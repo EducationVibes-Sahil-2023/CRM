@@ -1,0 +1,1 @@
+{"result":{"text":"fraction numerator 8 P subscript 1 over denominator 9 end fraction"},"status":"ok"}

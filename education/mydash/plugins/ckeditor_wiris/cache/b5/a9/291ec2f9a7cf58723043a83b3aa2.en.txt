@@ -1,0 +1,1 @@
+{"result":{"text":"left parenthesis straight x space element of space straight R right parenthesis"},"status":"ok"}

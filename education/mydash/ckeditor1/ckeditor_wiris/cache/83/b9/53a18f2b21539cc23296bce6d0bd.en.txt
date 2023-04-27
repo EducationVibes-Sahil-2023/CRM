@@ -1,0 +1,1 @@
+{"result":{"text":"square root of 4 space plus space open curly brackets 6 close curly brackets space minus space bevelled 5 over 6"},"status":"ok"}

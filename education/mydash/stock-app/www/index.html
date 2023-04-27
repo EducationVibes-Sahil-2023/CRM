@@ -1,0 +1,164 @@
+<!--
+Author: W3layouts
+Author URL: http://w3layouts.com
+License: Creative Commons Attribution 3.0 Unported
+License URL: http://creativecommons.org/licenses/by/3.0/
+-->
+<!DOCTYPE html>
+<html>
+	
+<head>
+	<title>Sale Entry</title>
+		<meta charset="utf-8">
+		<link href="css/style.css" rel='stylesheet' type='text/css' />
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/script.js"></script>
+	<script type="text/javascript" src="js/jquery.mobile-1.2.0.min.js"></script>
+<script >  
+      $(document).ready(function () {     
+	 // alert("aa");             
+				$.ajax({
+				type: "POST",
+				url: service_url+"get-counter.php",
+				dataType: "json",
+				data:{},
+				success:function(data)
+			  	{
+                  $.each(data.result, function (key, value) {  
+				//  alert(key);
+                      $("#counter_id1").append($("<option></option>").val(key).html(value.counter));  
+                  });  
+              },  
+            
+          });  
+		  
+			  $(document).on('click', '#submit', function () {
+			  var iemi_no = $('#iemi_no').val();
+			  var sales_date = $('#sales_date').val();
+			  var counter_id1 = $('#counter_id1').val();
+			  
+				if (counter_id1==" ")
+				{
+				alert("Please Select Counter Name");
+				$("#loading").css("display", "none");
+				return false;
+				}
+			  
+				if (iemi_no=='')
+				{
+				alert("Please Enter IEMI No");
+				$("#loading").css("display", "none");
+				return false;
+				}
+					
+				if (sales_date=='')
+				{
+				alert("Please Enter Sales Date");
+				$("#loading").css("display", "none");
+				return false;
+				}
+
+				//alert(counter_id1);
+            var dataString = "iemi_no=" + iemi_no + "&sales_date=" + sales_date +  "&counter_id1=" + counter_id1 + "&insert=";
+            if ($.trim(iemi_no).length > 0 & $.trim(sales_date).length > 0 & $.trim(counter_id1).length > 0) {
+                $.ajax({
+                    type: "POST",
+                    url: service_url+"insert-sale-entry.php",
+                    data: dataString,
+                    crossDomain: true,
+                    cache: false,
+                    beforeSend: function() {
+                        $("#submit").val('Connecting...');
+                    },
+					success: function(data) {
+                        if (data == "success") {
+                            alert("inserted");
+                            $("#submit").val('submit');
+                        } else if (data == "error") {
+                            alert("error");
+                        }
+                    }
+                });
+		  
+		  }
+		  
+		  });
+		  
+		  });
+		  
+	
+    </script>
+		
+		<!--//webfonts-->
+</head>
+<body>
+<div class="loader"></div>
+<div class="logo">
+<img src="images/logo.png"  />
+</div>
+<h2>Sale Entry</h2>
+				 <!-----start-main---->
+				<div class="login-form">
+				
+				<form id="form1" name="form1">
+				  <li>
+						<select id="counter_id1" name="counter_id1" style="background:#646464; border-color:#646464; color:#fff; width:100%">
+							<option value=" " selected="selected" >Select Counter Name</option>
+							
+						</select>
+					  
+				   </li>
+					<li>
+						<input type="text" style="color:#fff;"  name="iemi_no" id="iemi_no" onFocus="this.placeholder = '';"  placeholder="IEMI No" onBlur="if (this.placeholder == '') {this.placeholder = 'IEMI No';}" >
+						
+					</li>
+					<li>
+						 <input type="text" style="color:#fff;"  name="sales_date" id="sales_date" onFocus="this.placeholder = '';"  placeholder="Sales Date" onBlur="if (this.placeholder == '') {this.placeholder = 'Sales Date';}" >
+						
+					</li>
+					<div class="forgot">
+						<!--<a href="forgot-password.html">Forgot Password</a>-->
+					</div>
+					</br>
+					<div id="loading" style=" color:#FFFFFF; text-align:center; display:none">Please wait loading data ...</div>
+					
+					<div class="clear"></div>
+					<div class="p-container"><input type="submit" id="submit" value="Submit" ></div>					
+				
+					<!--<div class="clear"> </div>
+					<h1><small>OR</small></h1>
+					<div class="clear"></div>-->
+					<div class="p-container">
+					<!--<input type="submit" class="verify" value="Verify Membership" >-->
+					<!--<button class="verify1"><a href="verify-membership.html" style="text-decoration:none; color:#fff">Verify Membership</a></button>-->
+					<!--<input type="button" class="verify1" style="text-decoration:none; color:#fff" value="Verify Membership" id="member">-->
+					<div class="clear"> </div>
+					</div>
+				</form>
+				
+			<link rel="stylesheet" type="text/css" href="js/jquery.datetimepicker.css"/>
+			<script src="jquery.js"></script>
+			<script src="js/jquery.datetimepicker.js"></script>
+			<script type="text/javascript">
+				$('#sales_date').datetimepicker({
+				format: 'd-m-Y',
+				formatDate: 'd-m-Y',
+				
+				timepicker:false, // and tommorow is maximum date calendar
+				});	
+			
+			
+			
+			
+			</script>		
+			
+			</div>	 		
+</body>
+</html>

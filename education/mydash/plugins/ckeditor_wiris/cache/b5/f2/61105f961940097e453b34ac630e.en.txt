@@ -1,0 +1,1 @@
+{"result":{"text":"product for 2 of angle"},"status":"ok"}
