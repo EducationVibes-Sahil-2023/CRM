@@ -1,0 +1,1 @@
+{"result":{"text":"5 over 2 space cross times space straight K subscript straight c space colon"},"status":"ok"}

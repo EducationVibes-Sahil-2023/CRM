@@ -1,0 +1,1 @@
+{"result":{"text":"fraction numerator ln space straight x over denominator straight x end fraction"},"status":"ok"}

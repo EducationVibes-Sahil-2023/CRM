@@ -1,0 +1,1 @@
+{"result":{"text":"rightwards arrow with increment on top"},"status":"ok"}
