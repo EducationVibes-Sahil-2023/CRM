@@ -1,0 +1,1 @@
+{"result":{"text":"square root of x squared plus cube root of y equals square root of x plus square root of b plus square root of a"},"status":"ok"}

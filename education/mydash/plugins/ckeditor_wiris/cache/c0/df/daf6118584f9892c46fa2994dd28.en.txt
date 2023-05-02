@@ -1,0 +1,1 @@
+{"result":{"text":"straight A space rightwards harpoon over leftwards harpoon from straight k subscript – 1 end subscript to straight k subscript 1 of space straight B"},"status":"ok"}

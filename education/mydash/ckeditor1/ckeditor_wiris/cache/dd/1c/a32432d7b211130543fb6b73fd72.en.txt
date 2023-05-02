@@ -1,0 +1,1 @@
+{"result":{"text":"square root of a plus cube root of 5"},"status":"ok"}

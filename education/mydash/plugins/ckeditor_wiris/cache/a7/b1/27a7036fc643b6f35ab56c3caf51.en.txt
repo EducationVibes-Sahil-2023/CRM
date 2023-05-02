@@ -1,0 +1,1 @@
+{"result":{"text":"straight N subscript straight B space equals space straight N subscript 0 straight e to the power of negative 3 λt end exponent"},"status":"ok"}

@@ -1,0 +1,1 @@
+{"result":{"text":"cos subscript straight theta superscript 2 plus sin squared straight theta equals ?"},"status":"ok"}

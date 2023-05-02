@@ -1,0 +1,1 @@
+{"result":{"text":"for all"},"status":"ok"}

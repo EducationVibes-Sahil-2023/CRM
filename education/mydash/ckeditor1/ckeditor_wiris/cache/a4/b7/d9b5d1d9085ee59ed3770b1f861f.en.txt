@@ -1,0 +1,1 @@
+{"result":{"text":"straight N subscript straight A space equals space end subscript straight N subscript 0 straight e to the power of negative λt end exponent"},"status":"ok"}
