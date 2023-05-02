@@ -1,0 +1,1 @@
+{"result":{"text":"open parentheses cos squared straight x space plus space fraction numerator 1 over denominator cos squared straight x end fraction close parentheses space"},"status":"ok"}

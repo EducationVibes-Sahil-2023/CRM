@@ -1,0 +1,1 @@
+{"result":{"text":"intersection"},"status":"ok"}

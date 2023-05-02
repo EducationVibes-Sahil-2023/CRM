@@ -1,0 +1,1 @@
+{"result":{"text":"rightwards arrow with Charocal on top"},"status":"ok"}

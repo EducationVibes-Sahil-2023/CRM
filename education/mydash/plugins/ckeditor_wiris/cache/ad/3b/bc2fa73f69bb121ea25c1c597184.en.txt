@@ -1,0 +1,1 @@
+{"result":{"text":"\ncos 2 plus sin 2"},"status":"ok"}
