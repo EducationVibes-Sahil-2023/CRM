@@ -1,1 +1,0 @@
-{"result":{"text":"begin mathsize 18px style open parentheses fraction numerator straight t to the power of straight x space minus space 1 over denominator xt space minus space straight x end fraction close parentheses to the power of 1 over straight x end exponent space for space straight t space not equal to 1 end style"},"status":"ok"}

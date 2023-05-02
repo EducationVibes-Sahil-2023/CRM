@@ -1,1 +1,0 @@
-{"result":{"text":"fraction numerator bar space minus space lit over denominator mol space minus space straight K end fraction"},"status":"ok"}

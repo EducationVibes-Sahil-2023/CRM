@@ -1,1 +1,0 @@
-{"result":{"text":"cube root of 6"},"status":"ok"}

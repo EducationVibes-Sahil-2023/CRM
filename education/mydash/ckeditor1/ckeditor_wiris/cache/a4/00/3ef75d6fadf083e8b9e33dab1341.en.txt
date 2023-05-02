@@ -1,1 +1,0 @@
-{"result":{"text":"straight N subscript straight X space equals space straight N subscript 0 open parentheses 4 over 3 space minus space 1 third space straight e to the power of negative 3 λt end exponent close parentheses"},"status":"ok"}
