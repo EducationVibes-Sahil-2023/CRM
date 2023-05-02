@@ -1,0 +1,1 @@
+{"result":{"text":"open parentheses straight x space plus 1 over straight x close parentheses"},"status":"ok"}

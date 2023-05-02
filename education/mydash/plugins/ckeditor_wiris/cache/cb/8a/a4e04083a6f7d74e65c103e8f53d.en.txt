@@ -1,0 +1,1 @@
+{"result":{"text":"fraction numerator ln left parenthesis 1 space plus space f left parenthesis x right parenthesis right parenthesis over denominator sin open parentheses begin display style 1 over x end style close parentheses end fraction space equals space 1"},"status":"ok"}
