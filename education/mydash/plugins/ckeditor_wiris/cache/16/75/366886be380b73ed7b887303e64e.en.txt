@@ -1,1 +1,0 @@
-{"result":{"text":"square root of y plus square root of x"},"status":"ok"}

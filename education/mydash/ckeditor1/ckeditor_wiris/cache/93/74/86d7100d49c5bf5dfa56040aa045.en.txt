@@ -1,1 +1,0 @@
-{"result":{"text":"straight o subscript 2"},"status":"ok"}
