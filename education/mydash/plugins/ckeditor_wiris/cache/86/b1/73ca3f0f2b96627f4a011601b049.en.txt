@@ -1,1 +1,0 @@
-{"result":{"text":"4 2 over 2 square root of 3 open square brackets 5 close square brackets end root"},"status":"ok"}

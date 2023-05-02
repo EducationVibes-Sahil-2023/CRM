@@ -1,1 +1,0 @@
-{"result":{"text":"a-th root of b plus square root of c plus 1"},"status":"ok"}
