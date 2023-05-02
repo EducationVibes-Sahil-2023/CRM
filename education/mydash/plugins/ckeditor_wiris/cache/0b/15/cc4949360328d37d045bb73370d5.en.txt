@@ -1,1 +1,0 @@
-{"result":{"text":"left parenthesis straight alpha comma space straight beta right parenthesis"},"status":"ok"}

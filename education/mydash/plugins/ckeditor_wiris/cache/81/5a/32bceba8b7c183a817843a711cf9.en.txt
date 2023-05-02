@@ -1,1 +1,0 @@
-{"result":{"text":"fraction numerator left parenthesis x space plus space alpha right parenthesis to the power of n space minus space left parenthesis x space plus space beta right parenthesis to the power of n over denominator alpha space minus space beta end fraction"},"status":"ok"}

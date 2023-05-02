@@ -1,1 +1,0 @@
-{"result":{"text":"open parentheses y space plus 1 over straight y close parentheses"},"status":"ok"}

@@ -1,1 +1,0 @@
-{"result":{"text":"straight ϕ space equals space straight ϕ subscript 0 straight r cubed"},"status":"ok"}

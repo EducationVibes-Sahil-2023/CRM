@@ -1,1 +1,0 @@
-{"result":{"text":"If space straight f \" left parenthesis straight x right parenthesis space greater than space 0 space for all space straight x space element of space straight R comma space the space which space of space the space above space statements space are space true"},"status":"ok"}
