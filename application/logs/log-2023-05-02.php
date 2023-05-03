@@ -1019,3 +1019,7 @@ ERROR - 2023-05-02 15:46:23 --> Could not find the language line "SMS"
 ERROR - 2023-05-02 15:46:23 --> Could not find the language line "SEND NOW"
 ERROR - 2023-05-02 15:46:23 --> Could not find the language line "SMS"
 ERROR - 2023-05-02 15:46:23 --> Could not find the language line "SEND NOW"
+ERROR - 2023-05-02 13:32:29 --> Severity: error --> Exception: Access denied for user 'i8699431_ma1'@'localhost' (using password: YES) C:\xampp\htdocs\git_crm\system\database\drivers\mysqli\mysqli_driver.php 203
+ERROR - 2023-05-02 13:34:57 --> Severity: error --> Exception: Access denied for user 'i8699431_ma1'@'localhost' (using password: YES) C:\xampp\htdocs\git_crm\system\database\drivers\mysqli\mysqli_driver.php 203
+ERROR - 2023-05-02 17:06:44 --> Severity: Warning --> Undefined array key "isdefault" C:\xampp\htdocs\git_crm\application\helpers\leads_helper.php 176
+ERROR - 2023-05-02 17:06:44 --> Severity: Warning --> Undefined array key "id" C:\xampp\htdocs\git_crm\application\models\Dashboard_model.php 212

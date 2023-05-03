@@ -1,0 +1,78 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class Api_Controller extends CI_Controller
+{
+    public $secretKey = '1234567890';
+    public $staffId = '';
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('External_Apis/validate');
+        $this->load->model('External_Apis/Api_Model');
+
+        $this->load->helper('jwt');
+        $token = $this->input->get_request_header('Authorization');
+        $current_url = current_url();
+        // $issuedAt = time();
+        // $expirationTime = $issuedAt + 60 * 60 * 24 * 60;
+        // $data = array(
+        //     "login_token" => "b6d5dd663af253bd3ad79a8c916ad703",
+        //     'iat' => $issuedAt,
+        //     'exp' => $expirationTime,
+        // );
+        // echo $jwt_token =  $this->generate_token($data);
+        // die;
+        if (str_contains($current_url, 'login')) {
+        } else {
+            if (!empty($token)) {
+                $token = explode(" ", $token);
+                if (!empty($token[1])) {
+                    $token = $token[1];
+                }
+            }
+            if (!empty($token)) {
+                $token_decode_data = $this->decode_token($token);
+
+                $login_token = !empty($token_decode_data->login_token) ? $token_decode_data->login_token : '';
+                $getData = $this->Api_Model->getData(db_prefix() . 'login_analytics', array("token" => $login_token));
+                if (!empty($getData["status"])) {
+                    $this->staffId = $getData["data"]["staffid"];
+                } else {
+                    echo json_encode($getData);
+                    die;
+                }
+            }
+        }
+    }
+
+    public function decode_token($token)
+    {
+        $response = [];
+        try {
+            $jwt = new JWT();
+            $response = $jwt->decode($token, $this->secretKey, "HS256");
+        } catch (Exception $e) {
+            $response = array("status" => 0, "message" => "Invalid/Expired Token");
+        }
+        return $response;
+    }
+
+    public function generate_token($data)
+    {
+        $response = [];
+        try {
+            $jwt = new JWT();
+            $response = $jwt->encode($data, $this->secretKey, "HS256");
+        } catch (Exception $e) {
+            $response = array("status" => 0, "message" => "Not generate token.");
+        }
+        return $response;
+    }
+
+    function json_output($response)
+    {
+        return json_encode($response, true);
+    }
+}
