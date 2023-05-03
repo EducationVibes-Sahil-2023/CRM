@@ -1,12 +1,3 @@
-*/config/development
-*/logs/log-*.php
-!*/logs/index.html
-*/cache/*
-!system/cache/*
-!*/cache/index.html
-!*/cache/.htaccess
-
-#codeigniter 3
-/application/
 application/logs/*
 application/config/app-config.php
+application/config/config.php
