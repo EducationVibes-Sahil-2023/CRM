@@ -177,6 +177,8 @@ $route['forms/tickets/(:any)'] = 'forms/public_ticket/$1';
 //Api 
 $route['external/login'] = 'External_Apis/Login_Controller/login';
 $route['external/followup_contact'] = 'External_Apis/Login_Controller/follow_up_data';
+$route['external/call_update'] = 'External_Apis/Login_Controller/call_update';
+$route['external/call_activity_cron'] = 'External_Apis/Login_Controller/call_activity_cron';
 
 
 
