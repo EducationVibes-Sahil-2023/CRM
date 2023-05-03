@@ -173,6 +173,13 @@ $route['admin/modules/(:any)/(:any)'] = 'admin/mods/$1/$2';
 // Public single ticket route
 $route['forms/tickets/(:any)'] = 'forms/public_ticket/$1';
 
+
+//Api 
+$route['external/login'] = 'External_Apis/Login_Controller/login';
+$route['external/followup_contact'] = 'External_Apis/Login_Controller/follow_up_data';
+
+
+
 /**
  * @since  2.3.0
  * Route for clients set password URL, because it's using the same controller for staff to
