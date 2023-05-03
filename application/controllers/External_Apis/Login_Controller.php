@@ -65,8 +65,6 @@ class Login_Controller extends Api_Controller
 
     public function call_update()
     {
-        // $staffId = $this->staffId;
-        $staffId = 1;
         $form_data = !empty($_POST["call_data"]) ? json_decode($_POST["call_data"], true) : '';
         $form_data_array = [];
         $form_data_array_temp = [];
@@ -81,7 +79,7 @@ class Login_Controller extends Api_Controller
         $response = [];
         $rules[] = array(
             "field" => "Staff Id",
-            "value" => $staffId,
+            "value" => !empty($this->staffId) ? $this->staffId : '',
             "condition" => "required|{exist:{" . db_prefix() . "staff:staffid:active:1}}"
         );
 
