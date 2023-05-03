@@ -477,9 +477,11 @@ if (isset($app_csrf_exclude_uris)) {
     $config['csrf_exclude_uris'] = array_unique($config['csrf_exclude_uris']);
 }
 
-if ($config['csrf_protection'] == true
+if (
+    $config['csrf_protection'] == true
     && isset($_SERVER['REQUEST_URI'])
-    && strpos($_SERVER['REQUEST_URI'], 'gateways/') !== false) {
+    && strpos($_SERVER['REQUEST_URI'], 'gateways/') !== false
+) {
     $config['csrf_protection'] = false;
 }
 
@@ -558,23 +560,24 @@ $config['proxy_ips'] = '';
 | APP_MEMORY_LIMIT should be defined in app-config.php file.
 | For example: define('APP_MEMORY_LIMIT', '256m');
 */
+
 if (defined('APP_MEMORY_LIMIT')) {
     @ini_set('memory_limit', APP_MEMORY_LIMIT);
 }
 
 /**
-* Modules path
-* Do not change this code
-*/
+ * Modules path
+ * Do not change this code
+ */
 $config['modules_locations'] = [
     APP_MODULES_PATH => '../../modules/',
 ];
 
-if(!isset($config['csrf_exclude_uris']))
-        {
-            $config['csrf_exclude_uris']=[];
-        }
-$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('facebook_leads_integration/webhook'));
-$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('facebook_leads_integration/get_lead_data'));
-$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('facebook_leads_integration/new_webhook'));
-$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('facebook_leads_integration/new_webhook_test'));
+if (!isset($config['csrf_exclude_uris'])) {
+    $config['csrf_exclude_uris'] = [];
+}
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/webhook'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/get_lead_data'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/new_webhook'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/login'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/followup_contact'));
