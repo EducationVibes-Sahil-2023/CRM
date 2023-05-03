@@ -579,4 +579,5 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('f
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('facebook_leads_integration/new_webhook'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'],array('facebook_leads_integration/new_webhook_test'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/login'));
+
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/followup_contact'));
