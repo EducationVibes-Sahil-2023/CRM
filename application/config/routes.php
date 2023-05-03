@@ -174,6 +174,9 @@ $route['admin/modules/(:any)/(:any)'] = 'admin/mods/$1/$2';
 $route['forms/tickets/(:any)'] = 'forms/public_ticket/$1';
 
 
+//Api 
+$route['external/login'] = 'External_Apis/Login_Controller/login';
+$route['external/followup_contact'] = 'External_Apis/Login_Controller/follow_up_data';
 
 
 
