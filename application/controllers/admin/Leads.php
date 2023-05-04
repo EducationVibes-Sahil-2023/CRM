@@ -44,12 +44,12 @@ class Leads extends AdminController
 
 
 
-        if ($this->session->userdata('leads_kanban_view') == 'true') {
+        // if ($this->session->userdata('leads_kanban_view') == 'true') {
 
-            $data['switch_kanban'] = false;
+        //     $data['switch_kanban'] = false;
 
-            $data['bodyclass']     = 'kan-ban-body';
-        }
+        //     $data['bodyclass']     = 'kan-ban-body';
+        // }
 
 
 
@@ -144,6 +144,9 @@ class Leads extends AdminController
     public function kanban()
 
     {
+
+
+        return false;
 
         if (!is_staff_member()) {
 
