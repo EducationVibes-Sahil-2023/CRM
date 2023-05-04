@@ -393,6 +393,10 @@
             <?php echo render_custom_fields('leads', $rel_id); ?>
          </div>
          <div class="clearfix"></div>
+         <?php  $value = (isset($lead) ? $lead->address : ''); 
+            ?>
+            <?php echo render_textarea('address','lead_address',$value,array('rows'=>1,'style'=>'height:36px;font-size:100%;')); 
+            ?>
          <div class="col-md-12">
             <?php $value = (isset($lead) ? $lead->description : ''); ?>
             <?php echo render_textarea('description', 'lead_description', $value); ?>
