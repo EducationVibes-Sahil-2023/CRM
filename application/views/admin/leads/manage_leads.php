@@ -20,9 +20,9 @@
                         <div class="col-md-5">
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
                            <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
-                           <a href="<?php echo admin_url('leads/switch_kanban/'.$switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
+                           <!-- <a href="<?php echo admin_url('leads/switch_kanban/'.$switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
                            <?php if($switch_kanban == 1){ echo _l('leads_switch_to_kanban');}else{echo _l('switch_to_list_view');}; ?>
-                           </a>
+                           </a> -->
                            <div class="text-center pull-right">
                               <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br> 
                               <span id="updationCounterText">Updates Count</span>
@@ -30,10 +30,10 @@
                         </div>
                         
                         <div class="col-md-4 col-xs-12 pull-right leads-search">
-                           <?php if($this->session->userdata('leads_kanban_view') == 'true') { ?>
-                           <div data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
+                           <?php if($this->session->userdata('leads_kanban_view') == 'true' && 1 == 0) { ?>
+                           <!-- <div data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
                               <?php echo render_input('search','','','search',array('data-name'=>'search','onkeyup'=>'leads_kanban();','placeholder'=>_l('leads_search')),array(),'no-margin') ?>
-                           </div>
+                           </div> -->
                            <?php } ?>
                            <?php echo form_hidden('sort_type'); ?>
                            <?php echo form_hidden('sort',(get_option('default_leads_kanban_sort') != '' ? get_option('default_leads_kanban_sort_type') : '')); ?>
@@ -93,8 +93,8 @@
                   <hr class="hr-panel-heading" />
                   <div class="tab-content">
                      <?php
-                        if($this->session->has_userdata('leads_kanban_view') && $this->session->userdata('leads_kanban_view') == 'true') { ?>
-                     <div class="active kan-ban-tab" id="kan-ban-tab" style="overflow:auto;">
+                        if($this->session->has_userdata('leads_kanban_view') && $this->session->userdata('leads_kanban_view') == 'true' && 1 == 0) { ?>
+                     <!-- <div class="active kan-ban-tab" id="kan-ban-tab" style="overflow:auto;">
                         <div class="kanban-leads-sort">
                            <span class="bold"><?php echo _l('leads_sort_by'); ?>: </span>
                            <a href="#" onclick="leads_kanban_sort('dateadded'); return false" class="dateadded">
@@ -114,7 +114,7 @@
                               <div id="kan-ban"></div>
                            </div>
                         </div>
-                     </div>
+                     </div> -->
                      <?php } else { ?>
                      <div class="row" id="leads-table ">
                      <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p>
