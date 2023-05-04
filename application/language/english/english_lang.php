@@ -468,7 +468,7 @@ $lang['lead_add_edit_notes']               = 'Notes';
 $lang['lead_add_edit_add_note']            = 'Add Note';
 $lang['lead_not_contacted']                = 'I have not contacted this lead';
 $lang['lead_add_edit_contacted_this_lead'] = 'I got in touch with this lead';
-
+$lang['lead_add_edit_alternative_phonenumber']         = 'Alternative Contact';
 # Misc
 $lang['access_denied'] = 'Access denied';
 $lang['prev']          = 'Prev';
