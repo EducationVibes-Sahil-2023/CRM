@@ -32,17 +32,19 @@ class Api_Controller extends CI_Controller
                     $token = $token[1];
                 }
             }
-            if (!empty($token)) {
-                $token_decode_data = $this->decode_token($token);
 
-                $login_token = !empty($token_decode_data->login_token) ? $token_decode_data->login_token : '';
-                $getData = $this->Api_Model->getData(db_prefix() . 'login_analytics', array("token" => $login_token));
-                if (!empty($getData["status"])) {
-                    $this->staffId = $getData["data"]["staffid"];
-                } else {
-                    echo json_encode($getData);
-                    die;
-                }
+            $token_decode_data = $this->decode_token($token);
+            if (empty($token_decode_data["status"])) {
+                echo json_encode(array("status" => 0, "message" => $token_decode_data["message"]));
+                die;
+            }
+            $login_token = !empty($token_decode_data->login_token) ? $token_decode_data->login_token : '';
+            $getData = $this->Api_Model->getData(db_prefix() . 'login_analytics', array("token" => $login_token));
+            if (!empty($getData["status"])) {
+                $this->staffId = $getData["data"]["staffid"];
+            } else {
+                echo json_encode($getData);
+                die;
             }
         }
     }
