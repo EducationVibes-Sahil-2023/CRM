@@ -387,9 +387,7 @@
                </div>
             <?php } ?>
          </div>
-         <div class="row mbot15">
-            <hr class="no-margin" />
-         </div>
+         <hr class="mtop5 mbot10" />
          <div class="col-md-12 mtop15">
             <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
             <?php echo render_custom_fields('leads', $rel_id,); ?>
@@ -450,9 +448,7 @@
             // die; 
             ?>
          </div>
-         <div class="row mbot15">
-            <hr class="no-margin" />
-         </div>
+         <hr class="mtop5 mbot10" />
          <div class="clearfix"></div>
          <div class="col-md-12">
             <?php $value = (isset($lead) ? $lead->address : '');
