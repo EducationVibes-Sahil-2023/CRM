@@ -387,10 +387,71 @@
                </div>
             <?php } ?>
          </div>
-
+         <div class="row mbot15">
+            <hr class="no-margin" />
+         </div>
          <div class="col-md-12 mtop15">
             <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
-            <?php echo render_custom_fields('leads', $rel_id); ?>
+            <?php echo render_custom_fields('leads', $rel_id,); ?>
+         </div>
+         <?php
+         $exam_details = !empty($lead->exam_details) ? json_decode($lead->exam_details, true) : [];
+         ?>
+         <div class="mtop15 multiple-exam-section" style="display:<?= !empty($exam_details) ? '' : 'none' ?>;">
+            <?php if (!empty($exam_details)) {
+               unset($_POST["exam_name"]);
+               unset($_POST["exam_score"]);
+               $exam_index = 1;
+               foreach ($exam_details as $exam) {
+                  $examName = !empty($exam["exam_name"]) ? $exam["exam_name"] : '';
+                  $examScore = !empty($exam["exam_score"]) ? $exam["exam_score"] : '';
+                  if ($exam_index == 1) {
+            ?>
+                     <div class="exam-section">
+                        <div class="col-md-5 required">
+                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text'); ?>
+                        </div>
+                        <div class="col-md-5 required">
+                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number'); ?>
+                        </div>
+                        <div class="col-md-2 add_btn"><button class="btn btn-primary" onclick="add_exam_block()" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button></div>
+                     </div>
+                  <?php
+                  } else {
+                  ?>
+                     <div class="exam-section child">
+                        <div class="col-md-5 required">
+                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text'); ?>
+                        </div>
+                        <div class="col-md-5 required">
+                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number'); ?>
+                        </div>
+                        <div class="col-md-2 add_btn"><button class="btn btn-danger" onclick="remove_exam_block()" type="button"><i class="fa fa-minus" aria-hidden="true"></i></button></div>
+                     </div>
+                  <?php
+                  }
+                  $exam_index++;
+                  ?>
+               <?php
+               }
+            } else { ?>
+               <div class="exam-section">
+                  <div class="col-md-5 required">
+                     <?php $value = ''; ?>
+                     <?php echo render_input('exam_name[]', 'lead_exam_name', $value, 'text'); ?>
+                  </div>
+                  <div class="col-md-5 required">
+                     <?php $value = ''; ?>
+                     <?php echo render_input('exam_score[]', 'lead_exam_score', $value, 'number'); ?>
+                  </div>
+                  <div class="col-md-2 add_btn"><button class="btn btn-primary" onclick="add_exam_block()" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button></div>
+               </div>
+            <?php }
+            // die; 
+            ?>
+         </div>
+         <div class="row mbot15">
+            <hr class="no-margin" />
          </div>
          <div class="clearfix"></div>
          <div class="col-md-12">
@@ -460,6 +521,7 @@
 <?php if (isset($lead) && $lead_locked == true) { ?>
    <script>
       $(function() {
+
          // Set all fields to disabled if lead is locked
          $.each($('.lead-wrapper').find('input, select, textarea'), function() {
             $(this).attr('disabled', true);
@@ -488,6 +550,40 @@
             $(this).val(numbers.replace(/\D/, ''));
          });
 
+
       });
    </script>
 <?php } ?>
+
+<style>
+   .add_btn {
+      margin-top: 25px;
+   }
+</style>
+<script>
+   var input_exam = ' <?php echo render_input('exam_name[]', 'lead_exam_name', $value, 'text'); ?>';
+   var input_score = '<?php echo render_input('exam_score[]', 'lead_exam_score', $value, 'number'); ?>';
+
+   function add_exam_block() {
+      let html = `<div class="exam-section child">
+      <div class="col-md-5 required">` + input_exam + `</div>
+      <div class="col-md-5 required">` + input_score + `</div>
+      <div class="col-md-2"><button class="btn btn-danger add_btn"  onclick="remove_exam_block(this)" type="button" ><i class="fa fa-minus" aria-hidden="true"></i></button></div>
+      </div>`;
+      $(".multiple-exam-section").append(html);
+   }
+
+   function remove_exam_block(obj) {
+      $(obj).parents(".exam-section").remove();
+
+   }
+
+   $('select[name="custom_fields[leads][25]"]').change(function() {
+      $(".exam-section.child").remove();
+      $(".exam-section").find("input").val('');
+      $(".multiple-exam-section").hide();
+      if (($('select[name="custom_fields[leads][25]"] option:selected').val()).toLowerCase() == 'yes') {
+         $(".multiple-exam-section").show();
+      }
+   })
+</script>
