@@ -289,7 +289,8 @@
          <div class="col-md-6">
             <?php $value = (isset($lead) ? $lead->name : ''); ?>
             <?php echo render_input('name', 'lead_add_edit_name', $value); ?>
-            <?php $value = (isset($lead) ? $lead->phonenumber : ''); ?>
+            <?php // $value = (isset($lead) ? $lead->phonenumber : ''); 
+            ?>
             <?php // echo render_input('phonenumber','lead_add_edit_phonenumber',$value); 
             ?>
 
@@ -430,22 +431,9 @@
                   }
                   $exam_index++;
                   ?>
-               <?php
+            <?php
                }
-            } else { ?>
-               <div class="exam-section">
-                  <div class="col-md-5 required">
-                     <?php $value = ''; ?>
-                     <?php echo render_input('exam_name[]', 'lead_exam_name', $value, 'text'); ?>
-                  </div>
-                  <div class="col-md-5 required">
-                     <?php $value = ''; ?>
-                     <?php echo render_input('exam_score[]', 'lead_exam_score', $value, 'number'); ?>
-                  </div>
-                  <div class="col-md-2 add_btn"><button class="btn btn-primary" onclick="add_exam_block()" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button></div>
-               </div>
-            <?php }
-            // die; 
+            }
             ?>
          </div>
          <hr class="mtop5 mbot10" />
@@ -561,12 +549,25 @@
    var input_score = '<?php echo render_input('exam_score[]', 'lead_exam_score', $value, 'number'); ?>';
 
    function add_exam_block() {
+
+      $(".exam-section input").each(function() {
+         if ($.trim($(this).val()) == '') {
+            $(this).focus();
+            return false;
+         }
+
+      })
+      button = '<button class="btn btn-danger add_btn"  onclick="remove_exam_block(this)" type="button" ><i class="fa fa-minus" aria-hidden="true"></i></button>';
+      if ($(".exam-section").length == 1) {
+         button = '<button class="btn btn-primary add_btn"  onclick="add_exam_block()" type="button" ><i class="fa fa-plus" aria-hidden="true"></i></button>';
+      }
       let html = `<div class="exam-section child">
       <div class="col-md-5 required">` + input_exam + `</div>
       <div class="col-md-5 required">` + input_score + `</div>
-      <div class="col-md-2"><button class="btn btn-danger add_btn"  onclick="remove_exam_block(this)" type="button" ><i class="fa fa-minus" aria-hidden="true"></i></button></div>
+      <div class="col-md-2"></div>
       </div>`;
       $(".multiple-exam-section").append(html);
+      add_required_exam_block();
    }
 
    function remove_exam_block(obj) {
@@ -574,12 +575,27 @@
 
    }
 
+   function add_required_exam_block() {
+      $(".exam-section").find("input").attr("required", true);
+      $(".exam-section label").each(function() {
+         let label = $(this).text();
+         label += ' <small class="req text-danger">*</small>';
+         $(this).html(label);
+
+      });
+
+   }
+
    $('select[name="custom_fields[leads][25]"]').change(function() {
-      $(".exam-section.child").remove();
+      $(".exam-section").remove();
       $(".exam-section").find("input").val('');
       $(".multiple-exam-section").hide();
       if (($('select[name="custom_fields[leads][25]"] option:selected').val()).toLowerCase() == 'yes') {
          $(".multiple-exam-section").show();
+         add_exam_block();
+
+      } else {
+
       }
    })
 </script>
