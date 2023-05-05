@@ -560,7 +560,7 @@
 
       })
       button = '<button class="btn btn-danger add_btn"  onclick="remove_exam_block(this)" type="button" ><i class="fa fa-minus" aria-hidden="true"></i></button>';
-      if ($(".exam-section").length == 1) {
+      if ($(".exam-section").length == 0) {
          button = '<button class="btn btn-primary add_btn"  onclick="add_exam_block()" type="button" ><i class="fa fa-plus" aria-hidden="true"></i></button>';
       }
       let html = `<div class="exam-section child">
@@ -586,6 +586,11 @@
 
       });
 
+   }
+   if (($('select[name="custom_fields[leads][25]"] option:selected').val()).toLowerCase() == 'yes') {
+      if ($(".exam-section").length == 0) {
+         add_exam_block();
+      }
    }
 
    $('select[name="custom_fields[leads][25]"]').change(function() {
