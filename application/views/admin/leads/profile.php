@@ -583,24 +583,28 @@
 
    function add_exam_block() {
 
+      check_status = false;
       $(".exam-section input").each(function() {
          if ($.trim($(this).val()) == '') {
             $(this).focus();
+            check_status = true;
             return false;
          }
-
       })
-      button = '<button class="btn btn-danger add_btn"  onclick="remove_exam_block(this)" type="button" ><i class="fa fa-minus" aria-hidden="true"></i></button>';
-      if ($(".exam-section").length == 0) {
-         button = '<button class="btn btn-primary add_btn"  onclick="add_exam_block()" type="button" ><i class="fa fa-plus" aria-hidden="true"></i></button>';
-      }
-      let html = `<div class="exam-section child">
+      if (check_status == false) {
+         button = '<button class="btn btn-danger add_btn"  onclick="remove_exam_block(this)" type="button" ><i class="fa fa-minus" aria-hidden="true"></i></button>';
+         if ($(".exam-section").length == 0) {
+            button = '<button class="btn btn-primary add_btn"  onclick="add_exam_block()" type="button" ><i class="fa fa-plus" aria-hidden="true"></i></button>';
+         }
+         let html = `<div class="exam-section child">
       <div class="col-md-5 required">` + input_exam + `</div>
       <div class="col-md-5 required">` + input_score + `</div>
       <div class="col-md-2">` + button + `</div>
       </div>`;
-      $(".multiple-exam-section").append(html);
-      add_required_exam_block();
+         $(".multiple-exam-section").append(html);
+         setTimeout(add_required_exam_block(), 5000);
+      }
+
    }
 
    function remove_exam_block(obj) {
@@ -611,9 +615,12 @@
    function add_required_exam_block() {
       $(".exam-section").find("input").attr("required", true);
       $(".exam-section label").each(function() {
-         let label = $(this).text().replace('<small class="req text-danger">*</small>', "");;
-         label += ' <small class="req text-danger">*</small>';
-         $(this).html(label);
+         if ($(this).find("small").length > 0) {
+
+         } else {
+            let label = ' <small class="req text-danger">*</small>';
+            $(this).append(label);
+         }
 
       });
 
@@ -637,4 +644,6 @@
 
       }
    })
+
+   setTimeout(add_required_exam_block(), 5000);
 </script>
