@@ -388,6 +388,7 @@
                </div>
             <?php } ?>
          </div>
+         <div class="clearfix"></div>
          <hr class="mtop5 mbot10" />
          <div class="col-md-12 mtop15">
             <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
@@ -436,6 +437,7 @@
             }
             ?>
          </div>
+         <div class="clearfix"></div>
          <hr class="mtop5 mbot10" />
          <div class="clearfix"></div>
          <div class="col-md-12">
@@ -564,7 +566,7 @@
       let html = `<div class="exam-section child">
       <div class="col-md-5 required">` + input_exam + `</div>
       <div class="col-md-5 required">` + input_score + `</div>
-      <div class="col-md-2"></div>
+      <div class="col-md-2">` + button + `</div>
       </div>`;
       $(".multiple-exam-section").append(html);
       add_required_exam_block();
