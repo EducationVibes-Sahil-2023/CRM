@@ -574,7 +574,7 @@
             if ($(this).find("input").hasClass("check-by")) {} else {
                if ($.trim($(this).find("input[name='exam_name[]']").val()) == $.trim($(obj).val())) {
                   $("#lead-form-submit").attr("disabled", true);
-                  $("#lead-form-submit").after("<p class='name-exam-check text-danger'>This name is already exist.</p>");
+                  $("#lead-form-submit").after("<p class='name-exam-check text-danger' style='display:inline;'>This name is already exist.</p>");
                   $(obj).focus();
                   return false;
                }
