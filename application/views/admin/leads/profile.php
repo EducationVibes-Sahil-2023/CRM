@@ -397,7 +397,7 @@
          <?php
          $exam_details = !empty($lead->exam_details) ? json_decode($lead->exam_details, true) : [];
          ?>
-         <div class="mtop15 multiple-exam-section" style="display:<?= !empty($exam_details) ? '' : 'none' ?>;">
+         <div class="mtop15 multiple-exam-section row" style="display:<?= !empty($exam_details) ? '' : 'none' ?>;">
             <?php if (!empty($exam_details)) {
                unset($_POST["exam_name"]);
                unset($_POST["exam_score"]);
@@ -407,24 +407,24 @@
                   $examScore = !empty($exam["exam_score"]) ? $exam["exam_score"] : '';
                   if ($exam_index == 1) {
             ?>
-                     <div class="exam-section">
+                     <div class="exam-section child col-md-12">
                         <div class="col-md-5 required">
-                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)")); ?>
+                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)"), [], '', '', 'exam_name_' . timestamp_create(), [], '', '', time()); ?>
                         </div>
                         <div class="col-md-5 required">
-                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)")); ?>
+                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>
                         </div>
                         <div class="col-md-2 add_btn"><button class="btn btn-primary" onclick="add_exam_block()" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button></div>
                      </div>
                   <?php
                   } else {
                   ?>
-                     <div class="exam-section child">
+                     <div class="exam-section child col-md-12">
                         <div class="col-md-5 required">
-                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)")); ?>
+                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)", "required" => "required"), [], '', '', 'exam_name_' . timestamp_create(), [], '', '', time()); ?>
                         </div>
                         <div class="col-md-5 required">
-                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)")); ?>
+                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>
                         </div>
                         <div class="col-md-2 add_btn"><button class="btn btn-danger" onclick="remove_exam_block()" type="button"><i class="fa fa-minus" aria-hidden="true"></i></button></div>
                      </div>
@@ -547,8 +547,21 @@
    }
 </style>
 <script>
-   var input_exam = ' <?php echo render_input('exam_name[]', 'lead_exam_name', $value, 'text', array("onkeyup" => "check_exam_name(this)")); ?>';
-   var input_score = '<?php echo render_input('exam_score[]', 'lead_exam_score', $value, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)")); ?>';
+   var input_exam = "";
+   var input_score = "";
+
+   function generate_inputs_random() {
+      input_exam = "";
+      input_score = "";
+      return new Promise((resolve, reject) => {
+
+         input_exam = ' <?php echo render_input('exam_name[]', 'lead_exam_name', $value, 'text', array("onkeyup" => "check_exam_name(this)", "required" => "required"), [], '', '', 'exam_name_' . timestamp_create()); ?>';
+
+         input_score = '<?php echo render_input('exam_score[]', 'lead_exam_score', $value, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>';
+         setTimeout(resolve("Hello! "), 500);
+      });
+
+   }
 
    function check_exam_name(obj) {
       $("input.check-by").removeClass("check-by");
@@ -581,7 +594,9 @@
 
    }
 
-   function add_exam_block() {
+   async function add_exam_block() {
+      await generate_inputs_random();
+      console.log("okkkkk2");
 
       check_status = false;
       $(".exam-section input").each(function() {
@@ -596,13 +611,13 @@
          if ($(".exam-section").length == 0) {
             button = '<button class="btn btn-primary add_btn"  onclick="add_exam_block()" type="button" ><i class="fa fa-plus" aria-hidden="true"></i></button>';
          }
-         let html = `<div class="exam-section child">
+         let html = `<div class="exam-section child col-md-12">
       <div class="col-md-5 required">` + input_exam + `</div>
       <div class="col-md-5 required">` + input_score + `</div>
       <div class="col-md-2">` + button + `</div>
       </div>`;
          $(".multiple-exam-section").append(html);
-         setTimeout(add_required_exam_block(), 5000);
+         // setTimeout(add_required_exam_block(), 5000);
       }
 
    }
