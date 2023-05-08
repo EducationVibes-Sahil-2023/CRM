@@ -19,13 +19,14 @@ class Forms extends ClientsController
      * @param  string $key web to lead form key identifier
      * @return mixed
      */
-  
- public function wtl($key)
+
+    public function wtl($key)
     {
         $this->load->model('leads_model');
         $form = $this->leads_model->get_form([
             'form_key' => $key,
         ]);
+        $tags = "";
 
         if (!$form) {
             show_404();
@@ -46,8 +47,8 @@ class Forms extends ClientsController
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
-		$post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
-		$post_data["phonenumber"] = str_replace("+91","",$post_data["phonenumber"]);
+                $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
+                $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
 
                 $required  = [];
                 if ($form->responsible == 0) {
@@ -121,16 +122,16 @@ class Forms extends ClientsController
 
                 }
 
-  // if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
-    //                                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', [177, 176, 181, 179, 154]);
+                // if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
+                //                                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', [177, 176, 181, 179, 154]);
 
-      //              if (!empty($assign_staff_id[0]["staffid"])) {
-        //                $form->responsible = $assign_staff_id[0]["staffid"];
-          //          }
-            //    }
+                //              if (!empty($assign_staff_id[0]["staffid"])) {
+                //                $form->responsible = $assign_staff_id[0]["staffid"];
+                //          }
+                //    }
 
 
-   if (!empty($form->auto_assign)) {
+                if (!empty($form->auto_assign)) {
                     $lead_type = !empty($form->lead_type) ? $form->lead_type : '';
                     $auto_assign = array_filter(explode(",", $form->auto_assign));
                     $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $auto_assign);
@@ -368,13 +369,13 @@ class Forms extends ClientsController
                     }
                     $ip = $_SERVER['REMOTE_ADDR'];
                     if (!empty($form->facebook_status) && $form->facebook_status == 1) {
-                       $regular_fields['city']       = $post_data['city'];
+                        $regular_fields['city']       = $post_data['city'];
                         $regular_fields['state']       = $post_data['state'];
                         $regular_fields['website']    = !empty($post_data['website']) ? $post_data['website'] : '';
                     } else {
-                       
 
-  $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+
+                        $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
 
                         $regular_fields['city']       = $ipdetails->city;
                         $regular_fields['state']       = $ipdetails->region;
@@ -389,12 +390,12 @@ class Forms extends ClientsController
                         $regular_fields['state']       = $post_data['state'];
                     }
 
- //  if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
-// $regular_fields['type']       = 1;
+                    //  if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
+                    // $regular_fields['type']       = 1;
 
-// }
+                    // }
 
-                  if (!empty($lead_type)) {
+                    if (!empty($lead_type)) {
                         $regular_fields['type']  = $lead_type;
                     }
                     $regular_fields['source']       = $form->lead_source;
@@ -412,6 +413,11 @@ class Forms extends ClientsController
                         'lead_id'          => $lead_id,
                         'web_to_lead_form' => true,
                     ]);
+
+                    if (!empty($post_data['tags'])) {
+                        $tags = $post_data['tags'];
+                        handle_tags_save($tags, $lead_id, 'lead');
+                    }
 
                     $success = false;
                     if ($lead_id) {
@@ -772,6 +778,4 @@ class Forms extends ClientsController
         $data['form'] = $form;
         $this->load->view('forms/ticket', $data);
     }
-
- 
 }
