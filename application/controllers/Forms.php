@@ -26,6 +26,7 @@ class Forms extends ClientsController
         $form = $this->leads_model->get_form([
             'form_key' => $key,
         ]);
+        $tags = "";
 
         if (!$form) {
             show_404();
@@ -413,6 +414,11 @@ class Forms extends ClientsController
                         'lead_id'          => $lead_id,
                         'web_to_lead_form' => true,
                     ]);
+
+                    if (!empty($post_data['tags'])) {
+                        $tags = $post_data['tags'];
+                        handle_tags_save($tags, $lead_id, 'lead');
+                    }
 
                     $success = false;
                     if ($lead_id) {
