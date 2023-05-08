@@ -34,14 +34,17 @@ class Api_Controller extends CI_Controller
             }
 
             $token_decode_data = $this->decode_token($token);
-            if (empty($token_decode_data["status"])) {
-                echo json_encode(array("status" => 0, "message" => $token_decode_data["message"]));
-                die;
-            }
+
+            if (gettype($token_decode_data) == "array")
+                if (empty($token_decode_data["status"])) {
+                    echo json_encode(array("status" => 0, "message" => $token_decode_data["message"]));
+                    die;
+                }
             $login_token = !empty($token_decode_data->login_token) ? $token_decode_data->login_token : '';
             $getData = $this->Api_Model->getData(db_prefix() . 'login_analytics', array("token" => $login_token));
+
             if (!empty($getData["status"])) {
-                $this->staffId = $getData["data"]["staffid"];
+                $this->staffId = $getData["data"][0]["staffid"];
             } else {
                 echo json_encode($getData);
                 die;
