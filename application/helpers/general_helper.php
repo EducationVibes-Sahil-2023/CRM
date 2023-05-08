@@ -11,7 +11,7 @@ header('Content-Type: text/html; charset=utf-8');
  */
 function is_rtl($client_area = false)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     if (is_client_logged_in()) {
         $CI->db->select('direction')->from(db_prefix() . 'contacts')->where('id', get_contact_user_id());
         $direction = $CI->db->get()->row()->direction;
@@ -68,10 +68,10 @@ function is_rtl($client_area = false)
 function is_data_for_customer()
 {
     return is_client_logged_in()
-            || (!is_staff_logged_in() && !is_client_logged_in())
-            || defined('SEND_MAIL_TEMPLATE')
-            || defined('CLIENTS_AREA')
-            || defined('GDPR_EXPORT');
+        || (!is_staff_logged_in() && !is_client_logged_in())
+        || defined('SEND_MAIL_TEMPLATE')
+        || defined('CLIENTS_AREA')
+        || defined('GDPR_EXPORT');
 }
 
 /**
@@ -80,7 +80,7 @@ function is_data_for_customer()
  */
 function generate_encryption_key()
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     // In case accessed from my_functions_helper.php
     $CI->load->library('encryption');
     $key = bin2hex($CI->encryption->create_key(16));
@@ -118,10 +118,10 @@ function redirect_after_login_to_current_url()
     ]);
 }
 /**
-* Check if user accessed url while not logged in to redirect after login
-*
-* @return null
-*/
+ * Check if user accessed url while not logged in to redirect after login
+ *
+ * @return null
+ */
 function maybe_redirect_to_previous_url()
 {
     $CI = &get_instance();
@@ -146,7 +146,7 @@ function maybe_redirect_to_previous_url()
  */
 function do_recaptcha_validation($str = '')
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->load->library('form_validation');
     $google_url = 'https://www.google.com/recaptcha/api/siteverify';
     $secret     = get_option('recaptcha_secret_key');
@@ -214,7 +214,7 @@ function is_staff_logged_in()
  */
 function get_staff_user_id()
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     if (defined('API')) {
         $CI->load->config('rest');
@@ -256,7 +256,7 @@ function get_client_user_id()
  */
 function get_contact_user_id()
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     if (!$CI->session->has_userdata('contact_user_id')) {
         return false;
     }
@@ -417,7 +417,7 @@ function get_weekdays_original()
  */
 function _l($line, $label = '', $log_errors = true)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $hook_data = hooks()->apply_filters('before_get_language_text', ['line' => $line, 'label' => $label]);
 
@@ -615,7 +615,7 @@ function get_locale_key($language = 'english')
  */
 function current_full_url()
 {
-    $CI  = & get_instance();
+    $CI  = &get_instance();
     $url = $CI->config->site_url($CI->uri->uri_string());
 
     return $_SERVER['QUERY_STRING'] ? $url . '?' . $_SERVER['QUERY_STRING'] : $url;
@@ -680,14 +680,14 @@ function get_csrf_for_ajax()
  */
 function csrf_jquery_token()
 {
-    ?>
+?>
     <script>
-        if (typeof (jQuery) === 'undefined' && !window.deferAfterjQueryLoaded) {
+        if (typeof(jQuery) === 'undefined' && !window.deferAfterjQueryLoaded) {
             window.deferAfterjQueryLoaded = [];
             Object.defineProperty(window, "$", {
-                set: function (value) {
-                    window.setTimeout(function () {
-                        $.each(window.deferAfterjQueryLoaded, function (index, fn) {
+                set: function(value) {
+                    window.setTimeout(function() {
+                        $.each(window.deferAfterjQueryLoaded, function(index, fn) {
                             fn();
                         });
                     }, 0);
@@ -702,10 +702,10 @@ function csrf_jquery_token()
         var csrfData = <?php echo json_encode(get_csrf_for_ajax()); ?>;
 
         if (typeof(jQuery) == 'undefined') {
-            window.deferAfterjQueryLoaded.push(function () {
+            window.deferAfterjQueryLoaded.push(function() {
                 csrf_jquery_ajax_setup();
             });
-            window.addEventListener('load',function(){
+            window.addEventListener('load', function() {
                 csrf_jquery_ajax_setup();
             }, true);
         } else {
@@ -717,14 +717,14 @@ function csrf_jquery_token()
                 data: csrfData.formatted
             });
 
-            $(document).ajaxError(function( event, request, settings ) {
-                if(request.status === 419) {
+            $(document).ajaxError(function(event, request, settings) {
+                if (request.status === 419) {
                     alert_float('warning', 'Page expired, refresh the page make an action.')
                 }
             });
         }
- </script>
- <?php
+    </script>
+<?php
 }
 
 /**
@@ -878,7 +878,8 @@ function get_last_upgrade_copy_data()
     return false;
 }
 
-function check_invoice_status(){
+function check_invoice_status()
+{
 
     $CI = &get_instance();
     $CI->load->model('Invoices_model');
@@ -887,8 +888,10 @@ function check_invoice_status(){
     ];
 
     if (isset($where['status'])) {
-        if ($where['status'] == Invoices_model::STATUS_DRAFT
-            && get_option('exclude_invoice_from_client_area_with_draft_status') == 1) {
+        if (
+            $where['status'] == Invoices_model::STATUS_DRAFT
+            && get_option('exclude_invoice_from_client_area_with_draft_status') == 1
+        ) {
             unset($where['status']);
             $where['status !='] = Invoices_model::STATUS_DRAFT;
         }
@@ -900,13 +903,18 @@ function check_invoice_status(){
 
     $invoices = $CI->invoices_model->get('', $where);
     $show_invoice = array();
-    if(is_array($invoices) && count($invoices) > 0){
-        foreach($invoices as $key => $val){
-            if($val['status'] != Invoices_model::STATUS_PAID && $val['status'] != Invoices_model::STATUS_CANCELLED){
+    if (is_array($invoices) && count($invoices) > 0) {
+        foreach ($invoices as $key => $val) {
+            if ($val['status'] != Invoices_model::STATUS_PAID && $val['status'] != Invoices_model::STATUS_CANCELLED) {
                 $show_invoice[] = $val['status'];
             }
         }
     }
 
     return $show_invoice;
+}
+
+function timestamp_create()
+{
+    return time() . '_' . rand(1, 10000);;
 }

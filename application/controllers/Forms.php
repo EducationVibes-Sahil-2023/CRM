@@ -36,6 +36,7 @@ class Forms extends ClientsController
         if (!empty($_POST["facebook_status"])) {
             $form->facebook_status = 1;
         }
+        $tags = "";
         // Change the locale so the validation loader function can load
         // the proper localization file
         $GLOBALS['locale'] = get_locale_key($form->language);
@@ -65,7 +66,7 @@ class Forms extends ClientsController
                     }
                 }
 
-
+           
                 if (empty($post_data['callassignee']) && !empty($post_data['auto_assign'])  && $post_data['auto_assign'] == 1) {
                     $form->responsible = 1;
                     $ip = $_SERVER['REMOTE_ADDR'];
@@ -438,6 +439,10 @@ class Forms extends ClientsController
                         $this->leads_model->lead_assigned_member_notification($lead_id, $form->responsible, true);
 
                         handle_lead_attachments($lead_id, 'file-input', $form->name);
+                        if (!empty($post_data['tags'])) {
+                            $tags = $post_data['tags'];
+                            handle_tags_save($tags, $lead_id, 'lead');
+                        }
 
                         if ($form->notify_lead_imported != 0) {
                             if ($form->notify_type == 'assigned') {
