@@ -50,7 +50,7 @@ class Forms extends ClientsController
                 $post_data = $this->input->post();
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
-
+                $call_data = [];
                 $required  = [];
                 if ($form->responsible == 0) {
                     if ($post_data['callassignee'] != null) {
@@ -58,6 +58,17 @@ class Forms extends ClientsController
                         $this->db->where('phonenumber', $phoneNumber);
                         $user =  $this->db->get(db_prefix() . 'staff')->row();
                         $form->responsible = $user->staffid;
+                        $call_data["type"] = 1;
+                        $call_data["formData"] = array(
+                            "staff_contact" => !empty($post_data['callassignee']) ? $post_data['callassignee'] : '',
+                            "contact" => !empty($post_data['phonenumber']) ? $post_data['phonenumber'] : '',
+                            "call_status" => !empty($post_data['form-cf-13']) ? $post_data['form-cf-13'] : '',
+                            "calls_source" => 1,
+                            "calls_type" => 1,
+                            "duration" => !empty($post_data['call_duration']) ? $post_data['call_duration'] : '',
+                            "call_start" => !empty($post_data['startdate_time']) ? $post_data['startdate_time'] : '',
+                            "call_end" => !empty($post_data['enddate_time']) ? $post_data['enddate_time'] : '',
+                        );
                     }
                 }
                 foreach ($data['form_fields'] as $field) {
@@ -66,7 +77,7 @@ class Forms extends ClientsController
                     }
                 }
 
-           
+
                 if (empty($post_data['callassignee']) && !empty($post_data['auto_assign'])  && $post_data['auto_assign'] == 1) {
                     $form->responsible = 1;
                     $ip = $_SERVER['REMOTE_ADDR'];
@@ -208,6 +219,12 @@ class Forms extends ClientsController
                 }
                 $success      = false;
                 $insert_to_db = true;
+
+
+                if (!empty($call_data)) {
+                    $this->curl_function($call_data);
+                }
+
 
 
                 if ($form->allow_duplicate == 0) {
@@ -782,5 +799,29 @@ class Forms extends ClientsController
 
         $data['form'] = $form;
         $this->load->view('forms/ticket', $data);
+    }
+
+
+
+
+    private function curl_function($post_data)
+    {
+        try {
+            $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbl90b2tlbiI6IjhiNDAzYWY0MmVhZDFkM2NkNjM3YWU5ZTlmZWVhMjM0IiwiaWF0IjoxNjgzNTQ4MjM0LCJleHAiOjE2ODg3MzIyMzR9.rsEVHt4ZCTVlPSKORZ-nyuB2pn3ElWzSNBqhGjlL8O0";
+            header('Content-Type: application/json'); // Specify the type of data
+            $ch = curl_init('https://crm.staging.educationvibes.in/external/call_update'); // Initialise cURL
+            $post = json_encode($post_data); // Encode the data array into a JSON string
+            $authorization = "Authorization: Bearer " . $token; // Prepare the authorisation token
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization)); // Inject the token into the header
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $post); // Set the posted fields
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
+            $result = curl_exec($ch); // Execute the cURL statement
+            curl_close($ch); // Close the cURL connection
+            return json_decode($result); // Return the received data
+        } catch (Exception $e) {
+            return true;
+        }
     }
 }
