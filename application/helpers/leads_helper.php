@@ -434,8 +434,8 @@ function get_status_summary_filter($params)
             }
         }
 
-        if (!empty($params['source'])) {
-            $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+        if (!empty($params['status'])) {
+            $sql .= ' AND status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
         }
 
 
@@ -491,7 +491,7 @@ function get_status_summary_filter($params)
 
     foreach ($sources as $key => $source) {
         $sources[$key]['total'] = 0;
-        if (!empty($_POST["status"])) {
+        if (!empty($_POST["source"])) {
             if (in_array($source["id"], $_POST["source"])) {
                 $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
             } else {
@@ -601,9 +601,9 @@ function leads_update_count($params = false)
         }*/
 
     $sql .= " group by l.id,(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-     $sql = trim($sql);
+    $sql = trim($sql);
 
-     
+
     $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
     $sql = trim($sql);
 
