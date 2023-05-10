@@ -94,10 +94,10 @@ class Login_Controller extends Api_Controller
                 $callassignee =  !empty($form_d["callassignee"]) ? $form_d["callassignee"] : '';
                 $phonenumber =  !empty($form_d["phonenumber"]) ? $form_d["phonenumber"] : '';
                 $call_status =  !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
-                $calls_type =  !empty($form_d["call_type"]) ? $form_d["call_type"] : '';
+                $calls_type =  !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
                 $call_duration =  !empty($form_d["call_duration"]) ? $form_d["call_duration"] : '';
-                $call_start =  !empty($form_d["startdate_time"]) ? strtotime($form_d["startdate_time"]) : '';
-                $call_end =  !empty($form_d["enddate_time"]) ? strtotime($form_d["enddate_time"]) : '';
+                $call_start =  !empty($form_d["call_start"]) ? $form_d["call_start"] : '';
+                $call_end =  !empty($form_d["call_end"]) ? $form_d["call_end"] : '';
 
                 array_push($form_data_array_temp, array(
                     "staff_contact" => $callassignee,
@@ -116,8 +116,8 @@ class Login_Controller extends Api_Controller
             $staffid = "";
             $callassignee =  !empty($form_data["formData"]["callassignee"]) ? $form_data["formData"]["callassignee"] : '';
             $phonenumber =  !empty($form_data["formData"]["phonenumber"]) ? $form_data["formData"]["phonenumber"] : '';
-            $call_start =  !empty($form_data["formData"]["startdate_time"]) ? strtotime($form_data["formData"]["startdate_time"]) : '';
-            $call_end =  !empty($form_data["formData"]["enddate_time"]) ? strtotime($form_data["formData"]["enddate_time"]) : '';
+            $call_start =  !empty($form_data["formData"]["call_start"]) ? $form_data["formData"]["call_start"] : '';
+            $call_end =  !empty($form_data["formData"]["call_end"]) ? $form_data["formData"]["call_end"] : '';
             $call_status =  !empty($form_data["formData"]["form-cf-13"]) ? $form_data["formData"]["form-cf-13"] : 'Not Found';
             $type =  1;
             $calls_type =  1;
@@ -170,7 +170,7 @@ class Login_Controller extends Api_Controller
                 "condition" => "number"
             );
             $rules[] = array(
-                "field" => "Call Duration",
+                "field" => "Call Status",
                 "value" => $call_status,
                 "condition" => "required"
             );
