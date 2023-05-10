@@ -45,28 +45,24 @@ class Forms extends ClientsController
         if (!$data['form_fields']) {
             $data['form_fields'] = [];
         }
-        $this->db->insert(db_prefix() . 'post_data', array("data", json_encode($this->input->post(), true)));
-
-        print_r($this->input->post());
-        die;
-       
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
-                die;
+                $this->db->insert(db_prefix() . 'post_data', array("data" => json_encode($this->input->post(), true)));
+
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
-                $call_data = [];
+                $call_data = array();
                 $required  = [];
+
                 if ($form->responsible == 0) {
                     if ($post_data['callassignee'] != null) {
                         $phoneNumber = $post_data['callassignee'];
                         $this->db->where('phonenumber', $phoneNumber);
                         $user =  $this->db->get(db_prefix() . 'staff')->row();
                         $form->responsible = $user->staffid;
-                        $call_data["type"] = 1;
-                        $call_data["formData"] = array(
-                            "staff_contact" => !empty($post_data['callassignee']) ? $post_data['callassignee'] : '',
+                        $call_data = array("type" => 1, "formData" => array(
+                            "callassignee" => !empty($post_data['callassignee']) ? $post_data['callassignee'] : '',
                             "contact" => !empty($post_data['phonenumber']) ? $post_data['phonenumber'] : '',
                             "call_status" => !empty($post_data['form-cf-13']) ? $post_data['form-cf-13'] : '',
                             "calls_source" => 1,
@@ -74,7 +70,7 @@ class Forms extends ClientsController
                             "duration" => !empty($post_data['call_duration']) ? $post_data['call_duration'] : '',
                             "call_start" => !empty($post_data['startdate_time']) ? $post_data['startdate_time'] : '',
                             "call_end" => !empty($post_data['enddate_time']) ? $post_data['enddate_time'] : '',
-                        );
+                        ));
                     }
                 }
                 foreach ($data['form_fields'] as $field) {
@@ -139,6 +135,8 @@ class Forms extends ClientsController
                     // }
 
                 }
+
+
 
                 // if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
                 //                                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', [177, 176, 181, 179, 154]);
@@ -812,20 +810,21 @@ class Forms extends ClientsController
 
     private function curl_function($post_data)
     {
+
+        $data = array("call_data" => json_encode($post_data));
         try {
             $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbl90b2tlbiI6IjhiNDAzYWY0MmVhZDFkM2NkNjM3YWU5ZTlmZWVhMjM0IiwiaWF0IjoxNjgzNTQ4MjM0LCJleHAiOjE2ODg3MzIyMzR9.rsEVHt4ZCTVlPSKORZ-nyuB2pn3ElWzSNBqhGjlL8O0";
             header('Content-Type: application/json'); // Specify the type of data
-            $ch = curl_init('https://crm.staging.educationvibes.in/external/call_update'); // Initialise cURL
-            $post = json_encode($post_data); // Encode the data array into a JSON string
+            $ch = curl_init(base_url("external/call_update")); // Initialise cURL
+            // $post = json_encode($post_data); // Encode the data array into a JSON string
             $authorization = "Authorization: Bearer " . $token; // Prepare the authorisation token
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization)); // Inject the token into the header
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $post); // Set the posted fields
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // Set the posted fields
+            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
             $result = curl_exec($ch); // Execute the cURL statement
             curl_close($ch); // Close the cURL connection
-            return json_decode($result); // Return the received data
         } catch (Exception $e) {
             return true;
         }
