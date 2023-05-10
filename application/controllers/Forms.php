@@ -45,11 +45,10 @@ class Forms extends ClientsController
         if (!$data['form_fields']) {
             $data['form_fields'] = [];
         }
+        $this->db->insert(db_prefix() . 'post_data', array("data", json_encode($this->input->post()), true));
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
-
-                $this->db->insert(db_prefix() . 'post_data', array("data",json_encode($post_data),true));
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
                 $call_data = [];
