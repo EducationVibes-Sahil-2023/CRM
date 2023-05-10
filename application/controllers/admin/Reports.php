@@ -66,6 +66,7 @@ class Reports extends AdminController
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['status'] = $this->leads_model->get_status();
         $data['sources']  = $this->leads_model->get_source();
+        $data['type']  = $this->leads_model->get_type();
         $this->load->view('admin/reports/lead_reports', $data);
     }
 
