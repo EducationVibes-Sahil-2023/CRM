@@ -264,7 +264,7 @@
                                        </span>
                                     <?php } ?>
                                     <a href="<?php echo admin_url('profile/' . $call["staffid"]); ?>" target="_blank">
-                                       <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staff_name']); ?></h5>
+                                       <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?></h5>
                                     </a>
                                     <?php if (!empty($call["call_start"])) { ?>
                                        <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d H:i:s', ($call['call_start'])); ?>"><?php echo date('Y-m-d H:i:s', ($call['call_start'])); ?></small>
