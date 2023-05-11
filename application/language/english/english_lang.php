@@ -471,6 +471,7 @@ $lang['lead_add_edit_contacted_this_lead'] = 'I got in touch with this lead';
 $lang['lead_add_edit_alternative_phonenumber']         = 'Alternative Contact';
 $lang['lead_exam_name']         = 'Exam Name';
 $lang['lead_exam_score']         = 'Exam Score';
+$lang['lead_add_edit_call_activity']         = 'Call Activity';
 # Misc
 $lang['access_denied'] = 'Access denied';
 $lang['prev']          = 'Prev';

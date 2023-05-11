@@ -1911,6 +1911,12 @@ class Leads_model extends App_Model
         return $this->db->get(db_prefix() . 'lead_activity_log')->result_array();
     }
 
+    public function get_lead_call_activity_log($id)
+    {
+        $sql = "SELECT c.*,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON l.phonenumber = c.contact join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id DESC";
+        return $this->db->query($sql)->result_array();
+    }
+
 
 
     public function staff_can_access_lead($id, $staff_id = '')
