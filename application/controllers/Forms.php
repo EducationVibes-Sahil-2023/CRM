@@ -255,7 +255,7 @@ class Forms extends ClientsController
                             $updateStatus = [
                                 'status' => $form->lead_status,
                                 // 'description' => 'Re Query',
-                                'assigned' => $form->responsible,
+                                // 'assigned' => $form->responsible,
                                 'last_status_change' => date("Y-m-d"),
                                 'lastcontact' => date("Y-m-d h:i:s"),
                                 'dateassigned' => date("Y-m-d")
