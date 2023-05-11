@@ -216,12 +216,7 @@ class Forms extends ClientsController
 
 
                 if (!empty($call_data)) {
-                    $this->db->insert(db_prefix() . 'post_data', array("data" => "yes"));
-                    $this->db->insert(db_prefix() . 'post_data', array("data" => json_encode($call_data)));
-
                     $this->curl_function($call_data);
-                } else {
-                    $this->db->insert(db_prefix() . 'post_data', array("data" => "no"));
                 }
 
 
@@ -818,7 +813,6 @@ class Forms extends ClientsController
             // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
             $result = curl_exec($ch); // Execute the cURL statement
             curl_close($ch); // Close the cURL connection
-            $this->db->insert(db_prefix() . 'post_data', array("data" => json_encode($result)));
         } catch (Exception $e) {
             return true;
         }
