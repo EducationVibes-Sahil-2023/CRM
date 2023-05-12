@@ -260,6 +260,11 @@ class Forms extends ClientsController
                                 'lastcontact' => date("Y-m-d h:i:s"),
                                 'dateassigned' => date("Y-m-d")
                             ];
+
+                            if ($post_data['callassignee'] != null) {
+                                $updateStatus["assigned"] = $form->responsible;
+                            }
+
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus);
 
