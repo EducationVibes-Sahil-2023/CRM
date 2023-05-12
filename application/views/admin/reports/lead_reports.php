@@ -71,6 +71,17 @@
                         </div>
 
                         <div class="col-md-2 leads-filter-column">
+                            <select name="lead_type" id="lead_type" class="selectpicker" data-width="100%">
+                                <option value="">Select Lead Type</option>
+                                <?php foreach ($type as $tp => $vl) {
+                                ?>
+                                    <option value="<?php echo $vl['id']; ?>"><?php echo $vl['name']; ?></option>
+                                <?php } ?>
+                            </select>
+                            <?php
+                            ?>
+                        </div>
+                        <div class="col-md-2 leads-filter-column">
                             <div class="form-group">
                                 <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Created Date" autocomplete="off">
                             </div>
@@ -137,6 +148,7 @@
         var element_view_status = document.getElementById("view_status");
         var up_from_date = document.getElementById("up_from_date").value;
         var up_to_date = document.getElementById("up_to_date").value;
+        var lead_type = $("#lead_type").val();
         var view_assigned_options = "";
         var view_source_options = "";
         var view_status_options = "";
@@ -192,6 +204,7 @@
                 to_date: to_date,
                 up_from_date: up_from_date,
                 up_to_date: up_to_date,
+                lead_type: lead_type    
                 // followup_from_date: followup_from_date,
                 // followup_to_date: followup_to_date,
                 // assign_from_date: assign_from_date,

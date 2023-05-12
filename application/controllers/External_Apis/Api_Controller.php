@@ -34,14 +34,42 @@ class Api_Controller extends CI_Controller
             }
 
             $token_decode_data = $this->decode_token($token);
-            if (empty($token_decode_data["status"])) {
-                echo json_encode(array("status" => 0, "message" => $token_decode_data["message"]));
-                die;
-            }
+
+
+
+            if (gettype($token_decode_data) == "array")
+                if (empty($token_decode_data["status"])) {
+                    echo json_encode(array("status" => 0, "message" => $token_decode_data["message"]));
+                    die;
+                }
+            // if (!empty($token_decode_data->expire_status) && $token_decode_data->expire_status == 1) {
+            // } else {
+            //     if (empty($token_decode_data->iat)) {
+            //         echo json_encode(array("status" => 0, "message" => "Jwt token iat is missing"));
+            //         die;
+            //     }
+            //     if (($token_decode_data->iat > (time() + 60)) || $token_decode_data->iat + 60 < time()) {
+            //         echo json_encode(array("status" => 0, "message" => "Jwt token is expired"));
+            //         die;
+            //     }
+            // }
+
             $login_token = !empty($token_decode_data->login_token) ? $token_decode_data->login_token : '';
             $getData = $this->Api_Model->getData(db_prefix() . 'login_analytics', array("token" => $login_token));
+
+            if (!empty($getData["data"][0]["expire_status"]) && $getData["data"][0]["expire_status"] == 1) {
+            } else {
+                if (empty($token_decode_data->iat)) {
+                    echo json_encode(array("status" => 0, "message" => "Jwt token iat is missing"));
+                    die;
+                }
+                if (($token_decode_data->iat > (time() + 60)) || $token_decode_data->iat + 60 < time()) {
+                    echo json_encode(array("status" => 0, "message" => "Jwt token is expired"));
+                    die;
+                }
+            }
             if (!empty($getData["status"])) {
-                $this->staffId = $getData["data"]["staffid"];
+                $this->staffId = $getData["data"][0]["staffid"];
             } else {
                 echo json_encode($getData);
                 die;
