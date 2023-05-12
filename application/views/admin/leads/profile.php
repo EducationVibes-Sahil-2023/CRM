@@ -141,12 +141,12 @@
             <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->phonenumber != '' ? '<a href="tel:' . $lead->phonenumber . '">' . $lead->phonenumber . '</a>' : '-') ?></p>
             <p class="text-muted lead-field-heading"><?php echo _l('lead_add_edit_alternative_phonenumber'); ?></p>
             <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->alternative_phonenumber != '' ? '<a href="tel:' . $lead->alternative_phonenumber . '">' . $lead->alternative_phonenumber . '</a>' : '-') ?></p>
-            <p class="text-muted lead-field-heading"><?php echo _l('lead_value'); ?></p>
-            <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->lead_value != 0 ? app_format_money($lead->lead_value, $base_currency->symbol) : '-') ?></p>
-            <p class="text-muted lead-field-heading"><?php echo _l('lead_company'); ?></p>
-            <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->company != '' ? $lead->company : '-') ?></p>
-            <p class="text-muted lead-field-heading"><?php echo _l('lead_address'); ?></p>
-            <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->address != '' ? $lead->address : '-') ?></p>
+            <!-- <p class="text-muted lead-field-heading"><?php echo _l('lead_value'); ?></p> -->
+            <!-- <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->lead_value != 0 ? app_format_money($lead->lead_value, $base_currency->symbol) : '-') ?></p> -->
+            <!-- <p class="text-muted lead-field-heading"><?php echo _l('lead_company'); ?></p> -->
+            <!-- <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->company != '' ? $lead->company : '-') ?></p> -->
+            <!-- <p class="text-muted lead-field-heading"><?php echo _l('lead_address'); ?></p> -->
+            <!-- <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->address != '' ? $lead->address : '-') ?></p> -->
             <p class="text-muted lead-field-heading"><?php echo _l('lead_city'); ?></p>
             <p class="bold font-medium-xs"><?php echo (isset($lead) && $lead->city != '' ? $lead->city : '-') ?></p>
             <p class="text-muted lead-field-heading"><?php echo _l('lead_state'); ?></p>
@@ -289,17 +289,23 @@
          <div class="col-md-6">
             <?php $value = (isset($lead) ? $lead->name : ''); ?>
             <?php echo render_input('name', 'lead_add_edit_name', $value); ?>
-            <?php // $value = (isset($lead) ? $lead->phonenumber : ''); 
+            <?php $value = (isset($lead) ? $lead->phonenumber : '');
             ?>
             <?php // echo render_input('phonenumber','lead_add_edit_phonenumber',$value); 
             ?>
-
-            <div class="form-group" app-field-wrapper="phonenumber">
-               <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
-               <input type="text" id="phonenumber" name="phonenumber" class="form-control" <?php if ($value == '') {
-                                                                                                echo 'maxlength="10"';
-                                                                                             } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
-            </div>
+            <?php if (is_admin()) { ?>
+               <div class="form-group" app-field-wrapper="phonenumber">
+                  <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
+                  <input type="text" id="phonenumber" name="phonenumber" class="form-control" <?php if ($value == '') {
+                                                                                                   echo 'maxlength="10"';
+                                                                                                } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
+               </div>
+            <?php } else { ?>
+               <div class="form-group" app-field-wrapper="phonenumber">
+                  <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
+                  <p style="border: 1px solid; padding: 8px; border-radius: 6px; border-color: #bebebe;"><?= $value ?></p>
+               </div>
+            <?php } ?>
 
             <?php $value = (isset($lead) ? $lead->email : ''); ?>
             <?php echo render_input('email', 'lead_add_edit_email', $value); ?>
@@ -440,12 +446,12 @@
          <div class="clearfix"></div>
          <hr class="mtop5 mbot10" />
          <div class="clearfix"></div>
-         <div class="col-md-12">
+         <!-- <div class="col-md-12">
             <?php $value = (isset($lead) ? $lead->address : '');
             ?>
             <?php echo render_textarea('address', 'lead_address', $value, array('rows' => 1, 'style' => 'height:36px;font-size:100%;'));
             ?>
-         </div>
+         </div> -->
          <div class="col-md-12">
 
             <div class="row ">
