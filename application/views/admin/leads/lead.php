@@ -254,7 +254,7 @@
                                  </a>
                                  <div class="media-body">
 
-                                    <?php if (!empty($call["call_status"]) && strtolower(trim($call["call_status"])) == "missed") {
+                                    <?php if (!empty($call["call_status"]) && (strtolower(trim($call["call_status"])) == "missed" || strtolower(trim($call["call_status"])) == "disconnected By caller")) {
                                        $call['type_icon'] = "assets/images/missedcall.png";
                                     } ?>
                                     <a href="#" class="pull-right"><img style="height: 80px;" src='<?php echo base_url($call['source_icon']); ?>'>
@@ -280,12 +280,13 @@
                                        } else if (strtolower(trim($call["call_status"])) == "answered") {
                                           $color = "success";
                                           $show_time  = true;
-                                       } else if (strtolower(trim($call["call_status"])) == "missed") {
+                                       } else if ((strtolower(trim($call["call_status"])) == "missed" || str_contains(strtolower(trim($call["call_status"])), 'disconnected'))) {
                                           $color = "danger";
                                        }
                                     ?>
                                        <a href="javascript:void(0);">
-                                          <img style="height: 30px;" src='<?php echo base_url($call['type_icon']); ?>'>
+                                          <!-- <img style="height: 30px;" src='<?php echo base_url($call['type_icon']); ?>'> -->
+                                          <i class="fa-solid fa-phone-arrow-down-left text-success"></i>
                                           <small class="text-<?= $color ?>"><?= $call["call_status"] ?></small>
                                        </a>
                                     <?php } ?>
