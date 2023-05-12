@@ -254,32 +254,60 @@
                                  </a>
                                  <div class="media-body">
 
+                                    <?php if (!empty($call["call_status"]) && strtolower(trim($call["call_status"])) == "missed") {
+                                       $call['type_icon'] = "assets/images/missedcall.png";
+                                    } ?>
+                                    <a href="#" class="pull-right"><img style="height: 80px;" src='<?php echo base_url($call['source_icon']); ?>'>
+                                       <small><?= $call["source_name"] ?></small>
 
-                                    <a href="#" class="pull-right text-danger"><?php echo $call['source_name']; ?></a>
-                                    <a href="#" class="pull-right mright5"><?php echo $call['call_type_name']; ?></a>
+                                    </a>
 
                                     <?php if (!empty($call['datetime'])) { ?>
                                        <span data-toggle="tooltip" data-title="<?php echo $call['datetime']; ?>">
-                                          <i class="fa fa-phone-square text-success font-medium valign" aria-hidden="true"></i> <small><?php echo $call['datetime']; ?></small>
+                                          <small><?php echo $call['datetime']; ?></small>
                                        </span>
                                     <?php } ?>
                                     <a href="<?php echo admin_url('profile/' . $call["staffid"]); ?>" target="_blank">
                                        <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?></h5>
                                     </a>
-                                    <?php if (!empty($call["call_start"])) { ?>
-                                       <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d H:i:s', ($call['call_start'])); ?>"><?php echo date('Y-m-d H:i:s', ($call['call_start'])); ?></small>
-                                    <?php } ?>
-                                    <?php if (!empty($call["call_end"])) { ?>
-                                       - <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d H:i:s', ($call['call_end'])); ?>"><?php echo date('Y-m-d H:i:s', ($call['call_end'])); ?>
-                                       </small>
-                                    <?php } ?>
-
-                                    <?php if (!empty($call["duration"])) {
-                                    ?>
-                                       <small> - (<?= $call["duration"] ?> sec)</small>
                                     <?php
-                                    }
+                                    $color = "primary";
+                                    $show_time  = false;
+                                    if (!empty($call["call_status"])) {
+
+                                       if (strtolower(trim($call["call_status"])) == "busy") {
+                                          $color = "warning";
+                                       } else if (strtolower(trim($call["call_status"])) == "answered") {
+                                          $color = "success";
+                                          $show_time  = true;
+                                       } else if (strtolower(trim($call["call_status"])) == "missed") {
+                                          $color = "danger";
+                                       }
                                     ?>
+                                       <a href="javascript:void(0);">
+                                          <img style="height: 30px;" src='<?php echo base_url($call['type_icon']); ?>'>
+                                          <small class="text-<?= $color ?>"><?= $call["call_status"] ?></small>
+                                       </a>
+                                    <?php } ?>
+                                    <h5>
+                                       <?php
+                                       if ($show_time) {
+                                          if (!empty($call["call_start"])) { ?>
+                                             <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d H:i:s', ($call['call_start'])); ?>"><?php echo date('H:i:s', ($call['call_start'])); ?></small>
+                                          <?php } ?>
+                                          <?php if (!empty($call["call_end"])) { ?>
+                                             - <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d H:i:s', ($call['call_end'])); ?>"><?php echo date('H:i:s', ($call['call_end'])); ?>
+                                             </small>
+                                       <?php }
+                                       } ?>
+
+                                       <?php if (!empty($call["duration"])) {
+                                       ?>
+                                          <small> - (<?= $call["duration"] ?> sec)</small>
+                                       <?php
+                                       }
+                                       ?>
+                                    </h5>
 
                                  </div>
                                  <?php if ($i >= 0 && $i != $len - 1) {
