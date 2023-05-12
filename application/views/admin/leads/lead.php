@@ -254,10 +254,10 @@
                                  </a>
                                  <div class="media-body">
 
-                                    <?php if (!empty($call["call_status"]) && (strtolower(trim($call["call_status"])) == "missed" || strtolower(trim($call["call_status"])) == "disconnected By caller")) {
-                                       $call['type_icon'] = "assets/images/missedcall.png";
+                                    <?php if (!empty($call["call_status"]) && (strtolower(trim($call["call_status"])) == "missed" || str_contains(strtolower(trim($call["call_status"])), 'disconnected'))) {
+                                       $call['type_icon'] = "assets/images/missed.png";
                                     } ?>
-                                    <a href="#" class="pull-right"><img style="height: 80px;" src='<?php echo base_url($call['source_icon']); ?>'>
+                                    <a href="#" class="pull-right"><img style="height: 40px;" src='<?php echo base_url($call['source_icon']); ?>'>
                                        <small><?= $call["source_name"] ?></small>
 
                                     </a>
@@ -285,8 +285,8 @@
                                        }
                                     ?>
                                        <a href="javascript:void(0);">
-                                          <!-- <img style="height: 30px;" src='<?php echo base_url($call['type_icon']); ?>'> -->
-                                          <i class="fa-solid fa-phone-arrow-down-left text-success"></i>
+                                          <img style="height: 25px;" src='<?php echo base_url($call['type_icon']); ?>'>
+
                                           <small class="text-<?= $color ?>"><?= $call["call_status"] ?></small>
                                        </a>
                                     <?php } ?>
@@ -299,13 +299,14 @@
                                           <?php if (!empty($call["call_end"])) { ?>
                                              - <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d H:i:s', ($call['call_end'])); ?>"><?php echo date('H:i:s', ($call['call_end'])); ?>
                                              </small>
-                                       <?php }
-                                       } ?>
+                                          <?php }
+                                          ?>
 
-                                       <?php if (!empty($call["duration"])) {
-                                       ?>
-                                          <small> - (<?= $call["duration"] ?> sec)</small>
+                                          <?php if (!empty($call["duration"])) {
+                                          ?>
+                                             <small> - (<?= $call["duration"] ?> sec)</small>
                                        <?php
+                                          }
                                        }
                                        ?>
                                     </h5>
