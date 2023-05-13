@@ -514,7 +514,11 @@ foreach ($rResult as $aRow) {
 
 
     $row[] = $outputStatus;
-    $row[] = is_numeric($aRow['neet_score']) ? $aRow['neet_score'] : '';
+    foreach ($custom_fields as $key => $field) {
+        if ($field['name'] == 'NEET Score') {
+            $row[] = is_numeric($aRow['neet_score']) ? $aRow['neet_score'] : '';
+        }
+    }
     $row[] = $aRow['intake'];
     ///////////////////////////////////////
     $i = 0;
