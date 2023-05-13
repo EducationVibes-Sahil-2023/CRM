@@ -91,10 +91,7 @@ class Leads extends AdminController
 
     public function lead_summary_filter()
     {
-        // echo "<pre>";
-        // print_r($this->input->post('lead_type'));
         $summary = get_leads_summary_filter($_POST);
-        // die;
         $updateCount = leads_update_count($_POST);
 
         $ret = "";
