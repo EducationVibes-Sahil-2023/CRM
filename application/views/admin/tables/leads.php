@@ -107,7 +107,7 @@ foreach ($custom_fields as $key => $field) {
 
     array_push($customFieldsColumns, $selectAs);
 
-    array_push($aColumns, 'ctable_' . $key . '.value as ' . str_replace(' ', '_', strtolower($field["name"])));
+    array_push($aColumns, 'ctable_' . $key . '.value as ' . trim(str_replace(' ', '_', strtolower($field["name"]))));
 
     array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
     // print_r($join);
@@ -530,7 +530,7 @@ foreach ($rResult as $aRow) {
 
 
     foreach ($custom_fields as $key => $field) {
-        $row[] = (!empty($aRow[str_replace(" ", "_", strtolower($field['name']))]) && $aRow[str_replace(" ", "_", strtolower($field['name']))] != "null" &&  $aRow[str_replace(" ", "_", strtolower($field['name']))] != "undefined") ? $aRow[str_replace(" ", "-", strtolower($field['name']))] : '';
+        $row[] = (!empty($aRow[str_replace(" ", "_", strtolower($field['name']))]) && $aRow[str_replace(" ", "_", strtolower($field['name']))] != "null" &&  $aRow[str_replace(" ", "_", strtolower($field['name']))] != "undefined") ? $aRow[str_replace(" ", "_", strtolower($field['name']))] : '';
     }
     ///////////////////////////////////////
     $i = 0;
