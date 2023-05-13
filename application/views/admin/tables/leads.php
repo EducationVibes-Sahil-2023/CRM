@@ -272,7 +272,7 @@ if ($this->ci->input->post('lead_type')) {
 
 if (!empty($this->ci->input->post('neet_score'))) {
     $neet_range = explode("-", $this->ci->input->post('neet_score'));
-    array_push($where, ' AND (select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . trim($neet_range[0]) . '" AND "' . trim($neet_range[1]) . '" order by id desc limit 1) ');
+    array_push($where, ' AND (select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 AND  (' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . trim($neet_range[0]) . '" AND "' . trim($neet_range[1]) . '" AND ' . db_prefix() . 'customfieldsvalues.value!="" ) order by id desc limit 1) ');
 }
 
 // print_r($where);

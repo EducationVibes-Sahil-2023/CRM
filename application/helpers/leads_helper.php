@@ -277,7 +277,7 @@ function get_leads_summary_filter($params)
             $neet_range = explode("-", $params['neet_score']);
             // $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" order by id desc limit 1';
 
-            $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '"';
+            $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
         }
 
 
@@ -597,7 +597,7 @@ function leads_update_count($params = false)
 
     if (!empty($params['neet_score'])) {
         $neet_range = explode("-", $params['neet_score']);
-        $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '"';
+        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
     }
     if (!empty($params['to_date'])) {
         $from_date = $params['from_date'];
