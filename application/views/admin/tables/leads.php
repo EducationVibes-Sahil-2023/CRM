@@ -599,7 +599,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = ($aRow['email'] != '' ? '<a href="mailto:' . $aRow['email'] . '">' . $aRow['email'] . '</a>' : '');
 
-    $row[] = $row1[1];
+    // $row[] = $row1[1];
 
     $assignedOutput = '';
 
@@ -632,7 +632,7 @@ foreach ($rResult as $aRow) {
     $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' . $aRow['dateassigned'] . '</span>');
 
     // $row[] = $row1[0];
-    $row[] = $aRow["destination"];
+    // $row[] = $aRow["destination"];
 
     $row[] = $aRow['city'];
 
