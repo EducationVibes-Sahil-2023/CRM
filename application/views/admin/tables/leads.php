@@ -57,7 +57,7 @@ $aColumns = array_merge($aColumns, [
     'firstname as assigned_firstname',
     '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 24) as intake',
     '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 32) as destination',
-    '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8) as neet_score',
+    '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 order by id desc limit 1) as neet_score',
 
     db_prefix() . 'leads_status.name as status_name',
 
@@ -272,7 +272,7 @@ if ($this->ci->input->post('lead_type')) {
 
 if (!empty($this->ci->input->post('neet_score'))) {
     $neet_range = explode("-", $this->ci->input->post('neet_score'));
-    array_push($where, ' AND (select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . trim($neet_range[0]) . '" AND "' . trim($neet_range[1]) . '") ');
+    array_push($where, ' AND (select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . trim($neet_range[0]) . '" AND "' . trim($neet_range[1]) . '" order by id desc limit 1) ');
 }
 
 // print_r($where);
