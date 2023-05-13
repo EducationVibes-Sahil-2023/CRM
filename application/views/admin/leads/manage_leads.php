@@ -533,11 +533,11 @@
                               //          }
 
                               ///////////////////////////////////////////////////////////////////////////////////
-                              foreach ($custom_fields as $field) {
-                                 if ($field['name'] == 'Destination') {
-                                    array_push($_table_data, $field['name']);
-                                 }
-                              }
+                              // foreach ($custom_fields as $field) {
+                              //    if ($field['name'] == 'Destination') {
+                              //       array_push($_table_data, $field['name']);
+                              //    }
+                              // }
 
                               $_table_data[] = array(
                                  'name' => _l('lead_city'),
