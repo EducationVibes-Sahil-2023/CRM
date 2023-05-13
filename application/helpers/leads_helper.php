@@ -275,6 +275,8 @@ function get_leads_summary_filter($params)
 
         if (!empty($params['neet_score'])) {
             $neet_range = explode("-", $params['neet_score']);
+            // $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" order by id desc limit 1';
+
             $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '"';
         }
 
@@ -318,7 +320,14 @@ function get_leads_summary_filter($params)
             $assign_to_date = $params['assign_to_date'];
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
-        // $sql .= ' group by ' . db_prefix() . 'leads.id ';
+
+        $grup_by = "";
+        if (!empty($params['neet_score'])) {
+            $grup_by = db_prefix() . 'customfieldsvalues.relid';
+            $sql .= ' group by ' . $grup_by;
+        }
+
+
         $sql .= ' UNION ALL ';
         $sql = trim($sql);
     }
@@ -586,10 +595,10 @@ function leads_update_count($params = false)
         $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
     }
 
-    // if (!empty($params['neet_score'])) {
-    //     $neet_range = explode("-", $params['neet_score']);
-    //     $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '"';
-    // }
+    if (!empty($params['neet_score'])) {
+        $neet_range = explode("-", $params['neet_score']);
+        $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '"';
+    }
     if (!empty($params['to_date'])) {
         $from_date = $params['from_date'];
         $to_date = $params['to_date'];
@@ -613,8 +622,11 @@ function leads_update_count($params = false)
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
         }*/
-
-    $sql .= " group by l.id,(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+    $grup_by = "";
+    if (!empty($params['neet_score'])) {
+        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+    }
+    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
 
 
