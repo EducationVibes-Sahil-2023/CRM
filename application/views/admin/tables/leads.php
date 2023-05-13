@@ -57,6 +57,7 @@ $aColumns = array_merge($aColumns, [
     'firstname as assigned_firstname',
     '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 24) as intake',
     '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 32) as destination',
+    '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8) as neet_score',
 
     db_prefix() . 'leads_status.name as status_name',
 
@@ -268,6 +269,12 @@ if ($this->ci->input->post('lead_type')) {
     array_push($where, 'AND type =' . $this->ci->db->escape_str($this->ci->input->post('lead_type')));
     // print_r($where);
 }
+
+if (!empty($this->ci->input->post('neet_score'))) {
+    $neet_range = explode("-", $this->ci->input->post('neet_score'));
+    array_push($where, ' AND (select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . trim($neet_range[0]) . '" AND "' . trim($neet_range[1]) . '") ');
+}
+
 // print_r($where);
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
@@ -353,7 +360,6 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 //print_r(data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns));die;
 $group_by = ' Group By ' . db_prefix() . 'leads.id ';
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
-// die;
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
@@ -414,9 +420,14 @@ foreach ($rResult as $aRow) {
 
 
 
+    // if ($aRow['addedfrom'] == get_staff_user_id() || $has_permission_delete) {
+
+    //     $nameRow .= ' | <a href="' . admin_url('leads/delete/' . $aRow['id']) . '" class="_delete text-danger">' . _l('delete') . '</a>';
+    // }
+
     if ($aRow['addedfrom'] == get_staff_user_id() || $has_permission_delete) {
 
-        $nameRow .= ' | <a href="' . admin_url('leads/delete/' . $aRow['id']) . '" class="_delete text-danger">' . _l('delete') . '</a>';
+        $nameRow .= ' | <a href="javascript:void(0)" onclick="delete_leads(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
     }
 
     $nameRow .= '</div>';
@@ -502,8 +513,8 @@ foreach ($rResult as $aRow) {
     $outputStatus = '<span class="inline-block lead-status-' . $aRow['status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['status_name'];
 
 
-
     $row[] = $outputStatus;
+    $row[] = is_numeric($aRow['neet_score']) ? $aRow['neet_score'] : '';
     $row[] = $aRow['intake'];
     ///////////////////////////////////////
     $i = 0;
