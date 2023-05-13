@@ -27,7 +27,6 @@ $type              = $this->ci->leads_model->get_type();
 //echo "<pre>";print_r($type);die;
 
 
-
 $aColumns = [
 
     '1',
@@ -54,10 +53,11 @@ $aColumns = array_merge($aColumns, [
 
     '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
 
-    'firstname as assigned_firstname',
-    '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 24) as intake',
-    '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 32) as destination',
-    '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 order by id desc limit 1) as neet_score',
+    // 'firstname as assigned_firstname',
+    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 24) as intake',
+    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 32) as destination',
+    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 order by id desc limit 1) as neet_score',
+    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 16 order by id desc limit 1) as course_name',
 
     db_prefix() . 'leads_status.name as status_name',
 
@@ -103,39 +103,40 @@ $join = [
 
 foreach ($custom_fields as $key => $field) {
 
-    // $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
+    $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
 
-    // array_push($customFieldsColumns, $selectAs);
+    array_push($customFieldsColumns, $selectAs);
 
-    // array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
+    array_push($aColumns, 'ctable_' . $key . '.value as ' . str_replace(' ', '_', strtolower($field["name"])));
 
-    // array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
     // print_r($join);
     // die;
 }
 
-$fields_ids = array_column($custom_fields, 'id');
+// $fields_ids = array_column($custom_fields, 'id');
 
-if (!empty($fields_ids)) {
-    $keyy = 0;
-    $join_query_prefix = '';
-    $join_query_surfix = '';
-    $join_query = 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $keyy . ' ON ' . db_prefix() . 'leads.id = ctable_' . $keyy . '.relid AND ctable_' . $keyy . '.fieldto="' . $custom_fields[$keyy]['fieldto'] . '"';
-    $join_query_joins = '';
-    foreach ($fields_ids as $key => $field_id) {
-        if (!empty($field_id)) {
-            $join_query_prefix = ' AND (';
-            $join_query_surfix = ')';
-            if ($key == 0) {
-                $join_query_joins .= '  ctable_' . $keyy . '.fieldid = "' . $field_id . '" ';
-            } else {
-                $join_query_joins .= ' AND  ctable_' . $keyy . '.fieldid = "' . $field_id . '"';
-            }
-        }
-    }
+// if (!empty($fields_ids)) {
+//     $keyy = 0;
+//     $join_query_prefix = '';
+//     $join_query_surfix = '';
+//     $join_query = 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $keyy . ' ON ' . db_prefix() . 'leads.id = ctable_' . $keyy . '.relid AND ctable_' . $keyy . '.fieldto="' . $custom_fields[$keyy]['fieldto'] . '"';
+//     $join_query_joins = '';
+//     foreach ($fields_ids as $key => $field_id) {
+//         if (!empty($field_id)) {
+//             $join_query_prefix = ' AND (';
+//             $join_query_surfix = ')';
+//             if ($key == 0) {
+//                 $join_query_joins .= '  ctable_' . $keyy . '.fieldid = "' . $field_id . '" ';
+//             } else {
+//                 $join_query_joins .= ' AND  ctable_' . $keyy . '.fieldid = "' . $field_id . '"';
+//             }
+//         }
+//         array_push($aColumns, 'ctable_' . $field_id . '.value as ' . $custom_fields[$key]["name"]);
+//     }
 
-    array_push($join, $join_query . $join_query_prefix . $join_query_joins . $join_query_surfix);
-}
+//     array_push($join, $join_query . $join_query_prefix . $join_query_joins . $join_query_surfix);
+// }
 
 $lead_date_query = '';
 
@@ -350,6 +351,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     'zip',
 
 ]);
+
 // echo"<pre>";
 // print_r($aColumns);
 // print_r($sIndexColumn);
@@ -359,12 +361,12 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 // die;
 //print_r(data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns));die;
 $group_by = ' Group By ' . db_prefix() . 'leads.id ';
+
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
+
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
-
-//print_r($output);die;
 
 foreach ($rResult as $aRow) {
 
@@ -513,12 +515,23 @@ foreach ($rResult as $aRow) {
     $outputStatus = '<span class="inline-block lead-status-' . $aRow['status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['status_name'];
 
     $row[] = $outputStatus;
+    // foreach ($custom_fields as $key => $field) {
+    //     if ($field['name'] == 'NEET Score') {
+    //         $row[] = !empty(is_numeric($aRow['neet_score'])) ? $aRow['neet_score'] : '';
+    //     }
+    // }
+    // $row[] = $aRow['intake'];
+    // $row[] = $aRow['intake'];
+    // foreach ($custom_fields as $key => $field) {
+    //     if ($field['name'] == 'Course') {
+    //         $row[] = !empty($aRow['course_name']) ? $aRow['course_name'] : '';
+    //     }
+    // }
+
+
     foreach ($custom_fields as $key => $field) {
-        if ($field['name'] == 'NEET Score') {
-            $row[] = is_numeric($aRow['neet_score']) ? $aRow['neet_score'] : '';
-        }
+        $row[] = (!empty($aRow[str_replace(" ", "_", strtolower($field['name']))]) && $aRow[str_replace(" ", "_", strtolower($field['name']))] != "null" &&  $aRow[str_replace(" ", "_", strtolower($field['name']))] != "undefined") ? $aRow[str_replace(" ", "-", strtolower($field['name']))] : '';
     }
-    $row[] = $aRow['intake'];
     ///////////////////////////////////////
     $i = 0;
     $row1 = [];
