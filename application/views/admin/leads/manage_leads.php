@@ -451,17 +451,24 @@
                               //          array_push($_table_data,$field['name']);
                               //   }
                               //          } 
-                              foreach ($custom_fields as $field) {
-                                 if ($field['name'] == 'NEET Score') {
-                                    array_push($_table_data, $field['name']);
-                                 }
+                              // foreach ($custom_fields as $field) {
+                              //    if ($field['name'] == 'NEET Score') {
+                              //       array_push($_table_data, $field['name']);
+                              //    }
+                              // }
+                              // foreach ($custom_fields as $field) {
+                              //    if ($field['name'] == 'Intake') {
+                              //       array_push($_table_data, $field['name']);
+                              //    }
+                              // }
+                              // foreach ($custom_fields as $field) {
+                              //    if ($field['name'] == 'Course') {
+                              //       array_push($_table_data, $field['name']);
+                              //    }
+                              // }
+                              foreach ($custom_fields as $key => $field) {
+                                 array_push($_table_data, $field['name']);
                               }
-                              foreach ($custom_fields as $field) {
-                                 if ($field['name'] == 'Intake') {
-                                    array_push($_table_data, $field['name']);
-                                 }
-                              }
-
                               //   foreach($custom_fields as $field){
                               //          if($field['name'] == 'Course'){
                               //          array_push($_table_data,$field['name']);
@@ -498,11 +505,11 @@
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-email')
                               );
 
-                              foreach ($custom_fields as $field) {
-                                 if ($field['name'] == 'Call Type') {
-                                    array_push($_table_data, $field['name']);
-                                 }
-                              }
+                              // foreach ($custom_fields as $field) {
+                              //    if ($field['name'] == 'Call Type') {
+                              //       array_push($_table_data, $field['name']);
+                              //    }
+                              // }
 
                               $_table_data[] = array(
                                  'name' => _l('leads_dt_assigned'),
