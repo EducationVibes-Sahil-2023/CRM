@@ -456,7 +456,8 @@
                                  if ($field['name'] == 'Intake') {
                                     array_push($_table_data, $field['name']);
                                  }
-
+                              }
+                              foreach ($custom_fields as $field) {
                                  if ($field['name'] == 'NEET Score') {
                                     array_push($_table_data, $field['name']);
                                  }
