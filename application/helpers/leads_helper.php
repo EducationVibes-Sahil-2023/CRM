@@ -323,8 +323,8 @@ function get_leads_summary_filter($params)
 
         $grup_by = "";
         if (!empty($params['neet_score'])) {
-            $grup_by = db_prefix() . 'customfieldsvalues.relid';
-            $sql .= ' group by ' . $grup_by;
+            // $grup_by = db_prefix() . 'customfieldsvalues.relid';
+            // $sql .= ' group by ' . $grup_by;
         }
 
 
