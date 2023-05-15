@@ -1421,11 +1421,13 @@ class Leads_model extends App_Model
 
         if (!$statuses) {
 
-            $this->db->order_by('statusorder', 'asc');
 
+            $this->db->select('ls.*,c.name conversion_type_name');
+            $this->db->from(db_prefix() . 'leads_status ls', 'asc');
+            $this->db->join(db_prefix() . 'lead_conversion_type c', 'ls.conversion_type = c.id', "left");
+            $this->db->order_by('ls.statusorder', 'asc');
 
-
-            $statuses = $this->db->get(db_prefix() . 'leads_status')->result_array();
+            $statuses = $this->db->get()->result_array();
 
             $this->app_object_cache->add('leads-all-statuses', $statuses);
         }
