@@ -17,6 +17,7 @@
                   <?php echo render_input('name', 'leads_status_add_edit_name'); ?>
                   <?php echo render_color_picker('color', _l('leads_status_color')); ?>
                   <?php echo render_input('statusorder', 'leads_status_add_edit_order', total_rows(db_prefix().'leads_status') + 1, 'number'); ?>
+                  <?php echo render_select('conversion_type', $conversion_type, array('id', 'name'), 'lead_conversion_type_name'); ?>
                </div>
             </div>
          </div>

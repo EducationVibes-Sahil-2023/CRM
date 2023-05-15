@@ -1258,12 +1258,12 @@ class Leads_model extends App_Model
         }
 
 
+        $this->db->select('l.*,m.name as marketing_name');
+        $this->db->from(db_prefix() . 'leads_sources As l');
+        $this->db->join(db_prefix() . 'lead_marketing m', "l.marketing_type = m.id", "left");
+        $this->db->order_by('l.name', 'asc');
 
-        $this->db->order_by('name', 'asc');
-
-
-
-        return $this->db->get(db_prefix() . 'leads_sources')->result_array();
+        return $this->db->get()->result_array();
     }
 
 
@@ -2482,7 +2482,7 @@ class Leads_model extends App_Model
     }
     public function get_marketing_type()
     {
-        
+
         if (is_numeric($id)) {
 
             $this->db->where('id', $id);
@@ -2499,5 +2499,26 @@ class Leads_model extends App_Model
 
 
         return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
+    }
+
+    public function get_conversion_type()
+    {
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'lead_conversion_type')->row();
+        }
+
+
+
+        $this->db->order_by('id', 'asc');
+
+
+
+        return $this->db->get(db_prefix() . 'lead_conversion_type')->result_array();
     }
 }
