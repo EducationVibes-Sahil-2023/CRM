@@ -16,6 +16,7 @@
                                 <thead>
                                     <th><?php echo _l('id'); ?></th>
                                     <th><?php echo _l('leads_sources_table_name'); ?></th>
+                                    <th><?php echo _l('leads_marketing_add_edit_name'); ?></th>
                                     <th><?php echo _l('options'); ?></th>
                                 </thead>
                                 <tbody>
@@ -27,6 +28,7 @@
                                                     <?php echo _l('leads_table_total', total_rows(db_prefix() . 'leads', array('source' => $source['id']))); ?>
                                                 </span>
                                             </td>
+                                            <td><?php echo !empty($source['marketing_name']) ? $source['marketing_name'] : ''; ?></td>
                                             <td>
                                                 <a href="#" onclick="edit_source(this,<?php echo $source['id']; ?>,<?php echo $source['marketing_type']; ?>); return false" data-name="<?php echo $source['name']; ?>" data-type="<?php echo $source['marketing_type']; ?>" class="btn btn-default btn-icon"><i class="fa fa-pencil-square-o"></i></a>
                                                 <a href="<?php echo admin_url('leads/delete_source/' . $source['id']); ?>" class="btn btn-danger btn-icon _delete"><i class="fa fa-remove"></i></a>
