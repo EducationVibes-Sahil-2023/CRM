@@ -91,10 +91,9 @@ class Leads extends AdminController
 
     public function lead_summary_filter()
     {
-        // echo "<pre>";
-        // print_r($this->input->post('lead_type'));
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
+
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -323,7 +322,7 @@ class Leads extends AdminController
 
             $data['activity_log']  = $this->leads_model->get_lead_activity_log($id);
             $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
-         
+
 
             if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
 
@@ -501,7 +500,28 @@ class Leads extends AdminController
         redirect($ref);
     }
 
+    public function delete_lead()
+    {
 
+        $id = $_POST["id"];
+        $has_permission_delete = has_permission('leads', '', 'delete');
+
+        if ($has_permission_delete) {
+
+            $response = $this->leads_model->delete($id);
+
+            if (is_array($response) && isset($response['referenced'])) {
+
+                set_alert('warning', _l('is_referenced', _l('lead_lowercase')));
+            } elseif ($response === true) {
+
+                set_alert('success', _l('deleted', _l('lead')));
+            } else {
+
+                set_alert('warning', _l('problem_deleting', _l('lead_lowercase')));
+            }
+        }
+    }
 
     public function mark_as_lost($id)
 

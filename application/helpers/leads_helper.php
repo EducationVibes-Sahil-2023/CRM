@@ -237,7 +237,7 @@ function get_leads_summary_filter($params)
         $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
         $sql .= ' FROM ' . db_prefix() . 'leads';
 
-        if (!empty($params['course']) || !empty($params['degree'])) {
+        if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
             $sql .= ' join tblcustomfieldsvalues ON  tblleads.id=tblcustomfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
@@ -273,6 +273,12 @@ function get_leads_summary_filter($params)
             $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
         }
 
+        if (!empty($params['neet_score'])) {
+            $neet_range = explode("-", $params['neet_score']);
+            // $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" order by id desc limit 1';
+
+            $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
+        }
 
 
 
@@ -314,7 +320,14 @@ function get_leads_summary_filter($params)
             $assign_to_date = $params['assign_to_date'];
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
-        // $sql .= ' group by ' . db_prefix() . 'leads.id ';
+
+        $grup_by = "";
+        if (!empty($params['neet_score'])) {
+            // $grup_by = db_prefix() . 'customfieldsvalues.relid';
+            // $sql .= ' group by ' . $grup_by;
+        }
+
+
         $sql .= ' UNION ALL ';
         $sql = trim($sql);
     }
@@ -548,6 +561,11 @@ function leads_update_count($params = false)
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
     $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
     $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
+
+    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
+        $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
+    }
+
     if (!empty($params['followup_to_date'])) {
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
     }
@@ -576,6 +594,11 @@ function leads_update_count($params = false)
     if (!empty($params['lead_type'])) {
         $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
     }
+
+    if (!empty($params['neet_score'])) {
+        $neet_range = explode("-", $params['neet_score']);
+        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
+    }
     if (!empty($params['to_date'])) {
         $from_date = $params['from_date'];
         $to_date = $params['to_date'];
@@ -599,8 +622,11 @@ function leads_update_count($params = false)
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
         }*/
-
-    $sql .= " group by l.id,(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+    $grup_by = "";
+    if (!empty($params['neet_score'])) {
+        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+    }
+    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
 
 
@@ -614,7 +640,7 @@ function leads_update_count($params = false)
     // // $update_count = count(array_unique(array_column($result, "total")));
     // $update_count = count(array_count_values(array_column($result, "total")));
 
-    return $update_count;
+    return !empty($update_count) ? $update_count : 0;
 }
 
 function leads_update_count_id($id, $params = false)
