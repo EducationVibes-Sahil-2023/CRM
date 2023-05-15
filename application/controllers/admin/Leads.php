@@ -1852,6 +1852,7 @@ class Leads extends AdminController
         }
 
         $data['statuses'] = $this->leads_model->get_status();
+        $data['conversion_type'] = $this->leads_model->get_conversion_type();
 
         $data['title']    = 'Leads statuses';
 
