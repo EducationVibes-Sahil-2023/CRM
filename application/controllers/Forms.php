@@ -53,7 +53,7 @@ class Forms extends ClientsController
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
                 $call_data = array();
                 $required  = [];
-
+                $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
                 if ($form->responsible == 0) {
                     if ($post_data['callassignee'] != null) {
                         $phoneNumber = $post_data['callassignee'];
