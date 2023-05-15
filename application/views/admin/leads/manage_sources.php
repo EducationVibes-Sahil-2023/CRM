@@ -6,43 +6,43 @@
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
-                      <div class="_buttons">
-                        <a href="#" onclick="new_source(); return false;" class="btn btn-info pull-left display-block"><?php echo _l('lead_new_source'); ?></a>
+                        <div class="_buttons">
+                            <a href="#" onclick="new_source(); return false;" class="btn btn-info pull-left display-block"><?php echo _l('lead_new_source'); ?></a>
+                        </div>
+                        <div class="clearfix"></div>
+                        <hr class="hr-panel-heading" />
+                        <?php if (count($sources) > 0) { ?>
+                            <table class="table dt-table scroll-responsive" data-order-col="1" data-order-type="asc">
+                                <thead>
+                                    <th><?php echo _l('id'); ?></th>
+                                    <th><?php echo _l('leads_sources_table_name'); ?></th>
+                                    <th><?php echo _l('options'); ?></th>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($sources as $source) { ?>
+                                        <tr>
+                                            <td><?php echo $source['id']; ?></td>
+                                            <td><a href="#" onclick="edit_source(this,<?php echo $source['id']; ?>,<?php echo $source['marketing_type']; ?>); return false" data-name="<?php echo $source['name']; ?>" data-type="<?php echo $source['marketing_type']; ?>"><?php echo $source['name']; ?></a><br />
+                                                <span class="text-muted">
+                                                    <?php echo _l('leads_table_total', total_rows(db_prefix() . 'leads', array('source' => $source['id']))); ?>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="#" onclick="edit_source(this,<?php echo $source['id']; ?>,<?php echo $source['marketing_type']; ?>); return false" data-name="<?php echo $source['name']; ?>" data-type="<?php echo $source['marketing_type']; ?>" class="btn btn-default btn-icon"><i class="fa fa-pencil-square-o"></i></a>
+                                                <a href="<?php echo admin_url('leads/delete_source/' . $source['id']); ?>" class="btn btn-danger btn-icon _delete"><i class="fa fa-remove"></i></a>
+                                            </td>
+                                        </tr>
+                                    <?php } ?>
+                                </tbody>
+                            </table>
+                        <?php } else { ?>
+                            <p class="no-margin"><?php echo _l('leads_sources_not_found'); ?></p>
+                        <?php } ?>
                     </div>
-                    <div class="clearfix"></div>
-                    <hr class="hr-panel-heading" />
-                    <?php if(count($sources) > 0){ ?>
-                    <table class="table dt-table scroll-responsive" data-order-col="1" data-order-type="asc">
-                        <thead>
-                            <th><?php echo _l('id'); ?></th>
-                            <th><?php echo _l('leads_sources_table_name'); ?></th>
-                            <th><?php echo _l('options'); ?></th>
-                        </thead>
-                        <tbody>
-                            <?php foreach($sources as $source){ ?>
-                            <tr>
-                                <td><?php echo $source['id']; ?></td>
-                                <td><a href="#" onclick="edit_source(this,<?php echo $source['id']; ?>); return false" data-name="<?php echo $source['name']; ?>"><?php echo $source['name']; ?></a><br />
-                                    <span class="text-muted">
-                                        <?php echo _l('leads_table_total',total_rows(db_prefix().'leads',array('source'=>$source['id']))); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="#" onclick="edit_source(this,<?php echo $source['id']; ?>); return false" data-name="<?php echo $source['name']; ?>" class="btn btn-default btn-icon"><i class="fa fa-pencil-square-o"></i></a>
-                                    <a href="<?php echo admin_url('leads/delete_source/'.$source['id']); ?>" class="btn btn-danger btn-icon _delete"><i class="fa fa-remove"></i></a>
-                                </td>
-                            </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
-                    <?php } else { ?>
-                    <p class="no-margin"><?php echo _l('leads_sources_not_found'); ?></p>
-                    <?php } ?>
                 </div>
             </div>
         </div>
     </div>
-</div>
 </div>
 <div class="modal fade" id="source" tabindex="-1" role="dialog">
     <div class="modal-dialog">
@@ -59,7 +59,12 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div id="additional"></div>
-                        <?php echo render_input('name','leads_source_add_edit_name'); ?>
+                        <?php echo render_input('name', 'leads_source_add_edit_name'); ?>
+                    </div>
+                    <div class="col-md-12">
+                        <div id="additional_type"></div>
+                        <?php echo render_select('marketing_type', $marketing, array('id', 'name'), 'leads_marketing_add_edit_name'); ?>
+
                     </div>
                 </div>
             </div>
@@ -76,34 +81,46 @@
 <!-- /.modal -->
 <?php init_tail(); ?>
 <script>
-    $(function(){
-    	appValidateForm($('form'),{name:'required'},manage_leads_sources);
-    	$('#source').on('hidden.bs.modal', function(event) {
-    		$('#additional').html('');
-    		$('#source input[name="name"]').val('');
-    		$('.add-title').removeClass('hide');
-    		$('.edit-title').removeClass('hide');
-    	});
+    $(function() {
+        appValidateForm($('form'), {
+            name: 'required'
+        }, manage_leads_sources);
+        $('#source').on('hidden.bs.modal', function(event) {
+            $('#additional').html('');
+            $('#source input[name="name"]').val('');
+            $('.add-title').removeClass('hide');
+            $('.edit-title').removeClass('hide');
+        });
     });
+
     function manage_leads_sources(form) {
-    	var data = $(form).serialize();
-    	var url = form.action;
-    	$.post(url, data).done(function(response) {
-    		window.location.reload();
-    	});
-    	return false;
+        var data = $(form).serialize();
+        var url = form.action;
+        $.post(url, data).done(function(response) {
+            window.location.reload();
+        });
+        return false;
     }
-    function new_source(){
-    	$('#source').modal('show');
-    	$('.edit-title').addClass('hide');
+
+    function new_source() {
+        $('#source').modal('show');
+        $('.edit-title').addClass('hide');
     }
-    function edit_source(invoker,id){
-    	var name = $(invoker).data('name');
-    	$('#additional').append(hidden_input('id',id));
-    	$('#source input[name="name"]').val(name);
-    	$('#source').modal('show');
-    	$('.add-title').addClass('hide');
+
+    function edit_source(invoker, id, type) {
+        var name = $(invoker).data('name');
+        $('#marketing_type').val("");
+        $('#additional').append(hidden_input('id', id));
+        $('#source input[name="name"]').val(name);
+        if (type != undefined && type != 0) {
+            $('#marketing_type').val(type);
+        }
+        $('#marketing_type').selectpicker('refresh');
+
+        $('#source').modal('show');
+        $('.add-title').addClass('hide');
     }
 </script>
 </body>
+
 </html>

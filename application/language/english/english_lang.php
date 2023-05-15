@@ -439,6 +439,7 @@ $lang['lead_source_lowercase']             = 'lead source';
 $lang['leads_sources_not_found']           = 'No leads sources found';
 $lang['leads_sources_table_name']          = 'Source Name';
 $lang['leads_source_add_edit_name']        = 'Source Name';
+$lang['leads_marketing_add_edit_name']     = 'Marketing Type';
 $lang['lead_new_status']                   = 'New Lead Status';
 $lang['lead_status']                       = 'Lead Status';
 $lang['lead_status_lowercase']             = 'lead status';

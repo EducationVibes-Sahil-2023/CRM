@@ -1737,6 +1737,7 @@ class Leads extends AdminController
         }
 
         $data['sources'] = $this->leads_model->get_source();
+        $data['marketing'] = $this->leads_model->get_marketing_type();
 
         $data['title']   = 'Leads sources';
 

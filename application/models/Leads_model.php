@@ -2480,4 +2480,24 @@ class Leads_model extends App_Model
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
     }
+    public function get_marketing_type()
+    {
+        
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'lead_marketing')->row();
+        }
+
+
+
+        $this->db->order_by('id', 'asc');
+
+
+
+        return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
+    }
 }
