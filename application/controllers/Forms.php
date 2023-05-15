@@ -48,12 +48,11 @@ class Forms extends ClientsController
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
-
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
                 $call_data = array();
                 $required  = [];
-                $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
+                $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
                 if ($form->responsible == 0) {
                     if ($post_data['callassignee'] != null) {
                         $phoneNumber = $post_data['callassignee'];
@@ -138,7 +137,7 @@ class Forms extends ClientsController
 
 
                 if (!empty($form->auto_assign)) {
-                    $lead_type = !empty($form->lead_type) ? $form->lead_type : '';
+                    // $lead_type = !empty($form->lead_type) ? $form->lead_type : '';
                     $auto_assign = array_filter(explode(",", $form->auto_assign));
                     $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $auto_assign);
                     if (!empty($assign_staff_id[0]["staffid"])) {
