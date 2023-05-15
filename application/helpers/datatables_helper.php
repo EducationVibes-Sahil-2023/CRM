@@ -126,7 +126,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 
                 $columnName = "";
             }
-            
+
             if (!empty($columnName) && $columnName != '') {
                 if (strpos($columnName, ' as ') !== false) {
                     $columnName = strbefore($columnName, ' as');
@@ -230,12 +230,13 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     SELECT SQL_CALC_FOUND_ROWS ' . str_replace(' , ', ' ', implode(', ', $_aColumns)) . ' ' . $_additionalSelect . "
     FROM $sTable
     " . $join . "
+    " . $sWhere . "
     " . $where . "
     $sGroupBy
     $sOrder
     $sLimit
     ";
-    
+
     $rResult = $CI->db->query($sQuery)->result_array();
 
     $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [
