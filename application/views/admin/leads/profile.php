@@ -293,7 +293,7 @@
             ?>
             <?php // echo render_input('phonenumber','lead_add_edit_phonenumber',$value); 
             ?>
-            <?php if (is_admin()) { ?>
+            <?php if (is_admin() || $lead->id == "") { ?>
                <div class="form-group" app-field-wrapper="phonenumber">
                   <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
                   <input type="text" id="phonenumber" name="phonenumber" class="form-control" <?php if ($value == '') {

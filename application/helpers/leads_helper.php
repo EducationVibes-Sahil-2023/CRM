@@ -1048,6 +1048,8 @@ function get_status_summary_filter_performance($params)
         $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id,m.id marketing_id,m.name marketing_name,c.name conversion_name, ls.name status_name ,s.name source_name,concat(ls.name,"-",s.name) index_name ';
         $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
 
+        // $sql .=' FROM ' . db_prefix() . 'lead_marketing m left join ' . db_prefix() . 'leads_sources s ON s.marketing_type = m.id left join ' . db_prefix() . 'leads l ON s.id = l.source left join ' . db_prefix() . 'leads_status ls ON  ls.id = l.status left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
+
         if (!empty($params['course']) || !empty($params['degree'])) {
             $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
         }
@@ -1127,8 +1129,7 @@ function get_status_summary_filter_performance($params)
         }
         $sql .= '  GROUP BY m.id,c.id ';
         $sql .= ' UNION ALL ';
-       echo $sql = trim($sql);
-       die;
+        $sql = trim($sql);
     }
     $result = [];
 
