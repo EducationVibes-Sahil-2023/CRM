@@ -37,6 +37,98 @@
     hr {
         margin: 5px 0px !important;
     }
+
+    .switch .btn-toggle {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .btn-toggle {
+        margin: 0 7rem;
+        padding: 0;
+        position: relative;
+        border: none;
+        height: 1.5rem;
+        width: 3rem;
+        border-radius: 1.5rem;
+        color: #6b7381;
+        background: #bdc1c8;
+    }
+
+    .btn-toggle:focus,
+    .btn-toggle.focus,
+    .btn-toggle:focus.active,
+    .btn-toggle.focus.active {
+        outline: none;
+    }
+
+    .btn-toggle:before,
+    .btn-toggle:after {
+        line-height: 1.5rem;
+        width: 4rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        position: absolute;
+        bottom: 0;
+        transition: opacity 0.25s;
+    }
+
+    .btn-toggle:before {
+        content: 'Conversion';
+        left: -7rem;
+    }
+
+    .btn-toggle:after {
+        content: 'Marketing';
+        right: -5rem;
+        opacity: 0.5;
+    }
+
+    .btn-toggle:before,
+    .btn-toggle:after {
+        color: #6b7381;
+    }
+
+    .btn-toggle.active {
+        background-color: #29b5a8;
+    }
+
+    .btn-toggle>.handle {
+        position: absolute;
+        top: 0.1875rem;
+        left: 0.1875rem;
+        width: 1.125rem;
+        height: 1.125rem;
+        border-radius: 1.125rem;
+        background: #fff;
+        transition: left 0.25s;
+    }
+
+    .btn-toggle.active {
+        transition: background-color 0.25s;
+    }
+
+    .btn-toggle.active>.handle {
+        left: 1.6875rem;
+        transition: left 0.25s;
+    }
+
+    .btn-toggle.active:before {
+        opacity: 0.5;
+    }
+
+    .btn-toggle.active:after {
+        opacity: 1;
+    }
+
+    hr.hr-3 {
+        border: 0;
+        height: 0;
+        border-top: 1px solid #8c8c8c;
+    }
 </style>
 <div id="wrapper">
     <div class="content">
@@ -137,6 +229,8 @@
 <script>
     var source_name = <?= !empty($sources) ? json_encode($sources, true) : '' ?>;
     var status_name = <?= !empty($status) ? json_encode($status, true) : '' ?>;
+    var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
+    var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
     var excel_data_array = [];
     const workbook = new ExcelJS.Workbook();
 
@@ -204,7 +298,7 @@
                 to_date: to_date,
                 up_from_date: up_from_date,
                 up_to_date: up_to_date,
-                lead_type: lead_type    
+                lead_type: lead_type
                 // followup_from_date: followup_from_date,
                 // followup_to_date: followup_to_date,
                 // assign_from_date: assign_from_date,
@@ -355,6 +449,76 @@
                 }
                 index_upper++;
             }
+
+            // var con_index = (status_name.length + 3);
+            // for (j = con_index; j <= con_index; j++) {
+            //     let index = 0;
+            //     excel_data
+            //     for (let i = 66; i < (66 + source_name.length); i++) {
+            //         if (source_name[index].name != undefined) {
+            //             worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
+            //             worksheet.getCell(String.fromCharCode(i) + j).font = {
+            //                 bold: true,
+            //                 color: {
+            //                     argb: (source_name[index].color_name).replace("#", ""),
+            //                     size: 16
+            //                 }
+            //             };
+
+            //         }
+            //         index++;
+            //     }
+            // }
+            // var index_type = 0;
+            // for (j = 2; j <= (status_name.length + 1); j++) {
+            //     if (source_name[index_type].name != undefined) {
+            //         worksheet.getCell("A" + j).value = status_name[index_type].name;
+            //         worksheet.getCell("A" + j).font = {
+            //             bold: true,
+            //             color: {
+            //                 argb: (status_name[index_type].color).replace("#", ""),
+            //                 size: 16
+            //             }
+            //         };
+
+            //     }
+            //     index_type++;
+            // }
+
+            // let con_index_upper = 0;
+            // for (j = 2; j <= (status_name.length + 1); j++) {
+            //     let index = 0;
+            //     for (let i = 66; i < (66 + source_name.length); i++) {
+            //         if (source_name[index].name != undefined && status_name[con_index_upper].name != undefined) {
+            //             // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[con_index_upper].name + "_" + source_name[index].name].total;
+            //             let index_name = status_name[con_index_upper].name + "-" + source_name[index].name;
+            //             if (excel_data[index_name] != undefined) {
+            //                 worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[index_name].total;
+            //                 worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+            //                     horizontal: 'right',
+            //                     color: {
+            //                         argb: "FF0000"
+            //                     }
+            //                 };
+            //             } else {
+            //                 worksheet.getCell(String.fromCharCode(i) + j).value = 0;
+            //                 worksheet.getCell(String.fromCharCode(i) + j).numFmt = '#,##0.00';
+            //                 worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+            //                     horizontal: 'right',
+            //                     color: {
+            //                         argb: "FF0000"
+            //                     }
+            //                 };
+
+
+
+
+            //             }
+            //         }
+            //         index++;
+            //     }
+            //     con_index_upper++;
+            // }
         });
 
 
@@ -458,4 +622,9 @@
     //     // Remove the link
     //     document.body.removeChild(a);
     // });
+
+    $(document).on('click', '.btn-switch-toggle', function() {
+        var parentDiv = $(this).closest(".parrent-div");
+        parentDiv.find(".panel-body").toggle();
+    });
 </script>
