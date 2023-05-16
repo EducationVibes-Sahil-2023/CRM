@@ -172,7 +172,7 @@ class Login_Controller extends Api_Controller
             $rules[] = array(
                 "field" => "Call Status",
                 "value" => $call_status,
-                "condition" => "required"
+                "condition" => ""
             );
         }
 
