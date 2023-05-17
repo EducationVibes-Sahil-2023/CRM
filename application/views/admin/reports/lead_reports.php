@@ -232,8 +232,7 @@
     var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
     var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
     var excel_data_array = [];
-    const workbook = new ExcelJS.Workbook();
-
+    // const workbook = new ExcelJS.Workbook();
 
     var xhr = null;
     $('#apply_filter').on('click', function() {
@@ -369,10 +368,9 @@
     // Create a new workbook and worksheet
     // / create a new workbook and worksheet
 
-
+    const numberFormat = '#,##0.00'; // Number format pattern
     function RunExcelJSExport() {
-
-
+        var workbook = new ExcelJS.Workbook();
         Object.keys(excel_data_array).forEach(function(key) {
             let worksheet = workbook.addWorksheet(key);
             let excel_data = excel_data_array[key];
@@ -383,7 +381,6 @@
             };
             for (j = 1; j <= 1; j++) {
                 let index = 0;
-                excel_data
                 for (let i = 66; i < (66 + source_name.length); i++) {
                     if (source_name[index].name != undefined) {
                         worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
@@ -423,7 +420,8 @@
                         // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
                         let index_name = status_name[index_upper].name + "-" + source_name[index].name;
                         if (excel_data[index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[index_name].total;
+                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data[index_name].total);
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -432,7 +430,7 @@
                             };
                         } else {
                             worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = '#,##0.00';
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -450,75 +448,158 @@
                 index_upper++;
             }
 
-            // var con_index = (status_name.length + 3);
-            // for (j = con_index; j <= con_index; j++) {
-            //     let index = 0;
-            //     excel_data
-            //     for (let i = 66; i < (66 + source_name.length); i++) {
-            //         if (source_name[index].name != undefined) {
-            //             worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
-            //             worksheet.getCell(String.fromCharCode(i) + j).font = {
-            //                 bold: true,
-            //                 color: {
-            //                     argb: (source_name[index].color_name).replace("#", ""),
-            //                     size: 16
-            //                 }
-            //             };
+            var con_index = (status_name.length + 5);
+            worksheet.getCell("A" + con_index).value = "Conversion/Source";
+            worksheet.getCell("A" + con_index).font = {
+                bold: true,
+            };
+            for (j = con_index; j <= con_index; j++) {
+                let index = 0;
+                for (let i = 66; i < (66 + source_name.length); i++) {
+                    if (source_name[index].name != undefined) {
+                        worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
+                        worksheet.getCell(String.fromCharCode(i) + j).font = {
+                            bold: true,
+                            color: {
+                                argb: (source_name[index].color_name).replace("#", ""),
+                                size: 16
+                            }
+                        };
 
-            //         }
-            //         index++;
-            //     }
-            // }
-            // var index_type = 0;
-            // for (j = 2; j <= (status_name.length + 1); j++) {
-            //     if (source_name[index_type].name != undefined) {
-            //         worksheet.getCell("A" + j).value = status_name[index_type].name;
-            //         worksheet.getCell("A" + j).font = {
-            //             bold: true,
-            //             color: {
-            //                 argb: (status_name[index_type].color).replace("#", ""),
-            //                 size: 16
-            //             }
-            //         };
+                    }
+                    index++;
+                }
+            }
+            var index_type = 0;
 
-            //     }
-            //     index_type++;
-            // }
+            for (j = (con_index + 1); j < ((con_index + 1) + conversion_type.length); j++) {
 
-            // let con_index_upper = 0;
-            // for (j = 2; j <= (status_name.length + 1); j++) {
-            //     let index = 0;
-            //     for (let i = 66; i < (66 + source_name.length); i++) {
-            //         if (source_name[index].name != undefined && status_name[con_index_upper].name != undefined) {
-            //             // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[con_index_upper].name + "_" + source_name[index].name].total;
-            //             let index_name = status_name[con_index_upper].name + "-" + source_name[index].name;
-            //             if (excel_data[index_name] != undefined) {
-            //                 worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[index_name].total;
-            //                 worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-            //                     horizontal: 'right',
-            //                     color: {
-            //                         argb: "FF0000"
-            //                     }
-            //                 };
-            //             } else {
-            //                 worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-            //                 worksheet.getCell(String.fromCharCode(i) + j).numFmt = '#,##0.00';
-            //                 worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-            //                     horizontal: 'right',
-            //                     color: {
-            //                         argb: "FF0000"
-            //                     }
-            //                 };
+                if (conversion_type[index_type].name != undefined) {
+                    worksheet.getCell("A" + j).value = conversion_type[index_type].name;
+                    worksheet.getCell("A" + j).font = {
+                        bold: true,
+                        color: {
+                            argb: (conversion_type[index_type].color).replace("#", ""),
+                            size: 16
+                        }
+                    };
+
+                }
+                index_type++;
+            }
+
+            let con_index_upper = 0;
+            for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
+                let index = 0;
+                for (let i = 66; i < (66 + source_name.length); i++) {
+                    if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
+                        let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
+                        if (excel_data["conversion_data"][index_name] != undefined) {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["conversion_data"][index_name]);
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                horizontal: 'right',
+                                color: {
+                                    argb: "FF0000"
+                                }
+                            };
+                        } else {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = 0;
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                horizontal: 'right',
+                                color: {
+                                    argb: "FF0000"
+                                }
+                            };
 
 
 
 
-            //             }
-            //         }
-            //         index++;
-            //     }
-            //     con_index_upper++;
-            // }
+                        }
+                    }
+                    index++;
+                }
+                con_index_upper++;
+            }
+
+
+            var con_index = ((con_index + 1) + conversion_type.length + 3);
+            worksheet.getCell("A" + con_index).value = "Marketing/Source";
+            worksheet.getCell("A" + con_index).font = {
+                bold: true,
+            };
+            for (j = con_index; j <= con_index; j++) {
+                let index = 0;
+                for (let i = 66; i < (66 + conversion_type.length); i++) {
+                    if (conversion_type[index].name != undefined) {
+                        worksheet.getCell(String.fromCharCode(i) + j).value = conversion_type[index].name;
+                        worksheet.getCell(String.fromCharCode(i) + j).font = {
+                            bold: true,
+                            color: {
+                                argb: (conversion_type[index].color).replace("#", ""),
+                                size: 16
+                            }
+                        };
+
+                    }
+                    index++;
+                }
+            }
+            var index_type = 0;
+
+            for (j = (con_index + 1); j < ((con_index + 1) + marketing_type.length); j++) {
+
+                if (marketing_type[index_type].name != undefined) {
+                    worksheet.getCell("A" + j).value = marketing_type[index_type].name;
+                    worksheet.getCell("A" + j).font = {
+                        bold: true,
+                        color: {
+                            argb: (marketing_type[index_type].color).replace("#", ""),
+                            size: 16
+                        }
+                    };
+
+                }
+                index_type++;
+            }
+
+            let con_index_mar = 0;
+            for (j = (con_index + 1); j < ((con_index + 1) + (marketing_type.length)); j++) {
+                let index = 0;
+                for (let i = 66; i < (66 + conversion_type.length); i++) {
+                    if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
+                        let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
+                        if (excel_data["performance_data"][index_name] != undefined) {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["performance_data"][index_name]);
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                horizontal: 'right',
+                                color: {
+                                    argb: "FF0000"
+                                }
+                            };
+                        } else {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = 0;
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                horizontal: 'right',
+                                color: {
+                                    argb: "FF0000"
+                                }
+                            };
+
+
+
+
+                        }
+                    }
+                    index++;
+                }
+                con_index_mar++;
+            }
+
+
         });
 
 

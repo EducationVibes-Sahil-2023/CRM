@@ -304,7 +304,7 @@
 
                                           <?php if (!empty($call["duration"])) {
                                           ?>
-                                             <small> - (<?= $call["duration"] ?> sec)</small>
+                                             <small> - (<?= convertSeconds($call["duration"]) ?>)</small>
                                        <?php
                                           }
                                        }
