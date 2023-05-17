@@ -921,10 +921,7 @@ function timestamp_create()
 
 function convertSeconds($seconds)
 {
-    function convert_seconds($seconds)
-    {
-        $dt1 = new DateTime("@0");
-        $dt2 = new DateTime("@$seconds");
-        return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
-    }
+    $dt1 = new DateTime("@0");
+    $dt2 = new DateTime("@$seconds");
+    return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
 }
