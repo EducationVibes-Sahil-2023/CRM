@@ -919,19 +919,12 @@ function timestamp_create()
     return time() . '_' . rand(1, 10000);;
 }
 
-function convertSeconds($totalSeconds)
+function convertSeconds($seconds)
 {
-    $hours = floor($totalSeconds / 3600);
-    $minutes = floor(($totalSeconds % 3600) / 60);
-    $seconds = $totalSeconds % 60;
-
-    return sprintf(
-        '%d Hr : %d min : %d sec',
-        $hours,
-        ($hours != 1 ? 's' : ''),
-        $minutes,
-        ($minutes != 1 ? 's' : ''),
-        $seconds,
-        ($seconds != 1 ? 's' : '')
-    );
+    function convert_seconds($seconds)
+    {
+        $dt1 = new DateTime("@0");
+        $dt2 = new DateTime("@$seconds");
+        return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
+    }
 }
