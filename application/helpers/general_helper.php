@@ -918,3 +918,20 @@ function timestamp_create()
 {
     return time() . '_' . rand(1, 10000);;
 }
+
+function convertSeconds($totalSeconds)
+{
+    $hours = floor($totalSeconds / 3600);
+    $minutes = floor(($totalSeconds % 3600) / 60);
+    $seconds = $totalSeconds % 60;
+
+    return sprintf(
+        '%d Hr : %d min : %d sec',
+        $hours,
+        ($hours != 1 ? 's' : ''),
+        $minutes,
+        ($minutes != 1 ? 's' : ''),
+        $seconds,
+        ($seconds != 1 ? 's' : '')
+    );
+}

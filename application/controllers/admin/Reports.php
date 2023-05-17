@@ -216,10 +216,27 @@ class Reports extends AdminController
                 $conversion_type = array_column($conversion_type, null, "id");
                 $updateCount = leads_update_count($post_data);
                 $staff_name =  get_staff_full_name($assigned);
+
+
                 if (!empty($excel_data)) {
                     $excel_array[$staff_name] = $excel_data;
-                    $status_summary_conversion =  array_column($status_summary_conversion, null, "index_conversion_name");
-                    $status_summary_performance =  array_column($status_summary_performance, null, "index_performance_name");
+
+                    $status_summary_conversion_excel = [];
+                    $status_summary_performance_excel = [];
+                    foreach ($status_summary_conversion as $item) {
+                        $source_name = $item['source_name'];
+                        $conversion_name = $item['conversion_name'];
+                        $key = $source_name . "-" . $conversion_name;
+                        if (!isset($excel_array[$staff_name]["conversion_data"][$key])) {
+                            $excel_array[$staff_name]["conversion_data"][$key] = 0;
+                        }
+                        $status_summary_conversion_excel[$key]["total"] += $item['total'];
+                    }
+
+                    // $status_summary_conversion_excel =  array_column($status_summary_conversion, null, "index_conversion_name");
+
+
+                    // $status_summary_performance_excel =  array_column($status_summary_performance, null, "index_performance_name");
 
                     $excel_array[$staff_name]["conversion_data"] = [];
                     $excel_array[$staff_name]["performance_data"] = [];
@@ -234,7 +251,7 @@ class Reports extends AdminController
                             if (!isset($excel_array[$staff_name]["conversion_data"][$key])) {
                                 $excel_array[$staff_name]["conversion_data"][$key] = 0;
                             }
-                            $excel_array[$staff_name]["conversion_data"][$key] += $status_summary_conversion[$key]['total'];
+                            $excel_array[$staff_name]["conversion_data"][$key] += $status_summary_conversion_excel[$key]['total'];
 
 
                             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
@@ -250,6 +267,7 @@ class Reports extends AdminController
                             }
                             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
                                 if (!empty($percentage)) {
+
                                     $percentage_cal = ($percentage / $total) * 100;
                                     $excel_array[$staff_name]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
                                 } else {
@@ -257,6 +275,17 @@ class Reports extends AdminController
                                 }
                             }
                         }
+                    }
+
+
+                    foreach ($status_summary_performance as $item) {
+                        $performance_name = $item['marketing_name'];
+                        $conversion_name = $item['conversion_name'];
+                        $key = $performance_name . "-" . $conversion_name;
+                        if (!isset($excel_array[$staff_name]["performance_data"][$key])) {
+                            $excel_array[$staff_name]["performance_data"][$key] = 0;
+                        }
+                        $status_summary_performance_excel[$key]["total"] += $item['total'];
                     }
 
                     foreach ($marketing_type as $m) {
@@ -270,7 +299,7 @@ class Reports extends AdminController
                             if (!isset($excel_array[$staff_name]["performance_data"][$key])) {
                                 $excel_array[$staff_name]["performance_data"][$key] = 0;
                             }
-                            $excel_array[$staff_name]["performance_data"][$key] += $status_summary_performance[$key]['total'];
+                            $excel_array[$staff_name]["performance_data"][$key] += $status_summary_performance_excel[$key]['total'];
 
 
                             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
@@ -295,7 +324,6 @@ class Reports extends AdminController
                         }
                     }
                 }
-
 
                 if (!empty($index) && $index % 2 == 0) {
                     $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
@@ -465,9 +493,23 @@ class Reports extends AdminController
             $source_type = $this->leads_model->get_source();
             if (!empty($excel_data)) {
                 $excel_array["Total Details"] = $excel_data;
-                // $excel_array["Total Details"]["performance_data"] =  array_column($status_summary_performance, null, "index_performance_name");
-                $status_summary_conversion =  array_column($status_summary_conversion, null, "index_conversion_name");
-                $status_summary_performance =  array_column($status_summary_performance, null, "index_performance_name");
+
+                $status_summary_conversion_excel = [];
+                $status_summary_performance_excel = [];
+                foreach ($status_summary_conversion as $item) {
+                    $source_name = $item['source_name'];
+                    $conversion_name = $item['conversion_name'];
+                    $key = $source_name . "-" . $conversion_name;
+                    if (!isset($excel_array["Total Details"]["conversion_data"][$key])) {
+                        $excel_array["Total Details"]["conversion_data"][$key] = 0;
+                    }
+                    $status_summary_conversion_excel[$key]["total"] += $item['total'];
+                }
+
+                // $status_summary_conversion_excel =  array_column($status_summary_conversion, null, "index_conversion_name");
+
+
+                // $status_summary_performance_excel =  array_column($status_summary_performance, null, "index_performance_name");
 
                 $excel_array["Total Details"]["conversion_data"] = [];
                 $excel_array["Total Details"]["performance_data"] = [];
@@ -482,7 +524,7 @@ class Reports extends AdminController
                         if (!isset($excel_array["Total Details"]["conversion_data"][$key])) {
                             $excel_array["Total Details"]["conversion_data"][$key] = 0;
                         }
-                        $excel_array["Total Details"]["conversion_data"][$key] += $status_summary_conversion[$key]['total'];
+                        $excel_array["Total Details"]["conversion_data"][$key] += $status_summary_conversion_excel[$key]['total'];
 
 
                         if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
@@ -498,10 +540,7 @@ class Reports extends AdminController
                         }
                         if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
                             if (!empty($percentage)) {
-                                // echo $percentage;
-                                // echo "<br>";
-                                // echo $total;
-                                // echo "<br>";
+
                                 $percentage_cal = ($percentage / $total) * 100;
                                 $excel_array["Total Details"]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
                             } else {
@@ -509,6 +548,17 @@ class Reports extends AdminController
                             }
                         }
                     }
+                }
+
+
+                foreach ($status_summary_performance as $item) {
+                    $performance_name = $item['marketing_name'];
+                    $conversion_name = $item['conversion_name'];
+                    $key = $performance_name . "-" . $conversion_name;
+                    if (!isset($excel_array["Total Details"]["performance_data"][$key])) {
+                        $excel_array["Total Details"]["performance_data"][$key] = 0;
+                    }
+                    $status_summary_performance_excel[$key]["total"] += $item['total'];
                 }
 
                 foreach ($marketing_type as $m) {
@@ -522,7 +572,7 @@ class Reports extends AdminController
                         if (!isset($excel_array["Total Details"]["performance_data"][$key])) {
                             $excel_array["Total Details"]["performance_data"][$key] = 0;
                         }
-                        $excel_array["Total Details"]["performance_data"][$key] += $status_summary_performance[$key]['total'];
+                        $excel_array["Total Details"]["performance_data"][$key] += $status_summary_performance_excel[$key]['total'];
 
 
                         if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {

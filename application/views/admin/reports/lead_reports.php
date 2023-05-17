@@ -368,7 +368,7 @@
     // Create a new workbook and worksheet
     // / create a new workbook and worksheet
 
-
+    const numberFormat = '#,##0.00'; // Number format pattern
     function RunExcelJSExport() {
         var workbook = new ExcelJS.Workbook();
         Object.keys(excel_data_array).forEach(function(key) {
@@ -420,7 +420,8 @@
                         // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
                         let index_name = status_name[index_upper].name + "-" + source_name[index].name;
                         if (excel_data[index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[index_name].total;
+                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data[index_name].total);
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -429,7 +430,7 @@
                             };
                         } else {
                             worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = '#,##0.00';
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -494,7 +495,8 @@
                     if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
                         let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
                         if (excel_data["conversion_data"][index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = excel_data["conversion_data"][index_name];
+                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["conversion_data"][index_name]);
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -503,7 +505,7 @@
                             };
                         } else {
                             worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = '#,##0.00';
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -569,7 +571,8 @@
                     if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
                         let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
                         if (excel_data["performance_data"][index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = excel_data["performance_data"][index_name];
+                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["performance_data"][index_name]);
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
@@ -578,7 +581,7 @@
                             };
                         } else {
                             worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = '#,##0.00';
+                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
                             worksheet.getCell(String.fromCharCode(i) + j).alignment = {
                                 horizontal: 'right',
                                 color: {
