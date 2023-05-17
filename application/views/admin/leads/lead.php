@@ -320,7 +320,7 @@
                            <?php }
                         } else { ?>
                            <div>
-                              <h4><?= convertSeconds(100) ?> No Calls Activity</h4>
+                              <h4>No Calls Activity</h4>
                            </div>
                         <?php } ?>
                      </div>
