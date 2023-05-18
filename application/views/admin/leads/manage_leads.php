@@ -175,6 +175,15 @@
                                     ?>
                                  </div>
                                  <div class="col-md-2 leads-filter-column">
+                                    <?php
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                                    echo '</div>';
+
+                                    // die;
+                                    ?>
+                                 </div>
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <select name="lead_type" id="lead_type" class="selectpicker" data-width="100%">
                                        <option value="">Select Lead Type</option>
                                        <?php foreach ($type as $tp => $vl) {
@@ -186,7 +195,7 @@
                                     <?php
                                     // echo render_leads_type_select($type, ($this->input->post('type') ? $this->input->post('type') : 'Select Lead Type'),'lead_import_type','type', [], true);
                                     ?>
-                                 </div>
+                                 </div> -->
                                  <?php
                                  $neet_score_range = [];
                                  $min_range = 0;
@@ -785,6 +794,7 @@
          var element_view_assign = document.getElementById("view_assigned");
          var element_view_source = document.getElementById("view_source");
          var element_view_status = document.getElementById("view_status");
+         var element_lead_type = document.getElementById("lead_type");
          // if (typeof(element) != 'undefined' && element != null)
          // {
          //    var view_assigned = document.getElementById("view_assigned").value;
@@ -796,6 +806,7 @@
          var view_assigned_options = "";
          var view_source_options = "";
          var view_status_options = "";
+         var view_lead_type_options = "";
          if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
             view_source_options = document.getElementById('view_source').selectedOptions;
             view_source_options = Array.from(view_source_options).map(({
@@ -808,6 +819,13 @@
                value
             }) => value);
          }
+         if (typeof(element_lead_type) != 'undefined' && element_lead_type != null) {
+            view_lead_type_options = document.getElementById('lead_type').selectedOptions;
+            view_lead_type_options = Array.from(view_lead_type_options).map(({
+               value
+            }) => value);
+         }
+
          if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
             view_assigned_options = document.getElementById('view_assigned').selectedOptions;
             view_assigned_options = Array.from(view_assigned_options).map(({
@@ -839,7 +857,7 @@
             /* data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source,course:view_course,courseid:courseid,degree:view_degree,degreeid:degreeid, from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date},*/
             //  data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source_options,from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date,status:view_status_options},
             data: {
-               lead_type: $("#lead_type").val(),
+               lead_type: view_lead_type_options,
                assigned: view_assigned_options,
                source: view_source_options,
                from_date: from_date,
