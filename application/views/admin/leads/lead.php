@@ -304,7 +304,7 @@
 
                                           <?php if (!empty($call["duration"])) {
                                           ?>
-                                             <small> - (<?= $call["duration"] ?> sec)</small>
+                                             <small> - (<?= convertSeconds($call["duration"]) ?>)</small>
                                        <?php
                                           }
                                        }
@@ -320,7 +320,7 @@
                            <?php }
                         } else { ?>
                            <div>
-                              <h4>No Calls Activity</h4>
+                              <h4><?= convertSeconds(10) ?>No Calls Activity</h4>
                            </div>
                         <?php } ?>
                      </div>

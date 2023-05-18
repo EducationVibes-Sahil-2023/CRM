@@ -918,3 +918,10 @@ function timestamp_create()
 {
     return time() . '_' . rand(1, 10000);;
 }
+
+function convertSeconds($seconds)
+{
+    $dt1 = new DateTime("@0");
+    $dt2 = new DateTime("@$seconds");
+    return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
+}
