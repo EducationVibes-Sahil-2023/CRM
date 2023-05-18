@@ -113,17 +113,19 @@ class AdminController extends App_Controller
                     $today = new DateTime("now");
                     $interval = $today->diff($expire_date_check);
                     $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire on " . $expire_date);
-                    if ($interval->days <= 7) {
-                        $this->session->set_userdata("Facebook_Error_show", 1);
-                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $expire_date . " (" . $interval->days . " days left)");
-                    }
-                    if ($interval->days <= 3) {
-                        $this->session->set_userdata("Facebook_Error_show", 1);
-                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
-                    }
-                    if ($interval->days < 0) {
-                        $this->session->set_userdata("Facebook_Error_show", 1);
-                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
+                    if (!empty($interval)) {
+                        if ($interval->days <= 7) {
+                            $this->session->set_userdata("Facebook_Error_show", 1);
+                            $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $expire_date . " (" . $interval->days . " days left)");
+                        }
+                        if ($interval->days <= 3) {
+                            $this->session->set_userdata("Facebook_Error_show", 1);
+                            $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
+                        }
+                        if ($interval->days < 0) {
+                            $this->session->set_userdata("Facebook_Error_show", 1);
+                            $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
+                        }
                     }
                 }
             }
