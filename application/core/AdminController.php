@@ -121,6 +121,10 @@ class AdminController extends App_Controller
                         $this->session->set_userdata("Facebook_Error_show", 1);
                         $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
                     }
+                    if ($interval->days < 0) {
+                        $this->session->set_userdata("Facebook_Error_show", 1);
+                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
+                    }
                 }
             }
         }
