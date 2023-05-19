@@ -100,11 +100,12 @@ class AdminController extends App_Controller
             }
             if (!empty($access_token["access_token"])) {
                 $facebook_token_details = $this->check_facebook_access_token($access_token["access_token"]);
-                if (!empty($facebook_token_details["data"]["is_valid"]) && $facebook_token_details["data"]["is_valid"] != 1) {
+
+                if (empty($facebook_token_details["data"]["is_valid"]) && $facebook_token_details["data"]["is_valid"] != 1) {
                     // echo $facebook_token_details["data"]["error"]["message"];
                     // set_alert('warning', $facebook_token_details["data"]["error"]["message"]);
                     $this->session->set_userdata("Facebook_Error_show", 1);
-                    $this->session->set_userdata("Facebook_Error", $facebook_token_details["data"]["error"]["message"]);
+                    $this->session->set_userdata("Facebook_Error", "Access Token Invalid");
                     // die;
                 } else {
                     $issue_date = date('Y-m-d H:i:s', $facebook_token_details["data"]["issue_at"]);
@@ -113,19 +114,16 @@ class AdminController extends App_Controller
                     $today = new DateTime("now");
                     $interval = $today->diff($expire_date_check);
                     $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire on " . $expire_date);
-                    if (!empty($interval)) {
-                        if ($interval->days <= 7) {
-                            $this->session->set_userdata("Facebook_Error_show", 1);
-                            $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $expire_date . " (" . $interval->days . " days left)");
-                        }
-                        if ($interval->days <= 3) {
-                            $this->session->set_userdata("Facebook_Error_show", 1);
-                            $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
-                        }
-                        if ($interval->days < 0) {
-                            $this->session->set_userdata("Facebook_Error_show", 1);
-                            $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
-                        }
+
+                    if ($interval->days < 0) {
+                        $this->session->set_userdata("Facebook_Error_show", 1);
+                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
+                    } else if ($interval->days <= 7) {
+                        $this->session->set_userdata("Facebook_Error_show", 1);
+                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $expire_date . " (" . $interval->days . " days left)");
+                    } else if ($interval->days <= 3) {
+                        $this->session->set_userdata("Facebook_Error_show", 1);
+                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
                     }
                 }
             }
