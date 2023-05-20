@@ -90,44 +90,44 @@ class AdminController extends App_Controller
         $this->session->unset_userdata("Facebook_Error");
         $this->session->unset_userdata("Facebook_Error_show");
 
-        if (is_admin()) {
-            $access_token = $this->generate_access_token();
-            if (empty($access_token["access_token"])) {
-                // echo $access_token["error"]["message"];
-                // set_alert('warning', $access_token["error"]["message"]);
-                $this->session->set_userdata("Facebook_Error_show", 1);
-                $this->session->set_userdata("Facebook_Error", $access_token["error"]["message"]);
-            }
-            if (!empty($access_token["access_token"])) {
-                $facebook_token_details = $this->check_facebook_access_token($access_token["access_token"]);
+        // if (is_admin()) {
+        //     $access_token = $this->generate_access_token();
+        //     if (empty($access_token["access_token"])) {
+        //         // echo $access_token["error"]["message"];
+        //         // set_alert('warning', $access_token["error"]["message"]);
+        //         $this->session->set_userdata("Facebook_Error_show", 1);
+        //         $this->session->set_userdata("Facebook_Error", $access_token["error"]["message"]);
+        //     }
+        //     if (!empty($access_token["access_token"])) {
+        //         $facebook_token_details = $this->check_facebook_access_token($access_token["access_token"]);
 
-                if (empty($facebook_token_details["data"]["is_valid"]) && $facebook_token_details["data"]["is_valid"] != 1) {
-                    // echo $facebook_token_details["data"]["error"]["message"];
-                    // set_alert('warning', $facebook_token_details["data"]["error"]["message"]);
-                    $this->session->set_userdata("Facebook_Error_show", 1);
-                    $this->session->set_userdata("Facebook_Error", "Access Token Invalid");
-                    // die;
-                } else {
-                    $issue_date = date('Y-m-d H:i:s', $facebook_token_details["data"]["issue_at"]);
-                    $expire_date = date('d-m-Y', $facebook_token_details["data"]["expires_at"]);
-                    $expire_date_check = new DateTime(date('Y-m-d', $facebook_token_details["data"]["expires_at"]));
-                    $today = new DateTime("now");
-                    $interval = $today->diff($expire_date_check);
-                    $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire on " . $expire_date);
+        //         if (empty($facebook_token_details["data"]["is_valid"]) && $facebook_token_details["data"]["is_valid"] != 1) {
+        //             // echo $facebook_token_details["data"]["error"]["message"];
+        //             // set_alert('warning', $facebook_token_details["data"]["error"]["message"]);
+        //             $this->session->set_userdata("Facebook_Error_show", 1);
+        //             $this->session->set_userdata("Facebook_Error", "Access Token Invalid");
+        //             // die;
+        //         } else {
+        //             $issue_date = date('Y-m-d H:i:s', $facebook_token_details["data"]["issue_at"]);
+        //             $expire_date = date('d-m-Y', $facebook_token_details["data"]["expires_at"]);
+        //             $expire_date_check = new DateTime(date('Y-m-d', $facebook_token_details["data"]["expires_at"]));
+        //             $today = new DateTime("now");
+        //             $interval = $today->diff($expire_date_check);
+        //             $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire on " . $expire_date);
 
-                    if ($interval->days < 0) {
-                        $this->session->set_userdata("Facebook_Error_show", 1);
-                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
-                    } else if ($interval->days <= 7) {
-                        $this->session->set_userdata("Facebook_Error_show", 1);
-                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $expire_date . " (" . $interval->days . " days left)");
-                    } else if ($interval->days <= 3) {
-                        $this->session->set_userdata("Facebook_Error_show", 1);
-                        $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
-                    }
-                }
-            }
-        }
+        //             if ($interval->days < 0) {
+        //                 $this->session->set_userdata("Facebook_Error_show", 1);
+        //                 $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire " . abs($interval->days) . " days ago.");
+        //             } else if ($interval->days <= 7) {
+        //                 $this->session->set_userdata("Facebook_Error_show", 1);
+        //                 $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $expire_date . " (" . $interval->days . " days left)");
+        //             } else if ($interval->days <= 3) {
+        //                 $this->session->set_userdata("Facebook_Error_show", 1);
+        //                 $this->session->set_userdata("Facebook_Error", "Facebook Access token Expire soon " . $interval->days . " days left.");
+        //             }
+        //         }
+        //     }
+        // }
         $vars = hooks()->apply_filters('admin_area_auto_loaded_vars', $vars);
         $this->load->vars($vars);
     }
