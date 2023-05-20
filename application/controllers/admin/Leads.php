@@ -702,6 +702,10 @@ class Leads extends AdminController
         }
 
         $data['lead'] = $this->leads_model->get($id);
+        $data['statuses'] = $this->leads_model->get_status();
+        $data['type'] = $this->leads_model->get_type();
+        $data['members']     = $this->staff_model->get('', ['is_not_staff' => 0, 'active' => 1]);
+        $data['sources']  = $this->leads_model->get_source();
 
         $this->load->view('admin/leads/convert_to_customer', $data);
     }
