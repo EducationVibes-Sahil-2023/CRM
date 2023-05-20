@@ -47,7 +47,7 @@
                             ?>
                           <div class="select-placeholder form-group">
                                 <label for="fieldto"><?php echo _l('custom_field_add_edit_belongs_top'); ?></label>
-                            <select name="fieldto" id="fieldto" class="selectpicker" data-width="100%" <?php echo $disable; ?> data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
+                            <select name="fieldto" id="fieldto"  onchange=change_field(this)  class="selectpicker" data-width="100%" <?php echo $disable; ?> data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
                                 <option value=""></option>
                                 <option value="company" <?php if(isset($custom_field) && $custom_field->fieldto == 'company'){echo 'selected';} ?>><?php echo _l('custom_field_company'); ?></option>
                                 <option value="leads" <?php if(isset($custom_field) && $custom_field->fieldto == 'leads'){echo 'selected';} ?>><?php echo _l('custom_field_leads'); ?></option>
@@ -67,6 +67,24 @@
                                 <?php hooks()->do_action('after_custom_fields_select_options', isset($custom_field) ? $custom_field : null); ?>
                             </select>
                           </div>
+                          <div class="clearfix"></div>
+                          <div class="select-placeholder form-group" id="select_show_lead_type" style="display: <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers'){echo 'block';}else{ echo "none"; } ?>;">
+                                <label for="show_lead_type">Show Lead Type</label>
+
+                                <select name="show_lead_type" id="show_lead_type" class="selectpicker" data-width="100%"  data-none-selected-text="Select Custom Field">
+                            <option value=""></option>
+                            <?php 
+                            foreach($type as $t){ 
+                                $selected ="";
+                                if($custom_field->show_lead_type== $t["id"])
+                                {
+                                    $selected ="selected";
+                                }
+                                ?>
+                                <option <?=$selected?> value="<?=$t["id"]?>"><?=$t["name"] ?></option>
+                                <?php } ?>
+                            </select>
+                            </div>
                             <div class="clearfix"></div>
                             <?php $value = (isset($custom_field) ? $custom_field->name : ''); ?>
                             <?php echo render_input('name','custom_field_name',$value); ?>
@@ -121,6 +139,34 @@
                                 <input type="checkbox" name="required" id="required" <?php if(isset($custom_field) && $custom_field->required == 1){echo 'checked';} ?> <?php if(isset($custom_field) && $custom_field->fieldto == 'company'){echo 'disabled';} ?>>
                                 <label for="required"><?php echo _l('custom_field_required'); ?></label>
                             </div>
+                            <p class="bold">Map Custom Field</p>
+                            <div class="checkbox checkbox-primary">
+                                <input type="checkbox" name="map_status" id="map_status" value=1 <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'checked';} ?>>
+                                <label for="map_status">Field Map Status</label>
+                            </div>
+      
+                            <div class="select-placeholder form-group" id="select_map_field" style="display: <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'block';} ?>;">
+                                <label for="map_id"><?php echo _l('custom_field_add_edit_belongs_top'); ?></label>
+
+                            <select name="map_id" id="map_id" class="selectpicker" data-width="100%"  data-none-selected-text="Select Custom Field">
+                            <option value=""></option>
+                            <?php 
+                            $select_id = explode("-",$custom_field->map_id); 
+                            $select_id = $select_id[0];
+                            foreach($custom_fields as $cf){ 
+                                $selected ="";
+                                if($select_id== $cf["id"])
+                                {
+                                    $selected ="selected";
+                                }
+                                ?>
+                                <option <?=$selected?> value="<?=$cf["id"]."-".$cf["fieldto"]?>"><?= $cf["fieldto"]."-".$cf["name"] ?></option>
+                                <?php } ?>
+                            </select>
+                            </div>
+
+                            
+
                             <p class="bold"><?php echo _l('custom_field_visibility'); ?></p>
                             <div class="checkbox checkbox-primary">
                                 <input type="checkbox" name="show_on_table" id="show_on_table" <?php if(isset($custom_field) && $custom_field->show_on_table == 1){echo 'checked';} ?> <?php if(isset($custom_field) && ($custom_field->fieldto == 'company' || $custom_field->fieldto == 'items')){echo 'disabled';} ?>>
@@ -268,6 +314,33 @@ $(function () {
         $('#disalow_client_to_edit').prop('disabled', $(this).prop('checked')).prop('checked', false);
     });
 });
+$('#map_status').change(function()
+{
+if ($('#map_status').is(':checked')) {
+$("#map_id").val('');
+$("#map_id").selectpicker("refresh");
+$("#select_map_field").show();
+}
+else
+{
+$("#select_map_field").hide();  
+}
+});
+function change_field(obj)
+{
+   let field_vlue = $(obj).val();
+   if(field_vlue == "customers")
+   {
+$("#select_show_lead_type").show();
+$("#select_show_lead_type select").val("");
+$("#select_show_lead_type select").selectpicker("refresh");
+   }
+   else{
+    $("#select_show_lead_type").hide();
+$("#select_show_lead_type select").val("");
+
+   }
+}
 </script>
 </body>
 </html>

@@ -20,15 +20,17 @@ class Custom_fields_model extends App_Model
      * @return object
      * Get single custom field
      */
-    public function get($id = false)
+    public function get($id = false, $active = "")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
-            return $this->db->get(db_prefix().'customfields')->row();
+            return $this->db->get(db_prefix() . 'customfields')->row();
         }
-
-        return $this->db->get(db_prefix().'customfields')->result_array();
+        if (!empty($active)) {
+            $this->db->where("active", 1);
+        }
+        return $this->db->get(db_prefix() . 'customfields')->result_array();
     }
 
     /**
@@ -91,7 +93,7 @@ class Custom_fields_model extends App_Model
         $data['slug'] = slug_it($data['fieldto'] . '_' . $data['name'], [
             'separator' => '_',
         ]);
-        $slugs_total = total_rows(db_prefix().'customfields', ['slug' => $data['slug']]);
+        $slugs_total = total_rows(db_prefix() . 'customfields', ['slug' => $data['slug']]);
 
         if ($slugs_total > 0) {
             $data['slug'] .= '_' . ($slugs_total + 1);
@@ -111,7 +113,7 @@ class Custom_fields_model extends App_Model
             $data['disalow_client_to_edit'] = 0;
         }
 
-        $this->db->insert(db_prefix().'customfields', $data);
+        $this->db->insert(db_prefix() . 'customfields', $data);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
             log_activity('New Custom Field Added [' . $data['name'] . ']');
@@ -204,7 +206,7 @@ class Custom_fields_model extends App_Model
         }
 
         $this->db->where('id', $id);
-        $this->db->update(db_prefix().'customfields', $data);
+        $this->db->update(db_prefix() . 'customfields', $data);
         if ($this->db->affected_rows() > 0) {
             log_activity('Custom Field Updated [' . $data['name'] . ']');
 
@@ -220,7 +222,7 @@ class Custom_fields_model extends App_Model
                     }
                     $removed_options_in_use = [];
                     foreach ($options_before as $option) {
-                        if (!in_array($option, $options_now) && total_rows(db_prefix().'customfieldsvalues', [
+                        if (!in_array($option, $options_now) && total_rows(db_prefix() . 'customfieldsvalues', [
                             'fieldid' => $id,
                             'value' => $option,
                         ])) {
@@ -229,7 +231,7 @@ class Custom_fields_model extends App_Model
                     }
                     if (count($removed_options_in_use) > 0) {
                         $this->db->where('id', $id);
-                        $this->db->update(db_prefix().'customfields', [
+                        $this->db->update(db_prefix() . 'customfields', [
                             'options' => implode(',', $options_now) . ',' . implode(',', $removed_options_in_use),
                         ]);
 
@@ -255,11 +257,11 @@ class Custom_fields_model extends App_Model
     public function delete($id)
     {
         $this->db->where('id', $id);
-        $this->db->delete(db_prefix().'customfields');
+        $this->db->delete(db_prefix() . 'customfields');
         if ($this->db->affected_rows() > 0) {
             // Delete the values
             $this->db->where('fieldid', $id);
-            $this->db->delete(db_prefix().'customfieldsvalues');
+            $this->db->delete(db_prefix() . 'customfieldsvalues');
             log_activity('Custom Field Deleted [' . $id . ']');
 
             return true;
@@ -276,7 +278,7 @@ class Custom_fields_model extends App_Model
     public function change_custom_field_status($id, $status)
     {
         $this->db->where('id', $id);
-        $this->db->update(db_prefix().'customfields', [
+        $this->db->update(db_prefix() . 'customfields', [
             'active' => $status,
         ]);
         log_activity('Custom Field Status Changed [FieldID: ' . $id . ' - Active: ' . $status . ']');
