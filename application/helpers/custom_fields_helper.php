@@ -9,7 +9,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @param  array $items_cf_params          used only for custom fields for items operations
  * @return mixed
  */
-function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_cf_params = [])
+function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_cf_params = [], $show_lead_type = "")
 {
     // Is custom fields for items and in add/edit
     $items_add_edit_preview = isset($items_cf_params['add_edit_preview']) && $items_cf_params['add_edit_preview'] ? true : false;
@@ -45,6 +45,10 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
         foreach ($fields as $field) {
 
             if ($field['only_admin'] == 1 && !$is_admin) {
+                continue;
+            }
+
+            if (!empty($field["show_lead_type"]) && !empty($show_lead_type) &&  $field["show_lead_type"] != $show_lead_type) {
                 continue;
             }
 
