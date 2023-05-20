@@ -117,8 +117,9 @@
                <div class="clearfix"></div>
                <hr class="mtop5 mbot10" />
                <div class="col-md-12 mtop15">
-                  <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
-                  <?php echo render_custom_fields('customers', $rel_id, "", (isset($lead->type) ? $lead->type : '')); ?>
+                  <?php $rel_id = (isset($lead) ? $lead->id : false);
+                  ?>
+                  <?php echo render_custom_fields('customers', $rel_id, "","", (isset($lead->type) ? $lead->type : '')); ?>
                </div>
             </div>
             <hr class="mtop5 mbot10" />
