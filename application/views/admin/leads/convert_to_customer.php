@@ -74,7 +74,7 @@
                <hr class="mtop5 mbot10" />
                <div class="col-md-12 mtop15">
                   <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
-                  <?php echo render_custom_fields('customers'); ?>
+                  <?php echo render_custom_fields('customers', $rel_id); ?>
                </div>
             </div>
             <?php
