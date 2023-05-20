@@ -35,6 +35,8 @@ class Custom_fields extends AdminController
 
     public function field($id = '')
     {
+        $this->load->model('leads_model');
+
         if ($this->input->post()) {
             if ($id == '') {
                 $id = $this->custom_fields_model->add($this->input->post());
@@ -62,7 +64,9 @@ class Custom_fields extends AdminController
         $data['client_portal_fields']   = $this->client_portal_fields;
         $data['client_editable_fields'] = $this->client_editable_fields;
         $data['title']                  = $title;
-        $data['custom_fields']    =  $this->custom_fields_model->get('',1);
+        $data['custom_fields']    =  $this->custom_fields_model->get('', 1);
+        $data['type'] = $this->leads_model->get_type();
+
 
         $this->load->view('admin/custom_fields/customfield', $data);
     }

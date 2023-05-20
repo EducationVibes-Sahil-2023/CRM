@@ -118,7 +118,7 @@
                <hr class="mtop5 mbot10" />
                <div class="col-md-12 mtop15">
                   <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
-                  <?php echo render_custom_fields('customers', $rel_id); ?>
+                  <?php echo render_custom_fields('customers', $rel_id, "", (isset($lead->type) ? $lead->type : '')); ?>
                </div>
             </div>
             <hr class="mtop5 mbot10" />
@@ -140,18 +140,18 @@
                }
 
                ?>
-               <hr class="mtop5 mbot10" />
-               <div class="row">
-                  <!-- <?php
-                        if ($found_custom_fields == true) {
-                           echo '<h4 class="bold text-center mtop30">' . _l('copy_custom_fields_convert_to_customer') . '</h4><hr />';
-                        }
-                        foreach ($custom_fields as $field) {
-                           $value = get_custom_field_value($lead->id, $field['id'], 'leads');
-                           if ($value == '') {
-                              continue;
-                           }
-                        ?>
+            </div>
+
+            <!-- <?php
+                  if ($found_custom_fields == true) {
+                     echo '<h4 class="bold text-center mtop30">' . _l('copy_custom_fields_convert_to_customer') . '</h4><hr />';
+                  }
+                  foreach ($custom_fields as $field) {
+                     $value = get_custom_field_value($lead->id, $field['id'], 'leads');
+                     if ($value == '') {
+                        continue;
+                     }
+                  ?>
 
                      <p class="bold text-info"><?php echo $field['name']; ?> (<?php echo $value; ?>)</p>
                      <hr />
@@ -218,60 +218,62 @@
                   <?php } ?> -->
 
 
-                  <?php echo form_hidden('original_lead_email', $lead->email); ?>
+            <?php echo form_hidden('original_lead_email', $lead->email); ?>
+            <hr class="mtop5 mbot10" />
+            <div class="row">
+               <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
+               <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
+               <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
 
-                  <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
-                  <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
-                  <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
-
-                  <div class="client_password_set_wrapper">
-                     <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>
-                     <div class="input-group">
-                        <input type="password" class="form-control password" name="password" autocomplete="off">
-                        <span class="input-group-addon">
-                           <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>
-                        </span>
-                        <span class="input-group-addon">
-                           <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>
-                        </span>
-                     </div>
+               <div class="client_password_set_wrapper">
+                  <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>
+                  <div class="input-group">
+                     <input type="password" class="form-control password" name="password" autocomplete="off">
+                     <span class="input-group-addon">
+                        <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>
+                     </span>
+                     <span class="input-group-addon">
+                        <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>
+                     </span>
                   </div>
-                  <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
-                     <div class="checkbox checkbox-primary">
-                        <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
-                        <label for="send_set_password_email">
-                           <?php echo _l('client_send_set_password_email'); ?>
-                        </label>
-                     </div>
-                  <?php } ?>
-                  <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
-                     <div class="checkbox checkbox-primary">
-                        <input type="checkbox" name="donotsendwelcomeemail" id="donotsendwelcomeemail">
-                        <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>
-                     </div>
-                  <?php } ?>
-                  <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
-                     <div class="checkbox checkbox-primary">
-                        <input type="checkbox" name="transfer_notes" id="transfer_notes">
-                        <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>
-                     </div>
-                  <?php } ?>
-                  <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
-                     <div class="checkbox checkbox-primary">
-                        <input type="checkbox" name="transfer_consent" id="transfer_consent">
-                        <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>
-                     </div>
-                  <?php } ?>
                </div>
-               <div class="modal-footer">
-                  <button type="button" class="btn btn-default" onclick="init_lead(<?php echo $lead->id; ?>); return false;" data-dismiss="modal"><?php echo _l('back_to_lead'); ?></button>
-                  <button type="submit" data-form="#lead_to_client_form" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" class="btn btn-info"><?php echo _l('submit'); ?></button>
-               </div>
+               <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
+                  <div class="checkbox checkbox-primary">
+                     <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
+                     <label for="send_set_password_email">
+                        <?php echo _l('client_send_set_password_email'); ?>
+                     </label>
+                  </div>
+               <?php } ?>
+               <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
+                  <div class="checkbox checkbox-primary">
+                     <input type="checkbox" name="donotsendwelcomeemail" id="donotsendwelcomeemail">
+                     <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>
+                  </div>
+               <?php } ?>
+               <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
+                  <div class="checkbox checkbox-primary">
+                     <input type="checkbox" name="transfer_notes" id="transfer_notes">
+                     <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>
+                  </div>
+               <?php } ?>
+               <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
+                  <div class="checkbox checkbox-primary">
+                     <input type="checkbox" name="transfer_consent" id="transfer_consent">
+                     <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>
+                  </div>
+               <?php } ?>
             </div>
-            <?php echo form_close(); ?>
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" onclick="init_lead(<?php echo $lead->id; ?>); return false;" data-dismiss="modal"><?php echo _l('back_to_lead'); ?></button>
+            <button type="submit" data-form="#lead_to_client_form" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" class="btn btn-info"><?php echo _l('submit'); ?></button>
          </div>
       </div>
-      <script>
-         validate_lead_convert_to_client_form();
-         init_selectpicker();
-      </script>
+      <?php echo form_close(); ?>
+   </div>
+</div>
+<script>
+   validate_lead_convert_to_client_form();
+   init_selectpicker();
+</script>

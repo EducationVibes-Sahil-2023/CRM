@@ -419,7 +419,7 @@ function get_status_summary_filter($params)
         if (!empty($params['up_to_date'])) {
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
@@ -478,7 +478,7 @@ function get_status_summary_filter($params)
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
             $to_date = $params['to_date'];
-            $sql .= ' AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
         }
         if (!empty($params['up_to_date'])) {
             $up_from_date = $params['up_from_date'];
@@ -901,7 +901,7 @@ function get_leads_summary_filter_excel($params)
         if (!empty($params['up_to_date'])) {
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
@@ -1070,7 +1070,7 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
         if (!empty($params['up_to_date'])) {
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
