@@ -163,15 +163,10 @@
                         </div>
 
                         <div class="col-md-2 leads-filter-column">
-                            <select name="lead_type" id="lead_type" class="selectpicker" data-width="100%">
-                                <option value="">Select Lead Type</option>
-                                <?php foreach ($type as $tp => $vl) {
-                                ?>
-                                    <option value="<?php echo $vl['id']; ?>"><?php echo $vl['name']; ?></option>
-                                <?php } ?>
-                            </select>
-                            <?php
-                            ?>
+                            echo '<div id="leads-filter-source">';
+                            echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                            echo '</div>';
+
                         </div>
                         <div class="col-md-2 leads-filter-column">
                             <div class="form-group">
