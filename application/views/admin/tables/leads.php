@@ -267,7 +267,9 @@ if ($this->ci->input->post('source')) {
 
 if ($this->ci->input->post('lead_type')) {
 
-    array_push($where, 'AND type =' . $this->ci->db->escape_str($this->ci->input->post('lead_type')));
+    array_push($where, 'AND type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')');
+
+    // array_push($where, 'AND type =' . $this->ci->db->escape_str($this->ci->input->post('lead_type')));
     // print_r($where);
 }
 

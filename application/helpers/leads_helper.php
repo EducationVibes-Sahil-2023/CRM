@@ -279,7 +279,10 @@ function get_leads_summary_filter($params)
 
             $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
         }
-
+        if (!empty($params['lead_type'])) {
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        }
 
 
         // if (!empty($params['source'])) {
@@ -295,9 +298,7 @@ function get_leads_summary_filter($params)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
-        if (!empty($params['lead_type'])) {
-            $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-        }
+
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
             $to_date = $params['to_date'];
@@ -467,8 +468,12 @@ function get_status_summary_filter($params)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
+        // if (!empty($params['lead_type'])) {
+        //     $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        // }
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
@@ -595,7 +600,8 @@ function leads_update_count($params = false)
         $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
     }
     if (!empty($params['lead_type'])) {
-        $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
     }
 
     if (!empty($params['neet_score'])) {
@@ -701,8 +707,12 @@ function leads_update_count_id($id, $params = false)
     if (!empty($params['source'])) {
         $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
     }
+    // if (!empty($params['lead_type'])) {
+    //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+    // }
     if (!empty($params['lead_type'])) {
-        $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
     }
     if (!empty($params['to_date'])) {
         $from_date = $params['from_date'];
@@ -937,8 +947,12 @@ function get_leads_summary_filter_excel($params)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
+        // if (!empty($params['lead_type'])) {
+        //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        // }
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
@@ -1102,8 +1116,12 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
+        // if (!empty($params['lead_type'])) {
+        //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        // }
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];

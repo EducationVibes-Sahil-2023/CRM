@@ -23,7 +23,6 @@ class Facebook_leads_integration extends ClientsController
         parent::__construct();
 
         $this->load->library('session');
-
     }
 
     //zapier integration
@@ -33,7 +32,6 @@ class Facebook_leads_integration extends ClientsController
     {
 
         file_put_contents('zapier.json', file_get_contents('php://input'));
-
     }
 
 
@@ -55,21 +53,17 @@ class Facebook_leads_integration extends ClientsController
             if ($verify_token == get_option('verifytoken')) {
 
                 echo htmlspecialchars($challenge);
-
             }
-
         } else {
 
             $this->session->set_userdata('fb_lead', file_get_contents(file_get_contents("https://graph.facebook.com/v15.0/1365919237553627?access_token=EAAQIZBBbDDGMBAD1mDgRZAIGZBhgl6EibAez5djeqpqUsliMZADXl5zM4G3HQbbnScx9NVM74X0L9M2Qw6hqbGV3A1nvXs1XhbKS0ZCsmndgZA7vWx9Oc9zuZAz6Xfo7sCzprbxSNExT8ZAWN8ir0iy4SnydQnbmcH3ZBk4EpyM5eRYmWMeFeHYLOFrZCBRsww6ewZD")));
 
             // print_r(file_get_contents('php://input'));die;
-            
-             // print_r();die;
+
+            // print_r();die;
 
             redirect('facebook_leads_integration/getLeadGenID');
-
         }
-
     }
 
 
@@ -80,13 +74,13 @@ class Facebook_leads_integration extends ClientsController
 
     {
 
-		
+
 
         $pages = $_POST['pages'];
 
 
 
-         update_option('facebook_pages',json_encode($pages));
+        update_option('facebook_pages', json_encode($pages));
 
         $html = '<table class="table table-striped" id="pageTable">
 
@@ -108,34 +102,26 @@ class Facebook_leads_integration extends ClientsController
 
             if (!in_array($page['id'] . get_option('appId'), json_decode(get_option('subscribed_pages')))) {
 
-               
+
 
                 $html .= '<tr> <td>' . $page["name"] . '</td> <td><input type="button" value="' . _l('fbleadssubscribe') . '" id="' . $page['id'] . '" onclick="subscribe (' . $page['id'] . ',\'' . $page["access_token"] . '\');" class="btn btn-info"></td> </tr>';
-
-                
-
-            }else{
+            } else {
 
                 $html .= '<tr> <td>' . $page["name"] . '</td> <td><input type="button" value="' . _l('fbleadsunsubscribe') . '" id="' . $page['id'] . '" onclick="unsubscribeApps (' . $page['id'] . ',\'' . $page["access_token"] . '\');" class="btn btn-danger"></td> </tr>';
-
-            } 
-
-
-
+            }
         }
 
-       
+
 
         $html .= '</tbody>
 
         </table>';
 
-		// \modules\facebook_leads_integration\core\Apiinit::parse_module_url('facebook_leads_integration');
+        // \modules\facebook_leads_integration\core\Apiinit::parse_module_url('facebook_leads_integration');
 
-		// \modules\facebook_leads_integration\core\Apiinit::check_url('facebook_leads_integration');
+        // \modules\facebook_leads_integration\core\Apiinit::check_url('facebook_leads_integration');
 
         print_r($html);
-
     }
 
     // save Facebook leads data
@@ -147,11 +133,9 @@ class Facebook_leads_integration extends ClientsController
         if ($status == true) {
 
             $lead = $data;
-
         } else {
 
             $lead =  file_get_contents(APP_MODULES_PATH . 'facebook_leads_integration/lead_data.json', TRUE);
-
         }
 
         // print_r($lead);die;
@@ -203,7 +187,6 @@ class Facebook_leads_integration extends ClientsController
         foreach (get_custom_fields('leads') as $field) {
 
             $custom_fields[$field['id']] = $field['slug'];
-
         }
 
 
@@ -218,17 +201,14 @@ class Facebook_leads_integration extends ClientsController
 
 
             if (in_array($field->name, $fields)) {
-                
-                $data[$field->name] = $field->values[0];
 
+                $data[$field->name] = $field->values[0];
             } elseif (in_array($field->name, $custom_fields)) {
 
                 $id = array_search($field->name, $custom_fields);
 
                 $custom_fields_with_values['leads'][$id] = $field->values[0];
-
             }
-
         }
 
         /*
@@ -257,7 +237,6 @@ class Facebook_leads_integration extends ClientsController
         if (!isset($data['country']) || isset($data['country']) && $data['country'] == '') {
 
             $data['country'] = 0;
-
         }
 
 
@@ -265,7 +244,6 @@ class Facebook_leads_integration extends ClientsController
         if (isset($data['custom_contact_date'])) {
 
             unset($data['custom_contact_date']);
-
         }
 
 
@@ -281,21 +259,21 @@ class Facebook_leads_integration extends ClientsController
 
         $notifiedUsers = [];
         // foreach ($staff as $member) {
-            if ($staffid != 0) {
-                $notified = add_notification([
-                    'description'     => 'lead_imported_from_fb',
-                    'touserid'        => $staffid,
-                    'fromcompany'     => 1,
-                    'fromuserid'      => null,
-                    'additional_data' => serialize([
-                        'FB Leads',
-                        ]),
-                    'link' => '#leadid=' . $insert_id,
-                    ]);
-                if ($notified) {
-                    array_push($notifiedUsers, $staffid);
-                }
+        if ($staffid != 0) {
+            $notified = add_notification([
+                'description'     => 'lead_imported_from_fb',
+                'touserid'        => $staffid,
+                'fromcompany'     => 1,
+                'fromuserid'      => null,
+                'additional_data' => serialize([
+                    'FB Leads',
+                ]),
+                'link' => '#leadid=' . $insert_id,
+            ]);
+            if ($notified) {
+                array_push($notifiedUsers, $staffid);
             }
+        }
         // }
         pusher_trigger_notification($notifiedUsers);
 
@@ -305,9 +283,7 @@ class Facebook_leads_integration extends ClientsController
         if (isset($custom_fields)) {
 
             handle_custom_fields_post($insert_id, $custom_fields_with_values);
-
         }
-
     }
 
     // Store pages id which are subscribed 
@@ -316,9 +292,9 @@ class Facebook_leads_integration extends ClientsController
 
     {
 
-		// \modules\facebook_leads_integration\core\Apiinit::parse_module_url('facebook_leads_integration');
+        // \modules\facebook_leads_integration\core\Apiinit::parse_module_url('facebook_leads_integration');
 
-		// \modules\facebook_leads_integration\core\Apiinit::check_url('facebook_leads_integration');
+        // \modules\facebook_leads_integration\core\Apiinit::check_url('facebook_leads_integration');
 
         $pages = json_decode(get_option('subscribed_pages'));
 
@@ -333,7 +309,6 @@ class Facebook_leads_integration extends ClientsController
         update_option('subscribed_pages', json_encode($pages));
 
         print_r(json_encode($pages));
-
     }
 
     // Exclude pages id which are Unsubscribed 
@@ -365,9 +340,7 @@ class Facebook_leads_integration extends ClientsController
             if ($page != $page_id . $app_id) {
 
                 array_push($new_pages, $page);
-
             }
-
         }
 
 
@@ -377,7 +350,6 @@ class Facebook_leads_integration extends ClientsController
         update_option('subscribed_pages', json_encode($new_pages));
 
         print_r(json_encode($new_pages));
-
     }
 
     // Save and update Long live Facebook access token
@@ -387,7 +359,6 @@ class Facebook_leads_integration extends ClientsController
     {
 
         update_option('longLifeAccessToken', $_POST['data']);
-
     }
 
     // Returns the leadgen_id of a facebook lead
@@ -398,27 +369,23 @@ class Facebook_leads_integration extends ClientsController
 
         // $this->session->unset_userdata('fb_lead');
         // print_r($this->session->userdata('fb_lead'));die;
-        if($this->session->userdata('fb_lead')){
-        $data = json_decode($this->session->userdata('fb_lead'));
+        if ($this->session->userdata('fb_lead')) {
+            $data = json_decode($this->session->userdata('fb_lead'));
 
-        $id = $data->entry[0]->changes[0]->value->leadgen_id;
+            $id = $data->entry[0]->changes[0]->value->leadgen_id;
 
-        if ($id == "444444444444") {
+            if ($id == "444444444444") {
 
-            echo htmlspecialchars($this->saveData($id, false));
+                echo htmlspecialchars($this->saveData($id, false));
+            } else {
 
+                echo htmlspecialchars($this->get_lead_data($id));
+            }
+
+            $this->session->unset_userdata('fb_lead');
         } else {
-
-            echo htmlspecialchars($this->get_lead_data($id));
-
-        }
-
-        $this->session->unset_userdata('fb_lead');
-        }
-        else{
             echo "data not available";
         }
-
     }
 
     // returns facebook lead data
@@ -462,19 +429,16 @@ class Facebook_leads_integration extends ClientsController
 
 
             );
-
         } catch (Facebook\Exceptions\FacebookResponseException $e) {
 
             echo htmlspecialchars('Graph returned an error: ' . $e->getMessage());
 
             exit;
-
         } catch (Facebook\Exceptions\FacebookSDKException $e) {
 
             echo htmlspecialchars('Facebook SDK returned an error: ' . $e->getMessage());
 
             exit;
-
         }
 
         $graphNode = $response;
@@ -482,7 +446,6 @@ class Facebook_leads_integration extends ClientsController
 
 
         echo htmlspecialchars($this->saveData($graphNode->getBody(), true));
-
     }
 
     // Save dummy data against test_lead
@@ -492,7 +455,6 @@ class Facebook_leads_integration extends ClientsController
     {
 
         redirect('facebook_leads_integration/saveData');
-
     }
 
 
@@ -514,26 +476,22 @@ class Facebook_leads_integration extends ClientsController
         if ($id == 1) {
 
             update_option('facebook_lead_assigned', $view_assigned);
-
         } elseif ($id == 2) {
 
             update_option('facebook_lead_source', $view_source);
-
         } else {
 
             update_option('facebook_lead_status', $view_status);
-
         }
-
     }
-    
-      public function new_webhook()
+
+    public function new_webhook()
 
     {
-        
-        $app_version ="v16.0";
-        $key = "a0b28a40a2a6933b4617bb7ceb29f0a9";
-        $access_token ="EAAsKfvIyezoBABZBmZBSnUMXmDF1x5GZBCS7QIOZBH5Xy98JuMgEOV4EZBPZCwawHnZCXrfVZCe2ZB1Vz7ce1xIRJsDjKXlqEbZBgjzASdIMzcuryZA6lSh0n7SF6dXHIYkG3JuLHg4g2bg1E3alXMZBvbnsnqniuZAUHbM5UZB2UdaoKE1VcLAS7HqDspowL8VEuJRL14Y8rOuoBxHAZDZD";
+
+        $app_version = FACEBOOK_VERSION;
+        $key = FORM_KEY;
+        $access_token = FACEBOOK_ACCESS_TOKEN;
 
         // Verify the webhook by returning the challenge value
         if ($this->input->get('hub_mode') === 'subscribe' && $this->input->get('hub_verify_token') === 'token99099') {
@@ -543,99 +501,94 @@ class Facebook_leads_integration extends ClientsController
         if ($this->input->server('REQUEST_METHOD') === 'POST') {
             $json = file_get_contents('php://input');
             $lead_data = json_decode($json, true);
-          
+
             $lead_data_response = [];
-            if(!empty($lead_data['entry'][0]['changes'][0]['value']['leadgen_id'])){
-            $leadgen_id =  $lead_data['entry'][0]['changes'][0]['value']['leadgen_id'];
-            $form_name ="";
-            $form_id =  !empty($lead_data['entry'][0]['changes'][0]['value']['form_id'])?$lead_data['entry'][0]['changes'][0]['value']['form_id']:'';
-            $this->db->insert(db_prefix().'facebook_webhook_data', array("data"=>json_encode($lead_data,true),"lengen_id"=>$leadgen_id,"form_id"=>$form_id));
-            $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"),true);
-            if(!empty($form_id)){
-             $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"),true);
-             $form_name = !empty($lead_form_response["name"])?trim($lead_form_response["name"]):"";
-            }
-            $this->db->insert(db_prefix().'facebook_leads_logs', array("lead_details"=>json_encode($lead_data,true),"lead_data"=>json_encode($lead_data_response,true),"ledgen_id"=>$leadgen_id,"form_name"=>$form_name,"form_id"=>$form_id,"datetime"=>date("Y-m-d h:i:s")));
-            
-             $lead_data_array = [];
-            $token = $this->security->get_csrf_hash();
-            if (!empty($lead_data_response["field_data"])) {
-                $lead_data_array["facebook_status"] = 1;
-                $lead_data_array["csrf_token_name"] = $token;
-                $lead_data_array["key"] = $key;
-                $lead_data_array["website"] = $form_name;
-                
-                foreach ($lead_data_response["field_data"] as $field_data) {
-                    if (!empty($field_data["name"])) {
-                        if ($field_data["name"] == "full_name") {
-                            $lead_data_array["name"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if ($field_data["name"] == "phone_number") {
-                            $lead_data_array["phonenumber"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if ($field_data["name"] == "email") {
-                            $lead_data_array["email"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "intake") !== false) {
-                            $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "country") !== false) {
-                            $lead_data_array["form-cf-32"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "course") !== false) {
-                            $lead_data_array["form-cf-16"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "neet") !== false) {
-                            $lead_data_array["form-cf-8"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "passing") !== false) {
-                            $lead_data_array["form-cf-18"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        }
-                         else if (strpos(strtolower($field_data["name"]), "city") !== false) {
-                            $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        }
-                         else if (strpos(strtolower($field_data["name"]), "state") !== false) {
-                            $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+            if (!empty($lead_data['entry'][0]['changes'][0]['value']['leadgen_id'])) {
+                $leadgen_id =  $lead_data['entry'][0]['changes'][0]['value']['leadgen_id'];
+                $form_name = "";
+                $form_id =  !empty($lead_data['entry'][0]['changes'][0]['value']['form_id']) ? $lead_data['entry'][0]['changes'][0]['value']['form_id'] : '';
+                $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true), "lengen_id" => $leadgen_id, "form_id" => $form_id));
+                $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"), true);
+                if (!empty($form_id)) {
+                    $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"), true);
+                    $form_name = !empty($lead_form_response["name"]) ? trim($lead_form_response["name"]) : "";
+                }
+                $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data_response, true), "ledgen_id" => $leadgen_id, "form_name" => $form_name, "form_id" => $form_id, "datetime" => date("Y-m-d h:i:s")));
+
+                $lead_data_array = [];
+                $token = $this->security->get_csrf_hash();
+                if (!empty($lead_data_response["field_data"])) {
+                    $lead_data_array["facebook_status"] = 1;
+                    $lead_data_array["csrf_token_name"] = $token;
+                    $lead_data_array["key"] = $key;
+                    $lead_data_array["website"] = $form_name;
+
+                    foreach ($lead_data_response["field_data"] as $field_data) {
+                        if (!empty($field_data["name"])) {
+                            if ($field_data["name"] == "full_name") {
+                                $lead_data_array["name"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if ($field_data["name"] == "phone_number") {
+                                $lead_data_array["phonenumber"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if ($field_data["name"] == "email") {
+                                $lead_data_array["email"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "intake") !== false) {
+                                $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "country") !== false) {
+                                $lead_data_array["form-cf-32"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "course") !== false) {
+                                $lead_data_array["form-cf-16"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "neet") !== false) {
+                                $lead_data_array["form-cf-8"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "passing") !== false) {
+                                $lead_data_array["form-cf-18"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "city") !== false) {
+                                $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "state") !== false) {
+                                $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            }
                         }
                     }
-                }
 
-                 $lead_data_array["type"] = '';
-                $lead_type_array  = $this->staff_model->get_type();
-                if (!empty($lead_type_array)) {
-                    foreach ($lead_type_array as $l) {
-                        if (!empty($l["name"]) && strpos(strtolower($lead_form_response["name"]), strtolower(trim($l["name"]))) !== false) {
-                            $lead_data_array["type"] = !empty($l["id"]) ? $l["id"] : '';
+                    $lead_data_array["type"] = '';
+                    $lead_type_array  = $this->staff_model->get_type();
+                    if (!empty($lead_type_array)) {
+                        foreach ($lead_type_array as $l) {
+                            if (!empty($l["name"]) && strpos(strtolower($lead_form_response["name"]), strtolower(trim($l["name"]))) !== false) {
+                                $lead_data_array["type"] = !empty($l["id"]) ? $l["id"] : '';
+                            }
                         }
                     }
-                }
 
 
-                $ch = curl_init();
-                $url = base_url("forms/wtl/" . $key);
-                curl_setopt($ch, CURLOPT_URL, $url);
-                $headers = array(
-                    'X-CSRF-TOKEN: ' . $token
-                );
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                curl_setopt($ch, CURLOPT_POST, 1);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $lead_data_array);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                $result = curl_exec($ch);
-                // Check for errors
-                if (curl_errno($ch)) {
-                    echo 'cURL error: ' . curl_error($ch);
+                    $ch = curl_init();
+                    $url = base_url("forms/wtl/" . $key);
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    $headers = array(
+                        'X-CSRF-TOKEN: ' . $token
+                    );
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $lead_data_array);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    $result = curl_exec($ch);
+                    // Check for errors
+                    if (curl_errno($ch)) {
+                        echo 'cURL error: ' . curl_error($ch);
+                    }
+                    curl_close($ch);
                 }
-                curl_close($ch);
             }
-            }
-            
         }
-
-
     }
 
 
-      public function new_webhook_test()
+    public function new_webhook_test()
 
     {
-        
-        $app_version ="v16.0";
+
+        $app_version = "v16.0";
         $key = "a0b28a40a2a6933b4617bb7ceb29f0a9";
-        $access_token ="EAAsKfvIyezoBAK8j2nCSmxFL3E7mhZAZBNXyTeuVmWm0DW2sNS7tX0PFerye8fnmCydZBNQat1spVfRZBhHwgojl3nj70hgOhjgmfPwBf5jgEfBd0UInsXzYpVJXl9Atd5sRZCAmvZBzWHOPIMJT6x6zFK9OSX3z8f8TgsuuOCnjQat3r0WzAZCGLvwHZA6DJR0ZD";
+        $access_token = "EAAsKfvIyezoBAK8j2nCSmxFL3E7mhZAZBNXyTeuVmWm0DW2sNS7tX0PFerye8fnmCydZBNQat1spVfRZBhHwgojl3nj70hgOhjgmfPwBf5jgEfBd0UInsXzYpVJXl9Atd5sRZCAmvZBzWHOPIMJT6x6zFK9OSX3z8f8TgsuuOCnjQat3r0WzAZCGLvwHZA6DJR0ZD";
 
         // Verify the webhook by returning the challenge value
         if ($this->input->get('hub_mode') === 'subscribe' && $this->input->get('hub_verify_token') === 'token99099') {
@@ -643,99 +596,91 @@ class Facebook_leads_integration extends ClientsController
         }
         // Handle incoming lead data
         if ($this->input->server('REQUEST_METHOD') === 'POST') {
-                     
+
             $lead_data_response = [];
-                      $leadgen_id =  $_POST["leadgen_id"];
-            $form_name ="";
+            $leadgen_id =  $_POST["leadgen_id"];
+            $form_name = "";
             $form_id =  $_POST["form_id"];
-            $this->db->insert(db_prefix().'facebook_webhook_data', array("data"=>json_encode($lead_data,true),"lengen_id"=>$leadgen_id,"form_id"=>$form_id));
-            $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"),true);
-            if(!empty($form_id)){
-             $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"),true);
-             $form_name = !empty($lead_form_response["name"])?trim($lead_form_response["name"]):"";
-            
-            $this->db->insert(db_prefix().'facebook_leads_logs', array("lead_details"=>json_encode($lead_data,true),"lead_data"=>json_encode($lead_data_response,true),"ledgen_id"=>$leadgen_id,"form_name"=>$form_name,"form_id"=>$form_id));
-            
-             $lead_data_array = [];
-            $token = $this->security->get_csrf_hash();
-            if (!empty($lead_data_response["field_data"])) {
-                $lead_data_array["facebook_status"] = 1;
-                $lead_data_array["csrf_token_name"] = $token;
-                $lead_data_array["key"] = $key;
-                $lead_data_array["website"] = $form_name;
-                
-                foreach ($lead_data_response["field_data"] as $field_data) {
-                    if (!empty($field_data["name"])) {
-                        if ($field_data["name"] == "full_name") {
-                            $lead_data_array["name"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if ($field_data["name"] == "phone_number") {
-                            $lead_data_array["phonenumber"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if ($field_data["name"] == "email") {
-                            $lead_data_array["email"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "intake") !== false) {
-                            $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "country") !== false) {
-                            $lead_data_array["form-cf-32"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "course") !== false) {
-                            $lead_data_array["form-cf-16"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "neet") !== false) {
-                            $lead_data_array["form-cf-8"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        } else if (strpos(strtolower($field_data["name"]), "passing") !== false) {
-                            $lead_data_array["form-cf-18"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        }
-                         else if (strpos(strtolower($field_data["name"]), "city") !== false) {
-                            $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        }
-                         else if (strpos(strtolower($field_data["name"]), "state") !== false) {
-                            $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                        }
-                    }
-                }
+            $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true), "lengen_id" => $leadgen_id, "form_id" => $form_id));
+            $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"), true);
+            if (!empty($form_id)) {
+                $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"), true);
+                $form_name = !empty($lead_form_response["name"]) ? trim($lead_form_response["name"]) : "";
 
-                 $lead_data_array["type"] = '';
-                $lead_type_array  = $this->staff_model->get_type();
-                if (!empty($lead_type_array)) {
-                    foreach ($lead_type_array as $l) {
-                        if (!empty($l["name"]) && strpos(strtolower($lead_form_response["name"]), strtolower(trim($l["name"]))) !== false) {
-                            $lead_data_array["type"] = !empty($l["id"]) ? $l["id"] : '';
+                $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data_response, true), "ledgen_id" => $leadgen_id, "form_name" => $form_name, "form_id" => $form_id));
+
+                $lead_data_array = [];
+                $token = $this->security->get_csrf_hash();
+                if (!empty($lead_data_response["field_data"])) {
+                    $lead_data_array["facebook_status"] = 1;
+                    $lead_data_array["csrf_token_name"] = $token;
+                    $lead_data_array["key"] = $key;
+                    $lead_data_array["website"] = $form_name;
+
+                    foreach ($lead_data_response["field_data"] as $field_data) {
+                        if (!empty($field_data["name"])) {
+                            if ($field_data["name"] == "full_name") {
+                                $lead_data_array["name"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if ($field_data["name"] == "phone_number") {
+                                $lead_data_array["phonenumber"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if ($field_data["name"] == "email") {
+                                $lead_data_array["email"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "intake") !== false) {
+                                $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "country") !== false) {
+                                $lead_data_array["form-cf-32"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "course") !== false) {
+                                $lead_data_array["form-cf-16"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "neet") !== false) {
+                                $lead_data_array["form-cf-8"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "passing") !== false) {
+                                $lead_data_array["form-cf-18"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "city") !== false) {
+                                $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "state") !== false) {
+                                $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            }
                         }
                     }
+
+                    $lead_data_array["type"] = '';
+                    $lead_type_array  = $this->staff_model->get_type();
+                    if (!empty($lead_type_array)) {
+                        foreach ($lead_type_array as $l) {
+                            if (!empty($l["name"]) && strpos(strtolower($lead_form_response["name"]), strtolower(trim($l["name"]))) !== false) {
+                                $lead_data_array["type"] = !empty($l["id"]) ? $l["id"] : '';
+                            }
+                        }
+                    }
+
+
+
+                    $ch = curl_init();
+                    $url = base_url("forms/wtl/" . $key);
+                    curl_setopt($ch, CURLOPT_URL, $url);
+                    $headers = array(
+                        'X-CSRF-TOKEN: ' . $token
+                    );
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                    curl_setopt($ch, CURLOPT_POST, 1);
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $lead_data_array);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    // execute cURL request and store response in a variable
+                    $response = curl_exec($ch);
+
+                    // check for cURL errors
+                    if (curl_error($ch)) {
+
+                        echo 'Error: ' . curl_error($ch);
+                    }
+
+                    // close cURL
+                    curl_close($ch);
+
+                    // output response data
+                    echo $response;
                 }
-
-
-
-                $ch = curl_init();
-                $url = base_url("forms/wtl/" . $key);
-                curl_setopt($ch, CURLOPT_URL, $url);
-                $headers = array(
-                    'X-CSRF-TOKEN: ' . $token
-                );
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-                curl_setopt($ch, CURLOPT_POST, 1);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, $lead_data_array);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-     // execute cURL request and store response in a variable
-$response = curl_exec($ch);
-
-// check for cURL errors
-if(curl_error($ch)) {
-
-    echo 'Error: ' . curl_error($ch);
-}
-
-// close cURL
-curl_close($ch);
-
-// output response data
-echo $response;            }
             }
-            
         }
-
-
     }
-
-
-
 }
-
