@@ -25,6 +25,49 @@
             }
             ?>
             <div class="row">
+               <div class="col-md-3">
+                  <?php
+                  $selected = '';
+                  if (isset($lead)) {
+                     $selected = $lead->status;
+                  } else if (isset($status_id)) {
+                     $selected = $status_id;
+                  }
+                  echo render_leads_status_select($statuses, $selected, 'lead_add_edit_status');
+                  ?>
+               </div>
+               <div class="col-md-3">
+                  <?php
+                  $selected = (isset($lead) ? $lead->type : '');
+                  echo render_leads_type_select($type, $selected, 'lead_add_edit_type');
+                  ?>
+               </div>
+               <div class="col-md-3">
+                  <?php
+                  $selected = (isset($lead) ? $lead->source : get_option('leads_default_source'));
+                  echo render_leads_source_select($sources, $selected, 'lead_add_edit_source');
+                  ?>
+               </div>
+               <div class="col-md-3 <?php echo $hide_change_assignee; ?>">
+                  <?php
+                  $assigned_attrs = array();
+                  $selected = (isset($lead) ? $lead->assigned : get_staff_user_id());
+                  if (
+                     isset($lead)
+                     && $lead->assigned == get_staff_user_id()
+                     && $lead->addedfrom != get_staff_user_id()
+                     && !is_admin($lead->assigned)
+                     && !has_permission('leads', '', 'view')
+                  ) {
+                     $assigned_attrs['disabled'] = true;
+                  }
+                  echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs); ?>
+               </div>
+
+            </div>
+            <div class="clearfix"></div>
+            <hr class="mtop5 mbot10" />
+            <div class="row">
 
                <?php echo form_hidden('default_language', $lead->default_language); ?>
 
@@ -34,21 +77,21 @@
                <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('lastname', 'lead_convert_to_client_lastname', $lastname); ?>
                </div>
-               <div class="col-lg-6 col-md-6 col-12">
+               <!-- <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('title', 'contact_position', $lead->title); ?>
-               </div>
+               </div> -->
                <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('email', 'lead_convert_to_email', $lead->email); ?>
                </div>
-               <div class="col-lg-6 col-md-6 col-12">
+               <!-- <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('company', 'lead_company', $lead->company); ?>
-               </div>
+               </div> -->
                <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('phonenumber', 'lead_convert_to_client_phone', $lead->phonenumber); ?>
                </div>
-               <div class="col-lg-6 col-md-6 col-12">
+               <!-- <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('website', 'client_website', $lead->website); ?>
-               </div>
+               </div> -->
 
                <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('city', 'client_city', $lead->city); ?>
@@ -56,6 +99,7 @@
                <div class="col-lg-6 col-md-6 col-12">
                   <?php echo render_input('state', 'client_state', $lead->state); ?>
                </div>
+
                <div class="col-lg-6 col-md-6 col-12">
                   <?php
                   $countries = get_all_countries();
@@ -77,148 +121,157 @@
                   <?php echo render_custom_fields('customers', $rel_id); ?>
                </div>
             </div>
-            <?php
-            $not_mergable_customer_fields  = array('userid', 'datecreated', 'leadid', 'default_language', 'default_currency', 'active');
-            $not_mergable_contact_fields  = array('id', 'userid', 'datecreated', 'is_primary', 'password', 'new_pass_key', 'new_pass_key_requested', 'last_ip', 'last_login', 'last_password_change', 'active', 'profile_image', 'direction');
-            $customer_fields = $this->db->list_fields(db_prefix() . 'clients');
-            $contact_fields = $this->db->list_fields(db_prefix() . 'contacts');
-            $custom_fields = get_custom_fields('leads');
-            $found_custom_fields = false;
-            foreach ($custom_fields as $field) {
-               $value = get_custom_field_value($lead->id, $field['id'], 'leads');
-               if ($value == '') {
-                  continue;
-               } else {
-                  $found_custom_fields = true;
+            <hr class="mtop5 mbot10" />
+            <div class="row">
+               <?php
+               $not_mergable_customer_fields  = array('userid', 'datecreated', 'leadid', 'default_language', 'default_currency', 'active');
+               $not_mergable_contact_fields  = array('id', 'userid', 'datecreated', 'is_primary', 'password', 'new_pass_key', 'new_pass_key_requested', 'last_ip', 'last_login', 'last_password_change', 'active', 'profile_image', 'direction');
+               $customer_fields = $this->db->list_fields(db_prefix() . 'clients');
+               $contact_fields = $this->db->list_fields(db_prefix() . 'contacts');
+               $custom_fields = get_custom_fields('leads');
+               $found_custom_fields = false;
+               foreach ($custom_fields as $field) {
+                  $value = get_custom_field_value($lead->id, $field['id'], 'leads');
+                  if ($value == '') {
+                     continue;
+                  } else {
+                     $found_custom_fields = true;
+                  }
                }
-            }
-            if ($found_custom_fields == true) {
-               echo '<h4 class="bold text-center mtop30">' . _l('copy_custom_fields_convert_to_customer') . '</h4><hr />';
-            }
-            foreach ($custom_fields as $field) {
-               $value = get_custom_field_value($lead->id, $field['id'], 'leads');
-               if ($value == '') {
-                  continue;
-               }
-            ?>
 
-               <p class="bold text-info"><?php echo $field['name']; ?> (<?php echo $value; ?>)</p>
-               <hr />
-               <p class="bold no-margin"><?php echo _l('leads_merge_customer'); ?></p>
-               <div class="radio radio-primary">
-                  <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_1_<?php echo $field['id']; ?>" class="include_leads_custom_fields" checked name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="1">
-                  <label for="m_1_<?php echo $field['id']; ?>" class="bold">
-                     <span data-toggle="tooltip" data-title="<?php echo _l('copy_custom_fields_convert_to_customer_help'); ?>"><i class="fa fa-info-circle"></i></span> <?php echo _l('lead_merge_custom_field'); ?>
-                  </label>
-               </div>
-               <div class="radio radio-primary">
-                  <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_2_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="2">
-                  <label for="m_2_<?php echo $field['id']; ?>" class="bold">
-                     <?php echo _l('lead_merge_custom_field_existing'); ?>
-                  </label>
-               </div>
-               <div class="hide" id="merge_db_field_<?php echo $field['id']; ?>">
-                  <hr />
-                  <select name="merge_db_fields[<?php echo $field['id']; ?>]" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                     <option value=""></option>
-                     <?php foreach ($customer_fields as $c_field) {
-                        if (!in_array($c_field, $not_mergable_customer_fields)) {
-                           echo '<option value="' . $c_field . '">' . str_replace('_', ' ', ucfirst($c_field)) . '</option>';
+               ?>
+               <hr class="mtop5 mbot10" />
+               <div class="row">
+                  <!-- <?php
+                        if ($found_custom_fields == true) {
+                           echo '<h4 class="bold text-center mtop30">' . _l('copy_custom_fields_convert_to_customer') . '</h4><hr />';
                         }
-                     }
-                     ?>
-                  </select>
-                  <hr />
-               </div>
-               <p class="bold"><?php echo _l('leads_merge_contact'); ?></p>
-               <div class="radio radio-primary">
-                  <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_3_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="3">
-                  <label for="m_3_<?php echo $field['id']; ?>" class="bold">
-                     <?php echo _l('leads_merge_as_contact_field'); ?>
-                  </label>
-               </div>
-               <div class="radio radio-primary">
-                  <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_4_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="4">
-                  <label for="m_4_<?php echo $field['id']; ?>" class="bold">
-                     <span data-toggle="tooltip" data-title="<?php echo _l('copy_custom_fields_convert_to_customer_help'); ?>"><i class="fa fa-info-circle"></i></span>
-                     <?php echo _l('lead_merge_custom_field'); ?>
-                  </label>
-               </div>
-               <div class="hide" id="merge_db_contact_field_<?php echo $field['id']; ?>">
-                  <hr />
-                  <select name="merge_db_contact_fields[<?php echo $field['id']; ?>]" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                     <option value=""></option>
-                     <?php foreach ($contact_fields as $c_field) {
-                        if (!in_array($c_field, $not_mergable_contact_fields)) {
-                           echo '<option value="' . $c_field . '">' . str_replace('_', ' ', ucfirst($c_field)) . '</option>';
-                        }
-                     }
-                     ?>
-                  </select>
-               </div>
-               <hr />
-               <div class="radio radio-primary">
-                  <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_5_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="5">
-                  <label for="m_5_<?php echo $field['id']; ?>" class="bold">
-                     <?php echo _l('lead_dont_merge_custom_field'); ?>
-                  </label>
-               </div>
-               <hr />
-            <?php } ?>
-            <?php echo form_hidden('original_lead_email', $lead->email); ?>
+                        foreach ($custom_fields as $field) {
+                           $value = get_custom_field_value($lead->id, $field['id'], 'leads');
+                           if ($value == '') {
+                              continue;
+                           }
+                        ?>
 
-            <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
-            <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
-            <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
+                     <p class="bold text-info"><?php echo $field['name']; ?> (<?php echo $value; ?>)</p>
+                     <hr />
+                     <p class="bold no-margin"><?php echo _l('leads_merge_customer'); ?></p>
+                     <div class="radio radio-primary">
+                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_1_<?php echo $field['id']; ?>" class="include_leads_custom_fields" checked name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="1">
+                        <label for="m_1_<?php echo $field['id']; ?>" class="bold">
+                           <span data-toggle="tooltip" data-title="<?php echo _l('copy_custom_fields_convert_to_customer_help'); ?>"><i class="fa fa-info-circle"></i></span> <?php echo _l('lead_merge_custom_field'); ?>
+                        </label>
+                     </div>
+                     <div class="radio radio-primary">
+                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_2_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="2">
+                        <label for="m_2_<?php echo $field['id']; ?>" class="bold">
+                           <?php echo _l('lead_merge_custom_field_existing'); ?>
+                        </label>
+                     </div>
+                     <div class="hide" id="merge_db_field_<?php echo $field['id']; ?>">
+                        <hr />
+                        <select name="merge_db_fields[<?php echo $field['id']; ?>]" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
+                           <option value=""></option>
+                           <?php foreach ($customer_fields as $c_field) {
+                              if (!in_array($c_field, $not_mergable_customer_fields)) {
+                                 echo '<option value="' . $c_field . '">' . str_replace('_', ' ', ucfirst($c_field)) . '</option>';
+                              }
+                           }
+                           ?>
+                        </select>
+                        <hr />
+                     </div>
+                     <p class="bold"><?php echo _l('leads_merge_contact'); ?></p>
+                     <div class="radio radio-primary">
+                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_3_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="3">
+                        <label for="m_3_<?php echo $field['id']; ?>" class="bold">
+                           <?php echo _l('leads_merge_as_contact_field'); ?>
+                        </label>
+                     </div>
+                     <div class="radio radio-primary">
+                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_4_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="4">
+                        <label for="m_4_<?php echo $field['id']; ?>" class="bold">
+                           <span data-toggle="tooltip" data-title="<?php echo _l('copy_custom_fields_convert_to_customer_help'); ?>"><i class="fa fa-info-circle"></i></span>
+                           <?php echo _l('lead_merge_custom_field'); ?>
+                        </label>
+                     </div>
+                     <div class="hide" id="merge_db_contact_field_<?php echo $field['id']; ?>">
+                        <hr />
+                        <select name="merge_db_contact_fields[<?php echo $field['id']; ?>]" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
+                           <option value=""></option>
+                           <?php foreach ($contact_fields as $c_field) {
+                              if (!in_array($c_field, $not_mergable_contact_fields)) {
+                                 echo '<option value="' . $c_field . '">' . str_replace('_', ' ', ucfirst($c_field)) . '</option>';
+                              }
+                           }
+                           ?>
+                        </select>
+                     </div>
+                     <hr />
+                     <div class="radio radio-primary">
+                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_5_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="5">
+                        <label for="m_5_<?php echo $field['id']; ?>" class="bold">
+                           <?php echo _l('lead_dont_merge_custom_field'); ?>
+                        </label>
+                     </div>
+                     <hr />
+                  <?php } ?> -->
 
-            <div class="client_password_set_wrapper">
-               <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>
-               <div class="input-group">
-                  <input type="password" class="form-control password" name="password" autocomplete="off">
-                  <span class="input-group-addon">
-                     <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>
-                  </span>
-                  <span class="input-group-addon">
-                     <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>
-                  </span>
+
+                  <?php echo form_hidden('original_lead_email', $lead->email); ?>
+
+                  <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
+                  <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
+                  <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
+
+                  <div class="client_password_set_wrapper">
+                     <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>
+                     <div class="input-group">
+                        <input type="password" class="form-control password" name="password" autocomplete="off">
+                        <span class="input-group-addon">
+                           <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>
+                        </span>
+                        <span class="input-group-addon">
+                           <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>
+                        </span>
+                     </div>
+                  </div>
+                  <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
+                     <div class="checkbox checkbox-primary">
+                        <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
+                        <label for="send_set_password_email">
+                           <?php echo _l('client_send_set_password_email'); ?>
+                        </label>
+                     </div>
+                  <?php } ?>
+                  <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
+                     <div class="checkbox checkbox-primary">
+                        <input type="checkbox" name="donotsendwelcomeemail" id="donotsendwelcomeemail">
+                        <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>
+                     </div>
+                  <?php } ?>
+                  <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
+                     <div class="checkbox checkbox-primary">
+                        <input type="checkbox" name="transfer_notes" id="transfer_notes">
+                        <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>
+                     </div>
+                  <?php } ?>
+                  <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
+                     <div class="checkbox checkbox-primary">
+                        <input type="checkbox" name="transfer_consent" id="transfer_consent">
+                        <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>
+                     </div>
+                  <?php } ?>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-default" onclick="init_lead(<?php echo $lead->id; ?>); return false;" data-dismiss="modal"><?php echo _l('back_to_lead'); ?></button>
+                  <button type="submit" data-form="#lead_to_client_form" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" class="btn btn-info"><?php echo _l('submit'); ?></button>
                </div>
             </div>
-            <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
-                  <label for="send_set_password_email">
-                     <?php echo _l('client_send_set_password_email'); ?>
-                  </label>
-               </div>
-            <?php } ?>
-            <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="donotsendwelcomeemail" id="donotsendwelcomeemail">
-                  <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>
-               </div>
-            <?php } ?>
-            <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="transfer_notes" id="transfer_notes">
-                  <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>
-               </div>
-            <?php } ?>
-            <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="transfer_consent" id="transfer_consent">
-                  <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>
-               </div>
-            <?php } ?>
-         </div>
-         <div class="modal-footer">
-            <button type="button" class="btn btn-default" onclick="init_lead(<?php echo $lead->id; ?>); return false;" data-dismiss="modal"><?php echo _l('back_to_lead'); ?></button>
-            <button type="submit" data-form="#lead_to_client_form" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" class="btn btn-info"><?php echo _l('submit'); ?></button>
+            <?php echo form_close(); ?>
          </div>
       </div>
-      <?php echo form_close(); ?>
-   </div>
-</div>
-<script>
-   validate_lead_convert_to_client_form();
-   init_selectpicker();
-</script>
+      <script>
+         validate_lead_convert_to_client_form();
+         init_selectpicker();
+      </script>
