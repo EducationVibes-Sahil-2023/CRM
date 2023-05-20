@@ -62,7 +62,7 @@ class Custom_fields extends AdminController
         $data['client_portal_fields']   = $this->client_portal_fields;
         $data['client_editable_fields'] = $this->client_editable_fields;
         $data['title']                  = $title;
-        $data['custom_fields']    =  $this->custom_fields_model->get();
+        $data['custom_fields']    =  $this->custom_fields_model->get('',1);
 
         $this->load->view('admin/custom_fields/customfield', $data);
     }

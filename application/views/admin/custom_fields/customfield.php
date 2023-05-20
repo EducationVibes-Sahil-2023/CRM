@@ -123,22 +123,26 @@
                             </div>
                             <p class="bold">Map Custom Field</p>
                             <div class="checkbox checkbox-primary">
-                                <input type="checkbox" name="map_status" id="map_status" <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'checked';} ?>>
+                                <input type="checkbox" name="map_status" id="map_status" value=1 <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'checked';} ?>>
                                 <label for="map_status">Field Map Status</label>
                             </div>
+      
                             <div class="select-placeholder form-group" id="select_map_field" style="display: <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'block';} ?>;">
                                 <label for="map_id"><?php echo _l('custom_field_add_edit_belongs_top'); ?></label>
 
                             <select name="map_id" id="map_id" class="selectpicker" data-width="100%"  data-none-selected-text="Select Custom Field">
                             <option value=""></option>
-                            <?php foreach($custom_fields as $cf){ 
+                            <?php 
+                            $select_id = explode("-",$custom_field->map_id); 
+                            $select_id = $select_id[0];
+                            foreach($custom_fields as $cf){ 
                                 $selected ="";
-                                if($custom_field->map_id == $cf["id"])
+                                if($select_id== $cf["id"])
                                 {
                                     $selected ="selected";
                                 }
                                 ?>
-                                <option <?=$selected?> value="<?=$cf["id"]?>"><?= $cf["fieldto"]."-".$cf["name"] ?></option>
+                                <option <?=$selected?> value="<?=$cf["id"]."-".$cf["fieldto"]?>"><?= $cf["fieldto"]."-".$cf["name"] ?></option>
                                 <?php } ?>
                             </select>
                             </div>
