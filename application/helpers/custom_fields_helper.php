@@ -9,7 +9,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @param  array $items_cf_params          used only for custom fields for items operations
  * @return mixed
  */
-function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_cf_params = [], $show_lead_type = "")
+function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_cf_params = [], $show_lead_type = "", $table_array = [])
 {
     // Is custom fields for items and in add/edit
     $items_add_edit_preview = isset($items_cf_params['add_edit_preview']) && $items_cf_params['add_edit_preview'] ? true : false;
@@ -43,12 +43,16 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
             $fields_html .= '<div class="row custom-fields-form-row">';
         }
         foreach ($fields as $field) {
+            $show_lead_type_array = [];
+            if (!empty($field["show_lead_type"])) {
+                $show_lead_type_array = explode(",", $field["show_lead_type"]);
+            }
 
             if ($field['only_admin'] == 1 && !$is_admin) {
                 continue;
             }
 
-            if (!empty($field["show_lead_type"]) && !empty($show_lead_type) &&  $field["show_lead_type"] != $show_lead_type) {
+            if (!empty($field["show_lead_type"]) && !empty($show_lead_type) &&  !in_array($show_lead_type, $show_lead_type_array)) {
                 continue;
             }
 
@@ -135,6 +139,22 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                 }
             }
 
+            if (!empty($field["column_map"]) && !empty($table_array)) {
+
+                $check_array_type = gettype($table_array);
+                if ($check_array_type === 'array') {
+                    if (!empty($table_array[$field["column_map"]])) {
+                        $value = $table_array[$field["column_map"]];
+                    }
+                } elseif ($check_array_type === 'object') {
+       
+                    $table_array = (array)$table_array;
+                    if (!empty($table_array[$field["column_map"]])) {
+                        $value = $table_array[$field["column_map"]];
+                    }
+                }
+            }
+         
             $_input_attrs = [];
 
             if ($field['required'] == 1) {
@@ -210,6 +230,15 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
 
                 foreach ($options as $option) {
                     $option = trim($option);
+                    $option_array = explode("@@",$option);
+                    $option = $option_array[0];
+                    if(!empty($option_array))
+                    {
+                        if(!empty($option_array[1]))
+                        {
+                            $value = $option[0];
+                        }
+                    }
                     if ($option != '') {
                         $selected = '';
                         if ($field['type'] == 'select') {
