@@ -52,7 +52,7 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                 continue;
             }
 
-            if (!empty($field["show_lead_type"]) && !empty($show_lead_type) &&  !in_array($show_lead_type, $show_lead_type_array)) {
+            if (!empty($show_lead_type_array) && !empty($show_lead_type) &&  !in_array($show_lead_type,$show_lead_type_array)) {
                 continue;
             }
 
