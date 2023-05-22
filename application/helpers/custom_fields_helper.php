@@ -230,15 +230,15 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
 
                 foreach ($options as $option) {
                     $option = trim($option);
-                    // $option_array = explode("@@",$option);
-                    // $option = $option_array[0];
-                    // if(!empty($option_array))
-                    // {
-                    //     if(!empty($option_array[1]))
-                    //     {
-                    //         $value = $option[0];
-                    //     }
-                    // }
+                    $option_array = explode("@@",$option);
+                    $option = $option_array[0];
+                    if(!empty($option_array))
+                    {
+                        if(!empty($option_array[1]))
+                        {
+                            $value = $option_array[0];
+                        }
+                    }
                     if ($option != '') {
                         $selected = '';
                         if ($field['type'] == 'select') {
