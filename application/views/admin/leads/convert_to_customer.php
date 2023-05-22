@@ -24,7 +24,7 @@
                $firstname = $lead->name;
             }
             ?>
-            <div class="row">
+            <!-- <div class="row">
                <div class="col-md-3">
                   <?php
                   $selected = '';
@@ -64,7 +64,7 @@
                   echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs); ?>
                </div>
 
-            </div>
+            </div> -->
             <div class="clearfix"></div>
             <hr class="mtop5 mbot10" />
             <div class="row">
