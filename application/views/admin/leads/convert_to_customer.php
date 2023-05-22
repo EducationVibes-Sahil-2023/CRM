@@ -119,10 +119,10 @@
                <div class="col-md-12 mtop15">
                   <?php $rel_id = (isset($lead) ? $lead->id : false);
                   ?>
-                  <?php echo render_custom_fields('customers', $rel_id, "","", (isset($lead->type) ? $lead->type : '')); ?>
+                  <?php echo render_custom_fields('customers', $rel_id, "","", (isset($lead->type) ? $lead->type : ''),$lead); ?>
                </div>
             </div>
-            <hr class="mtop5 mbot10" />
+            <!-- <hr class="mtop5 mbot10" /> -->
             <div class="row">
                <?php
                $not_mergable_customer_fields  = array('userid', 'datecreated', 'leadid', 'default_language', 'default_currency', 'active');

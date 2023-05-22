@@ -20,18 +20,26 @@ class Custom_fields_model extends App_Model
      * @return object
      * Get single custom field
      */
-    public function get($id = false, $active = "")
+    public function get($id = false, $where_array = [])
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
 
             return $this->db->get(db_prefix() . 'customfields')->row();
         }
-        if (!empty($active)) {
-            $this->db->where("active", 1);
+        if (!empty($where_array)) {
+            $this->db->where($where_array);
         }
         return $this->db->get(db_prefix() . 'customfields')->result_array();
     }
+    public function get_column_names($table)
+    {
+        $sql = "SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = N";
+        $sql .= "'{$table}'";
+
+        return $this->db->query($sql)->result_array();
+    }
+
 
     /**
      * Add new custom field
