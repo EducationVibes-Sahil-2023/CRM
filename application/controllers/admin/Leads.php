@@ -748,7 +748,6 @@ class Leads extends AdminController
             unset($data['original_lead_email']);
 
 
-
             if (isset($data['transfer_notes'])) {
 
                 $notes = $this->misc_model->get_notes($data['leadid'], 'lead');
