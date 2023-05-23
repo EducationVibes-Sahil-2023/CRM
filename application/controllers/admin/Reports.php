@@ -453,7 +453,7 @@ class Reports extends AdminController
                                     $percentage = ($percentage / $total_sum) * 100;
                                     $ret .= number_format((float)$percentage, 2, '.', '');
                                 } else {
-                                    $ret .= number_format((float)$percentage, 2, '.', '');
+                                    $ret .= number_format(0, 2, '.', '');
                                 }
                             } else {
                                 $ret .= number_format((float)$percentage, 2, '.', '');
@@ -731,7 +731,7 @@ class Reports extends AdminController
 
                                 $ret .= number_format((float)$percentage, 2, '.', '');
                             } else {
-                                $ret .= number_format((float)$percentage, 2, '.', '');
+                                $ret .= number_format(0, 2, '.', '');
                             }
                         } else {
                             $ret .= number_format((float)$percentage, 2, '.', '');
