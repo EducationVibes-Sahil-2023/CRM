@@ -2347,6 +2347,7 @@ $lang['total_leads_deleted']                              = 'Total leads deleted
 $lang['total_clients_deleted']                            = 'Total customers deleted: %s';
 $lang['confirm_action_prompt']                            = 'Are you sure you want to perform this action?';
 $lang['mass_delete']                                      = 'Mass Delete';
+$lang['mass_re-assignation']                              = 'Mass Assignation';
 $lang['email_protocol']                                   = 'Email Protocol';
 $lang['add_edit_members']                                 = 'Add/Edit Members';
 $lang['project_overview_logged_hours']                    = 'Logged Hours:';
