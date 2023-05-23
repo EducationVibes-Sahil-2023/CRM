@@ -2477,10 +2477,10 @@ class Leads extends AdminController
                         }
                     }
                     
-                    else if($this->input->post('mass_assign') && !empty($this->input->post('mass_assigned')))
+                    else if($this->input->post('mass_assign') && !empty($this->input->post('assigned')))
                     {
                         if ($has_permission_delete) {
-                            if ($this->leads_model->re_assign($id,$this->input->post('mass_assigned'))) {
+                            if ($this->leads_model->re_assign($id,$this->input->post())) {
                                 $total_assign++;
 
                             }
