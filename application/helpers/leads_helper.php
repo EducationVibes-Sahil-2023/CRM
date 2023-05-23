@@ -129,8 +129,14 @@ function get_leads_summary()
         // echo "<pre>";print_r($idsarr);
         $sids = implode(",", $idsarr);
         // echo "<pre>";print_r($sids);
-
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+	    
+	if(!empty($sids))
+	{
+	$tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+	}
+	else{
+	$tids = ' AND assigned in ('. $sid .')';
+	}
         // print_r($where);die;
     }
 
