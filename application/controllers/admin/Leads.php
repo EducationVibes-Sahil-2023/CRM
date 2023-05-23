@@ -732,8 +732,29 @@ class Leads extends AdminController
         }
 
 
-
         if ($this->input->post()) {
+
+            $duplicate_status = true;
+            // check duplicate
+            $where = [];
+            if (!empty($_POST["phonenumber"])) {
+                $where["phonenumber"] = $_POST["phonenumber"];
+            }
+
+            if (count($where) > 0) {
+                $total = total_rows(db_prefix() . 'clients', $where);
+
+                if ($total == 1) {
+                    $this->db->where($where);
+                    $lead_details = $this->db->get(db_prefix() . 'clients')->row();
+
+                    $duplicate_status = false;
+                    set_alert('danger', "Already customer created this phone number ({$_POST["phonenumber"]})");
+                    redirect(admin_url('/leads/index/' . $lead_details->leadid . '?edit=true'));
+                    die;
+                }
+            }
+
 
             $default_country  = get_option('customer_default_country');
 
