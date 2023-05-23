@@ -2523,4 +2523,22 @@ class Leads_model extends App_Model
 
         return $this->db->get(db_prefix() . 'lead_conversion_type')->result_array();
     }
+    public function re_assign($id, $assigned_id)
+    {
+        $this->db->where('id', $id);
+        $temp_lead =  $this->db->get(db_prefix() . 'leads')->row();
+
+        $this->delete($id);
+        unset($temp_lead->id);
+        unset($temp_lead->dateadded);
+        unset($temp_lead->lastcontact);
+        unset($temp_lead->dateassigned);
+        unset($temp_lead->last_status_change);
+        unset($temp_lead->last_type_change);
+        $temp_lead->assigned = $assigned_id;
+        $temp_lead->status = 2;
+        $temp_lead = (array)$temp_lead;
+        return $this->add($temp_lead);
+     
+    }
 }
