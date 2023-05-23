@@ -76,12 +76,9 @@
         background: black;
         opacity: 0.2;
         z-index: 9;
-
-    .switch .btn-toggle {
-        top: 50%;
-        transform: translateY(-50%);
     }
 
+    
     .btn-toggle {
         margin: 0 7rem;
         padding: 0;
