@@ -7,6 +7,11 @@
         /* padding: 10px !important; */
         /* box-shadow: 0px 0px 10px lightgray; */
         /* margin-top: 20px; */
+
+        box-shadow: 2px 2px 5px 1px lightgray;;
+    padding: 15px;
+    margin: 15px 0px;
+
     }
 
     /* .leadSum .panel_s .panel-body {
@@ -14,7 +19,7 @@
     } */
 
     .leadSum .panel_s .panel-body {
-        min-height: 350px;
+        min-height: 360px;
         padding: 10px !important;
     }
 
@@ -37,8 +42,46 @@
     hr {
         margin: 5px 0px !important;
     }
+
+    .loading {
+        height: 0;
+        width: 0;
+        padding: 15px;
+        border: 6px solid #ccc;
+        border-right-color: #888;
+        border-radius: 22px;
+        -webkit-animation: rotate 1s infinite linear;
+        /* left, top and position just for the demo! */
+        position: absolute;
+        left: 40%;
+        top: 50%;
+        z-index: 999;
+    }
+
+    @-webkit-keyframes rotate {
+
+        /* 100% keyframe for  clockwise. 
+     use 0% instead for anticlockwise */
+        100% {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    .loading-upper {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        opacity: 0.2;
+        z-index: 9;
+    }
 </style>
+
 <div id="wrapper">
+    <div class="loading-upper" style="display:none;">
+        <div class="loading"></div>
+    </div>
     <div class="content">
         <div class="row">
             <div class="col-md-12">
@@ -92,8 +135,8 @@
                         </div>
                         <div class="col-md-6 leads-filter-column">
                             <div class="form-group">
-
-                                <button class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                <button type="button" class="btn btn-primary" id="apply_filter" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Processing ">Apply Filter</button>
+                                <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                 <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                 <!-- <button class="btn btn-xs btn-danger hide-btn-response" onclick="generatePDF()" id="generate_pdf" style="display:none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Generate Pdf</button> -->
                                 <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
@@ -180,6 +223,10 @@
         }
         $("#generate_pdf").hide();
         $(".hide-btn-response").hide();
+        $(".leadSum").html('');
+        $('#apply_filter').attr("disabled", true);
+        $('#apply_filter').button('loading');
+        $(".loading-upper").show();
 
         xhr = $.ajax({
             type: "POST",
@@ -201,6 +248,10 @@
             dataType: "JSON",
             cache: false,
             success: function(data) {
+                $('#apply_filter').attr("disabled", false);
+                $(".loading-upper").hide();
+
+                $('#apply_filter').button('reset');
                 //alert(data);  //as a debugging message.
                 $(".leadSum").html('');
                 $(".leadSum").html(data.status);

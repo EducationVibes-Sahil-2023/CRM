@@ -491,7 +491,7 @@ function get_status_summary_filter($params)
 
     foreach ($sources as $key => $source) {
         $sources[$key]['total'] = 0;
-        if (!empty($_POST["status"])) {
+        if (!empty($_POST["source"])) {
             if (in_array($source["id"], $_POST["source"])) {
                 $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
             } else {
@@ -503,7 +503,6 @@ function get_status_summary_filter($params)
 
         $totalLeads += !empty($sources[$key]['total']) ? $sources[$key]['total'] : 0;
     }
-
 
     $sources[] = array("name" => "Total Status Leads", "color_name" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads);
 
