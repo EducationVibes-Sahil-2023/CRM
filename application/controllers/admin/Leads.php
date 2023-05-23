@@ -91,10 +91,9 @@ class Leads extends AdminController
 
     public function lead_summary_filter()
     {
-        // echo "<pre>";
-        // print_r($this->input->post('lead_type'));
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
+
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -322,7 +321,7 @@ class Leads extends AdminController
             $data['notes']         = $this->misc_model->get_notes($id, 'lead');
 
             $data['activity_log']  = $this->leads_model->get_lead_activity_log($id);
-
+            $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
 
 
             if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
@@ -501,7 +500,28 @@ class Leads extends AdminController
         redirect($ref);
     }
 
+    public function delete_lead()
+    {
 
+        $id = $_POST["id"];
+        $has_permission_delete = has_permission('leads', '', 'delete');
+
+        if ($has_permission_delete) {
+
+            $response = $this->leads_model->delete($id);
+
+            if (is_array($response) && isset($response['referenced'])) {
+
+                set_alert('warning', _l('is_referenced', _l('lead_lowercase')));
+            } elseif ($response === true) {
+
+                set_alert('success', _l('deleted', _l('lead')));
+            } else {
+
+                set_alert('warning', _l('problem_deleting', _l('lead_lowercase')));
+            }
+        }
+    }
 
     public function mark_as_lost($id)
 
@@ -682,6 +702,10 @@ class Leads extends AdminController
         }
 
         $data['lead'] = $this->leads_model->get($id);
+        $data['statuses'] = $this->leads_model->get_status();
+        $data['type'] = $this->leads_model->get_type();
+        $data['members']     = $this->staff_model->get('', ['is_not_staff' => 0, 'active' => 1]);
+        $data['sources']  = $this->leads_model->get_source();
 
         $this->load->view('admin/leads/convert_to_customer', $data);
     }
@@ -708,8 +732,29 @@ class Leads extends AdminController
         }
 
 
-
         if ($this->input->post()) {
+
+            $duplicate_status = true;
+            // check duplicate
+            $where = [];
+            if (!empty($_POST["phonenumber"])) {
+                $where["phonenumber"] = $_POST["phonenumber"];
+            }
+
+            if (count($where) > 0) {
+                $total = total_rows(db_prefix() . 'clients', $where);
+
+                if ($total == 1) {
+                    $this->db->where($where);
+                    $lead_details = $this->db->get(db_prefix() . 'clients')->row();
+
+                    $duplicate_status = false;
+                    set_alert('danger', "Already customer created this phone number ({$_POST["phonenumber"]})");
+                    redirect(admin_url('/leads/index/' . $lead_details->leadid . '?edit=true'));
+                    die;
+                }
+            }
+
 
             $default_country  = get_option('customer_default_country');
 
@@ -722,7 +767,6 @@ class Leads extends AdminController
             $original_lead_email = $data['original_lead_email'];
 
             unset($data['original_lead_email']);
-
 
 
             if (isset($data['transfer_notes'])) {
@@ -1717,6 +1761,7 @@ class Leads extends AdminController
         }
 
         $data['sources'] = $this->leads_model->get_source();
+        $data['marketing'] = $this->leads_model->get_marketing_type();
 
         $data['title']   = 'Leads sources';
 
@@ -1831,6 +1876,7 @@ class Leads extends AdminController
         }
 
         $data['statuses'] = $this->leads_model->get_status();
+        $data['conversion_type'] = $this->leads_model->get_conversion_type();
 
         $data['title']    = 'Leads statuses';
 

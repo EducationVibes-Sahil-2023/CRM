@@ -96,8 +96,8 @@ class Login_Controller extends Api_Controller
                 $call_status =  !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
                 $calls_type =  !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
                 $call_duration =  !empty($form_d["call_duration"]) ? $form_d["call_duration"] : '';
-                $call_start =  !empty($form_d["call_start"]) ? $form_d["call_start"] : '';
-                $call_end =  !empty($form_d["call_end"]) ? $form_d["call_end"] : '';
+                $call_start =  !empty($form_d["startdate_time"]) ? strtotime($form_d["startdate_time"]) : '';
+                $call_end =  !empty($form_d["enddate_time"]) ? strtotime($form_d["enddate_time"]) : '';
 
                 array_push($form_data_array_temp, array(
                     "staff_contact" => $callassignee,
@@ -116,8 +116,8 @@ class Login_Controller extends Api_Controller
             $staffid = "";
             $callassignee =  !empty($form_data["formData"]["callassignee"]) ? $form_data["formData"]["callassignee"] : '';
             $phonenumber =  !empty($form_data["formData"]["phonenumber"]) ? $form_data["formData"]["phonenumber"] : '';
-            $call_start =  !empty($form_data["formData"]["call_start"]) ? $form_data["formData"]["call_start"] : '';
-            $call_end =  !empty($form_data["formData"]["call_end"]) ? $form_data["formData"]["call_end"] : '';
+            $call_start =  !empty($form_data["formData"]["startdate_time"]) ? strtotime($form_data["formData"]["startdate_time"]) : '';
+            $call_end =  !empty($form_data["formData"]["enddate_time"]) ? strtotime($form_data["formData"]["enddate_time"]) : '';
             $call_status =  !empty($form_data["formData"]["form-cf-13"]) ? $form_data["formData"]["form-cf-13"] : 'Not Found';
             $type =  1;
             $calls_type =  1;
@@ -167,12 +167,12 @@ class Login_Controller extends Api_Controller
             $rules[] = array(
                 "field" => "Call Duration",
                 "value" => $call_duration,
-                "condition" => "number"
+                "condition" => ""
             );
             $rules[] = array(
-                "field" => "Call Duration",
+                "field" => "Call Status",
                 "value" => $call_status,
-                "condition" => "required"
+                "condition" => ""
             );
         }
 

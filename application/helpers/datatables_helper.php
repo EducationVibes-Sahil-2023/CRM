@@ -263,7 +263,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     SELECT SQL_CALC_FOUND_ROWS ' . str_replace(' , ', ' ', implode(', ', $_aColumns)) . ' ' . $_additionalSelect . "
     FROM $sTable
     " . $join . "
-    $sWhere
+    " . $sWhere . "
     " . $where . "
     $sGroupBy
     $sOrder

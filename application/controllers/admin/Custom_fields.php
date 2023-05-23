@@ -35,14 +35,22 @@ class Custom_fields extends AdminController
 
     public function field($id = '')
     {
+        $this->load->model('leads_model');
+
         if ($this->input->post()) {
             if ($id == '') {
+                if (!empty($_POST["show_lead_type"])) {
+                    $_POST["show_lead_type"] =implode(",", $_POST["show_lead_type"]);
+                }
                 $id = $this->custom_fields_model->add($this->input->post());
                 if ($id) {
                     set_alert('success', _l('added_successfully', _l('custom_field')));
                     redirect(admin_url('custom_fields/field/' . $id));
                 }
             } else {
+                if (!empty($_POST["show_lead_type"])) {
+                    $_POST["show_lead_type"] =implode(",", $_POST["show_lead_type"]);
+                }
                 $success = $this->custom_fields_model->update($this->input->post(), $id);
                 if (is_array($success) && isset($success['cant_change_option_custom_field'])) {
                     set_alert('warning', _l('cf_option_in_use'));
@@ -62,6 +70,10 @@ class Custom_fields extends AdminController
         $data['client_portal_fields']   = $this->client_portal_fields;
         $data['client_editable_fields'] = $this->client_editable_fields;
         $data['title']                  = $title;
+        $data['custom_fields']    =  $this->custom_fields_model->get('', array("active" => 1, "fieldto" => "leads"));
+        $data['lead_table_column']    =  $this->custom_fields_model->get_column_names(db_prefix() . 'leads');
+
+        $data['type'] = $this->leads_model->get_type();
         $this->load->view('admin/custom_fields/customfield', $data);
     }
 

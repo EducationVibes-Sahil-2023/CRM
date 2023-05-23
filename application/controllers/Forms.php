@@ -36,6 +36,7 @@ class Forms extends ClientsController
         if (!empty($_POST["facebook_status"])) {
             $form->facebook_status = 1;
         }
+        $tags = "";
         // Change the locale so the validation loader function can load
         // the proper localization file
         $GLOBALS['locale'] = get_locale_key($form->language);
@@ -49,14 +50,16 @@ class Forms extends ClientsController
                 $post_data = $this->input->post();
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
-
+                $call_data = array();
                 $required  = [];
+                $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
                 if ($form->responsible == 0) {
                     if ($post_data['callassignee'] != null) {
                         $phoneNumber = $post_data['callassignee'];
                         $this->db->where('phonenumber', $phoneNumber);
                         $user =  $this->db->get(db_prefix() . 'staff')->row();
                         $form->responsible = $user->staffid;
+                        $call_data = array("type" => 1, "formData" => $post_data);
                     }
                 }
                 foreach ($data['form_fields'] as $field) {
@@ -122,6 +125,8 @@ class Forms extends ClientsController
 
                 }
 
+
+
                 // if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
                 //                                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', [177, 176, 181, 179, 154]);
 
@@ -132,7 +137,7 @@ class Forms extends ClientsController
 
 
                 if (!empty($form->auto_assign)) {
-                    $lead_type = !empty($form->lead_type) ? $form->lead_type : '';
+                    // $lead_type = !empty($form->lead_type) ? $form->lead_type : '';
                     $auto_assign = array_filter(explode(",", $form->auto_assign));
                     $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $auto_assign);
                     if (!empty($assign_staff_id[0]["staffid"])) {
@@ -209,6 +214,12 @@ class Forms extends ClientsController
                 $insert_to_db = true;
 
 
+                if (!empty($call_data)) {
+                    $this->curl_function($call_data);
+                }
+
+
+
                 if ($form->allow_duplicate == 0) {
                     $where = [];
                     if (!empty($form->track_duplicate_field) && isset($regular_fields[$form->track_duplicate_field])) {
@@ -243,11 +254,16 @@ class Forms extends ClientsController
                             $updateStatus = [
                                 'status' => $form->lead_status,
                                 // 'description' => 'Re Query',
-                                'assigned' => $form->responsible,
+                                // 'assigned' => $form->responsible,
                                 'last_status_change' => date("Y-m-d"),
                                 'lastcontact' => date("Y-m-d h:i:s"),
                                 'dateassigned' => date("Y-m-d")
                             ];
+
+                            if ($post_data['callassignee'] != null) {
+                                $updateStatus["assigned"] = $form->responsible;
+                            }
+
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus);
 
@@ -438,6 +454,10 @@ class Forms extends ClientsController
                         $this->leads_model->lead_assigned_member_notification($lead_id, $form->responsible, true);
 
                         handle_lead_attachments($lead_id, 'file-input', $form->name);
+                        if (!empty($post_data['tags'])) {
+                            $tags = $post_data['tags'];
+                            handle_tags_save($tags, $lead_id, 'lead');
+                        }
 
                         if ($form->notify_lead_imported != 0) {
                             if ($form->notify_type == 'assigned') {
@@ -777,5 +797,28 @@ class Forms extends ClientsController
 
         $data['form'] = $form;
         $this->load->view('forms/ticket', $data);
+    }
+
+
+
+
+    private function curl_function($post_data)
+    {
+        $data = array("call_data" => json_encode($post_data));
+        try {
+            $token = JWT_TOKEN;
+            header('Content-Type: application/json'); // Specify the type of data
+            $ch = curl_init(base_url("external/call_update")); // Initialise cURL
+            $authorization = "Authorization: Bearer " . $token; // Prepare the authorisation token
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // Set the posted fields
+            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
+            $result = curl_exec($ch); // Execute the cURL statement
+            curl_close($ch); // Close the cURL connection
+        } catch (Exception $e) {
+            return true;
+        }
     }
 }

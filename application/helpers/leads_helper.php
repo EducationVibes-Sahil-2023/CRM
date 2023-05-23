@@ -237,7 +237,7 @@ function get_leads_summary_filter($params)
         $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
         $sql .= ' FROM ' . db_prefix() . 'leads';
 
-        if (!empty($params['course']) || !empty($params['degree'])) {
+        if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
             $sql .= ' join tblcustomfieldsvalues ON  tblleads.id=tblcustomfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
@@ -273,7 +273,16 @@ function get_leads_summary_filter($params)
             $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
         }
 
+        if (!empty($params['neet_score'])) {
+            $neet_range = explode("-", $params['neet_score']);
+            // $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" order by id desc limit 1';
 
+            $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
+        }
+        if (!empty($params['lead_type'])) {
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        }
 
 
         // if (!empty($params['source'])) {
@@ -289,9 +298,7 @@ function get_leads_summary_filter($params)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
-        if (!empty($params['lead_type'])) {
-            $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-        }
+
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
             $to_date = $params['to_date'];
@@ -314,7 +321,14 @@ function get_leads_summary_filter($params)
             $assign_to_date = $params['assign_to_date'];
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
-        // $sql .= ' group by ' . db_prefix() . 'leads.id ';
+
+        $grup_by = "";
+        if (!empty($params['neet_score'])) {
+            // $grup_by = db_prefix() . 'customfieldsvalues.relid';
+            // $sql .= ' group by ' . $grup_by;
+        }
+
+
         $sql .= ' UNION ALL ';
         $sql = trim($sql);
     }
@@ -396,19 +410,19 @@ function get_status_summary_filter($params)
     }
 
     foreach ($sources as $source) {
-        $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
-        $sql .= ' FROM ' . db_prefix() . 'leads';
+        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id ';
+        $sql .= ' FROM ' . db_prefix() . 'leads l  inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status  inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
 
         if (!empty($params['course']) || !empty($params['degree'])) {
-            $sql .= ' join tblcustomfieldsvalues ON  tblleads.id=tblcustomfieldsvalues.relid ';
+            $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
         }
         if (!empty($params['followup_to_date'])) {
-            $sql .= ' join tblreminders  on  tblreminders.rel_id = tblleads.id ';
+            $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
         }
 
         // if (isset($status['lost'])) {
@@ -434,8 +448,8 @@ function get_status_summary_filter($params)
             }
         }
 
-        if (!empty($params['source'])) {
-            $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+        if (!empty($params['status'])) {
+            $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
         }
 
 
@@ -454,13 +468,17 @@ function get_status_summary_filter($params)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
+        // if (!empty($params['lead_type'])) {
+        //     $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        // }
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
             $to_date = $params['to_date'];
-            $sql .= ' AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
         }
         if (!empty($params['up_to_date'])) {
             $up_from_date = $params['up_from_date'];
@@ -491,11 +509,15 @@ function get_status_summary_filter($params)
 
     foreach ($sources as $key => $source) {
         $sources[$key]['total'] = 0;
+        $sources[$key]['conversion_id'] = !empty($result[$key]->conversion_id) ? $result[$key]->conversion_id : "";
+
         if (!empty($_POST["source"])) {
             if (in_array($source["id"], $_POST["source"])) {
                 $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
+                $sources[$key]['conversion_id'] = !empty($result[$key]->conversion_id) ? $result[$key]->conversion_id : 0;
             } else {
                 $sources[$key]['total'] = 0;
+                $sources[$key]['conversion_id'] = '';
             }
         } else {
             $sources[$key]['total']  = !empty($result[$key]->total) ? $result[$key]->total : 0;
@@ -547,6 +569,11 @@ function leads_update_count($params = false)
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
     $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
     $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
+
+    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
+        $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
+    }
+
     if (!empty($params['followup_to_date'])) {
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
     }
@@ -573,7 +600,13 @@ function leads_update_count($params = false)
         $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
     }
     if (!empty($params['lead_type'])) {
-        $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+    }
+
+    if (!empty($params['neet_score'])) {
+        $neet_range = explode("-", $params['neet_score']);
+        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
     }
     if (!empty($params['to_date'])) {
         $from_date = $params['from_date'];
@@ -598,11 +631,14 @@ function leads_update_count($params = false)
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
         }*/
+    $grup_by = "";
+    if (!empty($params['neet_score'])) {
+        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+    }
+    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+    $sql = trim($sql);
 
-    $sql .= " group by l.id,(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-     $sql = trim($sql);
 
-     
     $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
     $sql = trim($sql);
 
@@ -613,7 +649,7 @@ function leads_update_count($params = false)
     // // $update_count = count(array_unique(array_column($result, "total")));
     // $update_count = count(array_count_values(array_column($result, "total")));
 
-    return $update_count;
+    return !empty($update_count) ? $update_count : 0;
 }
 
 function leads_update_count_id($id, $params = false)
@@ -671,8 +707,12 @@ function leads_update_count_id($id, $params = false)
     if (!empty($params['source'])) {
         $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
     }
+    // if (!empty($params['lead_type'])) {
+    //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+    // }
     if (!empty($params['lead_type'])) {
-        $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
     }
     if (!empty($params['to_date'])) {
         $from_date = $params['from_date'];
@@ -852,8 +892,8 @@ function get_leads_summary_filter_excel($params)
     }
 
     foreach ($statuses as $status) {
-        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total, ls.name status_name ,s.name source_name,concat(ls.name,"-",s.name) index_name ';
-        $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source ';
+        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id,m.id marketing_id, ls.name status_name ,s.name source_name,concat(ls.name,"-",s.name) index_name ';
+        $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
 
         if (!empty($params['course']) || !empty($params['degree'])) {
             $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
@@ -861,7 +901,7 @@ function get_leads_summary_filter_excel($params)
         if (!empty($params['up_to_date'])) {
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
@@ -907,8 +947,12 @@ function get_leads_summary_filter_excel($params)
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
+        // if (!empty($params['lead_type'])) {
+        //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        // }
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
@@ -961,6 +1005,160 @@ function get_leads_summary_filter_excel($params)
 
     //     $statuses[$key]['total'] = $result[$key]->total;
     // }
+
+
+    return $result;
+}
+
+function get_status_summary_filter_performance($params, $conversion_status = 0)
+{
+    $CI = &get_instance();
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+    $statuses = $CI->leads_model->get_status();
+
+
+    $totalStatuses         = count($statuses);
+    $has_permission_view   = has_permission('leads', '', 'view');
+    $sql                   = '';
+    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+
+    // $statuses[] = [
+    //     'lost'  => true,
+    //     'name'  => _l('lost_leads'),
+    //     'color' => '#f0f0f0',
+    // ];
+
+
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    if ($role == 3) {
+        // $this->load->database();
+        $sid = get_staff_user_id(); //48;//get_staff_user_id();
+        // $teamids = $CI->db->query("select staffid
+        // 	from    (select * from tblstaff
+        // 	where active = '1' order by reporting_person, staffid) products_sorted,
+        // 			(select @pv := $sid) initialisation
+        // 	where   find_in_set(reporting_person, @pv)
+        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        // $idsarr = array_column($teamids, 'staffid');
+        // $sids = implode(",", $idsarr);
+        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        $query = [];
+        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        if (!empty($staff_ids)) {
+            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        }
+        $idsarr = array_column($query, 'staffid');
+        $sids = implode(",", $idsarr);
+
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+    }
+
+    foreach ($statuses as $status) {
+        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id,m.id marketing_id,m.name marketing_name,c.name conversion_name, ls.name status_name ,s.name source_name,concat(ls.name,"-",s.name) index_name,s.id source_id,ls.id status_id,concat(s.name,"-",c.name) index_conversion_name,concat(m.name,"-",c.name) index_performance_name ';
+        $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
+
+        // $sql .=' FROM ' . db_prefix() . 'lead_marketing m left join ' . db_prefix() . 'leads_sources s ON s.marketing_type = m.id left join ' . db_prefix() . 'leads l ON s.id = l.source left join ' . db_prefix() . 'leads_status ls ON  ls.id = l.status left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
+
+        if (!empty($params['course']) || !empty($params['degree'])) {
+            $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
+        }
+        if (!empty($params['up_to_date'])) {
+            $up_from_date_join = $params['up_from_date'];
+            $up_to_date_join = $params['up_to_date'];
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+        }
+        if (!empty($params['followup_to_date'])) {
+            $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
+        }
+
+        if (isset($status['lost'])) {
+            $sql .= ' WHERE lost=1';
+        } elseif (isset($status['junk'])) {
+            $sql .= ' WHERE junk=1';
+        } else {
+            $sql .= ' WHERE l.status=' . $status['id'];
+        }
+        if (!$has_permission_view) {
+            $sql .= ' AND ' . $whereNoViewPermission;
+        }
+        if (!empty($params['assigned'])) {
+            // $tids = " AND assigned = " . $params['assigned'];
+            $tids = " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
+            $sql .= $tids;
+        } else {
+            if ($role == 3) {
+                $sql .= $tids;
+            }
+        }
+
+        if (!empty($params['source'])) {
+            $sql .= ' AND l.source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+        }
+
+
+
+
+        // if (!empty($params['source'])) {
+        //     $sql .= ' AND source =' . $CI->db->escape_str($params['source']);
+        // }
+
+        /*if (isset($params['course'])) {
+            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
+        }
+		 
+		 
+		if (isset($params['degree'])) {
+            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
+        }*/
+
+        // if (!empty($params['lead_type'])) {
+        //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
+        // }
+        if (!empty($params['lead_type'])) {
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        }
+        if (!empty($params['to_date'])) {
+            $from_date = $params['from_date'];
+            $to_date = $params['to_date'];
+            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+        }
+        if (!empty($params['up_to_date'])) {
+            $up_from_date = $params['up_from_date'];
+            $up_to_date = $params['up_to_date'];
+            //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+        }
+        if (!empty($params['followup_to_date'])) {
+            $followup_from_date = $params['followup_from_date'];
+            $followup_to_date = $params['followup_to_date'];
+            $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
+        }
+
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+        }
+        if ($conversion_status) {
+            $sql .= '  GROUP BY l.source,c.id ';
+        } else {
+            $sql .= '  GROUP BY m.id,c.id ';
+        }
+        $sql .= ' UNION ALL ';
+        $sql = trim($sql);
+    }
+    $result = [];
+
+    // Remove the last UNION ALL
+    $sql    = substr($sql, 0, -10);
+
+    $result = $CI->db->query($sql)->result_array();
 
 
     return $result;

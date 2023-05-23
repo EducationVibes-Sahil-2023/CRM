@@ -235,6 +235,7 @@ class Leads_model extends App_Model
         $data['dateadded']   = date('Y-m-d H:i:s');
 
         $data['addedfrom']   = get_staff_user_id();
+        $data['exam_details']   = [];
 
 
 
@@ -251,7 +252,25 @@ class Leads_model extends App_Model
             unset($data['tags']);
         }
 
+        if (!empty($data['exam_name']) && count($data['exam_name']) > 0) {
+            $data["exam_details"] = [];
+            foreach ($data['exam_name'] as $key => $exam_d) {
 
+                if (!empty($data["exam_name"][$key]) &&  !empty($data["exam_score"][$key])) {
+                    array_push($data["exam_details"], array("exam_name" => $data["exam_name"][$key], "exam_score" => $data["exam_score"][$key]));
+                }
+            }
+
+            unset($data['exam_name']);
+            unset($data['exam_score']);
+        }
+
+        // print_r($data);
+        if (!empty($data["exam_details"])) {
+            $data["exam_details"]  = json_encode($data["exam_details"], true);
+        } else {
+            $data["exam_details"]  =  "";
+        }
 
         if (isset($data['custom_fields'])) {
 
@@ -259,8 +278,6 @@ class Leads_model extends App_Model
 
             unset($data['custom_fields']);
         }
-
-
 
         $data['address'] = trim($data['address']);
 
@@ -272,7 +289,9 @@ class Leads_model extends App_Model
 
         $this->db->insert(db_prefix() . 'leads', $data);
 
+
         $insert_id = $this->db->insert_id();
+
 
         if ($insert_id) {
 
@@ -433,6 +452,7 @@ class Leads_model extends App_Model
         $current_lead_data = $this->get($id);
 
         $current_status    = $this->get_status($current_lead_data->status);
+        $data["exam_details"]  =  "";
 
         if ($current_status) {
 
@@ -506,6 +526,25 @@ class Leads_model extends App_Model
             $data['lastcontact'] = to_sql_date($data['lastcontact'], true);
         }
 
+
+        if (!empty($data['exam_name']) && count($data['exam_name']) > 0) {
+            $data["exam_details"] = [];
+            foreach ($data['exam_name'] as $key => $exam_d) {
+
+                if (!empty($data["exam_name"][$key]) &&  !empty($data["exam_score"][$key])) {
+                    array_push($data["exam_details"], array("exam_name" => $data["exam_name"][$key], "exam_score" => $data["exam_score"][$key]));
+                }
+            }
+
+            unset($data['exam_name']);
+            unset($data['exam_score']);
+        }
+
+        if (!empty($data["exam_details"])) {
+            $data["exam_details"]  = json_encode($data["exam_details"], true);
+        } else {
+            $data["exam_details"]  =  "";
+        }
 
 
         if (isset($data['tags'])) {
@@ -1219,12 +1258,12 @@ class Leads_model extends App_Model
         }
 
 
+        $this->db->select('l.*,m.name as marketing_name');
+        $this->db->from(db_prefix() . 'leads_sources As l');
+        $this->db->join(db_prefix() . 'lead_marketing m', "l.marketing_type = m.id", "left");
+        $this->db->order_by('l.name', 'asc');
 
-        $this->db->order_by('name', 'asc');
-
-
-
-        return $this->db->get(db_prefix() . 'leads_sources')->result_array();
+        return $this->db->get()->result_array();
     }
 
 
@@ -1382,11 +1421,13 @@ class Leads_model extends App_Model
 
         if (!$statuses) {
 
-            $this->db->order_by('statusorder', 'asc');
 
+            $this->db->select('ls.*,c.name conversion_type_name');
+            $this->db->from(db_prefix() . 'leads_status ls', 'asc');
+            $this->db->join(db_prefix() . 'lead_conversion_type c', 'ls.conversion_type = c.id', "left");
+            $this->db->order_by('ls.statusorder', 'asc');
 
-
-            $statuses = $this->db->get(db_prefix() . 'leads_status')->result_array();
+            $statuses = $this->db->get()->result_array();
 
             $this->app_object_cache->add('leads-all-statuses', $statuses);
         }
@@ -1872,6 +1913,12 @@ class Leads_model extends App_Model
         return $this->db->get(db_prefix() . 'lead_activity_log')->result_array();
     }
 
+    public function get_lead_call_activity_log($id)
+    {
+        $sql = "SELECT c.*,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON l.phonenumber = c.contact join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id DESC";
+        return $this->db->query($sql)->result_array();
+    }
+
 
 
     public function staff_can_access_lead($id, $staff_id = '')
@@ -2241,7 +2288,7 @@ class Leads_model extends App_Model
     }
 
 
-      public function update_form($id, $data)
+    public function update_form($id, $data)
 
     {
 
@@ -2402,7 +2449,7 @@ class Leads_model extends App_Model
         return $data;
     }
 
-     function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array())
+    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array())
     {
 
         $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
@@ -2424,7 +2471,7 @@ class Leads_model extends App_Model
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
         if (!empty($staff_ids)) {
-                $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
+            $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
         $sql .= " order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
         if (!empty($facebook_lead)) {
@@ -2434,5 +2481,46 @@ class Leads_model extends App_Model
 
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
+    }
+    public function get_marketing_type()
+    {
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'lead_marketing')->row();
+        }
+
+
+
+        $this->db->order_by('id', 'asc');
+
+
+
+        return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
+    }
+
+    public function get_conversion_type()
+    {
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'lead_conversion_type')->row();
+        }
+
+
+
+        $this->db->order_by('id', 'asc');
+
+
+
+        return $this->db->get(db_prefix() . 'lead_conversion_type')->result_array();
     }
 }

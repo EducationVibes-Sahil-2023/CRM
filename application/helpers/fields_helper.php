@@ -50,7 +50,7 @@ function render_yes_no_option($option_value, $label, $tooltip = '', $replace_yes
  * @param  string $input_class      additional class on input
  * @return string
  */
-function render_input($name, $label = '', $value = '', $type = 'text', $input_attrs = [], $form_group_attr = [], $form_group_class = '', $input_class = '')
+function render_input($name, $label = '', $value = '', $type = 'text', $input_attrs = [], $form_group_attr = [], $form_group_class = '', $input_class = '', $id_name = '')
 {
     $input            = '';
     $_form_group_attr = '';
@@ -83,11 +83,18 @@ function render_input($name, $label = '', $value = '', $type = 'text', $input_at
     if (!empty($input_class)) {
         $input_class = ' ' . $input_class;
     }
+
+    if (!empty($id_name)) {
+        $id_name = $id_name;
+    } else {
+        $id_name = $name;
+    }
+
     $input .= '<div class="form-group' . $form_group_class . '" ' . $_form_group_attr . '>';
     if ($label != '') {
-        $input .= '<label for="' . $name . '" class="control-label">' . _l($label, '', false) . '</label>';
+        $input .= '<label for="' . $id_name . '" class="control-label">' . _l($label, '', false) . '</label>';
     }
-    $input .= '<input type="' . $type . '" id="' . $name . '" name="' . $name . '" class="form-control' . $input_class . '" ' . $_input_attrs . ' value="' . set_value($name, $value) . '">';
+    $input .= '<input type="' . $type . '" id="' . $id_name . '" name="' . $name . '" class="form-control' . $input_class . '" ' . $_input_attrs . ' value="' . set_value($name, $value) . '">';
     $input .= '</div>';
 
     return $input;
@@ -282,7 +289,7 @@ function render_textarea($name, $label = '', $value = '', $textarea_attrs = [], 
  */
 function render_select($name, $options, $option_attrs = [], $label = '', $selected = '', $select_attrs = [], $form_group_attr = [], $form_group_class = '', $select_class = '', $include_blank = true, $id_name = "")
 {
-    
+
     $callback_translate = '';
     if (isset($options['callback_translate'])) {
         $callback_translate = $options['callback_translate'];
@@ -322,12 +329,10 @@ function render_select($name, $options, $option_attrs = [], $label = '', $select
     if (!empty($form_group_class)) {
         $form_group_class = ' ' . $form_group_class;
     }
-   
+
     if (!empty($id_name)) {
         $id_name = $id_name;
-    }
-    else
-    {
+    } else {
         $id_name = $name;
     }
     $select .= '<div class="select-placeholder form-group' . $form_group_class . '" ' . $_form_group_attr . '>';
