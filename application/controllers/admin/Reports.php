@@ -333,6 +333,7 @@ class Reports extends AdminController
                 $ret .= '<div class="col-md-6">';
                 $ret .= '<div class="col-12 panel-body">';
                 $ret .= '<h4><b>Leads Types</b></h4><hr>';
+
                 foreach ($summary as $status) {
                     if (isset($conversion_type[$status['conversion_type']])) {
                         $conversion_type[$status['conversion_type']]["total"] += !empty($status['total']) ?  $status['total'] : 0;
@@ -346,6 +347,7 @@ class Reports extends AdminController
                     $ret .=  '</h3>';
                     $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
                 }
+
                 $ret .= '</div>';
                 $ret .= '</div>';
                 $ret .= '<div class="col-md-6">';
@@ -353,21 +355,21 @@ class Reports extends AdminController
                 $ret .= '<h4><b>Sources Types</b></h4><hr>';
 
 
-                foreach ($status_summary as $source) {
+                foreach ($status_summary as $source_data) {
 
-                    if (isset($marketing_type[$source['marketing_type']])) {
-                        $marketing_type[$source['marketing_type']]["total"] += !empty($source['total']) ?  $source['total'] : 0;
+                    if (isset($marketing_type[$source_data['marketing_type']])) {
+                        $marketing_type[$source_data['marketing_type']]["total"] += !empty($source_data['total']) ?  $source_data['total'] : 0;
                     }
 
                     $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                    if (isset($source['percent'])) {
-                        $ret .= '<span data-toggle="tooltip" data-title="' . $source['total'] . '">' . $source['percent'] . '%</span>';
+                    if (isset($source_data['percent'])) {
+                        $ret .= '<span data-toggle="tooltip" data-title="' . $source_data['total'] . '">' . $source_data['percent'] . '%</span>';
                     } else {
                         // Is regular status
-                        $ret .= $source['total'];
+                        $ret .= $source_data['total'];
                     }
                     $ret .=  '</h3>';
-                    $ret .= '<span style="color:' . $source['color_name'] . '">' . $source['name'] . '</span></div>';
+                    $ret .= '<span style="color:' . $source_data['color_name'] . '">' . $source_data['name'] . '</span></div>';
                 }
                 $ret .= '</div>';
                 $ret .= '</div>';
@@ -384,6 +386,8 @@ class Reports extends AdminController
 
                 $ret .= '<div class="col-12 panel-body" class="con_tab" >';
                 $ret .= '<h4><b>Conversion Type</b></h4><hr>';
+
+
                 foreach ($conversion_type as $conversion) {
                     $percentage = 0;
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
@@ -431,21 +435,22 @@ class Reports extends AdminController
                     $sum[$key] += $item['total'];
                 }
                 $performance_array = array_column($marketing_type, null, 'id');
+
                 foreach ($performance_array as $key => $per) {
                     $ret .= '<div class="col-md-12 col-xs-12 border-right"><h3 class="bold">';
                     $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
                     $percentage = 0;
                     foreach ($conversion_type as $kkey => $conversion) {
+
                         $percentage = 0;
                         if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
                             $ids = explode(",", $conversion["parent_id"]);
                             foreach ($ids as $c_id) {
-                                $percentage += $sum[$key . "_" . $c_id];
+                                $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
                             }
                         }
 
                         $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-
                         // Is regular status
                         if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
                             if (!empty($percentage)) {

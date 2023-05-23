@@ -353,6 +353,12 @@
                                                 <input type="checkbox" name="mass_delete" id="mass_delete">
                                                 <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
                                              </div>
+                                          <?php } ?>
+                                          <?php if (has_permission('leads', '', 'delete')) { ?>
+                                             <div class="checkbox checkbox-danger">
+                                                <input type="checkbox" name="mass_re-assignation" id="mass_re-assignation">
+                                                <label for="mass_re-assignation"><?php echo _l('mass_re-assignation'); ?></label>
+                                             </div>
                                              <hr class="mass_delete_separator" />
                                           <?php } ?>
                                           <div id="bulk_change">
@@ -409,6 +415,10 @@
                                                    </label>
                                                 </div>
                                              </div>
+                                          </div>
+                                          <div id="re-assignation_div" style="display:none;">
+                                       <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
+
                                           </div>
                                        </div>
                                        <div class="modal-footer">
