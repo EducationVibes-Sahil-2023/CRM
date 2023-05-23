@@ -86,7 +86,6 @@ class Clients extends AdminController
                 }
 
                 $data = $this->input->post();
-                print_r($data);die;
                 $save_and_add_contact = false;
                 if (isset($data['save_and_add_contact'])) {
                     unset($data['save_and_add_contact']);
@@ -133,7 +132,10 @@ class Clients extends AdminController
         if ($id == '') {
             $title = _l('add_new', _l('client_lowercase'));
         } else {
+            $this->load->model('leads_model');
+
             $client                = $this->clients_model->get($id);
+            $data["lead_data"]                = $this->leads_model->get($client->leadid);
             $data['customer_tabs'] = get_customer_profile_tabs();
 
             if (!$client) {
@@ -259,7 +261,7 @@ class Clients extends AdminController
 
             $slug_zip_folder = (
                 $client->company != ''
-                ? $client->company
+                ? $client->companyclient
                 : get_contact_full_name(get_primary_contact_user_id($client->userid))
             );
 
