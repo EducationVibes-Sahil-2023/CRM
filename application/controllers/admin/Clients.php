@@ -14,6 +14,7 @@ class Clients extends AdminController
         }
 
         $this->load->model('contracts_model');
+        $this->load->model('leads_model');
         $data['contract_types'] = $this->contracts_model->get_contract_types();
         $data['groups']         = $this->clients_model->get_groups();
         $data['title']          = _l('clients');
@@ -40,7 +41,10 @@ class Clients extends AdminController
         $data['contacts_logged_in_today'] = $this->clients_model->get_contacts('', 'last_login LIKE "' . date('Y-m-d') . '%"' . $whereContactsLoggedIn);
 
         $data['countries'] = $this->clients_model->get_clients_distinct_countries();
-
+        $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+        $data['sources']  = $this->leads_model->get_source();
+        $data['type']  = $this->leads_model->get_type();
+        $data['statuses'] = $this->leads_model->get_status();
         $this->load->view('admin/clients/manage', $data);
     }
 
