@@ -144,7 +144,11 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                             if ($useMatchForCustomFieldsTableSearch === 'true' && startsWith($columnName, 'ctable_')) {
                                 $sMatchCustomFields[] = $columnName;
                             } else {
-                                $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                                if (str_contains($search_value, '!=')) {
+                                    $sWhere .= ' convert(' . $columnName . ' USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                } else {
+                                    $sWhere .= ' convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                                }
                             }
                         }
                     }
@@ -152,9 +156,13 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             }
         }
         if (count($sMatchCustomFields) > 0) {
-            $s = $CI->db->escape_like_str($search_value);
+            $s = $CI->db->escape_str($search_value);
             foreach ($sMatchCustomFields as $matchCustomField) {
-                $sWhere .= "MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('{$s}') USING utf8)) OR ";
+                if (str_contains($s, '!=')) {
+                    $sWhere .= " NOT MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('" . str_replace("!=", "", $s) . "') USING utf8)) AND ";
+                } else {
+                    $sWhere .= " MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('{$s}') USING utf8)) OR ";
+                }
             }
         }
 
@@ -166,11 +174,20 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
                 } else {
                     // Use index
-                    $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                    if (str_contains($search_value, '!=')) {
+                        $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                    } else {
+                        $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                    }
                 }
             }
         }
-        $sWhere = substr_replace($sWhere, '', -3);
+
+        if (str_contains($search_value, '!=')) {
+            $sWhere = substr_replace($sWhere, '', -4);
+        } else {
+            $sWhere = substr_replace($sWhere, '', -3);
+        }
         $sWhere .= ')';
     } else {
         // Check for custom filtering
@@ -185,10 +202,18 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                     $columnName = strbefore($columnName, ' as');
                 }
                 if ($search_value != '') {
-                    $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                    if (str_contains($search_value, '!=')) {
+                        $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                    } else {
+                        $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                    }
                     if (count($additionalSelect) > 0) {
                         foreach ($additionalSelect as $searchAdditionalField) {
-                            $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                            if (str_contains($search_value, '!=')) {
+                                $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " NOT LIKE '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                            } else {
+                                $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '" . $CI->db->escape_str($search_value) . "%' OR ";
+                            }
                         }
                     }
                     $searchFound++;
@@ -196,13 +221,21 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             }
         }
         if ($searchFound > 0) {
-            $sWhere = substr_replace($sWhere, '', -3);
+
+            if ((isset($__post['search'])) && $__post['search']['value'] != '') {
+                if (str_contains($__post['search']['value'], '!=')) {
+                    $sWhere = substr_replace($sWhere, '', -4);
+                } else {
+                    $sWhere = substr_replace($sWhere, '', -3);
+                }
+            } else {
+                $sWhere = substr_replace($sWhere, '', -3);
+            }
             $sWhere .= ')';
         } else {
             $sWhere = '';
         }
     }
-
     /*
      * SQL queries
      * Get data to display
@@ -278,7 +311,6 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
         'output'  => $output,
     ];
 }
-
 /**
  * Used in data_tables_init function to fix sorting problems when duedate is null
  * Null should be always last
