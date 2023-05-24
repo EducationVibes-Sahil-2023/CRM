@@ -213,8 +213,12 @@ if ($role == 3) {
     // echo "<pre>";print_r($idsarr);
     $sids = implode(",", $idsarr);
     // echo "<pre>";print_r($sids);
-
+    if (!empty($sids)) {
     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
+        } else {
+    array_push($where, 'AND assigned in (' . $sid . ')');
+        }
+//     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
     // print_r($where);die;
 }
 
