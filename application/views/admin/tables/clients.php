@@ -10,13 +10,16 @@ $this->ci->db->query("SET sql_mode = ''");
 $aColumns = [
     '1',
     db_prefix().'clients.userid as userid',
-    'company',
+    db_prefix().'clients.company',
     'firstname',
-    'email',
+    db_prefix().'clients.email',
     db_prefix().'clients.phonenumber as phonenumber',
     db_prefix().'clients.active',
     '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM '.db_prefix().'customer_groups JOIN '.db_prefix().'customers_groups ON '.db_prefix().'customer_groups.groupid = '.db_prefix().'customers_groups.id WHERE customer_id = '.db_prefix().'clients.userid ORDER by name ASC) as customerGroups',
     db_prefix().'clients.datecreated as datecreated',
+    db_prefix().'leads_status.name as status_name',
+    db_prefix().'leads_type.name as type_name',
+    db_prefix().'leads_sources.name as source_name',
 ];
 
 $sIndexColumn = 'userid';
@@ -27,6 +30,11 @@ $filter = [];
 
 $join = [
     'LEFT JOIN '.db_prefix().'contacts ON '.db_prefix().'contacts.userid='.db_prefix().'clients.userid AND '.db_prefix().'contacts.is_primary=1',
+    'LEFT JOIN '.db_prefix().'leads ON '.db_prefix().'leads.id='.db_prefix().'clients.leadid ',
+    'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
+    'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
+    'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+
 ];
 
 foreach ($custom_fields as $key => $field) {
@@ -206,17 +214,13 @@ foreach ($rResult as $aRow) {
     // Bulk actions
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
     // User id
-    $row[] = $aRow['userid'];
+    // $row[] = $aRow['userid'];
 
     // Company
-    $company  = $aRow['company'];
-    $isPerson = false;
+  
+    
 
-    if ($company == '') {
-        $company  = _l('no_company_view_profile');
-        $isPerson = true;
-    }
-
+    $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
     $url = admin_url('clients/client/' . $aRow['userid']);
 
     if ($isPerson && $aRow['contact_id']) {
@@ -243,7 +247,7 @@ foreach ($rResult as $aRow) {
     $row[] = $company;
 
     // Primary contact
-    $row[] = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
+    // $row[] = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
 
     // Primary contact email
     $row[] = ($aRow['email'] ? '<a href="mailto:' . $aRow['email'] . '">' . $aRow['email'] . '</a>' : '');
@@ -274,6 +278,9 @@ foreach ($rResult as $aRow) {
     $row[] = $groupsRow;
 
     $row[] = _dt($aRow['datecreated']);
+    $row[] = $aRow['status_name'];
+    $row[] = $aRow['type_name'];
+    $row[] = $aRow['source_name'];
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {
