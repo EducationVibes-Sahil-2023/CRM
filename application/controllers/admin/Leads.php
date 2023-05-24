@@ -732,8 +732,29 @@ class Leads extends AdminController
         }
 
 
-
         if ($this->input->post()) {
+
+            $duplicate_status = true;
+            // check duplicate
+            $where = [];
+            if (!empty($_POST["phonenumber"])) {
+                $where["phonenumber"] = $_POST["phonenumber"];
+            }
+
+            if (count($where) > 0) {
+                $total = total_rows(db_prefix() . 'clients', $where);
+
+                if ($total == 1) {
+                    $this->db->where($where);
+                    $lead_details = $this->db->get(db_prefix() . 'clients')->row();
+
+                    $duplicate_status = false;
+                    set_alert('danger', "Already customer created this phone number ({$_POST["phonenumber"]})");
+                    redirect(admin_url('/leads/index/' . $lead_details->leadid . '?edit=true'));
+                    die;
+                }
+            }
+
 
             $default_country  = get_option('customer_default_country');
 
@@ -746,7 +767,6 @@ class Leads extends AdminController
             $original_lead_email = $data['original_lead_email'];
 
             unset($data['original_lead_email']);
-
 
 
             if (isset($data['transfer_notes'])) {
@@ -2455,7 +2475,19 @@ class Leads extends AdminController
                                 $total_deleted++;
                             }
                         }
-                    } else {
+                    }
+                    
+                    else if($this->input->post('mass_assign') && !empty($this->input->post('assigned')))
+                    {
+                        if ($has_permission_delete) {
+                            if ($this->leads_model->re_assign($id,$this->input->post())) {
+                                $total_assign++;
+
+                            }
+
+                        }
+                    }
+                    else {
 
 
                         // $current_lead_data = $this->leads_model->get($id);

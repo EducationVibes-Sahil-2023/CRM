@@ -14,6 +14,7 @@ class Clients extends AdminController
         }
 
         $this->load->model('contracts_model');
+        $this->load->model('leads_model');
         $data['contract_types'] = $this->contracts_model->get_contract_types();
         $data['groups']         = $this->clients_model->get_groups();
         $data['title']          = _l('clients');
@@ -40,7 +41,10 @@ class Clients extends AdminController
         $data['contacts_logged_in_today'] = $this->clients_model->get_contacts('', 'last_login LIKE "' . date('Y-m-d') . '%"' . $whereContactsLoggedIn);
 
         $data['countries'] = $this->clients_model->get_clients_distinct_countries();
-
+        $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+        $data['sources']  = $this->leads_model->get_source();
+        $data['type']  = $this->leads_model->get_type();
+        $data['statuses'] = $this->leads_model->get_status();
         $this->load->view('admin/clients/manage', $data);
     }
 
@@ -86,7 +90,6 @@ class Clients extends AdminController
                 }
 
                 $data = $this->input->post();
-                print_r($data);die;
                 $save_and_add_contact = false;
                 if (isset($data['save_and_add_contact'])) {
                     unset($data['save_and_add_contact']);
@@ -133,7 +136,10 @@ class Clients extends AdminController
         if ($id == '') {
             $title = _l('add_new', _l('client_lowercase'));
         } else {
+            $this->load->model('leads_model');
+
             $client                = $this->clients_model->get($id);
+            $data["lead_data"]                = $this->leads_model->get($client->leadid);
             $data['customer_tabs'] = get_customer_profile_tabs();
 
             if (!$client) {
@@ -259,7 +265,7 @@ class Clients extends AdminController
 
             $slug_zip_folder = (
                 $client->company != ''
-                ? $client->company
+                ? $client->companyclient
                 : get_contact_full_name(get_primary_contact_user_id($client->userid))
             );
 

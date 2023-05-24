@@ -1,5 +1,40 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<style>
+
+.hr-text {
+  line-height: 1em;
+  position: relative;
+  outline: 0;
+  border: 0;
+  color: black;
+  text-align: center;
+  height: 1.5em;
+  opacity: 0.5;
+}
+
+.hr-text:before {
+  content: '';
+  background: linear-gradient(to right, transparent, #818078, transparent);
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+}
+
+.hr-text:after {
+  content: attr(data-content);
+  position: relative;
+  display: inline-block;
+  color: black;
+  padding: 0 0.5em;
+  line-height: 1.5em;
+  color: #818078;
+  background-color: #fcfcfa;
+}
+</style>
+
 <div id="wrapper">
     <div class="content">
         <div class="row">
@@ -68,22 +103,23 @@
                             </select>
                           </div>
                           <div class="clearfix"></div>
-                          <div class="select-placeholder form-group" id="select_show_lead_type" style="display: <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers'){echo 'block';}else{ echo "none"; } ?>;">
-                                <label for="show_lead_type">Show Lead Type</label>
+                          <div class="select-placeholder form-group applicant-div-show" id="select_show_lead_type" style="display: <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers') {
+                              echo 'block';
+                          } else {
+                              echo "none";
+                          } ?>;">
+                          <?php 
+                          $selected_lead_type = "";
+if(!empty($custom_field->show_lead_type)) {
+    $selected_lead_type = explode(",", $custom_field->show_lead_type);
+}
+                         
+                          ?>
+                               
+                            <label for="show_lead_type">Show Lead Type</label>
+      <?php echo render_select('show_lead_type[]', $type, array('id','name'), '', $selected_lead_type, array('data-width' => '100%', 'data-none-selected-text' => "Select Lead Type", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'show_lead_type'); ?>
 
-                                <select name="show_lead_type" id="show_lead_type" class="selectpicker" data-width="100%"  data-none-selected-text="Select Custom Field">
-                            <option value=""></option>
-                            <?php 
-                            foreach($type as $t){ 
-                                $selected ="";
-                                if($custom_field->show_lead_type== $t["id"])
-                                {
-                                    $selected ="selected";
-                                }
-                                ?>
-                                <option <?=$selected?> value="<?=$t["id"]?>"><?=$t["name"] ?></option>
-                                <?php } ?>
-                            </select>
+
                             </div>
                             <div class="clearfix"></div>
                             <?php $value = (isset($custom_field) ? $custom_field->name : ''); ?>
@@ -139,14 +175,24 @@
                                 <input type="checkbox" name="required" id="required" <?php if(isset($custom_field) && $custom_field->required == 1){echo 'checked';} ?> <?php if(isset($custom_field) && $custom_field->fieldto == 'company'){echo 'disabled';} ?>>
                                 <label for="required"><?php echo _l('custom_field_required'); ?></label>
                             </div>
+                            <div class="checkbox checkbox-primary applicant-div-show"  style="display:  <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers') {
+                              echo 'block';
+                          } else {
+                              echo "none";
+                          } ?>">
                             <p class="bold">Map Custom Field</p>
-                            <div class="checkbox checkbox-primary">
                                 <input type="checkbox" name="map_status" id="map_status" value=1 <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'checked';} ?>>
                                 <label for="map_status">Field Map Status</label>
                             </div>
       
-                            <div class="select-placeholder form-group" id="select_map_field" style="display: <?php if(isset($custom_field) && $custom_field->map_status == 1){echo 'block';} ?>;">
-                                <label for="map_id"><?php echo _l('custom_field_add_edit_belongs_top'); ?></label>
+                            <div class="select-placeholder form-group" id="select_map_field"  style="display:  <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers') {
+                             if(isset($custom_field) && $custom_field->map_status == 1){echo 'block';} else {
+                                echo "none";
+                            } 
+                          } else {
+                              echo "none";
+                          } ?>" >
+                                <label for="map_id">Field Belongs to Leads</label>
 
                             <select name="map_id" id="map_id" class="selectpicker" data-width="100%"  data-none-selected-text="Select Custom Field">
                             <option value=""></option>
@@ -164,8 +210,34 @@
                                 <?php } ?>
                             </select>
                             </div>
+                            <hr class="hr-text applicant-div-show" data-content="OR"  style="display:  <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers') {
+                              echo 'block';
+                          } else {
+                              echo "none";
+                          } ?>" >
+                            <div class="select-placeholder form-group applicant-div-show "  style="display:  <?php if(isset($custom_field) &&  $custom_field->fieldto == 'customers') {
+                              echo 'block';
+                          } else {
+                              echo "none";
+                          } ?>;">
+                                
+                            <label for="column_map"><?php echo "Select Column Name" ?></label>
 
-                            
+                            <select name="column_map" onchange="change_column_name()" id="column_map" class="selectpicker" data-width="100%"  data-none-selected-text="Select Column Name">
+                            <option value=""></option>
+                            <?php 
+                            $column_name = $custom_field->column_map; 
+                            foreach($lead_table_column as $cfl){ 
+                                $selected ="";
+                                if(strtolower(trim($column_name)) == strtolower(trim($cfl["column_name"])))
+                                {
+                                    $selected ="selected";
+                                }
+                                ?>
+                                <option <?=$selected?> value="<?=$cfl["column_name"]?>"><?=$cfl["column_name"] ?></option>
+                                <?php } ?>
+                            </select>
+                            </div>
 
                             <p class="bold"><?php echo _l('custom_field_visibility'); ?></p>
                             <div class="checkbox checkbox-primary">
@@ -198,6 +270,10 @@
 var pdf_fields = <?php echo json_encode($pdf_fields); ?>;
 var client_portal_fields = <?php echo json_encode($client_portal_fields); ?>;
 var client_editable_fields = <?php echo json_encode($client_editable_fields); ?>;
+function change_column_name()
+{
+    $("#map_status").prop("checked",false);
+}
 $(function () {
     appValidateForm($('form'), {
         fieldto: 'required',
@@ -316,9 +392,11 @@ $(function () {
 });
 $('#map_status').change(function()
 {
-if ($('#map_status').is(':checked')) {
+if($('#map_status').is(':checked')) {
 $("#map_id").val('');
 $("#map_id").selectpicker("refresh");
+$("#column_map").val('');
+$("#column_map").selectpicker("refresh");
 $("#select_map_field").show();
 }
 else
@@ -331,13 +409,17 @@ function change_field(obj)
    let field_vlue = $(obj).val();
    if(field_vlue == "customers")
    {
-$("#select_show_lead_type").show();
-$("#select_show_lead_type select").val("");
-$("#select_show_lead_type select").selectpicker("refresh");
+$(".applicant-div-show").show();
+$(".applicant-div-show select").val("");
+$(".applicant-div-show input[type='checkbox']").prop('checked',false);
+$(".applicant-div-show select").selectpicker("refresh");
    }
    else{
-    $("#select_show_lead_type").hide();
-$("#select_show_lead_type select").val("");
+    $(".applicant-div-show").hide();
+$(".applicant-div-show input[type='checkbox']").prop('checked',false);
+$(".applicant-div-show select").val("");
+$(".applicant-div-show select").selectpicker("refresh");
+
 
    }
 }
