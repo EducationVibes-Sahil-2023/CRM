@@ -129,14 +129,12 @@ function get_leads_summary()
         // echo "<pre>";print_r($idsarr);
         $sids = implode(",", $idsarr);
         // echo "<pre>";print_r($sids);
-	    
-	if(!empty($sids))
-	{
-	$tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-	}
-	else{
-	$tids = ' AND assigned in ('. $sid .')';
-	}
+
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
         // print_r($where);die;
     }
 
@@ -235,15 +233,13 @@ function get_leads_summary_filter($params)
         }
         $idsarr = array_column($query, 'staffid');
         $sids = implode(",", $idsarr);
-	    if(!empty($sids))
-	{
-	$tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-	}
-	else{
-	$tids = ' AND assigned in ('. $sid .')';
-	}
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
 
-//         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
@@ -418,16 +414,14 @@ function get_status_summary_filter($params)
         }
         $idsarr = array_column($query, 'staffid');
         $sids = implode(",", $idsarr);
-	    
-	if(!empty($sids))
-	{
-	$tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-	}
-	else{
-	$tids = ' AND assigned in ('. $sid .')';
-	}
 
-//         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($sources as $source) {
@@ -583,7 +577,12 @@ function leads_update_count($params = false)
 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
     }
 
     // $sql .= ' SELECT COUNT(l.id) as total';
@@ -704,7 +703,12 @@ function leads_update_count_id($id, $params = false)
 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     $sql .= ' SELECT COUNT(l.id) as total';
@@ -908,16 +912,14 @@ function get_leads_summary_filter_excel($params)
         }
         $idsarr = array_column($query, 'staffid');
         $sids = implode(",", $idsarr);
-	    
-	if(!empty($sids))
-	{
-	$tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-	}
-	else{
-	$tids = ' AND assigned in ('. $sid .')';
-	}
 
-//         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
@@ -1083,14 +1085,12 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
         }
         $idsarr = array_column($query, 'staffid');
         $sids = implode(",", $idsarr);
-if(!empty($sids))
-	{
-	$tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-	}
-	else{
-	$tids = ' AND assigned in ('. $sid .')';
-	}
-//         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
