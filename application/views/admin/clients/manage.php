@@ -274,14 +274,14 @@
                      $table_data = array();
                      $_table_data = array(
                       '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>',
-                       array(
-                         'name'=>_l('the_number_sign'),
-                         'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-number')
-                        ),
-                         array(
-                         'name'=>_l('clients_list_company'),
-                         'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-company')
-                        ),
+                     //   array(
+                     //     'name'=>_l('the_number_sign'),
+                     //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-number')
+                     //    ),
+                     //     array(
+                     //     'name'=>_l('clients_list_company'),
+                     //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-company')
+                     //    ),
                          array(
                          'name'=>_l('contact_primary'),
                          'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-primary-contact')
@@ -315,8 +315,8 @@
                      foreach($custom_fields as $field){
                       array_push($table_data,$field['name']);
                      }
-
                      $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
+
 
                      render_datatable($table_data,'clients',[],[
                            'data-last-order-identifier' => 'customers',
