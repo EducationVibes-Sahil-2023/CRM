@@ -229,11 +229,11 @@
 							echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
 							?>
 							<?php
-							echo render_custom_fields('customers', $client->userid, "", "", !empty($this->session->userdata("staff_department")) ? $this->session->userdata("staff_department") : '');
+							echo render_custom_fields('customers', $client->userid,"","",!empty($lead_data->type)?$lead_data->type:'');
 							?>
 						</div>
 
-
+					
 					</div>
 				</div>
 			</div>
