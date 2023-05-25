@@ -328,7 +328,7 @@
                      //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-company')
                      //    ),
                      array(
-                        'name' => _l('contact_primary'),
+                        'name' => _l('Student Name'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-primary-contact')
                      ),
                      array(
