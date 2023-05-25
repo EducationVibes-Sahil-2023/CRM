@@ -317,6 +317,7 @@ function get_leads_summary_filter($params)
             $up_from_date = $params['up_from_date'];
             $up_to_date = $params['up_to_date'];
             //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            //             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
             $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
         }
         if (!empty($params['followup_to_date'])) {
@@ -524,7 +525,7 @@ function get_status_summary_filter($params)
 
     foreach ($sources as $key => $source) {
         $sources[$key]['total'] = 0;
-     
+
         if (!empty($_POST["source"])) {
             if (in_array($source["id"], $_POST["source"])) {
                 $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
