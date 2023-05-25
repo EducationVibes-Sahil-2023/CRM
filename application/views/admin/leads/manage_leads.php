@@ -329,8 +329,9 @@
                                  </div>
                                  <div class="col-md-4 leads-filter-column">
                                     <div class="form-group">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
-                                       <button class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                        <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                     </div>
                                  </div>
@@ -417,7 +418,7 @@
                                              </div>
                                           </div>
                                           <div id="re-assignation_div" style="display:none;">
-                                       <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
+                                             <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
 
                                           </div>
                                        </div>
@@ -728,6 +729,7 @@
       // })
 
       $('#apply_filter').on('click', function() {
+
          var from_date = document.getElementById("from_date").value;
          var to_date = document.getElementById("to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
@@ -791,12 +793,19 @@
                return false;
             }
          }
+         show_loader("apply_filter");
          periodFilter();
          summary();
       });
 
       function periodFilter() {
-         table_leads.DataTable().ajax.reload(null, false);
+
+
+         table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
+            console.log("okkkk");
+            hide_loader("apply_filter");
+         });
+
       }
       var xhr = null;
 
