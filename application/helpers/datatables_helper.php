@@ -145,9 +145,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                                 $sMatchCustomFields[] = $columnName;
                             } else {
                                 if (str_contains($search_value, '!=')) {
-                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
                                 } else {
-                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
                                 }
                             }
                         }
@@ -156,7 +156,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             }
         }
         if (count($sMatchCustomFields) > 0) {
-            $s = $CI->db->escape_str($search_value);
+            $s = $CI->db->escape_like_str($search_value);
             foreach ($sMatchCustomFields as $matchCustomField) {
                 if (str_contains($s, '!=')) {
                     $sWhere .= " NOT MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('" . str_replace("!=", "", $s) . "') USING utf8)) AND ";
@@ -175,9 +175,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 } else {
                     // Use index
                     if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
                     } else {
-                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
                     }
                 }
             }
@@ -203,16 +203,16 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 }
                 if ($search_value != '') {
                     if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
                     } else {
-                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
                     }
                     if (count($additionalSelect) > 0) {
                         foreach ($additionalSelect as $searchAdditionalField) {
                             if (str_contains($search_value, '!=')) {
-                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
                             } else {
-                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '" . $CI->db->escape_str($search_value) . "%' OR ";
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '" . $CI->db->escape_like_str($search_value) . "%' OR ";
                             }
                         }
                     }
@@ -269,7 +269,6 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sOrder
     $sLimit
     ";
-
 
     $rResult = $CI->db->query($sQuery)->result_array();
 
