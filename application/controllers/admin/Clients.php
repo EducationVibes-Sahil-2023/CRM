@@ -43,13 +43,14 @@ class Clients extends AdminController
         $data['countries'] = $this->clients_model->get_clients_distinct_countries();
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['sources']  = $this->leads_model->get_source();
-        $data['type']  = $this->leads_model->get_type();
-        $data['statuses'] = $this->leads_model->get_status();
+        $data['leadType']  = $this->leads_model->get_type();
+
         $this->load->view('admin/clients/manage', $data);
     }
 
     public function table()
     {
+      
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
                 ajax_access_denied();
@@ -148,7 +149,7 @@ class Clients extends AdminController
 
             $data['contacts'] = $this->clients_model->get_contacts($id);
             $data['basicDetails'] = $this->clients_model->get_contact_by_userid($data['contacts'][0]['userid']);
-            
+
             $data['tab']      = isset($data['customer_tabs'][$group]) ? $data['customer_tabs'][$group] : null;
 
             if (!$data['tab']) {
@@ -167,7 +168,6 @@ class Clients extends AdminController
 
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
                 $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
-
             } elseif ($group == 'attachments') {
                 $data['attachments'] = get_all_customer_attachments($id);
             } elseif ($group == 'vault') {
@@ -214,7 +214,7 @@ class Clients extends AdminController
                             'longitude'      => "$client->longitude",
                             'mapMarkerTitle' => "$client->company",
                         ],
-                        ]);
+                    ]);
                 }
             }
 
@@ -263,8 +263,7 @@ class Clients extends AdminController
 
             $data['customer_currency'] = $customer_currency;
 
-            $slug_zip_folder = (
-                $client->company != ''
+            $slug_zip_folder = ($client->company != ''
                 ? $client->companyclient
                 : get_contact_full_name(get_primary_contact_user_id($client->userid))
             );
@@ -365,9 +364,9 @@ class Clients extends AdminController
                 if (!is_customer_admin($customer_id)) {
                     header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad error');
                     echo json_encode([
-                            'success' => false,
-                            'message' => _l('access_denied'),
-                        ]);
+                        'success' => false,
+                        'message' => _l('access_denied'),
+                    ]);
                     die;
                 }
             }
@@ -397,21 +396,21 @@ class Clients extends AdminController
             if ($updated == true) {
                 $contact = $this->clients_model->get_contact($contact_id);
                 if (total_rows(db_prefix() . 'proposals', [
-                        'rel_type' => 'customer',
-                        'rel_id' => $contact->userid,
-                        'email' => $original_contact->email,
-                    ]) > 0 && ($original_contact->email != $contact->email)) {
+                    'rel_type' => 'customer',
+                    'rel_id' => $contact->userid,
+                    'email' => $original_contact->email,
+                ]) > 0 && ($original_contact->email != $contact->email)) {
                     $proposal_warning = true;
                     $original_email   = $original_contact->email;
                 }
             }
             echo json_encode([
-                    'success'             => $success,
-                    'proposal_warning'    => $proposal_warning,
-                    'message'             => $message,
-                    'original_email'      => $original_email,
-                    'has_primary_contact' => (total_rows(db_prefix() . 'contacts', ['userid' => $customer_id, 'is_primary' => 1]) > 0 ? true : false),
-                ]);
+                'success'             => $success,
+                'proposal_warning'    => $proposal_warning,
+                'message'             => $message,
+                'original_email'      => $original_email,
+                'has_primary_contact' => (total_rows(db_prefix() . 'contacts', ['userid' => $customer_id, 'is_primary' => 1]) > 0 ? true : false),
+            ]);
             die;
         }
         if ($contact_id == '') {
@@ -699,8 +698,10 @@ class Clients extends AdminController
     public function zip_invoices($id)
     {
         $has_permission_view = has_permission('invoices', '', 'view');
-        if (!$has_permission_view && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+        if (
+            !$has_permission_view && !has_permission('invoices', '', 'view_own')
+            && get_option('allow_staff_view_invoices_assigned') == '0'
+        ) {
             access_denied('Zip Customer Invoices');
         }
 
@@ -723,8 +724,10 @@ class Clients extends AdminController
     public function zip_estimates($id)
     {
         $has_permission_view = has_permission('estimates', '', 'view');
-        if (!$has_permission_view && !has_permission('estimates', '', 'view_own')
-            && get_option('allow_staff_view_estimates_assigned') == '0') {
+        if (
+            !$has_permission_view && !has_permission('estimates', '', 'view_own')
+            && get_option('allow_staff_view_estimates_assigned') == '0'
+        ) {
             access_denied('Zip Customer Estimates');
         }
 
@@ -747,18 +750,20 @@ class Clients extends AdminController
     {
         $has_permission_view = has_permission('payments', '', 'view');
 
-        if (!$has_permission_view && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+        if (
+            !$has_permission_view && !has_permission('invoices', '', 'view_own')
+            && get_option('allow_staff_view_invoices_assigned') == '0'
+        ) {
             access_denied('Zip Customer Payments');
         }
 
         $this->load->library('app_bulk_pdf_export', [
-                'export_type'       => 'payments',
-                'payment_mode'      => $this->input->post('paymentmode'),
-                'date_from'         => $this->input->post('zip-from'),
-                'date_to'           => $this->input->post('zip-to'),
-                'redirect_on_error' => admin_url('clients/client/' . $id . '?group=payments'),
-            ]);
+            'export_type'       => 'payments',
+            'payment_mode'      => $this->input->post('paymentmode'),
+            'date_from'         => $this->input->post('zip-from'),
+            'date_to'           => $this->input->post('zip-to'),
+            'redirect_on_error' => admin_url('clients/client/' . $id . '?group=payments'),
+        ]);
 
         $this->app_bulk_pdf_export->set_client_id($id);
         $this->app_bulk_pdf_export->set_client_id_column(db_prefix() . 'clients.userid');
@@ -784,18 +789,20 @@ class Clients extends AdminController
         $this->load->library('import/import_customers', [], 'import');
 
         $this->import->setDatabaseFields($dbFields)
-                     ->setCustomFields(get_custom_fields('customers'));
+            ->setCustomFields(get_custom_fields('customers'));
 
         if ($this->input->post('download_sample') === 'true') {
             $this->import->downloadSample();
         }
 
-        if ($this->input->post()
-            && isset($_FILES['file_csv']['name']) && $_FILES['file_csv']['name'] != '') {
+        if (
+            $this->input->post()
+            && isset($_FILES['file_csv']['name']) && $_FILES['file_csv']['name'] != ''
+        ) {
             $this->import->setSimulation($this->input->post('simulate'))
-                          ->setTemporaryFileLocation($_FILES['file_csv']['tmp_name'])
-                          ->setFilename($_FILES['file_csv']['name'])
-                          ->perform();
+                ->setTemporaryFileLocation($_FILES['file_csv']['tmp_name'])
+                ->setFilename($_FILES['file_csv']['name'])
+                ->perform();
 
 
             $data['total_rows_post'] = $this->import->totalRows();
@@ -1088,33 +1095,34 @@ class Clients extends AdminController
 
     // UPDATE ADMISSION PREFERENCES
 
-    function update_admission_preferences(){
+    function update_admission_preferences()
+    {
         $data = array();
-        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $params = $this->input->post();
 
             $dataArr = [
                 'program' => $params['program'],
                 'course' => $params['course'],
                 'entrance_exam_given' => $params['entranceExamGiven'],
-                'entrance_exam_details' => ($params['entranceExamGiven'] == 'YES')?$params['entranceExamDetails']:'',
+                'entrance_exam_details' => ($params['entranceExamGiven'] == 'YES') ? $params['entranceExamDetails'] : '',
                 'session_intake' => $params['sessionIntake'],
             ];
 
-            if($params['countries'] != ""){
+            if ($params['countries'] != "") {
                 $dataArr['study_country'] = $params['countries'];
-                $dataArr['university'] = json_encode($params['universities'],true);
+                $dataArr['university'] = json_encode($params['universities'], true);
             }
 
             $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $params['admissionPreferencesId']);
-            if($admissionPreferencesId){ 
+            if ($admissionPreferencesId) {
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'Admission Preferences successfully updated';
-            }else{
+            } else {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'Request failed!!';
             }
-        }else{
+        } else {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
         }
@@ -1124,9 +1132,10 @@ class Clients extends AdminController
 
     // FREEZE ADMISSION PREFERENCES
 
-    function freeze_admission_preferences(){
+    function freeze_admission_preferences()
+    {
         $data = array();
-        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $params = $this->input->post();
             $admission_preferences = $this->clients_model->getAdmissionPreferencesDetails($params['admissionPreferencesId']);
             $freeze = $admission_preferences->freeze == 0 ? 1 : 0;
@@ -1134,19 +1143,19 @@ class Clients extends AdminController
             $dataArr = [
                 'freeze' => $freeze,
             ];
-            
+
             $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $params['admissionPreferencesId']);
-            if($admissionPreferencesId){ 
+            if ($admissionPreferencesId) {
                 $data['resp_code'] = 'RCS';
-                $data['resp_desc'] = 'Admission Preferences '.$freeze_text.' successfully';
+                $data['resp_desc'] = 'Admission Preferences ' . $freeze_text . ' successfully';
                 $data['data'] = array(
-                    'is_freezed'=>$freeze
+                    'is_freezed' => $freeze
                 );
-            }else{
+            } else {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'Request failed!!';
             }
-        }else{
+        } else {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
         }

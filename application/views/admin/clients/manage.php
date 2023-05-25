@@ -3,9 +3,23 @@
 <div id="wrapper">
    <div class="content">
       <div class="row">
+
+         <?php if (!is_admin() && empty($this->session->userdata("staff_department"))) {
+         ?>
+            <div class="col-md-12">
+               <div class="panel_s">
+                  <div class="panel-body">
+                     <h4 class="text-center"> You don't have access to Applicant list. Contact your admin for more info.</h4>
+                  </div>
+               </div>
+            </div>
+         <?php
+            die;
+         } ?>
          <div class="col-md-12">
             <div class="_filters _hidden_inputs hidden">
                <?php
+
                echo form_hidden('my_customers');
                echo form_hidden('requires_registration_confirmation');
                foreach ($groups as $group) {
@@ -45,10 +59,11 @@
                      <?php } ?>
                      <a href="<?php echo admin_url('clients/all_contacts'); ?>" class="btn btn-info pull-left display-block mright5">
                         <?php echo _l('customer_contacts'); ?></a>
+                     <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('customers_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
                      <div class="visible-xs">
                         <div class="clearfix"></div>
                      </div>
-                     <div class="btn-group pull-right btn-with-tooltip-group _filter_data" data-toggle="tooltip" data-title="<?php echo _l('filter_by'); ?>">
+                     <div class="btn-group pull-right btn-with-tooltip-group _filter_data d-none" data-toggle="tooltip" data-title="<?php echo _l('filter_by'); ?>">
                         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                            <i class="fa fa-filter" aria-hidden="true"></i>
                         </button>
@@ -188,49 +203,51 @@
                         $where_summary = ' AND userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')';
                      }
                   ?>
-                     <hr class="hr-panel-heading" />
-                     <div class="row mbot15">
-                        <div class="col-md-12">
-                           <h4 class="no-margin"><?php echo _l('customers_summary'); ?></h4>
-                        </div>
-                        <div class="col-md-2 col-xs-6 border-right">
-                           <h3 class="bold"><?php echo total_rows(db_prefix() . 'clients', ($where_summary != '' ? substr($where_summary, 5) : '')); ?></h3>
-                           <span class="text-dark"><?php echo _l('customers_summary_total'); ?></span>
-                        </div>
-                        <div class="col-md-2 col-xs-6 border-right">
-                           <h3 class="bold"><?php echo total_rows(db_prefix() . 'clients', 'active=1' . $where_summary); ?></h3>
-                           <span class="text-success"><?php echo _l('active_customers'); ?></span>
-                        </div>
-                        <div class="col-md-2 col-xs-6 border-right">
-                           <h3 class="bold"><?php echo total_rows(db_prefix() . 'clients', 'active=0' . $where_summary); ?></h3>
-                           <span class="text-danger"><?php echo _l('inactive_active_customers'); ?></span>
-                        </div>
-                        <div class="col-md-2 col-xs-6 border-right">
-                           <h3 class="bold"><?php echo total_rows(db_prefix() . 'contacts', 'active=1' . $where_summary); ?></h3>
-                           <span class="text-info"><?php echo _l('customers_summary_active'); ?></span>
-                        </div>
-                        <div class="col-md-2  col-xs-6 border-right">
-                           <h3 class="bold"><?php echo total_rows(db_prefix() . 'contacts', 'active=0' . $where_summary); ?></h3>
-                           <span class="text-danger"><?php echo _l('customers_summary_inactive'); ?></span>
-                        </div>
-                        <div class="col-md-2 col-xs-6">
-                           <h3 class="bold"><?php echo total_rows(db_prefix() . 'contacts', 'last_login LIKE "' . date('Y-m-d') . '%"' . $where_summary); ?></h3>
-                           <span class="text-muted">
-                              <?php
-                              $contactsTemplate = '';
-                              if (count($contacts_logged_in_today) > 0) {
-                                 foreach ($contacts_logged_in_today as $contact) {
-                                    $url = admin_url('clients/client/' . $contact['userid'] . '?contactid=' . $contact['id']);
-                                    $fullName = $contact['firstname'] . ' ' . $contact['lastname'];
-                                    $dateLoggedIn = _dt($contact['last_login']);
-                                    $html = "<a href='$url' target='_blank'>$fullName</a><br /><small>$dateLoggedIn</small><br />";
-                                    $contactsTemplate .= html_escape('<p class="mbot5">' . $html . '</p>');
-                                 }
-                              ?>
-                              <?php } ?>
-                              <span<?php if ($contactsTemplate != '') { ?> class="pointer text-has-action" data-toggle="popover" data-title="<?php echo _l('customers_summary_logged_in_today'); ?>" data-html="true" data-content="<?php echo $contactsTemplate; ?>" data-placement="bottom" <?php } ?>><?php echo _l('customers_summary_logged_in_today'); ?>
-                           </span>
-                           </span>
+                     <div class="row hide leads-overview col-md-12">
+                        <hr class="hr-panel-heading" />
+                        <div class="row mbot15">
+                           <div class="col-md-12">
+                              <h4 class="no-margin"><?php echo _l('customers_summary'); ?></h4>
+                           </div>
+                           <div class="col-md-2 col-xs-6 border-right">
+                              <h3 class="bold"><?php echo total_rows(db_prefix() . 'clients', ($where_summary != '' ? substr($where_summary, 5) : '')); ?></h3>
+                              <span class="text-dark"><?php echo _l('customers_summary_total'); ?></span>
+                           </div>
+                           <div class="col-md-2 col-xs-6 border-right">
+                              <h3 class="bold"><?php echo total_rows(db_prefix() . 'clients', 'active=1' . $where_summary); ?></h3>
+                              <span class="text-success"><?php echo _l('active_customers'); ?></span>
+                           </div>
+                           <div class="col-md-2 col-xs-6 border-right">
+                              <h3 class="bold"><?php echo total_rows(db_prefix() . 'clients', 'active=0' . $where_summary); ?></h3>
+                              <span class="text-danger"><?php echo _l('inactive_active_customers'); ?></span>
+                           </div>
+                           <div class="col-md-2 col-xs-6 border-right">
+                              <h3 class="bold"><?php echo total_rows(db_prefix() . 'contacts', 'active=1' . $where_summary); ?></h3>
+                              <span class="text-info"><?php echo _l('customers_summary_active'); ?></span>
+                           </div>
+                           <div class="col-md-2  col-xs-6 border-right">
+                              <h3 class="bold"><?php echo total_rows(db_prefix() . 'contacts', 'active=0' . $where_summary); ?></h3>
+                              <span class="text-danger"><?php echo _l('customers_summary_inactive'); ?></span>
+                           </div>
+                           <div class="col-md-2 col-xs-6">
+                              <h3 class="bold"><?php echo total_rows(db_prefix() . 'contacts', 'last_login LIKE "' . date('Y-m-d') . '%"' . $where_summary); ?></h3>
+                              <span class="text-muted">
+                                 <?php
+                                 $contactsTemplate = '';
+                                 if (count($contacts_logged_in_today) > 0) {
+                                    foreach ($contacts_logged_in_today as $contact) {
+                                       $url = admin_url('clients/client/' . $contact['userid'] . '?contactid=' . $contact['id']);
+                                       $fullName = $contact['firstname'] . ' ' . $contact['lastname'];
+                                       $dateLoggedIn = _dt($contact['last_login']);
+                                       $html = "<a href='$url' target='_blank'>$fullName</a><br /><small>$dateLoggedIn</small><br />";
+                                       $contactsTemplate .= html_escape('<p class="mbot5">' . $html . '</p>');
+                                    }
+                                 ?>
+                                 <?php } ?>
+                                 <span <?php if ($contactsTemplate != '') { ?> class="pointer text-has-action" data-toggle="popover" data-title="<?php echo _l('customers_summary_logged_in_today'); ?>" data-html="true" data-content="<?php echo $contactsTemplate; ?>" data-placement="bottom" <?php } ?>><?php echo _l('customers_summary_logged_in_today'); ?>
+                                 </span>
+                              </span>
+                           </div>
                         </div>
                      </div>
                   <?php } ?>
@@ -266,52 +283,68 @@
                      <!-- /.modal-dialog -->
                   </div>
                   <!-- /.modal -->
-                  <div class="checkbox">
+                  <!-- <div class="checkbox">
                      <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
                      <label for="exclude_inactive"><?php echo _l('exclude_inactive'); ?> <?php echo _l('clients'); ?></label>
-                  </div>
+                  </div> -->
                   <div class="tab-content">
-                     <div class="row" id="leads-table ">
+                     <div class="" id="leads-table ">
                         <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p>
-                         <div id="filterArea" class="col-md-12 hidden-xs">
+                        <div class="checkbox">
+                           <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
+                           <label for="exclude_inactive"><?php echo _l('exclude_inactive'); ?> <?php echo _l('clients'); ?></label>
+                        </div>
+                        <div id="filterArea" class=" hidden-xs">
                            <div class="row">
                               <div class="col-md-12">
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
-                              <?php  if (has_permission('leads', '', 'view')) { ?>
+                              <?php if (has_permission('leads', '', 'view')) { ?>
                                  <div class="col-md-2 leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                  </div>
                               <?php } ?>
+                              <?php if (is_admin()) { ?>
+                                 <div class="col-md-2 leads-filter-column">
+                                    <?php
+
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('lead_type[]', $leadType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                                    echo '</div>';
+
+                                    // die;
+                                    ?>
+                                 </div>
+                              <?php } ?>
+
+
                               <div class="col-md-2 leads-filter-column">
                                  <?php
-                                 
-                                 echo '<div id="leads-filter-status">';
-                                 echo render_select('view_status[]', $statuses, array('id', 'name'), '',"", array('data-width' => '100%', 'data-none-selected-text' => _l('leads_all'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status');
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
                                  echo '</div>';
                                  ?>
                               </div>
-
-
                               <div class="col-md-2 leads-filter-column">
-                                 <?php
-                                  echo '<div id="leads-filter-source">';
-                                  echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
-                                  echo '</div>';
-                                 ?>
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
+                                 </div>
                               </div>
                               <div class="col-md-2 leads-filter-column">
-                                    <div class="form-group">
-                                       <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
-                                    </div>
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
-                                    <div class="form-group">
-                                       <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
-                                    </div>
+                              </div>
+                              <div class="col-md-4 leads-filter-column">
+                                 <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+
+                                    <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
+                                    <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                  </div>
+                              </div>
                            </div>
-                        </div> 
+                        </div>
                      </div>
                   </div>
                   <div class="clearfix mtop20"></div>
@@ -348,7 +381,7 @@
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
                      ),
                      array(
-                        'name' => _l('date_created'),
+                        'name' => _l('OnBoarding Date'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
                      array(
@@ -369,7 +402,14 @@
                   }
 
                   $custom_fields = get_custom_fields('customers', array('show_on_table' => 1));
+
                   foreach ($custom_fields as $field) {
+                     if (is_admin()) {
+                     } else {
+                        if (!empty($this->session->userdata("staff_department")) &&  !empty($field['show_lead_type']) &&  $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                           continue;
+                        }
+                     }
                      array_push($table_data, $field['name']);
                   }
                   $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
@@ -388,17 +428,24 @@
 </div>
 <?php init_tail(); ?>
 <script>
+   var tAPI = "";
    $(function() {
       var CustomersServerParams = {};
       $.each($('._hidden_inputs._filters input'), function() {
          CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
       });
       CustomersServerParams['exclude_inactive'] = '[name="exclude_inactive"]:checked';
+      CustomersServerParams['assigned'] = "[name='view_assigned[]']";
+      CustomersServerParams['source'] = "[name='view_source[]']";
+      CustomersServerParams['lead_type'] = "[name='lead_type[]']";
+      CustomersServerParams['from_date'] = "[name='from_date']";
+      CustomersServerParams['to_date'] = "[name='to_date']";
 
-      var tAPI = initDataTable('.table-clients', admin_url + 'clients/table', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
+      tAPI = initDataTable('.table-clients', admin_url + 'clients/table', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
       $('input[name="exclude_inactive"]').on('change', function() {
          tAPI.ajax.reload();
       });
+
    });
 
    function customers_bulk_action(event) {
@@ -432,6 +479,42 @@
             });
          }, 50);
       }
+   }
+
+   $('#apply_filter').on('click', function() {
+
+      var from_date = document.getElementById("from_date").value;
+      var to_date = document.getElementById("to_date").value;
+
+
+      if (to_date != '') {
+         if (from_date == '') {
+            $("#from_date").focus();
+            return false;
+         }
+      }
+
+      if (from_date != '') {
+         if (to_date == '') {
+            $("#to_date").focus();
+            return false;
+         }
+      }
+
+
+      show_loader("apply_filter");
+      periodFilter();
+      // summary();
+   });
+
+   function periodFilter() {
+      // $(".table-clients").DataTable().ajax.reload(null, false).on('draw.dt', function() {
+      //    hide_loader("apply_filter");
+      // });
+      tAPI.ajax.reload(null, false).on('draw.dt', function() {
+         hide_loader("apply_filter");
+      });
+
    }
 </script>
 </body>

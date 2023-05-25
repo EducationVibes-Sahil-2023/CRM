@@ -9,7 +9,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @param  array $items_cf_params          used only for custom fields for items operations
  * @return mixed
  */
-function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_cf_params = [], $show_lead_type = "", $table_array = [],$table_link = 0)
+function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_cf_params = [], $show_lead_type = "", $table_array = [], $table_link = 0)
 {
     // Is custom fields for items and in add/edit
     $items_add_edit_preview = isset($items_cf_params['add_edit_preview']) && $items_cf_params['add_edit_preview'] ? true : false;
@@ -52,7 +52,7 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                 continue;
             }
 
-            if (!empty($show_lead_type_array) && !empty($show_lead_type) &&  !in_array($show_lead_type,$show_lead_type_array)) {
+            if (!empty($show_lead_type_array) && !empty($show_lead_type) &&  !in_array($show_lead_type, $show_lead_type_array)) {
                 continue;
             }
 
@@ -61,9 +61,9 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
             $old_field_id = $field["id"];
             $old_field_to = $field["fieldto"];
             if (!empty($field['map_id']) && $table_link == 1) {
-                
+
                 $map_details =  explode("-", $field['map_id']);
-                $field_id = trim($map_details[0]);    
+                $field_id = trim($map_details[0]);
                 $field = $CI->db->where("id", $field_id)->get(db_prefix() . 'customfields')->result_array()[0];
                 $belongs_to_new = $field["fieldto"];
             }
@@ -151,14 +151,14 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
                         $value = $table_array[$field["column_map"]];
                     }
                 } elseif ($check_array_type === 'object') {
-       
+
                     $table_array = (array)$table_array;
                     if (!empty($table_array[$field["column_map"]])) {
                         $value = $table_array[$field["column_map"]];
                     }
                 }
             }
-         
+
             $_input_attrs = [];
 
             if ($field['required'] == 1) {
@@ -234,12 +234,10 @@ function render_custom_fields($belongs_to, $rel_id = false, $where = [], $items_
 
                 foreach ($options as $option) {
                     $option = trim($option);
-                    $option_array = explode("@@",$option);
+                    $option_array = explode("@@", $option);
                     $option = $option_array[0];
-                    if(!empty($option_array))
-                    {
-                        if(!empty($option_array[1]))
-                        {
+                    if (!empty($option_array)) {
+                        if (!empty($option_array[1])) {
                             $value = $option_array[0];
                         }
                     }
@@ -706,3 +704,4 @@ function is_custom_fields_smart_transfer_enabled()
 
     return false;
 }
+
