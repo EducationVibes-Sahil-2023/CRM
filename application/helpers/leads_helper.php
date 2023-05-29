@@ -243,6 +243,7 @@ function get_leads_summary_filter($params)
     }
 
     foreach ($statuses as $status) {
+        $sql .= ' SELECT SUM(subquery.total) AS total FROM ( ';
         $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
         $sql .= ' FROM ' . db_prefix() . 'leads';
 
@@ -253,6 +254,8 @@ function get_leads_summary_filter($params)
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+        } else if (!empty($params['update_count_max'])) {
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = tblleads.id ';
@@ -332,13 +335,19 @@ function get_leads_summary_filter($params)
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
+        if (!empty($params['update_count_max'])) {
+            $min = $params['update_count_min'];
+            $max = $params['update_count_max'];
+            $sql .= ' GROUP BY tblleads.id HAVING COUNT(tblleads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        }
+
         $grup_by = "";
         if (!empty($params['neet_score'])) {
             // $grup_by = db_prefix() . 'customfieldsvalues.relid';
             // $sql .= ' group by ' . $grup_by;
         }
 
-
+        $sql .= " ) AS subquery ";
         $sql .= ' UNION ALL ';
         $sql = trim($sql);
     }
@@ -545,7 +554,7 @@ function get_status_summary_filter($params)
 
     return $sources;
 }
-function leads_update_count($params = false)
+function leads_update_count($params = false, $max_status = 0)
 {
 
     $CI = &get_instance();
@@ -655,8 +664,21 @@ function leads_update_count($params = false)
     if (!empty($params['neet_score'])) {
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
-    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-    $sql = trim($sql);
+    $sql_add = "";
+    if (!empty($params['update_count_max'])) {
+        $min = $params['update_count_min'];
+        $max = $params['update_count_max'];
+        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    }
+
+
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " group by l.id" . $grup_by . "" . $sql_add . " order by total desc limit 1 ";
+        $sql = trim($sql);
+    } else {
+        $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql = trim($sql);
+    }
 
 
     $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
