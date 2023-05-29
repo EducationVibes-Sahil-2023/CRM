@@ -25,8 +25,8 @@
          </div>
          <?php if($group == 'profile'){ ?>
          <div class="btn-bottom-toolbar btn-toolbar-container-out text-right">
-            <button class="btn btn-info only-save customer-form-submiter">
-            <?php echo _l( 'submit'); ?>
+            <!-- <button class="btn btn-info only-save customer-form-submiter">
+            <?php echo _l( 'submit'); ?> -->
             </button>
             <?php if(!isset($client)){ ?>
             <button class="btn btn-info save-and-add-contact customer-form-submiter">
