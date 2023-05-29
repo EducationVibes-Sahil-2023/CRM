@@ -70,6 +70,7 @@ class Leads extends AdminController
 
         $data['summary']  = get_leads_summary();
         $data['updateCount'] = leads_update_count();
+        $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
 
@@ -93,6 +94,7 @@ class Leads extends AdminController
     {
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
+        $max_count = leads_update_count("", 1);
 
         $ret = "";
         $ret1 = '';
@@ -108,7 +110,7 @@ class Leads extends AdminController
             $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
         }
         // echo $ret;
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "max_count" => $max_count]);
     }
 
     public function updated_count()
@@ -2475,19 +2477,13 @@ class Leads extends AdminController
                                 $total_deleted++;
                             }
                         }
-                    }
-                    
-                    else if($this->input->post('mass_assign') && !empty($this->input->post('assigned')))
-                    {
+                    } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
                         if ($has_permission_delete) {
-                            if ($this->leads_model->re_assign($id,$this->input->post())) {
+                            if ($this->leads_model->re_assign($id, $this->input->post())) {
                                 $total_assign++;
-
                             }
-
                         }
-                    }
-                    else {
+                    } else {
 
 
                         // $current_lead_data = $this->leads_model->get($id);
