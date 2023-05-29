@@ -77,6 +77,16 @@ class Api_Model extends CI_Model
                 $response["login_token"] = $access_token;
                 $response["followup_contact"] = [];
 
+                $issuedAt = time();
+                $expirationTime = $issuedAt + 60 * 60 * 24 * 60;
+                $data = array(
+                    "login_token" => $access_token,
+                    'iat' => $issuedAt,
+                    'exp' => $expirationTime,
+                );
+                $jwt_token =  $this->generate_token($data);
+                $response["jwt_token"] = !empty($jwt_token) ? $jwt_token : '';
+
                 if (!empty($user->staffid)) {
                     $follow_up_contact = $this->follow_up_contact($user->staffid);
                     if (!empty($follow_up_contact["data"])) {
@@ -370,6 +380,18 @@ class Api_Model extends CI_Model
         } catch (Exception $e) {
             $response["status"] = 0;
             $response["message"] = $e->getMessage();
+        }
+        return $response;
+    }
+
+    public function generate_token($data)
+    {
+        $response = [];
+        try {
+            $jwt = new JWT();
+            $response = $jwt->encode($data, $this->secretKey, "HS256");
+        } catch (Exception $e) {
+            $response = array("status" => 0, "message" => "Not generate token.");
         }
         return $response;
     }

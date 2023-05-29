@@ -214,25 +214,25 @@ function get_leads_summary_filter($params)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
         } else {
@@ -893,25 +893,25 @@ function get_leads_summary_filter_excel($params)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
 
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
@@ -1066,25 +1066,25 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
         } else {
