@@ -683,12 +683,14 @@ function leads_update_count($params = false, $max_status = 0)
 
 
     // $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
-    $sql = trim($sql);
+    echo $sql = trim($sql);
 
 
 
     // $update_count = $CI->db->query($sql)->row()->total_sum;
     $update_count = $CI->db->query($sql)->result_array();
+	print_r($update_count);
+	die;
     // // Extract the 'id' column
     // $ids = array_column($update_count, 'id');
 
