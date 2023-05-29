@@ -596,7 +596,8 @@ function leads_update_count($params = false, $max_status = 0)
 
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
+    // $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
+    $sql .= " SELECT l.id,CAST(n.dateadded AS date) dates ";
     $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
@@ -665,33 +666,96 @@ function leads_update_count($params = false, $max_status = 0)
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     $sql_add = "";
-    if (!empty($params['update_count_max'])) {
-        $min = $params['update_count_min'];
-        $max = $params['update_count_max'];
-        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
-    }
+    // if (!empty($params['update_count_max'])) {
+    //     $min = $params['update_count_min'];
+    //     $max = $params['update_count_max'];
+    //     $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    // }
 
 
     if (!empty($max_status) && $max_status == 1) {
-        $sql .= " group by l.id" . $grup_by . "" . $sql_add . " order by total desc limit 1 ";
         $sql = trim($sql);
     } else {
-        $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        // $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
     }
 
 
-    $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
+    // $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
     $sql = trim($sql);
 
-    $update_count = $CI->db->query($sql)->row()->total_sum;
 
-    // $result = $CI->db->query($sql)->result_array();
 
-    // // $update_count = count(array_unique(array_column($result, "total")));
-    // $update_count = count(array_count_values(array_column($result, "total")));
+    // $update_count = $CI->db->query($sql)->row()->total_sum;
+    $update_count = $CI->db->query($sql)->result_array();
+    // // Extract the 'id' column
+    // $ids = array_column($update_count, 'id');
 
-    return !empty($update_count) ? $update_count : 0;
+    // // Count the occurrences of each ID
+    // $counts = array_count_values($ids);
+
+    // // Output the counts
+    // print_r($counts);
+    // die;
+    // // $result = $CI->db->query($sql)->result_array();
+
+    // // // $update_count = count(array_unique(array_column($result, "total")));
+    // // $update_count = count(array_count_values(array_column($result, "total")));
+
+    // print_r($update_count);
+    // die;
+
+    $result = [];
+
+    foreach ($update_count as $item) {
+        $id = $item['id'];
+        $date = $item['dates'];
+
+        if (!isset($result[$id])) {
+            $result[$id] = [
+                'id_count' => 0,
+                'date_count' => 0,
+                'unique_dates' => []
+            ];
+        }
+
+        $result[$id]['id_count']++;
+
+        if (!in_array($date, $result[$id]['unique_dates'])) {
+            $result[$id]['unique_dates'][] = $date;
+            $result[$id]['date_count']++;
+        }
+    }
+    $update_count_new = 0;
+    $max_update_count = 0;
+
+    if (!empty($params['update_count_max'])) {
+        $min = $params['update_count_min'];
+        $max = $params['update_count_max'];
+
+        $filteredResult = array_filter($result, function ($item) use ($min, $max) {
+            return $item['id_count'] >= $min && $item['id_count'] <= $max;
+        });
+
+        foreach ($filteredResult as $item) {
+            $update_count_new += $item['date_count'];
+        }
+    } else {
+        $filteredResult = array_filter($result, function ($item) {
+            return $item['id_count'];
+        });
+
+        foreach ($filteredResult as $item) {
+            $update_count_new += $item['date_count'];
+            $max_update_count = max($max_update_count, $item['id_count']);
+        }
+    }
+    if (!empty($max_status) && $max_status == 1) {
+        return !empty($max_update_count) ? $max_update_count : 0;
+    } else {
+        return !empty($update_count_new) ? $update_count_new : 0;
+    }
 }
 
 function leads_update_count_id($id, $params = false)
