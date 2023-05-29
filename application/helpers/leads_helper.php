@@ -707,10 +707,12 @@ function leads_update_count($params = false, $max_status = 0)
     // die;
 
     $result = [];
+    $update_count_new = 0;
+    $max_update_count = 0;
 
     foreach ($update_count as $item) {
-        $id = $item['id'];
-        $date = $item['dates'];
+        $id = trim($item['id']);
+        $date = trim($item['dates']);
 
         if (!isset($result[$id])) {
             $result[$id] = [
@@ -727,19 +729,18 @@ function leads_update_count($params = false, $max_status = 0)
             $result[$id]['date_count']++;
         }
     }
-    $update_count_new = 0;
-    $max_update_count = 0;
+
 
     if (!empty($params['update_count_max'])) {
-        $min = $params['update_count_min'];
-        $max = $params['update_count_max'];
+        $min = !empty($params['update_count_min']) ? (int)$params['update_count_min'] : 0;
+        $max = (int)$params['update_count_max'];
 
         $filteredResult = array_filter($result, function ($item) use ($min, $max) {
             return $item['id_count'] >= $min && $item['id_count'] <= $max;
         });
 
         foreach ($filteredResult as $item) {
-            $update_count_new += $item['date_count'];
+            $update_count_new += !empty($item['date_count']) ? (int)$item['date_count'] : 0;
         }
     } else {
         $filteredResult = array_filter($result, function ($item) {
@@ -747,7 +748,7 @@ function leads_update_count($params = false, $max_status = 0)
         });
 
         foreach ($filteredResult as $item) {
-            $update_count_new += $item['date_count'];
+            $update_count_new += !empty($item['date_count']) ? (int)$item['date_count'] : 0;
             $max_update_count = max($max_update_count, $item['id_count']);
         }
     }
