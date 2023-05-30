@@ -1474,12 +1474,33 @@ $(function () {
     // Global on change for mass delete to hide all other elements for bulk actions
     $('.bulk_actions').on('change', 'input[name="mass_delete"]', function () {
         var $bulkChange = $('#bulk_change');
+        $("#re-assignation_div").hide();
         if ($(this).prop('checked') === true) {
             $bulkChange.find('select').selectpicker('val', '');
+           
         }
         $bulkChange.toggleClass('hide');
         $('.mass_delete_separator').toggleClass('hide');
     });
+
+
+    $('input[name="mass_re-assignation"]').click(function(){
+        var $bulkChange = $('#bulk_change');
+        if ($(this).prop('checked') === true) {
+            $('#input[name="mass_delete"]').prop("checked",false);
+            $bulkChange.find('select').selectpicker('val', '');
+            $bulkChange.hide();
+            $("#re-assignation_div").show();
+        }
+        else
+        {
+            $$("#re-assignation_div").find('select').selectpicker('val', '');
+            $("#re-assignation_div").show();
+            $bulkChange.show();
+        }
+      
+        $('.mass_delete_separator').toggleClass('hide');
+      });
 
     // Fix for bigger items descriptions, the select is going out of the container
     $('body').on('change loaded.bs.select', '#item_select', function () {

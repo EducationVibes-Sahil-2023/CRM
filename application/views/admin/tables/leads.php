@@ -213,8 +213,12 @@ if ($role == 3) {
     // echo "<pre>";print_r($idsarr);
     $sids = implode(",", $idsarr);
     // echo "<pre>";print_r($sids);
-
+    if (!empty($sids)) {
     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
+        } else {
+    array_push($where, 'AND assigned in (' . $sid . ')');
+        }
+//     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
     // print_r($where);die;
 }
 
@@ -292,8 +296,8 @@ if ($this->ci->input->post('to_date')) {
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
-    // array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
-    array_push($where, 'AND DATE(n.dateadded) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
+//     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
+    array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
 }
 
 if ($this->ci->input->post('followup_to_date')) {
