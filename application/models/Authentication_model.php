@@ -45,8 +45,8 @@ class Authentication_model extends App_Model
             } else {
 
                 hooks()->do_action('non_existent_user_login_attempt', [
-                        'email'           => $email,
-                        'is_staff_member' => $staff,
+                    'email'           => $email,
+                    'is_staff_member' => $staff,
                 ]);
 
                 log_activity('Non Existing User Tried to Login [Email: ' . $email . ', Is Staff Member: ' . ($staff == true ? 'Yes' : 'No') . ', IP: ' . $this->input->ip_address() . ']');
@@ -56,8 +56,8 @@ class Authentication_model extends App_Model
 
             if ($user->active == 0) {
                 hooks()->do_action('inactive_user_login_attempt', [
-                        'user'            => $user,
-                        'is_staff_member' => $staff,
+                    'user'            => $user,
+                    'is_staff_member' => $staff,
                 ]);
                 log_activity('Inactive User Tried to Login [Email: ' . $email . ', Is Staff Member: ' . ($staff == true ? 'Yes' : 'No') . ', IP: ' . $this->input->ip_address() . ']');
 
@@ -80,6 +80,7 @@ class Authentication_model extends App_Model
                         'staff_user_id'   => $user->$_id,
                         'staff_logged_in' => true,
                     ];
+                    $user_data = ["staff_department" => !empty($user->lead_type) ? $user->lead_type : ''];
                 } else {
                     $user_data = [];
                     if ($remember) {

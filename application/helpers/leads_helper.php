@@ -214,25 +214,25 @@ function get_leads_summary_filter($params)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
         } else {
@@ -243,6 +243,7 @@ function get_leads_summary_filter($params)
     }
 
     foreach ($statuses as $status) {
+        $sql .= ' SELECT SUM(subquery.total) AS total FROM ( ';
         $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
         $sql .= ' FROM ' . db_prefix() . 'leads';
 
@@ -253,6 +254,8 @@ function get_leads_summary_filter($params)
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+        } else if (!empty($params['update_count_max'])) {
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = tblleads.id ';
@@ -317,8 +320,8 @@ function get_leads_summary_filter($params)
             $up_from_date = $params['up_from_date'];
             $up_to_date = $params['up_to_date'];
             //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-//             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-	 $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            //             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
         }
         if (!empty($params['followup_to_date'])) {
             $followup_from_date = $params['followup_from_date'];
@@ -332,13 +335,19 @@ function get_leads_summary_filter($params)
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
+        if (!empty($params['update_count_max'])) {
+            $min = $params['update_count_min'];
+            $max = $params['update_count_max'];
+            $sql .= ' GROUP BY tblleads.id HAVING COUNT(tblleads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        }
+
         $grup_by = "";
         if (!empty($params['neet_score'])) {
             // $grup_by = db_prefix() . 'customfieldsvalues.relid';
             // $sql .= ' group by ' . $grup_by;
         }
 
-
+        $sql .= " ) AS subquery ";
         $sql .= ' UNION ALL ';
         $sql = trim($sql);
     }
@@ -525,7 +534,7 @@ function get_status_summary_filter($params)
 
     foreach ($sources as $key => $source) {
         $sources[$key]['total'] = 0;
-     
+
         if (!empty($_POST["source"])) {
             if (in_array($source["id"], $_POST["source"])) {
                 $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
@@ -545,7 +554,7 @@ function get_status_summary_filter($params)
 
     return $sources;
 }
-function leads_update_count($params = false)
+function leads_update_count($params = false, $max_status = 0)
 {
 
     $CI = &get_instance();
@@ -587,7 +596,11 @@ function leads_update_count($params = false)
 
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " SELECT count((concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+    } else {
+        $sql .= " SELECT count(DISTINCT(concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+    }
     $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
@@ -655,13 +668,26 @@ function leads_update_count($params = false)
     if (!empty($params['neet_score'])) {
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
-    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-    $sql = trim($sql);
+    $sql_add = "";
+    if (!empty($params['update_count_max'])) {
+        $min = $params['update_count_min'];
+        $max = $params['update_count_max'];
+        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    }
 
 
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
+        $sql = trim($sql);
+    } else {
+        $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql = trim($sql);
+    }
+
+    // echo $sql;
+    // die;
     $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
-    $sql = trim($sql);
-
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
@@ -893,25 +919,25 @@ function get_leads_summary_filter_excel($params)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
 
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
@@ -1066,25 +1092,25 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
         } else {

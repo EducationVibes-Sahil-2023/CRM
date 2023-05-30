@@ -214,11 +214,11 @@ if ($role == 3) {
     $sids = implode(",", $idsarr);
     // echo "<pre>";print_r($sids);
     if (!empty($sids)) {
-    array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
-        } else {
-    array_push($where, 'AND assigned in (' . $sid . ')');
-        }
-//     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
+        array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
+    } else {
+        array_push($where, 'AND assigned in (' . $sid . ')');
+    }
+    //     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
     // print_r($where);die;
 }
 
@@ -296,7 +296,7 @@ if ($this->ci->input->post('to_date')) {
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
-//     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
+    //     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
     array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
 }
 
@@ -366,7 +366,14 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 // print_r($additionalColumns);
 // die;
 //print_r(data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns));die;
-$group_by = ' Group By ' . db_prefix() . 'leads.id ';
+$having = "";
+if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input->post('show_update_counts')) && $this->ci->input->post('show_update_counts') == 1)) {
+    $min = !empty($this->ci->input->post('update_count_min')) ? $this->ci->input->post('update_count_min') : 0;
+    $max = !empty($this->ci->input->post('update_count_max')) ? $this->ci->input->post('update_count_max') : 0;
+    $having = " Having count(n.id) between {$min} AND {$max} ";
+}
+
+$group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
 

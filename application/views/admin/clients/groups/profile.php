@@ -200,7 +200,7 @@
 							<?php } ?>
 						</div>
 					</div>
-					<div class="col-md-6">
+					<div class="col-md-12">
 						<div class="col-md-6">
 							<?php $value = (isset($client) ? $client->phonenumber : ''); ?>
 							<?php echo render_input('phonenumber', 'client_phonenumber', $value); ?>

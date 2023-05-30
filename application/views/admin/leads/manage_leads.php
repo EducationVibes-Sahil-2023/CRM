@@ -1,6 +1,28 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
+<script src="<?= base_url("assets/js/uislider.js") ?>"></script>
+<style>
+   div#rangeSlider {
+      margin: 0px 0px 30px !important;
+   }
 
+   .noUi-horizontal {
+      height: 10px !important;
+   }
+
+   .noUi-horizontal .noUi-handle {
+      width: 20px;
+      height: 20px;
+      top: -7px;
+   }
+
+   .noUi-tooltip {
+      width: 30px !important;
+      bottom: -35px !important;
+      top: auto !important;
+   }
+</style>
 <div id="wrapper">
    <div class="content">
       <div class="row">
@@ -224,6 +246,9 @@
                                     ?>
                                  </div>
 
+
+
+
                                  <?php /*                
 							<!--    <div class="col-md-2 leads-filter-column">-->
        <!--                          <?php-->
@@ -327,10 +352,17 @@
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-4 leads-filter-column">
+                                 <div class="col-md-3 leads-filter-column">
+                                    <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
+                                    <div id="rangeSlider" style="display:none;"></div>
+                                    <input type="hidden" id="update_count_min" name="update_count_min">
+                                    <input type="hidden" id="update_count_max" name="update_count_max">
+                                 </div>
+                                 <div class="col-md-3 text-center leads-filter-column">
                                     <div class="form-group">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
-                                       <button class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                        <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                     </div>
                                  </div>
@@ -417,7 +449,7 @@
                                              </div>
                                           </div>
                                           <div id="re-assignation_div" style="display:none;">
-                                       <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
+                                             <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
 
                                           </div>
                                        </div>
@@ -623,6 +655,94 @@
 <?php include_once(APPPATH . 'views/admin/leads/status.php'); ?>
 <?php init_tail(); ?>
 <script>
+   var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
+
+   function show_update_count_range(obj) {
+      if ($(obj).is(":checked")) {
+         $("#rangeSlider").show();
+         setMinMaxValues();
+      } else {
+         $("#rangeSlider").hide();
+
+      }
+   }
+
+   function setMinMaxValues() {
+      // Get the current values of the slider
+      var currentValues = rangeSlider.noUiSlider.get();
+
+      // Update the options with new min and max values
+      rangeSlider.noUiSlider.updateOptions({
+         range: {
+            'min': 0,
+            'max': max_count
+         },
+         start: [0, max_count] // Preserve the current slider values
+      });
+   }
+
+   function recreate_range_slider(max) {
+      if (max != undefined && parseInt(max) != max_count) {
+         rangeSlider.noUiSlider.destroy();
+         max_count = parseInt(max) + 10;
+         let min_ = document.getElementById("update_count_min").value;
+         let max_ = document.getElementById("update_count_max").value;
+         make_range_slider(min_, max_);
+      }
+   }
+   // Initialize the range slider
+   function make_range_slider(min = 0, max = 0) {
+      var rangeSlider = document.getElementById('rangeSlider');
+      if (max == 0) {
+         max = max_count;
+      }
+      noUiSlider.create(rangeSlider, {
+         start: [min, max], // Initial values for min and max
+         connect: true,
+         tooltips: [true, true],
+         format: {
+            to: function(value) {
+               return Math.round(value); // Round the tooltip values
+            },
+            from: function(value) {
+               return parseFloat(value); // Convert tooltip values to numbers
+            }
+         },
+         step: 1,
+         range: {
+            'min': 0,
+            'max': max_count
+         }
+      });
+
+      // Get handles for min and max sliders
+      var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+      var minSliderHandle = sliderHandles[0];
+      var maxSliderHandle = sliderHandles[1];
+
+      // Set event listeners for slider change
+      rangeSlider.noUiSlider.on('update', function(values, handle) {
+         var minValue = parseFloat(values[0]);
+         var maxValue = parseFloat(values[1]);
+
+         // Update the hidden input values
+         document.getElementById('update_count_min').value = minValue;
+         document.getElementById('update_count_max').value = maxValue;
+      });
+
+      // Set event listeners for slider handle drag
+      minSliderHandle.addEventListener('drag', function() {
+         var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+         rangeSlider.noUiSlider.set([minValue, null]);
+      });
+
+      maxSliderHandle.addEventListener('drag', function() {
+         var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+         rangeSlider.noUiSlider.set([null, maxValue]);
+      });
+   }
+   make_range_slider("", "");
+
    var openLeadID = '<?php echo $leadid; ?>';
    $(function() {
       leads_kanban();
@@ -727,7 +847,9 @@
       //    // summary();
       // })
 
+
       $('#apply_filter').on('click', function() {
+
          var from_date = document.getElementById("from_date").value;
          var to_date = document.getElementById("to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
@@ -791,12 +913,18 @@
                return false;
             }
          }
+         show_loader("apply_filter");
          periodFilter();
          summary();
       });
 
       function periodFilter() {
-         table_leads.DataTable().ajax.reload(null, false);
+
+
+         table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
+            hide_loader("apply_filter");
+         });
+
       }
       var xhr = null;
 
@@ -857,6 +985,12 @@
          var followup_to_date = document.getElementById("followup_to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
          var assign_to_date = document.getElementById("assign_to_date").value;
+         var update_count_min, update_count_max = '';
+         if ($("#show_update_counts").is(":checked")) {
+            update_count_min = document.getElementById("update_count_min").value;
+            update_count_max = document.getElementById("update_count_max").value;
+         }
+
          if (xhr != null) {
             xhr.abort();
          }
@@ -879,6 +1013,8 @@
                assign_from_date: assign_from_date,
                assign_to_date: assign_to_date,
                status: view_status_options,
+               update_count_min: update_count_min,
+               update_count_max: update_count_max,
                neet_score: $("#neet_score").val(),
 
 
@@ -891,6 +1027,9 @@
                $("#leadSum").html(data.status);
                $("#leadSum").innerHTML = data.status;
                $("#updationCounter").html(data.update_count);
+               if (data.max_count != undefined && parseInt(data.max_count) > 0) {
+                  recreate_range_slider(data.max_count);
+               }
             }
          }); // you have missed this bracket
          return false;
