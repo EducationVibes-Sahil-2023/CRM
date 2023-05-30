@@ -2557,7 +2557,7 @@ class Leads_model extends App_Model
 
         return false;
     }
-    public function re_assign($id, $data)
+    public function re_assign($id = "", $data)
     {
         $this->db->where('id', $id);
         $temp_lead =  $this->db->get(db_prefix() . 'leads')->row();
@@ -2581,5 +2581,11 @@ class Leads_model extends App_Model
         }
         $temp_lead = (array)$temp_lead;
         return $this->add($temp_lead);
+    }
+
+    public function lead_data($ids)
+    {
+        $this->db->where_in('id', $ids);
+        return  $this->db->get(db_prefix() . 'leads')->result_array();
     }
 }
