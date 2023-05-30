@@ -2746,4 +2746,47 @@ class Leads extends AdminController
         print_r($_POST);
         die;
     }
+
+    public function leads_fb_ads_name()
+    {
+        $this->load->model('staff_model');
+        $data['title'] = _l('leads_fb_ads_name');
+        $data['facebook']  = $this->staff_model->get_facebook_names("", 1);
+        $this->load->view('admin/leads/leads_fb_ads_name', $data);
+    }
+
+
+    public function add_edit_fb_form()
+    {
+        if (!is_admin() && get_option('staff_members_create_inline_lead_source') == '0') {
+
+            access_denied('Facebook Form');
+        }
+
+        if ($this->input->post()) {
+
+            $data = $this->input->post();
+
+            if (!$this->input->post('id')) {
+
+                $id = $this->leads_model->add_fb_form($data);
+
+                if ($id) {
+
+                    set_alert('success', _l('added_successfully', _l('Facebook form add successfully')));
+                } else {
+                    set_alert('danger', "Something bad happen");
+                }
+            } else {
+                $id = $data['id'];
+                unset($data['id']);
+                $success = $this->leads_model->update_fb_form($data, $id);
+                if ($success) {
+                    set_alert('success', _l('updated_successfully', _l('lead_source')));
+                } else {
+                    set_alert('danger', "Something bad happen");
+                }
+            }
+        }
+    }
 }

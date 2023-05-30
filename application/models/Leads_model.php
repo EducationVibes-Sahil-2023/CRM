@@ -2452,11 +2452,13 @@ class Leads_model extends App_Model
     function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array())
     {
 
-        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
+        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(f.name) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
-        $sql .= " ) where 1=1 ";
+        $sql .= " ) ";
+        $sql .= " LEFT JOIN " . db_prefix() . "facebook_name f ON (FIND_IN_SET(f.id,st.facebook_lead_name) ) ";
+        $sql .= " where 1=1 ";
         if (!empty($state_name)) {
             $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
         }
@@ -2473,7 +2475,7 @@ class Leads_model extends App_Model
         if (!empty($staff_ids)) {
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
-        $sql .= " order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
+        $sql .= " group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
         if (!empty($facebook_lead)) {
         } else {
             $sql .= " limit 1 ";
@@ -2484,43 +2486,75 @@ class Leads_model extends App_Model
     }
     public function get_marketing_type()
     {
-
         if (is_numeric($id)) {
-
             $this->db->where('id', $id);
-
-
-
             return $this->db->get(db_prefix() . 'lead_marketing')->row();
         }
-
-
-
         $this->db->order_by('id', 'asc');
-
-
-
         return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
     }
 
     public function get_conversion_type()
     {
-
         if (is_numeric($id)) {
-
             $this->db->where('id', $id);
-
-
-
             return $this->db->get(db_prefix() . 'lead_conversion_type')->row();
+        }
+        $this->db->order_by('id', 'asc');
+        return $this->db->get(db_prefix() . 'lead_conversion_type')->result_array();
+    }
+
+    public function add_fb_form($data)
+
+    {
+
+        $this->db->insert(db_prefix() . 'facebook_name', $data);
+
+        $insert_id = $this->db->insert_id();
+
+        if ($insert_id) {
+
+            log_activity('New Facebook Form Added [FormID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
         }
 
 
 
-        $this->db->order_by('id', 'asc');
+        return $insert_id;
+    }
 
 
 
-        return $this->db->get(db_prefix() . 'lead_conversion_type')->result_array();
+    /**
+
+     * Update lead source
+
+     * @param  mixed $data source data
+
+     * @param  mixed $id   source id
+
+     * @return boolean
+
+     */
+
+    public function update_fb_form($data, $id)
+
+    {
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'facebook_name', $data);
+
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Facebook Form Updated [FORMID: ' . $id . ', Name: ' . $data['name'] . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
     }
 }
