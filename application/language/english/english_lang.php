@@ -3649,3 +3649,8 @@ $lang['gantt_view_day'] = 'Days View';
 $lang['gantt_view_week'] = 'Weeks View';
 $lang['gantt_view_month'] = 'Months View';
 $lang['gantt_view_year'] = 'Years View';
+
+// new
+$lang['leads_fb_ads_name'] = 'Facebook Ads Name';
+$lang['fb_new_name'] = 'New Facebook Form Name';
+$lang['facebook_form_name'] = 'Form Name';
