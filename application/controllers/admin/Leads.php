@@ -2476,8 +2476,21 @@ class Leads extends AdminController
                             foreach ($keysToRemove as $k) {
                                 if (isset($lead_data[$key][$k])) {
                                     unset($lead_data[$key][$k]);
+                                    if (!empty($this->input->post('assigned'))) {
+                                        $lead_data[$key]["assigned"] = $this->input->post('assigned');
+                                    }
+                                    if (!empty($this->input->post('status'))) {
+                                        $lead_data[$key]["status"] = $this->input->post('status');
+                                    }
+                                    if (!empty($this->input->post('source'))) {
+                                        $lead_data[$key]["source"] = $this->input->post('source');
+                                    }
+                                    if (!empty($this->input->post('leadtype'))) {
+                                        $lead_data[$key]["type"] = $this->input->post('leadtype');
+                                    }
                                 }
                             }
+
                             $re_assign_array[] = array(
                                 "data" => json_encode($lead_data[$key], true),
                                 "status" => 1,
