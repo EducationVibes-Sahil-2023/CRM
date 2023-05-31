@@ -1,6 +1,6 @@
 <?php
 
-
+use BackgroundProcess\Process;
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -2882,5 +2882,13 @@ class Leads extends AdminController
             }
             echo json_encode(array("status" => 1, "message" => "Lead reassign successfully."));
         }
+    }
+
+    public function callUrlInBackground()
+    {
+
+        $url = base_url("admin/leads/re_assign_leads");
+        $pid = $this->process->do_in_background($url, "", "POST");
+        
     }
 }
