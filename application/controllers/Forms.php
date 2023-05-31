@@ -252,6 +252,7 @@ class Forms extends ClientsController
                             $this->db->where($where);
                             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
                             $updateStatus = [
+                               
                                 'status' => $form->lead_status,
                                 // 'description' => 'Re Query',
                                 // 'assigned' => $form->responsible,
@@ -259,6 +260,10 @@ class Forms extends ClientsController
                                 'lastcontact' => date("Y-m-d h:i:s"),
                                 'dateassigned' => date("Y-m-d")
                             ];
+                            
+                             if(!empty($form->lead_source)){
+                                $$updateStatus['source'] => $form->lead_source,
+                                }
 
                             if ($post_data['callassignee'] != null) {
                                 $updateStatus["assigned"] = $form->responsible;
