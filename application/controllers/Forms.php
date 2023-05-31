@@ -261,9 +261,10 @@ class Forms extends ClientsController
                                 'dateassigned' => date("Y-m-d")
                             ];
                             
-                             if(!empty($form->lead_source)){
-                                $$updateStatus['source'] => $form->lead_source,
-                                }
+                          if (!empty($form->lead_source)) {
+                                $updateStatus['source'] = $form->lead_source;
+                            }
+
 
                             if ($post_data['callassignee'] != null) {
                                 $updateStatus["assigned"] = $form->responsible;
