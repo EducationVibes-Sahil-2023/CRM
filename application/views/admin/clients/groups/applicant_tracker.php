@@ -241,11 +241,19 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
     .message-notification {
         background: orange;
         padding: 25px;
-        font-size: 18px;
+        font-size: 15px;
         color: white;
         border-radius: 7px;
         box-shadow: 0px 1px 5px 1px grey;
         margin-bottom: 20px;
+    }
+
+    .message-notification.success {
+        background: #84c529 !important;
+    }
+
+    .message-notification.danger {
+        background: #dc3545 !important;
     }
 
     i.fa {
@@ -348,8 +356,8 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                     <?php
                     } else if ($track["show_div_name"] == "profile_div") { ?>
                         <div id="profile_creation_div">
-                            <h3 class="message-notification">Your Douments under Processing</h3>
-
+                            <div class="document_approval_message_action">
+                            </div>
                             <div class="row">
                                 <div class="col-md-8"></div>
                                 <div class="col-md-3">
@@ -717,21 +725,19 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("email_creation", email);
             upload_data.append("client_id", client_id);
-            if (email != '') {
-                $.ajax({
-                    url: "<?= base_url("admin/clients/update_email_creation") ?>",
-                    method: "POST",
-                    data: upload_data,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        resolve(JSON.parse(response));
-                    },
-                    error: function(error) {
-                        reject(error);
-                    }
-                });
-            }
+            $.ajax({
+                url: "<?= base_url("admin/clients/update_email_creation") ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    resolve(JSON.parse(response));
+                },
+                error: function(error) {
+                    reject(error);
+                }
+            });
         });
     }
 
@@ -806,8 +812,71 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             $(obj).closest(".row").find('input, select').prop('disabled', false);
             $(obj).closest(".row").find('input, select').selectpicker('refresh');
             $(obj).siblings(".fa").show();
-            $("#profile_div").find(".next").attr("disabled", false);
+            $("#profile_div").find(".next").attr("disabled", true);
         }
 
+    }
+
+    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : [] ?>;
+    var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : [] ?>;
+    var upload_documents = <?= !empty($upload_documents[0]) ? json_encode($upload_documents[0], true) : [] ?>;
+    var staff_id = "<?= get_staff_user_id() ?>";
+
+    if (customer_admins.length > 0) {
+        var admin_ids = [];
+        var html = "";
+        for (var i = 0; i < customer_admins.length; i++) {
+            admin_ids.push(customer_admins[i].staff_id);
+        }
+
+
+        if ($.inArray(staff_id, admin_ids) !== -1) {
+            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + '</h3>';
+            } else {
+                html = '<h3 class="message-notification">Take action on document verification ';
+                $.each(upload_documents_button, function(index, item) {
+                    html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_document_status(' + item.id + ',this)">' + item.name + '</button>';
+                });
+                html += '</h3>';
+            }
+            $(".document_approval_message_action").html(html);
+        } else {
+            html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+        }
+        $(".document_approval_message_action").html(html);
+    }
+
+    async function update_document_status(status, obj) {
+        try {
+            const color = $(obj).data("color");
+            const text = $(obj).data("text");
+            const upload_data = new FormData();
+            upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+            upload_data.append("document_status", status);
+            upload_data.append("client_id", client_id);
+            show_loader();
+
+            const response = await $.ajax({
+                url: "<?= base_url("admin/clients/update_document_verification_status") ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false
+            });
+
+            // Handle the success response from the server
+            const parsedResponse = JSON.parse(response);
+            if (parsedResponse.resp_code === "RCS") {
+                hide_loader();
+                alert_float("success", parsedResponse.resp_desc);
+                const html = `<h3 class="message-notification ${color}">Your Documents is ${text}</h3>`;
+                $(".document_approval_message_action").html(html);
+            }
+        } catch (error) {
+            // Handle the error response from the server
+            console.error(error);
+            alert_float("success", error);
+        }
     }
 </script>

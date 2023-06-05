@@ -1700,18 +1700,28 @@ class Clients_model extends App_Model
     }
     function get_update_documents($id)
     {
-        $this->db->select('*');
-        $this->db->where('client_id', $id);
-        $this->db->where('status', 1);
-        $this->db->order_by('id', "DESC");
-        $this->db->limit(1);
-        return $documents = $this->db->get(db_prefix() . 'client_documents')->result_array();
+        try {
+            $this->db->select('cd.*, ds.name AS document_status_name,ds.color color_name')
+                ->from(db_prefix() . 'client_documents cd')
+                ->join(db_prefix() . 'document_status ds', 'cd.document_status = ds.id', 'left')
+                ->where('cd.client_id', $id)
+                ->where('cd.status', 1)
+                ->order_by('cd.id', 'DESC')
+                ->limit(1);
+
+            $documents = $this->db->get()->result_array();
+            return $documents;
+        } catch (Exception $e) {
+            // Handle the exception or log the error message
+            // Example: log_message('error', $e->getMessage());
+            return []; // Return an empty array or an appropriate error response
+        }
     }
     function get_profile_creator_vendor()
     {
         $this->db->select('*');
         $this->db->where('status', 1);
-        $this->db->order_by('sequence', "AES");
+        $this->db->order_by('sequence', "asc");
         return $vendor = $this->db->get(db_prefix() . 'profile_creater_vendor')->result_array();
     }
     function get_profile_creator_data($id)
@@ -1721,6 +1731,13 @@ class Clients_model extends App_Model
         $this->db->where('status', 1);
         $this->db->order_by('id', "DESC");
         $this->db->limit(1);
-        return $profile_creator = $this->db->get(db_prefix() . 'client_profile_creation')->result_array();
+        return $profile_creator = $this->db->get(db_prefix() . 'client_profile_creation	')->result_array();
+    }
+
+    function upload_documents_button()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
     }
 }
