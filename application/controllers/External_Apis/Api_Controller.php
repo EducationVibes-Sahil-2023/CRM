@@ -59,14 +59,14 @@ class Api_Controller extends CI_Controller
 
             if (!empty($getData["data"][0]["expire_status"]) && $getData["data"][0]["expire_status"] == 1) {
             } else {
-                if (empty($token_decode_data->iat)) {
-                    echo json_encode(array("status" => 0, "message" => "Jwt token iat is missing"));
-                    die;
-                }
-                if (($token_decode_data->iat > (time() + 60)) || $token_decode_data->iat + 60 < time()) {
-                    echo json_encode(array("status" => 0, "message" => "Jwt token is expired"));
-                    die;
-                }
+//                 if (empty($token_decode_data->iat)) {
+//                     echo json_encode(array("status" => 0, "message" => "Jwt token iat is missing"));
+//                     die;
+//                 }
+//                 if (($token_decode_data->iat > (time() + 60)) || $token_decode_data->iat + 60 < time()) {
+//                     echo json_encode(array("status" => 0, "message" => "Jwt token is expired"));
+//                     die;
+//                 }
             }
             if (!empty($getData["status"])) {
                 $this->staffId = $getData["data"][0]["staffid"];
