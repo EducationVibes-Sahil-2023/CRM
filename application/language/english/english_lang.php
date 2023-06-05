@@ -3663,3 +3663,5 @@ $lang['update_client_vendor_successfully'] =  '%s vendor update successfully.';
 $lang['update_client_vendor_failed'] =  '%s vendor update Failed.';
 $lang['update_client_sop_successfully'] =  '%s sop update successfully.';
 $lang['update_client_sop_failed'] =  '%s sop update Failed.';
+$lang['update_client_doc_status_successfully'] =  '%s document verification update successfully.';
+$lang['update_client_doc_status_failed'] =  '%s document verification update Failed.';

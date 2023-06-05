@@ -218,8 +218,10 @@ class Clients extends AdminController
                 }
             } elseif ($group == 'tracker') {
                 $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+                $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
                 $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
                 $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
+                $data['customer_admins'] = $this->clients_model->get_admins($id);
             }
 
 
@@ -1269,7 +1271,7 @@ class Clients extends AdminController
 
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
-            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+            $check_ = $this->db->get(db_prefix() . 'client_profile')->row();
 
             if ($check_) {
                 $_update = array(
@@ -1278,7 +1280,7 @@ class Clients extends AdminController
                     "email_updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
-                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $this->db->update(db_prefix() . 'client_profile', $_update);
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1299,7 +1301,7 @@ class Clients extends AdminController
                     "created_by" => get_staff_user_id()
                 );
 
-                $this->db->insert(db_prefix() . 'client_profile_creation', $insert_update_data);
+                $this->db->insert(db_prefix() . 'client_profile', $insert_update_data);
                 $insert_id = $this->db->insert_id();
 
                 if ($insert_id) {
@@ -1331,7 +1333,7 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
-            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+            $check_ = $this->db->get(db_prefix() . 'client_profile')->row();
 
             if ($check_) {
                 $_update = array(
@@ -1340,7 +1342,7 @@ class Clients extends AdminController
                     "vendor_updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
-                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $this->db->update(db_prefix() . 'client_profile', $_update);
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1374,7 +1376,7 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $this->db->select("id,email,vendor");
             $this->db->where('client_id', $client_id);
-            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+            $check_ = $this->db->get(db_prefix() . 'client_profile')->row();
 
             if ($check_) {
                 if (empty($sop_document) && empty($document_url)) {
@@ -1403,7 +1405,7 @@ class Clients extends AdminController
                 }
 
                 $this->db->where("id", $check_->id);
-                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $this->db->update(db_prefix() . 'client_profile', $_update);
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1461,6 +1463,56 @@ class Clients extends AdminController
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
         }
+        echo json_encode($data);
+    }
+
+    function update_document_verification_status()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $document_status = $this->input->post("document_status");
+
+            $this->db->select("id");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+
+            if ($check_) {
+                if (empty($document_status) && empty($document_status)) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Sop file is requried.';
+                    echo json_encode($data);
+                }
+
+                $_update = array(
+                    "document_status" => $document_status,
+                    "document_update_datetime" => date('Y-m-d H:i:s'),
+                    "document_updated_by" => get_staff_user_id()
+                );
+
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_documents', $_update);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_doc_status_successfully', _l('client'));
+                    set_alert('success', _l('update_client_doc_status_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_doc_status_failed', _l('client'));
+                    set_alert('danger', _l('update_client_doc_status_failed', _l('client')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Something bad happen.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
         echo json_encode($data);
     }
 }
