@@ -35,6 +35,7 @@ class Process
         $out .= "Connection: Close\r\n\r\n";
         if (isset($post_string))
             $out .= $post_string;
+
         fwrite($fp, $out);
         fclose($fp);
     }

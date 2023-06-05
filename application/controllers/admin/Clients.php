@@ -50,7 +50,7 @@ class Clients extends AdminController
 
     public function table()
     {
-      
+
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
                 ajax_access_denied();
@@ -216,7 +216,12 @@ class Clients extends AdminController
                         ],
                     ]);
                 }
+            } elseif ($group == 'tracker') {
+                $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+                $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+                $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
             }
+
 
             $data['staff'] = $this->staff_model->get('', ['active' => 1]);
 
@@ -273,6 +278,7 @@ class Clients extends AdminController
 
         $data['bodyclass'] = 'customer-profile dynamic-create-groups';
         $data['title']     = $title;
+        $data['client_id']     = $id;
 
         $this->load->view('admin/clients/client', $data);
     }
@@ -1099,7 +1105,7 @@ class Clients extends AdminController
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $params = $this->input->post();
+            $up = $this->input->post();
 
             $dataArr = [
                 'program' => $params['program'],
@@ -1160,6 +1166,301 @@ class Clients extends AdminController
             $data['resp_desc'] = 'Invalid request method';
         }
 
+        echo json_encode($data);
+    }
+
+    public function upload_documents()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $label_data = $this->input->post("document_label");
+            $document_url = $this->input->post("document_url");
+            $documents = $_FILES["document_file"];
+            $update_array = [];
+            $client_id = $this->input->post("client_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+
+            $files = $_FILES['document_file'];
+
+            for ($i = 0; $i < count($label_data); $i++) {
+                $upload_data = [];
+                if (!empty($files['name'][$i])) {
+                    $upload_data["name"] = $files['name'][$i];
+                    $upload_data["type"] = $files['type'][$i];
+                    $upload_data["tmp_name"] = $files['tmp_name'][$i];
+                    $upload_data["error"] = $files['error'][$i];
+                    $upload_data["size"] = $files['size'][$i];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {;
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
+                    }
+                } else {
+                    array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
+                }
+            }
+            $this->db->select("id");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+
+            if (!empty($check_->id)) {
+                $_update_data = array(
+                    "data" => json_encode($update_array, true),
+                    "updated_date" => date('Y-m-d H:i:s'),
+                    "updated_by" => get_staff_user_id()
+                );
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_documents', $_update_data);
+                $rows_affected = $this->db->affected_rows();
+                if (isset($applicant_status)) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                }
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_document_successfully', _l('client'));
+                    set_alert('success', _l('update_client_document_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_document_failed', _l('client'));
+                    set_alert('danger', _l('update_client_document_failed', _l('client')));
+                }
+            } else {
+                if (!empty($update_array)) {
+                    $insert_update_data = array(
+                        "client_id" => $client_id,
+                        "data" => json_encode($update_array, true),
+                        "status" => 1,
+                        "created_date" => date('Y-m-d H:i:s'),
+                        "created_by" => get_staff_user_id()
+                    );
+                    $insert_id =   $this->db->insert(db_prefix() . 'client_documents', $insert_update_data);
+                    if ($insert_id) {
+                        if (isset($applicant_status)) {
+                            $this->db->where("userid", $client_id);
+                            $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                        }
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = _l('update_client_document_successfully', _l('client'));
+                        set_alert('success', _l('update_client_document_successfully', _l('client')));
+                    } else {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = _l('update_client_document_failed', _l('client'));
+                        set_alert('danger', _l('update_client_document_failed', _l('client')));
+                    }
+                }
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_email_creation()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $email_creation = !empty($this->input->post("email_creation")) ? $this->input->post("email_creation") : '';
+            $vendor = !empty($this->input->post("vendor")) ? $this->input->post("vendor") : '';
+            $sop = !empty($_FILES["sop"]) ? $_FILES["sop"] : '';
+            $client_id = $this->input->post("client_id");
+
+            $this->db->select("id");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+
+            if ($check_) {
+                $_update = array(
+                    "email" => $email_creation,
+                    "email_updated_date" => date('Y-m-d H:i:s'),
+                    "email_updated_by" => get_staff_user_id()
+                );
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_email_successfully', _l('client'));
+                    set_alert('success', _l('update_client_email_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_email_failed', _l('client'));
+                    set_alert('danger', _l('update_client_email_failed', _l('client')));
+                }
+            } else {
+                $insert_update_data = array(
+                    "client_id" => $client_id,
+                    "email" => $email_creation,
+                    "status" => 1,
+                    "created_date" => date('Y-m-d H:i:s'),
+                    "created_by" => get_staff_user_id()
+                );
+
+                $this->db->insert(db_prefix() . 'client_profile_creation', $insert_update_data);
+                $insert_id = $this->db->insert_id();
+
+                if ($insert_id) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_email_successfully', _l('client'));
+                    set_alert('success', _l('update_client_email_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_email_failed', _l('client'));
+                    set_alert('danger', _l('update_client_email_failed', _l('client')));
+                }
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_vendor()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // $email_creation = !empty($this->input->post("email_creation")) ? $this->input->post("email_creation") : '';
+            $vendor = !empty($this->input->post("vendor")) ? $this->input->post("vendor") : '';
+            // $sop = !empty($_FILES["sop"]) ? $_FILES["sop"] : '';
+            $client_id = $this->input->post("client_id");
+            $this->db->select("id");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+
+            if ($check_) {
+                $_update = array(
+                    "vendor" => $vendor,
+                    "vendor_updated_date" => date('Y-m-d H:i:s'),
+                    "vendor_updated_by" => get_staff_user_id()
+                );
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_vendor_successfully', _l('client'));
+                    set_alert('success', _l('update_client_vendor_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_vendor_failed', _l('client'));
+                    set_alert('danger', _l('update_client_vendor_failed', _l('client')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'First create email then update vendor.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_sop()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $sop_document = !empty($_FILES["sop_document"]) ? $_FILES["sop_document"] : '';
+            $document_url = !empty($_FILES["document_url"]) ? $_FILES["document_url"] : '';
+            $client_id = $this->input->post("client_id");
+            $this->db->select("id,email,vendor");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+
+            if ($check_) {
+                if (empty($sop_document) && empty($document_url)) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Sop file is requried.';
+                    echo json_encode($data);
+                }
+                if (empty($check_->vendor)) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'First select vendor type.';
+                    echo json_encode($data);
+                }
+
+                $_update = array(
+                    // "sop" => $sop_document,
+                    "sop_updated_date" => date('Y-m-d H:i:s'),
+                    "sop_updated_by" => get_staff_user_id()
+                );
+                if (!empty($sop_document)) {
+                    $file = upload_applicant_documents($client_id, $sop_document, APPLICANT_UPLOAD_SOP_DOCUMENT_PATH, APPLICANT_UPLOAD_SOP_DOCUMENT);
+                    if (!empty($file["file_path"])) {
+                        $_update["sop"] = $file["file_path"];
+                    }
+                } else if (!empty($document_url)) {
+                    $_update["sop"] = $document_url;
+                }
+
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_sop_successfully', _l('client'));
+                    set_alert('success', _l('update_client_sop_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_sop_failed', _l('client'));
+                    set_alert('danger', _l('update_client_sop_failed', _l('client')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'First create email then update vendor.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function update_profile_data()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = !empty($this->input->post("client_id")) ? $this->input->post("client_id") : '';
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+            $this->db->select("id,email,vendor,sop");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+
+            if (!empty($check_->id)) {
+                if (empty($check_->email)) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Please add email first';
+                } else if (empty($check_->vendor)) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Please select vendor first.';
+                } else if (empty($check_->sop)) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Please upload sop document.';
+                } else {
+                    if (isset($applicant_status)) {
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    }
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'First create email then update vendor.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
         echo json_encode($data);
     }
 }
