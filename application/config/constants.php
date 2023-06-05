@@ -201,3 +201,8 @@ define('APP_MODULES_PATH', FCPATH . 'modules/');
  * Helper libraries path
  */
 define('LIBSPATH', APPPATH . 'libraries/');
+/// upload documents 
+define('APPLICANT_UPLOAD_DOCUMENT', FCPATH . 'uploads/clients_documents' . '/');
+define('APPLICANT_UPLOAD_DOCUMENT_PATH', 'uploads/clients_documents' . '/');
+define('APPLICANT_UPLOAD_SOP_DOCUMENT', FCPATH . 'uploads/client_sop' . '/');
+define('APPLICANT_UPLOAD_SOP_DOCUMENT_PATH', 'uploads/client_sop' . '/');
