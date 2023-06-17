@@ -79,6 +79,7 @@ class Authentication_model extends App_Model
                     $user_data = [
                         'staff_user_id'   => $user->$_id,
                         'staff_logged_in' => true,
+                        'staff_logged_in_new' => true,
                     ];
                     $user_data = ["staff_department" => !empty($user->lead_type) ? $user->lead_type : ''];
                 } else {
