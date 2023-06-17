@@ -7,7 +7,6 @@ class AdminController extends App_Controller
     public function __construct()
     {
         parent::__construct();
-
         if ($this->app->is_db_upgrade_required($this->current_db_version)) {
             if ($this->input->post('upgrade_database')) {
                 hooks()->do_action('pre_upgrade_database');
