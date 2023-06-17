@@ -36,6 +36,32 @@
 		cursor: pointer;
 		color: white !important;
 	}
+
+	.suggestions-container {
+		position: absolute;
+		/* border: 1px solid black; */
+		width: 100%;
+		padding: 10px;
+		border-radius: 5px;
+		box-shadow: 0px 0px 1px;
+		background: white;
+		z-index: 999;
+	}
+
+	.hide_sugg {
+		display: none;
+	}
+
+	.suggestions-container li {
+		padding: 10px;
+
+	}
+
+	.suggestions-container li :hover {
+		padding: 10px;
+		overflow: hidden;
+		background: lightgrey;
+	}
 </style>
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
@@ -229,11 +255,11 @@
 							echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
 							?>
 							<?php
-							echo render_custom_fields('customers', $client->userid,"","",!empty($lead_data->type)?$lead_data->type:'');
+							echo render_custom_fields('customers', $client->userid, "", "", !empty($lead_data->type) ? $lead_data->type : '');
 							?>
 						</div>
 
-					
+
 					</div>
 				</div>
 			</div>
@@ -394,15 +420,27 @@
 				<div class="row">
 					<div class="col-md-12">
 						<div class="card">
-							<?php // echo form_open($this->uri->uri_string()); 
-							?>
+
 							<h4>Admission Preferences</h4>
 							<hr>
 							<div class="row">
 								<div class="col-lg-4">
 									<div class="form-group">
+										<label for="program">Segment</label>
+										<?php
+										array_unshift($lead_type, array("id" => "", "name" => "Select Lead Type"));
+
+										echo render_select('lead_type', $lead_type, array('id', 'name'), "", $lead_data->form_data->lead_status, [], [], "", "", "", "lead_type");
+										?>
+
+									</div>
+								</div>
+								<div class="col-lg-4">
+									<div class="form-group">
 										<label for="program">Program</label>
+
 										<input type="hidden" name="admissionpreferencesid" id="admissionpreferencesid" value="<?php echo $admissionpreferences->id ?>">
+										<input type="hidden" name="client_id" id="client_id" value="<?php echo $client_id ?>">
 										<select class="form-control" name="program" id="program" required>
 											<option value="">Select a Program</option>
 											<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate') ? 'selected' : ''; ?>>Under Graduate</option>
@@ -456,10 +494,11 @@
 										<label for="study_country">Where would you like to study?</label>
 										<select class="form-control selectpicker" name="study_country" id="study_country" multiple required>
 											<?php
-											$allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
+											// $allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
 											?>
 											<option value="">Select country </option>
 											<?php
+											/*
 											if (!empty($admissionpreferences)) {
 												$countries = $admissionpreferences->study_country;
 												$countriesArr = explode(",", $countries);
@@ -468,7 +507,7 @@
 											?>
 												<option value="<?php echo $key; ?>" <?php echo !empty($admissionpreferences) ? ((in_array($val, $countriesArr)) ? 'selected' : '') : ''; ?>><?php echo $val; ?></option>
 											<?php
-											}
+											}*/
 											?>
 										</select>
 									</div>
@@ -501,7 +540,7 @@
 
 								<div class="universities">
 									<?php
-									if ($admissionpreferences->university != '') {
+									/*if ($admissionpreferences->university != '') {
 										$universitiesArr = json_decode($admissionpreferences->university, true);
 										foreach ($universitiesArr as $key => $val) {
 											if ($val != '') {
@@ -515,7 +554,7 @@
 									<?php
 											}
 										}
-									}
+									} */
 									?>
 								</div>
 							</div>
@@ -1067,7 +1106,94 @@
 		<!-- /.modal -->
 	<?php } ?>
 <?php } ?>
+
 <?php $this->load->view('admin/clients/client_group'); ?>
 <script>
+	var select_segment_default = "";
+	var user_id = "<?= !empty($admissionpreferences->user_id) ? $admissionpreferences->user_id : '' ?>";
+	var study_country_selected = <?= !empty(json_encode(explode(",", $admissionpreferences->study_country))) ? json_encode(explode(",", $admissionpreferences->study_country), true) : "" ?>;
+	console.log(study_country_selected.length);
+	if (study_country_selected.length > 0) {
+		study_country_selected = study_country_selected.map(function(value) {
+			return value.trim().toLowerCase();
+		});
+	}
+	var dropdown_country_university_selection = <?= !empty($dropdown_country_university_selection) ? json_encode($dropdown_country_university_selection, true) : [] ?>;
+	console.log(dropdown_country_university_selection);
 
+
+
+	function show_country_dropdown(select_segment) {
+		select_segment_default = select_segment;
+		var filteredData = dropdown_country_university_selection.filter(function(entry) {
+			return entry.name.toLowerCase() === select_segment.trim().toLowerCase();
+		});
+
+		var uniqueCountries = [];
+		var uniqueData = filteredData.filter(function(entry) {
+			if (!uniqueCountries.includes(entry.country_name.toLowerCase())) {
+				uniqueCountries.push(entry.country_name.charAt(0).toUpperCase() + entry.country_name.slice(1));
+				return true;
+			}
+			return false;
+		});
+
+		uniqueCountries = [...new Set(uniqueCountries)];
+		var study_country = $("#study_country");
+		// Clear current options
+		study_country.empty();
+
+		// Create new option elements
+		uniqueCountries.forEach(function(country_name) {
+			var option = $('<option value="' + country_name + '">').text(country_name);
+			if (study_country_selected.length > 0) {
+				if (study_country_selected.indexOf(country_name.trim().toLowerCase()) !== -1) {
+					option.prop('selected', true);
+				}
+			}
+			study_country.append(option);
+		});
+
+		// Refresh selectpicker
+		study_country.selectpicker('refresh');
+
+		// study_country.trigger('change');
+		// set_university();
+	}
+
+	function show_university_dropdown(select_segment, country) {
+		console.log("select_segment" + select_segment);
+		console.log("country" + country);
+		return new Promise(function(resolve, reject) {
+			var filteredData = dropdown_country_university_selection.filter(function(entry) {
+				return entry.name.toLowerCase() === select_segment.trim().toLowerCase() && entry.country_name.toLowerCase() === country.trim().toLowerCase();
+			});
+
+			var uniqueUniversity = [];
+			var uniqueData = filteredData.filter(function(entry) {
+				if (!uniqueUniversity.includes(entry.university_name.toLowerCase())) {
+					uniqueUniversity.push(entry.university_name.charAt(0).toUpperCase() + entry.university_name.slice(1));
+					return true;
+				}
+				return false;
+			});
+			uniqueUniversity = [...new Set(uniqueUniversity)];
+
+			resolve(uniqueUniversity);
+		});
+	}
+
+
+	document.addEventListener("DOMContentLoaded", function() {
+		var leadTypeSelect = document.getElementById("lead_type");
+		var selectedValue = leadTypeSelect.options[leadTypeSelect.selectedIndex].text.trim().toLowerCase();
+		select_segment_default = selectedValue;
+		show_country_dropdown(selectedValue);
+
+	});
+
+	document.getElementById("lead_type").addEventListener("change", function() {
+		var select_segment = this.options[this.selectedIndex].text.trim().toLowerCase();
+		show_country_dropdown(select_segment);
+	});
 </script>

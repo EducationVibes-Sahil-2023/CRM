@@ -2,7 +2,7 @@
 <?php
 $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
-$profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : 0;
+$profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 ?>
 <style>
     /*basic reset*/
@@ -232,7 +232,18 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
     .download_document {
         padding: 7px;
         width: 33px;
+        /* line-height: 33px; */
     }
+
+    #profile_div .download_document {
+        line-height: 33px;
+    }
+
+    #profile_creation_div .fa-pencil-square-o,
+    #profile_creation_div .fa-file {
+        line-height: 40px;
+    }
+
 
     .document_upload_files {
         margin: 15px 0px;
@@ -276,6 +287,15 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         cursor: not-allowed !important;
         box-shadow: unset !important;
     }
+
+    #progressbar li.previous:before {
+        background-color: green;
+        color: white;
+    }
+
+    .application_div div.university_div_application {
+        margin-top: 10px !important;
+    }
 </style>
 <!-- MultiStep Form -->
 <div class="row">
@@ -303,7 +323,10 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                 ?>
             </ul>
             <!-- fieldsets -->
-
+            <div class="document_approval_message_action">
+            </div>
+            <div class="profile_approval_message_action">
+            </div>
             <?php
             foreach ($applicant_tracker as $k => $track) {
             ?>
@@ -331,7 +354,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                                             </div>
                                         <?php } else { ?>
                                             <div class="col-md-2">
-                                                <a class="col-md-2 download_document" href="<?= base_url($docs["document_file"]) ?>" download href="" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                <a class="col-md-2 download_document" href="<?= base_url($docs["document_file"]) ?>" download type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                 <button class="col-md-2 add_document" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                             </div>
                                         <?php } ?>
@@ -356,41 +379,199 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                     <?php
                     } else if ($track["show_div_name"] == "profile_div") { ?>
                         <div id="profile_creation_div">
-                            <div class="document_approval_message_action">
-                            </div>
+
                             <div class="row">
-                                <div class="col-md-8"></div>
-                                <div class="col-md-3">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-4">
                                     <?php echo render_input('email_creation', "", !empty($profile_creation_data[0]["email"]) ? $profile_creation_data[0]["email"] : '', "Email", ["required" => "required", "placeholder" => "Enter Email"]); ?>
                                 </div>
-                                <div class="col-md-1 edit_save_block">
-                                    <i class="fa fa-pencil-square-o" style="display:none;" onclick="edit_data(this,1)"></i>
-                                    <i class="fa fa-file" style="display:none;" onclick="save_data(this,'email')"></i>
+                                <div class="col-md-2 edit_save_block">
+                                    <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                    <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-8"></div>
-                                <div class="col-md-3">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-4">
                                     <?php
                                     $selected_vendor = !empty($profile_creation_data[0]["vendor"]) ? explode(",", $profile_creation_data[0]["vendor"]) : [];
                                     echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); ?>
                                 </div>
-                                <div class="col-md-1 edit_save_block">
-                                    <i class="fa fa-pencil-square-o" style="display:none;" onclick="edit_data(this,1)"></i>
-                                    <i class="fa fa-file" style="display:none;" onclick="save_data(this,'vendor')"></i>
+                                <div class="col-md-2 edit_save_block">
+                                    <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                    <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'vendor')"></i>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-8"></div>
-                                <div class="col-md-3">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-4">
                                     <input type="file" id="sop_document" data-url="<?= !empty($profile_creation_data[0]["sop"]) ? $profile_creation_data[0]["sop"] : '' ?>" name="sop_document" class="form-control" accept=".pdf,.doc,.docx">
 
                                 </div>
-                                <div class="col-md-1 edit_save_block">
-                                    <i class="fa fa-pencil-square-o" style="display:none;" onclick="edit_data(this,1)"></i>
-                                    <i class="fa fa-file" style="display:none;" onclick="save_data(this,'sop')"></i>
+                                <div class="col-md-2 edit_save_block">
+                                    <?php if (!empty($profile_creation_data[0]["sop"])) { ?>
+                                        <a class="col-md-1 download_document" download href="<?= base_url($profile_creation_data[0]["sop"]) ?>" style="" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                    <?php } ?>
+
+                                    <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                    <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'sop')"></i>
                                 </div>
                             </div>
+                        </div>
+                    <?php } else if ($track["show_div_name"] == "university_div") {
+                        $selected_university = json_decode($admissionpreferences->university, true);
+                        $university_drop_down = [];
+                        foreach ($selected_university as $key => $university) {
+                            if (!empty($university)) {
+                                $university_drop_down[$key] = explode(",", $university);
+                            }
+                        }
+                    ?>
+
+                        <div class="add_university_div_block">
+                            <?php if (!empty($university_shortlisting)) {
+                                foreach ($university_shortlisting as $key_u => $short_list) {
+                            ?>
+                                    <div class="col-md-12 university_div">
+                                        <div class="col-md-5">
+                                            <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
+                                            <select class="selectpicker from-control" data-width="100%" name="select_university" id="select_university" data-live-search="true">
+                                                <option value="">Select University</option>
+                                                <?php
+                                                if (!empty($university_drop_down)) {
+                                                    foreach ($university_drop_down as $country_name => $university_list) {
+                                                        if (!empty($university_list)) {
+                                                ?>
+                                                            <optgroup label="<?= $country_name ?>" id="<?= $country_name ?>">
+                                                                <?php
+                                                                foreach ($university_list as $university_name) {
+                                                                    $selected_university = strtolower(trim($university_name)) == strtolower(trim($short_list["university_name"])) ? "selected" : '';
+                                                                    if (!empty($university_name)) {
+                                                                ?>
+                                                                        <option <?= $selected_university ?> value='<?= $university_name ?>'><?= $university_name ?></option>
+                                                                <?php
+                                                                    }
+                                                                }
+                                                                ?>
+                                                            </optgroup>
+                                                <?php
+                                                        }
+                                                    }
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <?php
+                                            // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
+                                            $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
+                                            echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
+                                            ?>
+                                        </div>
+
+                                        <div class="col-md-2">
+                                            <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
+                                            <?php if ($key_u == 0) { ?>
+                                                <button class="col-md-2 add_document" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                            <?php } else { ?>
+                                                <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                            <?php } ?>
+                                        </div>
+                                    </div>
+                                <?php }
+                                ?>
+
+                            <?php } else { ?>
+                                <div class="col-md-12 university_div">
+                                    <div class="col-md-5">
+                                        <input type="hidden" name="university_id">
+                                        <select class="selectpicker from-control" data-width="100%" name="select_university" id="select_university" data-live-search="true">
+                                            <option value="">Select University</option>
+                                            <?php
+                                            if (!empty($university_drop_down)) {
+                                                foreach ($university_drop_down as $country_name => $university_list) {
+                                                    if (!empty($university_list)) {
+                                            ?>
+                                                        <optgroup label="<?= $country_name ?>" id="<?= $country_name ?>">
+                                                            <?php
+                                                            foreach ($university_list as $university_name) {
+                                                                if (!empty($university_name)) {
+                                                            ?>
+                                                                    <option value='<?= $university_name ?>'><?= $university_name ?></option>
+                                                            <?php
+                                                                }
+                                                            }
+                                                            ?>
+                                                        </optgroup>
+                                            <?php
+                                                    }
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <?php
+                                        // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
+
+                                        echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'));
+                                        ?>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
+                                        <button class="col-md-2 add_document" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
+                            <?php } ?>
+                        </div>
+                    <?php } else if ($track["show_div_name"] == "application_div") {
+                        $selected_university = json_decode($admissionpreferences->university, true);
+                        $university_drop_down = [];
+                        foreach ($selected_university as $key => $university) {
+                            if (!empty($university)) {
+                                $university_drop_down[$key] = explode(",", $university);
+                            }
+                        }
+                    ?>
+
+                        <div class="application_div">
+                            <?php if (!empty($university_shortlisting)) {
+                                $select_dropdown_value = array_column($customer_vendors, "name", "id");
+                                foreach ($university_shortlisting as $key_u => $short_list) {
+                            ?>
+                                    <div class="col-md-12 university_div_application mt-2">
+                                        <div class="col-md-3">
+                                            <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
+                                            <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <?php
+                                            // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
+                                            $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
+                                            // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
+                                            // echo $select_dropdown_value[$selected_vendor];
+
+                                            ?>
+                                            <input type="input" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <?php
+
+                                            $selected_university_application = !empty($short_list["application_status"]) ? $short_list["application_status"] : "";
+                                            echo render_select('university_application_status', $university_application_status, array('id', 'name'), "", $selected_university_application); ?>
+                                        </div>
+                                        <div class="col-md-2 university_div_status">
+
+                                            <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                            <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'sop')"></i>
+                                        </div>
+                                    </div>
+                                <?php }
+                                ?>
+
+                            <?php } ?>
                         </div>
                     <?php } ?>
                     <?php if ($k > 0) { ?>
@@ -399,6 +580,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                     <?php if (($k + 1) < count($applicant_tracker)) { ?>
                         <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Next" />
                     <?php } ?>
+
                 </fieldset>
             <?php
             }
@@ -440,6 +622,29 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
     var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
     var csrfToken = "<?= $this->security->get_csrf_hash() ?>"; // Replace with the actual CSRF token value
     var step_stage = 0;
+
+    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : [] ?>;
+    var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : [] ?>;
+    var upload_documents = <?= !empty($upload_documents[0]) ? json_encode($upload_documents[0], true) : [] ?>;
+    var staff_id = "<?= get_staff_user_id() ?>";
+    var profile_creation_data = <?= !empty($profile_creation_data[0]) ? json_encode($profile_creation_data[0], true) : [] ?>;
+    var profile_verification_button = <?= !empty($profile_verification_button) ? json_encode($profile_verification_button, true) : [] ?>;
+    var document_verification = "<?= !empty($upload_documents[0]["document_status"]) ? $upload_documents[0]["document_status"] : 0 ?>";
+    var profile_verification = "<?= !empty($profile_creation_data[0]["profile_status"]) ? $profile_creation_data[0]["profile_status"] : 0 ?>";
+    console.log(upload_documents);
+    console.log(profile_creation_data);
+    $("document").ready(function() {
+        if (document_verification != 1) {
+            $("#profile_creation_div").find('input, select').prop('disabled', true).selectpicker('refresh');;
+            $("#profile_creation_div").find(".edit_save_block").hide();
+        }
+        if (profile_verification != 1) {
+            $(".add_university_div_block .university_div").find('input, select').prop('disabled', true).selectpicker('refresh');
+            $("#university_div").find(".add_document").hide();
+            $("#university_div").find(".next.action-button").prop('disabled', true);
+        }
+    })
+
 
     function check_profile_status() {
         var check_disabled = false;
@@ -549,19 +754,89 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         step_stage = (step);
         show_loader();
         if (type === "document_div") {
-            let isDocumentValid = await validate_document();
-            if (isDocumentValid) {
+            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                hide_loader();
+            } else {
+                let isDocumentValid = await validate_document();
+                if (isDocumentValid) {
+                    try {
+                        let uploadResponse = await upload_document();
+                        if (uploadResponse.resp_code == "RCS") {
+                            alert_float("success", uploadResponse.resp_desc);
+                            let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+                            $(".document_approval_message_action").html(html);
+                        } else {
+                            if (uploadResponse.resp_code != undefined) {
+                                alert_float("danger", uploadResponse.resp_desc);
+                                hide_loader();
+                                return false;
+                            } else {
+                                alert_float("danger", uploadResponse);
+                                hide_loader();
+                                return false;
+                            }
+                        }
+                    } catch (error) {
+                        hide_loader();
+                        console.error(error);
+                        return false;
+                    }
+                } else {
+                    hide_loader();
+                    return false;
+                }
+            }
+        } else if (type === "profile_div") {
+
+            if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                hide_loader();
+            } else {
+                let isprofilevalid = await validate_profile_div();
+                console.log(isprofilevalid);
+                if (isprofilevalid) {
+                    try {
+                        let update_profile_status = await update_profile();
+                        if (update_profile_status.resp_code == "RCS") {
+                            alert_float("success", update_profile_status.resp_desc);
+                        } else {
+                            if (update_profile_status.resp_code != undefined) {
+                                alert_float("danger", update_profile_status.resp_desc);
+                                hide_loader();
+                                return false;
+                            } else {
+                                alert_float("danger", update_profile_status);
+                                hide_loader();
+                                return false;
+                            }
+                        }
+                    } catch (error) {
+                        hide_loader();
+                        console.error(error);
+                        return false;
+                    }
+                }
+            }
+        } else if (type === "university_div") {
+            let isUniversityValid = await validate_university_div();
+            if (isUniversityValid) {
                 try {
-                    let uploadResponse = await upload_document();
-                    if (uploadResponse.resp_code == "RCS") {
-                        alert_float("success", uploadResponse.resp_desc);
+                    let update_university_status = await update_university();
+                    if (update_university_status.resp_code == "RCS") {
+                        let ids = update_university_status.ids;
+                        console.log(ids);
+                        $(".add_university_div_block .university_div").each(function(index) {
+                            if (ids[index] != undefined) {
+                                $(this).find("input[name='university_id']").val(ids[index]);
+                            }
+                        });
+                        alert_float("success", update_university_status.resp_desc);
                     } else {
-                        if (uploadResponse.resp_code != undefined) {
-                            alert_float("danger", uploadResponse.resp_desc);
+                        if (update_university_status.resp_code != undefined) {
+                            alert_float("danger", update_university_status.resp_desc);
                             hide_loader();
                             return false;
                         } else {
-                            alert_float("danger", uploadResponse);
+                            alert_float("danger", update_university_status);
                             hide_loader();
                             return false;
                         }
@@ -575,8 +850,6 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                 hide_loader();
                 return false;
             }
-        } else if (type === "profile_div") {
-
         }
         let current_fs = $(obj).parent();
         let next_fs = $(obj).parent().next();
@@ -589,6 +862,29 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         current_fs.slideUp("slow");
         next_fs.slideDown("slow");
     }
+
+    function validate_profile_div() {
+        return new Promise((resolve, reject) => {
+            let email_creation = $("#email_creation").val();
+            let select_vendor = $("#select_vendor").val();
+            let sop_document = $("#sop_document").val();
+            let sop_document_url = $("#sop_document").attr("data-url");
+
+            if (email_creation == "") {
+                alert_float("danger", "Email Creation is required");
+                reject("Email Creation is required");
+            } else if (select_vendor == "") {
+                alert_float("danger", "Select Vendor is required");
+                reject("Select Vendor is required");
+            } else if (sop_document == "" && sop_document_url == "") {
+                alert_float("danger", "SOP is required");
+                reject("SOP is required");
+            } else {
+                resolve(true);
+            }
+        });
+    }
+
 
     function update_profile_data() {
         return new Promise(async (resolve, reject) => {
@@ -817,10 +1113,6 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 
     }
 
-    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : [] ?>;
-    var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : [] ?>;
-    var upload_documents = <?= !empty($upload_documents[0]) ? json_encode($upload_documents[0], true) : [] ?>;
-    var staff_id = "<?= get_staff_user_id() ?>";
 
     if (customer_admins.length > 0) {
         var admin_ids = [];
@@ -828,11 +1120,15 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         for (var i = 0; i < customer_admins.length; i++) {
             admin_ids.push(customer_admins[i].staff_id);
         }
-
-
+        console.log(staff_id);
+        console.log(admin_ids);
         if ($.inArray(staff_id, admin_ids) !== -1) {
             if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-                html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + '</h3>';
+                html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + '</h3>';
+                $(".document_upload_files").find(".add_document").hide();
+                $(".document_upload_files").each(function() {
+                    $(this).find("input").attr("disabled", true);
+                });
             } else {
                 html = '<h3 class="message-notification">Take action on document verification ';
                 $.each(upload_documents_button, function(index, item) {
@@ -842,9 +1138,48 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             }
             $(".document_approval_message_action").html(html);
         } else {
-            html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                $(".add_document").hide();
+                $(".document_upload_files").each(function() {
+                    $(this).find("input").attr("disabled", true);
+                });
+            } else {
+                html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+            }
+            $(".document_approval_message_action").html(html);
         }
-        $(".document_approval_message_action").html(html);
+
+
+
+
+
+        console.log(profile_creation_data);
+        if ($.inArray(staff_id, admin_ids) !== -1) {
+            if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + '</h3>';
+                $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                $("#profile_creation_div").find(".fa-file").hide();
+            } else {
+                html = '<h3 class="message-notification">Take action on profile verification ';
+                $.each(profile_verification_button, function(index, item) {
+                    html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
+                });
+                html += '</h3>';
+            }
+            $(".profile_approval_message_action").html(html);
+        } else {
+            if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                $("#profile_creation_div").find(".fa-file").hide();
+            } else {
+                html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+            }
+            $(".profile_approval_message_action").html(html);
+        }
+
+
     }
 
     async function update_document_status(status, obj) {
@@ -870,7 +1205,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             if (parsedResponse.resp_code === "RCS") {
                 hide_loader();
                 alert_float("success", parsedResponse.resp_desc);
-                const html = `<h3 class="message-notification ${color}">Your Documents is ${text}</h3>`;
+                const html = `<h3 class="message-notification ${color}"> Documents is ${text}</h3>`;
                 $(".document_approval_message_action").html(html);
             }
         } catch (error) {
@@ -878,5 +1213,196 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             console.error(error);
             alert_float("success", error);
         }
+    }
+    async function update_profile_status_btn(status, obj) {
+        try {
+            const color = $(obj).data("color");
+            const text = $(obj).data("text");
+            const upload_data = new FormData();
+            upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+            upload_data.append("profile_status", status);
+            upload_data.append("client_id", client_id);
+            show_loader();
+
+            const response = await $.ajax({
+                url: "<?= base_url("admin/clients/update_profile_verification_status") ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false
+            });
+
+            // Handle the success response from the server
+            const parsedResponse = JSON.parse(response);
+            if (parsedResponse.resp_code === "RCS") {
+                hide_loader();
+                alert_float("success", parsedResponse.resp_desc);
+                const html = `<h3 class="message-notification ${color}"> Profile is ${text}</h3>`;
+                $(".profile_approval_message_action").html(html);
+            }
+        } catch (error) {
+            // Handle the error response from the server
+            console.error(error);
+            alert_float("success", error);
+        }
+    }
+
+
+
+    async function add_university_div() {
+        let response = await validate_university_div();
+        if (response) {
+            let html = `<div class="col-md-12 university_div">
+                                <div class="col-md-5">
+                                <input type="hidden" name="university_id">
+                                    <select class="selectpicker from-control"  data-width="100%" name="select_university" id="" data-live-search="true">
+                                    <option value="">Select University</option>
+                                        <?php
+                                        if (!empty($university_drop_down)) {
+                                            foreach ($university_drop_down as $country_name => $university_list) {
+                                                if (!empty($university_list)) {
+                                        ?>
+                                                    <optgroup label="<?= $country_name ?>" id="<?= $country_name ?>">
+                                                        <?php
+                                                        foreach ($university_list as $university_name) {
+                                                            if (!empty($university_name)) {
+                                                        ?>
+                                                                <option value='<?= $university_name ?>'><?= $university_name ?></option>
+                                                        <?php
+                                                            }
+                                                        }
+                                                        ?>
+                                                    </optgroup>
+                                        <?php
+                                                }
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <?php
+                                    echo render_select('select_university_vendor', $customer_vendors, array('id', 'name')); ?>
+                                </div>
+
+                                <div class="col-md-2">
+                                     <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                    
+                                </div>
+                            </div>`;
+            $(".add_university_div_block").append(html);
+            select_reinit();
+        }
+
+    }
+
+    function validate_university_div() {
+        return new Promise((resolve, reject) => {
+            $(".add_university_div_block .university_div").each(function() {
+                let select_university = $(this).find("select[name='select_university']").val();
+                let select_university_vendor = $(this).find("select[name='select_university_vendor']").val()
+
+                if (select_university === undefined || $.trim(select_university) === "") {
+                    $(this).find("select[name='select_university']").focus();
+                    alert_float("danger", "Select university is requried.");
+                    resolve(false);
+                    return;
+                }
+
+                if ((select_university_vendor === undefined || $.trim(select_university_vendor) === "")) {
+                    $(this).find("select[name='select_university_vendor']").focus();
+                    alert_float("danger", "Select vendor is requried.");
+                    resolve(false);
+                    return;
+                }
+
+                // Additional validation logic or processing can be added here
+            });
+
+            resolve(); // Resolving the promise if all validations pass
+        });
+    }
+
+    function select_reinit() {
+        $(".selectpicker").selectpicker('refresh');
+    }
+
+    function remove_university_div(obj) {
+        $(obj).parents(".university_div").remove();
+    }
+
+    function update_university() {
+        return new Promise(async (resolve, reject) => {
+            let upload_data = new FormData();
+            let university_shortlisting = [];
+            let universityVendorMap = {};
+            $(".add_university_div_block .university_div").each(function() {
+                let university_id = $(this).find("input[name='university_id']").val();
+                let select_university = $(this).find("select[name='select_university']").val();
+                let select_university_vendor = $(this).find("select[name='select_university_vendor']").val()
+                if (university_id == undefined) {
+                    university_id = "";
+                }
+
+                university_shortlisting.push({
+                    "university": select_university,
+                    "vendor": select_university_vendor,
+                    "university_id": university_id
+                });
+                if (!universityVendorMap.hasOwnProperty(select_university)) {
+                    universityVendorMap[select_university] = select_university_vendor;
+                } else {
+                    alert_float("danger", "Duplicate entry found: university '" + select_university + "' connected with multiple vendors.");
+                    return false;
+                }
+
+            });
+
+            upload_data.append("university_shortlisting", JSON.stringify(university_shortlisting));
+            try {
+
+                upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+                upload_data.append("client_id", client_id);
+                upload_data.append("applicant_status", step_stage);
+                let response = await $.ajax({
+                    url: "<?= base_url("admin/clients/update_university") ?>",
+                    method: "POST",
+                    data: upload_data,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Handle the success response from the server
+                resolve(JSON.parse(response));
+            } catch (error) {
+                // Handle the error response from the server
+                console.error(error);
+                reject(error);
+            }
+        });
+    }
+
+
+    function update_profile() {
+        return new Promise(function(resolve, reject) {
+
+            let upload_data = new FormData();
+            upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+            upload_data.append("client_id", client_id);
+            upload_data.append("applicant_status", step_stage);
+            $.ajax({
+                url: "<?= base_url("admin/clients/update_profile") ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    resolve(JSON.parse(response));
+                },
+                error: function(error) {
+                    reject(error);
+                }
+            });
+        });
     }
 </script>
