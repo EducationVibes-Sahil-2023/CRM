@@ -78,6 +78,10 @@ class Clients extends AdminController
     /* Edit client or add new client*/
     public function client($id = '')
     {
+        // $database_secondary = $this->load->database('database_secondary', TRUE);
+        $this->load->model('leads_model');
+        $data['lead_type'] = $this->leads_model->get_type();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 access_denied('customers');
@@ -160,10 +164,9 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-
-
                 $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
 
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
@@ -217,13 +220,23 @@ class Clients extends AdminController
                     ]);
                 }
             } elseif ($group == 'tracker') {
+
                 $data['upload_documents'] = $this->clients_model->get_update_documents($id);
                 $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
+                $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
                 $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
                 $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-            }
+                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+                $data['university_application_status'] = $this->clients_model->university_application_status();
+              
 
+                $data['customer_vendors'] = [];
+                if (!empty($data['profile_creation_data'][0]["vendor"])) {
+                    $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+                }
+            }
 
             $data['staff'] = $this->staff_model->get('', ['active' => 1]);
 
@@ -1102,12 +1115,11 @@ class Clients extends AdminController
     }
 
     // UPDATE ADMISSION PREFERENCES
-
     function update_admission_preferences()
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $up = $this->input->post();
+            $params = $this->input->post();
 
             $dataArr = [
                 'program' => $params['program'],
@@ -1115,6 +1127,7 @@ class Clients extends AdminController
                 'entrance_exam_given' => $params['entranceExamGiven'],
                 'entrance_exam_details' => ($params['entranceExamGiven'] == 'YES') ? $params['entranceExamDetails'] : '',
                 'session_intake' => $params['sessionIntake'],
+                'userid' => $params['client_id'],
             ];
 
             if ($params['countries'] != "") {
@@ -1126,6 +1139,7 @@ class Clients extends AdminController
             if ($admissionPreferencesId) {
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'Admission Preferences successfully updated';
+                $data['resp_id'] = $admissionPreferencesId;
             } else {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'Request failed!!';
@@ -1271,7 +1285,7 @@ class Clients extends AdminController
 
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
-            $check_ = $this->db->get(db_prefix() . 'client_profile')->row();
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
 
             if ($check_) {
                 $_update = array(
@@ -1280,7 +1294,7 @@ class Clients extends AdminController
                     "email_updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
-                $this->db->update(db_prefix() . 'client_profile', $_update);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1301,7 +1315,8 @@ class Clients extends AdminController
                     "created_by" => get_staff_user_id()
                 );
 
-                $this->db->insert(db_prefix() . 'client_profile', $insert_update_data);
+
+                $this->db->insert(db_prefix() . 'client_profile_creation', $insert_update_data);
                 $insert_id = $this->db->insert_id();
 
                 if ($insert_id) {
@@ -1333,7 +1348,7 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
-            $check_ = $this->db->get(db_prefix() . 'client_profile')->row();
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
 
             if ($check_) {
                 $_update = array(
@@ -1342,7 +1357,7 @@ class Clients extends AdminController
                     "vendor_updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
-                $this->db->update(db_prefix() . 'client_profile', $_update);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1376,7 +1391,7 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $this->db->select("id,email,vendor");
             $this->db->where('client_id', $client_id);
-            $check_ = $this->db->get(db_prefix() . 'client_profile')->row();
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
 
             if ($check_) {
                 if (empty($sop_document) && empty($document_url)) {
@@ -1405,7 +1420,7 @@ class Clients extends AdminController
                 }
 
                 $this->db->where("id", $check_->id);
-                $this->db->update(db_prefix() . 'client_profile', $_update);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1503,6 +1518,153 @@ class Clients extends AdminController
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_doc_status_failed', _l('client'));
                     set_alert('danger', _l('update_client_doc_status_failed', _l('client')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Something bad happen.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_profile()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+
+            $this->db->select("id");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+            if ($check_) {
+                if (isset($applicant_status)) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    $rows_affected = $this->db->affected_rows();
+
+                    if ($rows_affected > 0) {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
+                        set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
+                    } else {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = _l('update_client_profile_status_failed', _l('client'));
+                        set_alert('danger', _l('update_client_profile_status_failed', _l('client')));
+                    }
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Something bad happen.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_university()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+            $university_shortlisting = !empty($this->input->post("university_shortlisting")) ? json_decode($this->input->post("university_shortlisting"), true) : [];
+            $university_shortlisting_insert_arr = [];
+            $university_shortlisting_update_arr = [];
+            if (!empty($university_shortlisting)) {
+                $this->db->where('client_id', $client_id);
+                $this->db->update(db_prefix() . 'client_university_shortlisting', array("status" => 0));
+                foreach ($university_shortlisting as $university_s) {
+                    $this->db->select("id");
+                    $this->db->where(array('client_id' => $client_id, "id" => $university_s["university_id"]));
+                    $check_ = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+
+                    if (!empty($check_->id)) {
+                        array_push($university_shortlisting_update_arr, array("university_name" => $university_s["university"], "vendor_id" => $university_s["vendor"], "status" => 1, "id" => $check_->id));
+                    } else {
+                        array_push($university_shortlisting_insert_arr, array("client_id" => $client_id, "university_name" => $university_s["university"], "vendor_id" => $university_s["vendor"], "status" => 1, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s')));
+                    }
+                }
+            }
+            $update_university = "";
+            if (!empty($university_shortlisting_insert_arr) || !empty($university_shortlisting_update_arr)) {
+                if (!empty($university_shortlisting_insert_arr)) {
+                    $update_university =  $this->db->insert_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_insert_arr);
+                }
+
+                if (!empty($university_shortlisting_update_arr)) {
+                    $update_university = $this->db->update_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_update_arr, "id");
+                }
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                $rows_affected = $this->db->affected_rows();
+
+                $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+                $ids = array_column($university_shortlisting_data, "id");
+                if ($update_university) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
+                    $data['ids'] = $ids;
+                    set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_profile_status_failed', _l('client'));
+                    set_alert('danger', _l('update_client_profile_status_failed', _l('client')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Something bad happen.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_profile_verification_status()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $document_status = $this->input->post("profile_status");
+
+            $this->db->select("id");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
+
+            if ($check_) {
+
+                $_update = array(
+                    "profile_status" => $document_status,
+                    "approved_date" => date('Y-m-d H:i:s'),
+                    "approved_by" => get_staff_user_id()
+                );
+
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_profile_creation', $_update);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
+                    set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_profile_status_failed', _l('client'));
+                    set_alert('danger', _l('update_client_profile_status_failed', _l('client')));
                 }
             } else {
                 $data['resp_code'] = 'ERR';

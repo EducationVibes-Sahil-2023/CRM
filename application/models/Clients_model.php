@@ -1701,9 +1701,10 @@ class Clients_model extends App_Model
     function get_update_documents($id)
     {
         try {
-            $this->db->select('cd.*, ds.name AS document_status_name,ds.color color_name')
+            $this->db->select("cd.*, ds.name AS document_status_name,ds.color color_name,CONCAT(s.firstname,' ',s.lastname) staffname")
                 ->from(db_prefix() . 'client_documents cd')
                 ->join(db_prefix() . 'document_status ds', 'cd.document_status = ds.id', 'left')
+                ->join(db_prefix() . 'staff s', 'cd.document_updated_by = s.staffid', 'left')
                 ->where('cd.client_id', $id)
                 ->where('cd.status', 1)
                 ->order_by('cd.id', 'DESC')
@@ -1717,21 +1718,28 @@ class Clients_model extends App_Model
             return []; // Return an empty array or an appropriate error response
         }
     }
-    function get_profile_creator_vendor()
+    function get_profile_creator_vendor($ids = "")
     {
         $this->db->select('*');
         $this->db->where('status', 1);
+        if (!empty($ids)) {
+            $this->db->where("FIND_IN_SET(id,'{$ids}') > 0");
+        }
         $this->db->order_by('sequence', "asc");
-        return $vendor = $this->db->get(db_prefix() . 'profile_creater_vendor')->result_array();
+        $vendor = $this->db->get(db_prefix() . 'profile_creater_vendor')->result_array();
+        return $vendor;
     }
     function get_profile_creator_data($id)
     {
-        $this->db->select('*');
-        $this->db->where('client_id', $id);
-        $this->db->where('status', 1);
-        $this->db->order_by('id', "DESC");
+        $this->db->select("pc.*,ps.name AS profile_status_name,ps.color color_name,CONCAT(s.firstname,' ',s.lastname) staffname");
+        $this->db->from(db_prefix() . 'client_profile_creation pc');
+        $this->db->join(db_prefix() . 'profile_status ps', 'pc.profile_status = ps.id', 'left');
+        $this->db->join(db_prefix() . 'staff s', 'pc.approved_by = s.staffid', 'left');
+        $this->db->where('pc.client_id', $id);
+        $this->db->where('pc.status', 1);
+        $this->db->order_by('pc.id', "DESC");
         $this->db->limit(1);
-        return $profile_creator = $this->db->get(db_prefix() . 'client_profile_creation	')->result_array();
+        return $profile_creator = $this->db->get()->result_array();
     }
 
     function upload_documents_button()
@@ -1739,5 +1747,27 @@ class Clients_model extends App_Model
         $this->db->select('*');
         $this->db->order_by('sequence', "asc");
         return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
+    }
+    function university_shortlisting($client_id)
+    {
+        $this->db->select('*');
+        $this->db->where('client_id', $client_id);
+        $this->db->where('status', 1);
+        $this->db->order_by('id', "asc");
+        return $client_university_shortlisting = $this->db->get(db_prefix() . 'client_university_shortlisting')->result_array();
+    }
+
+    function profile_verification_button()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $update_button = $this->db->get(db_prefix() . 'profile_status')->result_array();
+    }
+
+    function university_application_status()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $university_application_status = $this->db->get(db_prefix() . 'university_application_status')->result_array();
     }
 }
