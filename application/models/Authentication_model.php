@@ -138,6 +138,7 @@ class Authentication_model extends App_Model
 
             $this->session->unset_userdata('staff_user_id');
             $this->session->unset_userdata('staff_logged_in');
+            $this->session->unset_userdata('staff_logged_in_new');
         }
 
         $this->session->sess_destroy();
@@ -200,6 +201,8 @@ class Authentication_model extends App_Model
                             $user_data = [
                                 'staff_user_id'   => $user->id,
                                 'staff_logged_in' => true,
+                                'staff_logged_in_new' => true,
+
                             ];
                         } else {
                             // Get the customer id
@@ -541,6 +544,7 @@ class Authentication_model extends App_Model
             [
                 'staff_user_id'   => $user->staffid,
                 'staff_logged_in' => true,
+                'staff_logged_in_new' => true,
             ]
         );
 
