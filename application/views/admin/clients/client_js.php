@@ -463,7 +463,7 @@
         let value = $(this).val();
         if (value.length > 0) {
             if (value.length <= 3) {
-                // selectedUniversityArr = [];
+                selectedUniversityArr = [];
                 $('#countries').val(value.join(','));
                 var str = '';
                 for (let k = 0; k < value.length; k++) {
