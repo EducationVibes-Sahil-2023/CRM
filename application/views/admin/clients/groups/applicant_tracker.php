@@ -1154,29 +1154,30 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 
 
 
-        console.log(profile_creation_data);
-        if ($.inArray(staff_id, admin_ids) !== -1) {
-            if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-                html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + '</h3>';
-                $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-                $("#profile_creation_div").find(".fa-file").hide();
+        if (profile_creation_data != "") {
+            if ($.inArray(staff_id, admin_ids) !== -1) {
+                if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                    html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + '</h3>';
+                    $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                    $("#profile_creation_div").find(".fa-file").hide();
+                } else {
+                    html = '<h3 class="message-notification">Take action on profile verification ';
+                    $.each(profile_verification_button, function(index, item) {
+                        html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
+                    });
+                    html += '</h3>';
+                }
+                $(".profile_approval_message_action").html(html);
             } else {
-                html = '<h3 class="message-notification">Take action on profile verification ';
-                $.each(profile_verification_button, function(index, item) {
-                    html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
-                });
-                html += '</h3>';
+                if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                    html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                    $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                    $("#profile_creation_div").find(".fa-file").hide();
+                } else {
+                    html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+                }
+                $(".profile_approval_message_action").html(html);
             }
-            $(".profile_approval_message_action").html(html);
-        } else {
-            if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-                html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
-                $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-                $("#profile_creation_div").find(".fa-file").hide();
-            } else {
-                html = '<h3 class="message-notification">Your Profile under Processing</h3>';
-            }
-            $(".profile_approval_message_action").html(html);
         }
 
 
