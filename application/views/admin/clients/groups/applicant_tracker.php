@@ -904,40 +904,19 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             } else {
                 return Promise.reject(new Error("University is not valid")); // Rejects the promise if university is not valid
             }
-        } else {
-            if (update_university_status.resp_code != undefined) {
-                alert_float("danger", update_university_status.resp_desc);
-                hide_loader();
-                return false;
-            } else {
-                alert_float("danger", update_university_status);
-                hide_loader();
-                return false;
-            }
+        } else if (type === "application_div") {
+            let is_validate_application_status = await is_validate_application_status(1);
         }
-    } catch (error) {
-        hide_loader();
-        console.error(error);
-        return false;
-    }
-    }
-    else {
-        hide_loader();
-        return false;
-    }
-    } else if (type === "application_div") {
-        let is_validate_application_status = await is_validate_application_status(1);
-    }
-    let current_fs = $(obj).parent();
-    let next_fs = $(obj).parent().next();
+        let current_fs = $(obj).parent();
+        let next_fs = $(obj).parent().next();
 
-    // Activate next step on progressbar using the index of next_fs
-    $("#progressbar li").removeClass("active").addClass("inactive");
-    $("#progressbar li.active").addClass("previous");
-    $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
-    hide_loader();
-    current_fs.slideUp("slow");
-    next_fs.slideDown("slow");
+        // Activate next step on progressbar using the index of next_fs
+        $("#progressbar li").removeClass("active").addClass("inactive");
+        $("#progressbar li.active").addClass("previous");
+        $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
+        hide_loader();
+        current_fs.slideUp("slow");
+        next_fs.slideDown("slow");
     }
 
     function validate_profile_div() {
