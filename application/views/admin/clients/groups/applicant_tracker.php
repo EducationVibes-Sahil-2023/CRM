@@ -1146,7 +1146,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         } else {
             if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
                 html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
-                $(".add_document").hide();
+                $(".document_upload_files").find(".add_document").hide();
                 $(".document_upload_files").each(function() {
                     $(this).find("input").attr("disabled", true);
                 });
@@ -1326,7 +1326,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                 // Additional validation logic or processing can be added here
             });
 
-            resolve(); // Resolving the promise if all validations pass
+            resolve(true); // Resolving the promise if all validations pass
         });
     }
 
