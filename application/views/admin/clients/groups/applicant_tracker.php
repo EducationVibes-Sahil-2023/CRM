@@ -763,8 +763,10 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                         let uploadResponse = await upload_document();
                         if (uploadResponse.resp_code == "RCS") {
                             alert_float("success", uploadResponse.resp_desc);
-                            let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
-                            $(".document_approval_message_action").html(html);
+                            if (upload_documents.document_status == undefined && upload_documents.document_status == "") {
+                                let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+                                $(".document_approval_message_action").html(html);
+                            }
                         } else {
                             if (uploadResponse.resp_code != undefined) {
                                 alert_float("danger", uploadResponse.resp_desc);
@@ -798,6 +800,10 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                         let update_profile_status = await update_profile();
                         if (update_profile_status.resp_code == "RCS") {
                             alert_float("success", update_profile_status.resp_desc);
+                            if (profile_creation_data.profile_status == undefined && profile_creation_data.profile_status == "") {
+                                html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+                                $(".profile_approval_message_action").html(html);
+                            }
                         } else {
                             if (update_profile_status.resp_code != undefined) {
                                 alert_float("danger", update_profile_status.resp_desc);
