@@ -895,6 +895,9 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                     html = '<h3 class="message-notification">Your University under Processing</h3>';
                     $(".university_approval_message_action").html(html);
 
+
+                } else {
+                    alert_float("danger", update_university_status.resp_desc);
                 }
             }
         } else if (type === "application_div") {
