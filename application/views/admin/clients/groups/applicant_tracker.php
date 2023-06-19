@@ -559,13 +559,13 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                                         <div class="col-md-4">
                                             <?php
 
-                                            $selected_university_application = !empty($short_list["application_status"]) ? $short_list["application_status"] : "";
+                                            $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
                                             echo render_select('university_application_status', $university_application_status, array('id', 'name'), "", $selected_university_application); ?>
                                         </div>
                                         <div class="col-md-2 university_div_status">
 
-                                            <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
-                                            <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'sop')"></i>
+                                            <!-- <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i> -->
+                                            <!-- <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'sop')"></i> -->
                                         </div>
                                     </div>
                                 <?php }
