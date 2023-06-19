@@ -541,11 +541,11 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                                 foreach ($university_shortlisting as $key_u => $short_list) {
                             ?>
                                     <div class="col-md-12 university_div_application mt-2">
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
                                             <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <?php
                                             // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
                                             $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
@@ -561,12 +561,10 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 
                                             $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
                                             echo render_select('university_application_status', $university_application_status, array('id', 'name'), "", $selected_university_application); ?>
-                                        </div>
-                                        <div class="col-md-2 university_div_status">
 
-                                            <!-- <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i> -->
-                                            <!-- <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'sop')"></i> -->
+
                                         </div>
+
                                     </div>
                                 <?php }
                                 ?>
@@ -643,6 +641,12 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
             $("#university_div").find(".add_document").hide();
             $("#university_div").find(".next.action-button").prop('disabled', true);
         }
+
+        $("select[name='university_application_status']").each(function() {
+            $(this).attr("disabled", true);
+            $(this).selectpicker('refresh');
+        })
+
     })
 
 
@@ -748,7 +752,21 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         $(obj).parents(".document_upload_files").remove();
     }
 
+    function is_validate_application_status() {
+        let check_status = true;
+        $("select[name='university_application_status']").each(function() {
+            if ($(this).val() != 1) {
+                check_status = false;
+            }
+        })
 
+        if (check_status) {
+            $("#university_application_status").find("button.next").attr("disabled", false);
+        } else {
+            $("#university_application_status").find("button.next").attr("disabled", true);
+        }
+    }
+    is_validate_application_status();
     async function next_step(type, obj, step) {
         type = $.trim(type);
         step_stage = (step);
@@ -856,6 +874,8 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                 hide_loader();
                 return false;
             }
+        } else if (type === "application_div") {
+            let is_validate_application_status = await is_validate_application_status();
         }
         let current_fs = $(obj).parent();
         let next_fs = $(obj).parent().next();
