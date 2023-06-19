@@ -543,11 +543,11 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                                 foreach ($university_shortlisting as $key_u => $short_list) {
                             ?>
                                     <div class="col-md-12 university_div_application mt-2">
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
                                             <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-3">
                                             <?php
                                             // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
                                             $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
@@ -558,13 +558,15 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                                             <input type="input" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
                                         </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <?php
 
                                             $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
                                             echo render_select('university_application_status', $university_application_status, array('id', 'name'), "", $selected_university_application); ?>
 
 
+                                        </div>
+                                        <div class="col-md-3">
                                         </div>
 
                                     </div>
@@ -874,17 +876,19 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                     let html = '';
                     for (let i = 0; i < university_list.length; i++) {
                         html += `<div class="col-md-12 university_div_application mt-2">
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <input type="hidden" name="university_id" value="` + university_list[i].id + `" >
                             <input type="input" class="form-control" disabled value="` + university_list[i].university_name + `" >
                         </div> 
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <input type="input" class="form-control" disabled value="` + university_list[i].vendor_name + `" >
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <?php
                             echo render_select('university_application_status', $university_application_status, array('id', 'name'), "");
                             ?>
+                        </div>
+                        <div class="col-md-3">
                         </div>
                     </div>`;
                     }
