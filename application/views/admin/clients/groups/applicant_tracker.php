@@ -756,7 +756,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         $(obj).parents(".document_upload_files").remove();
     }
 
-    async function is_validate_application_status(status = 0) {
+    function is_validate_application_status(status = 0) {
         return new Promise((resolve) => {
             if ($("select[name='university_application_status']").length > 0) {
                 let check_status = true;
@@ -795,7 +795,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         });
     }
 
-    is_validate_application_status();
+    await is_validate_application_status();
     async function next_step(type, obj, step) {
         type = $.trim(type);
         step_stage = (step);
