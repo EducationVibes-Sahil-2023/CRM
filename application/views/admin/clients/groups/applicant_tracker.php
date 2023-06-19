@@ -795,7 +795,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         });
     }
 
-    await is_validate_application_status();
+     is_validate_application_status();
     async function next_step(type, obj, step) {
         type = $.trim(type);
         step_stage = (step);
