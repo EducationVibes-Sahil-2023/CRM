@@ -1615,6 +1615,7 @@ class Clients extends AdminController
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
                     $data['ids'] = $ids;
+                    $data['university_shortlisting'] = $university_shortlisting_data;
                     set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
                 } else {
                     $data['resp_code'] = 'RCS';

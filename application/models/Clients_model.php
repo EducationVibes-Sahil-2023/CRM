@@ -1750,11 +1750,13 @@ class Clients_model extends App_Model
     }
     function university_shortlisting($client_id)
     {
-        $this->db->select('*');
-        $this->db->where('client_id', $client_id);
-        $this->db->where('status', 1);
-        $this->db->order_by('id', "asc");
-        return $client_university_shortlisting = $this->db->get(db_prefix() . 'client_university_shortlisting')->result_array();
+        $this->db->select('us.*,us.name vendor_name');
+        $this->db->from(db_prefix() . 'client_university_shortlisting us');
+        $this->db->join(db_prefix() . 'profile_creater_vendor cv', "cv.id = us.vendor_id");
+        $this->db->where('us.client_id', $client_id);
+        $this->db->where('us.status', 1);
+        $this->db->order_by('us.id', "asc");
+        return $client_university_shortlisting = $this->db->get()->result_array();
     }
 
     function profile_verification_button()
