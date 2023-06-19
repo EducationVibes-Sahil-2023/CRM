@@ -1770,4 +1770,11 @@ class Clients_model extends App_Model
         $this->db->order_by('sequence', "asc");
         return $university_application_status = $this->db->get(db_prefix() . 'university_application_status')->result_array();
     }
+
+    function university_status_update()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $university_application_status = $this->db->get(db_prefix() . 'university_status_update')->result_array();
+    }
 }

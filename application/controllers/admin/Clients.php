@@ -229,8 +229,8 @@ class Clients extends AdminController
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
-                $data['university_application_status'] = $this->clients_model->university_application_status();
-              
+                $data['university_application_status'] = $this->clients_model->university_status_update();
+
 
                 $data['customer_vendors'] = [];
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
