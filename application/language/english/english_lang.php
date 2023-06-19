@@ -3667,3 +3667,5 @@ $lang['update_client_doc_status_successfully'] =  '%s document verification upda
 $lang['update_client_doc_status_failed'] =  '%s document verification Failed.';
 $lang['update_client_profile_status_successfully'] =  '%s profile creation update successfully.';
 $lang['update_client_profile_status_failed'] =  '%s profile creation update Failed.';
+$lang['update_custumer_update_successfully'] =  '%s university shortlisting update successfully.';
+$lang['update_custumer_failed_successfully'] =  '%s university shortlisting update Failed.';
