@@ -896,7 +896,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                         html = '<h3 class="message-notification">Your University under Processing</h3>';
                         $(".university_approval_message_action").html(html);
 
-                        return Promise.resolve(); // Resolves the promise successfully
+
                     } else {
                         return Promise.reject(new Error("Update university status not RCS")); // Rejects the promise with an error
                     }
