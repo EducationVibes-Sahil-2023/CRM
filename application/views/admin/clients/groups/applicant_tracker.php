@@ -756,35 +756,45 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         $(obj).parents(".document_upload_files").remove();
     }
 
-    function is_validate_application_status(status = 0) {
-        if ($("select[name='university_application_status']").length > 0) {
-            let check_status = true;
-            let university_count = 0;
-            let university_count_not = 0;
-            $("select[name='university_application_status']").each(function() {
-                if ($(this).val() != 1) {
-                    university_count_not++;
-                    check_status = false;
+    async function is_validate_application_status(status = 0) {
+        return new Promise((resolve) => {
+            if ($("select[name='university_application_status']").length > 0) {
+                let check_status = true;
+                let university_count = 0;
+                let university_count_not = 0;
+                $("select[name='university_application_status']").each(function() {
+                    if ($(this).val() != 1) {
+                        university_count_not++;
+                        check_status = false;
+                    } else {
+                        university_count++;
+                    }
+                });
+
+                if (check_status) {
+                    $("#university_application_status").find("button.next").attr("disabled", false);
                 } else {
-                    university_count++;
+                    $("#university_application_status").find("button.next").attr("disabled", true);
                 }
-            })
 
-            if (check_status) {
-                $("#university_application_status").find("button.next").attr("disabled", false);
-            } else {
-                $("#university_application_status").find("button.next").attr("disabled", true);
+                let html = '';
+                if (university_count > 0) {
+                    if (university_count_not === 0) {
+                        html = '<h3 class="message-notification success">Your all university.</h3>';
+                    } else {
+                        html = '<h3 class="message-notification">Your ' + university_count + ' University is Approved. ' + university_count_not + ' is under processing.</h3>';
+                    }
+                } else {
+                    html = '<h3 class="message-notification">Your University under Processing</h3>';
+                }
+
+                $(".university_approval_message_action").html(html);
             }
 
-            if (university_count > 0) {
-                html = '<h3 class="message-notification">Your ' + university_count + ' University is Approved. ' + university_count_not + ' is under processing.</h3>';
-            } else {
-                html = '<h3 class="message-notification">Your University under Processing</h3>';
-            }
-
-            $(".university_approval_message_action").html(html);
-        }
+            resolve(); // Resolve the promise
+        });
     }
+
     is_validate_application_status();
     async function next_step(type, obj, step) {
         type = $.trim(type);
