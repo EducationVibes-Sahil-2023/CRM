@@ -860,21 +860,20 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         } else if (type === "university_div") {
             let isUniversityValid = await validate_university_div();
             if (isUniversityValid) {
-                try {
-                    let update_university_status = await update_university();
-                    if (update_university_status.resp_code === "RCS") {
-                        let ids = update_university_status.ids;
-                        console.log(ids);
-                        $(".add_university_div_block .university_div").each(function(index) {
-                            if (ids[index] !== undefined) {
-                                $(this).find("input[name='university_id']").val(ids[index]);
-                            }
-                        });
+                let update_university_status = await update_university();
+                if (update_university_status.resp_code === "RCS") {
+                    let ids = update_university_status.ids;
+                    console.log(ids);
+                    $(".add_university_div_block .university_div").each(function(index) {
+                        if (ids[index] !== undefined) {
+                            $(this).find("input[name='university_id']").val(ids[index]);
+                        }
+                    });
 
-                        let university_list = update_university_status.university_shortlisting;
-                        let html = '';
-                        for (let i = 0; i < university_list.length; i++) {
-                            html += `<div class="col-md-12 university_div_application mt-2">
+                    let university_list = update_university_status.university_shortlisting;
+                    let html = '';
+                    for (let i = 0; i < university_list.length; i++) {
+                        html += `<div class="col-md-12 university_div_application mt-2">
                         <div class="col-md-2">
                             <input type="hidden" name="university_id" value="` + university_list[i].id + `" >
                             <input type="input" class="form-control" disabled value="` + university_list[i].university_name + `" >
@@ -888,23 +887,18 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
                             ?>
                         </div>
                     </div>`;
-                        }
-                        $(".application_div").html(html);
-
-                        alert_float("success", update_university_status.resp_desc);
-
-                        html = '<h3 class="message-notification">Your University under Processing</h3>';
-                        $(".university_approval_message_action").html(html);
-
-                        return Promise.resolve(); // Resolves the promise successfully
-                    } else {
-                        return Promise.reject(new Error("Update university status not RCS")); // Rejects the promise with an error
                     }
-                } catch (error) {
-                    return Promise.reject(error); // Rejects the promise with the error caught in the try-catch block
+                    $(".application_div").html(html);
+
+                    alert_float("success", update_university_status.resp_desc);
+
+                    html = '<h3 class="message-notification">Your University under Processing</h3>';
+                    $(".university_approval_message_action").html(html);
+
+
+                } else {
+                    alert_float("danger", update_university_status.resp_desc);
                 }
-            } else {
-                return Promise.reject(new Error("University is not valid")); // Rejects the promise if university is not valid
             }
         } else if (type === "application_div") {
             let is_validate_application_status = await is_validate_application_status(1);
