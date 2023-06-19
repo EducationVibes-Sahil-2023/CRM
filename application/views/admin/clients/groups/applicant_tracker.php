@@ -1154,7 +1154,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 
 
 
-        if (profile_creation_data != "") {
+        if (profile_creation_data.profile_status != undefined) {
             if ($.inArray(staff_id, admin_ids) !== -1) {
                 if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
                     html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + '</h3>';
