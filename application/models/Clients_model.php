@@ -1750,7 +1750,7 @@ class Clients_model extends App_Model
     }
     function university_shortlisting($client_id)
     {
-        $this->db->select('us.*,us.name vendor_name');
+        $this->db->select('us.*,cv.name vendor_name');
         $this->db->from(db_prefix() . 'client_university_shortlisting us');
         $this->db->join(db_prefix() . 'profile_creater_vendor cv', "cv.id = us.vendor_id");
         $this->db->where('us.client_id', $client_id);
