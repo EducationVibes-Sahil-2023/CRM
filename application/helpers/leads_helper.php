@@ -1375,3 +1375,13 @@ function convertToHMS($seconds)
 
     return sprintf('%d Hours : %d Mins : %d Sec', $hours, $minutes, $seconds);
 }
+
+function call_duration($phone)
+{
+    $CI = &get_instance();
+    $sql = "SELECT ifnull(SUM(calls.duration),0) duration
+    FROM tblcalls_activity_logs AS calls
+    WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM('{$phone}'), 10) limit 1";
+
+    return $CI->db->query($sql)->row()->duration;
+}
