@@ -354,12 +354,12 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
 
-    'zip',
+    'zip'
 
-    '(SELECT sum(calls.duration)
-    FROM tblcalls_activity_logs AS calls
-    WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10)
-    LIMIT 1) AS  call_duration'
+    // '(SELECT sum(calls.duration)
+    // FROM tblcalls_activity_logs AS calls
+    // WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10)
+    // LIMIT 1) AS  call_duration'
 
 ]);
 
@@ -407,7 +407,7 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
-    $row[]    = !empty($aRow["call_duration"]) ? $aRow["call_duration"] : 0;
+    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber']) : 0;
 
 
 
