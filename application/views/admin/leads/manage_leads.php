@@ -39,7 +39,7 @@
                         </a>
                      <?php } ?>
                      <div class="row">
-                        <div class="col-md-5">
+                        <div class="col-md-10">
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
                            <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                            <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
@@ -49,10 +49,19 @@
                               echo _l('switch_to_list_view');
                            }; ?>
                            </a> -->
-                           <div class="text-center pull-right">
-                              <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
-                              <span id="updationCounterText">Updates Count</span>
+                           <div class="row">
+
+                              <div class="text-center  col-md-6">
+                                 <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
+                                 <span id="updationCounterText">Updates Count</span>
+                              </div>
+                              <div class="text-center  col-md-6">
+                                 <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
+                                 <span id="updationCounterText_time">Updates Calls</span>
+                              </div>
                            </div>
+
+
                         </div>
 
                         <div class="col-md-4 col-xs-12 pull-right leads-search">
@@ -473,6 +482,10 @@
                                  ),
                                  array(
                                     'name' => _l('Update Count'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Call Durations'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
@@ -1027,6 +1040,7 @@
                $("#leadSum").html(data.status);
                $("#leadSum").innerHTML = data.status;
                $("#updationCounter").html(data.update_count);
+               $("#updationCounter_time").html(data.call_count);
                if (data.max_count != undefined && parseInt(data.max_count) > 0) {
                   recreate_range_slider(data.max_count);
                }
