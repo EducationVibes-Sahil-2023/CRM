@@ -103,6 +103,7 @@ $db['default'] = array_merge([
     'compress'     => false,
     'failover'     => [],
     'save_queries' => true,
+    'max_allowed_packet' => 524288000
 ], defined('APP_DB_STRICTON') && APP_DB_STRICTON || !defined('APP_DB_STRICTON') ? ['stricton' => false] : []);
 
 $db['secondary'] = array(

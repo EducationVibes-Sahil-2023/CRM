@@ -356,7 +356,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     'zip',
 
-    '(SELECT calls.duration
+    '(SELECT sum(calls.duration)
     FROM tblcalls_activity_logs AS calls
     WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10)
     LIMIT 1) AS  call_duration'
@@ -381,7 +381,6 @@ if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
-
 
 $output  = $result['output'];
 
