@@ -1369,6 +1369,9 @@ function calls_update_count($params = false, $max_status = 0)
 
 function convertToHMS($seconds)
 {
+    if ($seconds == "") {
+        $seconds = 0;
+    }
     $hours = floor($seconds / 3600);
     $minutes = floor(($seconds % 3600) / 60);
     $seconds = $seconds % 60;
@@ -1383,5 +1386,5 @@ function call_duration($phone)
     FROM " . db_prefix() . "calls_activity_logs 
     WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9)
     LIMIT 1 ";
-    return $CI->db->query($sql)->row()->duration;
+    return convertToHMS($CI->db->query($sql)->row()->duration);
 }
