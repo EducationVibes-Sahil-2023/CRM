@@ -1376,7 +1376,7 @@ function convertToHMS($seconds, $status = 0)
     $minutes = floor(($seconds % 3600) / 60);
     $seconds = $seconds % 60;
     if ($status == 1) {
-        return sprintf('%d H : %d M : %d S', $hours, $minutes, $seconds);
+        return sprintf('%d:%d:%d', $hours, $minutes, $seconds);
     } else {
         return sprintf('%d Hours : %d Mins : %d Sec', $hours, $minutes, $seconds);
     }
