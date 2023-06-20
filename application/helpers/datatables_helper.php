@@ -20,7 +20,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $havingCount = '';
     /*
      * Paging
-     */
+     */ 
     $sLimit = '';
     if ((is_numeric($CI->input->post('start'))) && $CI->input->post('length') != '-1') {
         $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
@@ -270,8 +270,6 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sLimit
     ";
 
-    // echo $sQuery;
-    // die;
     $rResult = $CI->db->query($sQuery)->result_array();
 
     $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [
