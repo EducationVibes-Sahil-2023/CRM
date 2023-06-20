@@ -94,7 +94,6 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
 
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
-    'LEFT JOIN ' . db_prefix() . 'calls_activity_logs calls ON  RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10) = RIGHT(TRIM(calls.contact), 10) ',
 
     //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
 
@@ -357,7 +356,10 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     'zip',
 
-    'sum(calls.duration) call_duration'
+    '(SELECT calls.duration
+    FROM tblcalls_activity_logs AS calls
+    WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10)
+    LIMIT 1) AS  call_duration'
 
 ]);
 
@@ -379,6 +381,7 @@ if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
+
 
 $output  = $result['output'];
 
