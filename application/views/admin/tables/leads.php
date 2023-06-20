@@ -94,6 +94,7 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
 
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+    'LEFT JOIN ' . db_prefix() . 'calls_activity_logs calls ON  RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10) = RIGHT(TRIM(calls.contact), 10) ',
 
     //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
 
@@ -247,7 +248,7 @@ if (
     && ($filter != 'lost' && $filter != 'junk')
 ) {
 
-    array_push($where, 'AND status IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ')');
+    array_push($where, 'AND ' . db_prefix() . 'leads.status IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ')');
 }
 
 if ($this->ci->input->post('degree') && count($this->ci->input->post('degree')) > 0) {
@@ -344,7 +345,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     'color',
 
-    'status',
+    db_prefix() . 'leads.status',
 
     'assigned',
 
@@ -355,6 +356,8 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
 
     'zip',
+
+    'sum(calls.duration) call_duration'
 
 ]);
 
@@ -402,6 +405,9 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
+    $row[]    = !empty($aRow["call_duration"]) ? $aRow["call_duration"] : 0;
+
+
 
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 
