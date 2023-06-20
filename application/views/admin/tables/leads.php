@@ -381,7 +381,7 @@ if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
-
+die;
 
 $output  = $result['output'];
 
