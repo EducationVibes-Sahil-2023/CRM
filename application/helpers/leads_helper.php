@@ -653,9 +653,9 @@ function leads_update_count($params = false)
         }*/
     $grup_by = "";
     if (!empty($params['neet_score'])) {
-        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+        $grup_by = db_prefix() . 'customfieldsvalues.relid';
     }
-    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+    $sql .= " group by " . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
 
 
