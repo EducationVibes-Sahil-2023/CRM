@@ -1266,13 +1266,12 @@ function calls_update_count($params = false, $max_status = 0)
 
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    if (!empty($max_status) && $max_status == 1) {
-        $sql .= " SELECT sum(calls.duration) as total ";
-    } else {
-        $sql .= " SELECT sum(calls.duration)  as total ";
-    }
-    $sql .= ' FROM ' . db_prefix() . 'leads as l  ';
-    $sql .= ' inner JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON RIGHT(TRIM(l.phonenumber), 10) = RIGHT(TRIM(calls.contact), 10) ';
+
+    $sql .= 'SELECT SUM(calls.duration) AS total
+    FROM ' . db_prefix() . 'leads AS l
+    INNER JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), 
+        (SELECT GROUP_CONCAT(DISTINCT TRIM(contact)) FROM ' . db_prefix() . 'calls_activity_logs)) > 0
+    ';
 
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
@@ -1357,10 +1356,7 @@ function calls_update_count($params = false, $max_status = 0)
         $sql = trim($sql);
     }
 
-    // echo $sql;
-    // die;
     $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
-
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
