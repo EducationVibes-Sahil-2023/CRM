@@ -1285,6 +1285,9 @@ function calls_update_count($params = false, $max_status = 0)
     if (!$has_permission_view) {
         $sql .= ' AND ' . $whereNoViewPermission;
     }
+
+    $sql .= ' AND LOWER(TRIM(calls.call_status)) = "answered" ';
+
     if (!empty($params['assigned'])) {
         // $tids = " AND l.assigned = " . $params['assigned'];
         $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
