@@ -1275,17 +1275,7 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= "SELECT SUM(calls.duration) AS total_duration,
-    (SELECT SUM(duration)
-    FROM " . db_prefix() . "calls_activity_logs
-    WHERE RIGHT(TRIM(contact), 10) = RIGHT(TRIM(phonenumber), 10)
-    AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')) AS total
-    FROM tblleads AS l
-    INNER JOIN " . db_prefix() . "calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10),
-    (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10))
-    FROM " . db_prefix() . "calls_activity_logs
-    WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'))) > 0";
-    $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id  ';
+    $sql .= "SELECT sum(calls.duration) call_duration FROM tblleads AS l INNER JOIN   " . db_prefix() . "calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM " . db_prefix() . "calls_activity_logs WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'))) > 0 left join " . db_prefix() . "notes n ON ( l.id = n.rel_id   ";
 
     if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
@@ -1293,6 +1283,7 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
     }
     $sql .= ' ) ';
+
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' left join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
     }
@@ -1300,6 +1291,8 @@ function calls_update_count($params = false, $max_status = 0)
     if (!empty($params['followup_to_date'])) {
         $sql .= 'left join tblreminders  on  tblreminders.rel_id = l.id ';
     }
+
+    $sql .= " Where LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
     if (!$has_permission_view) {
         $sql .= ' AND ' . $whereNoViewPermission;
@@ -1367,16 +1360,11 @@ function calls_update_count($params = false, $max_status = 0)
     }
 
 
-    if (!empty($max_status) && $max_status == 1) {
-        $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
-        $sql = trim($sql);
-    } else {
-        $sql .= " group by l.id" . $grup_by . " " . $sql_add . " ";
-        // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-        $sql = trim($sql);
-    }
+    $sql .= " group by calls.contact" . $grup_by . " " . $sql_add . " ";
+    // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+    $sql = trim($sql);
 
-    $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
+    $sql = "SELECT SUM(call_duration) as total_sum FROM ( {$sql} )  as subquery ";
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
