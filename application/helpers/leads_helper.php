@@ -1275,7 +1275,7 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= "SELECT sum(calls.duration) call_duration FROM tblleads AS l INNER JOIN   " . db_prefix() . "calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM " . db_prefix() . "calls_activity_logs WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'))) > 0 left join " . db_prefix() . "notes n ON ( l.id = n.rel_id   ";
+    $sql .= "SELECT sum(distinct calls.duration) call_duration FROM tblleads AS l INNER JOIN   " . db_prefix() . "calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM " . db_prefix() . "calls_activity_logs WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'))) > 0 left join " . db_prefix() . "notes n ON ( l.id = n.rel_id   ";
 
     if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
