@@ -655,7 +655,7 @@ function leads_update_count($params = false)
     if (!empty($params['neet_score'])) {
         $grup_by = ','.db_prefix() . 'customfieldsvalues.relid';
     }
-    $sql .= " group by (CAST(n.dateadded AS date))" . $grup_by . " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
 
 
