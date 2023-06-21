@@ -1270,7 +1270,7 @@ function calls_update_count($params = false, $max_status = 0)
     $sql .= 'SELECT SUM(calls.duration) AS total
     FROM ' . db_prefix() . 'leads AS l
     INNER JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), 
-        (SELECT GROUP_CONCAT(DISTINCT TRIM(contact)) FROM ' . db_prefix() . 'calls_activity_logs)) > 0
+        (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM ' . db_prefix() . 'calls_activity_logs)) > 0
     ';
 
 
