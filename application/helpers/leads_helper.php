@@ -1272,7 +1272,7 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= " SELECT sum(calls.duration)  as total ";
     }
     $sql .= ' FROM ' . db_prefix() . 'leads as l  ';
-    $sql .= ' inner JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON RIGHT(TRIM(l.phonenumber), 10) = RIGHT(TRIM(calls.contact), 10) left join tblnotes as n on l.id = n.rel_id ';
+    $sql .= ' inner JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON RIGHT(TRIM(l.phonenumber), 10) = RIGHT(TRIM(calls.contact), 10) ';
 
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
@@ -1352,7 +1352,7 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
         $sql = trim($sql);
     } else {
-        $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql .= " group by l.id" . $grup_by . " " . $sql_add . " ";
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
     }
