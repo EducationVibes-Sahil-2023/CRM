@@ -1275,13 +1275,24 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= 'SELECT SUM(calls.duration) AS total
-    FROM ' . db_prefix() . 'leads AS l
-    INNER JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), 
-        (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM ' . db_prefix() . 'calls_activity_logs where LOWER(TRIM(calls.call_status)) = "answered")) > 0
-    ';
+    $sql .= "SELECT SUM(calls.duration) AS total_duration,
+    (SELECT SUM(duration)
+    FROM " . db_prefix() . "calls_activity_logs
+    WHERE RIGHT(TRIM(contact), 10) = RIGHT(TRIM(phonenumber), 10)
+    AND LOWER(TRIM(call_status)) = 'answered') AS total
+    FROM tblleads AS l
+    INNER JOIN " . db_prefix() . "calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10),
+    (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10))
+    FROM " . db_prefix() . "calls_activity_logs
+    WHERE LOWER(TRIM(call_status)) = 'answered')) > 0";
+    $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id  ';
 
-
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    }
+    $sql .= ' ) ';
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' left join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
     }
