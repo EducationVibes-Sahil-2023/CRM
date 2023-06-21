@@ -548,7 +548,7 @@ function get_status_summary_filter($params)
 function leads_update_count($params = false)
 {
 
-    $CI = &get_instance();
+  $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
     }
@@ -587,9 +587,15 @@ function leads_update_count($params = false)
 
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
-    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
+    $sql .= " SELECT count(DISTINCT  concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
+    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
 
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    }
+    $sql .= ' ) ';
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
     }
@@ -647,13 +653,14 @@ function leads_update_count($params = false)
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
         $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+        // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
         }*/
     $grup_by = "";
     if (!empty($params['neet_score'])) {
-        $grup_by = ','.db_prefix() . 'customfieldsvalues.relid';
+        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
@@ -661,7 +668,6 @@ function leads_update_count($params = false)
 
     $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     $sql = trim($sql);
-
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
