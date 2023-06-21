@@ -102,8 +102,7 @@ $db['default'] = array_merge([
     'encrypt'      => $db_encrypt,
     'compress'     => false,
     'failover'     => [],
-    'save_queries' => true,
-    'max_allowed_packet' => 524288000
+    'save_queries' => true
 ], defined('APP_DB_STRICTON') && APP_DB_STRICTON || !defined('APP_DB_STRICTON') ? ['stricton' => false] : []);
 
 $db['secondary'] = array(
