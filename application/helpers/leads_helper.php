@@ -601,8 +601,14 @@ function leads_update_count($params = false, $max_status = 0)
     } else {
         $sql .= " SELECT count(DISTINCT(concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
     }
-    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
+    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
 
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    }
+    $sql .= ' ) ';
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
     }
@@ -679,15 +685,17 @@ function leads_update_count($params = false, $max_status = 0)
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
         $sql = trim($sql);
+        $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
     } else {
         $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
+        $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     }
 
     // echo $sql;
     // die;
-    $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
+
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
@@ -1270,7 +1278,7 @@ function calls_update_count($params = false, $max_status = 0)
     $sql .= 'SELECT SUM(calls.duration) AS total
     FROM ' . db_prefix() . 'leads AS l
     INNER JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), 
-        (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM ' . db_prefix() . 'calls_activity_logs)) > 0
+        (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM ' . db_prefix() . 'calls_activity_logs where LOWER(TRIM(calls.call_status)) = "answered")) > 0
     ';
 
 
@@ -1285,8 +1293,6 @@ function calls_update_count($params = false, $max_status = 0)
     if (!$has_permission_view) {
         $sql .= ' AND ' . $whereNoViewPermission;
     }
-
-    $sql .= ' AND LOWER(TRIM(calls.call_status)) = "answered" ';
 
     if (!empty($params['assigned'])) {
         // $tids = " AND l.assigned = " . $params['assigned'];
@@ -1386,7 +1392,7 @@ function call_duration($phone)
     $CI = &get_instance();
     $sql = " SELECT IFNULL(SUM(duration), 0) AS duration
     FROM " . db_prefix() . "calls_activity_logs 
-    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9)
+    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) = 'answered'
     LIMIT 1 ";
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
