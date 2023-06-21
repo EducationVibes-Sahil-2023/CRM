@@ -1279,12 +1279,12 @@ function calls_update_count($params = false, $max_status = 0)
     (SELECT SUM(duration)
     FROM " . db_prefix() . "calls_activity_logs
     WHERE RIGHT(TRIM(contact), 10) = RIGHT(TRIM(phonenumber), 10)
-    AND LOWER(TRIM(call_status)) = 'answered') AS total
+    AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')) AS total
     FROM tblleads AS l
     INNER JOIN " . db_prefix() . "calls_activity_logs AS calls ON FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10),
     (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10))
     FROM " . db_prefix() . "calls_activity_logs
-    WHERE LOWER(TRIM(call_status)) = 'answered')) > 0";
+    WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'))) > 0";
     $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id  ';
 
     if (!empty($params['up_to_date'])) {
@@ -1403,7 +1403,7 @@ function call_duration($phone)
     $CI = &get_instance();
     $sql = " SELECT IFNULL(SUM(duration), 0) AS duration
     FROM " . db_prefix() . "calls_activity_logs 
-    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) = 'answered'
+    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')
     LIMIT 1 ";
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
