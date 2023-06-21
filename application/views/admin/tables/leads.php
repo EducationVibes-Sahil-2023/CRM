@@ -407,7 +407,8 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
-    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber']) : convertToHMS(0, 1);
+    // $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber']) : convertToHMS(0, 1);
+    $row[]    = 0;
 
 
 
