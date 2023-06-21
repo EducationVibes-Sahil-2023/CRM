@@ -659,7 +659,7 @@ function leads_update_count($params = false)
     $sql = trim($sql);
 
 
-    $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
+    $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     $sql = trim($sql);
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
