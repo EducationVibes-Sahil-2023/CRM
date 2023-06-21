@@ -545,10 +545,143 @@ function get_status_summary_filter($params)
 
     return $sources;
 }
-function leads_update_count($params = false)
+// function leads_update_count($params = false)
+// {
+
+//   $CI = &get_instance();
+//     if (!class_exists('leads_model')) {
+//         $CI->load->model('leads_model');
+//     }
+//     $statuses = $CI->leads_model->get_status();
+
+//     $totalStatuses         = count($statuses);
+//     $has_permission_view   = has_permission('leads', '', 'view');
+//     $sql                   = '';
+//     $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
+
+//     $statuses[] = [
+//         'lost'  => true,
+//         'name'  => _l('lost_leads'),
+//         'color' => '#f0f0f0',
+//     ];
+
+//     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+//     if ($role == 3) {
+//         // $this->load->database();
+//         $sid = get_staff_user_id(); //48;//get_staff_user_id();
+//         $teamids = $CI->db->query("select staffid
+// 			from    (select * from tblstaff
+// 			where active = '1' order by reporting_person, staffid) products_sorted,
+// 					(select @pv := $sid) initialisation
+// 			where   find_in_set(reporting_person, @pv)
+// 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+//         $idsarr = array_column($teamids, 'staffid');
+//         $sids = implode(",", $idsarr);
+//         // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+//         if (!empty($sids)) {
+//             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+//         } else {
+//             $tids = ' AND assigned in (' . $sid . ')';
+//         }
+//     }
+
+//     // $sql .= ' SELECT COUNT(l.id) as total';
+//     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
+//     $sql .= " SELECT count(DISTINCT  concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
+//     $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
+
+//     if (!empty($params['up_to_date'])) {
+//         $up_from_date = $params['up_from_date'];
+//         $up_to_date = $params['up_to_date'];
+//         $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+//     }
+//     $sql .= ' ) ';
+//     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
+//         $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
+//     }
+
+//     if (!empty($params['followup_to_date'])) {
+//         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
+//     }
+
+//     if (!$has_permission_view) {
+//         $sql .= ' AND ' . $whereNoViewPermission;
+//     }
+//     if (!empty($params['assigned'])) {
+//         // $tids = " AND l.assigned = " . $params['assigned'];
+//         $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
+
+//         $sql .= $tids;
+//     } else {
+//         if ($role == 3) {
+//             $sql .= $tids;
+//         }
+//     }
+//     if (!empty($params['status'])) {
+//         // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
+//         $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
+//     }
+//     if (!empty($params['source'])) {
+//         // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
+//         $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+//     }
+//     if (!empty($params['lead_type'])) {
+//         $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+//         // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+//     }
+
+//     if (!empty($params['neet_score'])) {
+//         $neet_range = explode("-", $params['neet_score']);
+//         $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
+//     }
+//     if (!empty($params['to_date'])) {
+//         $from_date = $params['from_date'];
+//         $to_date = $params['to_date'];
+//         $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+//     }
+//     if (!empty($params['followup_to_date'])) {
+//         $followup_from_date = $params['followup_from_date'];
+//         $followup_to_date = $params['followup_to_date'];
+//         $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
+//     }
+
+//     if (!empty($params['assign_to_date'])) {
+//         $assign_from_date = $params['assign_from_date'];
+//         $assign_to_date = $params['assign_to_date'];
+//         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+//     } else if (!empty($params['up_to_date'])) {
+//         $up_from_date = $params['up_from_date'];
+//         $up_to_date = $params['up_to_date'];
+//         $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+//         // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+//     }/*else{
+//             $today = date("Y-m-d");
+//             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
+//         }*/
+//     $grup_by = "";
+//     if (!empty($params['neet_score'])) {
+//         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+//     }
+//     $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+//     $sql = trim($sql);
+
+
+//     $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
+//     $sql = trim($sql);
+//     $update_count = $CI->db->query($sql)->row()->total_sum;
+
+//     // $result = $CI->db->query($sql)->result_array();
+
+//     // // $update_count = count(array_unique(array_column($result, "total")));
+//     // $update_count = count(array_count_values(array_column($result, "total")));
+
+//     return !empty($update_count) ? $update_count : 0;
+// }
+
+function leads_update_count($params = false, $max_status = 0)
 {
 
-  $CI = &get_instance();
+    $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
     }
@@ -587,7 +720,11 @@ function leads_update_count($params = false)
 
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    $sql .= " SELECT count(DISTINCT  concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " SELECT count((concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+    } else {
+        $sql .= " SELECT count(DISTINCT(concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+    }
     $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
 
     if (!empty($params['up_to_date'])) {
@@ -653,7 +790,6 @@ function leads_update_count($params = false)
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
         $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-        // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
@@ -662,12 +798,28 @@ function leads_update_count($params = false)
     if (!empty($params['neet_score'])) {
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
-    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-    $sql = trim($sql);
+    $sql_add = "";
+    if (!empty($params['update_count_max'])) {
+        $min = $params['update_count_min'];
+        $max = $params['update_count_max'];
+        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    }
 
 
-    $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
-    $sql = trim($sql);
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
+        $sql = trim($sql);
+        $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
+    } else {
+        $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql = trim($sql);
+        $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
+    }
+
+    // echo $sql;
+    // die;
+
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
@@ -677,7 +829,6 @@ function leads_update_count($params = false)
 
     return !empty($update_count) ? $update_count : 0;
 }
-
 function leads_update_count_id($id, $params = false)
 {
     $CI = &get_instance();

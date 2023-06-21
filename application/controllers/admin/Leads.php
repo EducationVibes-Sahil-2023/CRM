@@ -70,7 +70,7 @@ class Leads extends AdminController
 
         $data['summary']  = get_leads_summary();
         $data['updateCount'] = leads_update_count();
-
+        $data['updateCount_max'] = leads_update_count("", 1);
         $data['statuses'] = $this->leads_model->get_status();
 
         $data['degrees'] = $this->leads_model->get_customfieldsvalues('20');
@@ -2475,19 +2475,13 @@ class Leads extends AdminController
                                 $total_deleted++;
                             }
                         }
-                    }
-                    
-                    else if($this->input->post('mass_assign') && !empty($this->input->post('assigned')))
-                    {
+                    } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
                         if ($has_permission_delete) {
-                            if ($this->leads_model->re_assign($id,$this->input->post())) {
+                            if ($this->leads_model->re_assign($id, $this->input->post())) {
                                 $total_assign++;
-
                             }
-
                         }
-                    }
-                    else {
+                    } else {
 
 
                         // $current_lead_data = $this->leads_model->get($id);
