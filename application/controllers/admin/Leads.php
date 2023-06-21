@@ -92,6 +92,7 @@ class Leads extends AdminController
         $this->load->view('admin/leads/manage_leads', $data);
     }
 
+    
     public function lead_summary_filter()
     {
         $summary = get_leads_summary_filter($_POST);
