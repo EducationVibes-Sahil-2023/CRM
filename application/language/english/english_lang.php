@@ -3669,3 +3669,4 @@ $lang['update_client_profile_status_successfully'] =  '%s profile creation updat
 $lang['update_client_profile_status_failed'] =  '%s profile creation update Failed.';
 $lang['update_custumer_update_successfully'] =  '%s university shortlisting update successfully.';
 $lang['update_custumer_failed_successfully'] =  '%s university shortlisting update Failed.';
+$lang['no_admin_assign_tracker'] =  'No admin assigned.';

@@ -26,7 +26,7 @@
                         <input type="input" name="vendor_id" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-4  <?= ($short_list["university_status"] == 1) ? 'check_university' : '' ?>">
                         <?php
 
                         $selected_university_status_update = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
@@ -57,13 +57,18 @@
             console.log(validationResult);
 
             if (validationResult) {
+                $(".check_university").each(function() {
+                    $(this).find('input, select').prop('disabled', false).selectpicker('refresh');
+                })
                 // Collect form data
                 const formElement = document.getElementById('university_shortlisting_form');
                 const formData = new FormData(formElement);
 
                 formData.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
 
-
+                $(".check_university").each(function() {
+                    $(this).find('input, select').prop('disabled', true).selectpicker('refresh');
+                })
                 let response = await $.ajax({
                     url: "<?= base_url("clients/university_shortlisting_update") ?>",
                     method: "POST",
@@ -98,4 +103,10 @@
             resolve(true);
         });
     }
+
+    $(document).ready(function() {
+        $(".check_university").each(function() {
+            $(this).find('input, select').prop('disabled', true).selectpicker('refresh');
+        })
+    })
 </script>
