@@ -1198,22 +1198,24 @@ class Clients extends AdminController
 
             $files = $_FILES['document_file'];
 
-            for ($i = 0; $i < count($label_data); $i++) {
+            for ($k = $i = 0; $i < count($label_data); $i++) {
                 $upload_data = [];
-                if (!empty($files['name'][$i])) {
-                    $upload_data["name"] = $files['name'][$i];
-                    $upload_data["type"] = $files['type'][$i];
-                    $upload_data["tmp_name"] = $files['tmp_name'][$i];
-                    $upload_data["error"] = $files['error'][$i];
-                    $upload_data["size"] = $files['size'][$i];
+                if (!empty($files['name'][$k]) && empty($document_url[$i])) {
+                    $upload_data["name"] = $files['name'][$k];
+                    $upload_data["type"] = $files['type'][$k];
+                    $upload_data["tmp_name"] = $files['tmp_name'][$k];
+                    $upload_data["error"] = $files['error'][$k];
+                    $upload_data["size"] = $files['size'][$k];
                     if ($upload_data["error"] === UPLOAD_ERR_OK) {;
                         $file_name = upload_applicant_documents($client_id, $upload_data);
-                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
+                        array_push($update_array, array("label_name" => $label_data[$k], "document_file" => $file_name["file_path"]));
                     }
+                    $k++;
                 } else {
                     array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
                 }
             }
+
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
             $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
@@ -1282,6 +1284,7 @@ class Clients extends AdminController
             $vendor = !empty($this->input->post("vendor")) ? $this->input->post("vendor") : '';
             $sop = !empty($_FILES["sop"]) ? $_FILES["sop"] : '';
             $client_id = $this->input->post("client_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
 
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
@@ -1315,7 +1318,10 @@ class Clients extends AdminController
                     "created_by" => get_staff_user_id()
                 );
 
-
+                if (isset($applicant_status)) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                }
                 $this->db->insert(db_prefix() . 'client_profile_creation', $insert_update_data);
                 $insert_id = $this->db->insert_id();
 
@@ -1344,6 +1350,7 @@ class Clients extends AdminController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // $email_creation = !empty($this->input->post("email_creation")) ? $this->input->post("email_creation") : '';
             $vendor = !empty($this->input->post("vendor")) ? $this->input->post("vendor") : '';
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
             // $sop = !empty($_FILES["sop"]) ? $_FILES["sop"] : '';
             $client_id = $this->input->post("client_id");
             $this->db->select("id");
@@ -1359,7 +1366,10 @@ class Clients extends AdminController
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
-
+                if (isset($applicant_status)) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                }
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_vendor_successfully', _l('client'));
@@ -1388,6 +1398,8 @@ class Clients extends AdminController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sop_document = !empty($_FILES["sop_document"]) ? $_FILES["sop_document"] : '';
             $document_url = !empty($_FILES["document_url"]) ? $_FILES["document_url"] : '';
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+
             $client_id = $this->input->post("client_id");
             $this->db->select("id,email,vendor");
             $this->db->where('client_id', $client_id);
@@ -1419,6 +1431,10 @@ class Clients extends AdminController
                     $_update["sop"] = $document_url;
                 }
 
+                if (isset($applicant_status)) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                }
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
@@ -1489,6 +1505,7 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $document_status = $this->input->post("document_status");
 
+
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
             $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
@@ -1505,6 +1522,8 @@ class Clients extends AdminController
                     "document_update_datetime" => date('Y-m-d H:i:s'),
                     "document_updated_by" => get_staff_user_id()
                 );
+
+
 
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_documents', $_update);
@@ -1548,15 +1567,9 @@ class Clients extends AdminController
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                     $rows_affected = $this->db->affected_rows();
 
-                    if ($rows_affected > 0) {
-                        $data['resp_code'] = 'RCS';
-                        $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
-                        set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
-                    } else {
-                        $data['resp_code'] = 'RCS';
-                        $data['resp_desc'] = _l('update_client_profile_status_failed', _l('client'));
-                        set_alert('danger', _l('update_client_profile_status_failed', _l('client')));
-                    }
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
+                    set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
                 }
             } else {
                 $data['resp_code'] = 'ERR';
