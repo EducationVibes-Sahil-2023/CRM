@@ -100,15 +100,15 @@
                         -->
                         <style>.complete{color:blue;}</style>
 
-                           <div class="col-md-2 <?=($basicDetails->basic_details_status==1)? 'complete': ''?>" >BASIC DETAILS</div>
-                           <div class="col-md-3 <?=($basicDetails->admission_preferences_status==1)? 'complete': ''?>">ADMISSION PREFERENCES</div>
-                           <div class="col-md-3 <?=($basicDetails->academic_details_status==1)? 'complete': ''?>">ACADEMIC DETAILS</div>
-                           <div class="col-md-2 <?=($basicDetails->document_details_status==1)? 'complete': ''?>">
+                           <!-- <div class="col-md-2 <?=($basicDetails->basic_details_status==1)? 'complete': ''?>" >BASIC DETAILS</div> -->
+                           <!-- <div class="col-md-3 <?=($basicDetails->admission_preferences_status==1)? 'complete': ''?>">ADMISSION PREFERENCES</div> -->
+                           <!-- <div class="col-md-3 <?=($basicDetails->academic_details_status==1)? 'complete': ''?>">ACADEMIC DETAILS</div> -->
+                           <!-- <div class="col-md-2 <?=($basicDetails->document_details_status==1)? 'complete': ''?>">
                            <a data-group="attachments" href="<?php echo admin_url('clients/client/4?group=attachments'); ?>">
                               <i class="fa fa-paperclip menu-icon" aria-hidden="true"></i>Documents</a>
                            
-                           </div>
-                           <div class="col-md-2 <?=($basicDetails->admission_preferences_status==1)? 'complete': ''?>">DECLARATION &nbsp;<a href=""><i class="fa fa-file-pdf-o" aria-hidden="true"></i>Print</a></div>
+                           </div> -->
+                           <!-- <div class="col-md-2 <?=($basicDetails->admission_preferences_status==1)? 'complete': ''?>">DECLARATION &nbsp;<a href=""><i class="fa fa-file-pdf-o" aria-hidden="true"></i>Print</a></div> -->
                         </div>
                            <?php $this->load->view((isset($tab) ? $tab['view'] : 'admin/clients/groups/profile')); ?>
                      </div>
