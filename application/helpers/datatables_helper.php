@@ -20,7 +20,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $havingCount = '';
     /*
      * Paging
-     */ 
+     */
     $sLimit = '';
     if ((is_numeric($CI->input->post('start'))) && $CI->input->post('length') != '-1') {
         $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
@@ -456,4 +456,61 @@ function multi_strpos($haystack, $needles, $offset = 0)
             return strpos($haystack, $n, $offset);
     }
     return false;
+}
+
+
+function get_applicant_status($stage, $client_id)
+{
+    $CI = &get_instance();
+
+    $response = [];
+    if ($stage == 1) {
+        $result =  get_stage_1($stage, $client_id);
+        if (empty($result)) {
+            $response["applicant_stage_status"] = "Not Started";
+            $response["updated_date"] = "";
+        } else {
+            $response["applicant_stage_status"] = $result->applicant_stage_status;
+            $response["updated_date"] = $result->updated_date;
+        }
+    } else if ($stage == 2) {
+
+        $result =  get_stage_2($stage, $client_id);
+        if (empty($result)) {
+            $result = get_stage_1($stage, $client_id);
+        } else {
+            if ($result->profile_status) {
+                $response["applicant_stage_status"] = "Email Creation Complete and approved.";
+                $response["updated_date"] = $result->email_updated_date;
+            } else if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
+                $response["applicant_stage_status"] = "Email Creation Complete wait for Approval.";
+                $response["updated_date"] = $result->email_updated_date;
+            } else {
+                if (!empty($result->email)) {
+                    $response["applicant_stage_status"] = "Email Create.";
+                    $response["updated_date"] = $result->email_updated_date;
+                } else if (!empty($result->vendor)) {
+                    $response["applicant_stage_status"] = "Vendor Update.";
+                    $response["updated_date"] = $result->vendor_updated_date;
+                } else if (!empty($result->sop)) {
+                    $response["applicant_stage_status"] = "Sop Update.";
+                    $response["updated_date"] = $result->sop_updated_date;
+                }
+            }
+        }
+    }
+    return $response;
+}
+
+function get_stage_1($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "Select if(updated_date='0000-00-00 00:00:00',created_date) updated_date,if(document_status=1,'Document Approved','Pending') applicant_stage_status from " . db_prefix() . "client_documents  where client_id='{$client_id}' and status = 1 ";
+    return $result = $CI->db->query($sql)->row();
+}
+function get_stage_2($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "Select email,vendor,sop,ifnull(email_updated_date,created_date) email_updated_date,ifnull(sop_updated_date,created_date) sop_updated_date,ifnull(vendor_updated_date,created_date) vendor_updated_date,profile_status  from " . db_prefix() . "client_profile_creation  where client_id='{$client_id}' and status = 1 ";
+    return $result = $CI->db->query($sql)->row();
 }

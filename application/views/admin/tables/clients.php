@@ -20,7 +20,9 @@ $aColumns = [
     db_prefix() . 'leads_status.name as status_name',
     db_prefix() . 'leads_type.name as type_name',
     db_prefix() . 'leads_sources.name as source_name',
+
 ];
+
 
 $sIndexColumn = 'userid';
 $sTable       = db_prefix() . 'clients';
@@ -34,6 +36,7 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+    'LEFT JOIN ' . db_prefix() . 'applicant_tracker ON ' . db_prefix() . 'applicant_tracker.id = (' . db_prefix() . 'clients.applicant_status+1)',
 
 ];
 foreach ($custom_fields as $key => $field) {
@@ -234,7 +237,10 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'lastname',
     db_prefix() . 'clients.zip as zip',
     'registration_confirmed',
+    db_prefix() . 'applicant_tracker.name applicant_stage_name',
+    db_prefix() . 'applicant_tracker.id applicant_stage_id',
 ]);
+
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
@@ -307,7 +313,11 @@ foreach ($rResult as $aRow) {
     }
 
     $row[] = $groupsRow;
+    $row[] = $aRow['applicant_stage_name'];
+    $check_applicant_status = get_applicant_status($aRow['applicant_stage_id'], $aRow['userid']);
 
+    $row[] = !empty($check_applicant_status["applicant_stage_status"]) ? $check_applicant_status["applicant_stage_status"] : "";
+    $row[] = !empty($check_applicant_status["updated_date"]) ? $check_applicant_status["updated_date"] : "";
     $row[] = _dt($aRow['datecreated']);
     $row[] = $aRow['status_name'];
     $row[] = $aRow['type_name'];

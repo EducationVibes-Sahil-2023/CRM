@@ -3670,3 +3670,6 @@ $lang['update_client_profile_status_failed'] =  '%s profile creation update Fail
 $lang['update_custumer_update_successfully'] =  '%s university shortlisting update successfully.';
 $lang['update_custumer_failed_successfully'] =  '%s university shortlisting update Failed.';
 $lang['no_admin_assign_tracker'] =  'No admin assigned.';
+$lang['applicant_name_table'] =  'Applicant Stage';
+$lang['applicant_status_table'] =  'Applicant Status';
+$lang['applicant_updated_table'] =  'Applicant Updated by';
