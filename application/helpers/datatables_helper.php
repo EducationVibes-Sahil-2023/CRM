@@ -505,12 +505,12 @@ function get_applicant_status($stage, $client_id)
 function get_stage_1($stage, $client_id)
 {
     $CI = &get_instance();
-    $sql = "Select if(updated_date='0000-00-00 00:00:00',created_date) updated_date,if(document_status=1,'Document Approved','Pending') applicant_stage_status from " . db_prefix() . "client_documents  where client_id='{$client_id}' and status = 1 ";
+    $sql = "Select if(updated_date='0000-00-00 00:00:00',created_date,updated_date) updated_date,if(document_status=1,'Document Approved','Pending') applicant_stage_status from " . db_prefix() . "client_documents  where client_id='{$client_id}' and status = 1 ";
     return $result = $CI->db->query($sql)->row();
 }
 function get_stage_2($stage, $client_id)
 {
     $CI = &get_instance();
-    $sql = "Select email,vendor,sop,ifnull(email_updated_date,created_date) email_updated_date,ifnull(sop_updated_date,created_date) sop_updated_date,ifnull(vendor_updated_date,created_date) vendor_updated_date,profile_status  from " . db_prefix() . "client_profile_creation  where client_id='{$client_id}' and status = 1 ";
+    $sql = "Select email,vendor,sop,if(email_updated_date='0000-00-00 00:00:00',created_date,email_updated_date) email_updated_date,if(sop_updated_date='0000-00-00 00:00:00',created_date,sop_updated_date) sop_updated_date,if(vendor_updated_date='0000-00-00 00:00:00',created_date,vendor_updated_date) vendor_updated_date,profile_status  from " . db_prefix() . "client_profile_creation  where client_id='{$client_id}' and status = 1 ";
     return $result = $CI->db->query($sql)->row();
 }
