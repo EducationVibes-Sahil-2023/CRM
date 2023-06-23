@@ -1275,9 +1275,9 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= "SELECT sum(calls.duration) call_duration from " . db_prefix() . "leads l ";
+    $sql .= "SELECT sum( distinct calls.duration) call_duration from " . db_prefix() . "leads l ";
 
-    $sql .= "  JOIN " . db_prefix() . "notes n on ( l.id = n.rel_id ";
+    $sql .= " left JOIN " . db_prefix() . "notes n on ( l.id = n.rel_id ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
@@ -1289,7 +1289,7 @@ function calls_update_count($params = false, $max_status = 0)
     // }
     $sql .= " ) ";
 
-    $sql .= "  join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    $sql .= " left join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
@@ -1376,7 +1376,7 @@ function calls_update_count($params = false, $max_status = 0)
     }
 
 
-    $sql .= " group by calls.id,l.id" . $grup_by . " " . $sql_add . " ";
+    $sql .= " group by l.id,calls.id,n.id" . $grup_by . " " . $sql_add . " ";
     // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
 
