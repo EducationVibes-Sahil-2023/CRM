@@ -287,10 +287,11 @@
                                        <a href="javascript:void(0);">
                                           <img style="height: 25px;" src='<?php echo base_url($call['type_icon']); ?>'>
 
-                                          <small class="text-<?= $color ?>"><?= $call["call_status"] ?></small>
+                                          <small class="text-<?= $color ?>"><?= $call["call_status"] ?> </small>-<small>(<?= $call['call_type_name'] ?>)</small>
                                        </a>
                                     <?php } ?>
                                     <h5>
+                                       <small data-toggle="tooltip" data-title="<?php echo date('Y-m-d', ($call['call_start'])); ?>" ><?= !empty($call["call_start"]) ? date('Y-m-d', ($call['call_start'])) : '' ?></small><br>
                                        <?php
                                        if ($show_time) {
                                           if (!empty($call["call_start"])) { ?>
