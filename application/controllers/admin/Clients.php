@@ -1626,14 +1626,14 @@ class Clients extends AdminController
                 $ids = array_column($university_shortlisting_data, "id");
                 if ($update_university) {
                     $data['resp_code'] = 'RCS';
-                    $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
+                    $data['resp_desc'] = _l('update_custumer_update_successfully', _l('client'));
                     $data['ids'] = $ids;
                     $data['university_shortlisting'] = $university_shortlisting_data;
-                    set_alert('success', _l('update_client_profile_status_successfully', _l('client')));
+                    set_alert('success', _l('update_custumer_update_successfully', _l('client')));
                 } else {
                     $data['resp_code'] = 'RCS';
-                    $data['resp_desc'] = _l('update_client_profile_status_failed', _l('client'));
-                    set_alert('danger', _l('update_client_profile_status_failed', _l('client')));
+                    $data['resp_desc'] = _l('update_custumer_failed_successfully', _l('client'));
+                    set_alert('danger', _l('update_custumer_failed_successfully', _l('client')));
                 }
             } else {
                 $data['resp_code'] = 'ERR';
