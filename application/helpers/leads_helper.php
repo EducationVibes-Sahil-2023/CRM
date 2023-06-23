@@ -1275,8 +1275,21 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= "SELECT sum(calls.duration) call_duration from " . db_prefix() . "calls_activity_logs calls left join " . db_prefix() . "leads l on ( l.phonenumber = calls.contact and calls.staffid = l.assigned and LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    $sql .= "SELECT sum(calls.duration) call_duration from " . db_prefix() . "leads l ";
 
+    $sql .= " left JOIN " . db_prefix() . "notes n on ( l.id = n.rel_id ";
+
+    if (!empty($params['assigned'])) {
+        $sql .= " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
+    }
+    // if (!empty($params['up_to_date'])) {
+    //     $up_from_date = $params['up_from_date'];
+    //     $up_to_date = $params['up_to_date'];
+    //     $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    // }
+    $sql .= " ) ";
+
+    $sql .= " left join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
@@ -1284,17 +1297,7 @@ function calls_update_count($params = false, $max_status = 0)
 
     $sql .= " ) ";
 
-    $sql .= " left join " . db_prefix() . "notes n ON ( n.rel_id = l.id    ";
 
-    if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    }
-
-
-
-    $sql .= ' ) ';
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' left join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
