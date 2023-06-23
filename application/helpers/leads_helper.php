@@ -1403,12 +1403,12 @@ function convertToHMS($seconds, $status = 0)
     }
 }
 
-function call_duration($phone)
+function call_duration($phone, $staff_id)
 {
     $CI = &get_instance();
     $sql = " SELECT IFNULL(SUM(duration), 0) AS duration
     FROM " . db_prefix() . "calls_activity_logs 
-    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')
+    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = '{$staff_id}'
     LIMIT 1 ";
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
