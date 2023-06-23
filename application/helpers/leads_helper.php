@@ -1289,7 +1289,7 @@ function calls_update_count($params = false, $max_status = 0)
     // }
     $sql .= " ) ";
 
-    $sql .= " left join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    $sql .= " join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
@@ -1300,7 +1300,7 @@ function calls_update_count($params = false, $max_status = 0)
 
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
-        $sql .= ' left join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
+        $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
     }
 
     if (!empty($params['followup_to_date'])) {
