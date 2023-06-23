@@ -1275,17 +1275,16 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= "SELECT sum(distinct calls.duration) call_duration FROM tblleads AS l INNER JOIN   " . db_prefix() . "calls_activity_logs AS calls ON ( FIND_IN_SET(RIGHT(TRIM(l.phonenumber), 10), (SELECT GROUP_CONCAT(DISTINCT RIGHT(TRIM(contact), 10)) FROM " . db_prefix() . "calls_activity_logs WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'))) > 0 ";
+    $sql .= "SELECT sum(calls.duration) call_duration from " . db_prefix() . "calls_activity_logs calls inner join " . db_prefix() . "leads l on ( l.phonenumber = calls.contact and calls.staffid = l.assigned ";
 
 
     if (!empty($params['assigned'])) {
-        // $tids = " AND l.assigned = " . $params['assigned'];
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
     }
 
     $sql .= " ) ";
 
-    $sql .= " left join " . db_prefix() . "notes n ON ( l.id = n.rel_id   ";
+    $sql .= " inner join " . db_prefix() . "notes n ON ( n.rel_id = l.id    ";
 
     if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
@@ -1311,16 +1310,16 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= ' AND ' . $whereNoViewPermission;
     }
 
-    if (!empty($params['assigned'])) {
-        // $tids = " AND l.assigned = " . $params['assigned'];
-        $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
+    // if (!empty($params['assigned'])) {
+    //     // $tids = " AND l.assigned = " . $params['assigned'];
+    //     $tids = " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
 
-        $sql .= $tids;
-    } else {
-        if ($role == 3) {
-            $sql .= $tids;
-        }
-    }
+    //     $sql .= $tids;
+    // } else {
+    //     if ($role == 3) {
+    //         $sql .= $tids;
+    //     }
+    // }
 
     if (!empty($params['status'])) {
         // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
@@ -1377,6 +1376,7 @@ function calls_update_count($params = false, $max_status = 0)
     $sql .= " group by calls.contact" . $grup_by . " " . $sql_add . " ";
     // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
+
     // die;
     $sql = "SELECT SUM(call_duration) as total_sum FROM ( {$sql} )  as subquery ";
 

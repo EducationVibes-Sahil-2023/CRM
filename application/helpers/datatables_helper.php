@@ -269,7 +269,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sOrder
     $sLimit
     ";
-
+   
     $rResult = $CI->db->query($sQuery)->result_array();
 
     $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [
@@ -486,13 +486,16 @@ function get_applicant_status($stage, $client_id)
                 $response["applicant_stage_status"] = "Email Creation Complete wait for Approval.";
                 $response["updated_date"] = $result->email_updated_date;
             } else {
+
                 if (!empty($result->email)) {
                     $response["applicant_stage_status"] = "Email Create.";
                     $response["updated_date"] = $result->email_updated_date;
-                } else if (!empty($result->vendor)) {
+                }
+                if (!empty($result->vendor)) {
                     $response["applicant_stage_status"] = "Vendor Update.";
                     $response["updated_date"] = $result->vendor_updated_date;
-                } else if (!empty($result->sop)) {
+                }
+                if (!empty($result->sop)) {
                     $response["applicant_stage_status"] = "Sop Update.";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
