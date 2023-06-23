@@ -381,6 +381,18 @@
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
                      ),
                      array(
+                        'name' => _l('applicant_name_table'),
+                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
+                     ),
+                     array(
+                        'name' => _l('applicant_status_table'),
+                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
+                     ),
+                     array(
+                        'name' => _l('applicant_updated_table'),
+                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
+                     ),
+                     array(
                         'name' => _l('OnBoarding Date'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
