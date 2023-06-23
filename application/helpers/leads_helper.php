@@ -1376,7 +1376,7 @@ function calls_update_count($params = false, $max_status = 0)
     }
 
 
-    $sql .= " group by l.id,calls.id,n.id" . $grup_by . " " . $sql_add . " ";
+    $sql .= " group by calls.contact" . $grup_by . " " . $sql_add . " ";
     // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
     $sql = trim($sql);
 
