@@ -1275,7 +1275,7 @@ function calls_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
 
-    $sql .= "SELECT sum(calls.duration) call_duration from " . db_prefix() . "calls_activity_logs calls inner join " . db_prefix() . "leads l on ( l.phonenumber = calls.contact and calls.staffid = l.assigned ";
+    $sql .= "SELECT sum(calls.duration) call_duration from " . db_prefix() . "calls_activity_logs calls left join " . db_prefix() . "leads l on ( l.phonenumber = calls.contact and calls.staffid = l.assigned and LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
 
     if (!empty($params['assigned'])) {
@@ -1284,7 +1284,7 @@ function calls_update_count($params = false, $max_status = 0)
 
     $sql .= " ) ";
 
-    $sql .= " inner join " . db_prefix() . "notes n ON ( n.rel_id = l.id    ";
+    $sql .= " left join " . db_prefix() . "notes n ON ( n.rel_id = l.id    ";
 
     if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
