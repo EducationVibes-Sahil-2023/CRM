@@ -452,13 +452,31 @@ if (empty($customer_admins)) { ?>
                                 <div class="row">
                                     <div class="col-md-6"></div>
                                     <div class="col-md-4">
-                                        <input type="file" id="sop_document" data-url="<?= !empty($profile_creation_data[0]["sop"]) ? $profile_creation_data[0]["sop"] : '' ?>" name="sop_document" class="form-control" accept=".pdf,.doc,.docx">
+                                        <div class="">
+                                            <input type="file" id="sop_document" data-url="<?= !empty($profile_creation_data[0]["sop"]) ? $profile_creation_data[0]["sop"] : '' ?>" name="sop_document" class="form-control" accept=".pdf,.doc,.docx">
+                                        </div>
+                                        <div>
+                                            <?php if (!empty($profile_creation_data[0]["sop"])) {
+                                                $file_name = "";
+                                                if (!empty($profile_creation_data[0]["sop"])) {
+                                                    $file_name =  trim(explode("_", basename($profile_creation_data[0]["sop"]))[2]);
+                                                }
+                                            ?>
 
+                                                <div class="row mt-5 margin-bottom">
+                                                    <div class="col-md-10">
+                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                    </div>
+                                                    <div class="col-md-2 file-download-block">
+                                                        <a class="col-md-12 download_document" download href="<?= base_url($profile_creation_data[0]["sop"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                    </div>
+                                                </div>
+
+                                            <?php } ?>
+                                        </div>
                                     </div>
                                     <div class="col-md-2 edit_save_block sop_creation_block">
-                                        <?php if (!empty($profile_creation_data[0]["sop"])) { ?>
-                                            <a class="col-md-1 download_document" download href="<?= base_url($profile_creation_data[0]["sop"]) ?>" style="" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                        <?php } ?>
+
 
                                         <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
                                         <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'sop')"></i>
@@ -759,7 +777,7 @@ if (empty($customer_admins)) { ?>
 
         // Use Promise.all to wait for all promises to resolve
         Promise.all(promises).then(function() {
-            if (check_disabled) {
+            if (check_disabled && profile_verification != 1) {
                 $("#profile_div").find(".next").attr("disabled", true);
             } else {
                 $("#profile_div").find(".next").attr("disabled", false);
@@ -844,6 +862,7 @@ if (empty($customer_admins)) { ?>
                 }
 
                 let html = '';
+                
                 if (university_count > 0) {
                     if (university_count_not === 0) {
                         check_university_status = true;
@@ -1584,11 +1603,13 @@ if (empty($customer_admins)) { ?>
         }
     }
 
+
     function update_university() {
         return new Promise(async (resolve, reject) => {
             let upload_data = new FormData();
             let university_shortlisting = [];
             let universityVendorMap = {};
+            let stop_status = true;
             $(".add_university_div_block .university_div").each(function() {
                 let university_id = $(this).find("input[name='university_id']").val();
                 let select_university = $(this).find("select[name='select_university']").val();
@@ -1605,32 +1626,36 @@ if (empty($customer_admins)) { ?>
                 if (!universityVendorMap.hasOwnProperty(select_university)) {
                     universityVendorMap[select_university] = select_university_vendor;
                 } else {
+                    hide_loader();
                     alert_float("danger", "Duplicate entry found: university '" + select_university + "' connected with multiple vendors.");
+                    stop_status = false;
                     return false;
                 }
 
             });
 
-            upload_data.append("university_shortlisting", JSON.stringify(university_shortlisting));
-            try {
+            if (stop_status) {
+                upload_data.append("university_shortlisting", JSON.stringify(university_shortlisting));
+                try {
 
-                upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
-                upload_data.append("client_id", client_id);
-                upload_data.append("applicant_status", (step_stage - 1));
-                let response = await $.ajax({
-                    url: "<?= base_url("admin/clients/update_university") ?>",
-                    method: "POST",
-                    data: upload_data,
-                    contentType: false,
-                    processData: false
-                });
+                    upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+                    upload_data.append("client_id", client_id);
+                    upload_data.append("applicant_status", (step_stage - 1));
+                    let response = await $.ajax({
+                        url: "<?= base_url("admin/clients/update_university") ?>",
+                        method: "POST",
+                        data: upload_data,
+                        contentType: false,
+                        processData: false
+                    });
 
-                // Handle the success response from the server
-                resolve(JSON.parse(response));
-            } catch (error) {
-                // Handle the error response from the server
-                console.error(error);
-                reject(error);
+                    // Handle the success response from the server
+                    resolve(JSON.parse(response));
+                } catch (error) {
+                    // Handle the error response from the server
+                    console.error(error);
+                    reject(error);
+                }
             }
         });
     }
