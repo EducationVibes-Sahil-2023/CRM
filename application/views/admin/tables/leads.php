@@ -44,6 +44,7 @@ if (is_gdpr() && $consentLeads == '1') {
 
 $aColumns = array_merge($aColumns, [
     'company',
+    db_prefix() . 'leads.assigned as staffid',
 
     db_prefix() . 'leads.email as email',
 
@@ -407,6 +408,7 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
+
     $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
     // $row[]    = 0;
 
