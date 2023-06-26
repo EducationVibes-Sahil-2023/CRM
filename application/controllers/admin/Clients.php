@@ -1602,7 +1602,7 @@ class Clients extends AdminController
                     $check_ = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
 
                     if (!empty($check_->id)) {
-                        array_push($university_shortlisting_update_arr, array("university_name" => $university_s["university"], "vendor_id" => $university_s["vendor"], "status" => 1, "id" => $check_->id));
+                        array_push($university_shortlisting_update_arr, array("university_name" => $university_s["university"], "vendor_id" => $university_s["vendor"], "status" => 1, "id" => $check_->id, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s')));
                     } else {
                         array_push($university_shortlisting_insert_arr, array("client_id" => $client_id, "university_name" => $university_s["university"], "vendor_id" => $university_s["vendor"], "status" => 1, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s')));
                     }

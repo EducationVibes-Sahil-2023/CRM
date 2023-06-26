@@ -382,15 +382,15 @@ if (empty($customer_admins)) { ?>
                                         <div class="row col-md-12 document_upload_files ">
                                             <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= $docs["label_name"] ?>"></div>
                                             <div class="col-md-5">
-                                                <div class="margin-bottom row">
-                                                    <input class="col-md-5 form-control" type="file" data-url="<?= $docs["document_file"] ?>" name="document_file[]" placeholder="">
+                                                <div class="margin-bottom ">
+                                                    <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $docs["document_file"] ?>" name="document_file[]" placeholder="">
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-md-10">
                                                         <p class="document-file-name"><?= $file_name ?></p>
                                                     </div>
                                                     <div class="col-md-2 file-download-block">
-                                                        <a class="col-md-12 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                        <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                     </div>
                                                 </div>
 
@@ -398,7 +398,9 @@ if (empty($customer_admins)) { ?>
 
                                             <div class="col-md-2">
                                                 <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
-                                                <button class="col-md-2 add_document" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+
+                                                <button style="display:<?= ($d_key == 0) ? 'none' : '' ?>;" class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+
                                                 <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
                                             </div>
 
@@ -410,9 +412,9 @@ if (empty($customer_admins)) { ?>
                                     <div id="upload_documents">
                                         <div class="row col-md-12 document_upload_files ">
                                             <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
-                                            <div class="col-md-5"><input class="col-md-5 form-control" type="file" name="document_file[]" placeholder=""></div>
+                                            <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" name="document_file[]" placeholder=""></div>
                                             <div class="col-md-2">
-                                                <button class="col-md-2 add_document" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                                <button class="col-md-2 add_document remove_document_btn" style="display:none;" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                                 <button class="col-md-2 add_document add_document_btn" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
                                             </div>
                                         </div>
@@ -717,6 +719,7 @@ if (empty($customer_admins)) { ?>
             $(".add_university_div_block .university_div").find('input, select').prop('disabled', true).selectpicker('refresh');
             $("#university_div").find(".add_document_btn").hide();
             $("#university_div").find(".next.action-button").prop('disabled', true);
+
         }
 
         $("select[name='university_application_status']").each(function() {
@@ -816,25 +819,33 @@ if (empty($customer_admins)) { ?>
             let html = `<div class="row col-md-12 document_upload_files">
                                 <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
                                 <div class="col-md-5">
-                                <div class="margin-bottom row" >
-                                <input class="col-md-5 form-control" type="file" name="document_file[]" placeholder=""></div>
+                                <div class="margin-bottom " >
+                                <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" name="document_file[]" placeholder=""></div>
                                            </div>     
                                 <div class="col-md-2">
-                                <button class="col-md-6 add_document" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                <button class="col-md-6 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                 <button class="col-md-6 add_document add_document_btn" type="button" onclick="add_documents(this)"><i class="fa fa-plus " aria-hidden="true"></i></button>
                                 </div>
                     </div>`;
             $("#upload_documents").append(html);
             $("#upload_documents").find(".add_document_btn").hide();
+            $("#upload_documents").find(".remove_document_btn").show();
             $("#upload_documents").find(".add_document_btn:last").show();
+            if ($(".document_upload_files ").length == 1) {
+                $(".document_upload_files ").find(".remove_document_btn").hide();
+            }
         }
 
     }
 
     function remove_document(obj) {
         $(obj).parents(".document_upload_files").remove();
+        $("#upload_documents").find(".remove_document_btn").show();
         $("#upload_documents").find(".add_document_btn").hide();
         $("#upload_documents").find(".add_document_btn:last").show();
+        if ($(".document_upload_files ").length == 1) {
+            $(".document_upload_files ").find(".remove_document_btn").hide();
+        }
     }
 
     function is_validate_application_status(status = 0) {
@@ -862,7 +873,7 @@ if (empty($customer_admins)) { ?>
                 }
 
                 let html = '';
-                
+
                 if (university_count > 0) {
                     if (university_count_not === 0) {
                         check_university_status = true;
@@ -1559,6 +1570,7 @@ if (empty($customer_admins)) { ?>
         if ($(".university_div_").length == 1) {
             $(".university_div_").find(".remove_university_btn").hide();
         }
+        // $("#university_div").find('button.next').attr("disabled", false);
 
     }
 
