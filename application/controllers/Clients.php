@@ -1929,7 +1929,7 @@ class Clients extends ClientsController
             foreach ($_POST["university_id"] as $key => $university_id) {
                 $this->db->where("id", $university_id);
                 $rows_affected = $this->db->update(db_prefix() . 'client_university_shortlisting', [
-                    'university_status' => $_POST["university_application_status"][$key]
+                    'university_status' => $_POST["university_application_status"][$key],'client_updated_by'=>get_client_user_id(),'client_updated_date'=> date('Y-m-d H:i:s')
                 ]);
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';

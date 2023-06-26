@@ -486,7 +486,6 @@ function get_applicant_status($stage, $client_id)
                 $response["applicant_stage_status"] = "Email Creation Complete wait for Approval.";
                 $response["updated_date"] = $result->email_updated_date;
             } else {
-
                 if (!empty($result->email)) {
                     $response["applicant_stage_status"] = "Email Create.";
                     $response["updated_date"] = $result->email_updated_date;
@@ -499,6 +498,55 @@ function get_applicant_status($stage, $client_id)
                     $response["applicant_stage_status"] = "Sop Update.";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
+            }
+        }
+    } else if ($stage == 3) {
+        $result =  get_stage_3($stage, $client_id);
+        if (empty($result)) {
+            $response["applicant_stage_status"] = "University Shortlisting is pending by admin.";
+            $response["updated_date"] = "";
+        } else {
+            $max_date = $result->created_date;
+
+            $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+            $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+            if ($date1 !== null && $date2 !== null) {
+                if ($date1 > $date2) {
+                    $max_date = $result->created_date;
+                } elseif ($date1 < $date2) {
+                    $max_date = $result->updated_date;
+                } else {
+                    $max_date = $result->created_date;
+                }
+            } elseif ($date1 === null && $date2 === null) {
+            } elseif ($date1 === null) {
+            } else {
+                $max_date = $result->created_date;
+            }
+            // if ($client_id == 175) {
+            //     echo $result->university_count;
+            //     echo "<br>";
+            //     echo $result->approved_count;
+            //     echo "<br>";
+            //     echo $result->reject_count;
+            //     echo "<br>";
+            //     die;
+            // }
+
+
+            if (!empty($result->university_count) && !empty($result->approved_count) && ($result->university_count == $result->approved_count)) {
+                $response["applicant_stage_status"] = "University Shortlisting approved by student.";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count) && !empty($result->reject_count) && ($result->university_count == $result->reject_count)) {
+                $response["applicant_stage_status"] = "University Shortlisting rejected by student.";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count) && !empty($result->approved_count) && !empty($result->reject_count)) {
+                $response["applicant_stage_status"] = "Total " . $result->university_count . " university shortlisting by admin." . $result->approved_count . " Approved AND " . $result->reject_count . " Reject by Student";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count)) {
+                $response["applicant_stage_status"] = "University Shortlisting list send to student for approval.";
+                $response["updated_date"] = $max_date;
             }
         }
     }
@@ -515,5 +563,22 @@ function get_stage_2($stage, $client_id)
 {
     $CI = &get_instance();
     $sql = "Select email,vendor,sop,if(email_updated_date='0000-00-00 00:00:00',created_date,email_updated_date) email_updated_date,if(sop_updated_date='0000-00-00 00:00:00',created_date,sop_updated_date) sop_updated_date,if(vendor_updated_date='0000-00-00 00:00:00',created_date,vendor_updated_date) vendor_updated_date,profile_status  from " . db_prefix() . "client_profile_creation  where client_id='{$client_id}' and status = 1 ";
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_3($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "SELECT 
+    COUNT(1) AS university_count,
+    SUM(IF(university_status = 1, 1, 0)) AS approved_count,
+    SUM(IF(university_status = 2, 1, 0)) AS reject_count,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(client_updated_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
     return $result = $CI->db->query($sql)->row();
 }

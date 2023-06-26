@@ -79,6 +79,7 @@
                 response = JSON.parse(response);
                 if (response.resp_code == "RCS") {
                     alert_float("success", response.resp_desc);
+                    location.reload();
                 } else {
                     alert_float("danger", response.resp_desc);
                 }
