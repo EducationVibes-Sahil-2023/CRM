@@ -1,1419 +1,2551 @@
 <?php
 
+
+
 defined('BASEPATH') or exit('No direct script access allowed');
 
-hooks()->add_action('app_admin_head', 'leads_app_admin_head_data');
 
-function leads_app_admin_head_data()
+
+class Leads_model extends App_Model
+
 {
-?>
-    <script>
-        var leadUniqueValidationFields = <?php echo json_decode(json_encode(get_option('lead_unique_validation'))); ?>;
-        var leadAttachmentsDropzone;
-    </script>
-<?php
-}
 
-/**
- * Check if the user is lead creator
- * @since  Version 1.0.4
- * @param  mixed  $leadid leadid
- * @param  mixed  $staff_id staff id (Optional)
- * @return boolean
- */
+    public function __construct()
 
-function is_lead_creator($lead_id, $staff_id = '')
-{
-    if (!is_numeric($staff_id)) {
-        $staff_id = get_staff_user_id();
+    {
+
+        parent::__construct();
     }
 
-    return total_rows(db_prefix() . 'leads', [
-        'addedfrom' => $staff_id,
-        'id'        => $lead_id,
-    ]) > 0;
-}
-
-/**
- * Lead consent URL
- * @param  mixed $id lead id
- * @return string
- */
-function lead_consent_url($id)
-{
-    return site_url('consent/l/' . get_lead_hash($id));
-}
-
-/**
- * Lead public form URL
- * @param  mixed $id lead id
- * @return string
- */
-function leads_public_url($id)
-{
-    return site_url('forms/l/' . get_lead_hash($id));
-}
-
-/**
- * Get and generate lead hash if don't exists.
- * @param  mixed $id  lead id
- * @return string
- */
-function get_lead_hash($id)
-{
-    $CI   = &get_instance();
-    $hash = '';
-
-    $CI->db->select('hash');
-    $CI->db->where('id', $id);
-    $lead = $CI->db->get(db_prefix() . 'leads')->row();
-    if ($lead) {
-        $hash = $lead->hash;
-        if (empty($hash)) {
-            $hash = app_generate_hash() . '-' . app_generate_hash();
-            $CI->db->where('id', $id);
-            $CI->db->update(db_prefix() . 'leads', ['hash' => $hash]);
-        }
-    }
-
-    return $hash;
-}
-
-/**
- * Get leads summary
- * @return array
- */
-function get_leads_summary()
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
-
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(addedfrom = ' . get_staff_user_id() . ' OR assigned=' . get_staff_user_id() . ' OR is_public = 1)';
-
-    $statuses[] = [
-        'lost'  => true,
-        'name'  => _l('lost_leads'),
-        'color' => '#f0f0f0',
-    ];
-
-    /*    $statuses[] = [
-        'junk'  => true,
-        'name'  => _l('junk_leads'),
-        'color' => '',
-    ];*/
-
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-
-        $teamids = $CI->db->query("select staffid
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // return $query;
-        // array_push($teamids,get_staff_user_id());
-        // foreach ($teamids as $t) {
-        # code...
-        // }
-        $idsarr = array_column($teamids, 'staffid');
-
-        // echo "<pre>";print_r($idsarr);
-        $sids = implode(",", $idsarr);
-        // echo "<pre>";print_r($sids);
-
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
-        // print_r($where);die;
-    }
-
-    foreach ($statuses as $status) {
-        $sql .= ' SELECT COUNT(*) as total';
-        $sql .= ' FROM ' . db_prefix() . 'leads';
-
-        if (isset($status['lost'])) {
-            $sql .= ' WHERE lost=1';
-        } elseif (isset($status['junk'])) {
-            $sql .= ' WHERE junk=1';
-        } else {
-            $sql .= ' WHERE status=' . $status['id'];
-        }
-        if (!$has_permission_view) {
-            $sql .= ' AND ' . $whereNoViewPermission;
-        }
-        if ($role == 3) {
-            $sql .= $tids;
-        }
-        $sql .= ' UNION ALL ';
-        $sql = trim($sql);
-    }
-    //print_r($sql);die;
-    $result = [];
-
-    // Remove the last UNION ALL
-    $sql    = substr($sql, 0, -10);
-    $result = $CI->db->query($sql)->result();
-
-    // if (!$has_permission_view) {
-    //     $CI->db->where($whereNoViewPermission);
-    // }
-
-    $total_leads = $CI->db->count_all_results(db_prefix() . 'leads');
-
-    $totalLeads = 0;
-    foreach ($statuses as $key => $status) {
-        if (isset($status['lost']) || isset($status['junk'])) {
-            $statuses[$key]['percent'] = ($total_leads > 0 ? number_format(($result[$key]->total * 100) / $total_leads, 2) : 0);
-        }
-        $statuses[$key]['total'] = $result[$key]->total;
-        if ($status["isdefault"] == 0) {
-
-            $totalLeads += $result[$key]->total;
-        } else {
-            $statuses[$key]['total'] = 0;
-        }
-    }
-    $statuses[] = array("name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads);
-
-    return $statuses;
-}
-
-function get_leads_summary_filter($params)
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
 
 
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+    /**
 
-    // $statuses[] = [
-    //     'lost'  => true,
-    //     'name'  => _l('lost_leads'),
-    //     'color' => '#f0f0f0',
-    // ];
+     * Get lead
 
+     * @param  string $id Optional - leadid
 
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        $teamids = $CI->db->query("select staffid
-        	from    (select * from tblstaff
-        	where active = '1' order by reporting_person, staffid) products_sorted,
-        			(select @pv := $sid) initialisation
-        	where   find_in_set(reporting_person, @pv)
-        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+     * @return mixed
 
-        // $query = [];
-        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+     */
 
-        // if (!empty($staff_ids)) {
-        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        // }
-        // $idsarr = array_column($query, 'staffid');
-        // $sids = implode(",", $idsarr);
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
+    public function get($id = '', $where = [])
 
-        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-    }
+    {
 
-    foreach ($statuses as $status) {
-        $sql .= ' SELECT SUM(subquery.total) AS total FROM ( ';
-        $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
-        $sql .= ' FROM ' . db_prefix() . 'leads';
+        $this->db->select('*,' . db_prefix() . 'leads.name, ' . db_prefix() . 'leads.id,' . db_prefix() . 'leads_status.name as status_name,' . db_prefix() . 'leads_sources.name as source_name,' . db_prefix() . 'leads_type.name as type_name');
 
-        if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
-            $sql .= ' join tblcustomfieldsvalues ON  tblleads.id=tblcustomfieldsvalues.relid ';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
-        } else if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $sql .= ' join tblreminders  on  tblreminders.rel_id = tblleads.id ';
-        }
+        $this->db->join(db_prefix() . 'leads_status', db_prefix() . 'leads_status.id=' . db_prefix() . 'leads.status', 'left');
 
-        if (isset($status['lost'])) {
-            $sql .= ' WHERE lost=1';
-        } elseif (isset($status['junk'])) {
-            $sql .= ' WHERE junk=1';
-        } else {
-            $sql .= ' WHERE status=' . $status['id'];
-        }
-        if (!$has_permission_view) {
-            $sql .= ' AND ' . $whereNoViewPermission;
-        }
-        if (!empty($params['assigned'])) {
-            // $tids = " AND assigned = " . $params['assigned'];
-            $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
-            $sql .= $tids;
-        } else {
-            if ($role == 3) {
-                $sql .= $tids;
+        $this->db->join(db_prefix() . 'leads_sources', db_prefix() . 'leads_sources.id=' . db_prefix() . 'leads.source', 'left');
+
+        $this->db->join(db_prefix() . 'leads_type', db_prefix() . 'leads_type.id=' . db_prefix() . 'leads.type', 'left');
+
+        $this->db->where($where);
+
+        if (is_numeric($id)) {
+
+            $this->db->where(db_prefix() . 'leads.id', $id);
+
+            $lead = $this->db->get(db_prefix() . 'leads')->row();
+
+            if ($lead) {
+
+                if ($lead->from_form_id != 0) {
+
+                    $lead->form_data = $this->get_form([
+
+                        'id' => $lead->from_form_id,
+
+                    ]);
+                }
+
+                $lead->attachments = $this->get_lead_attachments($id);
+
+                $lead->public_url  = leads_public_url($id);
             }
-        }
 
-        if (!empty($params['source'])) {
-            $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
-        }
 
-        if (!empty($params['neet_score'])) {
-            $neet_range = explode("-", $params['neet_score']);
-            // $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" order by id desc limit 1';
 
-            $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
-        }
-        if (!empty($params['lead_type'])) {
-            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+            return $lead;
         }
 
 
-        // if (!empty($params['source'])) {
-        //     $sql .= ' AND source =' . $CI->db->escape_str($params['source']);
-        // }
 
-        /*if (isset($params['course'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
-        }
-		 
-		 
-		if (isset($params['degree'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
-        }*/
-
-
-        if (!empty($params['to_date'])) {
-            $from_date = $params['from_date'];
-            $to_date = $params['to_date'];
-            $sql .= ' AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date = $params['up_from_date'];
-            $up_to_date = $params['up_to_date'];
-            //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            //             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $followup_from_date = $params['followup_from_date'];
-            $followup_to_date = $params['followup_to_date'];
-            $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-        }
-
-        if (!empty($params['assign_to_date'])) {
-            $assign_from_date = $params['assign_from_date'];
-            $assign_to_date = $params['assign_to_date'];
-            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-        }
-
-        if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-            $min = $params['update_count_min'];
-            $max = $params['update_count_max'];
-            $sql .= ' GROUP BY tblleads.id HAVING COUNT(tblleads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
-        }
-
-        $grup_by = "";
-        if (!empty($params['neet_score'])) {
-            // $grup_by = db_prefix() . 'customfieldsvalues.relid';
-            // $sql .= ' group by ' . $grup_by;
-        }
-
-        $sql .= " ) AS subquery ";
-        $sql .= ' UNION ALL ';
-        $sql = trim($sql);
+        return $this->db->get(db_prefix() . 'leads')->result_array();
     }
-    $result = [];
 
-    // Remove the last UNION ALL
-    $sql    = substr($sql, 0, -10);
+    public function get_customfieldsvalues($fid)
+    {
+        $this->db->select('DISTINCT(`value`)');
+        $this->db->where('fieldid', $fid);
+        $consents = $this->db->get(db_prefix() . 'customfieldsvalues')->result_array();
 
-    $result = $CI->db->query($sql)->result();
-
-    // if (!$has_permission_view) {
-    //     $CI->db->where($whereNoViewPermission);
-    // }
-
-    // $total_leads = $CI->db->count_all_results(db_prefix() . 'leads');
+        return $consents;
+    }
 
 
-    // foreach ($statuses as $key => $status) {
-    //     if (isset($status['lost']) || isset($status['junk'])) {
-    //         $statuses[$key]['percent'] = ($total_leads > 0 ? number_format(($result[$key]->total * 100) / $total_leads, 2) : 0);
-    //     }
+    public function do_kanban_query($status, $search = '', $page = 1, $sort = [], $count = false)
 
-    //     $statuses[$key]['total'] = $result[$key]->total;
-    // }
+    {
 
-    $totalLeads = 0;
+        $limit                          = get_option('leads_kanban_limit');
 
-    foreach ($statuses as $key => $status) {
-        // if (isset($status['lost']) || isset($status['junk'])) {
-        //     $statuses[$key]['percent'] = ($total_leads > 0 ? number_format(($result[$key]->total * 100) / $total_leads, 2) : 0);
-        // }
+        $default_leads_kanban_sort      = get_option('default_leads_kanban_sort');
 
-        $statuses[$key]['total'] = 0;
-        if (!empty($_POST["status"])) {
-            if (in_array($status["id"], $_POST["status"])) {
-                $statuses[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
+        $default_leads_kanban_sort_type = get_option('default_leads_kanban_sort_type');
+
+        $has_permission_view            = has_permission('leads', '', 'view');
+
+
+
+        $this->db->select(db_prefix() . 'leads.title, ' . db_prefix() . 'leads.website, ' . db_prefix() . 'leads.lead_value, ' . db_prefix() . 'leads.address, ' . db_prefix() . 'leads.city, ' . db_prefix() . 'leads.state, ' . db_prefix() . 'leads.country, ' . db_prefix() . 'leads.zip, ' . db_prefix() . 'leads.name as lead_name,' . db_prefix() . 'leads_sources.name as source_name,' . db_prefix() . 'leads.id as id,' . db_prefix() . 'leads.assigned,' . db_prefix() . 'leads.email,' . db_prefix() . 'leads.phonenumber,' . db_prefix() . 'leads.company,' . db_prefix() . 'leads.dateadded,' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.lastcontact,(SELECT COUNT(*) FROM ' . db_prefix() . 'clients WHERE leadid=' . db_prefix() . 'leads.id) as is_lead_client, (SELECT COUNT(id) FROM ' . db_prefix() . 'files WHERE rel_id=' . db_prefix() . 'leads.id AND rel_type="lead") as total_files, (SELECT COUNT(id) FROM ' . db_prefix() . 'notes WHERE rel_id=' . db_prefix() . 'leads.id AND rel_type="lead") as total_notes,(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC) as tags');
+
+        $this->db->from(db_prefix() . 'leads');
+
+        $this->db->join(db_prefix() . 'leads_sources', db_prefix() . 'leads_sources.id=' . db_prefix() . 'leads.source');
+
+        $this->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid=' . db_prefix() . 'leads.assigned', 'left');
+
+        $this->db->where('status', $status);
+
+        if (!$has_permission_view) {
+
+            $this->db->where('(assigned = ' . get_staff_user_id() . ' OR addedfrom=' . get_staff_user_id() . ' OR is_public=1)');
+        }
+
+        if ($search != '') {
+
+            if (!startsWith($search, '#')) {
+
+                $this->db->where('(' . db_prefix() . 'leads.name LIKE "%' . $this->db->escape_like_str($search) . '%" ESCAPE \'!\' OR ' . db_prefix() . 'leads_sources.name LIKE "%' . $this->db->escape_like_str($search) . '%" ESCAPE \'!\' OR ' . db_prefix() . 'leads.email LIKE "%' . $this->db->escape_like_str($search) . '%" ESCAPE \'!\' OR ' . db_prefix() . 'leads.phonenumber LIKE "%' . $this->db->escape_like_str($search) . '%" ESCAPE \'!\' OR ' . db_prefix() . 'leads.company LIKE "%' . $this->db->escape_like_str($search) . '%" ESCAPE \'!\' OR CONCAT(' . db_prefix() . 'staff.firstname, \' \', ' . db_prefix() . 'staff.lastname) LIKE "%' . $this->db->escape_like_str($search) . '%" ESCAPE \'!\')');
             } else {
-                $statuses[$key]['total'] = 0;
+
+                $this->db->where(db_prefix() . 'leads.id IN
+
+                (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
+
+                (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . $this->db->escape_str(strafter($search, '#')) . '")
+
+                AND ' . db_prefix() . 'taggables.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
+
+                ');
             }
-        } else {
-            $statuses[$key]['total']  = !empty($result[$key]->total) ? $result[$key]->total : 0;
         }
 
-        $totalLeads += !empty($statuses[$key]['total']) ? $statuses[$key]['total'] : 0;
+
+
+        if (isset($sort['sort_by']) && $sort['sort_by'] && isset($sort['sort']) && $sort['sort']) {
+
+            $this->db->order_by($sort['sort_by'], $sort['sort']);
+        } else {
+
+            $this->db->order_by($default_leads_kanban_sort, $default_leads_kanban_sort_type);
+        }
+
+
+
+        if ($count == false) {
+
+            if ($page > 1) {
+
+                $page--;
+
+                $position = ($page * $limit);
+
+                $this->db->limit($limit, $position);
+            } else {
+
+                $this->db->limit($limit);
+            }
+        }
+
+
+
+        if ($count == false) {
+
+            return $this->db->get()->result_array();
+        }
+
+
+
+        return $this->db->count_all_results();
     }
 
 
-    $statuses[] = array("name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads);
 
-    return $statuses;
-}
+    /**
 
-function get_status_summary_filter($params)
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
+     * Add new lead to database
+
+     * @param mixed $data lead data
+
+     * @return mixed false || leadid
+
+     */
+
+    public function add($data)
+
+    {
+
+        if (isset($data['custom_contact_date']) || isset($data['custom_contact_date'])) {
+
+            if (isset($data['contacted_today'])) {
+
+                // $data['lastcontact'] = date('Y-m-d H:i:s');
+                $data['lastcontact'] = null;
+
+
+                unset($data['contacted_today']);
+            } else {
+
+                // $data['lastcontact'] = to_sql_date($data['custom_contact_date'], true);
+                $data['lastcontact'] = null;
+            }
+        }
+
+
+
+        if (isset($data['is_public']) && ($data['is_public'] == 1 || $data['is_public'] === 'on')) {
+
+            $data['is_public'] = 1;
+        } else {
+
+            $data['is_public'] = 0;
+        }
+
+
+
+        if (!isset($data['country']) || isset($data['country']) && $data['country'] == '') {
+
+            $data['country'] = 0;
+        }
+
+
+
+        if (isset($data['custom_contact_date'])) {
+
+            unset($data['custom_contact_date']);
+        }
+
+
+
+        $data['description'] = nl2br($data['description']);
+
+        $data['dateadded']   = date('Y-m-d H:i:s');
+
+        $data['addedfrom']   = get_staff_user_id();
+        $data['exam_details']   = [];
+
+
+
+        $data = hooks()->apply_filters('before_lead_added', $data);
+
+
+
+        $tags = '';
+
+        if (isset($data['tags'])) {
+
+            $tags = $data['tags'];
+
+            unset($data['tags']);
+        }
+
+        if (!empty($data['exam_name']) && count($data['exam_name']) > 0) {
+            $data["exam_details"] = [];
+            foreach ($data['exam_name'] as $key => $exam_d) {
+
+                if (!empty($data["exam_name"][$key]) &&  !empty($data["exam_score"][$key])) {
+                    array_push($data["exam_details"], array("exam_name" => $data["exam_name"][$key], "exam_score" => $data["exam_score"][$key]));
+                }
+            }
+
+            unset($data['exam_name']);
+            unset($data['exam_score']);
+        }
+
+        // print_r($data);
+        if (!empty($data["exam_details"])) {
+            $data["exam_details"]  = json_encode($data["exam_details"], true);
+        } else {
+            $data["exam_details"]  =  "";
+        }
+
+        if (isset($data['custom_fields'])) {
+
+            $custom_fields = $data['custom_fields'];
+
+            unset($data['custom_fields']);
+        }
+
+        $data['address'] = trim($data['address']);
+
+        $data['address'] = nl2br($data['address']);
+
+
+
+        $data['email'] = trim($data['email']);
+
+        $this->db->insert(db_prefix() . 'leads', $data);
+
+
+        $insert_id = $this->db->insert_id();
+
+
+        if ($insert_id) {
+
+            log_activity('New Lead Added [ID: ' . $insert_id . ']');
+
+            $this->log_lead_activity($insert_id, 'not_lead_activity_created');
+
+
+
+            handle_tags_save($tags, $insert_id, 'lead');
+
+
+
+            if (isset($custom_fields)) {
+
+                handle_custom_fields_post($insert_id, $custom_fields);
+            }
+
+
+
+            $this->lead_assigned_member_notification($insert_id, $data['assigned']);
+
+            hooks()->do_action('lead_created', $insert_id);
+
+
+
+            return $insert_id;
+        }
+
+
+
+        return false;
     }
-    $sources = $CI->leads_model->get_source();
-    $totalSource         = count($sources);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
 
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        $sid = get_staff_user_id();
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
 
+
+    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false)
+
+    {
+
+        if ((!empty($assigned) && $assigned != 0)) {
+
+            if ($integration == false) {
+
+                if ($assigned == get_staff_user_id()) {
+
+                    return false;
+                }
+            }
+
+
+
+            $name = $this->db->select('name')->from(db_prefix() . 'leads')->where('id', $lead_id)->get()->row()->name;
+
+
+
+            $notification_data = [
+
+                'description'     => ($integration == false) ? 'not_assigned_lead_to_you' : 'not_lead_assigned_from_form',
+
+                'touserid'        => $assigned,
+
+                'link'            => '#leadid=' . $lead_id,
+
+                'additional_data' => ($integration == false ? serialize([
+
+                    $name,
+
+                ]) : serialize([])),
+
+            ];
+
+
+
+            if ($integration != false) {
+
+                $notification_data['fromcompany'] = 1;
+            }
+
+
+
+            if (add_notification($notification_data)) {
+
+                pusher_trigger_notification([$assigned]);
+            }
+
+
+
+            $this->db->select('email');
+
+            $this->db->where('staffid', $assigned);
+
+            $email = $this->db->get(db_prefix() . 'staff')->row()->email;
+
+
+
+            send_mail_template('lead_assigned', $lead_id, $email);
+
+
+
+            $this->db->where('id', $lead_id);
+
+            $this->db->update(db_prefix() . 'leads', [
+
+                'dateassigned' => date('Y-m-d H:i:s'),
+
+            ]);
+
+
+
+            $not_additional_data = [
+
+                get_staff_full_name(),
+
+                '<a href="' . admin_url('profile/' . $assigned) . '" target="_blank">' . get_staff_full_name($assigned) . '</a>',
+
+            ];
+
+
+
+            if ($integration == true) {
+
+                unset($not_additional_data[0]);
+
+                array_values(($not_additional_data));
+            }
+
+
+
+            $not_additional_data = serialize($not_additional_data);
+
+
+
+            $not_desc = ($integration == false ? 'not_lead_activity_assigned_to' : 'not_lead_activity_assigned_from_form');
+
+            $this->log_lead_activity($lead_id, $not_desc, $integration, $not_additional_data);
+        }
+    }
+
+
+
+    /**
+
+     * Update lead
+
+     * @param  array $data lead data
+
+     * @param  mixed $id   leadid
+
+     * @return boolean
+
+     */
+
+    public function update($data, $id)
+
+    {
+
+        $current_lead_data = $this->get($id);
+
+        $current_status    = $this->get_status($current_lead_data->status);
+        $data["exam_details"]  =  "";
+
+        if ($current_status) {
+
+            $current_status_id = $current_status->id;
+
+            $current_status    = $current_status->name;
+        } else {
+
+            if ($current_lead_data->junk == 1) {
+
+                $current_status = _l('lead_junk');
+            } elseif ($current_lead_data->lost == 1) {
+
+                $current_status = _l('lead_lost');
+            } else {
+
+                $current_status = '';
+            }
+
+            $current_status_id = 0;
+        }
+
+
+
+        $affectedRows = 0;
+
+        if (isset($data['custom_fields'])) {
+
+            $custom_fields = $data['custom_fields'];
+
+            if (handle_custom_fields_post($id, $custom_fields)) {
+
+                $affectedRows++;
+            }
+
+            unset($data['custom_fields']);
+        }
+
+        if (!defined('API')) {
+
+            if (isset($data['is_public'])) {
+
+                $data['is_public'] = 1;
+            } else {
+
+                $data['is_public'] = 0;
+            }
+
+
+
+            if (!isset($data['country']) || isset($data['country']) && $data['country'] == '') {
+
+                $data['country'] = 0;
+            }
+
+
+
+            if (isset($data['description'])) {
+
+                $data['description'] = nl2br($data['description']);
+            }
+        }
+
+
+
+        if (isset($data['lastcontact']) && $data['lastcontact'] == '' || isset($data['lastcontact']) && $data['lastcontact'] == null) {
+
+            $data['lastcontact'] = null;
+        } elseif (isset($data['lastcontact'])) {
+
+            $data['lastcontact'] = to_sql_date($data['lastcontact'], true);
+        }
+
+
+        if (!empty($data['exam_name']) && count($data['exam_name']) > 0) {
+            $data["exam_details"] = [];
+            foreach ($data['exam_name'] as $key => $exam_d) {
+
+                if (!empty($data["exam_name"][$key]) &&  !empty($data["exam_score"][$key])) {
+                    array_push($data["exam_details"], array("exam_name" => $data["exam_name"][$key], "exam_score" => $data["exam_score"][$key]));
+                }
+            }
+
+            unset($data['exam_name']);
+            unset($data['exam_score']);
+        }
+
+        if (!empty($data["exam_details"])) {
+            $data["exam_details"]  = json_encode($data["exam_details"], true);
+        } else {
+            $data["exam_details"]  =  "";
+        }
+
+
+        if (isset($data['tags'])) {
+
+            if (handle_tags_save($data['tags'], $id, 'lead')) {
+
+                $affectedRows++;
+            }
+
+            unset($data['tags']);
+        }
+
+
+
+        if (isset($data['remove_attachments'])) {
+
+            foreach ($data['remove_attachments'] as $key => $val) {
+
+                $attachment = $this->get_lead_attachments($id, $key);
+
+                if ($attachment) {
+
+                    $this->delete_lead_attachment($attachment->id);
+                }
+            }
+
+            unset($data['remove_attachments']);
+        }
+
+
+
+        $data['address'] = trim($data['address']);
+
+        $data['address'] = nl2br($data['address']);
+
+
+
+        $data['email'] = trim($data['email']);
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads', $data);
+
+        if ($this->db->affected_rows() > 0) {
+
+            $affectedRows++;
+
+            if (isset($data['status']) && $current_status_id != $data['status']) {
+
+                $this->db->where('id', $id);
+
+                $this->db->update(db_prefix() . 'leads', [
+
+                    'last_status_change' => date('Y-m-d H:i:s'),
+
+                ]);
+
+                $new_status_name = $this->get_status($data['status'])->name;
+
+                $this->log_lead_activity($id, 'not_lead_activity_status_updated', false, serialize([
+
+                    get_staff_full_name(),
+
+                    $current_status,
+
+                    $new_status_name,
+
+                ]));
+
+
+
+                hooks()->do_action('lead_status_changed', [
+
+                    'lead_id'    => $id,
+
+                    'old_status' => $current_status_id,
+
+                    'new_status' => $data['status'],
+
+                ]);
+            }
+
+
+
+            if (($current_lead_data->junk == 1 || $current_lead_data->lost == 1) && $data['status'] != 0) {
+
+                $this->db->where('id', $id);
+
+                $this->db->update(db_prefix() . 'leads', [
+
+                    'junk' => 0,
+
+                    'lost' => 0,
+
+                ]);
+            }
+
+
+
+            if (isset($data['assigned'])) {
+
+                if ($current_lead_data->assigned != $data['assigned'] && (!empty($data['assigned']) && $data['assigned'] != 0)) {
+
+                    $this->lead_assigned_member_notification($id, $data['assigned']);
+                }
+            }
+
+            log_activity('Lead Updated [ID: ' . $id . ']');
+
+
+
+            return true;
+        }
+
+        if ($affectedRows > 0) {
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Delete lead from database and all connections
+
+     * @param  mixed $id leadid
+
+     * @return boolean
+
+     */
+
+    public function delete($id)
+
+    {
+
+        $affectedRows = 0;
+
+
+
+        hooks()->do_action('before_lead_deleted', $id);
+
+
+
+        $lead = $this->get($id);
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->delete(db_prefix() . 'leads');
+
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Lead Deleted [Deleted by: ' . get_staff_full_name() . ', ID: ' . $id . ']');
+
+
+
+            $attachments = $this->get_lead_attachments($id);
+
+            foreach ($attachments as $attachment) {
+
+                $this->delete_lead_attachment($attachment['id']);
+            }
+
+
+
+            // Delete the custom field values
+
+            $this->db->where('relid', $id);
+
+            $this->db->where('fieldto', 'leads');
+
+            $this->db->delete(db_prefix() . 'customfieldsvalues');
+
+
+
+            $this->db->where('leadid', $id);
+
+            $this->db->delete(db_prefix() . 'lead_activity_log');
+
+
+
+            $this->db->where('leadid', $id);
+
+            $this->db->delete(db_prefix() . 'lead_integration_emails');
+
+
+
+            $this->db->where('rel_id', $id);
+
+            $this->db->where('rel_type', 'lead');
+
+            $this->db->delete(db_prefix() . 'notes');
+
+
+
+            $this->db->where('rel_type', 'lead');
+
+            $this->db->where('rel_id', $id);
+
+            $this->db->delete(db_prefix() . 'reminders');
+
+
+
+            $this->db->where('rel_type', 'lead');
+
+            $this->db->where('rel_id', $id);
+
+            $this->db->delete(db_prefix() . 'taggables');
+
+
+
+            $this->load->model('proposals_model');
+
+            $this->db->where('rel_id', $id);
+
+            $this->db->where('rel_type', 'lead');
+
+            $proposals = $this->db->get(db_prefix() . 'proposals')->result_array();
+
+
+
+            foreach ($proposals as $proposal) {
+
+                $this->proposals_model->delete($proposal['id']);
+            }
+
+
+
+            // Get related tasks
+
+            $this->db->where('rel_type', 'lead');
+
+            $this->db->where('rel_id', $id);
+
+            $tasks = $this->db->get(db_prefix() . 'tasks')->result_array();
+
+            foreach ($tasks as $task) {
+
+                $this->tasks_model->delete_task($task['id']);
+            }
+
+
+
+            if (is_gdpr()) {
+
+                $this->db->where('(description LIKE "%' . $lead->email . '%" OR description LIKE "%' . $lead->name . '%" OR description LIKE "%' . $lead->phonenumber . '%")');
+
+                $this->db->delete(db_prefix() . 'activity_log');
+            }
+
+
+
+            $affectedRows++;
+        }
+
+        if ($affectedRows > 0) {
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Mark lead as lost
+
+     * @param  mixed $id lead id
+
+     * @return boolean
+
+     */
+
+    public function mark_as_lost($id)
+
+    {
+
+        $this->db->select('status');
+
+        $this->db->from(db_prefix() . 'leads');
+
+        $this->db->where('id', $id);
+
+        $last_lead_status = $this->db->get()->row()->status;
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'lost'               => 1,
+
+            'status'             => 0,
+
+            'last_status_change' => date('Y-m-d H:i:s'),
+
+            'last_lead_status'   => $last_lead_status,
+
+        ]);
+
+
+
+        if ($this->db->affected_rows() > 0) {
+
+            $this->log_lead_activity($id, 'not_lead_activity_marked_lost');
+
+
+
+            log_activity('Lead Marked as Lost [ID: ' . $id . ']');
+
+
+
+            hooks()->do_action('lead_marked_as_lost', $id);
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Unmark lead as lost
+
+     * @param  mixed $id leadid
+
+     * @return boolean
+
+     */
+
+    public function unmark_as_lost($id)
+
+    {
+
+        $this->db->select('last_lead_status');
+
+        $this->db->from(db_prefix() . 'leads');
+
+        $this->db->where('id', $id);
+
+        $last_lead_status = $this->db->get()->row()->last_lead_status;
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'lost'   => 0,
+
+            'status' => $last_lead_status,
+
+        ]);
+
+        if ($this->db->affected_rows() > 0) {
+
+            $this->log_lead_activity($id, 'not_lead_activity_unmarked_lost');
+
+
+
+            log_activity('Lead Unmarked as Lost [ID: ' . $id . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Mark lead as junk
+
+     * @param  mixed $id lead id
+
+     * @return boolean
+
+     */
+
+    public function mark_as_junk($id)
+
+    {
+
+        $this->db->select('status');
+
+        $this->db->from(db_prefix() . 'leads');
+
+        $this->db->where('id', $id);
+
+        $last_lead_status = $this->db->get()->row()->status;
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'junk'               => 1,
+
+            'status'             => 0,
+
+            'last_status_change' => date('Y-m-d H:i:s'),
+
+            'last_lead_status'   => $last_lead_status,
+
+        ]);
+
+
+
+        if ($this->db->affected_rows() > 0) {
+
+            $this->log_lead_activity($id, 'not_lead_activity_marked_junk');
+
+
+
+            log_activity('Lead Marked as Junk [ID: ' . $id . ']');
+
+
+
+            hooks()->do_action('lead_marked_as_junk', $id);
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Unmark lead as junk
+
+     * @param  mixed $id leadid
+
+     * @return boolean
+
+     */
+
+    public function unmark_as_junk($id)
+
+    {
+
+        $this->db->select('last_lead_status');
+
+        $this->db->from(db_prefix() . 'leads');
+
+        $this->db->where('id', $id);
+
+        $last_lead_status = $this->db->get()->row()->last_lead_status;
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'junk'   => 0,
+
+            'status' => $last_lead_status,
+
+        ]);
+
+        if ($this->db->affected_rows() > 0) {
+
+            $this->log_lead_activity($id, 'not_lead_activity_unmarked_junk');
+
+            log_activity('Lead Unmarked as Junk [ID: ' . $id . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Get lead attachments
+
+     * @since Version 1.0.4
+
+     * @param  mixed $id lead id
+
+     * @return array
+
+     */
+
+    public function get_lead_attachments($id = '', $attachment_id = '', $where = [])
+
+    {
+
+        $this->db->where($where);
+
+        $idIsHash = !is_numeric($attachment_id) && strlen($attachment_id) == 32;
+
+        if (is_numeric($attachment_id) || $idIsHash) {
+
+            $this->db->where($idIsHash ? 'attachment_key' : 'id', $attachment_id);
+
+
+
+            return $this->db->get(db_prefix() . 'files')->row();
+        }
+
+        $this->db->where('rel_id', $id);
+
+        $this->db->where('rel_type', 'lead');
+
+        $this->db->order_by('dateadded', 'DESC');
+
+
+
+        return $this->db->get(db_prefix() . 'files')->result_array();
+    }
+
+
+
+    public function add_attachment_to_database($lead_id, $attachment, $external = false, $form_activity = false)
+
+    {
+
+        $this->misc_model->add_attachment_to_database($lead_id, 'lead', $attachment, $external);
+
+
+
+        if ($form_activity == false) {
+
+            $this->leads_model->log_lead_activity($lead_id, 'not_lead_activity_added_attachment');
+        } else {
+
+            $this->leads_model->log_lead_activity($lead_id, 'not_lead_activity_log_attachment', true, serialize([
+
+                $form_activity,
+
+            ]));
+        }
+
+
+
+        // No notification when attachment is imported from web to lead form
+
+        if ($form_activity == false) {
+
+            $lead         = $this->get($lead_id);
+
+            $not_user_ids = [];
+
+            if ($lead->addedfrom != get_staff_user_id()) {
+
+                array_push($not_user_ids, $lead->addedfrom);
+            }
+
+            if ($lead->assigned != get_staff_user_id() && $lead->assigned != 0) {
+
+                array_push($not_user_ids, $lead->assigned);
+            }
+
+            $notifiedUsers = [];
+
+            foreach ($not_user_ids as $uid) {
+
+                $notified = add_notification([
+
+                    'description'     => 'not_lead_added_attachment',
+
+                    'touserid'        => $uid,
+
+                    'link'            => '#leadid=' . $lead_id,
+
+                    'additional_data' => serialize([
+
+                        $lead->name,
+
+                    ]),
+
+                ]);
+
+                if ($notified) {
+
+                    array_push($notifiedUsers, $uid);
+                }
+            }
+
+            pusher_trigger_notification($notifiedUsers);
+        }
+    }
+
+
+
+    /**
+
+     * Delete lead attachment
+
+     * @param  mixed $id attachment id
+
+     * @return boolean
+
+     */
+
+    public function delete_lead_attachment($id)
+
+    {
+
+        $attachment = $this->get_lead_attachments('', $id);
+
+        $deleted    = false;
+
+
+
+        if ($attachment) {
+
+            if (empty($attachment->external)) {
+
+                unlink(get_upload_path_by_type('lead') . $attachment->rel_id . '/' . $attachment->file_name);
+            }
+
+            $this->db->where('id', $attachment->id);
+
+            $this->db->delete(db_prefix() . 'files');
+
+            if ($this->db->affected_rows() > 0) {
+
+                $deleted = true;
+
+                log_activity('Lead Attachment Deleted [ID: ' . $attachment->rel_id . ']');
+            }
+
+
+
+            if (is_dir(get_upload_path_by_type('lead') . $attachment->rel_id)) {
+
+                // Check if no attachments left, so we can delete the folder also
+
+                $other_attachments = list_files(get_upload_path_by_type('lead') . $attachment->rel_id);
+
+                if (count($other_attachments) == 0) {
+
+                    // okey only index.html so we can delete the folder also
+
+                    delete_dir(get_upload_path_by_type('lead') . $attachment->rel_id);
+                }
+            }
+        }
+
+
+
+        return $deleted;
+    }
+
+
+
+    // Sources
+
+
+
+    /**
+
+     * Get leads sources
+
+     * @param  mixed $id Optional - Source ID
+
+     * @return mixed object if id passed else array
+
+     */
+
+    public function get_source($id = false)
+
+    {
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'leads_sources')->row();
+        }
+
+
+        $this->db->select('l.*,m.name as marketing_name');
+        $this->db->from(db_prefix() . 'leads_sources As l');
+        $this->db->join(db_prefix() . 'lead_marketing m', "l.marketing_type = m.id", "left");
+        $this->db->order_by('l.name', 'asc');
+
+        return $this->db->get()->result_array();
+    }
+
+
+
+    /**
+
+     * Add new lead source
+
+     * @param mixed $data source data
+
+     */
+
+    public function add_source($data)
+
+    {
+
+        $this->db->insert(db_prefix() . 'leads_sources', $data);
+
+        $insert_id = $this->db->insert_id();
+
+        if ($insert_id) {
+
+            log_activity('New Leads Source Added [SourceID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
+        }
+
+
+
+        return $insert_id;
+    }
+
+
+
+    /**
+
+     * Update lead source
+
+     * @param  mixed $data source data
+
+     * @param  mixed $id   source id
+
+     * @return boolean
+
+     */
+
+    public function update_source($data, $id)
+
+    {
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads_sources', $data);
+
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Leads Source Updated [SourceID: ' . $id . ', Name: ' . $data['name'] . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Delete lead source from database
+
+     * @param  mixed $id source id
+
+     * @return mixed
+
+     */
+
+    public function delete_source($id)
+
+    {
+
+        $current = $this->get_source($id);
+
+        // Check if is already using in table
+
+        if (is_reference_in_table('source', db_prefix() . 'leads', $id) || is_reference_in_table('lead_source', db_prefix() . 'leads_email_integration', $id)) {
+
+            return [
+
+                'referenced' => true,
+
+            ];
+        }
+
+        $this->db->where('id', $id);
+
+        $this->db->delete(db_prefix() . 'leads_sources');
+
+        if ($this->db->affected_rows() > 0) {
+
+            if (get_option('leads_default_source') == $id) {
+
+                update_option('leads_default_source', '');
+            }
+
+            log_activity('Leads Source Deleted [SourceID: ' . $id . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    // Statuses
+
+
+
+    /**
+
+     * Get lead statuses
+
+     * @param  mixed $id status id
+
+     * @return mixed      object if id passed else array
+
+     */
+
+    public function get_status($id = '', $where = [])
+
+    {
+
+        $this->db->where($where);
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'leads_status')->row();
+        }
+
+
+
+        $statuses = $this->app_object_cache->get('leads-all-statuses');
+
+
+
+        if (!$statuses) {
+
+
+            $this->db->select('ls.*,c.name conversion_type_name');
+            $this->db->from(db_prefix() . 'leads_status ls', 'asc');
+            $this->db->join(db_prefix() . 'lead_conversion_type c', 'ls.conversion_type = c.id', "left");
+            $this->db->order_by('ls.statusorder', 'asc');
+
+            $statuses = $this->db->get()->result_array();
+
+            $this->app_object_cache->add('leads-all-statuses', $statuses);
+        }
+
+
+
+        return $statuses;
+    }
+
+
+
+
+
+    /**
+
+     * Add new lead status
+
+     * @param array $data lead status data
+
+     */
+
+    public function add_status($data)
+
+    {
+
+        if (isset($data['color']) && $data['color'] == '') {
+
+            $data['color'] = hooks()->apply_filters('default_lead_status_color', '#757575');
+        }
+
+
+
+        if (!isset($data['statusorder'])) {
+
+            $data['statusorder'] = total_rows(db_prefix() . 'leads_status') + 1;
+        }
+
+
+
+        $this->db->insert(db_prefix() . 'leads_status', $data);
+
+        $insert_id = $this->db->insert_id();
+
+        if ($insert_id) {
+
+            log_activity('New Leads Status Added [StatusID: ' . $insert_id . ', Name: ' . $data['name'] . ']');
+
+
+
+            return $insert_id;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    // TYPES
+
+
+
+    /**
+
+     * Get lead types
+
+     * @param  mixed $id status id
+
+     * @return mixed      object if id passed else array
+
+     */
+
+    public function get_type($id = '', $where = [])
+
+    {
+
+        $this->db->where($where);
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'leads_type')->row();
+        }
+
+
+
+        $type = $this->app_object_cache->get('leads-all-type');
+
+
+
+        if (!$type) {
+
+            $this->db->order_by('statusorder', 'asc');
+
+            $type = $this->db->get(db_prefix() . 'leads_type')->result_array();
+
+            $this->app_object_cache->add('leads-all-type', $type);
+        }
+
+
+
+        return $type;
+    }
+
+
+
+    public function update_status($data, $id)
+
+    {
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'leads_status', $data);
+
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Leads Status Updated [StatusID: ' . $id . ', Name: ' . $data['name'] . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Delete lead status from database
+
+     * @param  mixed $id status id
+
+     * @return boolean
+
+     */
+
+    public function delete_status($id)
+
+    {
+
+        $current = $this->get_status($id);
+
+        // Check if is already using in table
+
+        if (is_reference_in_table('status', db_prefix() . 'leads', $id) || is_reference_in_table('lead_status', db_prefix() . 'leads_email_integration', $id)) {
+
+            return [
+
+                'referenced' => true,
+
+            ];
+        }
+
+
+
+        $this->db->where('id', $id);
+
+        $this->db->delete(db_prefix() . 'leads_status');
+
+        if ($this->db->affected_rows() > 0) {
+
+            if (get_option('leads_default_status') == $id) {
+
+                update_option('leads_default_status', '');
+            }
+
+            log_activity('Leads Status Deleted [StatusID: ' . $id . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Update canban lead status when drag and drop
+
+     * @param  array $data lead data
+
+     * @return boolean
+
+     */
+
+    public function update_lead_status($data)
+
+    {
+
+        $this->db->select('status');
+
+        $this->db->where('id', $data['leadid']);
+
+        $_old = $this->db->get(db_prefix() . 'leads')->row();
+
+
+
+        $old_status = '';
+
+
+
+        if ($_old) {
+
+            $old_status = $this->get_status($_old->status);
+
+            if ($old_status) {
+
+                $old_status = $old_status->name;
+            }
+        }
+
+
+
+        $affectedRows   = 0;
+
+        $current_status = $this->get_status($data['status'])->name;
+
+
+
+        $this->db->where('id', $data['leadid']);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'status' => $data['status'],
+
+        ]);
+
+
+
+        $_log_message = '';
+
+
+
+        if ($this->db->affected_rows() > 0) {
+
+            $affectedRows++;
+
+            if ($current_status != $old_status && $old_status != '') {
+
+                $_log_message    = 'not_lead_activity_status_updated';
+
+                $additional_data = serialize([
+
+                    get_staff_full_name(),
+
+                    $old_status,
+
+                    $current_status,
+
+                ]);
+
+
+
+                hooks()->do_action('lead_status_changed', [
+
+                    'lead_id'    => $data['leadid'],
+
+                    'old_status' => $old_status,
+
+                    'new_status' => $current_status,
+
+                ]);
+            }
+
+            $this->db->where('id', $data['leadid']);
+
+            $this->db->update(db_prefix() . 'leads', [
+
+                'last_status_change' => date('Y-m-d H:i:s'),
+
+            ]);
+        }
+
+        if (isset($data['order'])) {
+
+            foreach ($data['order'] as $order_data) {
+
+                $this->db->where('id', $order_data[0]);
+
+                $this->db->update(db_prefix() . 'leads', [
+
+                    'leadorder' => $order_data[1],
+
+                ]);
+            }
+        }
+
+        if ($affectedRows > 0) {
+
+            if ($_log_message == '') {
+
+                return true;
+            }
+
+            $this->log_lead_activity($data['leadid'], $_log_message, false, $additional_data);
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Update canban lead status when drag and drop
+
+     * @param  array $data lead data
+
+     * @return boolean
+
+     */
+
+    public function update_lead_type($data)
+
+    {
+
+        $this->db->select('type');
+
+        $this->db->where('id', $data['leadid']);
+
+        $_old = $this->db->get(db_prefix() . 'leads')->row();
+
+
+
+        $old_type = '';
+
+
+
+        if ($_old) {
+
+            $old_type = $this->get_type($_old->type);
+
+            if ($old_type) {
+
+                $old_type = $old_type->name;
+            }
+        }
+
+
+
+        $affectedRows   = 0;
+
+        $current_type = $this->get_type($data['type'])->name;
+
+
+
+        $this->db->where('id', $data['leadid']);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'type' => $data['type'],
+
+        ]);
+
+
+
+        $_log_message = '';
+
+
+
+        if ($this->db->affected_rows() > 0) {
+
+            $affectedRows++;
+
+            if ($current_type != $old_type && $old_type != '') {
+
+                $_log_message    = 'not_lead_activity_status_updated';
+
+                $additional_data = serialize([
+
+                    get_staff_full_name(),
+
+                    $old_type,
+
+                    $current_type,
+
+                ]);
+
+
+
+                hooks()->do_action('lead_type_changed', [
+
+                    'lead_id'    => $data['leadid'],
+
+                    'old_type' => $old_type,
+
+                    'new_type' => $current_type,
+
+                ]);
+            }
+
+            $this->db->where('id', $data['leadid']);
+
+            $this->db->update(db_prefix() . 'leads', [
+
+                'last_type_change' => date('Y-m-d H:i:s'),
+
+            ]);
+        }
+
+        if (isset($data['order'])) {
+
+            foreach ($data['order'] as $order_data) {
+
+                $this->db->where('id', $order_data[0]);
+
+                $this->db->update(db_prefix() . 'leads', [
+
+                    'leadorder' => $order_data[1],
+
+                ]);
+            }
+        }
+
+        if ($affectedRows > 0) {
+
+            if ($_log_message == '') {
+
+                return true;
+            }
+
+            $this->log_lead_activity($data['leadid'], $_log_message, false, $additional_data);
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /* Ajax */
+
+
+
+    /**
+
+     * All lead activity by staff
+
+     * @param  mixed $id lead id
+
+     * @return array
+
+     */
+
+    public function get_lead_activity_log($id)
+
+    {
+
+        $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'ASC');
+
+
+
+        $this->db->where('leadid', $id);
+
+        $this->db->order_by('date', $sorting);
+
+
+
+        return $this->db->get(db_prefix() . 'lead_activity_log')->result_array();
+    }
+
+    public function get_lead_call_activity_log($id)
+    {
+        $sql = "SELECT c.*,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON l.phonenumber = c.contact join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id order by c.id DESC";
+        return $this->db->query($sql)->result_array();
+    }
+
+
+
+    public function staff_can_access_lead($id, $staff_id = '')
+
+    {
+
+        $staff_id = $staff_id == '' ? get_staff_user_id() : $staff_id;
+
+
+
+        if (has_permission('leads', $staff_id, 'view')) {
+
+            return true;
+        }
+
+
+
+        $CI = &get_instance();
+
+
+
+        if (total_rows(db_prefix() . 'leads', 'id="' . $CI->db->escape_str($id) . '" AND (assigned=' . $CI->db->escape_str($staff_id) . ' OR is_public=1 OR addedfrom=' . $CI->db->escape_str($staff_id) . ')') > 0) {
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    /**
+
+     * Add lead activity from staff
+
+     * @param  mixed  $id          lead id
+
+     * @param  string  $description activity description
+
+     */
+
+    public function log_lead_activity($id, $description, $integration = false, $additional_data = '')
+
+    {
+
+        $log = [
+
+            'date'            => date('Y-m-d H:i:s'),
+
+            'description'     => $description,
+
+            'leadid'          => $id,
+
+            'staffid'         => get_staff_user_id(),
+
+            'additional_data' => $additional_data,
+
+            'full_name'       => get_staff_full_name(get_staff_user_id()),
+
+        ];
+
+        if ($integration == true) {
+
+            $log['staffid']   = 0;
+
+            $log['full_name'] = '[CRON]';
+        }
+
+
+
+        $this->db->insert(db_prefix() . 'lead_activity_log', $log);
+
+
+
+        return $this->db->insert_id();
+    }
+
+
+
+    /**
+
+     * Get email integration config
+
+     * @return object
+
+     */
+
+    public function get_email_integration()
+
+    {
+
+        $this->db->where('id', 1);
+
+
+
+        return $this->db->get(db_prefix() . 'leads_email_integration')->row();
+    }
+
+
+
+    /**
+
+     * Get lead imported email activity
+
+     * @param  mixed $id leadid
+
+     * @return array
+
+     */
+
+    public function get_mail_activity($id)
+
+    {
+
+        $this->db->where('leadid', $id);
+
+        $this->db->order_by('dateadded', 'asc');
+
+
+
+        return $this->db->get(db_prefix() . 'lead_integration_emails')->result_array();
+    }
+
+
+
+    /**
+
+     * Update email integration config
+
+     * @param  mixed $data All $_POST data
+
+     * @return boolean
+
+     */
+
+    public function update_email_integration($data)
+
+    {
+
+        $this->db->where('id', 1);
+
+        $original_settings = $this->db->get(db_prefix() . 'leads_email_integration')->row();
+
+
+
+        $data['create_task_if_customer']        = isset($data['create_task_if_customer']) ? 1 : 0;
+
+        $data['active']                         = isset($data['active']) ? 1 : 0;
+
+        $data['delete_after_import']            = isset($data['delete_after_import']) ? 1 : 0;
+
+        $data['notify_lead_imported']           = isset($data['notify_lead_imported']) ? 1 : 0;
+
+        $data['only_loop_on_unseen_emails']     = isset($data['only_loop_on_unseen_emails']) ? 1 : 0;
+
+        $data['notify_lead_contact_more_times'] = isset($data['notify_lead_contact_more_times']) ? 1 : 0;
+
+        $data['mark_public']                    = isset($data['mark_public']) ? 1 : 0;
+
+        $data['responsible']                    = !isset($data['responsible']) ? 0 : $data['responsible'];
+
+
+
+        if ($data['notify_lead_contact_more_times'] != 0 || $data['notify_lead_imported'] != 0) {
+
+            if (isset($data['notify_type']) && $data['notify_type'] == 'specific_staff') {
+
+                if (isset($data['notify_ids_staff'])) {
+
+                    $data['notify_ids'] = serialize($data['notify_ids_staff']);
+
+                    unset($data['notify_ids_staff']);
+                } else {
+
+                    $data['notify_ids'] = serialize([]);
+
+                    unset($data['notify_ids_staff']);
+                }
+
+                if (isset($data['notify_ids_roles'])) {
+
+                    unset($data['notify_ids_roles']);
+                }
+            } else {
+
+                if (isset($data['notify_ids_roles'])) {
+
+                    $data['notify_ids'] = serialize($data['notify_ids_roles']);
+
+                    unset($data['notify_ids_roles']);
+                } else {
+
+                    $data['notify_ids'] = serialize([]);
+
+                    unset($data['notify_ids_roles']);
+                }
+
+                if (isset($data['notify_ids_staff'])) {
+
+                    unset($data['notify_ids_staff']);
+                }
+            }
+        } else {
+
+            $data['notify_ids']  = serialize([]);
+
+            $data['notify_type'] = null;
+
+            if (isset($data['notify_ids_staff'])) {
+
+                unset($data['notify_ids_staff']);
+            }
+
+            if (isset($data['notify_ids_roles'])) {
+
+                unset($data['notify_ids_roles']);
+            }
+        }
+
+
+
+        // Check if not empty $data['password']
+
+        // Get original
+
+        // Decrypt original
+
+        // Compare with $data['password']
+
+        // If equal unset
+
+        // If not encrypt and save
+
+        if (!empty($data['password'])) {
+
+            $or_decrypted = $this->encryption->decrypt($original_settings->password);
+
+            if ($or_decrypted == $data['password']) {
+
+                unset($data['password']);
+            } else {
+
+                $data['password'] = $this->encryption->encrypt($data['password']);
+            }
+        }
+
+
+
+        $this->db->where('id', 1);
+
+        $this->db->update(db_prefix() . 'leads_email_integration', $data);
+
+        if ($this->db->affected_rows() > 0) {
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    public function change_status_color($data)
+
+    {
+
+        $this->db->where('id', $data['status_id']);
+
+        $this->db->update(db_prefix() . 'leads_status', [
+
+            'color' => $data['color'],
+
+        ]);
+    }
+
+
+
+    public function update_status_order($data)
+
+    {
+
+        foreach ($data['order'] as $status) {
+
+            $this->db->where('id', $status[0]);
+
+            $this->db->update(db_prefix() . 'leads_status', [
+
+                'statusorder' => $status[1],
+
+            ]);
+        }
+    }
+
+
+
+    public function get_form($where)
+
+    {
+
+        $this->db->where($where);
+
+
+
+        return $this->db->get(db_prefix() . 'web_to_lead')->row();
+    }
+
+
+
+    public function add_form($data)
+
+    {
+
+        $data                       = $this->_do_lead_web_to_form_responsibles($data);
+
+        $data['success_submit_msg'] = nl2br($data['success_submit_msg']);
+
+        $data['form_key']           = app_generate_hash();
+
+
+
+        $data['create_task_on_duplicate'] = (int) isset($data['create_task_on_duplicate']);
+
+        $data['mark_public']              = (int) isset($data['mark_public']);
+
+
+
+        if (isset($data['allow_duplicate'])) {
+
+            $data['allow_duplicate']           = 1;
+
+            $data['track_duplicate_field']     = '';
+
+            $data['track_duplicate_field_and'] = '';
+
+            $data['create_task_on_duplicate']  = 0;
+        } else {
+
+            $data['allow_duplicate'] = 0;
+        }
+        if (!empty($data['auto_assign'])) {
+            $data['auto_assign'] = implode(",", $data['auto_assign']);
+        }
+
+
+        $data['dateadded'] = date('Y-m-d H:i:s');
+
+        $this->db->insert(db_prefix() . 'web_to_lead', $data);
+
+        $insert_id = $this->db->insert_id();
+
+        if ($insert_id) {
+
+            log_activity('New Web to Lead Form Added [' . $data['name'] . ']');
+
+
+
+            return $insert_id;
+        }
+
+
+
+        return false;
+    }
+
+
+    public function update_form($id, $data)
+
+    {
+
+        $data                       = $this->_do_lead_web_to_form_responsibles($data);
+
+        $data['success_submit_msg'] = nl2br($data['success_submit_msg']);
+
+
+
+        $data['create_task_on_duplicate'] = (int) isset($data['create_task_on_duplicate']);
+
+        $data['mark_public']              = (int) isset($data['mark_public']);
+
+
+
+        if (isset($data['allow_duplicate'])) {
+
+            $data['allow_duplicate']           = 1;
+
+            $data['track_duplicate_field']     = '';
+
+            $data['track_duplicate_field_and'] = '';
+
+            $data['create_task_on_duplicate']  = 0;
+        } else {
+
+            $data['allow_duplicate'] = 0;
+        }
+
+        if (!empty($data['auto_assign'])) {
+            $data['auto_assign'] = implode(",", $data['auto_assign']);
+        }
+
+
+        $this->db->where('id', $id);
+
+        $this->db->update(db_prefix() . 'web_to_lead', $data);
+
+
+
+        return ($this->db->affected_rows() > 0 ? true : false);
+    }
+
+
+    public function delete_form($id)
+
+    {
+
+        $this->db->where('id', $id);
+
+        $this->db->delete(db_prefix() . 'web_to_lead');
+
+
+
+        $this->db->where('from_form_id', $id);
+
+        $this->db->update(db_prefix() . 'leads', [
+
+            'from_form_id' => 0,
+
+        ]);
+
+
+
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Lead Form Deleted [' . $id . ']');
+
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+
+    private function _do_lead_web_to_form_responsibles($data)
+
+    {
+
+        if (isset($data['notify_lead_imported'])) {
+
+            $data['notify_lead_imported'] = 1;
+        } else {
+
+            $data['notify_lead_imported'] = 0;
+        }
+
+
+
+        if ($data['responsible'] == '') {
+
+            $data['responsible'] = 0;
+        }
+
+        if ($data['notify_lead_imported'] != 0) {
+
+            if ($data['notify_type'] == 'specific_staff') {
+
+                if (isset($data['notify_ids_staff'])) {
+
+                    $data['notify_ids'] = serialize($data['notify_ids_staff']);
+
+                    unset($data['notify_ids_staff']);
+                } else {
+
+                    $data['notify_ids'] = serialize([]);
+
+                    unset($data['notify_ids_staff']);
+                }
+
+                if (isset($data['notify_ids_roles'])) {
+
+                    unset($data['notify_ids_roles']);
+                }
+            } else {
+
+                if (isset($data['notify_ids_roles'])) {
+
+                    $data['notify_ids'] = serialize($data['notify_ids_roles']);
+
+                    unset($data['notify_ids_roles']);
+                } else {
+
+                    $data['notify_ids'] = serialize([]);
+
+                    unset($data['notify_ids_roles']);
+                }
+
+                if (isset($data['notify_ids_staff'])) {
+
+                    unset($data['notify_ids_staff']);
+                }
+            }
+        } else {
+
+            $data['notify_ids']  = serialize([]);
+
+            $data['notify_type'] = null;
+
+            if (isset($data['notify_ids_staff'])) {
+
+                unset($data['notify_ids_staff']);
+            }
+
+            if (isset($data['notify_ids_roles'])) {
+
+                unset($data['notify_ids_roles']);
+            }
+        }
+
+
+
+        return $data;
+    }
+
+    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array())
+    {
+
+        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
+        if (!empty($lead_type)) {
+            $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        }
+        $sql .= " ) where 1=1 ";
+        if (!empty($state_name)) {
+            $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
+        }
+
+        if (!empty($deprtment_head_status)) {
+            $sql .= " and st.department_head = '1' ";
+        }
+        if (!empty($facebook_lead)) {
+            $sql .= " and st.facebook_lead_name != '' ";
+        }
+        if (!empty($lead_type)) {
+            $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        }
         if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+            $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
-        $idsarr = array_column($query, 'staffid');
-        $sids = implode(",", $idsarr);
-
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        $sql .= " order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
+        if (!empty($facebook_lead)) {
         } else {
-            $tids = ' AND assigned in (' . $sid . ')';
+            $sql .= " limit 1 ";
         }
 
-        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
+        return $this->db->query($sql)->result_array();
     }
+    public function get_marketing_type()
+    {
 
-    foreach ($sources as $source) {
-        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id ';
-        $sql .= ' FROM ' . db_prefix() . 'leads l  inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status  inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
+        if (is_numeric($id)) {
 
-        if (!empty($params['course']) || !empty($params['degree'])) {
-            $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
-        }
+            $this->db->where('id', $id);
 
-        // if (isset($status['lost'])) {
-        //     $sql .= ' WHERE lost=1';
-        // } elseif (isset($status['junk'])) {
-        //     $sql .= ' WHERE junk=1';
-        // } else {
-        //     $sql .= ' WHERE status=' . $status['id'];
-        // }
 
-        $sql .= ' WHERE source=' . $source['id'];
 
-        if (!$has_permission_view) {
-            $sql .= ' AND ' . $whereNoViewPermission;
-        }
-        if (!empty($params['assigned'])) {
-            // $tids = " AND assigned = " . $params['assigned'];
-            $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
-            $sql .= $tids;
-        } else {
-            if ($role == 3) {
-                $sql .= $tids;
-            }
-        }
-
-        if (!empty($params['status'])) {
-            $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
+            return $this->db->get(db_prefix() . 'lead_marketing')->row();
         }
 
 
 
+        $this->db->order_by('id', 'asc');
 
-        // if (!empty($params['source'])) {
-        //     $sql .= ' AND source =' . $CI->db->escape_str($params['source']);
-        // }
 
-        /*if (isset($params['course'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
-        }
-		 
-		 
-		if (isset($params['degree'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
-        }*/
 
-        // if (!empty($params['lead_type'])) {
-        //     $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-        // }
-        if (!empty($params['lead_type'])) {
-            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-        }
-        if (!empty($params['to_date'])) {
-            $from_date = $params['from_date'];
-            $to_date = $params['to_date'];
-            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date = $params['up_from_date'];
-            $up_to_date = $params['up_to_date'];
-            //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $followup_from_date = $params['followup_from_date'];
-            $followup_to_date = $params['followup_to_date'];
-            $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-        }
-
-        if (!empty($params['assign_to_date'])) {
-            $assign_from_date = $params['assign_from_date'];
-            $assign_to_date = $params['assign_to_date'];
-            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-        }
-        $sql .= ' UNION ALL ';
-        $sql = trim($sql);
-    }
-    $result = [];
-
-    // Remove the last UNION ALL
-    $sql    = substr($sql, 0, -10);
-    $result = $CI->db->query($sql)->result();
-    $totalLeads = 0;
-
-    foreach ($sources as $key => $source) {
-        $sources[$key]['total'] = 0;
-
-        if (!empty($_POST["source"])) {
-            if (in_array($source["id"], $_POST["source"])) {
-                $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
-                $sources[$key]['conversion_id'] = !empty($result[$key]->conversion_id) ? $result[$key]->conversion_id : 0;
-            } else {
-                $sources[$key]['total'] = 0;
-                $sources[$key]['conversion_id'] = '';
-            }
-        } else {
-            $sources[$key]['total']  = !empty($result[$key]->total) ? $result[$key]->total : 0;
-        }
-
-        $totalLeads += !empty($sources[$key]['total']) ? $sources[$key]['total'] : 0;
+        return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
     }
 
-    $sources[] = array("name" => "Total Status Leads", "color_name" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads);
+    public function get_conversion_type()
+    {
 
-    return $sources;
-}
-function leads_update_count($params = false, $max_status = 0)
-{
+        if (is_numeric($id)) {
 
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
-
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
-
-    $statuses[] = [
-        'lost'  => true,
-        'name'  => _l('lost_leads'),
-        'color' => '#f0f0f0',
-    ];
-
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        $teamids = $CI->db->query("select staffid
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
-    }
-
-    // $sql .= ' SELECT COUNT(l.id) as total';
-    // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    if (!empty($max_status) && $max_status == 1) {
-        $sql .= " SELECT count((concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
-    } else {
-        $sql .= " SELECT count(DISTINCT(concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
-    }
-    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
-
-    if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    }
-    $sql .= ' ) ';
-    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
-        $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
-    }
-
-    if (!empty($params['followup_to_date'])) {
-        $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
-    }
-
-    if (!$has_permission_view) {
-        $sql .= ' AND ' . $whereNoViewPermission;
-    }
-    if (!empty($params['assigned'])) {
-        // $tids = " AND l.assigned = " . $params['assigned'];
-        $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
-
-        $sql .= $tids;
-    } else {
-        if ($role == 3) {
-            $sql .= $tids;
-        }
-    }
-    if (!empty($params['status'])) {
-        // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
-        $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
-    }
-    if (!empty($params['source'])) {
-        // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
-        $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
-    }
-    if (!empty($params['lead_type'])) {
-        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-    }
-
-    if (!empty($params['neet_score'])) {
-        $neet_range = explode("-", $params['neet_score']);
-        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
-    }
-    if (!empty($params['to_date'])) {
-        $from_date = $params['from_date'];
-        $to_date = $params['to_date'];
-        $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-    }
-    if (!empty($params['followup_to_date'])) {
-        $followup_from_date = $params['followup_from_date'];
-        $followup_to_date = $params['followup_to_date'];
-        $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-    }
-
-    if (!empty($params['assign_to_date'])) {
-        $assign_from_date = $params['assign_from_date'];
-        $assign_to_date = $params['assign_to_date'];
-        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-    } else if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    }/*else{
-            $today = date("Y-m-d");
-            $sql .= " AND n.dateadded LIKE '%" .$today."%'";
-        }*/
-    $grup_by = "";
-    if (!empty($params['neet_score'])) {
-        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
-    }
-    $sql_add = "";
-    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        $min = $params['update_count_min'];
-        $max = $params['update_count_max'];
-        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
-    }
+            $this->db->where('id', $id);
 
 
-    if (!empty($max_status) && $max_status == 1) {
-        $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
-        $sql = trim($sql);
-        $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
-    } else {
-        $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-        // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-        $sql = trim($sql);
-        $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
-    }
 
-    // echo $sql;
-    // die;
-
-    $update_count = $CI->db->query($sql)->row()->total_sum;
-
-    // $result = $CI->db->query($sql)->result_array();
-
-    // // $update_count = count(array_unique(array_column($result, "total")));
-    // $update_count = count(array_count_values(array_column($result, "total")));
-
-    return !empty($update_count) ? $update_count : 0;
-}
-
-function leads_update_count_id($id, $params = false)
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
-
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
-
-    $statuses[] = [
-        'lost'  => true,
-        'name'  => _l('lost_leads'),
-        'color' => '#f0f0f0',
-    ];
-
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        $teamids = $CI->db->query("select staffid
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-    }
-
-    $sql .= ' SELECT COUNT(l.id) as total';
-    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id ';
-    if (!empty($params['followup_to_date'])) {
-        $sql .= ' Left join tblreminders  on  tblreminders.rel_id = l.id ';
-    }
-
-    $sql .= '  WHERE l.id=' . $id . ' AND l.id > 0 ';
-    if (!$has_permission_view) {
-        $sql .= ' AND ' . $whereNoViewPermission;
-    }
-    if (!empty($params['assigned'])) {
-        $tids = " AND l.assigned = " . $params['assigned'];
-        $sql .= $tids;
-    } else {
-        if ($role == 3) {
-            $sql .= $tids;
-        }
-    }
-    if (!empty($params['source'])) {
-        $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
-    }
-    // if (!empty($params['lead_type'])) {
-    //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
-    // }
-    if (!empty($params['lead_type'])) {
-        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-    }
-    if (!empty($params['to_date'])) {
-        $from_date = $params['from_date'];
-        $to_date = $params['to_date'];
-        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-    }
-    if (!empty($params['followup_to_date'])) {
-        $followup_from_date = $params['followup_from_date'];
-        $followup_to_date = $params['followup_to_date'];
-        $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-    }
-
-    if (!empty($params['assign_to_date'])) {
-        $assign_from_date = $params['assign_from_date'];
-        $assign_to_date = $params['assign_to_date'];
-        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-    } else if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    }/*else{
-            $today = date("Y-m-d");
-            $sql .= " AND n.dateadded LIKE '%" .$today."%'";
-        }*/
-    $sql = trim($sql); //print_r($sql);die;
-    $result = $CI->db->query($sql)->row()->total;
-    return $result;
-}
-
-/**
- * Render lead status select field with ability to create inline statuses with + sign
- * @param  array  $statuses         current statuses
- * @param  string  $selected        selected status
- * @param  string  $lang_key        the label of the select
- * @param  string  $name            the name of the select
- * @param  array   $select_attrs    additional select attributes
- * @param  boolean $exclude_default whether to exclude default Client status
- * @return string
- */
-function render_leads_status_select($statuses, $selected = '', $lang_key = '', $name = 'status', $select_attrs = [], $exclude_default = false)
-{
-    foreach ($statuses as $key => $status) {
-        if ($status['isdefault'] == 1) {
-            if ($exclude_default == false) {
-                $statuses[$key]['option_attributes'] = ['data-subtext' => _l('leads_converted_to_client')];
-            } else {
-                unset($statuses[$key]);
-            }
-
-            break;
-        }
-    }
-
-    if (is_admin() || get_option('staff_members_create_inline_lead_status') == '1') {
-        return render_select_with_input_group($name, $statuses, ['id', 'name'], $lang_key, $selected, '<a href="#" onclick="new_lead_status_inline();return false;" class="inline-field-new"><i class="fa fa-plus"></i></a>', $select_attrs);
-    }
-
-    return render_select($name, $statuses, ['id', 'name'], $lang_key, $selected, $select_attrs);
-}
-
-function render_leads_type_select($statuses, $selected = '', $lang_key = '', $name = 'type', $select_attrs = [], $exclude_default = false)
-{
-    // print_r($statuses);die;
-    // foreach ($statuses as $key => $status) {
-    //     if ($status['isdefault'] == 1) {
-    //         if ($exclude_default == false) {
-    //             $statuses[$key]['option_attributes'] = ['data-subtext' => _l('leads_converted_to_client')];
-    //         } else {
-    //             unset($statuses[$key]);
-    //         }
-
-    //         break;
-    //     }
-    // }
-
-    return render_select($name, $statuses, ['id', 'name'], $lang_key, $selected, $select_attrs);
-}
-
-/**
- * Render lead source select field with ability to create inline source with + sign
- * @param  array   $sources         current sourcees
- * @param  string  $selected        selected source
- * @param  string  $lang_key        the label of the select
- * @param  string  $name            the name of the select
- * @param  array   $select_attrs    additional select attributes
- * @return string
- */
-function render_leads_source_select($sources, $selected = '', $lang_key = '', $name = 'source', $select_attrs = [])
-{
-    if (is_admin() || get_option('staff_members_create_inline_lead_source') == '1') {
-        echo render_select_with_input_group($name, $sources, ['id', 'name'], $lang_key, $selected, '<a href="#" onclick="new_lead_source_inline();return false;" class="inline-field-new"><i class="fa fa-plus"></i></a>', $select_attrs);
-    } else {
-        echo render_select($name, $sources, ['id', 'name'], $lang_key, $selected, $select_attrs);
-    }
-}
-
-/**
- * Load lead language
- * Used in public GDPR form
- * @param  string $lead_id
- * @return string return loaded language
- */
-function load_lead_language($lead_id)
-{
-    $CI = &get_instance();
-    $CI->db->where('id', $lead_id);
-    $lead = $CI->db->get(db_prefix() . 'leads')->row();
-
-    // Lead not found or default language already loaded
-    if (!$lead || empty($lead->default_language)) {
-        return false;
-    }
-
-    $language = $lead->default_language;
-
-    if (!file_exists(APPPATH . 'language/' . $language)) {
-        return false;
-    }
-
-    $CI->lang->is_loaded = [];
-    $CI->lang->language  = [];
-
-    $CI->lang->load($language . '_lang', $language);
-    if (file_exists(APPPATH . 'language/' . $language . '/custom_lang.php')) {
-        $CI->lang->load('custom_lang', $language);
-    }
-
-    return true;
-}
-
-function get_leads_summary_filter_excel($params)
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
-
-
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
-
-    // $statuses[] = [
-    //     'lost'  => true,
-    //     'name'  => _l('lost_leads'),
-    //     'color' => '#f0f0f0',
-    // ];
-
-
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        $teamids = $CI->db->query("select staffid
-        	from    (select * from tblstaff
-        	where active = '1' order by reporting_person, staffid) products_sorted,
-        			(select @pv := $sid) initialisation
-        	where   find_in_set(reporting_person, @pv)
-        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        // $query = [];
-        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        // if (!empty($staff_ids)) {
-        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        // }
-        // $idsarr = array_column($query, 'staffid');
-        // $sids = implode(",", $idsarr);
-
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
-
-        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-    }
-
-    foreach ($statuses as $status) {
-        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id,m.id marketing_id, ls.name status_name ,s.name source_name,concat(ls.name,"-",s.name) index_name ';
-        $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
-
-        if (!empty($params['course']) || !empty($params['degree'])) {
-            $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
-        }
-
-        if (isset($status['lost'])) {
-            $sql .= ' WHERE lost=1';
-        } elseif (isset($status['junk'])) {
-            $sql .= ' WHERE junk=1';
-        } else {
-            $sql .= ' WHERE l.status=' . $status['id'];
-        }
-        if (!$has_permission_view) {
-            $sql .= ' AND ' . $whereNoViewPermission;
-        }
-        if (!empty($params['assigned'])) {
-            // $tids = " AND assigned = " . $params['assigned'];
-            $tids = " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
-            $sql .= $tids;
-        } else {
-            if ($role == 3) {
-                $sql .= $tids;
-            }
-        }
-
-        if (!empty($params['source'])) {
-            $sql .= ' AND l.source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+            return $this->db->get(db_prefix() . 'lead_conversion_type')->row();
         }
 
 
 
+        $this->db->order_by('id', 'asc');
 
-        // if (!empty($params['source'])) {
-        //     $sql .= ' AND source =' . $CI->db->escape_str($params['source']);
-        // }
 
-        /*if (isset($params['course'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
+
+        return $this->db->get(db_prefix() . 'lead_conversion_type')->result_array();
+    }
+    public function re_assign($id, $data)
+    {
+        $this->db->where('id', $id);
+        $temp_lead =  $this->db->get(db_prefix() . 'leads')->row();
+
+        $this->delete($id);
+        unset($temp_lead->id);
+        unset($temp_lead->dateadded);
+        unset($temp_lead->lastcontact);
+        unset($temp_lead->dateassigned);
+        unset($temp_lead->last_status_change);
+        unset($temp_lead->last_type_change);
+        $temp_lead->assigned = $data["assigned"];
+        if (!empty($data["status"])) {
+            $temp_lead->status = $data["status"];
         }
-		 
-		 
-		if (isset($params['degree'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
-        }*/
-
-        // if (!empty($params['lead_type'])) {
-        //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
-        // }
-        if (!empty($params['lead_type'])) {
-            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        if (!empty($data["source"])) {
+            $temp_lead->source = $data["source"];
         }
-        if (!empty($params['to_date'])) {
-            $from_date = $params['from_date'];
-            $to_date = $params['to_date'];
-            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+        if (!empty($data["leadtype"])) {
+            $temp_lead->type = $data["leadtype"];
         }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date = $params['up_from_date'];
-            $up_to_date = $params['up_to_date'];
-            //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $followup_from_date = $params['followup_from_date'];
-            $followup_to_date = $params['followup_to_date'];
-            $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-        }
-
-        if (!empty($params['assign_to_date'])) {
-            $assign_from_date = $params['assign_from_date'];
-            $assign_to_date = $params['assign_to_date'];
-            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-        }
-        $sql .= '  GROUP BY l.source,l.status ';
-        $sql .= ' UNION ALL ';
-        $sql = trim($sql);
+        $temp_lead = (array)$temp_lead;
+        return $this->add($temp_lead);
     }
-    $result = [];
-
-    // Remove the last UNION ALL
-    $sql    = substr($sql, 0, -10);
-
-    $result = $CI->db->query($sql)->result_array();
-
-    if (!empty($result)) {
-        $result = array_column($result, null, "index_name");
-    }
-
-    // if (!$has_permission_view) {
-    //     $CI->db->where($whereNoViewPermission);
-    // }
-
-    // $total_leads = $CI->db->count_all_results(db_prefix() . 'leads');
-
-
-    // foreach ($statuses as $key => $status) {
-    //     if (isset($status['lost']) || isset($status['junk'])) {
-    //         $statuses[$key]['percent'] = ($total_leads > 0 ? number_format(($result[$key]->total * 100) / $total_leads, 2) : 0);
-    //     }
-
-    //     $statuses[$key]['total'] = $result[$key]->total;
-    // }
-
-
-    return $result;
-}
-
-function get_status_summary_filter_performance($params, $conversion_status = 0)
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
-
-
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
-
-    // $statuses[] = [
-    //     'lost'  => true,
-    //     'name'  => _l('lost_leads'),
-    //     'color' => '#f0f0f0',
-    // ];
-
-
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        $teamids = $CI->db->query("select staffid
-        	from    (select * from tblstaff
-        	where active = '1' order by reporting_person, staffid) products_sorted,
-        			(select @pv := $sid) initialisation
-        	where   find_in_set(reporting_person, @pv)
-        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        // $query = [];
-        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        // if (!empty($staff_ids)) {
-        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        // }
-        // $idsarr = array_column($query, 'staffid');
-        // $sids = implode(",", $idsarr);
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
-        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-    }
-
-    foreach ($statuses as $status) {
-        $sql .= ' SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id,m.id marketing_id,m.name marketing_name,c.name conversion_name, ls.name status_name ,s.name source_name,concat(ls.name,"-",s.name) index_name,s.id source_id,ls.id status_id,concat(s.name,"-",c.name) index_conversion_name,concat(m.name,"-",c.name) index_performance_name ';
-        $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
-
-        // $sql .=' FROM ' . db_prefix() . 'lead_marketing m left join ' . db_prefix() . 'leads_sources s ON s.marketing_type = m.id left join ' . db_prefix() . 'leads l ON s.id = l.source left join ' . db_prefix() . 'leads_status ls ON  ls.id = l.status left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
-
-        if (!empty($params['course']) || !empty($params['degree'])) {
-            $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
-        }
-
-        if (isset($status['lost'])) {
-            $sql .= ' WHERE lost=1';
-        } elseif (isset($status['junk'])) {
-            $sql .= ' WHERE junk=1';
-        } else {
-            $sql .= ' WHERE l.status=' . $status['id'];
-        }
-        if (!$has_permission_view) {
-            $sql .= ' AND ' . $whereNoViewPermission;
-        }
-        if (!empty($params['assigned'])) {
-            // $tids = " AND assigned = " . $params['assigned'];
-            $tids = " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
-            $sql .= $tids;
-        } else {
-            if ($role == 3) {
-                $sql .= $tids;
-            }
-        }
-
-        if (!empty($params['source'])) {
-            $sql .= ' AND l.source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
-        }
-
-
-
-
-        // if (!empty($params['source'])) {
-        //     $sql .= ' AND source =' . $CI->db->escape_str($params['source']);
-        // }
-
-        /*if (isset($params['course'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
-        }
-		 
-		 
-		if (isset($params['degree'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
-        }*/
-
-        // if (!empty($params['lead_type'])) {
-        //     $sql .= ' AND l.type =' . $CI->db->escape_str($params['lead_type']);
-        // }
-        if (!empty($params['lead_type'])) {
-            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-        }
-        if (!empty($params['to_date'])) {
-            $from_date = $params['from_date'];
-            $to_date = $params['to_date'];
-            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-        }
-        if (!empty($params['up_to_date'])) {
-            $up_from_date = $params['up_from_date'];
-            $up_to_date = $params['up_to_date'];
-            //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-        }
-        if (!empty($params['followup_to_date'])) {
-            $followup_from_date = $params['followup_from_date'];
-            $followup_to_date = $params['followup_to_date'];
-            $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-        }
-
-        if (!empty($params['assign_to_date'])) {
-            $assign_from_date = $params['assign_from_date'];
-            $assign_to_date = $params['assign_to_date'];
-            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-        }
-        if ($conversion_status) {
-            $sql .= '  GROUP BY l.source,c.id ';
-        } else {
-            $sql .= '  GROUP BY m.id,c.id ';
-        }
-        $sql .= ' UNION ALL ';
-        $sql = trim($sql);
-    }
-    $result = [];
-
-    // Remove the last UNION ALL
-    $sql    = substr($sql, 0, -10);
-
-    $result = $CI->db->query($sql)->result_array();
-
-
-    return $result;
-}
-
-function calls_update_count($params = false, $max_status = 0)
-{
-    $CI = &get_instance();
-    if (!class_exists('leads_model')) {
-        $CI->load->model('leads_model');
-    }
-    $statuses = $CI->leads_model->get_status();
-
-    $totalStatuses         = count($statuses);
-    $has_permission_view   = has_permission('leads', '', 'view');
-    $sql                   = '';
-    $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
-
-    $statuses[] = [
-        'lost'  => true,
-        'name'  => _l('lost_leads'),
-        'color' => '#f0f0f0',
-    ];
-
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    if ($role == 3) {
-        // $this->load->database();
-        $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        $teamids = $CI->db->query("select staffid
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        $idsarr = array_column($teamids, 'staffid');
-        $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        if (!empty($sids)) {
-            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-        } else {
-            $tids = ' AND assigned in (' . $sid . ')';
-        }
-    }
-
-    // $sql .= ' SELECT COUNT(l.id) as total';
-    // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-
-    $sql .= "SELECT sum( distinct calls.duration) call_duration from " . db_prefix() . "leads l ";
-
-    $sql .= " left JOIN " . db_prefix() . "notes n on ( l.id = n.rel_id ";
-
-    if (!empty($params['assigned'])) {
-        $sql .= " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
-    }
-    // if (!empty($params['up_to_date'])) {
-    //     $up_from_date = $params['up_from_date'];
-    //     $up_to_date = $params['up_to_date'];
-    //     $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    // }
-    $sql .= " ) ";
-
-    $sql .= " join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
-
-    if (!empty($params['assigned'])) {
-        $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
-    }
-
-    $sql .= " ) ";
-
-
-
-    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
-        $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
-    }
-
-    if (!empty($params['followup_to_date'])) {
-        $sql .= 'left join tblreminders  on  tblreminders.rel_id = l.id ';
-    }
-
-    $sql .= " Where LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
-
-    if (!$has_permission_view) {
-        $sql .= ' AND ' . $whereNoViewPermission;
-    }
-
-    // if (!empty($params['assigned'])) {
-    //     // $tids = " AND l.assigned = " . $params['assigned'];
-    //     $tids = " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
-
-    //     $sql .= $tids;
-    // } else {
-    //     if ($role == 3) {
-    //         $sql .= $tids;
-    //     }
-    // }
-
-    if (!empty($params['status'])) {
-        // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
-        $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
-    }
-    if (!empty($params['source'])) {
-        // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
-        $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
-    }
-    if (!empty($params['lead_type'])) {
-        $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-        // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
-    }
-
-    if (!empty($params['neet_score'])) {
-        $neet_range = explode("-", $params['neet_score']);
-        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
-    }
-    if (!empty($params['to_date'])) {
-        $from_date = $params['from_date'];
-        $to_date = $params['to_date'];
-        $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-    }
-    if (!empty($params['followup_to_date'])) {
-        $followup_from_date = $params['followup_from_date'];
-        $followup_to_date = $params['followup_to_date'];
-        $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-    }
-
-    if (!empty($params['assign_to_date'])) {
-        $assign_from_date = $params['assign_from_date'];
-        $assign_to_date = $params['assign_to_date'];
-        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-    } else if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND (  DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-        $sql .= "  OR FROM_UNIXTIME(calls.call_start) between '{$up_from_date}' AND '{$up_to_date}' ) ";
-    }/*else{
-            $today = date("Y-m-d");
-            $sql .= " AND n.dateadded LIKE '%" .$today."%'";
-        }*/
-    $grup_by = "";
-    if (!empty($params['neet_score'])) {
-        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
-    }
-    $sql_add = "";
-    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        $min = $params['update_count_min'];
-        $max = $params['update_count_max'];
-        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
-    }
-
-
-    $sql .= " group by calls.contact" . $grup_by . " " . $sql_add . " ";
-    // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-    $sql = trim($sql);
-
-    // die;
-    $sql = "SELECT SUM(call_duration) as total_sum FROM ( {$sql} )  as subquery ";
-
-    $update_count = $CI->db->query($sql)->row()->total_sum;
-
-    return !empty($update_count) ?  convertToHMS($update_count) :  convertToHMS(0);
-}
-
-function convertToHMS($seconds, $status = 0)
-{
-    if ($seconds == "") {
-        $seconds = 0;
-    }
-    $hours = floor($seconds / 3600);
-    $minutes = floor(($seconds % 3600) / 60);
-    $seconds = $seconds % 60;
-    if ($status == 1) {
-        return sprintf('%d:%d:%d', $hours, $minutes, $seconds);
-    } else {
-        return sprintf('%d Hours : %d Mins : %d Sec', $hours, $minutes, $seconds);
-    }
-}
-
-function call_duration($phone, $staff_id, $calling_from_date = "", $calling_to_date = "")
-{
-    $CI = &get_instance();
-    $sql = " SELECT IFNULL(SUM(duration), 0) AS duration
-    FROM " . db_prefix() . "calls_activity_logs 
-    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = '{$staff_id}' ";
-    if (!empty($calling_from_date) && !empty($calling_to_date)) {
-        $sql .= " AND FROM_UNIXTIME(call_start) between '{$calling_from_date}' AND '{$calling_to_date}' ";
-    }
-    $sql .= " LIMIT 1 ";
-
-    return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
