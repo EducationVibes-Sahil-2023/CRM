@@ -44,6 +44,7 @@ if (is_gdpr() && $consentLeads == '1') {
 
 $aColumns = array_merge($aColumns, [
     'company',
+    db_prefix() . 'leads.assigned as staffid',
 
     db_prefix() . 'leads.email as email',
 
@@ -247,7 +248,7 @@ if (
     && ($filter != 'lost' && $filter != 'junk')
 ) {
 
-    array_push($where, 'AND status IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ')');
+    array_push($where, 'AND ' . db_prefix() . 'leads.status IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ')');
 }
 
 if ($this->ci->input->post('degree') && count($this->ci->input->post('degree')) > 0) {
@@ -265,7 +266,7 @@ if ($this->ci->input->post('course') && count($this->ci->input->post('course')) 
 if ($this->ci->input->post('source')) {
 
     // array_push($where, 'AND source =' . $this->ci->db->escape_str($this->ci->input->post('source')));
-    array_push($where, 'AND source IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ')');
+    array_push($where, 'AND ' . db_prefix() . 'leads.source IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ')');
 }
 
 
@@ -344,7 +345,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     'color',
 
-    'status',
+    db_prefix() . 'leads.status',
 
     'assigned',
 
@@ -354,16 +355,15 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
 
-    'zip',
+    'zip'
+
+    // '(SELECT sum(calls.duration)
+    // FROM tblcalls_activity_logs AS calls
+    // WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10)
+    // LIMIT 1) AS  call_duration'
 
 ]);
 
-$having = "";
-if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input->post('show_update_counts')) && $this->ci->input->post('show_update_counts') == 1)) {
-    $min = !empty($this->ci->input->post('update_count_min')) ? $this->ci->input->post('update_count_min') : 0;
-    $max = !empty($this->ci->input->post('update_count_max')) ? $this->ci->input->post('update_count_max') : 0;
-    $having = " Having count(n.id) between {$min} AND {$max} ";
-}
 // echo"<pre>";
 // print_r($aColumns);
 // print_r($sIndexColumn);
@@ -372,9 +372,19 @@ if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input
 // print_r($additionalColumns);
 // die;
 //print_r(data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns));die;
+$having = "";
+if (isset($_POST['update_count_max'])) {
+    if (!empty($this->ci->input->post('show_update_counts')) && $this->ci->input->post('show_update_counts') == 1) {
+        $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
+        $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
+        $having = " Having count(n.id) between {$min} AND {$max} ";
+    }
+}
+
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
+
 
 $output  = $result['output'];
 
@@ -401,6 +411,11 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
+
+    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
+    // $row[]    = 0;
+
+
 
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 

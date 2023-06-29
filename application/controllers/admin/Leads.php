@@ -70,7 +70,10 @@ class Leads extends AdminController
 
         $data['summary']  = get_leads_summary();
         $data['updateCount'] = leads_update_count();
+        $data['call_count'] = calls_update_count();
+        // die;
         $data['updateCount_max'] = leads_update_count("", 1);
+
         $data['statuses'] = $this->leads_model->get_status();
 
         $data['degrees'] = $this->leads_model->get_customfieldsvalues('20');
@@ -88,12 +91,12 @@ class Leads extends AdminController
 
         $this->load->view('admin/leads/manage_leads', $data);
     }
-
     public function lead_summary_filter()
     {
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
-
+        $max_count = leads_update_count("", 1);
+        $call_count = calls_update_count($_POST);
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -108,8 +111,9 @@ class Leads extends AdminController
             $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
         }
         // echo $ret;
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "max_count" => $max_count, "call_count" => $call_count]);
     }
+
 
     public function updated_count()
     {

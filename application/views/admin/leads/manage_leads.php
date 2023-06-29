@@ -39,7 +39,7 @@
                         </a>
                      <?php } ?>
                      <div class="row">
-                        <div class="col-md-5">
+                        <div class="col-md-8">
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
                            <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                            <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
@@ -49,11 +49,19 @@
                               echo _l('switch_to_list_view');
                            }; ?>
                            </a> -->
+                           <div class="row">
 
-                           <div class="text-center pull-right">
-                              <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
-                              <span id="updationCounterText">Updates Count</span>
+                              <div class="text-center  col-md-6">
+                                 <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
+                                 <span id="updationCounterText">Updates Count</span>
+                              </div>
+                              <div class="text-center  col-md-6">
+                                 <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
+                                 <span id="updationCounterText_time">Updates Calls Duration</span>
+                              </div>
                            </div>
+
+
                         </div>
 
                         <div class="col-md-4 col-xs-12 pull-right leads-search">
@@ -247,6 +255,9 @@
                                     ?>
                                  </div>
 
+
+
+
                                  <?php /*                
 							<!--    <div class="col-md-2 leads-filter-column">-->
        <!--                          <?php-->
@@ -350,18 +361,17 @@
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-
                                  <div class="col-md-3 leads-filter-column">
                                     <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
                                     <div id="rangeSlider" style="display:none;"></div>
                                     <input type="hidden" id="update_count_min" name="update_count_min">
                                     <input type="hidden" id="update_count_max" name="update_count_max">
                                  </div>
-
-                                 <div class="col-md-3 leads-filter-column">
+                                 <div class="col-md-3 text-center leads-filter-column">
                                     <div class="form-group">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
-                                       <button class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                        <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                     </div>
                                  </div>
@@ -472,6 +482,10 @@
                                  ),
                                  array(
                                     'name' => _l('Update Count'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Call Durations'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
@@ -846,7 +860,9 @@
       //    // summary();
       // })
 
+
       $('#apply_filter').on('click', function() {
+
          var from_date = document.getElementById("from_date").value;
          var to_date = document.getElementById("to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
@@ -916,9 +932,12 @@
       });
 
       function periodFilter() {
+
+
          table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
             hide_loader("apply_filter");
          });
+
       }
       var xhr = null;
 
@@ -979,12 +998,12 @@
          var followup_to_date = document.getElementById("followup_to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
          var assign_to_date = document.getElementById("assign_to_date").value;
-
          var update_count_min, update_count_max = '';
          if ($("#show_update_counts").is(":checked")) {
             update_count_min = document.getElementById("update_count_min").value;
             update_count_max = document.getElementById("update_count_max").value;
          }
+
          if (xhr != null) {
             xhr.abort();
          }
@@ -1021,6 +1040,10 @@
                $("#leadSum").html(data.status);
                $("#leadSum").innerHTML = data.status;
                $("#updationCounter").html(data.update_count);
+               $("#updationCounter_time").html(data.call_count);
+               if (data.max_count != undefined && parseInt(data.max_count) > 0) {
+                  recreate_range_slider(data.max_count);
+               }
             }
          }); // you have missed this bracket
          return false;
