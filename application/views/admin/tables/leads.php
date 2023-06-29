@@ -21,6 +21,8 @@ $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 $statuses              = $this->ci->leads_model->get_status();
 
 $type              = $this->ci->leads_model->get_type();
+$up_from_date = "";
+$up_to_date = "";
 
 // echo "<pre>";
 // print_r($_POST);die;
@@ -390,6 +392,7 @@ $output  = $result['output'];
 
 $rResult = $result['rResult'];
 
+
 foreach ($rResult as $aRow) {
 
     $row = [];
@@ -411,8 +414,7 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
-
-    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
+    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid'], $up_from_date, $up_to_date) : convertToHMS(0, 1);
     // $row[]    = 0;
 
 
