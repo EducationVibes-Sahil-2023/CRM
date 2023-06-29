@@ -347,7 +347,7 @@ class Api_Model extends CI_Model
                         }
                         if (!empty($staffid)) {
                             $delete_ids[] = $call_data["id"];
-
+  if (!empty($call_data["staff_contact"]) && !empty($staffid)) {
                             $insert_data = array(
                                 "staffid" => $staffid,
                                 "staff_contact" => $call_data["staff_contact"],
@@ -361,6 +361,7 @@ class Api_Model extends CI_Model
                                 "datetime" => $call_data["datetime"],
                             );
                             $this->insert_data(db_prefix() . 'calls_activity_logs', $insert_data);
+  }
                         }
                     }
                 }
