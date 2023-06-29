@@ -254,7 +254,7 @@ function get_leads_summary_filter($params)
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
-        } else if (isset($params['update_count_max'])) {
+        } else if (isset($params['update_count_max']) && $params['update_count_max']!="" ) {
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
         }
         if (!empty($params['followup_to_date'])) {
@@ -335,7 +335,7 @@ function get_leads_summary_filter($params)
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
-        if (isset($params['update_count_max'])) {
+        if (isset($params['update_count_max']) && $params['update_count_max']!="" ) {
             $min = $params['update_count_min'];
             $max = $params['update_count_max'];
             $sql .= ' GROUP BY tblleads.id HAVING COUNT(tblleads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
@@ -675,7 +675,7 @@ function leads_update_count($params = false, $max_status = 0)
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     $sql_add = "";
-    if (isset($params['update_count_max'])) {
+    if (isset($params['update_count_max']) && $params['update_count_max']!="" ) {
         $min = $params['update_count_min'];
         $max = $params['update_count_max'];
         $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
@@ -1369,7 +1369,7 @@ function calls_update_count($params = false, $max_status = 0)
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     $sql_add = "";
-    if (isset($params['update_count_max'])) {
+    if (isset($params['update_count_max']) && $params['update_count_max']!="" ) {
         $min = $params['update_count_min'];
         $max = $params['update_count_max'];
         $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
