@@ -1289,7 +1289,7 @@ function calls_update_count($params = false, $max_status = 0)
     // }
     $sql .= " ) ";
 
-    $sql .= " join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    $sql .= " left join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
@@ -1360,7 +1360,7 @@ function calls_update_count($params = false, $max_status = 0)
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
         $sql .= ' AND (  ( DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '") ';
-        $sql .= "  OR ( DATE_FORMAT(FROM_UNIXTIME(calls.call_start), '%Y-%m-%d') between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
+        $sql .= "  AND ( DATE_FORMAT(FROM_UNIXTIME(calls.call_start), '%Y-%m-%d') between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
