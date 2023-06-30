@@ -1417,9 +1417,8 @@ function call_duration($phone, $staff_id, $calling_from_date = "", $calling_to_d
     if (!empty($calling_from_date) && !empty($calling_to_date)) {
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
-    echo $calling_from_date;
-    echo $calling_to_date;
-     echo $sql .= " LIMIT 1 ";
-die;
+
+    $sql .= " LIMIT 1 ";
+
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
