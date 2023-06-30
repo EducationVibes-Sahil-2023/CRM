@@ -381,9 +381,9 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     // LIMIT 1) AS  call_duration'
 
 ]);
-if (!empty($call_query)) {
-    array_push($additionalColumns, $call_query);
-}
+// if (!empty($call_query)) {
+//     array_push($additionalColumns, $call_query);
+// }
 
 // echo"<pre>";
 // print_r($aColumns);
@@ -400,13 +400,13 @@ if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show
     $having .= " Having count(n.id) between {$min} AND {$max} ";
 }
 
-if ($call_query_having) {
+// if ($call_query_having) {
 
-    if (!empty($having)) {
-        $having .= " AND ";
-    }
-    $having .= " Having " . $call_query_having . " > 0 ";
-}
+//     if (!empty($having)) {
+//         $having .= " AND ";
+//     }
+//     $having .= " Having " . $call_query_having . " > 0 ";
+// }
 
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
@@ -439,11 +439,11 @@ foreach ($rResult as $aRow) {
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
     // $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid'], $up_from_date, $up_to_date) : convertToHMS(0, 1);
-    // $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
-    if (empty($aRow["call_duration"])) {
-        $aRow["call_duration"] = 0;
-    }
-    $row[]    = convertToHMS($aRow["call_duration"], 1);
+    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
+    // if (empty($aRow["call_duration"])) {
+    //     $aRow["call_duration"] = 0;
+    // }
+    // $row[]    = convertToHMS($aRow["call_duration"], 1);
 
 
     // $row[]    = 0;
