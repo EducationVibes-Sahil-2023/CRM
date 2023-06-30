@@ -545,9 +545,14 @@ class Facebook_leads_integration extends ClientsController
                                 $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             } else if (strpos(strtolower($field_data["name"]), "state") !== false) {
                                 $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "do you have the offer letter") !== false) {
+                                $lead_data_array["form-cf-35"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "what kind of assistance you are looking for") !== false) {
+                                $lead_data_array["form-cf-36"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             }
                         }
                     }
+
 
                     $lead_data_array["type"] = '';
                     $lead_type_array  = $this->staff_model->get_type();
