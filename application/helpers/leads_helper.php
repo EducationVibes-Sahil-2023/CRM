@@ -662,14 +662,11 @@ function leads_update_count($params = false, $max_status = 0)
         $assign_from_date = $params['assign_from_date'];
         $assign_to_date = $params['assign_to_date'];
         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-    }
-
-    // else if (!empty($params['up_to_date'])) {
-    //     $up_from_date = $params['up_from_date'];
-    //     $up_to_date = $params['up_to_date'];
-    //     $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    // }
-    /*else{
+    } else if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
         }*/
@@ -1362,9 +1359,8 @@ function calls_update_count($params = false, $max_status = 0)
     } else if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
-        // $sql .= ' AND (  ( DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '") ';
-        $sql .= ' AND ((DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '" ) ';
-        $sql .= "  AND ( DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
+        $sql .= ' AND (  ( DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '") ';
+        $sql .= "  AND ( DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
@@ -1417,7 +1413,6 @@ function call_duration($phone, $staff_id, $calling_from_date = "", $calling_to_d
     if (!empty($calling_from_date) && !empty($calling_to_date)) {
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
-
     $sql .= " LIMIT 1 ";
 
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
