@@ -1364,7 +1364,7 @@ function calls_update_count($params = false, $max_status = 0)
         $up_to_date = $params['up_to_date'];
         // $sql .= ' AND (  ( DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '") ';
         $sql .= ' AND ((DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '" ) ';
-        $sql .= "  AND ( DATE_FORMAT(FROM_UNIXTIME(calls.call_start), '%Y-%m-%d') between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
+        $sql .= "  AND ( DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
@@ -1415,9 +1415,11 @@ function call_duration($phone, $staff_id, $calling_from_date = "", $calling_to_d
     FROM " . db_prefix() . "calls_activity_logs 
     WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = '{$staff_id}' ";
     if (!empty($calling_from_date) && !empty($calling_to_date)) {
-        $sql .= " AND  DATE_FORMAT(FROM_UNIXTIME(call_start), '%Y-%m-%d') between '{$calling_from_date}' AND '{$calling_to_date}' ";
+        $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
-    $sql .= " LIMIT 1 ";
-
+    echo $calling_from_date;
+    echo $calling_to_date;
+     echo $sql .= " LIMIT 1 ";
+die;
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
