@@ -439,7 +439,7 @@ foreach ($rResult as $aRow) {
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
     // $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid'], $up_from_date, $up_to_date) : convertToHMS(0, 1);
-    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
+    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow, $_POST) : convertToHMS(0, 1);
     // if (empty($aRow["call_duration"])) {
     //     $aRow["call_duration"] = 0;
     // }
