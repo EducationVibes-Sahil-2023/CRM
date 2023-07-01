@@ -1419,6 +1419,6 @@ function call_duration($row_data, $post_data = "")
     if (!empty($calling_from_date) && !empty($calling_to_date)) {
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
-    $sql .= " LIMIT 1 ";
+    $sql .= "  group by note.id  LIMIT 1 ";
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
