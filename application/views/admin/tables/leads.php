@@ -339,12 +339,12 @@ if (count($custom_fields) > 4) {
 }
 
 // $call_query = "";
-$call_query = " (SELECT IFNULL(SUM(duration), 0) AS call_duration FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  LIMIT 1) call_duration ";
+$call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  LIMIT 1) last_call_date ";
 $call_query_having = "";
 if ($this->ci->input->post('up_from_date_call')) {
     $up_from_date = $this->ci->input->post('up_from_date_call');
     $up_to_date = $this->ci->input->post('up_to_date_call');
-    $call_query = " (SELECT IFNULL(SUM(duration), 0) AS duration FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) call_duration ";
+    // $call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) call_duration ";
     $call_query_having = "(SELECT sum(id)  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1)";
 
 

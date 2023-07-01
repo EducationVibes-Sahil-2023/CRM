@@ -341,12 +341,12 @@
                                        <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-column" style="display: none;">
                                     <div class="form-group">
-                                       <input type="text" class="form-control datepicker" name="up_from_date_call" id="up_from_date_call" placeholder="From Call Date" autocomplete="off">
+                                       <input type="text"  class="form-control datepicker" name="up_from_date_call" id="up_from_date_call" placeholder="From Call Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-column" style="display: none;">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="up_to_date_call" id="up_to_date_call" placeholder="To Call Date" autocomplete="off">
                                     </div>
