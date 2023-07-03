@@ -451,11 +451,11 @@ foreach ($rResult as $aRow) {
     $last_call_update = "";
     if (!empty($aRow['phonenumber'])) {
         $call_data =  call_duration($aRow, $_POST);
-        if (!empty($call_data["duration"])) {
-            $call_duration = $call_data["duration"];
+        if (!empty($call_data[0]["duration"])) {
+            $call_duration = $call_data[0]["duration"];
         }
-        if (!empty($call_data["last_contact_date"])) {
-            $last_call_update = $call_data["last_contact_date"];
+        if (!empty($call_data[0]["last_contact_date"])) {
+            $last_call_update = $call_data[0]["last_contact_date"];
         }
     }
     $row[]    =  !empty($call_duration) ? $call_duration : convertToHMS(0, 1);
