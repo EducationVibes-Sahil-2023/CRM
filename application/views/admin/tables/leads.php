@@ -458,7 +458,7 @@ foreach ($rResult as $aRow) {
             $last_call_update = $call_data[0]["last_contact_date"];
         }
     }
-    $row[]    =  !empty($call_duration) ? $call_duration : convertToHMS(0, 1);
+    $row[]    =  !empty($call_duration) ? convertToHMS($call_duration, 1) : convertToHMS(0, 1);
     $row[]    =  $last_call_update;
 
 
