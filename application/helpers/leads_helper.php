@@ -1277,17 +1277,17 @@ function calls_update_count($params = false, $max_status = 0)
 
     $sql .= "SELECT sum( distinct calls.duration) call_duration from " . db_prefix() . "leads l ";
 
-    $sql .= " JOIN " . db_prefix() . "notes n on ( l.id = n.rel_id ";
+    // $sql .= " JOIN " . db_prefix() . "notes n on ( l.id = n.rel_id ";
 
-    if (!empty($params['assigned'])) {
-        $sql .= " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
-    }
-    if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-    }
-    $sql .= " ) ";
+    // if (!empty($params['assigned'])) {
+    //     $sql .= " AND l.assigned IN ( " . implode(",", $params['assigned']) . ") ";
+    // }
+    // if (!empty($params['up_to_date'])) {
+    //     $up_from_date = $params['up_from_date'];
+    //     $up_to_date = $params['up_to_date'];
+    //     // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    // }
+    // $sql .= " ) ";
 
     $sql .= "  join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
@@ -1295,7 +1295,7 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
     }
 
-    $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') = date(n.dateadded) ";
+    // $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') = date(n.dateadded) ";
 
 
     $sql .= " ) ";
@@ -1414,11 +1414,12 @@ function call_duration($row_data, $post_data = "")
     $staff_id = $row_data["staffid"];
     $lead_id = $row_data["id"];
     $CI = &get_instance();
-    $sql = " SELECT  IFNULL(SUM(calls.duration), 0) AS duration,DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (ifnull(max(calls.call_start),'')+(5 * 3600 + 30 * 60)) SECOND),'%Y-%m-%d %H:%i:%s %a') last_contact_date  FROM " . db_prefix() . "calls_activity_logs calls join " . db_prefix() . "notes note ON ( note.addedfrom = '{$staff_id}'  AND note.rel_id = '{$lead_id}' AND DATE(note.dateadded) = DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') AND  SUBSTRING(TRIM(calls.contact), LENGTH(TRIM(calls.contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')) ";
+    $sql = " SELECT  IFNULL(SUM(calls.duration), 0) AS duration,DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (ifnull(max(calls.call_start),'')+(5 * 3600 + 30 * 60)) SECOND),'%Y-%m-%d %H:%i:%s %a') last_contact_date  FROM " . db_prefix() . "calls_activity_logs calls where SUBSTRING(TRIM(calls.contact), LENGTH(TRIM(calls.contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
     if (!empty($calling_from_date) && !empty($calling_to_date)) {
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
-    $sql .= "  group by note.id  LIMIT 1 ";
+    $sql .= " LIMIT 1 ";
+
 
     return $CI->db->query($sql)->result_array();
 }
