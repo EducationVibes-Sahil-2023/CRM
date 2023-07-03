@@ -545,9 +545,9 @@ class Facebook_leads_integration extends ClientsController
                                 $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             } else if (strpos(strtolower($field_data["name"]), "state") !== false) {
                                 $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                            } else if (strpos(strtolower($field_data["name"]), "do you have the offer letter") !== false) {
+                            } else if (strpos(strtolower($field_data["name"]),"do_you_have_the__offer_letter") !== false) {
                                 $lead_data_array["form-cf-35"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-                            } else if (strpos(strtolower($field_data["name"]), "what kind of assistance you are looking for") !== false) {
+                            } else if (strpos(strtolower($field_data["name"]),"what_kind_of_assistance_you_are_looking_for") !== false) {
                                 $lead_data_array["form-cf-36"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             }
                         }
