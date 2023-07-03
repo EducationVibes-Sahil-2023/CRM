@@ -21,6 +21,8 @@ $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 $statuses              = $this->ci->leads_model->get_status();
 
 $type              = $this->ci->leads_model->get_type();
+$up_from_date = "";
+$up_to_date = "";
 
 // echo "<pre>";
 // print_r($_POST);die;
@@ -373,19 +375,23 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 // die;
 //print_r(data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns));die;
 $having = "";
-if (!empty($this->ci->input->post('update_count_max') && !empty($this->ci->input->post('show_update_counts')) && $this->ci->input->post('show_update_counts') == 1)) {
-    $min = !empty($this->ci->input->post('update_count_min')) ? $this->ci->input->post('update_count_min') : 0;
-    $max = !empty($this->ci->input->post('update_count_max')) ? $this->ci->input->post('update_count_max') : 0;
-    $having = " Having count(n.id) between {$min} AND {$max} ";
+if (isset($_POST['update_count_max'])) {
+    if (!empty($this->ci->input->post('show_update_counts')) && $this->ci->input->post('show_update_counts') == 1) {
+        $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
+        $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
+        $having = " Having count(n.id) between {$min} AND {$max} ";
+    }
 }
 
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
 
+
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
+
 
 foreach ($rResult as $aRow) {
 
@@ -408,8 +414,7 @@ foreach ($rResult as $aRow) {
     // $updatecount = leads_update_count_id($aRow['id'], $this->ci->input->post());
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
-
-    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid']) : convertToHMS(0, 1);
+    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid'], $up_from_date, $up_to_date) : convertToHMS(0, 1);
     // $row[]    = 0;
 
 

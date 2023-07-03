@@ -322,7 +322,7 @@ class Api_Model extends CI_Model
     {
         $response = [];
         try {
-            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 25);
+            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 50);
             $delete_ids = [];
             if (!empty($get_all_activity_temp["data"])) {
                 foreach ($get_all_activity_temp["data"] as $key => $call_data) {
@@ -348,19 +348,21 @@ class Api_Model extends CI_Model
                         if (!empty($staffid)) {
                             $delete_ids[] = $call_data["id"];
 
-                            $insert_data = array(
-                                "staffid" => $staffid,
-                                "staff_contact" => $call_data["staff_contact"],
-                                "contact" => $call_data["contact"],
-                                "call_status" => $call_data["call_status"],
-                                "calls_source" => $call_data["calls_source"],
-                                "calls_type" => $call_data["calls_type"],
-                                "duration" => $call_data["duration"],
-                                "call_start" => $call_data["call_start"],
-                                "call_end" => $call_data["call_end"],
-                                "datetime" => $call_data["datetime"],
-                            );
-                            $this->insert_data(db_prefix() . 'calls_activity_logs', $insert_data);
+                            if (!empty($call_data["staff_contact"]) && !empty($staffid)) {
+                                $insert_data = array(
+                                    "staffid" => $staffid,
+                                    "staff_contact" => $call_data["staff_contact"],
+                                    "contact" => $call_data["contact"],
+                                    "call_status" => $call_data["call_status"],
+                                    "calls_source" => $call_data["calls_source"],
+                                    "calls_type" => $call_data["calls_type"],
+                                    "duration" => $call_data["duration"],
+                                    "call_start" => $call_data["call_start"],
+                                    "call_end" => $call_data["call_end"],
+                                    "datetime" => $call_data["datetime"],
+                                );
+                                $this->insert_data(db_prefix() . 'calls_activity_logs', $insert_data);
+                            }
                         }
                     }
                 }

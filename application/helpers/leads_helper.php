@@ -254,7 +254,7 @@ function get_leads_summary_filter($params)
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
-        } else if (!empty($params['update_count_max'])) {
+        } else if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
         }
         if (!empty($params['followup_to_date'])) {
@@ -335,7 +335,7 @@ function get_leads_summary_filter($params)
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
-        if (!empty($params['update_count_max'])) {
+        if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
             $min = $params['update_count_min'];
             $max = $params['update_count_max'];
             $sql .= ' GROUP BY tblleads.id HAVING COUNT(tblleads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
@@ -675,7 +675,7 @@ function leads_update_count($params = false, $max_status = 0)
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     $sql_add = "";
-    if (!empty($params['update_count_max'])) {
+    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
         $min = $params['update_count_min'];
         $max = $params['update_count_max'];
         $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
@@ -1289,7 +1289,7 @@ function calls_update_count($params = false, $max_status = 0)
     // }
     $sql .= " ) ";
 
-    $sql .= " join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    $sql .= " left join " . db_prefix() . "calls_activity_logs calls on ( l.assigned = calls.staffid and RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(l.phonenumber), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
@@ -1359,7 +1359,8 @@ function calls_update_count($params = false, $max_status = 0)
     } else if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+        $sql .= ' AND (  ( DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '") ';
+        $sql .= "  AND ( DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') between '{$up_from_date}' AND '{$up_to_date}' ) ) ";
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
@@ -1369,7 +1370,7 @@ function calls_update_count($params = false, $max_status = 0)
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
     $sql_add = "";
-    if (!empty($params['update_count_max'])) {
+    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
         $min = $params['update_count_min'];
         $max = $params['update_count_max'];
         $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
@@ -1403,12 +1404,16 @@ function convertToHMS($seconds, $status = 0)
     }
 }
 
-function call_duration($phone, $staff_id)
+function call_duration($phone, $staff_id, $calling_from_date = "", $calling_to_date = "")
 {
     $CI = &get_instance();
     $sql = " SELECT IFNULL(SUM(duration), 0) AS duration
     FROM " . db_prefix() . "calls_activity_logs 
-    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = '{$staff_id}'
-    LIMIT 1 ";
+    WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND  LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = '{$staff_id}' ";
+    if (!empty($calling_from_date) && !empty($calling_to_date)) {
+        $sql .= " AND  DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND) between '{$calling_from_date}' AND '{$calling_to_date}' ";
+    }
+    $sql .= " LIMIT 1 ";
+
     return convertToHMS($CI->db->query($sql)->row()->duration, 1);
 }
