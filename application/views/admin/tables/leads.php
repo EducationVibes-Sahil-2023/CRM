@@ -439,7 +439,7 @@ foreach ($rResult as $aRow) {
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
     // $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow['phonenumber'], $aRow['staffid'], $up_from_date, $up_to_date) : convertToHMS(0, 1);
-    $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow, $_POST) : convertToHMS(0, 1);
+    // $row[]    = !empty($aRow['phonenumber']) ? call_duration($aRow, $_POST) : convertToHMS(0, 1);
     // if (empty($aRow["call_duration"])) {
     //     $aRow["call_duration"] = 0;
     // }
@@ -447,6 +447,19 @@ foreach ($rResult as $aRow) {
 
 
     // $row[]    = 0;
+    $call_duration = 0;
+    $last_call_update = "";
+    if (!empty($aRow['phonenumber'])) {
+        $call_data =  call_duration($aRow, $_POST);
+        if (!empty($call_data["duration"])) {
+            $call_duration = $call_data["duration"];
+        }
+        if (!empty($call_data["last_contact_date"])) {
+            $last_call_update = $call_data["last_contact_date"];
+        }
+    }
+    $row[]    =  !empty($call_duration) ? $call_duration : convertToHMS(0, 1);
+    $row[]    =  $last_call_update;
 
 
 

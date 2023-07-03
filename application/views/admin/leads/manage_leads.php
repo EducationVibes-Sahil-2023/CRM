@@ -343,7 +343,7 @@
                                  </div>
                                  <div class="col-md-2 leads-filter-column" style="display: none;">
                                     <div class="form-group">
-                                       <input type="text"  class="form-control datepicker" name="up_from_date_call" id="up_from_date_call" placeholder="From Call Date" autocomplete="off">
+                                       <input type="text" class="form-control datepicker" name="up_from_date_call" id="up_from_date_call" placeholder="From Call Date" autocomplete="off">
                                     </div>
                                  </div>
                                  <div class="col-md-2 leads-filter-column" style="display: none;">
@@ -496,6 +496,10 @@
                                  ),
                                  array(
                                     'name' => _l('Call Durations'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Last Call Date'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
