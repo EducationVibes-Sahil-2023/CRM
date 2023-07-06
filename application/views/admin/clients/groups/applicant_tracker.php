@@ -821,6 +821,8 @@ if (empty($customer_admins)) { ?>
     var profile_verification_button = <?= !empty($profile_verification_button) ? json_encode($profile_verification_button, true) : [] ?>;
     var document_verification = "<?= !empty($upload_documents[0]["document_status"]) ? $upload_documents[0]["document_status"] : 0 ?>";
     var profile_verification = "<?= !empty($profile_creation_data[0]["profile_status"]) ? $profile_creation_data[0]["profile_status"] : 0 ?>";
+    console.log(upload_documents);
+    console.log(profile_creation_data);
     var admin_ids = [];
     var check_university_status = false;
     var check_university_status_direct = false;
@@ -878,7 +880,7 @@ if (empty($customer_admins)) { ?>
         var check_disabled = false;
         var promises = []; // Array to hold the promises
 
-        $("#profile_creation_div .row").each(function() {
+        $("#profile_creation_div .row.profile-div-save").each(function() {
             var hasValue = false;
             var row = $(this);
 
@@ -901,7 +903,7 @@ if (empty($customer_admins)) { ?>
 
             var pencilIcon = row.closest('.row').find('.fa-pencil-square-o');
             var fileIcon = row.closest('.row').find('.fa-file');
-
+            console.log(hasValue);
             if (hasValue) {
                 pencilIcon.show();
                 fileIcon.hide();
@@ -925,7 +927,7 @@ if (empty($customer_admins)) { ?>
         // Use Promise.all to wait for all promises to resolve
         Promise.all(promises).then(function() {
 
-            if (check_disabled) {
+            if (check_disabled && profile_verification != 1) {
                 $("#profile_div").find(".next").attr("disabled", true);
             } else {
                 $("#profile_div").find(".next").attr("disabled", false);
