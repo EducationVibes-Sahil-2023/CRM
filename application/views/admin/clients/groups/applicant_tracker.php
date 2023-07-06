@@ -1522,7 +1522,7 @@ if (empty($customer_admins)) { ?>
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("email_creation", email);
             upload_data.append("client_id", client_id);
-            upload_data.append("applicant_status", 2);
+            upload_data.append("applicant_status", 1);
 
             $.ajax({
                 url: "<?= base_url("admin/clients/update_email_creation") ?>",
@@ -1548,7 +1548,7 @@ if (empty($customer_admins)) { ?>
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("vendor", vendor);
             upload_data.append("client_id", client_id);
-            upload_data.append("applicant_status", 2);
+            upload_data.append("applicant_status", 1);
 
             if (vendor != '') {
                 $.ajax({
@@ -1577,7 +1577,7 @@ if (empty($customer_admins)) { ?>
             upload_data.append("sop_document", document);
             upload_data.append("document_url", document_url);
             upload_data.append("client_id", client_id);
-            upload_data.append("applicant_status", 2);
+            upload_data.append("applicant_status", 1);
 
             if (document != '' || document_url != '') {
                 $.ajax({
