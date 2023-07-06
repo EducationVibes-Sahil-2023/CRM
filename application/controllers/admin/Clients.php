@@ -1200,7 +1200,7 @@ class Clients extends AdminController
 
             for ($k = $i = 0; $i < count($label_data); $i++) {
                 $upload_data = [];
-                if (!empty($files['name'][$k]) && empty($document_url[$i])) {
+                if (!empty($files['name'][$k])) {
                     $upload_data["name"] = $files['name'][$k];
                     $upload_data["type"] = $files['type'][$k];
                     $upload_data["tmp_name"] = $files['tmp_name'][$k];
@@ -1211,7 +1211,7 @@ class Clients extends AdminController
                         array_push($update_array, array("label_name" => $label_data[$k], "document_file" => $file_name["file_path"]));
                     }
                     $k++;
-                } else {
+                } else if (!empty($document_url[$i])) {
                     array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
                 }
             }
@@ -1529,6 +1529,10 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'client_documents', $_update);
                 $rows_affected = $this->db->affected_rows();
 
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 2));
+                $rows_affected = $this->db->affected_rows();
+
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_doc_status_successfully', _l('client'));
@@ -1670,7 +1674,11 @@ class Clients extends AdminController
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
-
+                if ($document_status == 1) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
+                    $rows_affected = $this->db->affected_rows();
+                }
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
@@ -1703,9 +1711,10 @@ class Clients extends AdminController
             $university_shortlisting_update_arr = [];
             if (!empty($university_shortlisting_status)) {
                 foreach ($university_shortlisting_status as $university_s) {
-                    array_push($university_shortlisting_update_arr, array("university_submit_status" => $university_s["university_status_submit"], "id" => $university_s["university_id"], 'submit_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'submit_date' => date('Y-m-d H:i:s')));
+                    array_push($university_shortlisting_update_arr, array("university_submit_status" => $university_s["university_status_submit"], "id" => $university_s["university_id"], 'submited_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'submit_date' => date('Y-m-d H:i:s')));
                 }
             }
+
             $update_university = "";
             if (!empty($university_shortlisting_update_arr)) {
                 if (!empty($university_shortlisting_update_arr)) {
@@ -1751,6 +1760,7 @@ class Clients extends AdminController
             $offer_letter_status = !empty($this->input->post("offer_letter_status")) ? $this->input->post("offer_letter_status") : [];
             $media_file_status = !empty($this->input->post("media_file_status")) ? $this->input->post("media_file_status") : [];
             $media_file_url = !empty($this->input->post("media_file_url")) ? $this->input->post("media_file_url") : [];
+            $conditional_notes = !empty($this->input->post("conditional_notes")) ? $this->input->post("conditional_notes") : [];
 
             $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
 
@@ -1778,7 +1788,7 @@ class Clients extends AdminController
                         $i++;
                     }
 
-                    array_push($university_shortlisting_update_arr, array("university_offer_status" => $offer_letter_status[$k], "id" => $university_id, "media_file" => $media_path, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'offer_date' => date('Y-m-d H:i:s')));
+                    array_push($university_shortlisting_update_arr, array("conditional_notes" => $conditional_notes[$k], "university_offer_status" => $offer_letter_status[$k], "id" => $university_id, "media_file" => $media_path, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'offer_date' => date('Y-m-d H:i:s')));
                 }
 
                 $update_university = "";

@@ -467,7 +467,7 @@ function get_applicant_status($stage, $client_id)
     if ($stage == 1) {
         $result =  get_stage_1($stage, $client_id);
         if (empty($result)) {
-            $response["applicant_stage_status"] = "Not Started";
+            $response["applicant_stage_status"] = "Pending";
             $response["updated_date"] = "";
         } else {
             $response["applicant_stage_status"] = $result->applicant_stage_status;
@@ -477,33 +477,37 @@ function get_applicant_status($stage, $client_id)
 
         $result =  get_stage_2($stage, $client_id);
         if (empty($result)) {
-            $result = get_stage_1($stage, $client_id);
+            // $result = get_stage_1($stage, $client_id);
+            $response["applicant_stage_status"] = "Pending";
+            $response["updated_date"] = "";
         } else {
             if ($result->profile_status) {
-                $response["applicant_stage_status"] = "Email Creation Complete and approved.";
+                $response["applicant_stage_status"] = "Profile completed.";
                 $response["updated_date"] = $result->email_updated_date;
             } else if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
-                $response["applicant_stage_status"] = "Email Creation Complete wait for Approval.";
+                $response["applicant_stage_status"] = "Profile completed not approved.";
                 $response["updated_date"] = $result->email_updated_date;
             } else {
                 if (!empty($result->email)) {
-                    $response["applicant_stage_status"] = "Email Create.";
+                    $response["applicant_stage_status"] = "Email Created.";
                     $response["updated_date"] = $result->email_updated_date;
                 }
                 if (!empty($result->vendor)) {
-                    $response["applicant_stage_status"] = "Vendor Update.";
+                    $response["applicant_stage_status"] = "Vendor Updated.";
                     $response["updated_date"] = $result->vendor_updated_date;
                 }
                 if (!empty($result->sop)) {
-                    $response["applicant_stage_status"] = "Sop Update.";
+                    $response["applicant_stage_status"] = "Sop Updated.";
                     $response["updated_date"] = $result->sop_updated_date;
+                }
+                if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
                 }
             }
         }
     } else if ($stage == 3) {
         $result =  get_stage_3($stage, $client_id);
         if (empty($result)) {
-            $response["applicant_stage_status"] = "University Shortlisting is pending by admin.";
+            $response["applicant_stage_status"] = "Pending";
             $response["updated_date"] = "";
         } else {
             $max_date = $result->created_date;
@@ -536,23 +540,23 @@ function get_applicant_status($stage, $client_id)
 
 
             if (!empty($result->university_count) && !empty($result->approved_count) && ($result->university_count == $result->approved_count)) {
-                $response["applicant_stage_status"] = "University Shortlisting approved by student.";
+                $response["applicant_stage_status"] = "All approved";
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count) && !empty($result->reject_count) && ($result->university_count == $result->reject_count)) {
-                $response["applicant_stage_status"] = "University Shortlisting rejected by student.";
+                $response["applicant_stage_status"] = "All reject";
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count) && !empty($result->approved_count) && !empty($result->reject_count)) {
-                $response["applicant_stage_status"] = "Total " . $result->university_count . " university shortlisting by admin." . $result->approved_count . " Approved AND " . $result->reject_count . " Reject by Student";
+                $response["applicant_stage_status"] = "University shortlisted";
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count)) {
-                $response["applicant_stage_status"] = "University Shortlisting list send to student for approval.";
+                $response["applicant_stage_status"] = "University shortlisting is pending.";
                 $response["updated_date"] = $max_date;
             }
         }
     } else if ($stage == 4) {
         $result =  get_stage_4($stage, $client_id);
         if (empty($result)) {
-            $response["applicant_stage_status"] = "Application submitting is pending by admin.";
+            $response["applicant_stage_status"] = "Pending.";
             $response["updated_date"] = "";
         } else {
             $max_date = $result->created_date;
