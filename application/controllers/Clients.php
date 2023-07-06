@@ -740,7 +740,7 @@ class Clients extends ClientsController
                 $data['gantt_data'] = $this->projects_model->get_gantt_data($id);
             } elseif ($group == 'project_discussions') {
                 if ($this->input->get('discussion_id')) {
-                    $data['discussion_user_profile_image_url'] = contact_profile_image_url(get_contact_user_id());
+                    $data['discussion_user_    _image_url'] = contact_profile_image_url(get_contact_user_id());
                     $data['discussion']                        = $this->projects_model->get_discussion($this->input->get('discussion_id'), $id);
                     $data['current_user_is_admin']             = false;
                 }
@@ -1929,8 +1929,12 @@ class Clients extends ClientsController
             foreach ($_POST["university_id"] as $key => $university_id) {
                 $this->db->where("id", $university_id);
                 $rows_affected = $this->db->update(db_prefix() . 'client_university_shortlisting', [
-                    'university_status' => $_POST["university_application_status"][$key],'client_updated_by'=>get_client_user_id(),'client_updated_date'=> date('Y-m-d H:i:s')
+                    'university_status' => $_POST["university_application_status"][$key], 'client_updated_by' => get_client_user_id(), 'client_updated_date' => date('Y-m-d H:i:s')
                 ]);
+
+                $this->db->where("userid", get_client_user_id());
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 4));
+                $rows_affected = $this->db->affected_rows();
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));

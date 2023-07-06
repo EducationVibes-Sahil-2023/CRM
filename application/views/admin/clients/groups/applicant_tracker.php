@@ -324,6 +324,14 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
     .add_university_btn {
         margin-left: 5px;
     }
+
+    textarea.conditional_textarea {
+        width: 100%;
+        height: 100px;
+        resize: none;
+        padding: 10px;
+        margin: 5px 0px;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
@@ -383,9 +391,9 @@ if (empty($customer_admins)) { ?>
                                             <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= $docs["label_name"] ?>"></div>
                                             <div class="col-md-5">
                                                 <div class="margin-bottom ">
-                                                    <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $docs["document_file"] ?>" name="document_file[]" placeholder="">
+                                                    <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $docs["document_file"] ?>" onchange="real_time_media_show(this)" name="document_file[]" placeholder="">
                                                 </div>
-                                                <div class="row">
+                                                <div class="row media-text-div">
                                                     <div class="col-md-10">
                                                         <p class="document-file-name"><?= $file_name ?></p>
                                                     </div>
@@ -412,7 +420,7 @@ if (empty($customer_admins)) { ?>
                                     <div id="upload_documents">
                                         <div class="row col-md-12 document_upload_files ">
                                             <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
-                                            <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" name="document_file[]" placeholder=""></div>
+                                            <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" onchange="real_time_media_show(this)" name="document_file[]" placeholder=""></div>
                                             <div class="col-md-2">
                                                 <button class="col-md-2 add_document remove_document_btn" style="display:none;" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                                 <button class="col-md-2 add_document add_document_btn" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
@@ -429,35 +437,41 @@ if (empty($customer_admins)) { ?>
                         } else if ($track["show_div_name"] == "profile_div") { ?>
                             <div id="profile_creation_div">
 
-                                <div class="row">
-                                    <div class="col-md-6"></div>
+                                <div class="row profile-div-save">
+                                    <div class="col-md-4">
+                                        <label>Email <span class="text-danger">*</span></label>
+                                    </div>
                                     <div class="col-md-4">
                                         <?php echo render_input('email_creation', "", !empty($profile_creation_data[0]["email"]) ? $profile_creation_data[0]["email"] : '', "Email", ["required" => "required", "placeholder" => "Enter Email"]); ?>
                                     </div>
-                                    <div class="col-md-2 edit_save_block email_creation_block">
+                                    <div class="col-md-4 edit_save_block email_creation_block">
                                         <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
                                         <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6"></div>
+                                <div class="row profile-div-save">
+                                    <div class="col-md-4">
+                                        <label>Vendor <span class="text-danger">*</span></label>
+                                    </div>
                                     <div class="col-md-4">
                                         <?php
                                         $selected_vendor = !empty($profile_creation_data[0]["vendor"]) ? explode(",", $profile_creation_data[0]["vendor"]) : [];
                                         echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); ?>
                                     </div>
-                                    <div class="col-md-2 edit_save_block vendor_creation_block">
+                                    <div class="col-md-4 edit_save_block vendor_creation_block">
                                         <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
                                         <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'vendor')"></i>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6"></div>
+                                <div class="row profile-div-save">
+                                    <div class="col-md-4">
+                                        <label>Sop <span class="text-danger">*</span></label>
+                                    </div>
                                     <div class="col-md-4">
                                         <div class="">
-                                            <input type="file" id="sop_document" data-url="<?= !empty($profile_creation_data[0]["sop"]) ? $profile_creation_data[0]["sop"] : '' ?>" name="sop_document" class="form-control" accept=".pdf,.doc,.docx">
+                                            <input type="file" id="sop_document" onchange="real_time_media_show_sop(this)" data-url="<?= !empty($profile_creation_data[0]["sop"]) ? $profile_creation_data[0]["sop"] : '' ?>" name="sop_document" class="form-control" accept=".pdf,.doc,.docx">
                                         </div>
-                                        <div>
+                                        <div class="media-text-div-other">
                                             <?php if (!empty($profile_creation_data[0]["sop"])) {
                                                 $file_name = "";
                                                 if (!empty($profile_creation_data[0]["sop"])) {
@@ -477,7 +491,7 @@ if (empty($customer_admins)) { ?>
                                             <?php } ?>
                                         </div>
                                     </div>
-                                    <div class="col-md-2 edit_save_block sop_creation_block">
+                                    <div class="col-md-4 edit_save_block sop_creation_block">
 
 
                                         <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
@@ -502,7 +516,10 @@ if (empty($customer_admins)) { ?>
                                     foreach ($university_shortlisting as $key_u => $short_list) {
                                 ?>
                                         <div class="col-md-12 university_div <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>">
-                                            <div class="col-md-5">
+                                            <div class="col-md-2">
+                                                <?= ($short_list["university_status"] == 1) ? 'Approved' : (($short_list["university_status"] == 2) ? 'Reject' : '') ?>
+                                            </div>
+                                            <div class="col-md-4">
                                                 <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
                                                 <select class="selectpicker from-control" data-width="100%" name="select_university" id="select_university" data-live-search="true">
                                                     <option value="">Select University</option>
@@ -530,7 +547,7 @@ if (empty($customer_admins)) { ?>
                                                     ?>
                                                 </select>
                                             </div>
-                                            <div class="col-md-5">
+                                            <div class="col-md-4">
                                                 <?php
                                                 $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
                                                 echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
@@ -669,6 +686,9 @@ if (empty($customer_admins)) { ?>
                                 <?php if (!empty($university_shortlisting)) {
                                     $select_dropdown_value = array_column($customer_vendors, "name", "id");
                                     foreach ($university_shortlisting as $key_u => $short_list) {
+                                        if ($short_list["university_submit_status"] != 1) {
+                                            continue;
+                                        }
 
                                         $file_name = "";
                                         if (!empty($short_list["media_file"])) {
@@ -713,10 +733,10 @@ if (empty($customer_admins)) { ?>
 
                                             </div>
                                             <div class="col-md-3">
-                                                <input type="file" disabled data-file-name="<?= $file_name ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" name="offer_letter">
+                                                <input type="file" disabled data-file-name="<?= $file_name ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" onchange="real_time_media_show_offer(this)" name="offer_letter">
 
 
-                                                <div class="row ">
+                                                <div class="row media-text-div-offer">
                                                     <div class="col-md-8">
 
                                                         <p class="document-file-name"><?= $file_name ?></p>
@@ -730,7 +750,9 @@ if (empty($customer_admins)) { ?>
 
                                                 </div>
                                             </div>
-
+                                            <div class="col-lg-12 mt-2 mb-2">
+                                                <textarea style="display:<?= !empty($short_list["conditional_notes"]) ? '' : 'none'; ?>" height="200" class="conditional_textarea" placeholder="Write conditions ...... "><?= !empty($short_list["conditional_notes"]) ? $short_list["conditional_notes"] : '' ?></textarea>
+                                            </div>
                                         </div>
                                     <?php }
                                     ?>
@@ -803,6 +825,7 @@ if (empty($customer_admins)) { ?>
     console.log(profile_creation_data);
     var admin_ids = [];
     var check_university_status = false;
+    var check_university_status_direct = false;
     var check_university_status_submit = false;
     $("document").ready(function() {
         if (document_verification != 1) {
@@ -826,7 +849,6 @@ if (empty($customer_admins)) { ?>
             if ($.trim($(this).val()) != "") {
                 $(this).attr("disabled", true);
                 $(this).selectpicker('refresh');
-                check_university_status_submit = true;
             }
         })
 
@@ -944,7 +966,7 @@ if (empty($customer_admins)) { ?>
                                 <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
                                 <div class="col-md-5">
                                 <div class="margin-bottom " >
-                                <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" name="document_file[]" placeholder=""></div>
+                                <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" name="document_file[]" onchange="real_time_media_show(this)" placeholder=""></div>
                                            </div>     
                                 <div class="col-md-2">
                                 <button class="col-md-6 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
@@ -979,6 +1001,8 @@ if (empty($customer_admins)) { ?>
                 let university_count = 0;
                 let university_count_not = 0;
                 let total_university = $("#application_div select[name='university_application_status']").length;
+
+
                 $("#application_div select[name='university_application_status']").each(function() {
                     if ($(this).val() != 1) {
                         university_count_not++;
@@ -1001,11 +1025,16 @@ if (empty($customer_admins)) { ?>
                 if (university_count > 0) {
                     if (university_count_not === 0) {
                         check_university_status = true;
+                        check_university_status_direct = true;
                         html = '<h3 class="message-notification success">Your all university is Approved.</h3>';
                         $("#university_div").find("button.next").attr("disabled", false);
 
                     } else {
                         html = '<h3 class="message-notification">Your ' + university_count + ' University is Approved. ' + university_count_not + ' is Reject.';
+
+                        if (university_count > 0) {
+                            check_university_status = true;
+                        }
 
                         if (total_university > 0) {
                             html += total_university + ' under processing.tab-content';
@@ -1028,7 +1057,7 @@ if (empty($customer_admins)) { ?>
     function is_validate_application() {
         return new Promise((resolve, reject) => {
             if ($("select[name='university_status_submit']").length > 0) {
-                let check_status = true;
+                let check_status = false;
                 let university_count = 0;
                 let university_count_not = 0;
                 let total_university = $("select[name='university_status_submit']").length;
@@ -1036,13 +1065,17 @@ if (empty($customer_admins)) { ?>
                 $("select[name='university_status_submit']").each(function() {
                     if ($(this).val() != 1) {
                         university_count_not++;
-                        check_status = false;
                     } else {
+                        check_status = true;
                         university_count++;
                     }
                 });
 
                 if (total_university === university_count) {
+                    check_university_status_submit = true;
+                    $("#application_div").find("input.next").attr("disabled", false);
+                    resolve(true); // Resolving the promise if all universities have a value of 1
+                } else if (university_count > 0) {
                     $("#application_div").find("input.next").attr("disabled", false);
                     resolve(true); // Resolving the promise if all universities have a value of 1
                 } else {
@@ -1155,14 +1188,14 @@ if (empty($customer_admins)) { ?>
         } else if (type === "university_div") {
             let isUniversityValid = await is_validate_university();
             if (isUniversityValid) {
-                if (check_university_status == true) {
+                if (check_university_status_direct == true) {
                     hide_loader();
                 } else {
                     let update_university_status = await update_university();
-                    hide_loader();
+
                     if (update_university_status.resp_code === "RCS") {
+                        hide_loader();
                         let ids = update_university_status.ids;
-                        console.log(ids);
                         $(".add_university_div_block .university_div").each(function(index) {
                             if (ids[index] !== undefined) {
                                 $(this).find("input[name='university_id']").val(ids[index]);
@@ -1197,56 +1230,67 @@ if (empty($customer_admins)) { ?>
 
                         html = '<h3 class="message-notification">Your University under Processing</h3>';
                         $(".university_approval_message_action").html(html);
-
+                        if (check_university_status == true) {
+                            hide_loader();
+                            current_fs.slideUp("slow");
+                            next_fs.slideDown("slow");
+                        }
 
                     } else {
                         alert_float("danger", update_university_status.resp_desc);
                     }
                     return false;
                 }
+
+            } else {
+                hide_loader();
+                return false;
             }
         } else if (type === "application_div") {
             let validate_application_status = await is_validate_application();
-            if (check_university_status_submit) {
 
-            } else {
-                if (validate_application_status) {
-                    $("select[name='university_status_submit']").attr("disabled", true);
-                    let update_university_application_submit_status = await update_university_application();
-                    if (update_university_application_submit_status.resp_code === "RCS") {
-                        alert_float("success", update_university_application_submit_status.resp_desc);
-                        hide_loader();
-                    } else {
-                        hide_loader();
-                        alert_float("danger", update_university_application_submit_status.resp_desc);
-                    }
-                    return false;
+            if (validate_application_status) {
+                $("select[name='university_status_submit']").attr("disabled", true);
+                let update_university_application_submit_status = await update_university_application();
+                if (update_university_application_submit_status.resp_code === "RCS") {
+                    alert_float("success", update_university_application_submit_status.resp_desc);
+                    hide_loader();
                 } else {
                     hide_loader();
+                    alert_float("danger", update_university_application_submit_status.resp_desc);
                 }
+
+                $("select[name='university_status_submit']").each(function() {
+                    if ($.trim($(this).val()) != "") {
+                        location.reload();
+                        return;
+                    }
+                });
+                return false;
+            } else {
+                hide_loader();
             }
+
         } else if (type === "offer_div") {
             let validate_offer_letter = await is_validate_offer_letter();
             check_university_status_submit = false;
-            if (check_university_status_submit) {
 
-            } else {
-                if (validate_offer_letter) {
-                    check_offer_status
-                    let update_university_offer_status = await update_university_offer_application();
-                    if (update_university_offer_status.resp_code === "RCS") {
-                        hide_loader();
-                        alert_float("success", update_university_offer_status.resp_desc);
-                        return false;
-                    } else {
-                        hide_loader();
-                        alert_float("danger", update_university_offer_status.resp_desc);
-                    }
+            if (validate_offer_letter) {
+                check_offer_status
+                let update_university_offer_status = await update_university_offer_application();
+                if (update_university_offer_status.resp_code === "RCS") {
+                    hide_loader();
+                    alert_float("success", update_university_offer_status.resp_desc);
                     return false;
                 } else {
                     hide_loader();
+                    alert_float("danger", update_university_offer_status.resp_desc);
                 }
+                return false;
+            } else {
+                hide_loader();
             }
+
         }
         // let current_fs = $(obj).parent();
         // let next_fs = $(obj).parent().next();
@@ -1421,6 +1465,7 @@ if (empty($customer_admins)) { ?>
             response = await update_email();
         } else if ($.trim(type.toLowerCase()) == "vendor") {
             if ($.trim($("#email_creation").val()) == "") {
+                alert_float("danger", "Email is requried.");
                 return false;
             } else if ($(".email_creation_block").find(".fa-pencil-square-o").is(":visible") === false) {
                 alert_float("danger", "First save email.");
@@ -1429,8 +1474,6 @@ if (empty($customer_admins)) { ?>
                 alert_float("danger", "Select vendor is requried.");
                 return false;
             }
-
-
             show_loader();
             response = await update_vendor();
         } else if ($.trim(type.toLowerCase()) == "sop") {
@@ -1452,8 +1495,8 @@ if (empty($customer_admins)) { ?>
             hide_loader();
             alert_float("success", response.resp_desc);
             $(obj).hide();
-            $(obj).closest(".row").find('input, select').prop('disabled', true);
-            $(obj).closest(".row").find('input, select').selectpicker('refresh');
+            $(obj).closest('input, select').prop('disabled', true);
+            $(obj).closest('input, select').selectpicker('refresh');
             $(obj).siblings(".fa").show();
 
         } else {
@@ -1479,7 +1522,7 @@ if (empty($customer_admins)) { ?>
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("email_creation", email);
             upload_data.append("client_id", client_id);
-            upload_data.append("applicant_status", step_stage);
+            upload_data.append("applicant_status", 2);
 
             $.ajax({
                 url: "<?= base_url("admin/clients/update_email_creation") ?>",
@@ -1505,7 +1548,7 @@ if (empty($customer_admins)) { ?>
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("vendor", vendor);
             upload_data.append("client_id", client_id);
-            upload_data.append("applicant_status", step_stage);
+            upload_data.append("applicant_status", 2);
 
             if (vendor != '') {
                 $.ajax({
@@ -1534,7 +1577,7 @@ if (empty($customer_admins)) { ?>
             upload_data.append("sop_document", document);
             upload_data.append("document_url", document_url);
             upload_data.append("client_id", client_id);
-            upload_data.append("applicant_status", step_stage);
+            upload_data.append("applicant_status", 2);
 
             if (document != '' || document_url != '') {
                 $.ajax({
@@ -1642,7 +1685,7 @@ if (empty($customer_admins)) { ?>
                     $("#profile_creation_div").find(".fa-pencil-square-o").hide();
                     $("#profile_creation_div").find(".fa-file").hide();
                 } else {
-                    if (email == "" || vendor == "" || sop == "") {
+                    if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
                         html = '<h3 class="message-notification"> Profile is incompleted.</h3>';
                     } else {
                         html = '<h3 class="message-notification">Take action on profile verification ';
@@ -1660,7 +1703,7 @@ if (empty($customer_admins)) { ?>
                     $("#profile_creation_div").find(".fa-file").hide();
                 } else {
 
-                    if (email == "" || vendor == "" || sop == "") {
+                    if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
                         html = '<h3 class="message-notification">Your Profile is incompleted.</h3>';
 
                     } else {
@@ -1752,7 +1795,9 @@ if (empty($customer_admins)) { ?>
         let response = await is_validate_university();
         if (response) {
             let html = `<div class="col-md-12 university_div university_div_">
-                                <div class="col-md-5">
+                                <div class="col-md-2">
+                                </div>
+                                <div class="col-md-4">
                                 <input type="hidden" name="university_id">
                                     <select class="selectpicker from-control"  data-width="100%" name="select_university" id="" data-live-search="true">
                                     <option value="">Select University</option>
@@ -1779,7 +1824,7 @@ if (empty($customer_admins)) { ?>
                                         ?>
                                     </select>
                                 </div>
-                                <div class="col-md-5">
+                                <div class="col-md-4">
                                     <?php
                                     echo render_select('select_university_vendor', $customer_vendors, array('id', 'name')); ?>
                                 </div>
@@ -1855,9 +1900,19 @@ if (empty($customer_admins)) { ?>
             $(".add_university_div_block .university_div").each(function() {
                 let university_id = $(this).find("input[name='university_id']").val();
                 let select_university = $(this).find("select[name='select_university']").val();
-                let select_university_vendor = $(this).find("select[name='select_university_vendor']").val()
-                if (university_id == undefined) {
+                let select_university_vendor = $(this).find("select[name='select_university_vendor']").val();
+
+                if (university_id === undefined) {
                     university_id = "";
+                }
+
+                // Check for duplicate university and vendor
+                const duplicateEntry = university_shortlisting.find(entry => entry.university === select_university && entry.vendor === select_university_vendor);
+                if (duplicateEntry) {
+                    hide_loader();
+                    alert_float("danger", "Duplicate entry found: university '" + select_university + "' connected with multiple vendors.");
+                    stop_status = false;
+                    return false;
                 }
 
                 university_shortlisting.push({
@@ -1865,14 +1920,12 @@ if (empty($customer_admins)) { ?>
                     "vendor": select_university_vendor,
                     "university_id": university_id
                 });
-                if (!universityVendorMap.hasOwnProperty(select_university)) {
-                    universityVendorMap[select_university] = select_university_vendor;
-                } else {
-                    hide_loader();
-                    alert_float("danger", "Duplicate entry found: university '" + select_university + "' connected with multiple vendors.");
-                    stop_status = false;
-                    return false;
+
+                // Update universityVendorMap
+                if (!universityVendorMap.hasOwnProperty(select_university_vendor)) {
+                    universityVendorMap[select_university_vendor] = select_university_vendor;
                 }
+
 
             });
 
@@ -1952,6 +2005,8 @@ if (empty($customer_admins)) { ?>
                 let media_file = $(this).find("input[name='offer_letter']").prop("files")[0];
                 let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
                 let university_id = $(this).find("input[name='university_id']").val();
+                let conditional_notes = $(this).find(".conditional_textarea").val();
+
                 if (upload_media_status == "" || upload_media_status == undefined) {
                     upload_media_status = 0;
                 }
@@ -1960,6 +2015,7 @@ if (empty($customer_admins)) { ?>
                 upload_data.append("media_file_status[]", upload_media_status);
                 upload_data.append("media_file_url[]", media_file_url);
                 upload_data.append("university_id[]", university_id);
+                upload_data.append("conditional_notes[]", conditional_notes);
             });
             try {
                 upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
@@ -2022,12 +2078,91 @@ if (empty($customer_admins)) { ?>
     }
     $("select[name='university_status_submit_offer']").change(function() {
         let upload_media = $("option:selected", this).data("selected-file");
-        console.log(upload_media);
         if (upload_media == 1) {
+            $(this).parents(".university_div_application").find("textarea").val("");
+            $(this).parents(".university_div_application").find("textarea").hide();
+            if ($("option:selected", this).val() == 2) {
+                $(this).parents(".university_div_application").find("textarea").val("");
+                $(this).parents(".university_div_application").find("textarea").show();
+            }
             $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", false);
         } else {
+            $(this).parents(".university_div_application").find("textarea").val("");
+            $(this).parents(".university_div_application").find("textarea").hide();
             $(this).parents(".university_div_application").find("input[type='file']").val('');
             $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", true);
         }
     });
+
+
+    function real_time_media_show(input) {
+        var file = input.files[0];
+
+        if (file) {
+            var $parent = $(input).parents(".document_upload_files");
+            $parent.find(".media-text-div").remove();
+
+            var mediaTextDiv = $('<div class="row media-text-div">' +
+                '<div class="col-md-10">' +
+                '<p class="document-file-name">' + file.name + '</p>' +
+                '</div>' +
+                '<div class="col-md-2 file-download-block">' +
+                '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
+                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '</a>' +
+                '</div>' +
+                '</div>');
+
+            $(input).after(mediaTextDiv);
+        } else {
+            $(input).parents(".document_upload_files").find(".media-text-div").remove();
+
+        }
+    }
+
+    function real_time_media_show_sop(input) {
+        var file = input.files[0];
+
+        if (file) {
+            $(".media-text-div-other").remove();;
+            var mediaTextDiv = $('<div class="row media-text-div-other">' +
+                '<div class="col-md-10">' +
+                '<p class="document-file-name">' + file.name + '</p>' +
+                '</div>' +
+                '<div class="col-md-2 file-download-block">' +
+                '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
+                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '</a>' +
+                '</div>' +
+                '</div>');
+
+            $(input).after(mediaTextDiv);
+        } else {
+            $(".media-text-div-other").remove();
+
+        }
+    }
+
+    function real_time_media_show_offer(input) {
+        var file = input.files[0];
+
+        if (file) {
+            $(".media-text-div-offer").remove();;
+            var mediaTextDiv = $('<div class="row media-text-div-offer">' +
+                '<div class="col-md-10">' +
+                '<p class="document-file-name">' + file.name + '</p>' +
+                '</div>' +
+                '<div class="col-md-2 file-download-block">' +
+                '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
+                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '</a>' +
+                '</div>' +
+                '</div>');
+
+            $(input).after(mediaTextDiv);
+        } else {
+            $(".media-text-div-offer").remove();
+
+        }
+    }
 </script>
