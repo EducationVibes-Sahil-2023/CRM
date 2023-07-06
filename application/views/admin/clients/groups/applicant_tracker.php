@@ -638,7 +638,97 @@ if (empty($customer_admins)) { ?>
 
 
                                             </div>
+
                                             <div class="col-md-3">
+                                                <?php
+
+                                                $university_status_submit_new = array($university_status_submit[0]);
+                                                $selected_university_status_submit = !empty($short_list["university_submit_status"]) ? $short_list["university_submit_status"] : "";
+                                                echo render_select('university_status_submit', $university_status_submit_new, array('id', 'name'), "", $selected_university_status_submit); ?>
+
+
+                                            </div>
+
+                                        </div>
+                                    <?php }
+                                    ?>
+
+                                <?php } ?>
+                            </div>
+                        <?php } else if ($track["show_div_name"] == "offer_div") {
+                            $selected_university = json_decode($admissionpreferences->university, true);
+                            $university_drop_down = [];
+                            foreach ($selected_university as $key => $university) {
+                                if (!empty($university)) {
+                                    $university_drop_down[$key] = explode(",", $university);
+                                }
+                            }
+                        ?>
+
+                            <div class="offer_div">
+                                <?php if (!empty($university_shortlisting)) {
+                                    $select_dropdown_value = array_column($customer_vendors, "name", "id");
+                                    foreach ($university_shortlisting as $key_u => $short_list) {
+
+                                        $file_name = "";
+                                        if (!empty($short_list["media_file"])) {
+                                            $file_name =  trim(explode("_", basename($short_list["media_file"]))[2]);
+                                        }
+                                ?>
+                                        <div class="col-md-12 university_div_application mt-2">
+                                            <div class="col-md-3">
+                                                <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
+                                                <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <?php $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : ""; ?>
+                                                <input type="input" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <?php
+                                                // $selected_university_application = 2;
+                                                $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
+                                                echo render_select('university_application_status', $university_application_status, array('id', 'name'), "", $selected_university_application);
+                                                ?>
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <select name="university_status_submit_offer" class=" university_status_submit_offer selectpicker" data-width="100%" data-none-selected-text="Non selected" data-live-search="true">
+                                                    <option></option>
+                                                    <?php
+
+                                                    $offer_status = $university_status_submit;
+                                                    unset($offer_status[0]);
+
+                                                    foreach ($offer_status as $u_a_s) {
+                                                        $selected_university_application = !empty($short_list["university_offer_status"]) ? $short_list["university_offer_status"] : "";
+                                                        $select_s = ($selected_university_application == $u_a_s['id']) ? "Selected" : "";
+                                                    ?>
+                                                        <option value="<?= $u_a_s['id'] ?>" <?= $select_s ?> data-selected-file='<?= $u_a_s['file_upload_status'] ?>'><?= $u_a_s['name'] ?></option>
+                                                    <?php
+                                                    }
+                                                    ?>
+                                                </select>
+
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="file" disabled data-file-name="<?= $file_name ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" name="offer_letter">
+
+
+                                                <div class="row ">
+                                                    <div class="col-md-8">
+
+                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <?php if (!empty($short_list["media_file"])) { ?>
+                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                        <?php }
+                                                        ?>
+                                                    </div>
+
+                                                </div>
                                             </div>
 
                                         </div>
@@ -651,8 +741,11 @@ if (empty($customer_admins)) { ?>
                         <?php if ($k > 0) { ?>
                             <input type="button" name="previous" class="previous action-button-previous" value="Previous" />
                         <?php } ?>
-                        <?php if (($k + 1) < count($applicant_tracker)) { ?>
+                        <?php
+                        if (($k + 1) < count($applicant_tracker)) { ?>
                             <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Next" />
+                        <?php } else if (($k + 1) == count($applicant_tracker)) {  ?>
+                            <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Update" />
                         <?php } ?>
 
                     </fieldset>
@@ -710,6 +803,7 @@ if (empty($customer_admins)) { ?>
     console.log(profile_creation_data);
     var admin_ids = [];
     var check_university_status = false;
+    var check_university_status_submit = false;
     $("document").ready(function() {
         if (document_verification != 1) {
             $("#profile_creation_div").find('input, select').prop('disabled', true).selectpicker('refresh');;
@@ -727,8 +821,38 @@ if (empty($customer_admins)) { ?>
             $(this).selectpicker('refresh');
         })
 
-    })
 
+        $("select[name='university_status_submit']").each(function() {
+            if ($.trim($(this).val()) != "") {
+                $(this).attr("disabled", true);
+                $(this).selectpicker('refresh');
+                check_university_status_submit = true;
+            }
+        })
+
+
+
+
+    })
+    var check_offer_letter = true;
+
+    function check_offer_status() {
+
+        $("#offer_div select[name='university_status_submit_offer']").each(function() {
+            if ($.trim($(this).val()) != "") {
+                $(this).attr("disabled", true);
+                $(this).selectpicker('refresh');
+            } else {
+                check_offer_letter = false;
+            }
+        })
+
+        if (check_offer_letter == true) {
+            $("#progressbar li.active").addClass("previous");
+        }
+
+    }
+    check_offer_status();
 
     function check_profile_status() {
         var check_disabled = false;
@@ -814,7 +938,7 @@ if (empty($customer_admins)) { ?>
 
     async function add_documents() {
 
-        let response = await validate_document();
+        let response = await is_validate_document();
         if (response) {
             let html = `<div class="row col-md-12 document_upload_files">
                                 <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
@@ -850,12 +974,12 @@ if (empty($customer_admins)) { ?>
 
     function is_validate_application_status(status = 0) {
         return new Promise((resolve) => {
-            if ($("select[name='university_application_status']").length > 0) {
+            if ($("#application_div select[name='university_application_status']").length > 0) {
                 let check_status = true;
                 let university_count = 0;
                 let university_count_not = 0;
-                let total_university = $("select[name='university_application_status']").length;
-                $("select[name='university_application_status']").each(function() {
+                let total_university = $("#application_div select[name='university_application_status']").length;
+                $("#application_div select[name='university_application_status']").each(function() {
                     if ($(this).val() != 1) {
                         university_count_not++;
                         check_status = false;
@@ -867,9 +991,9 @@ if (empty($customer_admins)) { ?>
                 total_university = ((total_university - university_count) - university_count_not);
 
                 if (check_status) {
-                    $("#university_application_status").find("button.next").attr("disabled", false);
+                    $("#university_application_status").find("input.next").attr("disabled", false);
                 } else {
-                    $("#university_application_status").find("button.next").attr("disabled", true);
+                    $("#university_application_status").find("input.next").attr("disabled", true);
                 }
 
                 let html = '';
@@ -878,6 +1002,8 @@ if (empty($customer_admins)) { ?>
                     if (university_count_not === 0) {
                         check_university_status = true;
                         html = '<h3 class="message-notification success">Your all university is Approved.</h3>';
+                        $("#university_div").find("button.next").attr("disabled", false);
+
                     } else {
                         html = '<h3 class="message-notification">Your ' + university_count + ' University is Approved. ' + university_count_not + ' is Reject.';
 
@@ -898,15 +1024,62 @@ if (empty($customer_admins)) { ?>
     }
 
     is_validate_application_status();
+
+    function is_validate_application() {
+        return new Promise((resolve, reject) => {
+            if ($("select[name='university_status_submit']").length > 0) {
+                let check_status = true;
+                let university_count = 0;
+                let university_count_not = 0;
+                let total_university = $("select[name='university_status_submit']").length;
+
+                $("select[name='university_status_submit']").each(function() {
+                    if ($(this).val() != 1) {
+                        university_count_not++;
+                        check_status = false;
+                    } else {
+                        university_count++;
+                    }
+                });
+
+                if (total_university === university_count) {
+                    $("#application_div").find("input.next").attr("disabled", false);
+                    resolve(true); // Resolving the promise if all universities have a value of 1
+                } else {
+                    $("#application_div").find("input.next").attr("disabled", true);
+                    reject("Some universities have not been selected"); // Rejecting the promise if some universities don't have a value of 1
+                }
+            } else {
+                resolve(true); // Resolving the promise if there are no universities to validate
+            }
+        });
+    }
+
+    is_validate_application();
+
+    $("select[name='university_status_submit']").change(function() {
+        is_validate_application();
+    })
     async function next_step(type, obj, step) {
         type = $.trim(type);
         step_stage = (step);
         show_loader();
+
+        let current_fs = $(obj).parent();
+        let next_fs = $(obj).parent().next();
+
+        // Activate next step on progressbar using the index of next_fs
+        $("#progressbar li").removeClass("active").addClass("inactive");
+
+        let nextIndex = $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
+        $("#progressbar li.active").prevAll().addClass("previous");
+
+
         if (type === "document_div") {
             if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
                 hide_loader();
             } else {
-                let isDocumentValid = await validate_document();
+                let isDocumentValid = await is_validate_document();
                 if (isDocumentValid) {
                     try {
                         let uploadResponse = await upload_document();
@@ -945,7 +1118,7 @@ if (empty($customer_admins)) { ?>
                 hide_loader();
 
             } else {
-                let isprofilevalid = await validate_profile_div();
+                let isprofilevalid = await is_validate_profile();
                 console.log(isprofilevalid);
                 if (isprofilevalid) {
                     try {
@@ -980,8 +1153,7 @@ if (empty($customer_admins)) { ?>
                 return false
             }
         } else if (type === "university_div") {
-            let isUniversityValid = await validate_university_div();
-            console.log(isUniversityValid);
+            let isUniversityValid = await is_validate_university();
             if (isUniversityValid) {
                 if (check_university_status == true) {
                     hide_loader();
@@ -1034,21 +1206,79 @@ if (empty($customer_admins)) { ?>
                 }
             }
         } else if (type === "application_div") {
-            let is_validate_application_status = await is_validate_application_status(1);
-        }
-        let current_fs = $(obj).parent();
-        let next_fs = $(obj).parent().next();
+            let validate_application_status = await is_validate_application();
+            if (check_university_status_submit) {
 
-        // Activate next step on progressbar using the index of next_fs
-        $("#progressbar li").removeClass("active").addClass("inactive");
-        $("#progressbar li.active").addClass("previous");
-        $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
+            } else {
+                if (validate_application_status) {
+                    $("select[name='university_status_submit']").attr("disabled", true);
+                    let update_university_application_submit_status = await update_university_application();
+                    if (update_university_application_submit_status.resp_code === "RCS") {
+                        alert_float("success", update_university_application_submit_status.resp_desc);
+                        hide_loader();
+                    } else {
+                        hide_loader();
+                        alert_float("danger", update_university_application_submit_status.resp_desc);
+                    }
+                    return false;
+                } else {
+                    hide_loader();
+                }
+            }
+        } else if (type === "offer_div") {
+            let validate_offer_letter = await is_validate_offer_letter();
+            check_university_status_submit = false;
+            if (check_university_status_submit) {
+
+            } else {
+                if (validate_offer_letter) {
+                    check_offer_status
+                    let update_university_offer_status = await update_university_offer_application();
+                    if (update_university_offer_status.resp_code === "RCS") {
+                        hide_loader();
+                        alert_float("success", update_university_offer_status.resp_desc);
+                        return false;
+                    } else {
+                        hide_loader();
+                        alert_float("danger", update_university_offer_status.resp_desc);
+                    }
+                    return false;
+                } else {
+                    hide_loader();
+                }
+            }
+        }
+        // let current_fs = $(obj).parent();
+        // let next_fs = $(obj).parent().next();
+
+        // // Activate next step on progressbar using the index of next_fs
+        // $("#progressbar li").removeClass("active").addClass("inactive");
+        // $("#progressbar li.active").addClass("previous");
+        // $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
         hide_loader();
         current_fs.slideUp("slow");
         next_fs.slideDown("slow");
     }
 
-    function validate_profile_div() {
+    function is_validate_offer_letter() {
+        return new Promise((resolve, reject) => {
+            $("#offer_div .university_div_application").each(function() {
+                let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
+                let upload_media_status = $("option:selected", this).data("selected-file");
+                let media_file = $(this).find("input[name='offer_letter']").val();
+                let upload_media = $("option:selected", this).data("selected-file");
+                if (upload_media_status == 1) {
+                    if (media_file == "") {
+                        return false;
+                    }
+                }
+            });
+            resolve(true);
+        });
+
+    }
+
+    function is_validate_profile() {
         return new Promise((resolve, reject) => {
             let email_creation = $("#email_creation").val();
             let select_vendor = $("#select_vendor").val();
@@ -1095,7 +1325,7 @@ if (empty($customer_admins)) { ?>
         });
     }
 
-    function validate_document() {
+    function is_validate_document() {
         return new Promise((resolve, reject) => {
             $(".document_upload_files").each(function() {
                 let label_name = $(this).find("input[name='document_label[]']").val();
@@ -1519,7 +1749,7 @@ if (empty($customer_admins)) { ?>
 
 
     async function add_university_div() {
-        let response = await validate_university_div();
+        let response = await is_validate_university();
         if (response) {
             let html = `<div class="col-md-12 university_div university_div_">
                                 <div class="col-md-5">
@@ -1574,7 +1804,7 @@ if (empty($customer_admins)) { ?>
 
     }
 
-    function validate_university_div() {
+    function is_validate_university() {
         return new Promise((resolve, reject) => {
             $(".add_university_div_block .university_div").each(function() {
                 let select_university = $(this).find("select[name='select_university']").val();
@@ -1708,4 +1938,96 @@ if (empty($customer_admins)) { ?>
     if ($(".university_div_").length == 1) {
         $(".university_div_").find(".remove_university_btn").hide();
     }
+
+    function update_university_offer_application() {
+        return new Promise(async (resolve, reject) => {
+            let upload_data = new FormData();
+            let university_shortlisting_status = [];
+            let universityVendorMap = {};
+            let stop_status = true;
+
+            $("#offer_div .university_div_application").each(function() {
+                let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
+                let upload_media_status = $("select[name='university_status_submit_offer'] option:selected", this).data("selected-file");
+                let media_file = $(this).find("input[name='offer_letter']").prop("files")[0];
+                let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
+                let university_id = $(this).find("input[name='university_id']").val();
+                if (upload_media_status == "" || upload_media_status == undefined) {
+                    upload_media_status = 0;
+                }
+                upload_data.append("offer_letter_status[]", offer_letter_status);
+                upload_data.append("media_file[]", media_file);
+                upload_data.append("media_file_status[]", upload_media_status);
+                upload_data.append("media_file_url[]", media_file_url);
+                upload_data.append("university_id[]", university_id);
+            });
+            try {
+                upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+                upload_data.append("client_id", client_id);
+                upload_data.append("applicant_status", (step_stage));
+                let response = await $.ajax({
+                    url: "<?= base_url("admin/clients/update_university_offer_status") ?>",
+                    method: "POST",
+                    data: upload_data,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Handle the success response from the server
+                resolve(JSON.parse(response));
+            } catch (error) {
+                // Handle the error response from the server
+                console.error(error);
+                reject(error);
+            }
+        });
+    }
+
+    function update_university_application() {
+        return new Promise(async (resolve, reject) => {
+            console.log("start");
+            let upload_data = new FormData();
+            let university_shortlisting_status = [];
+            let universityVendorMap = {};
+            let stop_status = true;
+            $(".application_div .university_div_application ").each(function() {
+                let university_id = $(this).find("input[name='university_id']").val();
+                let university_status_submit = $(this).find("select[name='university_status_submit']").val();
+                university_shortlisting_status.push({
+                    "university_id": university_id,
+                    "university_status_submit": university_status_submit
+                });
+            });
+            upload_data.append("university_shortlisting_status", JSON.stringify(university_shortlisting_status));
+            try {
+                upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+                upload_data.append("client_id", client_id);
+                upload_data.append("applicant_status", (step_stage));
+                let response = await $.ajax({
+                    url: "<?= base_url("admin/clients/update_university_status") ?>",
+                    method: "POST",
+                    data: upload_data,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Handle the success response from the server
+                resolve(JSON.parse(response));
+            } catch (error) {
+                // Handle the error response from the server
+                console.error(error);
+                reject(error);
+            }
+        });
+    }
+    $("select[name='university_status_submit_offer']").change(function() {
+        let upload_media = $("option:selected", this).data("selected-file");
+        console.log(upload_media);
+        if (upload_media == 1) {
+            $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", false);
+        } else {
+            $(this).parents(".university_div_application").find("input[type='file']").val('');
+            $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", true);
+        }
+    });
 </script>
