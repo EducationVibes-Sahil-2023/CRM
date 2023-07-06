@@ -116,7 +116,7 @@ if( ! ini_get('date.timezone') )
 
  */
 
-	define('ENVIRONMENT', 'production');
+	define('ENVIRONMENT', 'development');
 
 
 
