@@ -231,13 +231,12 @@ class Clients extends AdminController
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
-
-
                 $data['customer_vendors'] = [];
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
                     $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
                 }
             }
+
 
             $data['staff'] = $this->staff_model->get('', ['active' => 1]);
 
@@ -1116,7 +1115,7 @@ class Clients extends AdminController
     }
 
     // UPDATE ADMISSION PREFERENCES
-    function update_admission_preferences()
+    public function update_admission_preferences()
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -1155,7 +1154,7 @@ class Clients extends AdminController
 
     // FREEZE ADMISSION PREFERENCES
 
-    function freeze_admission_preferences()
+    public function freeze_admission_preferences()
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -1276,7 +1275,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_email_creation()
+    public function update_email_creation()
     {
         $data = array();
 
@@ -1344,7 +1343,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_vendor()
+    public function update_vendor()
     {
         $data = array();
 
@@ -1392,7 +1391,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_sop()
+    public function update_sop()
     {
         $data = array();
 
@@ -1428,7 +1427,7 @@ class Clients extends AdminController
                     if (!empty($file["file_path"])) {
                         $_update["sop"] = $file["file_path"];
                     }
-                } else if (!empty($document_url)) {
+                } elseif (!empty($document_url)) {
                     $_update["sop"] = $document_url;
                 }
 
@@ -1475,10 +1474,10 @@ class Clients extends AdminController
                 if (empty($check_->email)) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'Please add email first';
-                } else if (empty($check_->vendor)) {
+                } elseif (empty($check_->vendor)) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'Please select vendor first.';
-                } else if (empty($check_->sop)) {
+                } elseif (empty($check_->sop)) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'Please upload sop document.';
                 } else {
@@ -1498,7 +1497,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_document_verification_status()
+    public function update_document_verification_status()
     {
         $data = array();
 
@@ -1551,7 +1550,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_profile()
+    public function update_profile()
     {
         $data = array();
 
@@ -1584,7 +1583,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_university()
+    public function update_university()
     {
         $data = array();
 
@@ -1648,7 +1647,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_profile_verification_status()
+    public function update_profile_verification_status()
     {
         $data = array();
 
@@ -1693,7 +1692,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    function update_university_status()
+    public function update_university_status()
     {
         $data = array();
 
@@ -1704,7 +1703,7 @@ class Clients extends AdminController
             $university_shortlisting_update_arr = [];
             if (!empty($university_shortlisting_status)) {
                 foreach ($university_shortlisting_status as $university_s) {
-                    array_push($university_shortlisting_update_arr, array("university_submit_status" => $university_s["university_status_submit"], "id" => $university_s["university_id"], 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s')));
+                    array_push($university_shortlisting_update_arr, array("university_submit_status" => $university_s["university_status_submit"], "id" => $university_s["university_id"], 'submit_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'submit_date' => date('Y-m-d H:i:s')));
                 }
             }
             $update_university = "";
@@ -1740,5 +1739,81 @@ class Clients extends AdminController
         }
 
         echo json_encode($data);
+    }
+
+    public function update_university_offer_status()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+            $university_ids = !empty($this->input->post("university_id")) ? $this->input->post("university_id") : [];
+            $offer_letter_status = !empty($this->input->post("offer_letter_status")) ? $this->input->post("offer_letter_status") : [];
+            $media_file_status = !empty($this->input->post("media_file_status")) ? $this->input->post("media_file_status") : [];
+            $media_file_url = !empty($this->input->post("media_file_url")) ? $this->input->post("media_file_url") : [];
+
+            $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
+
+            $university_shortlisting_update_arr = [];
+            if (!empty($university_ids)) {
+                $i = 0;
+                foreach ($university_ids as $k => $university_id) {
+
+                    $media_path = "";
+                    if (!empty($media_file_url[$k])) {
+                        $media_path = $media_file_url[$k];
+                    }
+                    $upload_data = [];
+                    if (!empty($media_file['name'][$i]) && $media_file_status[$k] == 1) {
+                        $upload_data["name"] = $media_file['name'][$i];
+                        $upload_data["type"] = $media_file['type'][$i];
+                        $upload_data["tmp_name"] = $media_file['tmp_name'][$i];
+                        $upload_data["error"] = $media_file['error'][$i];
+                        $upload_data["size"] = $media_file['size'][$i];
+                        if ($upload_data["error"] === UPLOAD_ERR_OK) {
+
+                            $file_name = upload_applicant_documents($client_id, $upload_data);
+                            $media_path = $file_name["file_path"];
+                        }
+                        $i++;
+                    }
+
+                    array_push($university_shortlisting_update_arr, array("university_offer_status" => $offer_letter_status[$k], "id" => $university_id, "media_file" => $media_path, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'offer_date' => date('Y-m-d H:i:s')));
+                }
+
+                $update_university = "";
+                if (!empty($university_shortlisting_update_arr)) {
+                    if (!empty($university_shortlisting_update_arr)) {
+                        $update_university = $this->db->update_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_update_arr, "id");
+                    }
+
+                    // $this->db->where("userid", $client_id);
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    // $rows_affected = $this->db->affected_rows();
+
+                    $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+                    $ids = array_column($university_shortlisting_data, "id");
+                    if ($update_university) {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = _l('update_custumer_update_offer_successfully', _l('client'));
+                        $data['ids'] = $ids;
+                        $data['university_shortlisting'] = $university_shortlisting_data;
+                        set_alert('success', _l('update_custumer_update_offer_successfully', _l('client')));
+                    } else {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = _l('update_custumer_failed_offer_successfully', _l('client'));
+                        set_alert('danger', _l('update_custumer_failed_offer_successfully', _l('client')));
+                    }
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Something bad happen.';
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Invalid request method';
+            }
+
+            echo json_encode($data);
+        }
     }
 }

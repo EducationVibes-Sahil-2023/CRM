@@ -549,6 +549,78 @@ function get_applicant_status($stage, $client_id)
                 $response["updated_date"] = $max_date;
             }
         }
+    } else if ($stage == 4) {
+        $result =  get_stage_4($stage, $client_id);
+        if (empty($result)) {
+            $response["applicant_stage_status"] = "Application submitting is pending by admin.";
+            $response["updated_date"] = "";
+        } else {
+            $max_date = $result->created_date;
+
+            $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+            $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+            if ($date1 !== null && $date2 !== null) {
+                if ($date1 > $date2) {
+                    $max_date = $result->created_date;
+                } elseif ($date1 < $date2) {
+                    $max_date = $result->updated_date;
+                } else {
+                    $max_date = $result->created_date;
+                }
+            } elseif ($date1 === null && $date2 === null) {
+            } elseif ($date1 === null) {
+            } else {
+                $max_date = $result->created_date;
+            }
+
+            if (!empty($result->university_count) && !empty($result->action_taken) && ($result->university_count == $result->action_taken)) {
+                $response["applicant_stage_status"] = "All application submitting by Admin.Waiting for offer letter.";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count) && !empty($result->action_taken) && !empty($result->not_take_action)) {
+                $response["applicant_stage_status"] = "Total " . $result->university_count . " Application." . $result->action_taken . " Application submitting AND " . $result->not_take_action . " Application not submitting by admin.";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count)) {
+                $response["applicant_stage_status"] = "Application submitting by Admin.Waiting for offer letter.";
+                $response["updated_date"] = $max_date;
+            }
+        }
+    } else if ($stage == 5) {
+        $result =  get_stage_5($stage, $client_id);
+        if (empty($result)) {
+            $response["applicant_stage_status"] = "Offer letter is pedding.";
+            $response["updated_date"] = "";
+        } else {
+            $max_date = $result->created_date;
+
+            $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+            $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+            if ($date1 !== null && $date2 !== null) {
+                if ($date1 > $date2) {
+                    $max_date = $result->created_date;
+                } elseif ($date1 < $date2) {
+                    $max_date = $result->updated_date;
+                } else {
+                    $max_date = $result->created_date;
+                }
+            } elseif ($date1 === null && $date2 === null) {
+            } elseif ($date1 === null) {
+            } else {
+                $max_date = $result->created_date;
+            }
+
+            if (!empty($result->university_count) && !empty($result->offer_letter) && ($result->university_count == $result->offer_letter)) {
+                $response["applicant_stage_status"] = "Completed";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count) && !empty($result->offer_letter) && !empty($result->offer_letter_not)) {
+                $response["applicant_stage_status"] = "Total " . $result->university_count . " Application Submittind." . $result->offer_letter . " Application Offer response AND " . $result->offer_letter_not . " Application is pending.";
+                $response["updated_date"] = $result->client_updated_date;
+            } else if (!empty($result->university_count)) {
+                $response["applicant_stage_status"] =  "Application submitting by Admin.Pending offer letter.";
+                $response["updated_date"] = $max_date;
+            }
+        }
     }
     return $response;
 }
@@ -576,6 +648,44 @@ function get_stage_3($stage, $client_id)
     MAX(created_date) AS created_date,
     MAX(updated_date) AS updated_date,
     MAX(client_updated_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_4($stage, $client_id)
+{
+
+    $CI = &get_instance();
+    $sql = "SELECT 
+    university_submit_status,
+    COUNT(1) AS university_count,
+    SUM(IF(university_submit_status != 1, 1, 0)) AS action_taken,
+    SUM(IF(university_submit_status = 0, 1, 0)) AS not_take_action,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(submit_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_5($stage, $client_id)
+{
+
+    $CI = &get_instance();
+    $sql = "SELECT 
+    university_submit_status,
+    COUNT(1) AS university_count,
+    SUM(IF(media_file != '', 1, 0)) AS offer_letter,
+    SUM(IF(media_file = '', 1, 0)) AS offer_letter_not,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(offer_date) AS client_updated_date
   FROM " . db_prefix() . "client_university_shortlisting
   WHERE client_id = '{$client_id}' AND status = '1';
    ";
