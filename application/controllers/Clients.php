@@ -1907,7 +1907,7 @@ class Clients extends ClientsController
     {
 
         $data['is_home'] = true;
-        $data['title']            = "University Shortlisting";
+        $data['title']  = "University Shortlisting";
         $data['university_shortlisting'] = $this->clients_model->university_shortlisting(get_client_user_id());
         $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
         $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data(get_client_user_id());

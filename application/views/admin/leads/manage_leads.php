@@ -57,7 +57,7 @@
                               </div>
                               <div class="text-center  col-md-6">
                                  <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
-                                 <span id="updationCounterText_time">Updates Calls</span>
+                                 <span id="updationCounterText_time">Updates Calls Duration</span>
                               </div>
                            </div>
 
@@ -341,6 +341,16 @@
                                        <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                     </div>
                                  </div>
+                                 <div class="col-md-2 leads-filter-column" style="display: none;">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="up_from_date_call" id="up_from_date_call" placeholder="From Call Date" autocomplete="off">
+                                    </div>
+                                 </div>
+                                 <div class="col-md-2 leads-filter-column" style="display: none;">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="up_to_date_call" id="up_to_date_call" placeholder="To Call Date" autocomplete="off">
+                                    </div>
+                                 </div>
                                  <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="followup_from_date" id="followup_from_date" placeholder="From Followup Date" autocomplete="off">
@@ -486,6 +496,10 @@
                                  ),
                                  array(
                                     'name' => _l('Call Durations'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Last Call Date'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
@@ -871,6 +885,8 @@
          var followup_to_date = document.getElementById("followup_to_date").value;
          var up_from_date = document.getElementById("up_from_date").value;
          var up_to_date = document.getElementById("up_to_date").value;
+         var up_from_date_call = document.getElementById("up_from_date_call").value;
+         var up_to_date_call = document.getElementById("up_to_date_call").value;
 
          if (to_date != '') {
             if (from_date == '') {
@@ -923,6 +939,20 @@
          if (up_from_date != '') {
             if (up_to_date == '') {
                $("#up_to_date").focus();
+               return false;
+            }
+         }
+
+         if (up_to_date_call != '') {
+            if (up_from_date_call == '') {
+               $("#up_from_date_call").focus();
+               return false;
+            }
+         }
+
+         if (up_from_date_call != '') {
+            if (up_to_date_call == '') {
+               $("#up_to_date_call").focus();
                return false;
             }
          }
@@ -999,6 +1029,8 @@
          var assign_from_date = document.getElementById("assign_from_date").value;
          var assign_to_date = document.getElementById("assign_to_date").value;
          var update_count_min, update_count_max = '';
+         var up_from_date_call = document.getElementById("up_from_date_call").value;
+         var up_to_date_call = document.getElementById("up_to_date_call").value;
          if ($("#show_update_counts").is(":checked")) {
             update_count_min = document.getElementById("update_count_min").value;
             update_count_max = document.getElementById("update_count_max").value;
@@ -1029,6 +1061,8 @@
                update_count_min: update_count_min,
                update_count_max: update_count_max,
                neet_score: $("#neet_score").val(),
+               up_from_date_call: up_from_date_call,
+               up_to_date_call: up_to_date_call,
 
 
             },
