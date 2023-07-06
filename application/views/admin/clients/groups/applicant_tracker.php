@@ -1694,8 +1694,12 @@ if (empty($customer_admins)) { ?>
                         });
                         html += '</h3>';
                     }
+
                 }
                 $(".profile_approval_message_action").html(html);
+                if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
+                    $("#profile_div").find("input.next").attr("disabled", false);
+                }
             } else {
                 if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
                     html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
@@ -1709,6 +1713,10 @@ if (empty($customer_admins)) { ?>
                     } else {
                         html = '<h3 class="message-notification">Your Profile under Processing</h3>';
                     }
+                }
+
+                if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
+                    $("#profile_div").find("input.next").attr("disabled", false);
                 }
                 $(".profile_approval_message_action").html(html);
             }
