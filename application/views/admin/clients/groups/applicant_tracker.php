@@ -570,7 +570,9 @@ if (empty($customer_admins)) { ?>
 
                                 <?php } else { ?>
                                     <div class="col-md-12 university_div university_div_">
-                                        <div class="col-md-5">
+                                        <div class="col-md-2">
+                                        </div>
+                                        <div class="col-md-4">
                                             <input type="hidden" name="university_id">
                                             <select class="selectpicker from-control" data-width="100%" name="select_university" id="select_university" data-live-search="true">
                                                 <option value="">Select University</option>
@@ -597,7 +599,7 @@ if (empty($customer_admins)) { ?>
                                                 ?>
                                             </select>
                                         </div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-4">
                                             <?php
                                             // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
 
