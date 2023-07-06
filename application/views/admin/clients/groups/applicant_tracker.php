@@ -821,8 +821,6 @@ if (empty($customer_admins)) { ?>
     var profile_verification_button = <?= !empty($profile_verification_button) ? json_encode($profile_verification_button, true) : [] ?>;
     var document_verification = "<?= !empty($upload_documents[0]["document_status"]) ? $upload_documents[0]["document_status"] : 0 ?>";
     var profile_verification = "<?= !empty($profile_creation_data[0]["profile_status"]) ? $profile_creation_data[0]["profile_status"] : 0 ?>";
-    console.log(upload_documents);
-    console.log(profile_creation_data);
     var admin_ids = [];
     var check_university_status = false;
     var check_university_status_direct = false;
@@ -926,7 +924,8 @@ if (empty($customer_admins)) { ?>
 
         // Use Promise.all to wait for all promises to resolve
         Promise.all(promises).then(function() {
-            if (check_disabled && profile_verification != 1) {
+
+            if (check_disabled) {
                 $("#profile_div").find(".next").attr("disabled", true);
             } else {
                 $("#profile_div").find(".next").attr("disabled", false);
