@@ -1530,7 +1530,7 @@ class Clients extends AdminController
                 $rows_affected = $this->db->affected_rows();
 
                 $this->db->where("userid", $client_id);
-                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 2));
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 1));
                 $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected > 0) {
@@ -1676,7 +1676,7 @@ class Clients extends AdminController
                 $rows_affected = $this->db->affected_rows();
                 if ($document_status == 1) {
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 2));
                     $rows_affected = $this->db->affected_rows();
                 }
                 if ($rows_affected > 0) {

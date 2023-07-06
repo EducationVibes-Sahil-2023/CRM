@@ -1933,7 +1933,7 @@ class Clients extends ClientsController
                 ]);
 
                 $this->db->where("userid", get_client_user_id());
-                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 4));
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
                 $rows_affected = $this->db->affected_rows();
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
