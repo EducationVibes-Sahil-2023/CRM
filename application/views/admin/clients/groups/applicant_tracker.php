@@ -2161,15 +2161,17 @@ if (empty($customer_admins)) { ?>
                             if (condition_id == undefined || condition_id == "") {
                                 condition_id = "";
                             }
+                            let media_name = Math.floor(Date.now() / 1000) + "_" + Math.floor(Math.random() * 1001);
                             let conditional_array = {
                                 university_id: university_id,
                                 condition: condition,
                                 condition_id: condition_id,
                                 university_status: university_status,
-                                media_url: media_url
+                                media_url: media_url,
+                                media_name: media_name
                             };
                             upload_data.append("conditional_array[]", JSON.stringify(conditional_array));
-                            upload_data.append("conditional_media_file[" + university_id + "][]", condition_file);
+                            upload_data.append("conditional_media_file[" + media_name + "]", condition_file);
                         });
                     }
                 });
