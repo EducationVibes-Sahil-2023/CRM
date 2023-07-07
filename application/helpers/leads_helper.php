@@ -1414,7 +1414,7 @@ function call_duration($row_data, $post_data = "")
     $staff_id = $row_data["staffid"];
     $lead_id = $row_data["id"];
     $CI = &get_instance();
-    $sql = " SELECT  IFNULL(SUM(calls.duration), 0) AS duration,DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (ifnull(max(calls.call_start),'')+(5 * 3600 + 30 * 60)) SECOND),'%Y-%m-%d %H:%i:%s %a') last_contact_date  FROM " . db_prefix() . "calls_activity_logs calls where SUBSTRING(TRIM(calls.contact), LENGTH(TRIM(calls.contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    $sql = " SELECT  IFNULL(SUM(calls.duration), 0) AS duration,if(max(calls.call_start)!='',DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (ifnull(max(calls.call_start),'')+(5 * 3600 + 30 * 60)) SECOND),'%Y-%m-%d %H:%i:%s'),'') last_contact_date  FROM " . db_prefix() . "calls_activity_logs calls where SUBSTRING(TRIM(calls.contact), LENGTH(TRIM(calls.contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
     if (!empty($calling_from_date) && !empty($calling_to_date)) {
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
