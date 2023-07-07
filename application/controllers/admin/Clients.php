@@ -1763,6 +1763,7 @@ class Clients extends AdminController
             $media_file_url = !empty($this->input->post("media_file_url")) ? $this->input->post("media_file_url") : [];
             $conditional_notes = !empty($this->input->post("conditional_notes")) ? $this->input->post("conditional_notes") : [];
             $conditional_array = !empty($this->input->post("conditional_array")) ? $this->input->post("conditional_array") : [];
+            $university_status = !empty($this->input->post("university_status")) ? $this->input->post("university_status") : [];
 
             $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
             $media_file_condition = !empty($_FILES["conditional_media_file"]) ? $_FILES["conditional_media_file"] : [];
@@ -1790,8 +1791,9 @@ class Clients extends AdminController
                         }
                         $i++;
                     }
-
-                    array_push($university_shortlisting_update_arr, array("university_offer_status" => $offer_letter_status[$k], "id" => $university_id, "media_file" => $media_path, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'offer_date' => date('Y-m-d H:i:s')));
+                    if (empty($university_status[$k])) {
+                        array_push($university_shortlisting_update_arr, array("university_offer_status" => $offer_letter_status[$k], "id" => $university_id, "media_file" => $media_path, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'offer_date' => date('Y-m-d H:i:s')));
+                    }
                 }
 
 
@@ -1803,38 +1805,42 @@ class Clients extends AdminController
                 foreach ($conditional_array as $keyy => $con) {
                     $con_array = json_decode($con);
 
-                    $this->db->where('client_id', $client_id);
-                    $this->db->where('university_id', $university_id);
-                    $this->db->update(db_prefix() . 'offer_condition', [
-                        'status' => 0
-                    ]);
 
-                    if (empty($con_array->condition_id)) {
-                        $condition_a[$con_array->university_id] = empty($condition_a[$con_array->university_id]) ? 0 : $condition_a[$con_array->university_id] + 1;
-                        $condition_array_data[$index_] = array("client_id" => $client_id, "university_id" => $con_array->university_id, "status" => 1, "condition_text" => $con_array->condition, "created_at" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s'), "file" => '');
-                        $index_++;
-                    } else {
-                        $condition_a[$con_array->university_id] = empty($condition_a[$con_array->university_id]) ? 0 : $condition_a[$con_array->university_id] + 1;
-                        $condition_array_update_data[$index_u] = array("id" => $con_array->condition_id, "client_id" => $client_id, "university_id" => $con_array->university_id, "status" => 1, "condition_text" => $con_array->condition, "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s'), "file" => '');
-                        $index_u++;
-                    }
+                    if (empty($con_array->university_status) || $con_array->university_status == '' || $con_array->university_status <= 0) {
 
-                    $upload_data = [];
-                    if (!empty($media_file_condition['name'][$con_array->university_id][$condition_a[$con_array->university_id]])) {
-                        $upload_data["name"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
-                        $upload_data["type"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
-                        $upload_data["tmp_name"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
-                        $upload_data["error"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
-                        $upload_data["size"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
-                        if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $this->db->where('client_id', $client_id);
+                        $this->db->where('university_id', $university_id);
+                        $this->db->update(db_prefix() . 'offer_condition', [
+                            'status' => 0
+                        ]);
 
-                            $file_name = upload_applicant_documents($client_id, $upload_data);
-                            $media_path = $file_name["file_path"];
-                        }
                         if (empty($con_array->condition_id)) {
-                            $condition_array_data[(count($condition_array_data) - 1)]["file"] = $media_path;
+                            $condition_a[$con_array->university_id] = empty($condition_a[$con_array->university_id]) ? 0 : $condition_a[$con_array->university_id] + 1;
+                            $condition_array_data[$index_] = array("client_id" => $client_id, "university_id" => $con_array->university_id, "status" => 1, "condition_text" => $con_array->condition, "created_at" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s'), "file" =>  $con_array->media_url);
+                            $index_++;
                         } else {
-                            $condition_array_update_data[(count($condition_array_update_data) - 1)]["file"] = $media_path;
+                            $condition_a[$con_array->university_id] = empty($condition_a[$con_array->university_id]) ? 0 : $condition_a[$con_array->university_id] + 1;
+                            $condition_array_update_data[$index_u] = array("id" => $con_array->condition_id, "client_id" => $client_id, "university_id" => $con_array->university_id, "status" => 1, "condition_text" => $con_array->condition, "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s'), "file" => $con_array->media_url);
+                            $index_u++;
+                        }
+
+                        $upload_data = [];
+                        if (!empty($media_file_condition['name'][$con_array->university_id][$condition_a[$con_array->university_id]])) {
+                            $upload_data["name"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
+                            $upload_data["type"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
+                            $upload_data["tmp_name"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
+                            $upload_data["error"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
+                            $upload_data["size"] = $media_file_condition[$con_array->university_id][$condition_a[$con_array->university_id]];
+                            if ($upload_data["error"] === UPLOAD_ERR_OK) {
+
+                                $file_name = upload_applicant_documents($client_id, $upload_data);
+                                $media_path = $file_name["file_path"];
+                            }
+                            if (empty($con_array->condition_id)) {
+                                $condition_array_data[(count($condition_array_data) - 1)]["file"] = $media_path;
+                            } else {
+                                $condition_array_update_data[(count($condition_array_update_data) - 1)]["file"] = $media_path;
+                            }
                         }
                     }
                 }
