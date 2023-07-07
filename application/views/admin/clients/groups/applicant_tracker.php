@@ -327,10 +327,22 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 
     textarea.conditional_textarea {
         width: 100%;
-        height: 100px;
+        height: 50px;
         resize: none;
         padding: 10px;
         margin: 5px 0px;
+    }
+
+    .text-area-field-div {
+        display: flex;
+        align-items: center;
+    }
+
+    #offer_div .university_div_application {
+        /* border: 1px solid black; */
+        padding: 10px 0px;
+        margin-top: 25px;
+        box-shadow: 0px 1px 5px -2px black;
     }
 </style>
 <!-- MultiStep Form -->
@@ -700,6 +712,7 @@ if (empty($customer_admins)) { ?>
                                         <div class="col-md-12 university_div_application mt-2">
                                             <div class="col-md-3">
                                                 <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
+                                                <input type="hidden" class="form-control" name="university_status" value="<?= $short_list["university_offer_status"] ?>">
                                                 <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
                                             </div>
                                             <div class="col-md-2">
@@ -737,7 +750,6 @@ if (empty($customer_admins)) { ?>
                                             <div class="col-md-3">
                                                 <input type="file" disabled data-file-name="<?= $file_name ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" onchange="real_time_media_show_offer(this)" name="offer_letter">
 
-
                                                 <div class="row media-text-div-offer">
                                                     <div class="col-md-8">
 
@@ -752,9 +764,57 @@ if (empty($customer_admins)) { ?>
 
                                                 </div>
                                             </div>
-                                            <div class="col-lg-12 mt-2 mb-2">
-                                                <textarea style="display:<?= !empty($short_list["conditional_notes"]) ? '' : 'none'; ?>" height="200" class="conditional_textarea" placeholder="Write conditions ...... "><?= !empty($short_list["conditional_notes"]) ? $short_list["conditional_notes"] : '' ?></textarea>
-                                            </div>
+                                            <?php
+                                            $condition_array = get_condition_offer($short_list["client_id"], $short_list["id"]);
+                                            if (!empty($condition_array)) {
+                                                foreach ($condition_array as $con) {
+
+                                                    $file_name = "";
+                                                    if (!empty($con["file"])) {
+                                                        $file_name =  trim(explode("_", basename($con["file"]))[2]);
+                                                    }
+                                            ?>
+                                                    <div class="col-lg-12 mt-2 mb-2 text-area-field">
+                                                        <div class="row text-area-field-div">
+                                                            <div class="col-md-3">Condition</div>
+                                                            <div class="col-md-6"><textarea disabled placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"><?= $con["condition_text"] ?></textarea></div>
+                                                            <div class="col-md-3"><input type="file" disabled data-file-url<?= $con["file"] ?> class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf">
+
+                                                                <div class="row media-text-div-offer-condition">
+                                                                    <div class="col-md-8">
+                                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                                    </div>
+                                                                    <div class="col-md-2">
+                                                                        <?php if (!empty($con["file"])) { ?>
+                                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($con["file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                        <?php }
+                                                                        ?>
+                                                                    </div>
+                                                                </div>
+
+                                                            </div>
+                                                            <!-- <div class="col-md-2"> -->
+                                                            <!-- <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                                                <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
+                                                            <!-- </div> -->
+                                                        </div>
+                                                    </div>
+                                                <?php
+                                                }
+                                            } else {
+                                                ?>
+                                                <div class="col-lg-12 mt-2 mb-2 text-area-field" style="display:none;">
+                                                    <div class="row text-area-field-div">
+                                                        <div class="col-md-1">Condition</div>
+                                                        <div class="col-md-6"><textarea placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"></textarea></div>
+                                                        <div class="col-md-3"><input type="file" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf"></div>
+                                                        <div class="col-md-2">
+                                                            <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                                            <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php } ?>
                                         </div>
                                     <?php }
                                     ?>
@@ -1276,8 +1336,8 @@ if (empty($customer_admins)) { ?>
 
         } else if (type === "offer_div") {
             let validate_offer_letter = await is_validate_offer_letter();
+            hide_loader();
             check_university_status_submit = false;
-
             if (validate_offer_letter) {
                 check_offer_status
                 let update_university_offer_status = await update_university_offer_application();
@@ -1308,22 +1368,76 @@ if (empty($customer_admins)) { ?>
     }
 
     function is_validate_offer_letter() {
-        return new Promise((resolve, reject) => {
-            $("#offer_div .university_div_application").each(function() {
-                let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
-                let upload_media_status = $("option:selected", this).data("selected-file");
-                let media_file = $(this).find("input[name='offer_letter']").val();
-                let upload_media = $("option:selected", this).data("selected-file");
-                if (upload_media_status == 1) {
-                    if (media_file == "") {
-                        return false;
+        return new Promise(async function(resolve, reject) {
+            try {
+                $("#offer_div .university_div_application").each(async function() {
+                    let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
+                    let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
+                    let media_file = $(this).find("input[name='offer_letter']").val();
+                    let media_file_url = $(this).find("input[name='offer_letter']").attr();
+                    console.log(upload_media_status);
+                    console.log(offer_letter_status);
+                    if (upload_media_status == 1) {
+                        if (media_file == "") {
+                            $(this).find("input[name='offer_letter']").focus();
+                            alert_float("danger", "Upload offer letter file.");
+                            reject("Offer letter file is missing."); // Reject the promise if the offer letter file is missing
+                            return false;
+                        }
+                        if (offer_letter_status == 2) {
+                            try {
+                                let check_condition = await is_validate_offer_condition(this); // Await the validation of offer conditions
+                                hide_loader();
+                                console.log(check_condition);
+                                if (!check_condition) {
+                                    return false;
+                                }
+                            } catch (error) {
+                                hide_loader();
+                                reject(error); // Reject the promise if offer conditions are invalid
+                                return false;
+                            }
+                        }
                     }
+                });
+
+                resolve("Validation successful"); // Resolve the promise if all validations pass
+            } catch (error) {
+                hide_loader();
+                reject(error); // Reject the promise in case of any other errors
+            }
+        });
+    }
+
+    function is_validate_offer_condition(obj) {
+        return new Promise(function(resolve, reject) {
+            var isValid = true;
+
+            $(obj).find(".text-area-field .text-area-field-div").each(function() {
+                let condition = $(this).find("textarea[name='condition_text']").val();
+                let condition_file = $(this).find("input[name='condition_file']").val();
+
+                if (condition === '') {
+                    $(this).find("textarea[name='condition_text']").focus();
+                    alert_float("danger", "Upload offer letter condition.");
+                    isValid = false;
+                    reject("Offer letter condition is missing."); // Reject the promise if the offer letter condition is missing
+                    return false;
+                } else if (condition_file === '') {
+                    $(this).find("input[name='condition_file']").focus();
+                    alert_float("danger", "Upload offer letter condition file.");
+                    isValid = false;
+                    reject("Offer letter condition file is missing."); // Reject the promise if the offer letter condition file is missing
+                    return false;
                 }
             });
-            resolve(true);
-        });
 
+            if (isValid) {
+                resolve("Validation successful"); // Resolve the promise if all conditions are valid
+            }
+        });
     }
+
 
     function is_validate_profile() {
         return new Promise((resolve, reject) => {
@@ -2005,33 +2119,53 @@ if (empty($customer_admins)) { ?>
 
     function update_university_offer_application() {
         return new Promise(async (resolve, reject) => {
-            let upload_data = new FormData();
-            let university_shortlisting_status = [];
-            let universityVendorMap = {};
-            let stop_status = true;
-
-            $("#offer_div .university_div_application").each(function() {
-                let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
-                let upload_media_status = $("select[name='university_status_submit_offer'] option:selected", this).data("selected-file");
-                let media_file = $(this).find("input[name='offer_letter']").prop("files")[0];
-                let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
-                let university_id = $(this).find("input[name='university_id']").val();
-                let conditional_notes = $(this).find(".conditional_textarea").val();
-
-                if (upload_media_status == "" || upload_media_status == undefined) {
-                    upload_media_status = 0;
-                }
-                upload_data.append("offer_letter_status[]", offer_letter_status);
-                upload_data.append("media_file[]", media_file);
-                upload_data.append("media_file_status[]", upload_media_status);
-                upload_data.append("media_file_url[]", media_file_url);
-                upload_data.append("university_id[]", university_id);
-                upload_data.append("conditional_notes[]", conditional_notes);
-            });
             try {
+                let upload_data = new FormData();
+                let university_shortlisting_status = [];
+                let universityVendorMap = {};
+                let stop_status = true;
+
+                $("#offer_div .university_div_application").each(function() {
+                    let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
+                    let upload_media_status = $("select[name='university_status_submit_offer'] option:selected", this).data("selected-file");
+                    let media_file = $(this).find("input[name='offer_letter']").prop("files")[0];
+                    let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
+                    let university_id = $(this).find("input[name='university_id']").val();
+                    let conditional_notes = $(this).find(".conditional_textarea").val();
+                    let university_status_update = $(this).find("input[name='university_status']").val();
+
+                    if (upload_media_status == "" || upload_media_status == undefined) {
+                        upload_media_status = 0;
+                    }
+
+                    if (university_status_update != '' && university_status_update > 0) {
+                        return true;
+                    }
+                    upload_data.append("offer_letter_status[]", offer_letter_status);
+                    upload_data.append("media_file[]", media_file);
+                    upload_data.append("media_file_status[]", upload_media_status);
+                    upload_data.append("media_file_url[]", media_file_url);
+                    upload_data.append("university_id[]", university_id);
+                    upload_data.append("conditional_notes[]", conditional_notes);
+                    console.log("media_condition_type", upload_media_status);
+                    if (offer_letter_status == 2) {
+                        $(this).find(".text-area-field .text-area-field-div").each(function() {
+                            let condition = $(this).find("textarea[name='condition_text']").val();
+                            let condition_file = $(this).find("input[name='condition_file']").prop("files")[0];
+                            let conditional_array = {
+                                university_id: university_id,
+                                condition: condition
+                            };
+                            upload_data.append("conditional_array[]", JSON.stringify(conditional_array));
+                            upload_data.append("conditional_media_file[" + university_id + "][]", condition_file);
+                        });
+                    }
+                });
+
                 upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
                 upload_data.append("client_id", client_id);
-                upload_data.append("applicant_status", (step_stage));
+                upload_data.append("applicant_status", step_stage);
+
                 let response = await $.ajax({
                     url: "<?= base_url("admin/clients/update_university_offer_status") ?>",
                     method: "POST",
@@ -2040,15 +2174,14 @@ if (empty($customer_admins)) { ?>
                     processData: false
                 });
 
-                // Handle the success response from the server
-                resolve(JSON.parse(response));
+                resolve(JSON.parse(response)); // Resolve the promise with the parsed JSON response
             } catch (error) {
-                // Handle the error response from the server
                 console.error(error);
-                reject(error);
+                reject(error); // Reject the promise with the error
             }
         });
     }
+
 
     function update_university_application() {
         return new Promise(async (resolve, reject) => {
@@ -2089,17 +2222,17 @@ if (empty($customer_admins)) { ?>
     }
     $("select[name='university_status_submit_offer']").change(function() {
         let upload_media = $("option:selected", this).data("selected-file");
+        $(this).parents(".university_div_application").find(".text-area-field").hide();
+        $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").eq(1).remove();
+        $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").find('input, select,texarea').val("").selectpicker('refresh');
         if (upload_media == 1) {
-            $(this).parents(".university_div_application").find("textarea").val("");
-            $(this).parents(".university_div_application").find("textarea").hide();
             if ($("option:selected", this).val() == 2) {
-                $(this).parents(".university_div_application").find("textarea").val("");
-                $(this).parents(".university_div_application").find("textarea").show();
+                $(this).parents(".university_div_application").find(".text-area-field").show();
+                // $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").eq(1).next().remove();
+                // $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").find('input, select').prop('disabled', true).selectpicker('refresh');
             }
             $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", false);
         } else {
-            $(this).parents(".university_div_application").find("textarea").val("");
-            $(this).parents(".university_div_application").find("textarea").hide();
             $(this).parents(".university_div_application").find("input[type='file']").val('');
             $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", true);
         }
@@ -2158,7 +2291,7 @@ if (empty($customer_admins)) { ?>
         var file = input.files[0];
 
         if (file) {
-            $(".media-text-div-offer").remove();;
+            $(input).parent("div").find(".media-text-div-offer").remove();
             var mediaTextDiv = $('<div class="row media-text-div-offer">' +
                 '<div class="col-md-10">' +
                 '<p class="document-file-name">' + file.name + '</p>' +
@@ -2174,6 +2307,70 @@ if (empty($customer_admins)) { ?>
         } else {
             $(".media-text-div-offer").remove();
 
+        }
+    }
+
+
+    function real_time_media_show_offer_condition(input) {
+        var file = input.files[0];
+
+        if (file) {
+            $(input).parent("div").find(".media-text-div-offer-condition").remove();
+            var mediaTextDiv = $('<div class="row media-text-div-offer-condition">' +
+                '<div class="col-md-10">' +
+                '<p class="document-file-name">' + file.name + '</p>' +
+                '</div>' +
+                '<div class="col-md-2 file-download-block">' +
+                '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
+                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '</a>' +
+                '</div>' +
+                '</div>');
+
+            $(input).after(mediaTextDiv);
+        } else {
+            $(input).find(".media-text-div-offer-condition").remove();
+
+        }
+    }
+
+    async function add_condition_div(obj) {
+
+        let check_condition = await is_validate_offer_condition($(obj).parents(".university_div_application"));
+        console.log(check_condition);
+        if (check_condition) {
+            html = `<div class="row text-area-field-div">
+                <div class="col-md-1">Condition</div>
+                <div class="col-md-6"><textarea placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"></textarea></div>
+                <div class="col-md-3"><input type="file" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf"></div>
+                <div class="col-md-2">
+                    <button class="col-md-2 add_document remove_condition_btn" type="button" style="" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                    <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                </div>
+            </div>`;
+
+            var parentDiv = $(obj).parents(".university_div_application");
+            parentDiv.find(".text-area-field").append(html);
+
+            var textAreaFieldDiv = parentDiv.find(".text-area-field-div");
+            textAreaFieldDiv.find(".remove_condition_btn").show();
+            textAreaFieldDiv.find(".add_condition_btn").hide();
+            textAreaFieldDiv.last().find(".add_condition_btn").show();
+
+            if (textAreaFieldDiv.length == 1) {
+                textAreaFieldDiv.find(".remove_condition_btn").hide();
+            }
+        }
+    }
+
+
+    function remove_condition_div(obj) {
+        $(obj).parents(".text-area-field-div").remove();
+        $("#offer_div").find(".text-area-field").find(".remove_condition_btn").show();
+        $("#offer_div").find(".text-area-field").find(".add_condition_btn").hide();
+        $("#offer_div").find(".text-area-field").find(".add_condition_btn:last").show();
+        if ($(".text-area-field-div ").length == 1) {
+            $(".text-area-field-div ").find(".text-area-field").find(".remove_condition_btn").hide();
         }
     }
 </script>
