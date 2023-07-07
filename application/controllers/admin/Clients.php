@@ -1826,11 +1826,11 @@ class Clients extends AdminController
 
                         $upload_data = [];
                         if (!empty($media_file_condition['name'][$con_array->media_name])) {
-                            $upload_data["name"] = $media_file_condition[$con_array->media_name];
-                            $upload_data["type"] = $media_file_condition[$con_array->media_name];
-                            $upload_data["tmp_name"] = $media_file_condition[$con_array->media_name];
-                            $upload_data["error"] = $media_file_condition[$con_array->media_name];
-                            $upload_data["size"] = $media_file_condition[$con_array->media_name];
+                            $upload_data["name"] = $media_file_condition["name"][$con_array->media_name];
+                            $upload_data["type"] = $media_file_condition["type"][$con_array->media_name];
+                            $upload_data["tmp_name"] = $media_file_condition["tmp_name"][$con_array->media_name];
+                            $upload_data["error"] = $media_file_condition["error"][$con_array->media_name];
+                            $upload_data["size"] = $media_file_condition["size"][$con_array->media_name];
                             if ($upload_data["error"] === UPLOAD_ERR_OK) {
 
                                 $file_name = upload_applicant_documents($client_id, $upload_data);
@@ -1845,9 +1845,6 @@ class Clients extends AdminController
                     }
                 }
 
-                print_r($condition_array_data);
-                print_r($university_shortlisting_update_arr);
-                die;
 
 
                 $update_university = "";
