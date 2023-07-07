@@ -767,15 +767,18 @@ if (empty($customer_admins)) { ?>
                                             <?php
                                             $condition_array = get_condition_offer($short_list["client_id"], $short_list["id"]);
                                             if (!empty($condition_array)) {
-                                                foreach ($condition_array as $con) {
-
-                                                    $file_name = "";
-                                                    if (!empty($con["file"])) {
-                                                        $file_name =  trim(explode("_", basename($con["file"]))[2]);
-                                                    }
                                             ?>
-                                                    <div class="col-lg-12 mt-2 mb-2 text-area-field">
+                                                <div class="col-lg-12 mt-2 mb-2 text-area-field">
+                                                    <?php
+                                                    foreach ($condition_array as $con) {
+
+                                                        $file_name = "";
+                                                        if (!empty($con["file"])) {
+                                                            $file_name =  trim(explode("_", basename($con["file"]))[2]);
+                                                        }
+                                                    ?>
                                                         <div class="row text-area-field-div">
+                                                            <input type="hidden" data-condition-id="<?= $con["id"] ?>">
                                                             <div class="col-md-3">Condition</div>
                                                             <div class="col-md-6"><textarea disabled placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"><?= $con["condition_text"] ?></textarea></div>
                                                             <div class="col-md-3"><input type="file" disabled data-file-url<?= $con["file"] ?> class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf">
@@ -798,11 +801,13 @@ if (empty($customer_admins)) { ?>
                                                                 <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                                             <!-- </div> -->
                                                         </div>
-                                                    </div>
-                                                <?php
-                                                }
+
+                                                    <?php
+                                                    } ?>
+                                                </div>
+                                            <?php
                                             } else {
-                                                ?>
+                                            ?>
                                                 <div class="col-lg-12 mt-2 mb-2 text-area-field" style="display:none;">
                                                     <div class="row text-area-field-div">
                                                         <div class="col-md-1">Condition</div>
@@ -1342,6 +1347,7 @@ if (empty($customer_admins)) { ?>
                 check_offer_status
                 let update_university_offer_status = await update_university_offer_application();
                 if (update_university_offer_status.resp_code === "RCS") {
+                    location.reload();
                     hide_loader();
                     alert_float("success", update_university_offer_status.resp_desc);
                     return false;
@@ -2124,37 +2130,43 @@ if (empty($customer_admins)) { ?>
                 let university_shortlisting_status = [];
                 let universityVendorMap = {};
                 let stop_status = true;
-
+                $("#offer_div").find("input,textarea,select").prop("disabled", false);
                 $("#offer_div .university_div_application").each(function() {
                     let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
                     let upload_media_status = $("select[name='university_status_submit_offer'] option:selected", this).data("selected-file");
                     let media_file = $(this).find("input[name='offer_letter']").prop("files")[0];
                     let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
                     let university_id = $(this).find("input[name='university_id']").val();
+                    let university_status = $(this).find("input[name='university_status']").val();
                     let conditional_notes = $(this).find(".conditional_textarea").val();
-                    let university_status_update = $(this).find("input[name='university_status']").val();
 
                     if (upload_media_status == "" || upload_media_status == undefined) {
                         upload_media_status = 0;
-                    }
-
-                    if (university_status_update != '' && university_status_update > 0) {
-                        return true;
                     }
                     upload_data.append("offer_letter_status[]", offer_letter_status);
                     upload_data.append("media_file[]", media_file);
                     upload_data.append("media_file_status[]", upload_media_status);
                     upload_data.append("media_file_url[]", media_file_url);
                     upload_data.append("university_id[]", university_id);
+                    upload_data.append("university_status[]", university_status);
                     upload_data.append("conditional_notes[]", conditional_notes);
                     console.log("media_condition_type", upload_media_status);
                     if (offer_letter_status == 2) {
                         $(this).find(".text-area-field .text-area-field-div").each(function() {
                             let condition = $(this).find("textarea[name='condition_text']").val();
                             let condition_file = $(this).find("input[name='condition_file']").prop("files")[0];
+                            let media_url = $(this).find("input[name='condition_file']").data("file-url");
+                            let condition_id = $(this).find("input[name='condition_id']").data("condition-id");
+
+                            if (condition_id == undefined || condition_id == "") {
+                                condition_id = "";
+                            }
                             let conditional_array = {
                                 university_id: university_id,
-                                condition: condition
+                                condition: condition,
+                                condition_id: condition_id,
+                                university_status: university_status,
+                                media_url: media_url
                             };
                             upload_data.append("conditional_array[]", JSON.stringify(conditional_array));
                             upload_data.append("conditional_media_file[" + university_id + "][]", condition_file);
@@ -2165,6 +2177,7 @@ if (empty($customer_admins)) { ?>
                 upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
                 upload_data.append("client_id", client_id);
                 upload_data.append("applicant_status", step_stage);
+                $("#offer_div").find("input,textarea,select").prop("disabled", true);
 
                 let response = await $.ajax({
                     url: "<?= base_url("admin/clients/update_university_offer_status") ?>",
@@ -2175,6 +2188,7 @@ if (empty($customer_admins)) { ?>
                 });
 
                 resolve(JSON.parse(response)); // Resolve the promise with the parsed JSON response
+
             } catch (error) {
                 console.error(error);
                 reject(error); // Reject the promise with the error
