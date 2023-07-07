@@ -777,7 +777,7 @@ if (empty($customer_admins)) { ?>
                                                             $file_name =  trim(explode("_", basename($con["file"]))[2]);
                                                         }
                                                     ?>
-                                                        <div class="row text-area-field-div">
+                                                        <div class="row text-area-field-div u_s_l_<?= $short_list['id'] ?>">
                                                             <input type="hidden" data-condition-id="<?= $con["id"] ?>">
                                                             <div class="col-md-3">Condition</div>
                                                             <div class="col-md-6"><textarea disabled placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"><?= $con["condition_text"] ?></textarea></div>
@@ -808,14 +808,14 @@ if (empty($customer_admins)) { ?>
                                             <?php
                                             } else {
                                             ?>
-                                                <div class="col-lg-12 mt-2 mb-2 text-area-field" style="display:none;">
-                                                    <div class="row text-area-field-div">
+                                                <div class="col-lg-12 mt-2 mb-2 text-area-field  " style="display:none;">
+                                                    <div class="row text-area-field-div  u_s_l_<?= $short_list['id'] ?>">
                                                         <div class="col-md-1">Condition</div>
                                                         <div class="col-md-6"><textarea placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"></textarea></div>
                                                         <div class="col-md-3"><input type="file" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf"></div>
                                                         <div class="col-md-2">
-                                                            <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                            <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                            <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this,<?= $short_list['id'] ?>)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                                            <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this,<?= $short_list['id'] ?>)"><i class="fa fa-plus" aria-hidden="true"></i></button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1427,19 +1427,20 @@ if (empty($customer_admins)) { ?>
                     $(this).find("textarea[name='condition_text']").focus();
                     alert_float("danger", "Upload offer letter condition.");
                     isValid = false;
-                    reject("Offer letter condition is missing."); // Reject the promise if the offer letter condition is missing
+                    resolve(false);
+                    // Reject the promise if the offer letter condition is missing
                     return false;
                 } else if (condition_file === '') {
                     $(this).find("input[name='condition_file']").focus();
                     alert_float("danger", "Upload offer letter condition file.");
                     isValid = false;
-                    reject("Offer letter condition file is missing."); // Reject the promise if the offer letter condition file is missing
+                    resolve(false);
                     return false;
                 }
             });
 
             if (isValid) {
-                resolve("Validation successful"); // Resolve the promise if all conditions are valid
+                resolve(true); // Resolve the promise if all conditions are valid
             }
         });
     }
@@ -2350,18 +2351,18 @@ if (empty($customer_admins)) { ?>
         }
     }
 
-    async function add_condition_div(obj) {
+    async function add_condition_div(obj, id) {
 
         let check_condition = await is_validate_offer_condition($(obj).parents(".university_div_application"));
         console.log(check_condition);
         if (check_condition) {
-            html = `<div class="row text-area-field-div">
+            html = `<div class="row text-area-field-div u_s_l_` + id + `">
                 <div class="col-md-1">Condition</div>
                 <div class="col-md-6"><textarea placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"></textarea></div>
                 <div class="col-md-3"><input type="file" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf"></div>
                 <div class="col-md-2">
-                    <button class="col-md-2 add_document remove_condition_btn" type="button" style="" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                    <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                    <button class="col-md-2 add_document remove_condition_btn" type="button" style="" onclick="remove_condition_div(this,` + id + `)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                    <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this,` + id + `)"><i class="fa fa-plus" aria-hidden="true"></i></button>
                 </div>
             </div>`;
 
@@ -2380,13 +2381,26 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    function remove_condition_div(obj) {
-        $(obj).parents(".text-area-field-div").remove();
-        $(obj).parents(".university_div_application").find(".text-area-field-div").find(".remove_condition_btn").show();
-        $(obj).parents(".university_div_application").find(".text-area-field-div").find(".add_condition_btn").hide();
-        $(obj).parents(".university_div_application").find(".text-area-field-div").find(".add_condition_btn:last").show();
-        if ($(obj).parents(".university_div_application").find(".text-area-field-div").length == 1) {
-            $(obj).parents(".university_div_application").find(".text-area-field-div").find(".remove_condition_btn").hide();
+    function remove_condition_div(objj, id) {
+
+        $(objj).parents(".text-area-field-div").remove();
+        $(".u_s_l_" + id).find(".remove_condition_btn").show();
+        $(".u_s_l_" + id).find(".add_condition_btn").hide();
+        $(".u_s_l_" + id).last().find(".add_condition_btn").show();
+        // $(objj).parents(".university_div_application").find(".text-area-field .text-area-field-div .remove_condition_btn").show();
+        // $(objj).parents(".university_div_application").find(".text-area-field .text-area-field-div .add_condition_btn").hide();
+        // $(objj).parents(".university_div_application").find(".text-area-field .text-area-field-div:last .add_condition_btn").show();
+        // console.log($(objj).parents(".university_div_application .text-area-field .text-area-field-div").length);
+        // if ($(objj).parents(".university_div_application .text-area-field .text-area-field-div").length == 1) {
+        //     $(objj).parents(".university_div_application").find(".text-area-field-div").find(".add_condition_btn").show();
+        //     $(objj).parents(".university_div_application").find(".text-area-field-div").find(".remove_condition_btn").hide();
+        // }
+
+        console.log($(".u_s_l_" + id).length);
+        if ($(".u_s_l_" + id).length == 1) {
+            $(".u_s_l_" + id).find(".remove_condition_btn").hide();
+            $(".u_s_l_" + id).find(".add_condition_btn").show();
         }
+
     }
 </script>
