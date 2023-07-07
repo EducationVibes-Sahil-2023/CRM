@@ -1168,3 +1168,16 @@ function applicant_tracker()
         ->get()
         ->result_array();
 }
+
+function get_condition_offer($client_id, $university_id)
+{
+    $CI = &get_instance();
+    return $client_tracker = $CI->db->select("*")
+        ->where('status', 1)
+        ->where('client_id', $client_id)
+        ->where('university_id', $university_id)
+        ->from(db_prefix() . 'offer_condition')
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
+}
