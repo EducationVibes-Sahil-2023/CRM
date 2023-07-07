@@ -2382,11 +2382,11 @@ if (empty($customer_admins)) { ?>
 
     function remove_condition_div(obj) {
         $(obj).parents(".text-area-field-div").remove();
-        $("#offer_div").find(".text-area-field").find(".remove_condition_btn").show();
-        $("#offer_div").find(".text-area-field").find(".add_condition_btn").hide();
-        $("#offer_div").find(".text-area-field").find(".add_condition_btn:last").show();
-        if ($(".text-area-field-div ").length == 1) {
-            $(".text-area-field-div ").find(".text-area-field").find(".remove_condition_btn").hide();
+        $(obj).parents(".university_div_application").find(".text-area-field").find(".remove_condition_btn").show();
+        $(obj).parents(".university_div_application").find(".text-area-field").find(".add_condition_btn").hide();
+        $(obj).parents(".university_div_application").find(".text-area-field").find(".add_condition_btn:last").show();
+        if ($(obj).parents(".university_div_application").find(".text-area-field").length == 1) {
+            $(obj).parents(".university_div_application").find(".text-area-field").find(".remove_condition_btn").hide();
         }
     }
 </script>
