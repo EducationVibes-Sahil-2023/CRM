@@ -1434,13 +1434,13 @@ if (empty($customer_admins)) { ?>
                 let condition_file = $(this).find("input[name='condition_file']").val();
                 let condition_file_url = $(this).find("input[name='condition_file']").data("file-url");
 
-                if (condition === '' && condition_file_url === "") {
+                if (condition === '') {
                     $(this).find("textarea[name='condition_text']").focus();
                     alert_float("danger", "Upload offer letter condition.");
                     isValid = false;
                     resolve(false); // Resolve with 'false' if the offer letter condition is missing
                     return false;
-                } else if (condition_file === '') {
+                } else if (condition_file === '' && condition_file_url === "") {
                     $(this).find("input[name='condition_file']").focus();
                     alert_float("danger", "Upload offer letter condition file.");
                     isValid = false;
