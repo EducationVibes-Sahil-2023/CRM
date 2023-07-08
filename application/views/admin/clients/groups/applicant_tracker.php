@@ -2157,7 +2157,7 @@ if (empty($customer_admins)) { ?>
                         upload_media_status = 0;
                     }
                     upload_data.append("offer_letter_status[]", offer_letter_status);
-                    upload_data.append("media_file[]", media_file);
+                    upload_data.append("media_file[" + university_id + "]", media_file);
                     upload_data.append("media_file_status[]", upload_media_status);
                     upload_data.append("media_file_url[" + university_id + "]", media_file_url);
                     upload_data.append("university_id[]", university_id);
