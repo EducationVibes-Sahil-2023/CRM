@@ -1752,7 +1752,10 @@ class Clients extends AdminController
 
     public function update_university_offer_status()
     {
-
+echo "<pre>";
+        print_r($_POST);
+        print_r($_FILES);
+        die;
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $client_id = $this->input->post("client_id");
