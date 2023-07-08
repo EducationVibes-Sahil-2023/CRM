@@ -1393,7 +1393,7 @@ if (empty($customer_admins)) { ?>
                     console.log(upload_media_status);
                     console.log(offer_letter_status);
                     if (upload_media_status == 1) {
-                        if (media_file === "") {
+                        if (media_file === "" && media_file_url == "") {
                             hide_loader();
                             $(this).find("input[name='offer_letter']").focus();
                             alert_float("danger", "Upload offer letter file.");
