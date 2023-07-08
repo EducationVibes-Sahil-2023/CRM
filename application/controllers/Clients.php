@@ -1912,7 +1912,7 @@ class Clients extends ClientsController
         $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
         $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data(get_client_user_id());
         $data['university_status_update'] = $this->clients_model->university_status_update();
-
+        $data['university_status_submit'] = $this->clients_model->university_status_submit();
 
         $data['customer_vendors'] = [];
         if (!empty($data['profile_creation_data'][0]["vendor"])) {

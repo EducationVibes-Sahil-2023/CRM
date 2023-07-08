@@ -1166,14 +1166,6 @@ if (empty($customer_admins)) { ?>
         step_stage = (step);
         show_loader();
 
-        let current_fs = $(obj).parent();
-        let next_fs = $(obj).parent().next();
-
-        // Activate next step on progressbar using the index of next_fs
-        $("#progressbar li").removeClass("active").addClass("inactive");
-
-        let nextIndex = $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
-        $("#progressbar li.active").prevAll().addClass("previous");
 
 
         if (type === "document_div") {
@@ -1190,6 +1182,7 @@ if (empty($customer_admins)) { ?>
                             if ($.inArray(staff_id, admin_ids) !== -1) {} else {
                                 let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
                                 $(".document_approval_message_action").html(html);
+                                window.reload();
                             }
                         } else {
                             if (uploadResponse.resp_code != undefined) {
@@ -1233,6 +1226,7 @@ if (empty($customer_admins)) { ?>
                                 }
                             }
                             hide_loader();
+                            window.reload();
 
                         } else {
                             if (update_profile_status.resp_code != undefined) {
@@ -1299,10 +1293,12 @@ if (empty($customer_admins)) { ?>
                         html = '<h3 class="message-notification">Your University under Processing</h3>';
                         $(".university_approval_message_action").html(html);
                         if (check_university_status == true) {
-                            hide_loader();
-                            current_fs.slideUp("slow");
-                            next_fs.slideDown("slow");
+                            window.reload();
+                            // hide_loader();
+                            // current_fs.slideUp("slow");
+                            // next_fs.slideDown("slow");
                         }
+
 
                     } else {
                         alert_float("danger", update_university_status.resp_desc);
@@ -1341,14 +1337,14 @@ if (empty($customer_admins)) { ?>
 
         } else if (type === "offer_div") {
             let validate_offer_letter = await is_validate_offer_letter();
-            hide_loader();
             check_university_status_submit = false;
             if (validate_offer_letter) {
                 check_offer_status
                 let update_university_offer_status = await update_university_offer_application();
+                hide_loader();
                 if (update_university_offer_status.resp_code === "RCS") {
                     location.reload();
-                    hide_loader();
+
                     alert_float("success", update_university_offer_status.resp_desc);
                     return false;
                 } else {
@@ -1368,6 +1364,19 @@ if (empty($customer_admins)) { ?>
         // $("#progressbar li").removeClass("active").addClass("inactive");
         // $("#progressbar li.active").addClass("previous");
         // $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
+
+
+
+        let current_fs = $(obj).parent();
+        let next_fs = $(obj).parent().next();
+
+        // Activate next step on progressbar using the index of next_fs
+        $("#progressbar li").removeClass("active").addClass("inactive");
+
+        let nextIndex = $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
+        $("#progressbar li.active").prevAll().addClass("previous");
+
+
         hide_loader();
         current_fs.slideUp("slow");
         next_fs.slideDown("slow");
@@ -2020,6 +2029,7 @@ if (empty($customer_admins)) { ?>
         if ($(".university_div").length == 1) {
             $(".university_div").find(".remove_university_btn").hide();
         }
+        is_validate_application_status();
     }
 
 
