@@ -499,7 +499,7 @@
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
-                                    'name' => _l('Last Call Date'),
+                                    'name' => _l('Last-Call-Date'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
