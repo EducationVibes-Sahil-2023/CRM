@@ -1782,11 +1782,11 @@ class Clients extends AdminController
                     }
                     $upload_data = [];
                     if (!empty($media_file['name'][$university_id]) && $media_file_status[$k] == 1) {
-                        $upload_data["name"] = $media_file['name'][$i];
-                        $upload_data["type"] = $media_file['type'][$i];
-                        $upload_data["tmp_name"] = $media_file['tmp_name'][$i];
-                        $upload_data["error"] = $media_file['error'][$i];
-                        $upload_data["size"] = $media_file['size'][$i];
+                        $upload_data["name"] = $media_file['name'][$university_id];
+                        $upload_data["type"] = $media_file['type'][$university_id];
+                        $upload_data["tmp_name"] = $media_file['tmp_name'][$university_id];
+                        $upload_data["error"] = $media_file['error'][$university_id];
+                        $upload_data["size"] = $media_file['size'][$university_id];
                         if ($upload_data["error"] === UPLOAD_ERR_OK) {
 
                             $file_name = upload_applicant_documents($client_id, $upload_data);
