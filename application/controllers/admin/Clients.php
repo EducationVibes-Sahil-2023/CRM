@@ -1791,9 +1791,9 @@ class Clients extends AdminController
                         }
                         $i++;
                     }
-                    if (empty($university_status[$k])) {
+                   
                         array_push($university_shortlisting_update_arr, array("university_offer_status" => $offer_letter_status[$k], "id" => $university_id, "media_file" => $media_path, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'), 'offer_date' => date('Y-m-d H:i:s')));
-                    }
+                    
                 }
 
 
