@@ -748,7 +748,7 @@ if (empty($customer_admins)) { ?>
 
                                             </div>
                                             <div class="col-md-3">
-                                                <input type="file" disabled data-file-name="<?= $file_name ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" onchange="real_time_media_show_offer(this)" name="offer_letter">
+                                                <input type="file" disabled data-file-name="<?= !empty($docs["document_file"]) ? $docs["document_file"] : '' ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" onchange="real_time_media_show_offer(this)" name="offer_letter">
 
                                                 <div class="row media-text-div-offer">
                                                     <div class="col-md-8">
