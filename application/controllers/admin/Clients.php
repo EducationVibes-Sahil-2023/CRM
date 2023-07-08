@@ -1773,12 +1773,15 @@ class Clients extends AdminController
                 $i = 0;
                 foreach ($university_ids as $k => $university_id) {
 
-                    $media_path = $media_file_url[$k];
-                    if (!empty($media_file_url[$k])) {
+                    $media_path = $media_file_url[$university_id];
+                    if (!empty($media_file_url[$university_id])) {
                         $media_path = $media_file_url[$university_id];
                     }
+                    if ($media_file_status[$k] != 1) {
+                        $media_path = "";
+                    }
                     $upload_data = [];
-                    if (!empty($media_file['name'][$i]) && $media_file_status[$k] == 1) {
+                    if (!empty($media_file['name'][$university_id]) && $media_file_status[$k] == 1) {
                         $upload_data["name"] = $media_file['name'][$i];
                         $upload_data["type"] = $media_file['type'][$i];
                         $upload_data["tmp_name"] = $media_file['tmp_name'][$i];
