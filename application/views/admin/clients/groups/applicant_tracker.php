@@ -1337,11 +1337,11 @@ if (empty($customer_admins)) { ?>
 
         } else if (type === "offer_div") {
             let validate_offer_letter = await is_validate_offer_letter();
-            check_university_status_submit = false;
+
             if (validate_offer_letter) {
                 check_offer_status
                 let update_university_offer_status = await update_university_offer_application();
-                hide_loader();
+
                 if (update_university_offer_status.resp_code === "RCS") {
                     location.reload();
 
@@ -1389,11 +1389,12 @@ if (empty($customer_admins)) { ?>
                     let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
                     let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
                     let media_file = $(this).find("input[name='offer_letter']").val();
-                    let media_file_url = $(this).find("input[name='offer_letter']").attr();
+                    let media_file_url = $(this).find("input[name='offer_letter']").attr("href"); // Fix: Retrieve the 'href' attribute correctly
                     console.log(upload_media_status);
                     console.log(offer_letter_status);
                     if (upload_media_status == 1) {
-                        if (media_file == "") {
+                        if (media_file === "") {
+                            hide_loader();
                             $(this).find("input[name='offer_letter']").focus();
                             alert_float("danger", "Upload offer letter file.");
                             reject("Offer letter file is missing."); // Reject the promise if the offer letter file is missing
@@ -1416,7 +1417,7 @@ if (empty($customer_admins)) { ?>
                     }
                 });
 
-                resolve("Validation successful"); // Resolve the promise if all validations pass
+                resolve(true); // Resolve the promise if all validations pass
             } catch (error) {
                 hide_loader();
                 reject(error); // Reject the promise in case of any other errors
@@ -1436,23 +1437,23 @@ if (empty($customer_admins)) { ?>
                     $(this).find("textarea[name='condition_text']").focus();
                     alert_float("danger", "Upload offer letter condition.");
                     isValid = false;
-                    resolve(false);
-                    // Reject the promise if the offer letter condition is missing
+                    resolve(false); // Resolve with 'false' if the offer letter condition is missing
                     return false;
                 } else if (condition_file === '') {
                     $(this).find("input[name='condition_file']").focus();
                     alert_float("danger", "Upload offer letter condition file.");
                     isValid = false;
-                    resolve(false);
+                    resolve(false); // Resolve with 'false' if the offer letter condition file is missing
                     return false;
                 }
             });
 
             if (isValid) {
-                resolve(true); // Resolve the promise if all conditions are valid
+                resolve(true); // Resolve with 'true' if all conditions are valid
             }
         });
     }
+
 
 
     function is_validate_profile() {
