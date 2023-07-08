@@ -1775,7 +1775,7 @@ class Clients extends AdminController
 
                     $media_path = $media_file_url[$k];
                     if (!empty($media_file_url[$k])) {
-                        $media_path = $media_file_url[$k];
+                        $media_path = $media_file_url[$university_id];
                     }
                     $upload_data = [];
                     if (!empty($media_file['name'][$i]) && $media_file_status[$k] == 1) {
