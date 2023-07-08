@@ -781,7 +781,7 @@ if (empty($customer_admins)) { ?>
                                                             <input type="hidden" data-condition-id="<?= $con["id"] ?>">
                                                             <div class="col-md-3">Condition</div>
                                                             <div class="col-md-6"><textarea disabled placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"><?= $con["condition_text"] ?></textarea></div>
-                                                            <div class="col-md-3"><input type="file" disabled data-file-url<?= $con["file"] ?> class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf">
+                                                            <div class="col-md-3"><input type="file" disabled data-file-url="<?= $con["file"] ?>" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf">
 
                                                                 <div class="row media-text-div-offer-condition">
                                                                     <div class="col-md-8">
@@ -1389,11 +1389,11 @@ if (empty($customer_admins)) { ?>
                     let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
                     let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
                     let media_file = $(this).find("input[name='offer_letter']").val();
-                    let media_file_url = $(this).find("input[name='offer_letter']").attr("href"); // Fix: Retrieve the 'href' attribute correctly
+                    let media_file_url = $(this).find("input[name='offer_letter']").data("file-name"); // Fix: Retrieve the 'href' attribute correctly
                     console.log(upload_media_status);
                     console.log(offer_letter_status);
                     if (upload_media_status == 1) {
-                        if (media_file === "" && media_file_url == "") {
+                        if (media_file === "" && media_file_url === "") {
                             hide_loader();
                             $(this).find("input[name='offer_letter']").focus();
                             alert_float("danger", "Upload offer letter file.");
@@ -1432,8 +1432,9 @@ if (empty($customer_admins)) { ?>
             $(obj).find(".text-area-field .text-area-field-div").each(function() {
                 let condition = $(this).find("textarea[name='condition_text']").val();
                 let condition_file = $(this).find("input[name='condition_file']").val();
+                let condition_file_url = $(this).find("input[name='condition_file']").data("file-url");
 
-                if (condition === '') {
+                if (condition === '' && condition_file_url === "") {
                     $(this).find("textarea[name='condition_text']").focus();
                     alert_float("danger", "Upload offer letter condition.");
                     isValid = false;
