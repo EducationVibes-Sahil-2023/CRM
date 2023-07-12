@@ -755,7 +755,7 @@ if (empty($customer_admins)) { ?>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <?php if (!empty($short_list["media_file"])) { ?>
-                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                         <?php }
                                                         ?>
                                                     </div>
@@ -787,7 +787,7 @@ if (empty($customer_admins)) { ?>
                                                                     </div>
                                                                     <div class="col-md-2">
                                                                         <?php if (!empty($con["file"])) { ?>
-                                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($con["file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($con['file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                                         <?php }
                                                                         ?>
                                                                     </div>
@@ -2332,7 +2332,7 @@ if (empty($customer_admins)) { ?>
                 '<p class="document-file-name">' + file.name + '</p>' +
                 '</div>' +
                 '<div class="col-md-2 file-download-block">' +
-                '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
+                '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="window.open(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
                 '<i class="fa fa-download" aria-hidden="true"></i>' +
                 '</a>' +
                 '</div>' +
