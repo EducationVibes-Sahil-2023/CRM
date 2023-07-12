@@ -444,13 +444,7 @@ if (empty($customer_admins)) { ?>
 
                                             </div>
 
-                                            <div class="col-md-2">
-                                                <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
-
-                                                <button style="display:<?= ($d_key == 0) ? 'none' : '' ?>;" class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-
-                                                <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                            </div>
+                                            
 
 
                                         </div>
@@ -461,10 +455,7 @@ if (empty($customer_admins)) { ?>
                                         <div class="row col-md-12 document_upload_files ">
                                             <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
                                             <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" onchange="real_time_media_show(this)" name="document_file[]" placeholder=""></div>
-                                            <div class="col-md-2">
-                                                <button class="col-md-2 add_document remove_document_btn" style="display:none;" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                <button class="col-md-2 add_document add_document_btn" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                            </div>
+                                          
                                         </div>
                                     </div>
                                 <?php }
@@ -498,10 +489,7 @@ if (empty($customer_admins)) { ?>
                                         $selected_vendor = !empty($profile_creation_data[0]["vendor"]) ? explode(",", $profile_creation_data[0]["vendor"]) : [];
                                         echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); ?>
                                     </div>
-                                    <div class="col-md-4 edit_save_block vendor_creation_block">
-                                        <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
-                                        <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'vendor')"></i>
-                                    </div>
+                                   
                                 </div>
                                 <div class="row profile-div-save">
                                     <div class="col-md-4">
@@ -599,8 +587,7 @@ if (empty($customer_admins)) { ?>
                                                 <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
                                                 <?php if ($short_list["university_status"] == 1) { ?>
                                                 <?php } else { ?>
-                                                    <button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                    <button class="col-md-2 add_document add_university_btn" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                   
                                                 <?php } ?>
 
                                             </div>
@@ -647,11 +634,7 @@ if (empty($customer_admins)) { ?>
                                             ?>
                                         </div>
 
-                                        <div class="col-md-2">
-                                            <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
-                                            <button class="col-md-2 add_document remove_university_btn" type="button" style="display:none;" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                            <button class="col-md-2 add_document add_university_btn" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                        </div>
+                                      
                                     </div>
                                 <?php } ?>
                             </div>
@@ -788,7 +771,7 @@ if (empty($customer_admins)) { ?>
                                                     </div>
                                                     <div class="col-md-2">
                                                         <?php if (!empty($short_list["media_file"])) { ?>
-                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                         <?php }
                                                         ?>
                                                     </div>
@@ -820,7 +803,7 @@ if (empty($customer_admins)) { ?>
                                                                     </div>
                                                                     <div class="col-md-2">
                                                                         <?php if (!empty($con["file"])) { ?>
-                                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" download href="<?= base_url($con["file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" onclick="window.open(`<?= base_url($con['file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                                         <?php }
                                                                         ?>
                                                                     </div>
@@ -844,10 +827,7 @@ if (empty($customer_admins)) { ?>
                                                         <div class="col-md-1">Condition</div>
                                                         <div class="col-md-6"><textarea placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"></textarea></div>
                                                         <div class="col-md-3"><input type="file" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf"></div>
-                                                        <div class="col-md-2">
-                                                            <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this,<?= $short_list['id'] ?>)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                            <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this,<?= $short_list['id'] ?>)"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                                        </div>
+                                                        
                                                     </div>
                                                 </div>
                                             <?php } ?>
