@@ -1806,13 +1806,17 @@ if (empty($customer_admins)) { ?>
         console.log(admin_ids);
         if ($.inArray(staff_id, admin_ids) !== -1 && upload_documents != '') {
             if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-                html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + '</h3>';
+                if (staff_id == upload_documents.approved_by) {
+                    html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
+                } else {
+                    html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                }
+
                 $(".document_upload_files").find(".add_document").hide();
                 $(".document_upload_files").each(function() {
                     $(this).find("input[type='file']").hide();
                     $(".document-file-name").show();
                     $(this).find("input").attr("disabled", true);
-
 
                 });
             } else {
