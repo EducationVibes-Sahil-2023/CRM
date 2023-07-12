@@ -4,7 +4,34 @@ $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 ?>
+<script type="text/javascript" id="jquery-migrate-js" src="https://localhost/git_crm/assets/plugins/jquery/jquery-migrate.min.js?v=2.6.0"></script>
+<!-- <script type="text/javascript" id="vendor-js" src="https://localhost/git_crm/assets/builds/vendor-admin.js?v=2.6.0"></script> -->
+
 <style>
+    .nav>li>a {
+        color: white !important;
+    }
+
+    .dropdown-menu .animated .fadeIn li a {
+        color: black !important;
+    }
+
+    .customers-nav-item-profile .dropdown-toggle {
+        background-color: transparent !important;
+    }
+
+    .submenu .customer-top-submenu li a,
+    .submenu .customer-top-submenu li a:hover,
+    .submenu .customer-top-submenu li:hover {
+        text-decoration: none !important;
+
+    }
+
+    a:focus,
+    a:hover {
+        text-decoration: none !important;
+    }
+
     /*basic reset*/
     * {
         margin: 0;
@@ -354,7 +381,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 <?php
 
 if (empty($customer_admins)) { ?>
-    <h2 class='text-center'><?= _l("no_admin_assign_tracker") ?></h2>
+    <h2 class='text-center'>Not Started</h2>
 <?php } else { ?>
     <div class="row">
         <div class="col-md-12 ">
@@ -829,10 +856,13 @@ if (empty($customer_admins)) { ?>
                             <input type="button" name="previous" class="previous action-button-previous" value="Previous" />
                         <?php } ?>
                         <?php
-                        if (($k + 1) < count($applicant_tracker)) { ?>
-                            <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Next" />
-                        <?php } else if (($k + 1) == count($applicant_tracker)) {  ?>
-                            <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Update" />
+
+                        if (($k + 1) < count($applicant_tracker)) {
+                            if ($applicant_status >  $k) { ?>
+                                <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Next" />
+                            <?php }
+                        } else if (($k + 1) == count($applicant_tracker)) {  ?>
+                            <!-- <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Update" /> -->
                         <?php } ?>
 
                     </fieldset>
@@ -867,9 +897,37 @@ if (empty($customer_admins)) { ?>
         </div>
     </div>
 <?php } ?>
-<?php init_tail(); ?>
+<?php // init_tail();
+?>
+
+
+<link rel="stylesheet" type="text/css" id="vendor-css" href="https://localhost/git_crm/assets/builds/vendor-admin.css?v=2.6.0">
 <!-- /.MultiStep Form -->
+<!--  -->
+
 <script>
+    $(window).load(function() {
+        $(".loading-upper").hide();
+    });
+
+    function show_loader(id = "") {
+        if (id != '') {
+            $("#" + id).attr("data-loading-text", "<i class='fa fa-spinner fa-spin '></i> Processing ");
+        }
+        $(".loading-upper").show();
+
+    }
+
+    function hide_loader(id = "") {
+        if (id != '') {
+            $("#" + id).button('reset');
+        }
+        $(".loading-upper").hide();
+
+    }
+
+
+
     //jQuery time
     var applicant_status = "<?= $applicant_status ?>";
     console.log(applicant_status);
@@ -952,7 +1010,7 @@ if (empty($customer_admins)) { ?>
         }
 
     }
-    check_offer_status();
+
 
     function check_profile_status() {
         var check_disabled = false;
@@ -1014,7 +1072,7 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    check_profile_status();
+    // check_profile_status();
 
 
     $(".previous").click(function() {
@@ -1179,195 +1237,196 @@ if (empty($customer_admins)) { ?>
 
 
 
-        if (type === "document_div") {
-            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-                hide_loader();
-            } else {
-                let isDocumentValid = await is_validate_document();
-                if (isDocumentValid) {
-                    try {
-                        let uploadResponse = await upload_document();
-                        if (uploadResponse.resp_code == "RCS") {
-                            hide_loader();
-                            alert_float("success", uploadResponse.resp_desc);
-                            if ($.inArray(staff_id, admin_ids) !== -1) {} else {
-                                let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
-                                $(".document_approval_message_action").html(html);
-                                window.reload();
-                            }
-                        } else {
-                            if (uploadResponse.resp_code != undefined) {
-                                alert_float("danger", uploadResponse.resp_desc);
-                                hide_loader();
-                                return false;
-                            } else {
-                                alert_float("danger", uploadResponse);
-                                hide_loader();
-                                return false;
-                            }
-                        }
-                    } catch (error) {
-                        hide_loader();
-                        console.error(error);
-                        return false;
-                    }
-                } else {
-                    hide_loader();
-                    return false;
-                }
-                return false
-            }
-        } else if (type === "profile_div") {
-            let html = "";
-            if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-                hide_loader();
+        // if (type === "document_div") {
+        //     if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+        //         hide_loader();
+        //     } else {
+        //         let isDocumentValid = await is_validate_document();
+        //         if (isDocumentValid) {
+        //             try {
+        //                 let uploadResponse = await upload_document();
+        //                 if (uploadResponse.resp_code == "RCS") {
+        //                     hide_loader();
+        //                     alert_float("success", uploadResponse.resp_desc);
+        //                     if ($.inArray(staff_id, admin_ids) !== -1) {} else {
+        //                         let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+        //                         $(".document_approval_message_action").html(html);
+        //                         window.reload();
+        //                     }
+        //                 } else {
+        //                     if (uploadResponse.resp_code != undefined) {
+        //                         alert_float("danger", uploadResponse.resp_desc);
+        //                         hide_loader();
+        //                         return false;
+        //                     } else {
+        //                         alert_float("danger", uploadResponse);
+        //                         hide_loader();
+        //                         return false;
+        //                     }
+        //                 }
+        //             } catch (error) {
+        //                 hide_loader();
+        //                 console.error(error);
+        //                 return false;
+        //             }
+        //         } else {
+        //             hide_loader();
+        //             return false;
+        //         }
+        //         return false
+        //     }
+        // } else if (type === "profile_div") {
+        //     let html = "";
+        //     if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+        //         hide_loader();
 
-            } else {
-                let isprofilevalid = await is_validate_profile();
-                console.log(isprofilevalid);
-                if (isprofilevalid) {
-                    try {
-                        let update_profile_status = await update_profile();
-                        if (update_profile_status.resp_code == "RCS") {
-                            alert_float("success", update_profile_status.resp_desc);
-                            if (profile_creation_data.profile_status == undefined && profile_creation_data.profile_status == "") {
-                                if ($.inArray(staff_id, admin_ids) !== -1) {} else {
-                                    html = '<h3 class="message-notification">Your Profile under Processing</h3>';
-                                    $(".profile_approval_message_action").html(html);
-                                }
-                            }
-                            hide_loader();
-                            window.reload();
+        //     } else {
+        //         let isprofilevalid = await is_validate_profile();
+        //         console.log(isprofilevalid);
+        //         if (isprofilevalid) {
+        //             try {
+        //                 let update_profile_status = await update_profile();
+        //                 if (update_profile_status.resp_code == "RCS") {
+        //                     alert_float("success", update_profile_status.resp_desc);
+        //                     if (profile_creation_data.profile_status == undefined && profile_creation_data.profile_status == "") {
+        //                         if ($.inArray(staff_id, admin_ids) !== -1) {} else {
+        //                             html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+        //                             $(".profile_approval_message_action").html(html);
+        //                         }
+        //                     }
+        //                     hide_loader();
+        //                     window.reload();
 
-                        } else {
-                            if (update_profile_status.resp_code != undefined) {
-                                alert_float("danger", update_profile_status.resp_desc);
-                                hide_loader();
-                                return false;
-                            } else {
-                                alert_float("danger", update_profile_status);
-                                hide_loader();
-                                return false;
-                            }
-                        }
-                    } catch (error) {
-                        hide_loader();
-                        console.error(error);
-                        return false;
-                    }
-                }
-                return false
-            }
-        } else if (type === "university_div") {
-            let isUniversityValid = await is_validate_university();
-            if (isUniversityValid) {
-                if (check_university_status_direct == true) {
-                    hide_loader();
-                } else {
-                    let update_university_status = await update_university();
+        //                 } else {
+        //                     if (update_profile_status.resp_code != undefined) {
+        //                         alert_float("danger", update_profile_status.resp_desc);
+        //                         hide_loader();
+        //                         return false;
+        //                     } else {
+        //                         alert_float("danger", update_profile_status);
+        //                         hide_loader();
+        //                         return false;
+        //                     }
+        //                 }
+        //             } catch (error) {
+        //                 hide_loader();
+        //                 console.error(error);
+        //                 return false;
+        //             }
+        //         }
+        //         return false
+        //     }
+        // } else if (type === "university_div") {
+        //     let isUniversityValid = await is_validate_university();
+        //     if (isUniversityValid) {
+        //         if (check_university_status_direct == true) {
+        //             hide_loader();
+        //         } else {
+        //             let update_university_status = await update_university();
 
-                    if (update_university_status.resp_code === "RCS") {
-                        hide_loader();
-                        let ids = update_university_status.ids;
-                        $(".add_university_div_block .university_div").each(function(index) {
-                            if (ids[index] !== undefined) {
-                                $(this).find("input[name='university_id']").val(ids[index]);
-                            }
-                        });
+        //             if (update_university_status.resp_code === "RCS") {
+        //                 hide_loader();
+        //                 let ids = update_university_status.ids;
+        //                 $(".add_university_div_block .university_div").each(function(index) {
+        //                     if (ids[index] !== undefined) {
+        //                         $(this).find("input[name='university_id']").val(ids[index]);
+        //                     }
+        //                 });
 
-                        let university_list = update_university_status.university_shortlisting;
-                        let html = '';
-                        for (let i = 0; i < university_list.length; i++) {
-                            html += `<div class="col-md-12 university_div_application mt-2">
-                        <div class="col-md-3">
-                            <input type="hidden" name="university_id" value="` + university_list[i].id + `" >
-                            <input type="input" class="form-control" disabled value="` + university_list[i].university_name + `" >
-                        </div> 
-                        <div class="col-md-3">
-                            <input type="input" class="form-control" disabled value="` + university_list[i].vendor_name + `" >
-                        </div>
-                        <div class="col-md-3">
-                        <input type="input" class="form-control" disabled value="` + university_list[i].vendor_name + `" >
+        //                 let university_list = update_university_status.university_shortlisting;
+        //                 let html = '';
+        //                 for (let i = 0; i < university_list.length; i++) {
+        //                     html += `<div class="col-md-12 university_div_application mt-2">
+        //                 <div class="col-md-3">
+        //                     <input type="hidden" name="university_id" value="` + university_list[i].id + `" >
+        //                     <input type="input" class="form-control" disabled value="` + university_list[i].university_name + `" >
+        //                 </div> 
+        //                 <div class="col-md-3">
+        //                     <input type="input" class="form-control" disabled value="` + university_list[i].vendor_name + `" >
+        //                 </div>
+        //                 <div class="col-md-3">
+        //                 <input type="input" class="form-control" disabled value="` + university_list[i].vendor_name + `" >
 
-                            <?php
-                            echo render_select('university_application_status', $university_application_status, array('id', 'name'), "");
-                            ?>
-                        </div>
-                        <div class="col-md-3">
-                        </div>
-                    </div>`;
-                        }
-                        $(".application_div").html(html);
+        //                     <?php
+                                //                     echo render_select('university_application_status', $university_application_status, array('id', 'name'), "");
+                                //                     
+                                ?>
+        //                 </div>
+        //                 <div class="col-md-3">
+        //                 </div>
+        //             </div>`;
+        //                 }
+        //                 $(".application_div").html(html);
 
-                        alert_float("success", update_university_status.resp_desc);
+        //                 alert_float("success", update_university_status.resp_desc);
 
-                        html = '<h3 class="message-notification">Your University under Processing</h3>';
-                        $(".university_approval_message_action").html(html);
-                        if (check_university_status == true) {
-                            window.reload();
-                            // hide_loader();
-                            // current_fs.slideUp("slow");
-                            // next_fs.slideDown("slow");
-                        }
+        //                 html = '<h3 class="message-notification">Your University under Processing</h3>';
+        //                 $(".university_approval_message_action").html(html);
+        //                 if (check_university_status == true) {
+        //                     window.reload();
+        //                     // hide_loader();
+        //                     // current_fs.slideUp("slow");
+        //                     // next_fs.slideDown("slow");
+        //                 }
 
 
-                    } else {
-                        alert_float("danger", update_university_status.resp_desc);
-                    }
-                    return false;
-                }
+        //             } else {
+        //                 alert_float("danger", update_university_status.resp_desc);
+        //             }
+        //             return false;
+        //         }
 
-            } else {
-                hide_loader();
-                return false;
-            }
-        } else if (type === "application_div") {
-            let validate_application_status = await is_validate_application();
+        //     } else {
+        //         hide_loader();
+        //         return false;
+        //     }
+        // } else if (type === "application_div") {
+        //     let validate_application_status = await is_validate_application();
 
-            if (validate_application_status) {
-                $("select[name='university_status_submit']").attr("disabled", true);
-                let update_university_application_submit_status = await update_university_application();
-                if (update_university_application_submit_status.resp_code === "RCS") {
-                    alert_float("success", update_university_application_submit_status.resp_desc);
-                    hide_loader();
-                } else {
-                    hide_loader();
-                    alert_float("danger", update_university_application_submit_status.resp_desc);
-                }
+        //     if (validate_application_status) {
+        //         $("select[name='university_status_submit']").attr("disabled", true);
+        //         let update_university_application_submit_status = await update_university_application();
+        //         if (update_university_application_submit_status.resp_code === "RCS") {
+        //             alert_float("success", update_university_application_submit_status.resp_desc);
+        //             hide_loader();
+        //         } else {
+        //             hide_loader();
+        //             alert_float("danger", update_university_application_submit_status.resp_desc);
+        //         }
 
-                $("select[name='university_status_submit']").each(function() {
-                    if ($.trim($(this).val()) != "") {
-                        location.reload();
-                        return;
-                    }
-                });
-                return false;
-            } else {
-                hide_loader();
-            }
+        //         $("select[name='university_status_submit']").each(function() {
+        //             if ($.trim($(this).val()) != "") {
+        //                 location.reload();
+        //                 return;
+        //             }
+        //         });
+        //         return false;
+        //     } else {
+        //         hide_loader();
+        //     }
 
-        } else if (type === "offer_div") {
-            let validate_offer_letter = await is_validate_offer_letter();
+        // } else if (type === "offer_div") {
+        //     let validate_offer_letter = await is_validate_offer_letter();
 
-            if (validate_offer_letter) {
-                check_offer_status
-                let update_university_offer_status = await update_university_offer_application();
+        //     if (validate_offer_letter) {
+        //         check_offer_status
+        //         let update_university_offer_status = await update_university_offer_application();
 
-                if (update_university_offer_status.resp_code === "RCS") {
-                    location.reload();
+        //         if (update_university_offer_status.resp_code === "RCS") {
+        //             location.reload();
 
-                    alert_float("success", update_university_offer_status.resp_desc);
-                    return false;
-                } else {
-                    hide_loader();
-                    alert_float("danger", update_university_offer_status.resp_desc);
-                }
-                return false;
-            } else {
-                hide_loader();
-            }
+        //             alert_float("success", update_university_offer_status.resp_desc);
+        //             return false;
+        //         } else {
+        //             hide_loader();
+        //             alert_float("danger", update_university_offer_status.resp_desc);
+        //         }
+        //         return false;
+        //     } else {
+        //         hide_loader();
+        //     }
 
-        }
+        // }
 
         let current_fs = $(obj).parent();
         let next_fs = $(obj).parent().next();
@@ -2170,11 +2229,7 @@ if (empty($customer_admins)) { ?>
             });
         });
     }
-    $(".university_status_check").each(function() {
-        if ($(this).val() == 1) {
-            $(this).parents(".university_div").find('input, select').prop('disabled', true).selectpicker('refresh');
-        }
-    })
+
 
 
     $(".university_div_").find(".remove_university_btn").show();
@@ -2463,4 +2518,16 @@ if (empty($customer_admins)) { ?>
         }
 
     }
+    $(document).ready(function() {
+        check_offer_status();
+
+        $(".university_status_check").each(function() {
+            if ($(this).val() == 1) {
+                $(this).parents(".university_div").find('input, select').prop('disabled', true).selectpicker('refresh');
+            }
+        })
+        $("body").find("input,select").attr("disabled", true).selectpicker('refresh');
+        $("body").find("input[type=button]").attr("disabled", false);
+
+    })
 </script>

@@ -104,13 +104,39 @@ class Clients extends ClientsController
             // }
         }
 
-
+        $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
         $data['title']         = "Basic Details";
         $data['announcements'] = $this->announcements_model->get();
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         // echo "<pre>";print_r($data);die;
         $this->data($data);
         $this->view('basic_details');
+        $this->layout();
+    }
+
+    public function client_tracker()
+    {
+        $id = get_client_user_id();
+        $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+        $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
+        $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
+        $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+        $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
+        $data['customer_admins'] = $this->clients_model->get_admins($id);
+        $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+        $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+        $data['university_application_status'] = $this->clients_model->university_status_update();
+        $data['university_status_submit'] = $this->clients_model->university_status_submit();
+        $data['customer_vendors'] = [];
+        if (!empty($data['profile_creation_data'][0]["vendor"])) {
+            $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+        }
+        // $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
+        $data['title']         = "Basic Details";
+        $data['client_id']         = $id;
+        // echo "<pre>";print_r($data);die;
+        $this->data($data);
+        $this->view('client_tracker');
         $this->layout();
     }
 
@@ -1926,24 +1952,36 @@ class Clients extends ClientsController
     public function university_shortlisting_update()
     {
         if (!empty($_POST["university_id"])) {
+            $update_array = [];
+            $status_check = false;
             foreach ($_POST["university_id"] as $key => $university_id) {
-                $this->db->where("id", $university_id);
-                $rows_affected = $this->db->update(db_prefix() . 'client_university_shortlisting', [
-                    'university_status' => $_POST["university_application_status"][$key], 'client_updated_by' => get_client_user_id(), 'client_updated_date' => date('Y-m-d H:i:s')
-                ]);
+                // $this->db->where("id", $university_id);
+                // $rows_affected = $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                //     'university_status' => $_POST["university_application_status"][$key], 'client_updated_by' => get_client_user_id(), 'client_updated_date' => date('Y-m-d H:i:s')
+                // ]);
+                $update_array[] = array("university_status" => $_POST["university_application_status"][$key], "client_updated_by" => get_client_user_id(), "client_updated_date" => date('Y-m-d H:i:s'), "id" => $university_id);
+                if ($_POST["university_application_status"][$key] == 1) {
+                    $status_check = true;
+                }
+            }
 
+            if (!empty($update_array)) {
+                $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $update_array, "id");
+            }
+
+            if ($status_check) {
                 $this->db->where("userid", get_client_user_id());
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
                 $rows_affected = $this->db->affected_rows();
-                if ($rows_affected > 0) {
-                    $data['resp_code'] = 'RCS';
-                    $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
-                    set_alert('success', _l('update_custumer_update_successfully', _l('customer')));
-                } else {
-                    $data['resp_code'] = 'RCS';
-                    $data['resp_desc'] = _l('update_custumer_failed_failed', _l('customer'));
-                    set_alert('danger', _l('update_custumer_failed_failed', _l('customer')));
-                }
+            }
+            if ($rows_affected > 0) {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
+                set_alert('success', _l('update_custumer_update_successfully', _l('customer')));
+            } else {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = _l('update_custumer_failed_failed', _l('customer'));
+                set_alert('danger', _l('update_custumer_failed_failed', _l('customer')));
             }
         } else {
             $data['resp_code'] = 'ERR';
