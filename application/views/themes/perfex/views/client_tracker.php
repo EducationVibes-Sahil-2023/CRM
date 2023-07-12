@@ -376,6 +376,10 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         margin-top: 25px;
         box-shadow: 0px 1px 5px -2px black;
     }
+
+    .document_approval_message_action {
+        display: inline-block !important;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
