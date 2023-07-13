@@ -11,9 +11,33 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         padding: 0;
     }
 
+    textarea#note_data {
+        height: 70px;
+        resize: none;
+    }
+
+    .table-loading table thead tr {
+        min-height: 44px;
+        height: 44px;
+    }
+
+    .table-loading {
+        background: none !important;
+    }
+
     html {
         height: 100%;
         background: #eee;
+    }
+
+    .dt-table-loading.table,
+    .table-loading .dataTables_filter,
+    .table-loading .dataTables_length,
+    .table-loading .dt-buttons,
+    .table-loading table tbody tr,
+    .table-loading table thead th {
+        opacity: none !important;
+        opacity: unset !important;
     }
 
     body {
@@ -348,6 +372,19 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         padding: 10px 0px;
         margin-top: 25px;
         box-shadow: 0px 1px 5px -2px black;
+    }
+
+    .note_activity_section {
+        margin-top: 20px;
+        background: white;
+        border: 0 none;
+        border-radius: 8px;
+        box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.4);
+        padding: 20px 30px;
+        box-sizing: border-box;
+        width: 100%;
+        /* margin: 0 10%; */
+        position: relative;
     }
 </style>
 <!-- MultiStep Form -->
@@ -864,6 +901,30 @@ if (empty($customer_admins)) { ?>
                 <input type="submit" name="submit" class="submit action-button" value="Submit" />
             </fieldset> -->
             </form>
+
+            <section class="note_activity_section mt-5">
+                <div class="note_section">
+                    <div class="create_notes row" style="margin-bottom:10px;">
+                        <input type="hidden" id="notes_id">
+                        <div class="col-md-9"><textarea id="note_data" class="form-control"></textarea></div>
+                        <div class="col-md-3"><button class="btn btn-primary" onclick="create_notes()">Update Notes</button></div>
+                    </div>
+                    <div class="note_table" style="margin-top:10px;">
+                        <table class="table table-application-notes dataTable no-footer" id="table-notes">
+                            <thead>
+                                <tr>
+                                    <th>Notes</th>
+                                    <th>Application Stage</th>
+                                    <th>Created Date</th>
+                                    <th>Created By</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
 <?php } ?>
@@ -894,6 +955,8 @@ if (empty($customer_admins)) { ?>
     var check_university_status = false;
     var check_university_status_direct = false;
     var check_university_status_submit = false;
+    var table_notes = "";
+    var notes_url = "";
     $("document").ready(function() {
         if (document_verification != 1) {
             $("#profile_creation_div").find('input, select').prop('disabled', true).selectpicker('refresh');;
@@ -929,10 +992,125 @@ if (empty($customer_admins)) { ?>
             .prevAll().removeClass("inactive").removeClass("active")
             .addClass("previous permanent_previous");
 
+        notes_url = "<?= base_url() ?>admin/clients/get_application_notes/<?= $client_id ?>";
 
+        table_notes = $('#table-notes').DataTable({
+            order: []
+        });
+        set_notes_table();
 
     })
 
+
+    function set_notes_table() {
+        console.log(notes_url);
+        reloadDataTable(notes_url);
+
+    }
+    // Function to reload the DataTable with a specified URL
+    function reloadDataTable(url) {
+        $.ajax({
+            url: url,
+            success: function(data) {
+                data = JSON.parse(data);
+                let data_array = [];
+                if (data.length > 0) {
+                    for (let i = 0; i < data.length; i++) {
+                        data_array.push([
+                            data[i].note,
+                            data[i].application_stage_name,
+                            data[i].staffname,
+                            data[i].created_date,
+                            `<a href="javascript:void(0)" data-id='` + data[i].id + `' data-notes='` + data[i].note + `' onclick="edit_notes(` + data[i].id + `,this)" return false;">Edit </a> `
+                            // | <a href="javascript:void(0)" onclick="delete_notes(` + data[i].id + `)" class=" text-danger">Delete </a></div>
+                        ]);
+                    }
+                }
+                console.log(data_array);
+                table_notes.clear().rows.add(data_array).draw();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading data:", error);
+            }
+        });
+
+    }
+
+    function edit_notes(id, obj) {
+        let notes = $(obj).data('notes');
+        let notes_id = $(obj).data('id');
+        $("#note_data").val(notes);
+        $("#notes_id").val(notes_id);
+    }
+
+    // Example usage: Call reloadDataTable() with a URL to reload the DataTable
+
+
+    async function create_notes() {
+        let stage_id = ($("#progressbar").find("li.active").index() + 1);
+        let notes = $("#note_data").val();
+        let notes_id = $("#notes_id").val();
+
+        if (stage_id == "" || stage_id == undefined) {
+            alert_float("danger", "Applicant stage id requried");
+            return false;
+        }
+        if (notes == "" || notes == undefined) {
+            alert_float("danger", "notes is requried");
+            $("#note_data").focus();
+            return false;
+        }
+        if (stage_id != "" && notes != "") {
+            show_loader();
+            let uploadResponse = await update_notes(stage_id, notes, notes_id);
+            if (uploadResponse.resp_code == "RCS") {
+                $("#note_data").val("");
+                hide_loader();
+                reloadDataTable(notes_url);
+                alert_float("success", uploadResponse.resp_desc);
+            } else {
+                if (uploadResponse.resp_code != undefined) {
+                    alert_float("danger", uploadResponse.resp_desc);
+                    hide_loader();
+                    return false;
+                } else {
+                    alert_float("danger", uploadResponse);
+                    hide_loader();
+                    return false;
+                }
+            }
+            hide_loader();
+        }
+
+    }
+
+    function update_notes(stage_id, notes, notes_id) {
+        let upload_data = new FormData();
+        return new Promise(async (resolve, reject) => {
+            try {
+                upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+                upload_data.append("client_id", <?= $client_id ?>);
+                upload_data.append("stage_id", stage_id);
+                upload_data.append("applicant_notes", notes);
+                upload_data.append("notes_id", notes_id);
+
+                let response = await $.ajax({
+                    url: "<?= base_url("admin/clients/update_notes") ?>",
+                    method: "POST",
+                    data: upload_data,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Handle the success response from the server
+                resolve(JSON.parse(response));
+            } catch (error) {
+                // Handle the error response from the server
+                console.error(error);
+                reject(error);
+            }
+        });
+    }
 
     var check_offer_letter = true;
 
