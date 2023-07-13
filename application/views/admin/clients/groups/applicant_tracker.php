@@ -386,6 +386,10 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         /* margin: 0 10%; */
         position: relative;
     }
+
+    .table-application-notes thead tr th {
+        width: 100%;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
