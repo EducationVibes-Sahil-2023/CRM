@@ -1886,4 +1886,46 @@ class Clients extends AdminController
             echo json_encode($data);
         }
     }
+
+    public function update_notes()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $stage_id = !empty($this->input->post("stage_id")) ? $this->input->post("stage_id") : "";
+            $applicant_notes = !empty($this->input->post("applicant_notes")) ? $this->input->post("applicant_notes") : "";
+            $notes_id = !empty($this->input->post("notes_id")) ? $this->input->post("notes_id") : "";
+
+            $this->db->where('id', $notes_id);
+            $this->db->update(db_prefix() . 'application_notes', [
+                'status' => 0,
+            ]);
+            $this->db->insert(db_prefix() . 'application_notes', array("application_stage" => $stage_id, "note" => $applicant_notes, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s'), "status" => 1, "client_id" => $client_id, "parent_id" => $notes_id));
+            $rows_affected = $this->db->affected_rows();
+            if ($rows_affected) {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Notes update successfully.";
+                $data['notes'] = [];
+
+                set_alert('success', "Notes update successfully.");
+            } else {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Notes update failed";
+                set_alert('danger', "Notes update failed");
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function get_application_notes($client_id = "")
+    {
+
+        $application_note_list = $this->clients_model->application_note_list($client_id);
+        echo json_encode($application_note_list);
+    }
 }
