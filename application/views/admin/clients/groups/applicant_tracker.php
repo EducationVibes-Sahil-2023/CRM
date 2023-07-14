@@ -1189,10 +1189,12 @@ if (empty($customer_admins)) { ?>
 
                     });
                 } else {
-                    if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
-                        html = '<h3 class="message-notification">Your Documents under Processing</h3>';
-                    } else {
-                        html = '<h3 class="message-notification ' + upload_documents.color_name + ' ">Your Documents is ' + upload_documents.document_status_name + upload_documents.staffname + '</h3>';
+                    if (upload_documents.document_status_name != undefined) {
+                        if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
+                            html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+                        } else {
+                            html = '<h3 class="message-notification ' + upload_documents.color_name + ' ">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                        }
                     }
                     $("#upload_documents").find(".add_document_btn:last").show();
 
@@ -1422,20 +1424,20 @@ if (empty($customer_admins)) { ?>
     }
 
     function check_offer_status() {
+        if ($("#offer_div select[name='university_status_submit_offer']").length > 0) {
+            $("#offer_div select[name='university_status_submit_offer']").each(function() {
+                if ($.trim($(this).val()) != "") {
+                    $(this).attr("disabled", true);
+                    $(this).selectpicker('refresh');
+                } else {
+                    check_offer_letter = false;
+                }
+            })
 
-        $("#offer_div select[name='university_status_submit_offer']").each(function() {
-            if ($.trim($(this).val()) != "") {
-                $(this).attr("disabled", true);
-                $(this).selectpicker('refresh');
-            } else {
-                check_offer_letter = false;
+            if (check_offer_letter == true) {
+                $("#progressbar li.active").addClass("previous");
             }
-        })
-
-        if (check_offer_letter == true) {
-            $("#progressbar li.active").addClass("previous");
         }
-
     }
 
     function check_profile_status() {
