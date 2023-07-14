@@ -1549,7 +1549,7 @@ if (empty($customer_admins)) { ?>
                 let check_status = true;
                 let university_count = 0;
                 let university_count_not = 0;
-                let total_university = $("#application_div select[name='university_application_status']").length;
+                let total_university = university_shortlisting.length;
 
                 $("#application_div select[name='university_application_status']").each(function() {
                     if ($(this).val() != 1) {
@@ -1559,6 +1559,9 @@ if (empty($customer_admins)) { ?>
                         university_count++;
                     }
                 });
+
+                university_count_not = university_shortlisting.filter(obj => obj.university_status === "2").length
+                university_count = university_shortlisting.filter(obj => obj.university_status === "1").length
 
                 total_university = ((total_university - university_count) - university_count_not);
 
