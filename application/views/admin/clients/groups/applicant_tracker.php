@@ -1648,7 +1648,6 @@ if (empty($customer_admins)) { ?>
         show_loader();
 
 
-
         if (type === "document_div") {
             if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
                 hide_loader();
@@ -1735,7 +1734,7 @@ if (empty($customer_admins)) { ?>
                 if (check_university_status_direct == true) {
                     hide_loader();
                 } else {
-                    let update_university_status = await update_university();
+                    let update_university_status = await update_university(check_university_status);
 
                     if (update_university_status.resp_code === "RCS") {
                         hide_loader();
@@ -2441,7 +2440,7 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    function update_university() {
+    function update_university(check_university_status = "") {
         return new Promise(async (resolve, reject) => {
             let upload_data = new FormData();
             let university_shortlisting = [];
@@ -2485,7 +2484,11 @@ if (empty($customer_admins)) { ?>
 
                     upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
                     upload_data.append("client_id", client_id);
-                    upload_data.append("applicant_status", (step_stage - 1));
+                    if (check_university_status === true) {
+                        upload_data.append("applicant_status", (step_stage));
+                    } else {
+                        upload_data.append("applicant_status", (step_stage - 1));
+                    }
                     let response = await $.ajax({
                         url: "<?= base_url("admin/clients/update_university") ?>",
                         method: "POST",
