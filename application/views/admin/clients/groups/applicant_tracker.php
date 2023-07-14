@@ -1127,7 +1127,7 @@ if (empty($customer_admins)) { ?>
             is_validate_application();
         })
 
-   
+
 
         $(".university_div_").find(".remove_university_btn").show();
         $(".university_div_").find(".add_university_btn").hide();
@@ -1173,151 +1173,151 @@ if (empty($customer_admins)) { ?>
 
         if (customer_admins.length > 0) {
 
-let email = $("#email_creation").val();
-let vendor = $("#select_vendor").val();
-let sop = $("#sop_document").attr("data-url");
+            let email = $("#email_creation").val();
+            let vendor = $("#select_vendor").val();
+            let sop = $("#sop_document").attr("data-url");
 
-var html = "";
-for (var i = 0; i < customer_admins.length; i++) {
-    admin_ids.push(customer_admins[i].staff_id);
-}
-// console.log(staff_id);
-// console.log(admin_ids);
-if ($.inArray(staff_id, admin_ids) !== -1 && upload_documents != '') {
-    if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-        if (staff_id == upload_documents.document_updated_by) {
-            html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
-        } else {
-            html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
-        }
-
-        $(".document_upload_files").find(".add_document").hide();
-        $(".document_upload_files").each(function() {
-            $(this).find("input[type='file']").hide();
-            $(".document-file-name").show();
-            $(this).find("input").attr("disabled", true);
-
-        });
-    } else {
-
-        // console.log(upload_documents);
-        // console.log(upload_documents);
-        if (upload_documents.document_status > 0) {
-            if (staff_id == upload_documents.document_updated_by) {
-                html += '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
-            } else {
-                html += '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+            var html = "";
+            for (var i = 0; i < customer_admins.length; i++) {
+                admin_ids.push(customer_admins[i].staff_id);
             }
-        }
-        if (upload_documents.updated_date > upload_documents.document_update_datetime || upload_documents.document_status == 0) {
-            html += '<h3 class="message-notification">Take action on document verification ';
-            $.each(upload_documents_button, function(index, item) {
-                html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_document_status(' + item.id + ',this)">' + item.name + '</button>';
-            });
-            html += '</h3>';
-        }
-        $("#upload_documents").find(".remove_document_btn").show();
-        $("#upload_documents").find(".remove_document_btn:first").hide();
-        $("#upload_documents").find(".add_document_btn:last").show();
-    }
-    $(".document_approval_message_action").html(html);
-} else {
-    if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-        html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
-
-        $(".document_upload_files").each(function() {
-            $(this).find("input[type='file']").hide();
-            $(".document-file-name").show();
-            $(this).find("input").attr("disabled", true);
-            $(".document_upload_files").find(".add_document").hide();
-
-        });
-    } else {
-        if (upload_documents.created_by != undefined) {
-            if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
-                html = '<h3 class="message-notification">Your Documents under Processing</h3>';
-            } else {
-                html = '<h3 class="message-notification ' + upload_documents.color_name + ' ">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
-            }
-        }
-        $("#upload_documents").find(".add_document_btn:last").show();
-
-    }
-    $(".document_approval_message_action").html(html);
-}
-
-
-
-
-
-if (profile_creation_data.profile_status != undefined) {
-    let html = "";
-    if ($.inArray(staff_id, admin_ids) !== -1) {
-        // console.log(profile_creation_data);
-        if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-            if (staff_id == profile_creation_data.approved_by) {
-                html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
-            } else {
-                html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
-            }
-
-
-            $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-            $("#profile_creation_div").find(".fa-file").hide();
-        } else {
-            // console.log(profile_creation_data);
-            if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
-                html = '<h3 class="message-notification"> Profile is incompleted.</h3>';
-            } else {
-                if (profile_creation_data.profile_status > 0) {
-                    html = "";
-                    if (staff_id == profile_creation_data.approved_by) {
-                        html += '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
+            // console.log(staff_id);
+            // console.log(admin_ids);
+            if ($.inArray(staff_id, admin_ids) !== -1 && upload_documents != '') {
+                if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                    if (staff_id == upload_documents.document_updated_by) {
+                        html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
                     } else {
-                        html += '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                        html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
                     }
+
+                    $(".document_upload_files").find(".add_document").hide();
+                    $(".document_upload_files").each(function() {
+                        $(this).find("input[type='file']").hide();
+                        $(".document-file-name").show();
+                        $(this).find("input").attr("disabled", true);
+
+                    });
+                } else {
+
+                    // console.log(upload_documents);
+                    // console.log(upload_documents);
+                    if (upload_documents.document_status > 0) {
+                        if (staff_id == upload_documents.document_updated_by) {
+                            html += '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
+                        } else {
+                            html += '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                        }
+                    }
+                    if (upload_documents.updated_date > upload_documents.document_update_datetime || upload_documents.document_status == 0) {
+                        html += '<h3 class="message-notification">Take action on document verification ';
+                        $.each(upload_documents_button, function(index, item) {
+                            html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_document_status(' + item.id + ',this)">' + item.name + '</button>';
+                        });
+                        html += '</h3>';
+                    }
+                    $("#upload_documents").find(".remove_document_btn").show();
+                    $("#upload_documents").find(".remove_document_btn:first").hide();
+                    $("#upload_documents").find(".add_document_btn:last").show();
                 }
-
-                html += '<h3 class="message-notification">Take action on profile verification ';
-                $.each(profile_verification_button, function(index, item) {
-                    html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
-                });
-                html += '</h3>';
-            }
-
-        }
-
-        // console.log("cflqwekeklnwekdfwe");
-        // console.log(html);
-        $(".profile_approval_message_action").html(html);
-        if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
-            $("#profile_div").find("input.next").attr("disabled", false);
-        }
-    } else {
-        if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-            html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
-            $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-            $("#profile_creation_div").find(".fa-file").hide();
-        } else {
-
-            if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
-                html = '<h3 class="message-notification">Your Profile is incompleted.</h3>';
-
+                $(".document_approval_message_action").html(html);
             } else {
-                html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+                if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                    html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+
+                    $(".document_upload_files").each(function() {
+                        $(this).find("input[type='file']").hide();
+                        $(".document-file-name").show();
+                        $(this).find("input").attr("disabled", true);
+                        $(".document_upload_files").find(".add_document").hide();
+
+                    });
+                } else {
+                    if (upload_documents.created_by != undefined) {
+                        if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
+                            html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+                        } else {
+                            html = '<h3 class="message-notification ' + upload_documents.color_name + ' ">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                        }
+                    }
+                    $("#upload_documents").find(".add_document_btn:last").show();
+
+                }
+                $(".document_approval_message_action").html(html);
             }
+
+
+
+
+
+            if (profile_creation_data.profile_status != undefined) {
+                let html = "";
+                if ($.inArray(staff_id, admin_ids) !== -1) {
+                    // console.log(profile_creation_data);
+                    if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                        if (staff_id == profile_creation_data.approved_by) {
+                            html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
+                        } else {
+                            html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                        }
+
+
+                        $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                        $("#profile_creation_div").find(".fa-file").hide();
+                    } else {
+                        // console.log(profile_creation_data);
+                        if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
+                            html = '<h3 class="message-notification"> Profile is incompleted.</h3>';
+                        } else {
+                            if (profile_creation_data.profile_status > 0) {
+                                html = "";
+                                if (staff_id == profile_creation_data.approved_by) {
+                                    html += '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
+                                } else {
+                                    html += '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                                }
+                            }
+
+                            html += '<h3 class="message-notification">Take action on profile verification ';
+                            $.each(profile_verification_button, function(index, item) {
+                                html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
+                            });
+                            html += '</h3>';
+                        }
+
+                    }
+
+                    // console.log("cflqwekeklnwekdfwe");
+                    // console.log(html);
+                    $(".profile_approval_message_action").html(html);
+                    if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
+                        $("#profile_div").find("input.next").attr("disabled", false);
+                    }
+                } else {
+                    if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                        html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                        $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                        $("#profile_creation_div").find(".fa-file").hide();
+                    } else {
+
+                        if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
+                            html = '<h3 class="message-notification">Your Profile is incompleted.</h3>';
+
+                        } else {
+                            html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+                        }
+                    }
+
+                    if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
+                        $("#profile_div").find("input.next").attr("disabled", false);
+                    }
+                    $(".profile_approval_message_action").html(html);
+                }
+            }
+
+
+
         }
-
-        if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
-            $("#profile_div").find("input.next").attr("disabled", false);
-        }
-        $(".profile_approval_message_action").html(html);
-    }
-}
-
-
-
-}
     })
 
     // Function to reload the DataTable with a specified URL
@@ -1540,7 +1540,7 @@ if (profile_creation_data.profile_status != undefined) {
     }
 
     function is_validate_application_status(status = 0) {
-        if (university_shortlisting != undefined && university_shortlisting.length > 0) {
+        if (university_shortlisting != undefined && university_shortlisting[0].id > 0) {
             let html = '<h3 class="message-notification">Your University under Processing</h3>';
             $(".university_approval_message_action").html(html);
         }
