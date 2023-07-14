@@ -390,6 +390,108 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
     .table-application-notes thead tr th {
         width: 100%;
     }
+
+    .lead-note .note-box {
+        margin-left: 1%;
+        width: 98%;
+        /* text-align: center; */
+        margin-bottom: 10px;
+        margin-top: 5px;
+        padding: 10px;
+        box-shadow: 1px 1px 5px -1px black;
+        border-radius: 10px;
+    }
+
+    .btn-toggle {
+        margin: 0 7rem;
+        padding: 0;
+        position: relative;
+        border: none;
+        height: 1.5rem;
+        width: 3rem;
+        border-radius: 1.5rem;
+        color: #6b7381;
+        background: #bdc1c8;
+    }
+
+    .btn-toggle:focus,
+    .btn-toggle.focus,
+    .btn-toggle:focus.active,
+    .btn-toggle.focus.active {
+        outline: none;
+    }
+
+    .btn-toggle:before,
+    .btn-toggle:after {
+        line-height: 1.5rem;
+        width: 4rem;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        position: absolute;
+        bottom: 0;
+        transition: opacity 0.25s;
+    }
+
+    .btn-toggle:before {
+        content: 'Notes';
+        left: -7rem;
+    }
+
+    .btn-toggle:after {
+        content: 'Activity';
+        right: -5rem;
+        opacity: 0.5;
+    }
+
+    .btn-toggle:before,
+    .btn-toggle:after {
+        color: #6b7381;
+    }
+
+    .btn-toggle.active {
+        background-color: #29b5a8;
+    }
+
+    .btn-toggle>.handle {
+        position: absolute;
+        top: 0.1875rem;
+        left: 0.1875rem;
+        width: 1.125rem;
+        height: 1.125rem;
+        border-radius: 1.125rem;
+        background: #fff;
+        transition: left 0.25s;
+    }
+
+    .btn-toggle.active {
+        transition: background-color 0.25s;
+    }
+
+    .btn-toggle.active>.handle {
+        left: 1.6875rem;
+        transition: left 0.25s;
+    }
+
+    .btn-toggle.active:before {
+        opacity: 0.5;
+    }
+
+    .btn-toggle.active:after {
+        opacity: 1;
+    }
+
+    small.note-edit {
+        /* border: 0px solid green; */
+        margin-left: 10px;
+        color: green;
+        padding: 2px 10px;
+        font-weight: 700;
+        border-radius: 10px;
+        box-shadow: 1px 1px 4px 0px;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
@@ -455,7 +557,7 @@ if (empty($customer_admins)) { ?>
                                             <div class="col-md-2">
                                                 <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
 
-                                                <button style="display:<?= ($d_key == 0) ? 'none' : '' ?>;" class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                                <button class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
 
                                                 <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
                                             </div>
@@ -907,25 +1009,27 @@ if (empty($customer_admins)) { ?>
             </form>
 
             <section class="note_activity_section mt-5">
+                <div class="col-12 text-right" style="margin:25px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
+                        <div class="handle"></div>
+                    </button></div>
                 <div class="note_section">
-                    <div class="create_notes row" style="margin-bottom:10px;">
-                        <input type="hidden" id="notes_id">
-                        <div class="col-md-9"><textarea id="note_data" class="form-control"></textarea></div>
-                        <div class="col-md-3"><button class="btn btn-primary" onclick="create_notes()">Update Notes</button></div>
-                    </div>
-                    <div class="note_table" style="margin-top:10px;">
-                        <table class="table table-application-notes dataTable no-footer" id="table-notes">
-                            <thead>
-                                <tr>
-                                    <th>Notes</th>
-                                    <th>Application Stage</th>
-                                    <th>Created Date</th>
-                                    <th>Created By</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
+                    <div class="parrent-div">
+                        <div class="panel-body">
+                            <div class="create_notes row" style="margin-bottom:30px;">
+                                <input type="hidden" id="notes_id">
+                                <div class="col-md-9"><textarea id="note_data" class="form-control"></textarea></div>
+                                <div class="col-md-3"><button class="btn btn-primary" onclick="create_notes()">Update Notes</button></div>
+                            </div>
+                            <h4>Notes</h4>
+                            <div class="media lead-note">
 
-                        </table>
+                            </div>
+                        </div>
+                        <div class="panel-body lead-modal" style="display:none;">
+                            <h4>Activity</h4>
+                            <div class="media lead-activity activity-feed">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -937,7 +1041,7 @@ if (empty($customer_admins)) { ?>
 <script>
     //jQuery time
     var applicant_status = "<?= $applicant_status ?>";
-    console.log(applicant_status);
+    // console.log(applicant_status);
     var current_fs, next_fs, previous_fs; //fieldsets
     var left, opacity, scale; //fieldset properties which we will animate
     var animating; //flag to prevent quick multi-click glitches
@@ -951,16 +1055,21 @@ if (empty($customer_admins)) { ?>
     var staff_id = "<?= get_staff_user_id() ?>";
     var profile_creation_data = <?= !empty($profile_creation_data[0]) ? json_encode($profile_creation_data[0], true) : [] ?>;
     var profile_verification_button = <?= !empty($profile_verification_button) ? json_encode($profile_verification_button, true) : [] ?>;
+    var university_shortlisting = <?= !empty($university_shortlisting) ? json_encode($university_shortlisting, true) : [] ?>;
     var document_verification = "<?= !empty($upload_documents[0]["document_status"]) ? $upload_documents[0]["document_status"] : 0 ?>";
     var profile_verification = "<?= !empty($profile_creation_data[0]["profile_status"]) ? $profile_creation_data[0]["profile_status"] : 0 ?>";
-    console.log(upload_documents);
-    console.log(profile_creation_data);
+    // console.log(upload_documents);
+    // console.log(profile_creation_data);
     var admin_ids = [];
     var check_university_status = false;
     var check_university_status_direct = false;
     var check_university_status_submit = false;
     var table_notes = "";
     var notes_url = "";
+    var activity_url = "";
+    var check_offer_letter = true;
+
+
     $("document").ready(function() {
         if (document_verification != 1) {
             $("#profile_creation_div").find('input, select').prop('disabled', true).selectpicker('refresh');;
@@ -997,41 +1106,237 @@ if (empty($customer_admins)) { ?>
             .addClass("previous permanent_previous");
 
         notes_url = "<?= base_url() ?>admin/clients/get_application_notes/<?= $client_id ?>";
+        activity_url = "<?= base_url() ?>admin/clients/get_application_activity/<?= $client_id ?>";
 
-        table_notes = $('#table-notes').DataTable({
-            order: []
+
+        $(".previous").click(function() {
+            current_fs = $(this).parent();
+            previous_fs = $(this).parent().prev();
+            //de-activate current step on progressbar
+            $("#progressbar li").eq($("fieldset").index(current_fs)).removeClass("active").addClass("inactive");
+            $("#progressbar li").eq($("fieldset").index(previous_fs)).addClass("active").removeClass("previous").removeClass("inactive");
+            previous_fs.slideDown();
+            current_fs.slideUp("slow");
         });
-        set_notes_table();
 
+        $(".submit").click(function() {
+            return false;
+        })
+
+        $("select[name='university_status_submit']").change(function() {
+            is_validate_application();
+        })
+
+        if (customer_admins.length > 0) {
+
+            let email = $("#email_creation").val();
+            let vendor = $("#select_vendor").val();
+            let sop = $("#sop_document").attr("data-url");
+
+            var html = "";
+            for (var i = 0; i < customer_admins.length; i++) {
+                admin_ids.push(customer_admins[i].staff_id);
+            }
+            // console.log(staff_id);
+            // console.log(admin_ids);
+            if ($.inArray(staff_id, admin_ids) !== -1 && upload_documents != '') {
+                if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                    if (staff_id == upload_documents.document_updated_by) {
+                        html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
+                    } else {
+                        html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                    }
+
+                    $(".document_upload_files").find(".add_document").hide();
+                    $(".document_upload_files").each(function() {
+                        $(this).find("input[type='file']").hide();
+                        $(".document-file-name").show();
+                        $(this).find("input").attr("disabled", true);
+
+                    });
+                } else {
+
+                    // console.log(upload_documents);
+                    // console.log(upload_documents);
+                    if (upload_documents.document_status > 0) {
+                        if (staff_id == upload_documents.document_updated_by) {
+                            html += '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
+                        } else {
+                            html += '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+                        }
+                    }
+                    if (upload_documents.updated_date > upload_documents.document_update_datetime || upload_documents.document_status == 0) {
+                        html += '<h3 class="message-notification">Take action on document verification ';
+                        $.each(upload_documents_button, function(index, item) {
+                            html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_document_status(' + item.id + ',this)">' + item.name + '</button>';
+                        });
+                        html += '</h3>';
+                    }
+                    $("#upload_documents").find(".remove_document_btn").show();
+                    $("#upload_documents").find(".remove_document_btn:first").hide();
+                    $("#upload_documents").find(".add_document_btn:last").show();
+                }
+                $(".document_approval_message_action").html(html);
+            } else {
+                if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+                    html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
+
+                    $(".document_upload_files").each(function() {
+                        $(this).find("input[type='file']").hide();
+                        $(".document-file-name").show();
+                        $(this).find("input").attr("disabled", true);
+                        $(".document_upload_files").find(".add_document").hide();
+
+                    });
+                } else {
+                    if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
+                        html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+                    } else {
+                        html = '<h3 class="message-notification ' + upload_documents.color_name + ' ">Your Documents is ' + upload_documents.document_status_name + upload_documents.staffname + '</h3>';
+                    }
+                    $("#upload_documents").find(".add_document_btn:last").show();
+
+                }
+                $(".document_approval_message_action").html(html);
+            }
+
+
+
+
+
+            if (profile_creation_data.profile_status != undefined) {
+                let html = "";
+                if ($.inArray(staff_id, admin_ids) !== -1) {
+                    // console.log(profile_creation_data);
+                    if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                        if (staff_id == profile_creation_data.approved_by) {
+                            html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
+                        } else {
+                            html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                        }
+
+
+                        $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                        $("#profile_creation_div").find(".fa-file").hide();
+                    } else {
+                        // console.log(profile_creation_data);
+                        if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
+                            html = '<h3 class="message-notification"> Profile is incompleted.</h3>';
+                        } else {
+                            if (profile_creation_data.profile_status > 0) {
+                                html = "";
+                                if (staff_id == profile_creation_data.approved_by) {
+                                    html += '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
+                                } else {
+                                    html += '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                                }
+                            }
+
+                            html += '<h3 class="message-notification">Take action on profile verification ';
+                            $.each(profile_verification_button, function(index, item) {
+                                html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
+                            });
+                            html += '</h3>';
+                        }
+
+                    }
+
+                    // console.log("cflqwekeklnwekdfwe");
+                    // console.log(html);
+                    $(".profile_approval_message_action").html(html);
+                    if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
+                        $("#profile_div").find("input.next").attr("disabled", false);
+                    }
+                } else {
+                    if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
+                        html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
+                        $("#profile_creation_div").find(".fa-pencil-square-o").hide();
+                        $("#profile_creation_div").find(".fa-file").hide();
+                    } else {
+
+                        if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
+                            html = '<h3 class="message-notification">Your Profile is incompleted.</h3>';
+
+                        } else {
+                            html = '<h3 class="message-notification">Your Profile under Processing</h3>';
+                        }
+                    }
+
+                    if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
+                        $("#profile_div").find("input.next").attr("disabled", false);
+                    }
+                    $(".profile_approval_message_action").html(html);
+                }
+            }
+
+
+
+        }
+
+        $(".university_div_").find(".remove_university_btn").show();
+        $(".university_div_").find(".add_university_btn").hide();
+        $(".university_div_:last").find(".add_university_btn").show();
+        if ($(".university_div_").length == 1) {
+            $(".university_div_").find(".remove_university_btn").hide();
+        }
+        $("select[name='university_status_submit_offer']").change(function() {
+            let upload_media = $("option:selected", this).data("selected-file");
+            $(this).parents(".university_div_application").find(".text-area-field").hide();
+            $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").eq(1).remove();
+            $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").find('input, select,texarea').val("").selectpicker('refresh');
+            if (upload_media == 1) {
+                if ($("option:selected", this).val() == 2) {
+                    $(this).parents(".university_div_application").find(".text-area-field").show();
+                    // $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").eq(1).next().remove();
+                    // $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").find('input, select').prop('disabled', true).selectpicker('refresh');
+                }
+                $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", false);
+            } else {
+                $(this).parents(".university_div_application").find("input[type='file']").val('');
+                $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", true);
+            }
+        });
+        $(document).on('click', '.btn-switch-toggle', function() {
+            var parentDiv = $(".note_activity_section .parrent-div");
+            parentDiv.find(".panel-body").toggle();
+        });
+
+
+        $(".university_status_check").each(function() {
+            if ($(this).val() == 1) {
+                $(this).parents(".university_div").find('input, select').prop('disabled', true).selectpicker('refresh');
+            }
+        })
+
+        reloadNote_list(notes_url);
+        reloadActivity_list(activity_url);
+        is_validate_application_status();
+        check_offer_status();
+        check_profile_status();
+        is_validate_application();
     })
 
-
-    function set_notes_table() {
-        console.log(notes_url);
-        reloadDataTable(notes_url);
-
-    }
     // Function to reload the DataTable with a specified URL
-    function reloadDataTable(url) {
+    function reloadNote_list(url) {
         $.ajax({
             url: url,
             success: function(data) {
-                data = JSON.parse(data);
-                let data_array = [];
-                if (data.length > 0) {
-                    for (let i = 0; i < data.length; i++) {
-                        data_array.push([
-                            data[i].note,
-                            data[i].application_stage_name,
-                            data[i].staffname,
-                            data[i].created_date,
-                            `<a href="javascript:void(0)" data-id='` + data[i].id + `' data-notes='` + data[i].note + `' onclick="edit_notes(` + data[i].id + `,this)" return false;">Edit </a> `
-                            // | <a href="javascript:void(0)" onclick="delete_notes(` + data[i].id + `)" class=" text-danger">Delete </a></div>
-                        ]);
-                    }
-                }
-                console.log(data_array);
-                table_notes.clear().rows.add(data_array).draw();
+
+                $(".lead-note").html(data);
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading data:", error);
+            }
+        });
+
+    }
+
+    function reloadActivity_list(url) {
+        $.ajax({
+            url: url,
+            success: function(data) {
+
+                $(".lead-activity").html(data);
             },
             error: function(xhr, status, error) {
                 console.error("Error loading data:", error);
@@ -1047,46 +1352,46 @@ if (empty($customer_admins)) { ?>
         $("#notes_id").val(notes_id);
     }
 
-    // Example usage: Call reloadDataTable() with a URL to reload the DataTable
-
-
     async function create_notes() {
-        let stage_id = ($("#progressbar").find("li.active").index() + 1);
+        let stage_id = $("#progressbar").find("li.active").index() + 1;
         let notes = $("#note_data").val();
         let notes_id = $("#notes_id").val();
 
-        if (stage_id == "" || stage_id == undefined) {
-            alert_float("danger", "Applicant stage id requried");
+        if (stage_id === "" || stage_id === undefined) {
+            alert_float("danger", "Applicant stage id required");
             return false;
         }
-        if (notes == "" || notes == undefined) {
-            alert_float("danger", "notes is requried");
+
+        if (notes === "" || notes === undefined) {
+            alert_float("danger", "Notes are required");
             $("#note_data").focus();
             return false;
         }
-        if (stage_id != "" && notes != "") {
-            show_loader();
+
+        show_loader();
+
+        try {
             let uploadResponse = await update_notes(stage_id, notes, notes_id);
-            if (uploadResponse.resp_code == "RCS") {
+
+            if (uploadResponse.resp_code === "RCS") {
                 $("#note_data").val("");
-                hide_loader();
-                reloadDataTable(notes_url);
+                reloadNote_list(notes_url);
                 alert_float("success", uploadResponse.resp_desc);
             } else {
-                if (uploadResponse.resp_code != undefined) {
+                if (uploadResponse.resp_code !== undefined) {
                     alert_float("danger", uploadResponse.resp_desc);
-                    hide_loader();
-                    return false;
                 } else {
                     alert_float("danger", uploadResponse);
-                    hide_loader();
-                    return false;
                 }
             }
+        } catch (error) {
+            console.error(error);
+            alert_float("danger", "An error occurred while updating notes.");
+        } finally {
             hide_loader();
         }
-
     }
+
 
     function update_notes(stage_id, notes, notes_id) {
         let upload_data = new FormData();
@@ -1116,8 +1421,6 @@ if (empty($customer_admins)) { ?>
         });
     }
 
-    var check_offer_letter = true;
-
     function check_offer_status() {
 
         $("#offer_div select[name='university_status_submit_offer']").each(function() {
@@ -1134,7 +1437,6 @@ if (empty($customer_admins)) { ?>
         }
 
     }
-    check_offer_status();
 
     function check_profile_status() {
         var check_disabled = false;
@@ -1147,7 +1449,7 @@ if (empty($customer_admins)) { ?>
 
 
             row.find('input, select').each(function() {
-                console.log($(this).val());
+                // console.log($(this).val());
                 if ($(this).val().length > 0) {
                     hasValue = true;
                     return false; // Exit the loop if a value is found
@@ -1163,7 +1465,7 @@ if (empty($customer_admins)) { ?>
 
             var pencilIcon = row.closest('.row').find('.fa-pencil-square-o');
             var fileIcon = row.closest('.row').find('.fa-file');
-            console.log(hasValue);
+            // console.log(hasValue);
             if (hasValue) {
                 pencilIcon.show();
                 fileIcon.hide();
@@ -1196,28 +1498,6 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    check_profile_status();
-
-
-    $(".previous").click(function() {
-
-
-        current_fs = $(this).parent();
-        previous_fs = $(this).parent().prev();
-
-
-        //de-activate current step on progressbar
-        $("#progressbar li").eq($("fieldset").index(current_fs)).removeClass("active").addClass("inactive");
-        $("#progressbar li").eq($("fieldset").index(previous_fs)).addClass("active").removeClass("previous").removeClass("inactive");
-
-        previous_fs.slideDown();
-        current_fs.slideUp("slow");
-
-    });
-
-    $(".submit").click(function() {
-        return false;
-    })
 
     async function add_documents() {
 
@@ -1256,13 +1536,16 @@ if (empty($customer_admins)) { ?>
     }
 
     function is_validate_application_status(status = 0) {
+        if (university_shortlisting != undefined && university_shortlisting != '') {
+            let html = '<h3 class="message-notification">Your University under Processing</h3>';
+            $(".university_approval_message_action").html(html);
+        }
         return new Promise((resolve) => {
             if ($("#application_div select[name='university_application_status']").length > 0) {
                 let check_status = true;
                 let university_count = 0;
                 let university_count_not = 0;
                 let total_university = $("#application_div select[name='university_application_status']").length;
-
 
                 $("#application_div select[name='university_application_status']").each(function() {
                     if ($(this).val() != 1) {
@@ -1305,7 +1588,7 @@ if (empty($customer_admins)) { ?>
                 } else {
                     html = '<h3 class="message-notification">Your University under Processing</h3>';
                 }
-
+                // console.log("acjkascask");
                 $(".university_approval_message_action").html(html);
             }
 
@@ -1313,7 +1596,7 @@ if (empty($customer_admins)) { ?>
         });
     }
 
-    is_validate_application_status();
+
 
     function is_validate_application() {
         return new Promise((resolve, reject) => {
@@ -1349,11 +1632,9 @@ if (empty($customer_admins)) { ?>
         });
     }
 
-    is_validate_application();
 
-    $("select[name='university_status_submit']").change(function() {
-        is_validate_application();
-    })
+
+
     async function next_step(type, obj, step) {
         type = $.trim(type);
         step_stage = (step);
@@ -1375,7 +1656,8 @@ if (empty($customer_admins)) { ?>
                             if ($.inArray(staff_id, admin_ids) !== -1) {} else {
                                 let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
                                 $(".document_approval_message_action").html(html);
-                                window.reload();
+
+                                location.reload();
                             }
                         } else {
                             if (uploadResponse.resp_code != undefined) {
@@ -1406,7 +1688,7 @@ if (empty($customer_admins)) { ?>
 
             } else {
                 let isprofilevalid = await is_validate_profile();
-                console.log(isprofilevalid);
+                // console.log(isprofilevalid);
                 if (isprofilevalid) {
                     try {
                         let update_profile_status = await update_profile();
@@ -1419,7 +1701,7 @@ if (empty($customer_admins)) { ?>
                                 }
                             }
                             hide_loader();
-                            window.reload();
+                            location.reload();
 
                         } else {
                             if (update_profile_status.resp_code != undefined) {
@@ -1486,7 +1768,7 @@ if (empty($customer_admins)) { ?>
                         html = '<h3 class="message-notification">Your University under Processing</h3>';
                         $(".university_approval_message_action").html(html);
                         if (check_university_status == true) {
-                            window.reload();
+                            location.reload();
                             // hide_loader();
                             // current_fs.slideUp("slow");
                             // next_fs.slideDown("slow");
@@ -1551,6 +1833,7 @@ if (empty($customer_admins)) { ?>
 
         }
 
+
         let current_fs = $(obj).parent();
         let next_fs = $(obj).parent().next();
 
@@ -1562,7 +1845,7 @@ if (empty($customer_admins)) { ?>
         let nextIndex = $("#progressbar li").eq($("fieldset").index(next_fs)).addClass("active").removeClass("inactive").removeClass("previous");
         // $("#progressbar li.active").prevAll().addClass("previous");
 
-
+        // location.reload();
         hide_loader();
         current_fs.slideUp("slow");
         next_fs.slideDown("slow");
@@ -1576,8 +1859,8 @@ if (empty($customer_admins)) { ?>
                     let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
                     let media_file = $(this).find("input[name='offer_letter']").val();
                     let media_file_url = $(this).find("input[name='offer_letter']").data("file-name"); // Fix: Retrieve the 'href' attribute correctly
-                    console.log(upload_media_status);
-                    console.log(offer_letter_status);
+                    // console.log(upload_media_status);
+                    // console.log(offer_letter_status);
                     if (upload_media_status == 1) {
                         if (media_file === "" && media_file_url === "") {
                             hide_loader();
@@ -1590,7 +1873,7 @@ if (empty($customer_admins)) { ?>
                             try {
                                 let check_condition = await is_validate_offer_condition(this); // Await the validation of offer conditions
                                 hide_loader();
-                                console.log(check_condition);
+                                // console.log(check_condition);
                                 if (!check_condition) {
                                     return false;
                                 }
@@ -1703,8 +1986,8 @@ if (empty($customer_admins)) { ?>
                 if (document === undefined || document == "undefined") {
                     document = "";
                 }
-                console.log(document_previous_url);
-                console.log(document);
+                // console.log(document_previous_url);
+                // console.log(document);
                 if (label_name === undefined || $.trim(label_name) === "") {
                     $(this).find("input[name='document_label[]']").focus();
                     alert_float("danger", "Label is required");
@@ -1785,6 +2068,7 @@ if (empty($customer_admins)) { ?>
             } else {
                 show_loader();
                 response = await update_email();
+
             }
         } else if ($.trim(type.toLowerCase()) == "vendor") {
             if ($.trim($("#email_creation").val()) == "") {
@@ -1832,12 +2116,14 @@ if (empty($customer_admins)) { ?>
         }
         if (response != undefined) {
             if (response.resp_code == "RCS") {
+
                 hide_loader();
                 alert_float("success", response.resp_desc);
                 $(obj).hide();
                 $(obj).closest('input, select').prop('disabled', true);
                 $(obj).closest('input, select').selectpicker('refresh');
                 $(obj).siblings(".fa").show();
+                location.reload();
 
             } else {
                 hide_loader();
@@ -1974,126 +2260,7 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    if (customer_admins.length > 0) {
 
-        let email = $("#email_creation").val();
-        let vendor = $("#select_vendor").val();
-        let sop = $("#sop_document").attr("data-url");
-
-        var html = "";
-        for (var i = 0; i < customer_admins.length; i++) {
-            admin_ids.push(customer_admins[i].staff_id);
-        }
-        console.log(staff_id);
-        console.log(admin_ids);
-        if ($.inArray(staff_id, admin_ids) !== -1 && upload_documents != '') {
-            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-                if (staff_id == upload_documents.approved_by) {
-                    html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by you </h3>';
-                } else {
-                    html = '<h3 class="message-notification ' + upload_documents.color_name + '"> Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
-                }
-
-                $(".document_upload_files").find(".add_document").hide();
-                $(".document_upload_files").each(function() {
-                    $(this).find("input[type='file']").hide();
-                    $(".document-file-name").show();
-                    $(this).find("input").attr("disabled", true);
-
-                });
-            } else {
-                html = '<h3 class="message-notification">Take action on document verification ';
-                $.each(upload_documents_button, function(index, item) {
-                    html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_document_status(' + item.id + ',this)">' + item.name + '</button>';
-                });
-                html += '</h3>';
-                $("#upload_documents").find(".add_document_btn:last").show();
-            }
-            $(".document_approval_message_action").html(html);
-        } else {
-            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
-                html = '<h3 class="message-notification ' + upload_documents.color_name + '">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
-
-                $(".document_upload_files").each(function() {
-                    $(this).find("input[type='file']").hide();
-                    $(".document-file-name").show();
-                    $(this).find("input").attr("disabled", true);
-                    $(".document_upload_files").find(".add_document").hide();
-
-                });
-            } else {
-                if (upload_documents.document_status != undefined && upload_documents.document_status != '') {
-                    html = '<h3 class="message-notification">Your Documents under Processing</h3>';
-                }
-                $("#upload_documents").find(".add_document_btn:last").show();
-
-            }
-            $(".document_approval_message_action").html(html);
-        }
-
-
-
-
-
-        if (profile_creation_data.profile_status != undefined) {
-            let html = "";
-            if ($.inArray(staff_id, admin_ids) !== -1) {
-                console.log(profile_creation_data);
-                if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-                    if (staff_id == profile_creation_data.approved_by) {
-                        html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' you </h3>';
-                    } else {
-                        html = '<h3 class="message-notification ' + profile_creation_data.color_name + '"> Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
-                    }
-
-
-                    $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-                    $("#profile_creation_div").find(".fa-file").hide();
-                } else {
-                    console.log(profile_creation_data);
-                    if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
-                        html = '<h3 class="message-notification"> Profile is incompleted.</h3>';
-                    } else {
-                        html = '<h3 class="message-notification">Take action on profile verification ';
-                        $.each(profile_verification_button, function(index, item) {
-                            html += ' <button class="btn btn-' + item.color + '" data-color="' + item.color + '"  data-text="' + item.name + '" type="button" onclick="update_profile_status_btn(' + item.id + ',this)">' + item.name + '</button>';
-                        });
-                        html += '</h3>';
-                    }
-
-                }
-
-                console.log("cflqwekeklnwekdfwe");
-                console.log(html);
-                $(".profile_approval_message_action").html(html);
-                if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
-                    $("#profile_div").find("input.next").attr("disabled", false);
-                }
-            } else {
-                if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
-                    html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
-                    $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-                    $("#profile_creation_div").find(".fa-file").hide();
-                } else {
-
-                    if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
-                        html = '<h3 class="message-notification">Your Profile is incompleted.</h3>';
-
-                    } else {
-                        html = '<h3 class="message-notification">Your Profile under Processing</h3>';
-                    }
-                }
-
-                if (profile_creation_data.email != "" && profile_creation_data.vendor != "" && profile_creation_data.sop != "") {
-                    $("#profile_div").find("input.next").attr("disabled", false);
-                }
-                $(".profile_approval_message_action").html(html);
-            }
-        }
-
-
-
-    }
 
     async function update_document_status(status, obj) {
         try {
@@ -2121,11 +2288,8 @@ if (empty($customer_admins)) { ?>
                 alert_float("success", parsedResponse.resp_desc);
                 let html = `<h3 class="message-notification ${color}"> Documents is ${text}</h3>`;
                 $(".document_approval_message_action").html(html);
-                setTimeout(
-                    function() {
-                        $(obj).parents("fieldset").find("button.next").trigger("click");
+                location.reload();
 
-                    }, 2000);
             }
         } catch (error) {
             // Handle the error response from the server
@@ -2158,6 +2322,7 @@ if (empty($customer_admins)) { ?>
                 alert_float("success", parsedResponse.resp_desc);
                 let html = `<h3 class="message-notification ${color}"> Profile is ${text}</h3>`;
                 $(".profile_approval_message_action").html(html);
+                location.reload();
             }
         } catch (error) {
             // Handle the error response from the server
@@ -2356,19 +2521,9 @@ if (empty($customer_admins)) { ?>
             });
         });
     }
-    $(".university_status_check").each(function() {
-        if ($(this).val() == 1) {
-            $(this).parents(".university_div").find('input, select').prop('disabled', true).selectpicker('refresh');
-        }
-    })
 
 
-    $(".university_div_").find(".remove_university_btn").show();
-    $(".university_div_").find(".add_university_btn").hide();
-    $(".university_div_:last").find(".add_university_btn").show();
-    if ($(".university_div_").length == 1) {
-        $(".university_div_").find(".remove_university_btn").hide();
-    }
+
 
     function update_university_offer_application() {
         return new Promise(async (resolve, reject) => {
@@ -2397,7 +2552,7 @@ if (empty($customer_admins)) { ?>
                     upload_data.append("university_id[]", university_id);
                     upload_data.append("university_status[]", university_status);
                     upload_data.append("conditional_notes[]", conditional_notes);
-                    console.log("media_condition_type", upload_media_status);
+                    // console.log("media_condition_type", upload_media_status);
                     if (offer_letter_status == 2) {
                         $(this).find(".text-area-field .text-area-field-div").each(function() {
                             let condition = $(this).find("textarea[name='condition_text']").val();
@@ -2448,7 +2603,7 @@ if (empty($customer_admins)) { ?>
 
     function update_university_application() {
         return new Promise(async (resolve, reject) => {
-            console.log("start");
+            // console.log("start");
             let upload_data = new FormData();
             let university_shortlisting_status = [];
             let universityVendorMap = {};
@@ -2483,23 +2638,7 @@ if (empty($customer_admins)) { ?>
             }
         });
     }
-    $("select[name='university_status_submit_offer']").change(function() {
-        let upload_media = $("option:selected", this).data("selected-file");
-        $(this).parents(".university_div_application").find(".text-area-field").hide();
-        $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").eq(1).remove();
-        $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").find('input, select,texarea').val("").selectpicker('refresh');
-        if (upload_media == 1) {
-            if ($("option:selected", this).val() == 2) {
-                $(this).parents(".university_div_application").find(".text-area-field").show();
-                // $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").eq(1).next().remove();
-                // $(this).parents(".university_div_application").find(".text-area-field").find(".text-area-field-div").find('input, select').prop('disabled', true).selectpicker('refresh');
-            }
-            $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", false);
-        } else {
-            $(this).parents(".university_div_application").find("input[type='file']").val('');
-            $(this).parents(".university_div_application").find("input[type='file']").prop("disabled", true);
-        }
-    });
+
 
 
     function real_time_media_show(input) {
@@ -2600,7 +2739,7 @@ if (empty($customer_admins)) { ?>
     async function add_condition_div(obj, id) {
 
         let check_condition = await is_validate_offer_condition($(obj).parents(".university_div_application"));
-        console.log(check_condition);
+        // console.log(check_condition);
         if (check_condition) {
             html = `<div class="row text-area-field-div u_s_l_` + id + `">
                 <div class="col-md-1">Condition</div>
@@ -2626,27 +2765,25 @@ if (empty($customer_admins)) { ?>
         }
     }
 
-
     function remove_condition_div(objj, id) {
 
         $(objj).parents(".text-area-field-div").remove();
         $(".u_s_l_" + id).find(".remove_condition_btn").show();
         $(".u_s_l_" + id).find(".add_condition_btn").hide();
         $(".u_s_l_" + id).last().find(".add_condition_btn").show();
-        // $(objj).parents(".university_div_application").find(".text-area-field .text-area-field-div .remove_condition_btn").show();
-        // $(objj).parents(".university_div_application").find(".text-area-field .text-area-field-div .add_condition_btn").hide();
-        // $(objj).parents(".university_div_application").find(".text-area-field .text-area-field-div:last .add_condition_btn").show();
         // console.log($(objj).parents(".university_div_application .text-area-field .text-area-field-div").length);
-        // if ($(objj).parents(".university_div_application .text-area-field .text-area-field-div").length == 1) {
-        //     $(objj).parents(".university_div_application").find(".text-area-field-div").find(".add_condition_btn").show();
-        //     $(objj).parents(".university_div_application").find(".text-area-field-div").find(".remove_condition_btn").hide();
-        // }
 
-        console.log($(".u_s_l_" + id).length);
+
+        // console.log($(".u_s_l_" + id).length);
         if ($(".u_s_l_" + id).length == 1) {
             $(".u_s_l_" + id).find(".remove_condition_btn").hide();
             $(".u_s_l_" + id).find(".add_condition_btn").show();
         }
 
     }
+
+
+    window.onbeforeunload = function() {
+        return null;
+    };
 </script>

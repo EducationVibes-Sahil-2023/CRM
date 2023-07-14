@@ -1228,6 +1228,8 @@ class Clients extends AdminController
                 );
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_documents', $_update_data);
+
+                $insert_id =   $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Document upload by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 $rows_affected = $this->db->affected_rows();
                 if (isset($applicant_status)) {
                     $this->db->where("userid", $client_id);
@@ -1252,6 +1254,8 @@ class Clients extends AdminController
                         "created_by" => get_staff_user_id()
                     );
                     $insert_id =   $this->db->insert(db_prefix() . 'client_documents', $insert_update_data);
+                    $insert_id =   $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Document upload by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                     if ($insert_id) {
                         if (isset($applicant_status)) {
                             $this->db->where("userid", $client_id);
@@ -1318,6 +1322,8 @@ class Clients extends AdminController
                     "created_by" => get_staff_user_id()
                 );
 
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile email updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                 if (isset($applicant_status)) {
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
@@ -1366,6 +1372,10 @@ class Clients extends AdminController
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile vendor selected updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+
                 if (isset($applicant_status)) {
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
@@ -1439,6 +1449,10 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
 
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile sop updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_sop_successfully', _l('client'));
@@ -1482,6 +1496,13 @@ class Clients extends AdminController
                     $data['resp_desc'] = 'Please upload sop document.';
                 } else {
                     if (isset($applicant_status)) {
+                        $applicant_status_text = "";
+                        if ($applicant_status == 1) {
+                            $applicant_status_text = "Approved";
+                        } else {
+                            $applicant_status_text = "Reject";
+                        }
+                        $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile " . $applicant_status_text . " by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                     }
@@ -1529,9 +1550,20 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'client_documents', $_update);
                 $rows_affected = $this->db->affected_rows();
 
-                $this->db->where("userid", $client_id);
-                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 1));
-                $rows_affected = $this->db->affected_rows();
+
+                $document_status_text = "";
+                if ($document_status == 1) {
+                    $document_status_text = "Approved";
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 1));
+                } else if ($document_status == 2) {
+                    $document_status_text = "Reject";
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0));
+                }
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Document " . $document_status_text . " by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
 
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
@@ -1567,6 +1599,7 @@ class Clients extends AdminController
             $check_ = $this->db->get(db_prefix() . 'client_profile_creation')->row();
             if ($check_) {
                 if (isset($applicant_status)) {
+
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                     $rows_affected = $this->db->affected_rows();
@@ -1626,6 +1659,9 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                 $rows_affected = $this->db->affected_rows();
 
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisted list send to applicant by  - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+
                 $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
                 $ids = array_column($university_shortlisting_data, "id");
                 if ($update_university) {
@@ -1675,9 +1711,14 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
                 if ($document_status == 1) {
+
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile is Approved by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => 2));
                     $rows_affected = $this->db->affected_rows();
+                } else {
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile is Reject by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
@@ -1725,7 +1766,13 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                 $rows_affected = $this->db->affected_rows();
 
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Application shortlisting by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                 $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+
+
+
+
                 $ids = array_column($university_shortlisting_data, "id");
                 if ($update_university) {
                     $data['resp_code'] = 'RCS';
@@ -1861,6 +1908,8 @@ class Clients extends AdminController
                         }
                     }
 
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University Offer updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                     $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
                     $ids = array_column($university_shortlisting_data, "id");
                     if ($update_university) {
@@ -1896,12 +1945,14 @@ class Clients extends AdminController
             $stage_id = !empty($this->input->post("stage_id")) ? $this->input->post("stage_id") : "";
             $applicant_notes = !empty($this->input->post("applicant_notes")) ? $this->input->post("applicant_notes") : "";
             $notes_id = !empty($this->input->post("notes_id")) ? $this->input->post("notes_id") : "";
+            if (!empty($notes_id)) {
+                $this->db->where("id", $notes_id);
+                $this->db->update(db_prefix() . 'application_notes', array("application_stage" => $stage_id, "note" => $applicant_notes, "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s'), "status" => 1, "client_id" => $client_id, "editable_status" => 1));
+            } else {
+                $this->db->insert(db_prefix() . 'application_notes', array("application_stage" => $stage_id, "note" => $applicant_notes, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s'), "status" => 1, "client_id" => $client_id));
+            }
 
-            $this->db->where('id', $notes_id);
-            $this->db->update(db_prefix() . 'application_notes', [
-                'status' => 0,
-            ]);
-            $this->db->insert(db_prefix() . 'application_notes', array("application_stage" => $stage_id, "note" => $applicant_notes, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s'), "status" => 1, "client_id" => $client_id, "parent_id" => $notes_id));
+
             $rows_affected = $this->db->affected_rows();
             if ($rows_affected) {
                 $data['resp_code'] = 'RCS';
@@ -1926,6 +1977,84 @@ class Clients extends AdminController
     {
 
         $application_note_list = $this->clients_model->application_note_list($client_id);
-        echo json_encode($application_note_list);
+
+        $html = '';
+        foreach ($application_note_list as $i => $note) {
+            $html .= "<div class='note-box'>";
+            $html .= '<a href="' . admin_url('profile/' . $note["created_by"]) . '" target="_blank">';
+            $html .= staff_profile_image($note['created_by'], array('staff-profile-image-small', 'pull-left mright10'));
+            $html .= '</a>';
+            $html .= '<div class="media-body">';
+            if ($note['created_by'] == get_staff_user_id() || is_admin()) {
+                // $html .= '<a href="#" class="pull-right text-danger" onclick="delete_lead_note(this, ' . $note['id'] . ', ' . $lead->id . '); return false;"><i class="fa fa fa-times"></i></a>';
+                $html .= '<a href="#" class="pull-right mright5"  data-id="' . $note['id'] . '" data-notes="' . check_for_links(app_happy_text($note['note'])) . '" onclick="edit_notes(' . $note['id'] . ',this); return false;"><i class="fa fa-pencil-square-o"></i></a>';
+            }
+            $html .= ' <span data-toggle="tooltip" data-title="' . _dt($note['datetime']) . '" data-original-title="" title="">
+            <i class="fa fa-phone-square text-success font-medium valign" aria-hidden="true"></i>
+         </span>';
+            $html .= '<small>' . _l('lead_note_date_added', _dt($note['datetime'])) . '</small>';
+            if ($note['editable_status'] == 1) {
+                $html .= '<small class="note-edit">Edited</small>';
+            }
+            $html .= '<a href="' . admin_url('profile/' . $note["created_by"]) . '" target="_blank">';
+            $html .= '<h5 class="media-heading bold">' . get_staff_full_name($note['created_by']) . '</h5>';
+            $html .= '<h6 class="media-heading bold text-warning">' . $note['application_stage_name'] . '</h6>';
+            $html .= '</a>';
+            $html .= '<div data-note-description="' . $note['id'] . '" class="text-muted">';
+            $html .= check_for_links(app_happy_text($note['note']));
+            $html .= '</div>';
+            $html .= '<div data-note-edit-textarea="' . $note['id'] . '" class="hide mtop15">';
+            $html .= '</div>';
+            $html .= '</div>';
+            $html .= "</div>";
+        }
+
+        echo $html;
+    }
+
+    public function get_application_activity($client_id = "")
+    {
+
+        $activity_log = $this->clients_model->application_activity($client_id);
+
+        $html = '';
+        foreach ($activity_log as $log) {
+
+            $html .= '<div class="feed-item">';
+            $html .= '<div class="date">';
+            $html .= '<span class="text-has-action" data-toggle="tooltip" data-title="' . _dt($log['date']) . '">';
+            $html .= time_ago($log['datetime']);
+            $html .= '</span>';
+            $html .= '</div>';
+            $html .= '<div class="text">';
+            if ($log['staffid'] != 0) {
+                $html .= '<a href="' . admin_url('profile/' . $log["staffid"]) . '">';
+                $html .= staff_profile_image($log['staffid'], array('staff-profile-xs-image', 'pull-left', 'mright5'));
+                $html .= '</a>';
+            }
+            $datetime = '';
+            if (!empty($log['datetime'])) {
+                $datetime = unserialize($log['datetime']);
+                $html .= ($log['staffid'] == 0) ? _l($log['description'], $datetime) : $log['full_name'] . ' - ' . _l($log['description'], $datetime);
+                if ($log['full_name'] != "") {
+                    $html .= $log['full_name'];
+                }
+            } else {
+                $html .= $log['full_name'] . ' - ';
+                if ($log['custom_activity'] == 0) {
+                    $html .= _l($log['description']);
+                } else {
+                    $html .= _l($log['description'], '', false);
+                }
+                if ($log['full_name'] != "") {
+                    $html .= $log['full_name'];
+                }
+            }
+            $html .= '</div>';
+            $html .= '</div>';
+        }
+
+
+        echo $html;
     }
 }
