@@ -1790,13 +1790,25 @@ class Clients_model extends App_Model
 
     function application_note_list($client_id)
     {
-        $this->db->select("n.*, t.name AS application_stage_name, CONCAT(s.firstname, ' ', s.lastname) AS staffname");
+        $this->db->select("n.*, t.name AS application_stage_name, CONCAT(s.firstname, ' ', s.lastname) AS staffname,if(n.created_date > n.updated_date,n.created_date,n.updated_date) datetime");
         $this->db->from(db_prefix() . 'application_notes n');
         $this->db->join(db_prefix() . 'applicant_tracker t', 'n.application_stage = t.id', 'inner');
         $this->db->join(db_prefix() . 'staff s', 'n.created_by = s.staffid', 'inner');
         $this->db->where('n.client_id', $client_id);
-        $this->db->order_by('n.id', 'desc');
         $this->db->where('n.status', '1');
+        $this->db->order_by('n.id', 'desc');
+
+        return $application_note_list = $this->db->get()->result_array();
+    }
+
+    function application_activity($client_id)
+    {
+        $this->db->select("l.*, CONCAT(s.firstname, ' ', s.lastname) AS full_name,max(l.date) datetime");
+        $this->db->from(db_prefix() . 'application_activity_log l');
+        $this->db->join(db_prefix() . 'staff s', 'l.staffid = s.staffid', 'left');
+        $this->db->where('l.client_id', $client_id);
+        $this->db->group_by('l.id');
+        $this->db->order_by('l.date', 'desc');
 
         return $application_note_list = $this->db->get()->result_array();
     }
