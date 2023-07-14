@@ -1540,7 +1540,7 @@ if (profile_creation_data.profile_status != undefined) {
     }
 
     function is_validate_application_status(status = 0) {
-        if (university_shortlisting != undefined && university_shortlisting != '') {
+        if (university_shortlisting != undefined && university_shortlisting.length > 0) {
             let html = '<h3 class="message-notification">Your University under Processing</h3>';
             $(".university_approval_message_action").html(html);
         }
