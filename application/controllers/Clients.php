@@ -327,6 +327,9 @@ class Clients extends ClientsController
         $data['title']         = "Academic Details";
         $data['announcements'] = $this->announcements_model->get();
         $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
+        echo "sdlckndkc jkds cksdjk csdk ";
+        print_r($data['university_shortlisting_notification']);
+        die;
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());

@@ -118,6 +118,8 @@
 </nav>
 
 <?php
+$university_shortlisting_notification = $this->announcements_model->get_university_shortlist_status();
+
 if (!empty($university_shortlisting_notification) && $university_shortlisting_notification == true) {
 ?>
    <div class="container">
