@@ -3,6 +3,7 @@
 $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
+
 ?>
 <style>
     /*basic reset*/
@@ -1049,13 +1050,13 @@ if (empty($customer_admins)) { ?>
     var csrfToken = "<?= $this->security->get_csrf_hash() ?>"; // Replace with the actual CSRF token value
     var step_stage = 0;
 
-    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : [] ?>;
-    var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : [] ?>;
-    var upload_documents = <?= !empty($upload_documents[0]) ? json_encode($upload_documents[0], true) : [] ?>;
+    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : "" ?>;
+    var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : "" ?>;
+    var upload_documents = <?= !empty($upload_documents[0]) ? json_encode($upload_documents[0], true) : '0' ?>;
     var staff_id = "<?= get_staff_user_id() ?>";
-    var profile_creation_data = <?= !empty($profile_creation_data[0]) ? json_encode($profile_creation_data[0], true) : [] ?>;
-    var profile_verification_button = <?= !empty($profile_verification_button) ? json_encode($profile_verification_button, true) : [] ?>;
-    var university_shortlisting = <?= !empty($university_shortlisting) ? json_encode($university_shortlisting, true) : [] ?>;
+    var profile_creation_data = <?= !empty($profile_creation_data[0]) ? json_encode($profile_creation_data[0], true) : '0' ?>;
+    var profile_verification_button = <?= !empty($profile_verification_button) ? json_encode($profile_verification_button, true) : "" ?>;
+    var university_shortlisting = <?= !empty($university_shortlisting) ? json_encode($university_shortlisting, true) : '0' ?>;
     var document_verification = "<?= !empty($upload_documents[0]["document_status"]) ? $upload_documents[0]["document_status"] : 0 ?>";
     var profile_verification = "<?= !empty($profile_creation_data[0]["profile_status"]) ? $profile_creation_data[0]["profile_status"] : 0 ?>";
     // console.log(upload_documents);
@@ -1233,13 +1234,15 @@ if (empty($customer_admins)) { ?>
 
                     });
                 } else {
-                    if (upload_documents.created_by != undefined) {
-                        if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
-                            html = '<h3 class="message-notification">Your Documents under Processing</h3>';
-                        } else {
+                    console.log("sdkcfnlsdkcndskn");
+                    if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
+                        html = '<h3 class="message-notification">Your Documents under Processing</h3>';
+                    } else {
+                        if (upload_documents.staffname != undefined) {
                             html = '<h3 class="message-notification ' + upload_documents.color_name + ' ">Your Documents is ' + upload_documents.document_status_name + ' by ' + upload_documents.staffname + '</h3>';
                         }
                     }
+
                     $("#upload_documents").find(".add_document_btn:last").show();
 
                 }
@@ -1316,6 +1319,11 @@ if (empty($customer_admins)) { ?>
             }
 
 
+
+        }
+
+        if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
+            $("#offer_div .next").attr("disabled", true);
 
         }
     })
@@ -1540,7 +1548,7 @@ if (empty($customer_admins)) { ?>
     }
 
     function is_validate_application_status(status = 0) {
-        if (university_shortlisting != undefined && university_shortlisting[0].id > 0) {
+        if (university_shortlisting != undefined && university_shortlisting.length > 0) {
             let html = '<h3 class="message-notification">Your University under Processing</h3>';
             $(".university_approval_message_action").html(html);
         }
@@ -1792,31 +1800,42 @@ if (empty($customer_admins)) { ?>
                 return false;
             }
         } else if (type === "application_div") {
-            let validate_application_status = await is_validate_application();
 
-            if (validate_application_status) {
-                $("select[name='university_status_submit']").attr("disabled", true);
-                let update_university_application_submit_status = await update_university_application();
-                if (update_university_application_submit_status.resp_code === "RCS") {
-                    alert_float("success", update_university_application_submit_status.resp_desc);
-                    hide_loader();
+            if ($(".application_div select[name='university_status_submit']:not(:disabled)").length == 0) {
+
+            } else {
+                let validate_application_status = await is_validate_application();
+
+                if (validate_application_status) {
+                    $("select[name='university_status_submit']").attr("disabled", true);
+                    let update_university_application_submit_status = await update_university_application();
+                    if (update_university_application_submit_status.resp_code === "RCS") {
+                        alert_float("success", update_university_application_submit_status.resp_desc);
+                        hide_loader();
+                    } else {
+                        hide_loader();
+                        alert_float("danger", update_university_application_submit_status.resp_desc);
+                    }
+
+                    $("select[name='university_status_submit']").each(function() {
+                        if ($.trim($(this).val()) != "") {
+                            location.reload();
+                            return;
+                        }
+                    });
+                    return false;
                 } else {
                     hide_loader();
-                    alert_float("danger", update_university_application_submit_status.resp_desc);
                 }
-
-                $("select[name='university_status_submit']").each(function() {
-                    if ($.trim($(this).val()) != "") {
-                        location.reload();
-                        return;
-                    }
-                });
-                return false;
-            } else {
-                hide_loader();
             }
 
         } else if (type === "offer_div") {
+
+            if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
+
+                return false;
+            }
+
             let validate_offer_letter = await is_validate_offer_letter();
 
             if (validate_offer_letter) {
