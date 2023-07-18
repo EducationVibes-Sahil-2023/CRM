@@ -489,15 +489,15 @@ function get_applicant_status($stage, $client_id)
                 $response["updated_date"] = $result->email_updated_date;
             } else {
                 if (!empty($result->email)) {
-                    $response["applicant_stage_status"] = "Email Created";
+                    $response["applicant_stage_status"] = "Application email created";
                     $response["updated_date"] = $result->email_updated_date;
                 }
                 if (!empty($result->vendor)) {
-                    $response["applicant_stage_status"] = "Vendor Updated";
+                    $response["applicant_stage_status"] = "Application vendor selected";
                     $response["updated_date"] = $result->vendor_updated_date;
                 }
                 if (!empty($result->sop)) {
-                    $response["applicant_stage_status"] = "Sop Updated";
+                    $response["applicant_stage_status"] = "Application sop updated";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
                 if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
@@ -579,20 +579,21 @@ function get_applicant_status($stage, $client_id)
             }
 
             if (!empty($result->university_count) && !empty($result->action_taken) && ($result->university_count == $result->action_taken)) {
-                $response["applicant_stage_status"] = "All application submitting by Admin.Waiting for offer letter.";
+                $response["applicant_stage_status"] = "All application submitting by Admin.Waiting for offer letter";
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count) && !empty($result->action_taken) && !empty($result->not_take_action)) {
-                $response["applicant_stage_status"] = "Total " . $result->university_count . " Application." . $result->action_taken . " Application submitting AND " . $result->not_take_action . " Application not submitting by admin.";
+                $response["applicant_stage_status"] = "Total " . $result->university_count . " Application." . $result->action_taken . " Application submitting AND " . $result->not_take_action . " Application not submitting by admin";
+                $response["applicant_stage_status_"] = "Application shortlisting";
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count)) {
-                $response["applicant_stage_status"] = "Application submitting by Admin.Waiting for offer letter.";
+                $response["applicant_stage_status"] = "Application submitting by Admin.Waiting for offer letter";
                 $response["updated_date"] = $max_date;
             }
         }
     } else if ($stage == 5) {
         $result =  get_stage_5($stage, $client_id);
         if (empty($result)) {
-            $response["applicant_stage_status"] = "Offer letter is pedding.";
+            $response["applicant_stage_status"] = "Offer letter is pedding";
             $response["updated_date"] = "";
         } else {
             $max_date = $result->created_date;
@@ -618,14 +619,31 @@ function get_applicant_status($stage, $client_id)
                 $response["applicant_stage_status"] = "Completed";
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count) && !empty($result->offer_letter) && !empty($result->offer_letter_not)) {
-                $response["applicant_stage_status"] = "Total " . $result->university_count . " Application Submittind." . $result->offer_letter . " Application Offer response AND " . $result->offer_letter_not . " Application is pending.";
+                $response["applicant_stage_status"] = "Total " . $result->university_count . " Application Submittind." . $result->offer_letter . " Application Offer response AND " . $result->offer_letter_not . " Application is pending";
+                $response["applicant_stage_status_"] = "Offer shortlisted";
+
                 $response["updated_date"] = $result->client_updated_date;
             } else if (!empty($result->university_count)) {
-                $response["applicant_stage_status"] =  "Application submitting by Admin.Pending offer letter.";
+                $response["applicant_stage_status"] =  "Application submitting by Admin.Pending offer letter";
                 $response["updated_date"] = $max_date;
             }
         }
     }
+
+    $update_array_data = [];
+
+    if (!empty($response["applicant_stage_status_"])) {
+        $update_array_data["application_text"] = $response["applicant_stage_status_"];
+    } else {
+        if (!empty($response["applicant_stage_status"])) {
+            $update_array_data["application_text"] = $response["applicant_stage_status"];
+        }
+    }
+    if (!empty($update_array_data)) {
+        $CI->db->where("userid", $client_id);
+        $CI->db->update(db_prefix() . 'clients', $update_array_data);
+    }
+
     return $response;
 }
 
