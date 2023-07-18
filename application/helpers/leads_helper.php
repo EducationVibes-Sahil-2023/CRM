@@ -1237,7 +1237,8 @@ function calls_update_count($params = false, $max_status = 0)
 {
 
 
-
+    return convertToHMS(0);
+    die;
     $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
