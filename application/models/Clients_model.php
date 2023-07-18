@@ -1817,7 +1817,17 @@ class Clients_model extends App_Model
     {
         $this->db->select("t.*");
         $this->db->from(db_prefix() . 'applicant_tracker t');
-        $this->db->order_by('t.id', 'asc');
+        $this->db->where("status", 1);
+        $this->db->order_by('t.orderby', 'asc');
         return $get_application_stage = $this->db->get()->result_array();
+    }
+
+    function get_application_sub_stage()
+    {
+        $this->db->select("ts.*");
+        $this->db->from(db_prefix() . 'application_sub_category ts');
+        $this->db->where("ts.status", 1);
+        $this->db->order_by('ts.sequence', 'asc');
+        return $get_application_sub_stage = $this->db->get()->result_array();
     }
 }
