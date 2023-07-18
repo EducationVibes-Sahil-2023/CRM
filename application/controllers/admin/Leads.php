@@ -1,6 +1,6 @@
 <?php
 
-
+use BackgroundProcess\Process;
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -2466,6 +2466,63 @@ class Leads extends AdminController
 
             $has_permission_delete = has_permission('leads', '', 'delete');
             $notifiedUsers = [];
+            $re_assign_array = [];
+
+            if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
+                if ($has_permission_delete) {
+                    $lead_data = $this->leads_model->lead_data($ids);
+                    if (!empty($lead_data)) {
+                        $keysToRemove = array('id', 'dateadded', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
+                        $re_assign_array = [];
+                        foreach ($lead_data as $key => $lead_d) {
+                            foreach ($keysToRemove as $k) {
+                                if (isset($lead_data[$key][$k])) {
+                                    unset($lead_data[$key][$k]);
+                                    if (!empty($this->input->post('assigned'))) {
+                                        $lead_data[$key]["assigned"] = $this->input->post('assigned');
+                                    }
+                                    if (!empty($this->input->post('status'))) {
+                                        $lead_data[$key]["status"] = $this->input->post('status');
+                                    }
+                                    if (!empty($this->input->post('source'))) {
+                                        $lead_data[$key]["source"] = $this->input->post('source');
+                                    }
+                                    if (!empty($this->input->post('leadtype'))) {
+                                        $lead_data[$key]["type"] = $this->input->post('leadtype');
+                                    }
+                                }
+                            }
+
+                            $re_assign_array[] = array(
+                                "data" => json_encode($lead_data[$key], true),
+                                "status" => 1,
+                                "date" => date('Y-m-d H:i:s')
+                            );
+                        }
+                    }
+
+                    if (!empty($re_assign_array)) {
+
+                        $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
+
+                        $this->db->where_in('id', $ids);
+                        $this->db->delete(db_prefix() . 'leads');
+
+                        set_alert('success', "Re-assign lead successfully.");
+                    } else {
+                        set_alert('danger', "Something bad happen.");
+                    }
+
+                    die;
+                    // if ($this->leads_model->re_assign($id,$this->input->post())) {
+                    //     $total_assign++;
+
+                    // }
+
+                }
+            }
+
+
             if (is_array($ids)) {
 
                 foreach ($ids as $id) {
@@ -2755,5 +2812,84 @@ class Leads extends AdminController
     {
         print_r($_POST);
         die;
+    }
+
+    public function leads_fb_ads_name()
+    {
+        $this->load->model('staff_model');
+        $data['title'] = _l('leads_fb_ads_name');
+        $data['facebook']  = $this->staff_model->get_facebook_names("", 1);
+        $this->load->view('admin/leads/leads_fb_ads_name', $data);
+    }
+
+
+    public function add_edit_fb_form()
+    {
+        if (!is_admin() && get_option('staff_members_create_inline_lead_source') == '0') {
+
+            access_denied('Facebook Form');
+        }
+
+        if ($this->input->post()) {
+
+            $data = $this->input->post();
+
+            if (!$this->input->post('id')) {
+
+                $id = $this->leads_model->add_fb_form($data);
+
+                if ($id) {
+
+                    set_alert('success', _l('added_successfully', _l('Facebook form add successfully')));
+                } else {
+                    set_alert('danger', "Something bad happen");
+                }
+            } else {
+                $id = $data['id'];
+                unset($data['id']);
+                $success = $this->leads_model->update_fb_form($data, $id);
+                if ($success) {
+                    set_alert('success', _l('updated_successfully', _l('lead_source')));
+                } else {
+                    set_alert('danger', "Something bad happen");
+                }
+            }
+        }
+    }
+
+    public function re_assign_leads()
+    {
+        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1 limit 30")->result_array();
+        if (!empty($data_leads)) {
+            foreach ($data_leads as $leads) {
+                if (!empty($leads["data"])) {
+                    $temp_lead_data = json_decode($leads["data"], true);
+                    $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
+                    $phonenumber = substr($phonenumber, -10);
+                    $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
+                    FROM " . db_prefix() . "leads where phonenumber like '%{$phonenumber}%'
+                    GROUP BY RIGHT(phonenumber, 10)
+                    HAVING COUNT(*) > 0 ")->row();
+
+                    if (empty($check_exist)) {
+                        if ($this->leads_model->add($temp_lead_data)) {
+                            $this->db->where('id', $leads["id"]);
+                            $this->db->delete(db_prefix() . 'lead_temp');
+                        }
+                    } else {
+                        $this->db->where('id', $leads["id"]);
+                        $this->db->update(db_prefix() . 'lead_temp', ["status" => 2]);
+                    }
+                }
+            }
+            echo json_encode(array("status" => 1, "message" => "Lead reassign successfully."));
+        }
+    }
+
+    public function callUrlInBackground()
+    {
+
+        $url = base_url("admin/leads/re_assign_leads");
+        $pid = $this->process->do_in_background($url, "", "POST");
     }
 }

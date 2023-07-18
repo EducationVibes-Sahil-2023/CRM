@@ -1,4 +1,5 @@
 <?php
+
 /**
  * CodeIgniter
  *
@@ -35,7 +36,7 @@
  * @since	Version 1.0.0
  * @filesource
  */
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') or exit('No direct script access allowed');
 
 /**
  * Application Controller Class
@@ -49,7 +50,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @author		EllisLab Dev Team
  * @link		https://codeigniter.com/user_guide/general/controllers.html
  */
-class CI_Controller {
+class CI_Controller
+{
 
 	/**
 	 * Reference to the CI singleton
@@ -64,6 +66,8 @@ class CI_Controller {
 	 * @var	CI_Loader
 	 */
 	public $load;
+	public $db;
+	public $s_db;
 
 	/**
 	 * Class constructor
@@ -72,18 +76,20 @@ class CI_Controller {
 	 */
 	public function __construct()
 	{
-		self::$instance =& $this;
+		self::$instance = &$this;
 
 		// Assign all the class objects that were instantiated by the
 		// bootstrap file (CodeIgniter.php) to local class variables
 		// so that CI can run as one big super object.
-		foreach (is_loaded() as $var => $class)
-		{
-			$this->$var =& load_class($class);
+		foreach (is_loaded() as $var => $class) {
+			$this->$var = &load_class($class);
 		}
 
-		$this->load =& load_class('Loader', 'core');
+		$this->load = &load_class('Loader', 'core');
 		$this->load->initialize();
+
+		$this->db = $this->load->database("default", true);
+		$this->s_db = $this->load->database("secondary", true);
 		log_message('info', 'Controller Class Initialized');
 	}
 
@@ -99,5 +105,4 @@ class CI_Controller {
 	{
 		return self::$instance;
 	}
-
 }

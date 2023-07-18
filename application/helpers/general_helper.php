@@ -250,6 +250,25 @@ function get_client_user_id()
     return get_instance()->session->userdata('client_user_id');
 }
 
+function get_staff_user_name()
+{
+    $CI = &get_instance();
+
+    $CI->db->select('CONCAT(' . db_prefix() . 'staff.firstname, " ", ' . db_prefix() . 'staff.lastname) AS staffname')
+        ->where('staffid', get_staff_user_id());
+    $query = $CI->db->get(db_prefix() . 'staff');
+    return $query->row()->staffname;
+}
+
+function get_contact_user_name()
+{
+    $CI = &get_instance();
+
+    $CI->db->select('CONCAT(' . db_prefix() . 'contacts.firstname, " ", ' . db_prefix() . 'contacts.lastname) AS fullname')
+        ->where('id', $CI->session->userdata('contact_user_id'));
+    $query = $CI->db->get(db_prefix() . 'contacts');
+    return $query->row()->fullname;
+}
 /**
  * Get contact user id
  * @return mixed

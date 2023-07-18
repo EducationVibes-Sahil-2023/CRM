@@ -32,7 +32,6 @@ class Forms extends ClientsController
             show_404();
         }
 
-
         if (!empty($_POST["facebook_status"])) {
             $form->facebook_status = 1;
         }
@@ -88,6 +87,7 @@ class Forms extends ClientsController
                         }
                     }
                 }
+
                 if (!empty($form->facebook_status) && $form->facebook_status == 1) {
                     $form->responsible = 1;
                     $state_name = !empty($post_data['state']) ? $post_data['state'] : '';
@@ -99,10 +99,19 @@ class Forms extends ClientsController
                         $status_fb_lead_assign = false;
                         if (!empty($assign_staff_id)) {
                             foreach ($assign_staff_id as $fl) {
-                                if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fl["facebook_lead_name"]))) !== false) {
-                                    $form->responsible = $fl["staffid"];
-                                    $status_fb_lead_assign = true;
-                                    break;
+                                if (!empty($fl["facebook_lead_name"])) {
+                                    $fb_form_name = explode(",", $fl["facebook_lead_name"]);
+                                    if (!empty($fb_form_name)) {
+                                        foreach ($fb_form_name as $fb_name) {
+                                            if (!empty($fb_name)) {
+                                                if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
+                                                    $form->responsible = $fl["staffid"];
+                                                    $status_fb_lead_assign = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -124,8 +133,6 @@ class Forms extends ClientsController
                     // }
 
                 }
-
-
 
                 // if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
                 //                                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', [177, 176, 181, 179, 154]);

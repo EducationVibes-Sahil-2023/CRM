@@ -3,46 +3,57 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $hasPermissionDelete = has_permission('customers', '', 'delete');
-
+$customFieldsColumns = [];
 $custom_fields = get_table_custom_fields('customers');
 $this->ci->db->query("SET sql_mode = ''");
 
 $aColumns = [
     '1',
-    db_prefix().'clients.userid as userid',
-    db_prefix().'clients.company',
+    db_prefix() . 'clients.userid as userid',
+    db_prefix() . 'clients.company',
     'firstname',
-    db_prefix().'contacts.email  as email',
-    db_prefix().'clients.phonenumber as phonenumber',
-    db_prefix().'clients.active',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM '.db_prefix().'customer_groups JOIN '.db_prefix().'customers_groups ON '.db_prefix().'customer_groups.groupid = '.db_prefix().'customers_groups.id WHERE customer_id = '.db_prefix().'clients.userid ORDER by name ASC) as customerGroups',
-    db_prefix().'clients.datecreated as datecreated',
-    db_prefix().'leads_status.name as status_name',
-    db_prefix().'leads_type.name as type_name',
-    db_prefix().'leads_sources.name as source_name',
+    db_prefix() . 'contacts.email  as email',
+    db_prefix() . 'clients.phonenumber as phonenumber',
+    db_prefix() . 'clients.active',
+    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'customer_groups JOIN ' . db_prefix() . 'customers_groups ON ' . db_prefix() . 'customer_groups.groupid = ' . db_prefix() . 'customers_groups.id WHERE customer_id = ' . db_prefix() . 'clients.userid ORDER by name ASC) as customerGroups',
+    db_prefix() . 'clients.datecreated as datecreated',
+    db_prefix() . 'leads_status.name as status_name',
+    db_prefix() . 'leads_type.name as type_name',
+    db_prefix() . 'leads_sources.name as source_name',
+
 ];
 
+
 $sIndexColumn = 'userid';
-$sTable       = db_prefix().'clients';
+$sTable       = db_prefix() . 'clients';
 $where        = [];
 // Add blank where all filter can be stored
 $filter = [];
 
 $join = [
-    'LEFT JOIN '.db_prefix().'contacts ON '.db_prefix().'contacts.userid='.db_prefix().'clients.userid AND '.db_prefix().'contacts.is_primary=1',
-    'LEFT JOIN '.db_prefix().'leads ON '.db_prefix().'leads.id='.db_prefix().'clients.leadid ',
+    'LEFT JOIN ' . db_prefix() . 'contacts ON ' . db_prefix() . 'contacts.userid=' . db_prefix() . 'clients.userid AND ' . db_prefix() . 'contacts.is_primary=1',
+    'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id=' . db_prefix() . 'clients.leadid ',
     'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+    'LEFT JOIN ' . db_prefix() . 'applicant_tracker ON ' . db_prefix() . 'applicant_tracker.id = (' . db_prefix() . 'clients.applicant_status+1)',
 
 ];
-
 foreach ($custom_fields as $key => $field) {
+
+    if (is_admin()) {
+    } else {
+        if (!empty($_SESSION["staff_department"]) &&  !empty($field['show_lead_type']) &&  $_SESSION["staff_department"] != $field['show_lead_type']) {
+            continue;
+        }
+    }
+
     $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
     array_push($customFieldsColumns, $selectAs);
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN '.db_prefix().'customfieldsvalues as ctable_' . $key . ' ON '.db_prefix().'clients.userid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'clients.userid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
+
 
 $join = hooks()->apply_filters('customers_table_sql_join', $join);
 
@@ -55,7 +66,7 @@ foreach ($groups as $group) {
     }
 }
 if (count($groupIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_groups WHERE groupid IN (' . implode(', ', $groupIds) . '))');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_groups WHERE groupid IN (' . implode(', ', $groupIds) . '))');
 }
 
 $countries  = $this->ci->clients_model->get_clients_distinct_countries();
@@ -79,7 +90,7 @@ foreach ($this->ci->invoices_model->get_statuses() as $status) {
     }
 }
 if (count($invoiceStatusIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT clientid FROM '.db_prefix().'invoices WHERE status IN (' . implode(', ', $invoiceStatusIds) . '))');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT clientid FROM ' . db_prefix() . 'invoices WHERE status IN (' . implode(', ', $invoiceStatusIds) . '))');
 }
 
 // Filter by estimates
@@ -91,7 +102,7 @@ foreach ($this->ci->estimates_model->get_statuses() as $status) {
     }
 }
 if (count($estimateStatusIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT clientid FROM '.db_prefix().'estimates WHERE status IN (' . implode(', ', $estimateStatusIds) . '))');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT clientid FROM ' . db_prefix() . 'estimates WHERE status IN (' . implode(', ', $estimateStatusIds) . '))');
 }
 
 // Filter by projects
@@ -103,7 +114,7 @@ foreach ($this->ci->projects_model->get_project_statuses() as $status) {
     }
 }
 if (count($projectStatusIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT clientid FROM '.db_prefix().'projects WHERE status IN (' . implode(', ', $projectStatusIds) . '))');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT clientid FROM ' . db_prefix() . 'projects WHERE status IN (' . implode(', ', $projectStatusIds) . '))');
 }
 
 // Filter by proposals
@@ -115,7 +126,7 @@ foreach ($this->ci->proposals_model->get_statuses() as $status) {
     }
 }
 if (count($proposalStatusIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT rel_id FROM '.db_prefix().'proposals WHERE status IN (' . implode(', ', $proposalStatusIds) . ') AND rel_type="customer")');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT rel_id FROM ' . db_prefix() . 'proposals WHERE status IN (' . implode(', ', $proposalStatusIds) . ') AND rel_type="customer")');
 }
 
 // Filter by having contracts by type
@@ -129,7 +140,7 @@ foreach ($contract_types as $type) {
     }
 }
 if (count($contractTypesIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT client FROM '.db_prefix().'contracts WHERE contract_type IN (' . implode(', ', $contractTypesIds) . '))');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT client FROM ' . db_prefix() . 'contracts WHERE contract_type IN (' . implode(', ', $contractTypesIds) . '))');
 }
 
 // Filter by proposals
@@ -141,38 +152,38 @@ foreach ($this->ci->clients_model->get_customers_admin_unique_ids() as $cadmin) 
 }
 
 if (count($customAdminIds) > 0) {
-    array_push($filter, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id IN (' . implode(', ', $customAdminIds) . '))');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id IN (' . implode(', ', $customAdminIds) . '))');
 }
 
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-        if($role==3){
-            // $this->load->database();
-            $sid = get_staff_user_id();//48;//get_staff_user_id();
-        
-            $teamids = $this->ci->db->query("select staffid
+if ($role == 3) {
+    // $this->load->database();
+    $sid = get_staff_user_id(); //48;//get_staff_user_id();
+
+    $teamids = $this->ci->db->query("select staffid
 			from    (select * from tblstaff
 			where active = '1' order by reporting_person, staffid) products_sorted,
 					(select @pv := $sid) initialisation
 			where   find_in_set(reporting_person, @pv)
 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-            // return $query;
-            // array_push($teamids,get_staff_user_id());
-            // foreach ($teamids as $t) {
-                # code...
-            // }
-            $idsarr = array_column($teamids, 'staffid');
+    // return $query;
+    // array_push($teamids,get_staff_user_id());
+    // foreach ($teamids as $t) {
+    # code...
+    // }
+    $idsarr = array_column($teamids, 'staffid');
 
-            // echo "<pre>";print_r($idsarr);
-            $sids = implode(",",$idsarr);
-            // echo "<pre>";print_r($sids);
+    // echo "<pre>";print_r($idsarr);
+    $sids = implode(",", $idsarr);
+    // echo "<pre>";print_r($sids);
 
-            // array_push($where, 'AND assigned in (' .$sid. ','. $sids. ')');
-            // array_push($where, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id IN (' . $sid. ','. $sids.')');
-            // print_r($where);die;
-        }
+    // array_push($where, 'AND assigned in (' .$sid. ','. $sids. ')');
+    // array_push($where, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id IN (' . $sid. ','. $sids.')');
+    // print_r($where);die;
+}
 
 if ($this->ci->input->post('requires_registration_confirmation')) {
-    array_push($filter, 'AND '.db_prefix().'clients.registration_confirmed=0');
+    array_push($filter, 'AND ' . db_prefix() . 'clients.registration_confirmed=0');
 }
 
 if (count($filter) > 0) {
@@ -180,15 +191,46 @@ if (count($filter) > 0) {
 }
 
 if (!has_permission('customers', '', 'view')) {
-    array_push($where, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id=' . get_staff_user_id() . ')');
+    array_push($where, 'AND ' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')');
 }
 
 if ($this->ci->input->post('exclude_inactive')) {
-    array_push($where, 'AND ('.db_prefix().'clients.active = 1 OR '.db_prefix().'clients.active=0 AND registration_confirmed = 0)');
+    array_push($where, 'AND (' . db_prefix() . 'clients.active = 1 OR ' . db_prefix() . 'clients.active=0 AND registration_confirmed = 0)');
 }
 
 if ($this->ci->input->post('my_customers')) {
-    array_push($where, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id=' . get_staff_user_id() . ')');
+    array_push($where, 'AND ' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')');
+}
+
+if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
+    array_push($where, 'AND  ' . db_prefix() . 'leads.assigned IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ')');
+}
+
+if ($this->ci->input->post('source')) {
+    array_push($where, 'AND ' . db_prefix() . 'leads.source IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ')');
+}
+
+
+if ($this->ci->input->post('lead_type')) {
+
+    array_push($where, 'AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')');
+
+    // array_push($where, 'AND type =' . $this->ci->db->escape_str($this->ci->input->post('lead_type')));
+    // print_r($where);
+}
+
+if ($this->ci->input->post('application_stage')) {
+    array_push($where, 'AND ' . db_prefix() . 'clients.applicant_status = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage')) - 1));
+}
+
+if ($this->ci->input->post('application_sub_stage')) {
+
+    array_push($where, 'AND ' . db_prefix() . 'clients.application_text IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('application_sub_stage'))) . ')');
+}
+if ($this->ci->input->post('to_date')) {
+    $from_date = $this->ci->input->post('from_date');
+    $to_date = $this->ci->input->post('to_date');
+    array_push($where, 'AND DATE(' . db_prefix() . 'clients.datecreated) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
 }
 
 $aColumns = hooks()->apply_filters('customers_table_sql_columns', $aColumns);
@@ -199,11 +241,14 @@ if (count($custom_fields) > 4) {
 }
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
-    db_prefix().'contacts.id as contact_id',
+    db_prefix() . 'contacts.id as contact_id',
     'lastname',
-    db_prefix().'clients.zip as zip',
+    db_prefix() . 'clients.zip as zip',
     'registration_confirmed',
+    db_prefix() . 'applicant_tracker.name applicant_stage_name',
+    db_prefix() . 'applicant_tracker.id applicant_stage_id',
 ]);
+
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
@@ -217,8 +262,8 @@ foreach ($rResult as $aRow) {
     // $row[] = $aRow['userid'];
 
     // Company
-  
-    
+
+
 
     $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
     $url = admin_url('clients/client/' . $aRow['userid']);
@@ -257,12 +302,12 @@ foreach ($rResult as $aRow) {
 
     // Toggle active/inactive customer
     $toggleActive = '<div class="onoffswitch" data-toggle="tooltip" data-title="' . _l('customer_active_inactive_help') . '">
-    <input type="checkbox"' . ($aRow['registration_confirmed'] == 0 ? ' disabled' : '') . ' data-switch-url="' . admin_url() . 'clients/change_client_status" name="onoffswitch" class="onoffswitch-checkbox" id="' . $aRow['userid'] . '" data-id="' . $aRow['userid'] . '" ' . ($aRow[db_prefix().'clients.active'] == 1 ? 'checked' : '') . '>
+    <input type="checkbox"' . ($aRow['registration_confirmed'] == 0 ? ' disabled' : '') . ' data-switch-url="' . admin_url() . 'clients/change_client_status" name="onoffswitch" class="onoffswitch-checkbox" id="' . $aRow['userid'] . '" data-id="' . $aRow['userid'] . '" ' . ($aRow[db_prefix() . 'clients.active'] == 1 ? 'checked' : '') . '>
     <label class="onoffswitch-label" for="' . $aRow['userid'] . '"></label>
     </div>';
 
     // For exporting
-    $toggleActive .= '<span class="hide">' . ($aRow[db_prefix().'clients.active'] == 1 ? _l('is_active_export') : _l('is_not_active_export')) . '</span>';
+    $toggleActive .= '<span class="hide">' . ($aRow[db_prefix() . 'clients.active'] == 1 ? _l('is_active_export') : _l('is_not_active_export')) . '</span>';
 
     $row[] = $toggleActive;
 
@@ -276,7 +321,11 @@ foreach ($rResult as $aRow) {
     }
 
     $row[] = $groupsRow;
+    $row[] = $aRow['applicant_stage_name'];
+    $check_applicant_status = get_applicant_status($aRow['applicant_stage_id'], $aRow['userid']);
 
+    $row[] = !empty($check_applicant_status["applicant_stage_status"]) ? $check_applicant_status["applicant_stage_status"] : "";
+    $row[] = !empty($check_applicant_status["updated_date"]) ? $check_applicant_status["updated_date"] : "";
     $row[] = _dt($aRow['datecreated']);
     $row[] = $aRow['status_name'];
     $row[] = $aRow['type_name'];

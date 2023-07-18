@@ -84,7 +84,7 @@ class Clients_model extends App_Model
         $this->db->where('userid', $id);
 
         return $this->db->get(db_prefix() . 'contacts')->row();
-    } 
+    }
     /**
      * @param array $_POST data
      * @param client_request is this request from the customer area
@@ -229,17 +229,17 @@ class Clients_model extends App_Model
 
         if (isset($update_all_other_transactions) || isset($update_credit_notes)) {
             $transactions_update = [
-                    'billing_street'   => $data['billing_street'],
-                    'billing_city'     => $data['billing_city'],
-                    'billing_state'    => $data['billing_state'],
-                    'billing_zip'      => $data['billing_zip'],
-                    'billing_country'  => $data['billing_country'],
-                    'shipping_street'  => $data['shipping_street'],
-                    'shipping_city'    => $data['shipping_city'],
-                    'shipping_state'   => $data['shipping_state'],
-                    'shipping_zip'     => $data['shipping_zip'],
-                    'shipping_country' => $data['shipping_country'],
-                ];
+                'billing_street'   => $data['billing_street'],
+                'billing_city'     => $data['billing_city'],
+                'billing_state'    => $data['billing_state'],
+                'billing_zip'      => $data['billing_zip'],
+                'billing_country'  => $data['billing_country'],
+                'shipping_street'  => $data['shipping_street'],
+                'shipping_city'    => $data['shipping_city'],
+                'shipping_state'   => $data['shipping_state'],
+                'shipping_zip'     => $data['shipping_zip'],
+                'shipping_country' => $data['shipping_country'],
+            ];
             if (isset($update_all_other_transactions)) {
 
                 // Update all invoices except paid ones.
@@ -324,13 +324,13 @@ class Clients_model extends App_Model
         }
 
         if ($client_request == false) {
-            $data['invoice_emails']     = isset($data['invoice_emails']) ? 1 :0;
-            $data['estimate_emails']    = isset($data['estimate_emails']) ? 1 :0;
-            $data['credit_note_emails'] = isset($data['credit_note_emails']) ? 1 :0;
-            $data['contract_emails']    = isset($data['contract_emails']) ? 1 :0;
-            $data['task_emails']        = isset($data['task_emails']) ? 1 :0;
-            $data['project_emails']     = isset($data['project_emails']) ? 1 :0;
-            $data['ticket_emails']      = isset($data['ticket_emails']) ? 1 :0;
+            $data['invoice_emails']     = isset($data['invoice_emails']) ? 1 : 0;
+            $data['estimate_emails']    = isset($data['estimate_emails']) ? 1 : 0;
+            $data['credit_note_emails'] = isset($data['credit_note_emails']) ? 1 : 0;
+            $data['contract_emails']    = isset($data['contract_emails']) ? 1 : 0;
+            $data['task_emails']        = isset($data['task_emails']) ? 1 : 0;
+            $data['project_emails']     = isset($data['project_emails']) ? 1 : 0;
+            $data['ticket_emails']      = isset($data['ticket_emails']) ? 1 : 0;
         }
 
         $data = hooks()->apply_filters('before_update_contact', $data, $id);
@@ -478,13 +478,13 @@ class Clients_model extends App_Model
         $data['datecreated'] = date('Y-m-d H:i:s');
 
         if (!$not_manual_request) {
-            $data['invoice_emails']     = isset($data['invoice_emails']) ? 1 :0;
-            $data['estimate_emails']    = isset($data['estimate_emails']) ? 1 :0;
-            $data['credit_note_emails'] = isset($data['credit_note_emails']) ? 1 :0;
-            $data['contract_emails']    = isset($data['contract_emails']) ? 1 :0;
-            $data['task_emails']        = isset($data['task_emails']) ? 1 :0;
-            $data['project_emails']     = isset($data['project_emails']) ? 1 :0;
-            $data['ticket_emails']      = isset($data['ticket_emails']) ? 1 :0;
+            $data['invoice_emails']     = isset($data['invoice_emails']) ? 1 : 0;
+            $data['estimate_emails']    = isset($data['estimate_emails']) ? 1 : 0;
+            $data['credit_note_emails'] = isset($data['credit_note_emails']) ? 1 : 0;
+            $data['contract_emails']    = isset($data['contract_emails']) ? 1 : 0;
+            $data['task_emails']        = isset($data['task_emails']) ? 1 : 0;
+            $data['project_emails']     = isset($data['project_emails']) ? 1 : 0;
+            $data['ticket_emails']      = isset($data['ticket_emails']) ? 1 : 0;
         }
 
         $data['email'] = trim($data['email']);
@@ -1341,11 +1341,11 @@ class Clients_model extends App_Model
     }
 
     /**
-    * Create new vault entry
-    * @param  array $data        $_POST data
-    * @param  mixed $customer_id customer id
-    * @return boolean
-    */
+     * Create new vault entry
+     * @param  array $data        $_POST data
+     * @param  mixed $customer_id customer id
+     * @return boolean
+     */
     public function vault_entry_create($data, $customer_id)
     {
         return $this->client_vault_entries_model->create($data, $customer_id);
@@ -1394,26 +1394,26 @@ class Clients_model extends App_Model
     }
 
     /**
-    * Get customer statement formatted
-    * @param  mixed $customer_id customer id
-    * @param  string $from        date from
-    * @param  string $to          date to
-    * @return array
-    */
+     * Get customer statement formatted
+     * @param  mixed $customer_id customer id
+     * @param  string $from        date from
+     * @param  string $to          date to
+     * @return array
+     */
     public function get_statement($customer_id, $from, $to)
     {
         return $this->statement_model->get_statement($customer_id, $from, $to);
     }
 
     /**
-    * Send customer statement to email
-    * @param  mixed $customer_id customer id
-    * @param  array $send_to     array of contact emails to send
-    * @param  string $from        date from
-    * @param  string $to          date to
-    * @param  string $cc          email CC
-    * @return boolean
-    */
+     * Send customer statement to email
+     * @param  mixed $customer_id customer id
+     * @param  array $send_to     array of contact emails to send
+     * @param  string $from        date from
+     * @param  string $to          date to
+     * @param  string $cc          email CC
+     * @return boolean
+     */
     public function send_statement_to_email($customer_id, $send_to, $from, $to, $cc = '')
     {
         return $this->statement_model->send_statement_to_email($customer_id, $send_to, $from, $to, $cc);
@@ -1511,14 +1511,14 @@ class Clients_model extends App_Model
 
         foreach ($staff as $member) {
             mail_template('customer_profile_uploaded_file_to_staff', $member['email'], $member['staffid'])
-            ->set_merge_fields($merge_fields)
-            ->send();
+                ->set_merge_fields($merge_fields)
+                ->send();
 
             if (add_notification([
-                    'touserid' => $member['staffid'],
-                    'description' => 'not_customer_uploaded_file',
-                    'link' => 'clients/client/' . $customer_id . '?group=attachments',
-                ])) {
+                'touserid' => $member['staffid'],
+                'description' => 'not_customer_uploaded_file',
+                'link' => 'clients/client/' . $customer_id . '?group=attachments',
+            ])) {
                 array_push($notifiedUsers, $member['staffid']);
             }
         }
@@ -1537,19 +1537,19 @@ class Clients_model extends App_Model
                 )
             AND active=1')->result_array();
     }
-    
+
     public function getBasicDetails($userid)
     {
         $this->db->where('userid', $userid);
         return $this->db->get(db_prefix() . 'basic_details')->row();
     }
-    
+
     public function getAdmissionPreferences($userid)
     {
         $this->db->where('userid', $userid);
         return $this->db->get(db_prefix() . 'admission_preferences')->row();
     }
-    
+
     public function getAdmissionPreferencesDetails($id)
     {
         $this->db->where('id', $id);
@@ -1573,99 +1573,103 @@ class Clients_model extends App_Model
         return $this->db->get(db_prefix() . 'declaration')->row();
     }
 
-    public function addBasicDetails($data,$basicDetailsId){
+    public function addBasicDetails($data, $basicDetailsId)
+    {
         // print_r($basicDetailsId);die;
-        if($basicDetailsId < 1){
+        if ($basicDetailsId < 1) {
             $this->db->insert(db_prefix() . 'basic_details', $data);
             $basic_detailsid = $this->db->insert_id();
-            if($basic_detailsid){
+            if ($basic_detailsid) {
                 $this->db->where('userid', $data['userid']);
                 $this->db->update(db_prefix() . 'contacts', ['basic_details_status' => 1]);
-            }  
-        }else if($basicDetailsId > 0 ) {
+            }
+        } else if ($basicDetailsId > 0) {
             $this->db->where('id', $basicDetailsId);
             $this->db->update(db_prefix() . 'basic_details', $data);
             $basic_detailsid = $basicDetailsId;
-
-        }      
+        }
 
         // log_activity('New Basic Details Added [' . $log . ']', $isStaff);
 
         return $basic_detailsid;
     }
 
-    public function addAdmissionPreferences($data,$admissionPreferencesIds){
+    public function addAdmissionPreferences($data, $admissionPreferencesIds)
+    {
         // print_r($admissionPreferencesIds);die;
-        if($admissionPreferencesIds < 1){
+        if ($admissionPreferencesIds < 1) {
             $this->db->insert(db_prefix() . 'admission_preferences', $data);
             $admission_preferencesid = $this->db->insert_id();
-            if($admission_preferencesid){
+            if ($admission_preferencesid) {
                 $this->db->where('userid', $data['userid']);
                 $this->db->update(db_prefix() . 'contacts', ['admission_preferences_status' => 1]);
-            }   
-        }else if($admissionPreferencesIds > 0 ) {
+            }
+        } else if ($admissionPreferencesIds > 0) {
             $this->db->where('id', $admissionPreferencesIds);
             $this->db->update(db_prefix() . 'admission_preferences', $data);
             $admission_preferencesid = $admissionPreferencesIds;
+        }
 
-        }      
-        
         return $admission_preferencesid;
     }
-    public function addParentDetails($data,$parentDetailsId){
-        if($parentDetailsId < 1){
+    public function addParentDetails($data, $parentDetailsId)
+    {
+        if ($parentDetailsId < 1) {
             $this->db->insert(db_prefix() . 'parent_details', $data);
             $parent_detailsid = $this->db->insert_id();
-            if($parent_detailsid){
+            if ($parent_detailsid) {
                 $this->db->where('userid', $data['userid']);
                 $this->db->update(db_prefix() . 'contacts', ['parent_details_status' => 1]);
-            }        
-        }else if($parentDetailsId > 0 ) {
+            }
+        } else if ($parentDetailsId > 0) {
             $this->db->where('id', $parentDetailsId);
             $this->db->update(db_prefix() . 'parent_details', $data);
             $parent_detailsid = $parentDetailsId;
-        }  
+        }
         return $parent_detailsid;
     }
 
-    public function addAcademicDetails($data){
+    public function addAcademicDetails($data)
+    {
         $this->db->insert(db_prefix() . 'academic_details', $data);
         $academic_detailsid = $this->db->insert_id();
-        if($academic_detailsid){
+        if ($academic_detailsid) {
             $this->db->where('userid', $data['userid']);
             $this->db->update(db_prefix() . 'contacts', ['academic_details_status' => 1]);
-        }        
+        }
         // log_activity('New Basic Details Added [' . $log . ']', $isStaff);
 
         return $academic_detailsid;
     }
 
-    public function addDeclarationDetails($data,$id){
+    public function addDeclarationDetails($data, $id)
+    {
         // print_r($data);die;
-        if($id < 1){
-            
+        if ($id < 1) {
+
             $this->db->insert(db_prefix() . 'declaration', $data);
             $declaration_detailsid = $this->db->insert_id();
-            if($declaration_detailsid){
+            if ($declaration_detailsid) {
                 // print_r($data);die;
                 $this->db->where('userid', $data['userid']);
                 $this->db->update(db_prefix() . 'contacts', ['declaration_details_status' => 1]);
-            }        
-        }else if($id > 0 ) {
-                            // print_r($data);die;
+            }
+        } else if ($id > 0) {
+            // print_r($data);die;
 
             $this->db->where('id', $id);
             $this->db->update(db_prefix() . 'declaration', $data);
             $declaration_detailsid = $id;
-        }  
+        }
         return $declaration_detailsid;
     }
-    public function update_doc_status($id){
-        if($id > 0){
+    public function update_doc_status($id)
+    {
+        if ($id > 0) {
             $this->db->where('userid', $id);
             $this->db->update(db_prefix() . 'contacts', ['document_details_status' => 1]);
             return true;
-        }else{
+        } else {
             return true;
         }
     }
@@ -1693,5 +1697,137 @@ class Clients_model extends App_Model
         }
 
         return $data;
+    }
+    function get_update_documents($id)
+    {
+        try {
+            $this->db->select("cd.*, ds.name AS document_status_name,ds.color color_name,CONCAT(s.firstname,' ',s.lastname) staffname")
+                ->from(db_prefix() . 'client_documents cd')
+                ->join(db_prefix() . 'document_status ds', 'cd.document_status = ds.id', 'left')
+                ->join(db_prefix() . 'staff s', 'cd.document_updated_by = s.staffid', 'left')
+                ->where('cd.client_id', $id)
+                ->where('cd.status', 1)
+                ->order_by('cd.id', 'DESC')
+                ->limit(1);
+
+            $documents = $this->db->get()->result_array();
+            return $documents;
+        } catch (Exception $e) {
+            // Handle the exception or log the error message
+            // Example: log_message('error', $e->getMessage());
+            return []; // Return an empty array or an appropriate error response
+        }
+    }
+    function get_profile_creator_vendor($ids = "")
+    {
+        $this->db->select('*');
+        $this->db->where('status', 1);
+        if (!empty($ids)) {
+            $this->db->where("FIND_IN_SET(id,'{$ids}') > 0");
+        }
+        $this->db->order_by('sequence', "asc");
+        $vendor = $this->db->get(db_prefix() . 'profile_creater_vendor')->result_array();
+        return $vendor;
+    }
+    function get_profile_creator_data($id)
+    {
+        $this->db->select("pc.*,ps.name AS profile_status_name,ps.color color_name,CONCAT(s.firstname,' ',s.lastname) staffname");
+        $this->db->from(db_prefix() . 'client_profile_creation pc');
+        $this->db->join(db_prefix() . 'profile_status ps', 'pc.profile_status = ps.id', 'left');
+        $this->db->join(db_prefix() . 'staff s', 'pc.approved_by = s.staffid', 'left');
+        $this->db->where('pc.client_id', $id);
+        $this->db->where('pc.status', 1);
+        $this->db->order_by('pc.id', "DESC");
+        $this->db->limit(1);
+        return $profile_creator = $this->db->get()->result_array();
+    }
+
+    function upload_documents_button()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
+    }
+    function university_shortlisting($client_id)
+    {
+        $this->db->select('us.*,cv.name vendor_name');
+        $this->db->from(db_prefix() . 'client_university_shortlisting us');
+        $this->db->join(db_prefix() . 'profile_creater_vendor cv', "cv.id = us.vendor_id");
+        $this->db->where('us.client_id', $client_id);
+        $this->db->where('us.status', 1);
+        $this->db->order_by('us.id', "asc");
+        return $client_university_shortlisting = $this->db->get()->result_array();
+    }
+
+    function profile_verification_button()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $update_button = $this->db->get(db_prefix() . 'profile_status')->result_array();
+    }
+
+    function university_application_status()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $university_application_status = $this->db->get(db_prefix() . 'university_application_status')->result_array();
+    }
+
+    function university_status_update()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        return $university_application_status = $this->db->get(db_prefix() . 'university_status_update')->result_array();
+    }
+
+    function university_status_submit()
+    {
+        $this->db->select('*');
+        $this->db->order_by('sequence', "asc");
+        $this->db->where('status', "1");
+        return $university_application_status = $this->db->get(db_prefix() . 'university_application_status')->result_array();
+    }
+
+    function application_note_list($client_id)
+    {
+        $this->db->select("n.*, t.name AS application_stage_name, CONCAT(s.firstname, ' ', s.lastname) AS staffname,if(n.created_date > n.updated_date,n.created_date,n.updated_date) datetime");
+        $this->db->from(db_prefix() . 'application_notes n');
+        $this->db->join(db_prefix() . 'applicant_tracker t', 'n.application_stage = t.id', 'inner');
+        $this->db->join(db_prefix() . 'staff s', 'n.created_by = s.staffid', 'inner');
+        $this->db->where('n.client_id', $client_id);
+        $this->db->where('n.status', '1');
+        $this->db->order_by('n.id', 'desc');
+
+        return $application_note_list = $this->db->get()->result_array();
+    }
+
+    function application_activity($client_id)
+    {
+        $this->db->select("l.*, CONCAT(s.firstname, ' ', s.lastname) AS full_name,max(l.date) datetime");
+        $this->db->from(db_prefix() . 'application_activity_log l');
+        $this->db->join(db_prefix() . 'staff s', 'l.staffid = s.staffid', 'left');
+        $this->db->where('l.client_id', $client_id);
+        $this->db->group_by('l.id');
+        $this->db->order_by('l.date', 'desc');
+
+        return $application_note_list = $this->db->get()->result_array();
+    }
+
+    function get_application_stage()
+    {
+        $this->db->select("t.*");
+        $this->db->from(db_prefix() . 'applicant_tracker t');
+        $this->db->where("status", 1);
+        $this->db->order_by('t.orderby', 'asc');
+        return $get_application_stage = $this->db->get()->result_array();
+    }
+
+    function get_application_sub_stage()
+    {
+        $this->db->select("ts.*");
+        $this->db->from(db_prefix() . 'application_sub_category ts');
+        $this->db->where("ts.status", 1);
+        $this->db->order_by('ts.sequence', 'asc');
+        return $get_application_sub_stage = $this->db->get()->result_array();
     }
 }

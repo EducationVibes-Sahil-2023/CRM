@@ -412,6 +412,7 @@ $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
 
+
 $output  = $result['output'];
 
 $rResult = $result['rResult'];

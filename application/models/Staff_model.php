@@ -337,14 +337,14 @@ class Staff_model extends App_Model
             $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result_array();
             array_push($query, $selfDet[0]);
 
- //$query = [];
-   //         $query_sql = $this->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-     //       $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+            //$query = [];
+            //         $query_sql = $this->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+            //       $staff_ids = implode(",", array_column($query_sql, 'staffid'));
 
-       //     if (!empty($staff_ids)) {
-         //       $query = $this->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-           // }
-           // return $query;
+            //     if (!empty($staff_ids)) {
+            //       $query = $this->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+            // }
+            // return $query;
 
             return $query;
         }
@@ -943,5 +943,18 @@ class Staff_model extends App_Model
 
 
         return $type;
+    }
+
+    public function get_facebook_names($id = "", $nostatus = 0)
+    {
+        if (is_numeric($id)) {
+            $this->db->where('id', $id);
+        }
+        if ($nostatus == 1) {
+        } else {
+            $this->db->where('status', 1);
+        }
+
+        return $this->db->get(db_prefix() . 'facebook_name')->result_array();
     }
 }

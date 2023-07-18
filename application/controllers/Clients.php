@@ -19,7 +19,7 @@ class Clients extends ClientsController
     }
 
     public function index()
-    {   
+    {
         $data['is_home'] = true;
         $basicDetails = $this->clients_model->get_contact_by_userid(get_client_user_id());
         $basicDetailsStatus = $basicDetails->basic_details_status;
@@ -31,22 +31,22 @@ class Clients extends ClientsController
 
 
         // echo "basicdet:".$basicDetailsStatus."parentDet: ".$admissionPreferencesStatus."academicDet: ".$academicDetailsStatus;
-        if($basicDetailsStatus == '' && $admissionPreferencesStatus == '' && $academicDetailsStatus == '' ){
+        if ($basicDetailsStatus == '' && $admissionPreferencesStatus == '' && $academicDetailsStatus == '') {
             redirect(site_url('clients/basic_details'));
         }
-        if($basicDetailsStatus == 1 && $admissionPreferencesStatus == '' ){
+        if ($basicDetailsStatus == 1 && $admissionPreferencesStatus == '') {
             redirect(site_url('clients/admission_preferences'));
         }
-        if($admissionPreferencesStatus == 1 && $academicDetailsStatus == ''){
+        if ($admissionPreferencesStatus == 1 && $academicDetailsStatus == '') {
             redirect(site_url('clients/academic_details'));
         }
-        if($academicDetailsStatus == 1 && $documentDetailsStatus ==''){
+        if ($academicDetailsStatus == 1 && $documentDetailsStatus == '') {
             redirect(site_url('clients/upload_documents'));
         }
-        if($documentDetailsStatus == 1 && $declarationDetailsStatus ==''){
+        if ($documentDetailsStatus == 1 && $declarationDetailsStatus == '') {
             redirect(site_url('clients/declaration'));
         }
-        if($declarationDetailsStatus == 1){
+        if ($declarationDetailsStatus == 1) {
             redirect(site_url('clients/invoices'));
         }
 
@@ -70,9 +70,9 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('dob', _l('DOB'), 'required');
             $this->form_validation->set_rules('gender', _l('Gender'), 'required');
 
-            if ($this->form_validation->run() !== false) { 
+            if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
-                $basicDetailsIds = (($this->input->post('basicDetailsId')) > 0)?$this->input->post('basicDetailsId'):0;
+                $basicDetailsIds = (($this->input->post('basicDetailsId')) > 0) ? $this->input->post('basicDetailsId') : 0;
                 // define('CONTACT_REGISTERING', true);
                 // print_r($basicDetailsIds);die;
                 $basicDetailsid = $this->clients_model->addBasicDetails([
@@ -92,10 +92,10 @@ class Clients extends ClientsController
                     'mothers_email' => $data['mothers_email'],
                     'created_by' => get_client_user_id(),
                 ], $basicDetailsIds);
-                if($basicDetailsid){
-                    $this->session->set_flashdata('success', "Basic details successfully updated"); 
+                if ($basicDetailsid) {
+                    $this->session->set_flashdata('success', "Basic details successfully updated");
                     redirect(site_url('clients/admission_preferences'));
-                }               
+                }
             }
             // else{
             //     echo "<pre>"."validation failed"; 
@@ -104,7 +104,7 @@ class Clients extends ClientsController
             // }
         }
 
-       
+        $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
         $data['title']         = "Basic Details";
         $data['announcements'] = $this->announcements_model->get();
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
@@ -112,7 +112,32 @@ class Clients extends ClientsController
         $this->data($data);
         $this->view('basic_details');
         $this->layout();
-        
+    }
+
+    public function client_tracker()
+    {
+        $id = get_client_user_id();
+        $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+        $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
+        $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
+        $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+        $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
+        $data['customer_admins'] = $this->clients_model->get_admins($id);
+        $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+        $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+        $data['university_application_status'] = $this->clients_model->university_status_update();
+        $data['university_status_submit'] = $this->clients_model->university_status_submit();
+        $data['customer_vendors'] = [];
+        if (!empty($data['profile_creation_data'][0]["vendor"])) {
+            $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+        }
+        // $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
+        $data['title']         = "Basic Details";
+        $data['client_id']         = $id;
+        // echo "<pre>";print_r($data);die;
+        $this->data($data);
+        $this->view('client_tracker');
+        $this->layout();
     }
 
     public function admission_preferences()
@@ -122,16 +147,16 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('course', _l('Course'), 'required');
             $this->form_validation->set_rules('study_country', _l('Country'), 'required');
 
-            if ($this->form_validation->run() !== false) { 
+            if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
-                $admissionPreferencesIds = (($this->input->post('admissionPreferencesId')) > 0)?$this->input->post('admissionPreferencesId'):0;
+                $admissionPreferencesIds = (($this->input->post('admissionPreferencesId')) > 0) ? $this->input->post('admissionPreferencesId') : 0;
                 $university_array = array();
-                if($data['countries'] != ''){
-                    $countriesArr = explode(',',$data['countries']);
-                    if(is_array($countriesArr) && count($countriesArr) > 0){
-                        foreach($countriesArr as $key => $val){
-                            $university = isset($data['university'.$val]) ? $data['university'.$val] : '';
-                            if($university != ''){
+                if ($data['countries'] != '') {
+                    $countriesArr = explode(',', $data['countries']);
+                    if (is_array($countriesArr) && count($countriesArr) > 0) {
+                        foreach ($countriesArr as $key => $val) {
+                            $university = isset($data['university' . $val]) ? $data['university' . $val] : '';
+                            if ($university != '') {
                                 $university_array[$val] = $university;
                             }
                         }
@@ -144,21 +169,21 @@ class Clients extends ClientsController
                     'course' => $data['course'],
                     'specialization' => $data['specialization'],
                     'entrance_exam_given' => $data['entrance_exam_given'],
-                    'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES')?$data['entrance_exam_details']:'',
+                    'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES') ? $data['entrance_exam_details'] : '',
                     'session_intake' => $data['session_intake'],
                     'created_by' => get_client_user_id(),
                 ];
 
-                if($data['countries'] != ""){
+                if ($data['countries'] != "") {
                     $dataArr['study_country'] = $data['countries'];
-                    $dataArr['university'] = json_encode($university_array,true);
+                    $dataArr['university'] = json_encode($university_array, true);
                 }
 
                 $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $admissionPreferencesIds);
-                if($admissionPreferencesId){
-                    $this->session->set_flashdata('success', "Admission Preferences successfully updated"); 
+                if ($admissionPreferencesId) {
+                    $this->session->set_flashdata('success', "Admission Preferences successfully updated");
                     redirect(site_url('clients/academic_details'));
-                }               
+                }
             }
             // else{
             //     echo "<pre>"."validation failed"; 
@@ -167,7 +192,7 @@ class Clients extends ClientsController
             // }
         }
 
-       
+
         $data['title']         = "Admission Preferences";
         $data['announcements'] = $this->announcements_model->get();
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
@@ -175,9 +200,8 @@ class Clients extends ClientsController
         $this->data($data);
         $this->view('admission_preferences');
         $this->layout();
-        
     }
-    
+
     public function parent_details()
     {
         if ($this->input->post()) {
@@ -186,10 +210,10 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('fmobile', _l('Father Mobile No.'), 'required|numeric|min_length[10]|max_length[10]');
 
 
-            if ($this->form_validation->run() !== false) { 
+            if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
                 // define('CONTACT_REGISTERING', true);
-                $parentDetailsIds = (($this->input->post('parentDetailsId')) > 0)?$this->input->post('parentDetailsId'):0;
+                $parentDetailsIds = (($this->input->post('parentDetailsId')) > 0) ? $this->input->post('parentDetailsId') : 0;
 
                 $parentDetailsid = $this->clients_model->addParentDetails([
                     'userid' => get_client_user_id(),
@@ -220,15 +244,13 @@ class Clients extends ClientsController
                 ], $parentDetailsIds);
 
 
-                if($parentDetailsid){
+                if ($parentDetailsid) {
                     // echo json_encode(['status'=>1, 'message' =>'Parent details successfully updated.'.$parentDetailsid]);
                     // $parentDetailsStatusUpdate = $this->clients_model->updateParentDetailsStatus($basicDetailsid);
 
-                    $this->session->set_flashdata('success', "Parent details successfully updated"); 
+                    $this->session->set_flashdata('success', "Parent details successfully updated");
                     redirect(site_url('clients/academic_details'));
-
                 }
-                
             }
         }
         $data['title']         = "Parent Details";
@@ -254,10 +276,10 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('tenth_school_name', _l('tenth_board'), 'required');
             $this->form_validation->set_rules('tenth_board', _l('tenth_board'), 'required');
 
-            if ($this->form_validation->run() !== false) { 
+            if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
                 // define('CONTACT_REGISTERING', true);
-                $academicDetailsIds = (($this->input->post('academicDetailsId')) > 0)?$this->input->post('academicDetailsId'):0;
+                $academicDetailsIds = (($this->input->post('academicDetailsId')) > 0) ? $this->input->post('academicDetailsId') : 0;
                 $academicDetailsid = $this->clients_model->addAcademicDetails([
                     'userid' => get_client_user_id(),
                     'tenth_school_name' => $data['tenth_school_name'],
@@ -289,22 +311,22 @@ class Clients extends ClientsController
                     'entrance_year' => $data['entrance_year'],
                     'entrance_result_status' => $data['entrance_result_status'],
                     'entrance_percentage' => $data['entrance_percentage']
-                    
+
                 ], $academicDetailsIds);
 
 
-                if($academicDetailsid){
+                if ($academicDetailsid) {
                     // echo json_encode(['status'=>1, 'message' =>'Academic details successfully updated.'.$academicDetailsid]);
                     // $academicDetailsStatusUpdate = $this->clients_model->updateAcademicDetailsStatus($basicDetailsid);
-                    $this->session->set_flashdata('success', "Academic details successfully updated."); 
+                    $this->session->set_flashdata('success', "Academic details successfully updated.");
                     redirect(site_url('clients/upload_documents'));
-                    
                 }
             }
         }
 
         $data['title']         = "Academic Details";
         $data['announcements'] = $this->announcements_model->get();
+        $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
@@ -335,21 +357,21 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('name', _l('name'), 'required');
             $this->form_validation->set_rules('father_name', _l('father_name'), 'required');
 
-            if ($this->form_validation->run() !== false) { 
+            if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
                 // define('CONTACT_REGISTERING', true);
-                $declarationDetailsIds = (($this->input->post('declarationDetailsId')) > 0)?$this->input->post('declarationDetailsId'):0;
+                $declarationDetailsIds = (($this->input->post('declarationDetailsId')) > 0) ? $this->input->post('declarationDetailsId') : 0;
                 $declarationDetailsid = $this->clients_model->addDeclarationDetails([
                     // 'id'    => 1,
                     'userid' => get_client_user_id(),
                     'name' => $data['name'],
                     'father_name' => $data['father_name'],
                     // 'declaration_date' =>$data['declaration_date']                   
-                    
+
                 ], $declarationDetailsIds);
 
-                if($declarationDetailsid){
-                    $this->session->set_flashdata('success', "Declaration details successfully updated."); 
+                if ($declarationDetailsid) {
+                    $this->session->set_flashdata('success', "Declaration details successfully updated.");
                     redirect(site_url('clients/preview'));
                 }
             }
@@ -381,7 +403,7 @@ class Clients extends ClientsController
 
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['declarationdetails'] = $this->clients_model->getDeclarationDetails(get_client_user_id());
-        
+
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
 
         $this->data($data);
@@ -485,8 +507,8 @@ class Clients extends ClientsController
             $action = $this->input->post('action');
 
             switch ($action) {
-                  case 'new_task':
-                  case 'edit_task':
+                case 'new_task':
+                case 'edit_task':
 
                     $data    = $this->input->post();
                     $task_id = false;
@@ -522,8 +544,10 @@ class Clients extends ClientsController
                             redirect(site_url('clients/project/' . $project->id . '?group=project_tasks&taskid=' . $task_id));
                         }
                     } else {
-                        if ($project->settings->edit_tasks == 1
-                            && total_rows(db_prefix() . 'tasks', ['is_added_from_contact' => 1, 'addedfrom' => get_contact_user_id()]) > 0) {
+                        if (
+                            $project->settings->edit_tasks == 1
+                            && total_rows(db_prefix() . 'tasks', ['is_added_from_contact' => 1, 'addedfrom' => get_contact_user_id()]) > 0
+                        ) {
                             $affectedRows = 0;
                             $updated      = $this->tasks_model->update($data, $task_id, true);
                             if ($updated) {
@@ -606,16 +630,16 @@ class Clients extends ClientsController
                     break;
                 case 'project_file_dropbox': // deprecated
                 case 'project_external_file':
-                        $data                        = [];
-                        $data['project_id']          = $id;
-                        $data['files']               = $this->input->post('files');
-                        $data['external']            = $this->input->post('external');
-                        $data['visible_to_customer'] = 1;
-                        $data['contact_id']          = get_contact_user_id();
-                        $this->projects_model->add_external_file($data);
-                die;
+                    $data                        = [];
+                    $data['project_id']          = $id;
+                    $data['files']               = $this->input->post('files');
+                    $data['external']            = $this->input->post('external');
+                    $data['visible_to_customer'] = 1;
+                    $data['contact_id']          = get_contact_user_id();
+                    $this->projects_model->add_external_file($data);
+                    die;
 
-                break;
+                    break;
                 case 'get_file':
                     $file_data['discussion_user_profile_image_url'] = contact_profile_image_url(get_contact_user_id());
                     $file_data['current_user_is_admin']             = false;
@@ -714,20 +738,20 @@ class Clients extends ClientsController
                 $total_tasks = hooks()->apply_filters('client_project_total_tasks', $total_tasks, $id);
 
                 $data['tasks_not_completed'] = total_rows(db_prefix() . 'tasks', [
-                'status !='         => 5,
-                'rel_id'            => $id,
-                'rel_type'          => 'project',
-                'visible_to_client' => 1,
-            ]);
+                    'status !='         => 5,
+                    'rel_id'            => $id,
+                    'rel_type'          => 'project',
+                    'visible_to_client' => 1,
+                ]);
 
                 $data['tasks_not_completed'] = hooks()->apply_filters('client_project_tasks_not_completed', $data['tasks_not_completed'], $id);
 
                 $data['tasks_completed'] = total_rows(db_prefix() . 'tasks', [
-                'status'            => 5,
-                'rel_id'            => $id,
-                'rel_type'          => 'project',
-                'visible_to_client' => 1,
-            ]);
+                    'status'            => 5,
+                    'rel_id'            => $id,
+                    'rel_type'          => 'project',
+                    'visible_to_client' => 1,
+                ]);
                 $data['tasks_completed'] = hooks()->apply_filters('client_project_tasks_completed', $data['tasks_completed'], $id);
 
                 $data['total_tasks']                  = $total_tasks;
@@ -742,7 +766,7 @@ class Clients extends ClientsController
                 $data['gantt_data'] = $this->projects_model->get_gantt_data($id);
             } elseif ($group == 'project_discussions') {
                 if ($this->input->get('discussion_id')) {
-                    $data['discussion_user_profile_image_url'] = contact_profile_image_url(get_contact_user_id());
+                    $data['discussion_user_    _image_url'] = contact_profile_image_url(get_contact_user_id());
                     $data['discussion']                        = $this->projects_model->get_discussion($this->input->get('discussion_id'), $id);
                     $data['current_user_is_admin']             = false;
                 }
@@ -756,9 +780,9 @@ class Clients extends ClientsController
                 $data['contracts'] = [];
                 if (has_contact_permission('contracts')) {
                     $data['contracts'] = $this->contracts_model->get('', [
-                            'client'     => get_client_user_id(),
-                            'project_id' => $id,
-                        ]);
+                        'client'     => get_client_user_id(),
+                        'project_id' => $id,
+                    ]);
                 }
             } elseif ($group == 'project_activity') {
                 $data['activity'] = $this->projects_model->get_activity($id);
@@ -768,9 +792,9 @@ class Clients extends ClientsController
                 $data['invoices'] = [];
                 if (has_contact_permission('invoices')) {
                     $whereInvoices = [
-                            'clientid'   => get_client_user_id(),
-                            'project_id' => $id,
-                        ];
+                        'clientid'   => get_client_user_id(),
+                        'project_id' => $id,
+                    ];
                     if (get_option('exclude_invoice_from_client_area_with_draft_status') == 1) {
                         $whereInvoices['status !='] = 6;
                     }
@@ -795,9 +819,9 @@ class Clients extends ClientsController
                 $data['estimates'] = [];
                 if (has_contact_permission('estimates')) {
                     $data['estimates'] = $this->estimates_model->get('', [
-                            'clientid'   => get_client_user_id(),
-                            'project_id' => $id,
-                        ]);
+                        'clientid'   => get_client_user_id(),
+                        'project_id' => $id,
+                    ]);
                 }
             } elseif ($group == 'project_timesheets') {
                 $data['timesheets'] = $this->projects_model->get_timesheets($id);
@@ -814,11 +838,11 @@ class Clients extends ClientsController
         } elseif ($group == 'edit_task') {
             $data['milestones'] = $this->projects_model->get_milestones($id);
             $data['task']       = $this->tasks_model->get($this->input->get('taskid'), [
-                    'rel_id'                => $project->id,
-                    'rel_type'              => 'project',
-                    'addedfrom'             => get_contact_user_id(),
-                    'is_added_from_contact' => 1,
-                ]);
+                'rel_id'                => $project->id,
+                'rel_type'              => 'project',
+                'addedfrom'             => get_contact_user_id(),
+                'is_added_from_contact' => 1,
+            ]);
         }
 
         $data['group']    = $group;
@@ -914,16 +938,16 @@ class Clients extends ClientsController
             );
         } else {
             // if (isset($_FILES['photo']['name'])){
-                $successPhoto = handle_client_attachments_upload_docs(get_client_user_id(), true, 'photo');
+            $successPhoto = handle_client_attachments_upload_docs(get_client_user_id(), true, 'photo');
             // }
             // if (isset($_FILES['signature']['name'])){
-                $successSignature = handle_client_attachments_upload_docs(get_client_user_id(), true, 'signature');
+            $successSignature = handle_client_attachments_upload_docs(get_client_user_id(), true, 'signature');
             // }
             // if($this->input->post('tenth_marksheet')){
-                $successTenth_marksheet = handle_client_attachments_upload_docs(get_client_user_id(), true, 'tenth_marksheet');
+            $successTenth_marksheet = handle_client_attachments_upload_docs(get_client_user_id(), true, 'tenth_marksheet');
             // }
             // if($this->input->post('twelth_marksheet')){
-                $successTwelth_marksheet = handle_client_attachments_upload_docs(get_client_user_id(), true, 'twelth_marksheet');
+            $successTwelth_marksheet = handle_client_attachments_upload_docs(get_client_user_id(), true, 'twelth_marksheet');
             // }
         }
 
@@ -933,21 +957,20 @@ class Clients extends ClientsController
                 get_contact_user_id(),
                 get_client_user_id()
             );
-            $this->session->set_flashdata('success', "Documents successfully Uploaded"); 
-                    redirect(site_url('clients/declaration'));
+            $this->session->set_flashdata('success', "Documents successfully Uploaded");
+            redirect(site_url('clients/declaration'));
         }
         redirect(site_url('clients/upload_documents'));
-
     }
-    public function mk(){
+    public function mk()
+    {
         $updateDocsStatus = $this->clients_model->update_doc_status(get_client_user_id());
-        if($updateDocsStatus){
+        if ($updateDocsStatus) {
             print_r(get_client_user_id());
             print_r($updateDocsStatus);
-        }else{
+        } else {
             echo "something went wrong.";
         }
-
     }
     public function delete_file($id, $type = '')
     {
@@ -1098,14 +1121,14 @@ class Clients extends ClientsController
                     'department' => $data['department'],
                     'priority'   => $data['priority'],
                     'service'    => isset($data['service']) && is_numeric($data['service'])
-                    ? $data['service']
-                    : null,
+                        ? $data['service']
+                        : null,
                     'project_id' => isset($data['project_id']) && is_numeric($data['project_id'])
-                    ? $data['project_id']
-                    : 0,
+                        ? $data['project_id']
+                        : 0,
                     'custom_fields' => isset($data['custom_fields']) && is_array($data['custom_fields'])
-                    ? $data['custom_fields']
-                    : [],
+                        ? $data['custom_fields']
+                        : [],
                     'message'   => $data['message'],
                     'contactid' => get_contact_user_id(),
                     'userid'    => get_client_user_id(),
@@ -1201,8 +1224,10 @@ class Clients extends ClientsController
         }
 
         if (isset($where['status'])) {
-            if ($where['status'] == Invoices_model::STATUS_DRAFT
-                && get_option('exclude_invoice_from_client_area_with_draft_status') == 1) {
+            if (
+                $where['status'] == Invoices_model::STATUS_DRAFT
+                && get_option('exclude_invoice_from_client_area_with_draft_status') == 1
+            ) {
                 unset($where['status']);
                 $where['status !='] = Invoices_model::STATUS_DRAFT;
             }
@@ -1242,42 +1267,42 @@ class Clients extends ClientsController
         $data['to']   = $to;
 
         $data['period_today'] = json_encode(
-                     [
-                     _d(date('Y-m-d')),
-                     _d(date('Y-m-d')),
-                     ]
+            [
+                _d(date('Y-m-d')),
+                _d(date('Y-m-d')),
+            ]
         );
         $data['period_this_week'] = json_encode(
-                     [
-                     _d(date('Y-m-d', strtotime('monday this week'))),
-                     _d(date('Y-m-d', strtotime('sunday this week'))),
-                     ]
+            [
+                _d(date('Y-m-d', strtotime('monday this week'))),
+                _d(date('Y-m-d', strtotime('sunday this week'))),
+            ]
         );
         $data['period_this_month'] = json_encode(
-                     [
-                     _d(date('Y-m-01')),
-                     _d(date('Y-m-t')),
-                     ]
+            [
+                _d(date('Y-m-01')),
+                _d(date('Y-m-t')),
+            ]
         );
 
         $data['period_last_month'] = json_encode(
-                     [
-                     _d(date('Y-m-01', strtotime('-1 MONTH'))),
-                     _d(date('Y-m-t', strtotime('-1 MONTH'))),
-                     ]
+            [
+                _d(date('Y-m-01', strtotime('-1 MONTH'))),
+                _d(date('Y-m-t', strtotime('-1 MONTH'))),
+            ]
         );
 
         $data['period_this_year'] = json_encode(
-                     [
-                     _d(date('Y-m-d', strtotime(date('Y-01-01')))),
-                     _d(date('Y-m-d', strtotime(date('Y-12-31')))),
-                     ]
+            [
+                _d(date('Y-m-d', strtotime(date('Y-01-01')))),
+                _d(date('Y-m-d', strtotime(date('Y-12-31')))),
+            ]
         );
         $data['period_last_year'] = json_encode(
-                     [
-                     _d(date('Y-m-d', strtotime(date(date('Y', strtotime('last year')) . '-01-01')))),
-                     _d(date('Y-m-d', strtotime(date(date('Y', strtotime('last year')) . '-12-31')))),
-                     ]
+            [
+                _d(date('Y-m-d', strtotime(date(date('Y', strtotime('last year')) . '-01-01')))),
+                _d(date('Y-m-d', strtotime(date(date('Y', strtotime('last year')) . '-12-31')))),
+            ]
         );
 
         $data['period_selected'] = json_encode([$from, $to]);
@@ -1400,8 +1425,10 @@ class Clients extends ClientsController
                 $data['zip']         = $this->input->post('zip');
                 $data['state']       = $this->input->post('state');
 
-                if (get_option('allow_primary_contact_to_view_edit_billing_and_shipping') == 1
-                    && is_primary_contact()) {
+                if (
+                    get_option('allow_primary_contact_to_view_edit_billing_and_shipping') == 1
+                    && is_primary_contact()
+                ) {
 
                     // Dynamically get the billing and shipping values from $_POST
                     for ($i = 0; $i < 2; $i++) {
@@ -1574,16 +1601,16 @@ class Clients extends ClientsController
         $this->load->model('subscriptions_model');
 
         $sessionData = [
-              'payment_method_types' => ['card'],
-              'mode'                 => 'setup',
-              'setup_intent_data'    => [
+            'payment_method_types' => ['card'],
+            'mode'                 => 'setup',
+            'setup_intent_data'    => [
                 'metadata' => [
-                  'customer_id' => $this->clients_model->get(get_client_user_id())->stripe_id,
+                    'customer_id' => $this->clients_model->get(get_client_user_id())->stripe_id,
                 ],
-              ],
-              'success_url' => site_url('clients/success_update_card?session_id={CHECKOUT_SESSION_ID}'),
-              'cancel_url'  => $cancelUrl = site_url('clients/credit_card'),
-            ];
+            ],
+            'success_url' => site_url('clients/success_update_card?session_id={CHECKOUT_SESSION_ID}'),
+            'cancel_url'  => $cancelUrl = site_url('clients/credit_card'),
+        ];
 
         $contact = $this->clients_model->get_contact(get_contact_user_id());
 
@@ -1619,8 +1646,8 @@ class Clients extends ClientsController
             $this->stripe_core->update_customer($session->setup_intent->metadata->customer_id, [
                 'invoice_settings' => [
                     'default_payment_method' => $session->setup_intent->payment_method->id,
-                  ],
-              ]);
+                ],
+            ]);
 
             set_alert('success', _l('updated_successfully', _l('credit_card')));
         } catch (Exception $e) {
@@ -1696,8 +1723,10 @@ class Clients extends ClientsController
 
     public function cancel_subscription($id)
     {
-        if (!is_primary_contact(get_contact_user_id())
-            || get_option('show_subscriptions_in_customers_area') != '1') {
+        if (
+            !is_primary_contact(get_contact_user_id())
+            || get_option('show_subscriptions_in_customers_area') != '1'
+        ) {
             redirect(site_url());
         }
 
@@ -1736,8 +1765,10 @@ class Clients extends ClientsController
 
     public function resume_subscription($id)
     {
-        if (!is_primary_contact(get_contact_user_id())
-            || get_option('show_subscriptions_in_customers_area') != '1') {
+        if (
+            !is_primary_contact(get_contact_user_id())
+            || get_option('show_subscriptions_in_customers_area') != '1'
+        ) {
             redirect(site_url());
         }
 
@@ -1764,9 +1795,11 @@ class Clients extends ClientsController
     {
         $this->load->model('gdpr_model');
 
-        if (is_gdpr()
+        if (
+            is_gdpr()
             && $this->input->post('removal_request')
-            && get_option('gdpr_contact_enable_right_to_be_forgotten') == '1') {
+            && get_option('gdpr_contact_enable_right_to_be_forgotten') == '1'
+        ) {
             $success = $this->gdpr_model->add_removal_request([
                 'description'  => nl2br($this->input->post('removal_description')),
                 'request_from' => get_contact_full_name(get_contact_user_id()),
@@ -1806,9 +1839,11 @@ class Clients extends ClientsController
 
     public function export()
     {
-        if (is_gdpr()
+        if (
+            is_gdpr()
             && get_option('gdpr_data_portability_contacts') == '0'
-            || !is_gdpr()) {
+            || !is_gdpr()
+        ) {
             show_error('This page is currently disabled, check back later.');
         }
 
@@ -1823,11 +1858,11 @@ class Clients extends ClientsController
     public function client_home_chart()
     {
         $statuses = [
-                1,
-                2,
-                4,
-                3,
-            ];
+            1,
+            2,
+            4,
+            3,
+        ];
         $months          = [];
         $months_original = [];
         for ($m = 1; $m <= 12; $m++) {
@@ -1835,9 +1870,9 @@ class Clients extends ClientsController
             array_push($months_original, date('F', mktime(0, 0, 0, $m, 1)));
         }
         $chart = [
-                'labels'   => $months,
-                'datasets' => [],
-            ];
+            'labels'   => $months,
+            'datasets' => [],
+        ];
         foreach ($statuses as $status) {
             $this->db->select('total as amount, date');
             $this->db->from(db_prefix() . 'invoices');
@@ -1878,13 +1913,13 @@ class Clients extends ClientsController
             $backgroundColor = 'rgba(' . implode(',', hex2rgb($borderColor)) . ',0.3)';
 
             array_push($chart['datasets'], [
-                    'label'           => format_invoice_status($status, '', false, true),
-                    'backgroundColor' => $backgroundColor,
-                    'borderColor'     => $borderColor,
-                    'borderWidth'     => 1,
-                    'tension'         => false,
-                    'data'            => $data['total'],
-                ]);
+                'label'           => format_invoice_status($status, '', false, true),
+                'backgroundColor' => $backgroundColor,
+                'borderColor'     => $borderColor,
+                'borderWidth'     => 1,
+                'tension'         => false,
+                'data'            => $data['total'],
+            ]);
         }
         echo json_encode($chart);
     }
@@ -1892,5 +1927,66 @@ class Clients extends ClientsController
     public function contact_email_profile_unique($email)
     {
         return total_rows(db_prefix() . 'contacts', 'id !=' . get_contact_user_id() . ' AND email="' . get_instance()->db->escape_str($email) . '"') > 0 ? false : true;
+    }
+
+    public function university_shortlisting()
+    {
+
+        $data['is_home'] = true;
+        $data['title']  = "University Shortlisting";
+        $data['university_shortlisting'] = $this->clients_model->university_shortlisting(get_client_user_id());
+        $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+        $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data(get_client_user_id());
+        $data['university_status_update'] = $this->clients_model->university_status_update();
+        $data['university_status_submit'] = $this->clients_model->university_status_submit();
+
+        $data['customer_vendors'] = [];
+        if (!empty($data['profile_creation_data'][0]["vendor"])) {
+            $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+        }
+        $this->data($data);
+        $this->view('university_shortlisting');
+        $this->layout();
+    }
+
+    public function university_shortlisting_update()
+    {
+        if (!empty($_POST["university_id"])) {
+            $update_array = [];
+            $status_check = false;
+            foreach ($_POST["university_id"] as $key => $university_id) {
+                $update_array[] = array("university_status" => $_POST["university_application_status"][$key], "client_updated_by" => get_client_user_id(), "client_updated_date" => date('Y-m-d H:i:s'), "id" => $university_id);
+                if ($_POST["university_application_status"][$key] == 1) {
+                    $status_check = true;
+                }
+            }
+
+            if (!empty($update_array)) {
+                $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $update_array, "id");
+            }
+
+            if ($status_check) {
+                $this->db->where("userid", get_client_user_id());
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
+                $rows_affected = $this->db->affected_rows();
+            }
+
+            $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisting by Applicant - " . get_contact_user_name(), "date" => date('Y-m-d H:i:s'), "contact_id" => get_contact_user_id(), "client_id" => get_client_user_id()));
+            get_applicant_status(3, get_client_user_id());
+            if ($rows_affected > 0) {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
+                set_alert('success', _l('update_custumer_update_successfully', _l('customer')));
+            } else {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = _l('update_custumer_failed_failed', _l('customer'));
+                set_alert('danger', _l('update_custumer_failed_failed', _l('customer')));
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
     }
 }
