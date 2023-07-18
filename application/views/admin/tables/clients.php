@@ -219,6 +219,14 @@ if ($this->ci->input->post('lead_type')) {
     // print_r($where);
 }
 
+if ($this->ci->input->post('application_stage')) {
+    array_push($where, 'AND ' . db_prefix() . 'clients.applicant_status = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage')) - 1));
+}
+
+if ($this->ci->input->post('application_sub_stage')) {
+
+    array_push($where, 'AND ' . db_prefix() . 'clients.application_text IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('application_sub_stage'))) . ')');
+}
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date = $this->ci->input->post('to_date');

@@ -639,14 +639,26 @@ function get_applicant_status($stage, $client_id)
             $update_array_data["application_text"] = $response["applicant_stage_status"];
         }
     }
-    if (!empty($update_array_data)) {
+    if (!empty($update_array_data) && !empty($update_array_data["application_text"])) {
         $CI->db->where("userid", $client_id);
         $CI->db->update(db_prefix() . 'clients', $update_array_data);
+        update_application_sub_category($stage, $update_array_data["application_text"]);
     }
 
     return $response;
 }
 
+function update_application_sub_category($stage, $text)
+{
+    $CI = &get_instance();
+    $check = $CI->db->select("id")->where(array("application_tracker" => $stage, "name" => $text))->get(db_prefix() . "application_sub_category")->row();
+    if (!empty($check->id)) { // Corrected variable name from $$check->id to $check->id
+        // Do something if the record already exists
+    } else {
+        $CI->db->insert(db_prefix() . 'application_sub_category', array("application_tracker" => $stage, "name" => $text, "status" => 1));
+    }
+    return true;
+}
 function get_stage_1($stage, $client_id)
 {
     $CI = &get_instance();
