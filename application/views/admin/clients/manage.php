@@ -325,6 +325,14 @@
                                  echo '</div>';
                                  ?>
                               </div>
+
+                              <div class="col-md-2 leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('view_application_stage[]', $application_stage, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('applicant_name_table'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
+                                 echo '</div>';
+                                 ?>
+                              </div>
                               <div class="col-md-2 leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
