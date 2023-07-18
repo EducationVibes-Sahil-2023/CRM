@@ -327,9 +327,6 @@ class Clients extends ClientsController
         $data['title']         = "Academic Details";
         $data['announcements'] = $this->announcements_model->get();
         $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
-        echo "sdlckndkc jkds cksdjk csdk ";
-        print_r($data['university_shortlisting_notification']);
-        die;
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
@@ -1975,7 +1972,7 @@ class Clients extends ClientsController
             }
 
             $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisting by Applicant - " . get_contact_user_name(), "date" => date('Y-m-d H:i:s'), "contact_id" => get_contact_user_id(), "client_id" => get_client_user_id()));
-
+            get_applicant_status(3, get_client_user_id());
             if ($rows_affected > 0) {
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));

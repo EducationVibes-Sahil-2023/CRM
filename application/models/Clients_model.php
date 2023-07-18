@@ -1812,4 +1812,12 @@ class Clients_model extends App_Model
 
         return $application_note_list = $this->db->get()->result_array();
     }
+
+    function get_application_stage()
+    {
+        $this->db->select("t.*");
+        $this->db->from(db_prefix() . 'applicant_tracker t');
+        $this->db->order_by('t.id', 'asc');
+        return $get_application_stage = $this->db->get()->result_array();
+    }
 }
