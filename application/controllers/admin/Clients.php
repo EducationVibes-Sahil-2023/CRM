@@ -33,6 +33,7 @@ class Clients extends AdminController
 
         $data['customer_admins'] = $this->clients_model->get_customers_admin_unique_ids();
         $data['application_stage'] = $this->clients_model->get_application_stage();
+        $data['application_sub_stage'] = $this->clients_model->get_application_sub_stage();
 
         $whereContactsLoggedIn = '';
         if (!has_permission('customers', '', 'view')) {
@@ -1235,6 +1236,7 @@ class Clients extends AdminController
                 if (isset($applicant_status)) {
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    get_applicant_status($applicant_status, $client_id);
                 }
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
@@ -1328,6 +1330,7 @@ class Clients extends AdminController
                 if (isset($applicant_status)) {
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    get_applicant_status($applicant_status, $client_id);
                 }
                 $this->db->insert(db_prefix() . 'client_profile_creation', $insert_update_data);
                 $insert_id = $this->db->insert_id();
@@ -1380,6 +1383,7 @@ class Clients extends AdminController
                 if (isset($applicant_status)) {
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    get_applicant_status($applicant_status, $client_id);
                 }
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
@@ -1453,6 +1457,7 @@ class Clients extends AdminController
 
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile sop updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
 
+                get_applicant_status($applicant_status, $client_id);
 
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
@@ -1506,6 +1511,7 @@ class Clients extends AdminController
                         $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile " . $applicant_status_text . " by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                        get_applicant_status($applicant_status, $client_id);
                     }
                 }
             } else {
@@ -1557,10 +1563,12 @@ class Clients extends AdminController
                     $document_status_text = "Approved";
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => 1));
+                    get_applicant_status(1, $client_id);
                 } else if ($document_status == 2) {
                     $document_status_text = "Reject";
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0));
+                    get_applicant_status(0, $client_id);
                 }
 
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Document " . $document_status_text . " by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
@@ -1604,6 +1612,7 @@ class Clients extends AdminController
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                     $rows_affected = $this->db->affected_rows();
+                    get_applicant_status($applicant_status, $client_id);
 
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
@@ -1661,6 +1670,7 @@ class Clients extends AdminController
                 $rows_affected = $this->db->affected_rows();
 
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisted list send to applicant by  - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                get_applicant_status($applicant_status, $client_id);
 
 
                 $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
@@ -1717,10 +1727,13 @@ class Clients extends AdminController
 
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => 2));
+                    get_applicant_status(2, $client_id);
                     $rows_affected = $this->db->affected_rows();
                 } else {
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile is Reject by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
+
+
                 if ($rows_affected > 0) {
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_profile_status_successfully', _l('client'));
@@ -1766,7 +1779,7 @@ class Clients extends AdminController
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                 $rows_affected = $this->db->affected_rows();
-
+                get_applicant_status($applicant_status, $client_id);
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Application shortlisting by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
 
                 $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
@@ -1910,7 +1923,7 @@ class Clients extends AdminController
                     }
 
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University Offer updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
-
+                    get_applicant_status($applicant_status, $client_id);
                     $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
                     $ids = array_column($university_shortlisting_data, "id");
                     if ($update_university) {

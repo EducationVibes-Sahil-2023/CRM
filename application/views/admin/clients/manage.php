@@ -328,8 +328,17 @@
 
                               <div class="col-md-2 leads-filter-column">
                                  <?php
+                                 array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('view_application_stage[]', $application_stage, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('applicant_name_table'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
+                                 echo render_select('view_application_stage', $application_stage, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('applicant_name_table'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_stage");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2 leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('view_application_sub_stage[]', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -446,9 +455,12 @@
       </div>
    </div>
 </div>
-<?php init_tail(); ?>
+<?php
+init_tail(); ?>
 <script>
    var tAPI = "";
+   var sub_category = <?= !empty($application_sub_stage) ? json_encode($application_sub_stage) : [] ?>;
+
    $(function() {
       var CustomersServerParams = {};
       $.each($('._hidden_inputs._filters input'), function() {
@@ -460,13 +472,42 @@
       CustomersServerParams['lead_type'] = "[name='lead_type[]']";
       CustomersServerParams['from_date'] = "[name='from_date']";
       CustomersServerParams['to_date'] = "[name='to_date']";
+      CustomersServerParams['application_stage'] = "[name='view_application_stage']";
+      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage[]']";
 
       tAPI = initDataTable('.table-clients', admin_url + 'clients/table', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
       $('input[name="exclude_inactive"]').on('change', function() {
          tAPI.ajax.reload();
       });
 
+
+
+      $('#view_application_stage').on('changed.bs.select', function(event, clickedIndex, newValue, oldValue) {
+         let selectedValue = $(this).val();
+         // Populate the child dropdown with the data for the selected parent
+         populateChildDropdown(selectedValue);
+      });
+
    });
+
+   function populateChildDropdown(parentValue) {
+      let childDropdown = $('#view_application_sub_stage');
+      childDropdown.empty();
+      let childOptions = sub_category.filter(item => item.application_tracker === parentValue);;
+      console.log(childOptions);
+      if (childOptions && childOptions.length > 0) {
+         childOptions.forEach(option => {
+            childDropdown.append($('<option>', {
+               value: option.name,
+               text: option.name
+            }));
+         });
+      }
+
+
+      // Refresh the Bootstrap SelectPicker to update the UI
+      childDropdown.selectpicker('refresh');
+   }
 
    function customers_bulk_action(event) {
       var r = confirm(app.lang.confirm_action_prompt);
