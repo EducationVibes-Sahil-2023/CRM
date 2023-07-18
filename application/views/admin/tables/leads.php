@@ -449,15 +449,15 @@ foreach ($rResult as $aRow) {
     // $row[]    = 0;
     $call_duration = 0;
     $last_call_update = "";
-    // if (!empty($aRow['phonenumber'])) {
-    //     $call_data =  call_duration($aRow, $_POST);
-    //     if (!empty($call_data[0]["duration"])) {
-    //         $call_duration = $call_data[0]["duration"];
-    //     }
-    //     if (!empty($call_data[0]["last_contact_date"])) {
-    //         $last_call_update = $call_data[0]["last_contact_date"];
-    //     }
-    // }
+    if (!empty($aRow['phonenumber'])) {
+        $call_data =  call_duration($aRow, $_POST);
+        if (!empty($call_data[0]["duration"])) {
+            $call_duration = $call_data[0]["duration"];
+        }
+        if (!empty($call_data[0]["last_contact_date"])) {
+            $last_call_update = $call_data[0]["last_contact_date"];
+        }
+    }
     $row[]    =  !empty($call_duration) ? convertToHMS($call_duration, 1) : convertToHMS(0, 1);
     $row[]    =  $last_call_update;
 
