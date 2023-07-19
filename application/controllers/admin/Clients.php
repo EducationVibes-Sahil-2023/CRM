@@ -254,7 +254,6 @@ class Clients extends AdminController
                 }
             }
 
-        
             $data['client'] = $client;
             $title          = $client->company;
 

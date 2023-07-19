@@ -149,19 +149,21 @@ class Clients extends ClientsController
 
             if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
+
                 $admissionPreferencesIds = (($this->input->post('admissionPreferencesId')) > 0) ? $this->input->post('admissionPreferencesId') : 0;
                 $university_array = array();
                 if ($data['countries'] != '') {
                     $countriesArr = explode(',', $data['countries']);
                     if (is_array($countriesArr) && count($countriesArr) > 0) {
                         foreach ($countriesArr as $key => $val) {
-                            $university = isset($data['university' . $val]) ? $data['university' . $val] : '';
+                            $university = isset($data['university' . $key]) ? $data['university' . $key] : '';
                             if ($university != '') {
                                 $university_array[$val] = $university;
                             }
                         }
                     }
                 }
+
 
                 $dataArr = [
                     'userid' => get_client_user_id(),
@@ -192,10 +194,15 @@ class Clients extends ClientsController
             // }
         }
 
-
+        $this->load->model("leads_model");
+        $client = $this->clients_model->get(get_client_user_id());
+        $data['lead_type'] = $this->leads_model->get_type();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["lead_data"]                = $this->leads_model->get($client->leadid);
         $data['title']         = "Admission Preferences";
         $data['announcements'] = $this->announcements_model->get();
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
+
         // echo "<pre>";print_r($data);die;
         $this->data($data);
         $this->view('admission_preferences');

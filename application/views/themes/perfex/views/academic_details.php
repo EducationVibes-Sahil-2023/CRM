@@ -46,7 +46,7 @@ p{font-size: 15px;
         <div class="col-lg-1"></div>
       <div class="col-lg-2">
         <center>
-		<a href="/clients/basic_details">
+		<a href="<?=base_url()?>/clients/basic_details">
           <img src="/uploads/company/basic_details.png" class="img-responsive">
           <p>Basic Details</p>
 		</a>
@@ -55,7 +55,7 @@ p{font-size: 15px;
       <div class="col-lg-2">
         <div class="icon-box">
         <center>
-		<a href="/clients/admission_preferences">
+		<a href="<?=base_url()?>/clients/admission_preferences">
           <img src="/uploads/company/Parents_details.png" class="img-responsive">
           <p>Admission Preferences</p>
 		</a>
@@ -73,7 +73,7 @@ p{font-size: 15px;
       <div class="col-lg-2">
         <div class="icon-box">
         <center>
-          <img src="/uploads/company/Academics_details.png" class="img-responsive">
+          <img src="<?=base_url()?>/uploads/company/Academics_details.png" class="img-responsive">
           <p>Academics Details</p>
         </center>
         </div>
@@ -81,14 +81,14 @@ p{font-size: 15px;
 	  	<div class="col-lg-2">
 			<div class="icon-box">
 			<center>
-				<img src="/uploads/company/Address_details_gray.png" class="img-responsive">
+				<img src="<?=base_url()?>/uploads/company/Address_details_gray.png" class="img-responsive">
 				<p>Document Details</p>
 			</center>
 			</div>
 		</div>
       <div class="col-lg-2">
         <center>
-          <img src="/uploads/company/declaration_gray.png" class="img-responsive">
+          <img src="<?=base_url()?>/uploads/company/declaration_gray.png" class="img-responsive">
           <p>Declaration</p>
         </center>
       </div>
@@ -492,7 +492,7 @@ p{font-size: 15px;
   	</div>
   				<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
 				  	<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
-				  		<a href="/clients/admission_preferences" class="btn btn-primary button-23">Back</a>
+				  		<a href="<?=base_url()?>/clients/admission_preferences" class="btn btn-primary button-23">Back</a>
 				  		<button type="submit" class="btn btn-primary">Save & Next</button>
 				  	</div>
 				  	<div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
