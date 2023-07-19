@@ -1,6 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
 <div id="wrapper">
+   <style>
+      .margin-top {
+         margin-top: 20px;
+      }
+   </style>
    <div class="content">
       <div class="row">
 
@@ -300,12 +305,12 @@
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
                               <?php if (has_permission('leads', '', 'view')) { ?>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2  margin-top leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                  </div>
                               <?php } ?>
                               <?php if (is_admin()) { ?>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2  margin-top leads-filter-column">
                                     <?php
 
                                     echo '<div id="leads-filter-source">';
@@ -318,7 +323,7 @@
                               <?php } ?>
 
 
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
@@ -326,7 +331,7 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
@@ -335,24 +340,32 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_application_sub_stage[]', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
-                              <div class="col-md-2 leads-filter-column">
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-vendor">';
+                                 echo render_select('vendor_type[]', $vendorType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Vendor'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-4 leads-filter-column">
+                              <div class="col-md-4 margin-top leads-filter-column">
                                  <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
@@ -474,6 +487,8 @@ init_tail(); ?>
       CustomersServerParams['to_date'] = "[name='to_date']";
       CustomersServerParams['application_stage'] = "[name='view_application_stage']";
       CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage[]']";
+      CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
+
 
       tAPI = initDataTable('.table-clients', admin_url + 'clients/table', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
       $('input[name="exclude_inactive"]').on('change', function() {
