@@ -11,7 +11,7 @@
             
     <!-- <div class="col-lg-8 col-lg-offset-4"> -->
             <ul class="list-group" >
-                <li class="text-center"><a href="/clients/declaration" class="btn btn-primary">NEXT</a></li>
+                <li class="text-center"><a href="<?=base_url()?>/clients/declaration" class="btn btn-primary">NEXT</a></li>
                 <li class="list-group-item">1.Upload Your Recent Passport Size Photograph </li>
                 <li class="list-group-item">2.Upload Your Signature. </li>
                 <li class="list-group-item">3.Upload Your 10th Marksheet </li>
