@@ -171,7 +171,7 @@
               <button type="submit" class="btn btn-primary">Save & Next</button>
             </div>
             <div class="col-lg-6 col-xs-6" >
-              <a href="/clients/academic_details" class="btn btn-primary" style="float: right;">Next</a>
+              <a href="<?=base_url()?>/clients/academic_details" class="btn btn-primary" style="float: right;">Next</a>
               
             </div>
           </div>

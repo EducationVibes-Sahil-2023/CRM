@@ -1504,6 +1504,8 @@ class Clients_model extends App_Model
 
     public function send_notification_customer_profile_file_uploaded_to_responsible_staff($contact_id, $customer_id)
     {
+        return true;
+        die;
         $staff         = $this->get_staff_members_that_can_access_customer($customer_id);
         $merge_fields  = $this->app_merge_fields->format_feature('client_merge_fields', $customer_id, $contact_id);
         $notifiedUsers = [];
@@ -1575,7 +1577,7 @@ class Clients_model extends App_Model
 
     public function addBasicDetails($data, $basicDetailsId)
     {
-        // print_r($basicDetailsId);die;
+
         if ($basicDetailsId < 1) {
             $this->db->insert(db_prefix() . 'basic_details', $data);
             $basic_detailsid = $this->db->insert_id();

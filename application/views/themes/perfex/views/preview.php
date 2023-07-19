@@ -1,328 +1,386 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
 
-   <style type="text/css">
-  	.card{border:1px solid #efefef;padding: 10px;}
-  	.heading{    font-size: 25px;
-    font-weight: 600;}
-    .btn-primary {
-    color: #fff;
-    background-color: #337ab7;
-    border-color: #2e6da4;
-    height: 40px;
-    border-radius: initial;
-}
-.button-22{background: #415165;border-color: #415165;}
-  </style>
-  <style type="text/css">
-  	.c1{    border: 1px solid #cecbcb;
-    padding: 5px;
-    padding: 10px;
-    height: 55px;}
-  	.c2{    border: 1px solid #cecbcb;
-    padding: 5px;
-    padding: 10px;
-    height: 55px;}
-  	.border1{padding-left: 0px;}
-  	.border2{padding-right: 0px;}
-  	.after{margin-top:20px;}
-  	.btn-primary {
-    color: #fff;
-    background-color: #337ab7;
-    border-color: #2e6da4;
-    height: 40px;
-    border-radius: initial;
-}
-p{font-size: 15px;
-    font-weight: 600;}
-.heading{font-size: 25px;
-    font-weight: 600;}
-.button-23{background: #415165;border-color: #415165;}
-@media only screen and (max-width: 600px) {
-  .c1 {
-   border: none;
-       margin-bottom: -24px;
-  }
-}
-@media only screen and (max-width: 600px) {
-  .c2 {
-   border: none;
-       margin-bottom: -10px;
-  }
-}
-.card{    border:1px solid #d2d2d2;
-    padding-left: 25px;
-    padding-right: 25px;}
+<style type="text/css">
+	.card {
+		border: 1px solid #efefef;
+		padding: 10px;
+	}
 
-	
-	.tags-input-wrapper{
+	.heading {
+		font-size: 25px;
+		font-weight: 600;
+	}
+
+	.btn-primary {
+		color: #fff;
+		background-color: #337ab7;
+		border-color: #2e6da4;
+		height: 40px;
+		border-radius: initial;
+	}
+
+	.button-22 {
+		background: #415165;
+		border-color: #415165;
+	}
+</style>
+<style type="text/css">
+	.c1 {
+		border: 1px solid #cecbcb;
+		padding: 5px;
+		padding: 10px;
+		height: 55px;
+	}
+
+	.c2 {
+		border: 1px solid #cecbcb;
+		padding: 5px;
+		padding: 10px;
+		height: 55px;
+	}
+
+	.border1 {
+		padding-left: 0px;
+	}
+
+	.border2 {
+		padding-right: 0px;
+	}
+
+	.after {
+		margin-top: 20px;
+	}
+
+	.btn-primary {
+		color: #fff;
+		background-color: #337ab7;
+		border-color: #2e6da4;
+		height: 40px;
+		border-radius: initial;
+	}
+
+	p {
+		font-size: 15px;
+		font-weight: 600;
+	}
+
+	.heading {
+		font-size: 25px;
+		font-weight: 600;
+	}
+
+	.button-23 {
+		background: #415165;
+		border-color: #415165;
+	}
+
+	@media only screen and (max-width: 600px) {
+		.c1 {
+			border: none;
+			margin-bottom: -24px;
+		}
+	}
+
+	@media only screen and (max-width: 600px) {
+		.c2 {
+			border: none;
+			margin-bottom: -10px;
+		}
+	}
+
+	.card {
+		border: 1px solid #d2d2d2;
+		padding-left: 25px;
+		padding-right: 25px;
+	}
+
+
+	.tags-input-wrapper {
 		background: transparent;
 		padding: 10px;
 		border-radius: 4px;
 		max-width: 400px;
 		border: 1px solid #ccc;
-		pointer-events:<?php echo $admissionpreferences->freeze == 1 ? 'none' : '' ?>
+		pointer-events: <?php echo $admissionpreferences->freeze == 1 ? 'none' : '' ?>
 	}
-	.tags-input-wrapper input{
+
+	.tags-input-wrapper input {
 		border: none;
 		background: transparent;
 		outline: none;
 		width: 140px;
 		margin-left: 8px;
 	}
-	.tags-input-wrapper .tag{
+
+	.tags-input-wrapper .tag {
 		display: inline-block;
 		background-color: #337ab7;
 		color: white;
 		border-radius: 40px;
 		padding: 0px 3px 0px 7px;
 		margin-right: 5px;
-		margin-bottom:5px;
+		margin-bottom: 5px;
 		box-shadow: 0 5px 15px -2px rgb(51 122 183)
 	}
+
 	.tags-input-wrapper .tag a {
 		margin: 0 7px 3px;
 		display: inline-block;
 		cursor: pointer;
-		color:white!important;
+		color: white !important;
 	}
-  </style>
+
+	.tags-input-wrapper input {
+		display: none;
+	}
+	.tags-input-wrapper .tag a
+	{
+		display:none;
+	}
+</style>
 </head>
+
 <body>
-	
+
 	<div class="container">
 		<div class="row">
 			<div class="col-lg-12">
 				<h2 class="heading">Final Preview</h2>
 			</div>
-			<div class="col-lg-12"><h4 style="color:green"><?php echo $this->session->flashdata('success'); ?></h4></div>
+			<div class="col-lg-12">
+				<h4 style="color:green"><?php echo $this->session->flashdata('success'); ?></h4>
+			</div>
 
 		</div>
 	</div>
-<!-- basic details section -->	
+	<!-- basic details section -->
 	<div class="container">
 		<div class="row">
 			<div class="col-lg-12">
 				<div class="card">
-				<?php // echo form_open($this->uri->uri_string()); ?>
+					<?php // echo form_open($this->uri->uri_string()); 
+					?>
 					<h4>Personal Informations</h4>
-				  	<div class="row">
+					<div class="row">
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="title">Title</label>
 								<select class="form-control" name="title" id="title" readonly>
-									<option value="Mr" <?php echo ($basicdetails->title == 'Mr')? 'selected': ''; ?>>Mr</option>
-									<option value="Ms" <?php echo ($basicdetails->title == 'Ms')? 'selected': ''; ?>>Ms</option>
-									<option value="Mrs" <?php echo ($basicdetails->title == 'Mrs')? 'selected': ''; ?>>Mrs</option>
-									<option value="Dr" <?php echo ($basicdetails->title == 'Dr')? 'selected': ''; ?>>Dr</option>
+									<option value="Mr" <?php echo ($basicdetails->title == 'Mr') ? 'selected' : ''; ?>>Mr</option>
+									<option value="Ms" <?php echo ($basicdetails->title == 'Ms') ? 'selected' : ''; ?>>Ms</option>
+									<option value="Mrs" <?php echo ($basicdetails->title == 'Mrs') ? 'selected' : ''; ?>>Mrs</option>
+									<option value="Dr" <?php echo ($basicdetails->title == 'Dr') ? 'selected' : ''; ?>>Dr</option>
 								</select>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputFirstName">First Name</label>
-								<input class="form-control" type="text" class="form-group" placeholder="First Name" name="first_name" id="first_name" value='<?php echo (isset($basicdetails))?$basicdetails->first_name: $contact->firstname;?>' readonly>
+								<input class="form-control" type="text" class="form-group" placeholder="First Name" name="first_name" id="first_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->first_name : $contact->firstname; ?>' readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputLastName">Last Name</label>
-								<input class="form-control" type="text" class="form-group" placeholder="Last Name" name="last_name" id="last_name" value='<?php echo (isset($basicdetails))?$basicdetails->last_name: $contact->lastname;?>' readonly>
+								<input class="form-control" type="text" class="form-group" placeholder="Last Name" name="last_name" id="last_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->last_name : $contact->lastname; ?>' readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputEmail">Email Address</label>
-								<input class="form-control" type="text" class="form-group" placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails))?$basicdetails->email: $contact->email;?>' readonly>
+								<input class="form-control" type="text" class="form-group" placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>' readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputMobileNumber">Mobile Number</label>
-								<input class="form-control" type="text" class="form-group" placeholder="Mobile Number" name="mobile" value='<?php echo (isset($basicdetails))?$basicdetails->mobile: $contact->phonenumber;?>' readonly>
+								<input class="form-control" type="text" class="form-group" placeholder="Mobile Number" name="mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>' readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputDateOfBirth">Date Of Birth</label>
-								<input type="date" class="form-control" name="dob" value='<?php echo ($basicdetails->dob != '')? $basicdetails->dob : '';?>' required="required" readonly>
+								<input type="date" class="form-control" name="dob" value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' required="required" readonly>
 								<?php echo form_error('dob'); ?>
 							</div>
 						</div>
 						<div class="col-lg-3">
-				  			<div class="form-group">
-				  				<label for="exampleInputPassword1">Gender</label>
+							<div class="form-group">
+								<label for="exampleInputPassword1">Gender</label>
 								<select class="form-control" name="gender" id="gender" required readonly>
 									<option value="">Select</option>
-									<option <?php echo ($basicdetails->gender == 'Male')? 'selected': ''; ?>>Male</option>
-									<option <?php echo ($basicdetails->gender == 'Female')? 'selected': ''; ?>>Female</option>
-									<option <?php echo ($basicdetails->gender == 'Other')? 'selected': ''; ?>>Other</option>
+									<option <?php echo ($basicdetails->gender == 'Male') ? 'selected' : ''; ?>>Male</option>
+									<option <?php echo ($basicdetails->gender == 'Female') ? 'selected' : ''; ?>>Female</option>
+									<option <?php echo ($basicdetails->gender == 'Other') ? 'selected' : ''; ?>>Other</option>
 								</select>
-					  			<?php echo form_error('gender'); ?>
+								<?php echo form_error('gender'); ?>
 
 							</div>
 						</div>
 					</div>
-					
+
 					<h4>Parent Details</h4>
 					<div class="row">
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Father Name</label>
-								<input type="text" name="father_name" class="form-control" id="father_name" value="<?php echo $basicdetails->father_name ;?>" readonly>
+								<input type="text" name="father_name" class="form-control" id="father_name" value="<?php echo $basicdetails->father_name; ?>" readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Mother Name</label>
-								<input type="text" name="mother_name" class="form-control" id="mother_name" value="<?php echo $basicdetails->mother_name ;?>" readonly>
+								<input type="text" name="mother_name" class="form-control" id="mother_name" value="<?php echo $basicdetails->mother_name; ?>" readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Father's Mobile Number</label>
-								<input type="text" name="fathers_mobile" class="form-control" id="fathers_mobile" value="<?php echo $basicdetails->fathers_mobile ;?>" readonly>
+								<input type="text" name="fathers_mobile" class="form-control" id="fathers_mobile" value="<?php echo $basicdetails->fathers_mobile; ?>" readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Mother's Mobile Number</label>
-								<input type="text" name="mothers_mobile" class="form-control" id="mothers_mobile" value="<?php echo $basicdetails->mothers_mobile ;?>" readonly>
+								<input type="text" name="mothers_mobile" class="form-control" id="mothers_mobile" value="<?php echo $basicdetails->mothers_mobile; ?>" readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Father's Email Number</label>
-								<input type="text" name="fathers_email" class="form-control" id="fathers_email" value="<?php echo $basicdetails->fathers_email ;?>" readonly>
+								<input type="text" name="fathers_email" class="form-control" id="fathers_email" value="<?php echo $basicdetails->fathers_email; ?>" readonly>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Mother's Email Number</label>
-								<input type="text" name="mothers_email" class="form-control" id="mothers_email" value="<?php echo $basicdetails->mothers_email ;?>" readonly>
+								<input type="text" name="mothers_email" class="form-control" id="mothers_email" value="<?php echo $basicdetails->mothers_email; ?>" readonly>
 							</div>
 						</div>
 					</div>
-				  <div class="row">
-				  	<div class="col-lg-6 col-xs-6">
-						  <a href="/clients/basic_details" class="btn btn-primary button-23 pull-right">Edit Basic Details</a>
-				  	</div>
-				  	<div class="col-lg-6 col-xs-6" >
-				  		<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
-						<?php if($basicdetails->id > 1){?>
-						  <!-- <a href="/clients/parent_details" class="btn btn-primary button-23 pull-right">Next</a> -->
-						<?php } ?>
-				  		
-				  	</div>
-				  </div>
-				  <?php // echo form_close(); ?>
-			</div>
+					<div class="row">
+						<div class="col-lg-6 col-xs-6">
+							<a href="<?= base_url() ?>/clients/basic_details" class="btn btn-primary button-23 pull-right">Edit Basic Details</a>
+						</div>
+						<div class="col-lg-6 col-xs-6">
+							<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
+							<?php if ($basicdetails->id > 1) { ?>
+								<!-- <a href="<?= base_url() ?>/clients/parent_details" class="btn btn-primary button-23 pull-right">Next</a> -->
+							<?php } ?>
+
+						</div>
+					</div>
+					<?php // echo form_close(); 
+					?>
+				</div>
 			</div>
 		</div>
 	</div>
-<!-- end basic details section -->	
-<!-- admission preferences section -->	
+	<!-- end basic details section -->
+	<!-- admission preferences section -->
 	<div class="container">
 		<div class="row">
 			<div class="col-lg-12">
 				<div class="card">
-				<?php // echo form_open($this->uri->uri_string()); ?>
+					<?php // echo form_open($this->uri->uri_string()); 
+					?>
 					<h4>Admission Preferences</h4>
 					<?php $freezed = $admissionpreferences->freeze == 1 ? 'disabled' : ''; ?>
 					<div class="row">
 						<div class="col-lg-4">
-                      		<div class="form-group">
+							<div class="form-group">
 								<label for="program">Program</label>
-								<input type="hidden" name="basicDetailsId" value="<?=$admissionpreferences->id?>">
+								<input type="hidden" name="basicDetailsId" value="<?= $admissionpreferences->id ?>">
 								<select class="form-control" name="program" id="program" required readonly>
 									<option value="">Select a Program</option>
-									<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate')? 'selected': ''; ?>>Under Graduate</option>
-									<option vaue="Post Graduate" <?php echo ($admissionpreferences->program == 'Post Graduate')? 'selected': ''; ?>>Post Graduate</option>
+									<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate') ? 'selected' : ''; ?>>Under Graduate</option>
+									<option vaue="Post Graduate" <?php echo ($admissionpreferences->program == 'Post Graduate') ? 'selected' : ''; ?>>Post Graduate</option>
 								</select>
 								<?php echo form_error('program'); ?>
-				  			</div>
-				  		</div>
-				  		<div class="col-lg-4">
+							</div>
+						</div>
+						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="course">Course</label>
 								<select class="form-control" name="course" id="course" readonly>
 									<option value="">Select a course </option>
-									<?php if($admissionpreferences->course !=''): ?>
-									<option value="<?=$admissionpreferences->course ;?>" selected><?=$admissionpreferences->course ;?></option>
+									<?php if ($admissionpreferences->course != '') : ?>
+										<option value="<?= $admissionpreferences->course; ?>" selected><?= $admissionpreferences->course; ?></option>
 									<?php endif; ?>
 
 								</select>
 								<?php echo form_error('course'); ?>
 							</div>
-				  		</div>
-						  <div class="col-lg-4">
+						</div>
+						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="session_intake">Session Intake</label>
 								<select class="form-control" name="session_intake" id="session_intake" <?php echo $freezed ?>>
 									<option value="">Select</option>
-									<?php 
-										$intakeArr = array(
-											"May_2023"=>"May 2023",
-											"July_2023"=>"July 2023",
-											"September_2023"=>"September 2023",
-											"November_2023"=>"November 2023",
-										);
+									<?php
+									$intakeArr = array(
+										"May_2023" => "May 2023",
+										"July_2023" => "July 2023",
+										"September_2023" => "September 2023",
+										"November_2023" => "November 2023",
+									);
 
-										foreach($intakeArr as $key => $val){
-											?>
-												<option value="<?php echo $key ?>" <?php echo ($admissionpreferences->session_intake == $key)? 'selected': ''; ?>><?php echo $val ?></option>
-											<?php
-										}
+									foreach ($intakeArr as $key => $val) {
+									?>
+										<option value="<?php echo $key ?>" <?php echo ($admissionpreferences->session_intake == $key) ? 'selected' : ''; ?>><?php echo $val ?></option>
+									<?php
+									}
 									?>
 								</select>
 							</div>
 						</div>
 					</div>
-				 	<div class="row">
-					 	<div class="col-lg-4">
+					<div class="row">
+						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="study_country">Where would you like to study?</label>
 								<select class="form-control" name="study_country" id="study_country" multiple readonly>
-									<?php 
-										$allCountriesArr = array("USA"=>"USA","UK"=>"UK","Canada"=>"Canada","Australia"=>"Australia","New_Zealand"=>"New zealand","Germany"=>"Germany","Italy"=>"Italy","France"=>"France","UAE"=>"UAE","Russia"=>"Russia","Georgia"=>"Georgia","Kazakhstan"=>"Kazakhstan","Krygstan"=>"Krygstan","Bangladesh"=>"Bangladesh","Nepal"=>"Nepal");
+									<?php
+									$allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
 									?>
 									<option value="">Select country </option>
-									<?php 
-										if(!empty($admissionpreferences)){
-											$countries = $admissionpreferences->study_country;
-											$countriesArr = explode(",",$countries);
-										}
-										foreach($allCountriesArr as $key => $val){
-											?>
-												<option value="<?php echo $key; ?>"  <?php echo !empty($admissionpreferences) ? ((in_array($val,$countriesArr))? 'selected': '') : ''; ?>><?php echo $val; ?></option>
-											<?php
-										}
+									<?php
+									if (!empty($admissionpreferences)) {
+										$countries = $admissionpreferences->study_country;
+										$countriesArr = explode(",", $countries);
+									}
+									foreach ($allCountriesArr as $key => $val) {
+									?>
+										<option value="<?php echo $key; ?>" <?php echo !empty($admissionpreferences) ? ((in_array($val, $countriesArr)) ? 'selected' : '') : ''; ?>><?php echo $val; ?></option>
+									<?php
+									}
 									?>
 								</select>
 							</div>
-				  		</div>
+						</div>
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="entrance_exam_given">Have You Given any Entrance Exam?</label>
 								<select class="form-control" name="entrance_exam_given" id="entrance_exam_given">
 									<option value="">Select</option>
-									<option value="YES" <?php echo ($admissionpreferences->entrance_exam_given == 'YES')? 'selected': ''; ?>>YES</option>
-									<option value="NO" <?php echo ($admissionpreferences->entrance_exam_given == 'NO')? 'selected': ''; ?>>NO</option>
+									<option value="YES" <?php echo ($admissionpreferences->entrance_exam_given == 'YES') ? 'selected' : ''; ?>>YES</option>
+									<option value="NO" <?php echo ($admissionpreferences->entrance_exam_given == 'NO') ? 'selected' : ''; ?>>NO</option>
 								</select>
 							</div>
-				  		</div>
+						</div>
 						<div class="col-lg-4">
 							<div class="form-group" id="entrance_exam_details_div">
 								<label for="exampleInputCourse">Entrance exam details</label>
 								<select class="form-control" name="entrance_exam_details" id="entrance_exam_details" readonly>
 									<option value="">Select</option>
-									<?php if($admissionpreferences->entrance_exam_details !=''): ?>
-									<option value="<?=$admissionpreferences->entrance_exam_details ;?>" selected><?=$admissionpreferences->entrance_exam_details ;?></option>
-									<?php else: ?>
-										<option value="NEET UG">NEET UG</option>	
+									<?php if ($admissionpreferences->entrance_exam_details != '') : ?>
+										<option value="<?= $admissionpreferences->entrance_exam_details; ?>" selected><?= $admissionpreferences->entrance_exam_details; ?></option>
+									<?php else : ?>
+										<option value="NEET UG">NEET UG</option>
 									<?php endif; ?>
-									
+
 								</select>
 							</div>
 						</div>
@@ -330,803 +388,810 @@ p{font-size: 15px;
 
 					<div class="row">
 						<div class="universities">
-							<?php 
-								if($admissionpreferences->university != ''){
-									$universitiesArr = json_decode($admissionpreferences->university,true);
-									$count = 0;
-									foreach($universitiesArr as $key => $val){
-										if($val != ''){
-											?>
-											<div class="col-lg-4">
-												<div class="form-group">
-													<label for="university<?php echo $key ?>"><?php  ?> <?php echo $key; ?> University</label>
-													<input type="text" class="form-control" name="university<?php echo $key ?>" id="university<?php echo $key ?>" value="<?php echo $val ?>" required <?php echo $freezed ?>>
-												</div>			
+							<?php
+							if ($admissionpreferences->university != '') {
+								$universitiesArr = json_decode($admissionpreferences->university, true);
+								$count = 0;
+								foreach ($universitiesArr as $key => $val) {
+									if ($val != '') {
+							?>
+										<div class="col-lg-4">
+											<div class="form-group">
+												<label for="university<?php echo $key ?>"><?php  ?> <?php echo $key; ?> University</label>
+												<input type="text" class="form-control" name="university<?php echo $key ?>" id="university<?php echo $key ?>" value="<?php echo $val ?>" required <?php echo $freezed ?>>
 											</div>
-											<?php
-										}
-										$count++;
+										</div>
+							<?php
 									}
+									$count++;
 								}
+							}
 							?>
 						</div>
 					</div>
-					
-				  <div class="row">
-				  	<div class="col-lg-6 col-xs-6">
-						  <a href="/clients/admission_preferences" class="btn btn-primary button-23 pull-right">Edit Admission Preferences</a>
-				  	</div>
-				  	<div class="col-lg-6 col-xs-6" >
-				  		<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
-						<?php if($admissionpreferences->id > 1){?>
-						  <!-- <a href="/clients/parent_details" class="btn btn-primary button-23 pull-right">Next</a> -->
-						<?php } ?>
-				  		
-				  	</div>
-				  </div>
-				  <?php // echo form_close(); ?>
-			</div>
+
+					<div class="row">
+						<div class="col-lg-6 col-xs-6">
+							<a href="<?= base_url() ?>/clients/admission_preferences" class="btn btn-primary button-23 pull-right">Edit Admission Preferences</a>
+						</div>
+						<div class="col-lg-6 col-xs-6">
+							<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
+							<?php if ($admissionpreferences->id > 1) { ?>
+								<!-- <a href="<?= base_url() ?>/clients/parent_details" class="btn btn-primary button-23 pull-right">Next</a> -->
+							<?php } ?>
+
+						</div>
+					</div>
+					<?php // echo form_close(); 
+					?>
+				</div>
 			</div>
 		</div>
 	</div>
-<!-- end admission preferences section -->	
-<!-- Academic Details Section -->
-<div class="container">
+	<!-- end admission preferences section -->
+	<!-- Academic Details Section -->
+	<div class="container">
 		<div class="row">
 			<div class="col-lg-12">
 				<h2 class="heading">Academic Details</h2>
 			</div>
 		</div>
 	</div>
-  	<div class="container" style="padding: 15px;">
-  		<div class="card">
-		  <?php // echo form_open($this->uri->uri_string()); ?>
-  		<div class="row">
-   	<!-- <h2 class="heading">10th Academic Details</h2> -->
-   </div>
-  	<div class="row">
-  		<h4>10th Academic Details</h4>
-  		<div class="col-lg-1 border2 border1">
-  			<div class="c1">
-  			<p>&nbsp;</p>
-  		</div>
-
-  		<div class="c2">
-  			<p>10<sup>th</sup></p>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  			<div class="c1">
-  			<p>School Name</p>
-  		</div>
-  		<div class="c2">
-			  <input type="hidden" name="academicDetailsId" value="<?=$academicdetails->id;?>">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter School Name" name="tenth_school_name" value="<?=$academicdetails->tenth_school_name;?>" required>
-			  <?php echo form_error('academicDetailsId'); ?>
-
-  		</div>
-  		</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Board </p>
-  		</div>
-  			<div class="c2">
-  			<input class="form-control" type="text" placeholder="Enter Board Name" name="tenth_board" value="<?=$academicdetails->tenth_board;?>" required>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Year of Passing 	</p>
-  		</div>
-  			<div class="c2">
-  			<!-- <input class="form-control tenth_passing_year" type="text" placeholder="YYYY" name="tenth_passing_year" id="tenth_passing_year" value="<?=$academicdetails->tenth_passing_year;?>"> -->
-			  <select class="form-control" name="tenth_passing_year" id="tenth_passing_year">
-				<option value="">Select</option>
-				<?php for($i = 0; $i<15; $i++): ?>
-				<option value="<?=date("Y")-$i;?>" <?=((date("Y")-$i) ==$academicdetails->tenth_passing_year)? 'selected': '' ?>><?=date("Y")-$i;?></option>
-				<?php endfor; ?>
-				
-			</select>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Marking Scheme</p>
-  		</div>
-  			<div class="c2">
-  			<!-- <input class="form-control" type="text" class="form-group" placeholder="Enter Marking Scheme" name="tenth_marking_scheme" value=""> -->
-			<select class="form-control" name="tenth_marking_scheme" required>
-				<option value="">Select</option>					  
-				<option value="Percentage" <?=($academicdetails->tenth_marking_scheme =='Percentage')? 'selected': ''; ?>>Percentage</option>
-				<option value="CGPA out of 10" <?=($academicdetails->tenth_marking_scheme == 'CGPA out of 10')? 'selected': ''; ?>>CGPA out of 10</option>
-				<option value="CGPA out of 9" <?=($academicdetails->tenth_marking_scheme == 'CGPA out of 9')? 'selected': ''; ?>>CGPA out of 9</option>
-				<option value="CGPA out of 7" <?=($academicdetails->tenth_marking_scheme == 'CGPA out of 7')? 'selected': ''; ?>>CGPA out of 7</option>
-				<option value="CGPA out of 4" <?=($academicdetails->tenth_marking_scheme == 'CGPA out of 4')? 'selected': ''; ?>>CGPA out of 4</option>
-			</select>
-  		</div>
-  	</div>
-  		<div class="col-lg-3 border2 border1">
-  				<div class="c1">
-  			<p>Obtained Percentage / CGPA</p>
-        </div>
-	<div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" maxlength="3" value="<?=$academicdetails->tenth_marking_scheme;?>">
-  		</div>
-  	</div>
-  	</div>
-   <div class="row after hide" >
-   	<label>After Xth Qualification *</label><br>
-   	<input type="radio" name="after_tenth" value="12th">&nbsp;&nbsp;12th
-   	<input type="radio" name="after_tenth" value="Diploma">&nbsp;&nbsp;Diploma 
-   	<input type="radio" name="after_tenth" value="Both">&nbsp;&nbsp;Both
-   </div>
-
-  	<div class="row <?php echo ($academicdetails->twelth_school_name == '')? 'hide':''; ?>" id="twelthAcademicDetails" >
-  		<h4>12th Academic Details</h4>
-  		<div class="col-lg-1 border2 border1">
-			<div class="c1">
-				<p>&nbsp;</p>
+	<div class="container" style="padding: 15px;">
+		<div class="card">
+			<?php // echo form_open($this->uri->uri_string()); 
+			?>
+			<div class="row">
+				<!-- <h2 class="heading">10th Academic Details</h2> -->
 			</div>
+			<div class="row">
+				<h4>10th Academic Details</h4>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>&nbsp;</p>
+					</div>
 
-			<div class="c2">
-				<p>12<sup>th</sup></p>
-			</div>
-		</div>
-  		<div class="col-lg-2 border2 border1">
-			<div class="c1">
-				<p>Institute Name</p>
-			</div>
-			<div class="c2">
-				<input type="hidden" name="academicDetailsId" value="">
-				<input class="form-control" type="text" class="form-group" placeholder="Enter 12th School Name" name="twelth_school_name" value="<?=$academicdetails->twelth_school_name;?>">
-			</div>
-  		</div>
-  		<div class="col-lg-2 border2 border1">
-			<div class="c1">
-				<p>Board / University</p>
-			</div>
-			<div class="c2">
-				<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="twelth_board" value="<?=$academicdetails->twelth_board;?>">
-			</div>
-		</div>
-  		<div class="col-lg-2 border2 border1">
-			<div class="c1">
-				<p>Year of Passing</p>
-			</div>
-			<div class="c2">
-				<!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="twelth_passing_year" id="twelth_passing_year" value="<?=$academicdetails->twelth_passing_year;?>"> -->
-			<select class="form-control" name="twelth_passing_year" id="twelth_passing_year">
-				<option value="">Select</option>
-				<?php for($i = 0; $i<15; $i++): ?>
-				<option value="<?=date("Y")-$i;?>" <?=((date("Y")-$i) ==$academicdetails->twelth_passing_year)? 'selected': '' ?>><?=date("Y")-$i;?></option>
-				<?php endfor; ?>
-				
-			</select>
-				
-			</div>
-		</div>
-		<div class="col-lg-1 border2 border1">
-			<div class="c1">
-				<p>Result Status</p>
-			</div>
-				<div class="c2">
-				<select class="form-control" name="twelth_result_status" id="twelth_result_status">
-					<option >Select</option>
-					<option value="Awaited">Awaited</option>
-					<option value="Declared">Declared</option>
-				</select>
-			</div>
-		</div>
-  		<div class="col-lg-2 border2 border1 " id="twelth_marking_scheme_div">
-			<div class="c1">
-				<p>Marking Scheme</p>
-			</div>
-			<div class="c2">
-				<!-- <input class="form-control" type="text" placeholder="CGPA / Percentage" name="twelth_marking_scheme" id="twelth_marking_scheme" value="<?=$academicdetails->twelth_marking_scheme;?>"> -->
-			<select class="form-control" name="twelth_marking_scheme" required>
-				<option value="">Select</option>					  
-				<option value="Percentage" <?=($academicdetails->twelth_marking_scheme =='Percentage')? 'selected': ''; ?>>Percentage</option>
-				<option value="CGPA out of 10" <?=($academicdetails->twelth_marking_scheme == 'CGPA out of 10')? 'selected': ''; ?>>CGPA out of 10</option>
-				<option value="CGPA out of 9" <?=($academicdetails->twelth_marking_scheme == 'CGPA out of 9')? 'selected': ''; ?>>CGPA out of 9</option>
-				<option value="CGPA out of 7" <?=($academicdetails->twelth_marking_scheme == 'CGPA out of 7')? 'selected': ''; ?>>CGPA out of 7</option>
-				<option value="CGPA out of 4" <?=($academicdetails->twelth_marking_scheme == 'CGPA out of 4')? 'selected': ''; ?>>CGPA out of 4</option>
-			</select>
-
-
-			</div>
-		</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Obtained Percentage / CGPA</p>
-        </div>
-		<div class="c2">
-				<input class="form-control" type="text" placeholder="Enter Your 12th Percentage" name="twelth_percentage" id="twelth_percentage" value="<?=$academicdetails->twelth_percentage;?>">
-			</div>
-		</div>
-  	</div>
-<!-- diploma details-->
-
-  	<div class="row <?php echo ($academicdetails->diploma_institute == '')? 'hide':''; ?>" id="diplomaAcademicDetails">
-  		<h4>Diploma Academic Details</h4>
-  		<div class="col-lg-1 border2 border1">
-  			<div class="c1">
-  			<p>&nbsp;</p>
-  		</div>
-
-  			<div class="c2">
-  			<p>Diploma</p>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  			<div class="c1">
-  			<p>Institute Name</p>
-  		</div>
-  		<div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Institute Name" name="diploma_institute" value="<?=$academicdetails->diploma_institute;?>">
-  		</div>
-  		</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Board / University</p>
-  		</div>
-  			<div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="diploma_board" value="<?=$academicdetails->diploma_board;?>">
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Year of Passing 	</p>
-  		</div>
-  			<div class="c2">
-  			<!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="diploma_passing_year" value="<?=$academicdetails->diploma_passing_year;?>"> -->
-			<select class="form-control" name="diploma_passing_year" id="diploma_passing_year">
-				<option value="">Select</option>
-				<?php for($i = 0; $i<15; $i++): ?>
-				<option value="<?=date("Y")-$i;?>" <?=((date("Y")-$i) ==$academicdetails->diploma_passing_year)? 'selected': '' ?>><?=date("Y")-$i;?></option>
-				<?php endfor; ?>
-				
-			</select>
-  		</div>
-  	</div>
-  	<div class="col-lg-1 border2 border1">
-  				<div class="c1">
-  			<p>Result Status</p>
-  		</div>
-  			<div class="c2">
-			  <select class="form-control" name="diploma_result_status" id="diploma_result_status">
-				<option >Select</option>
-				<option value="Awaited">Awaited</option>
-				<option value="Declared">Declared</option>
-			</select>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1" id="diploma_marking_scheme_div">
-  				<div class="c1">
-  			<p>Marking Scheme 	</p>
-  		</div>
-  			<div class="c2">
-  			<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="diploma_marking_scheme" id="diploma_marking_scheme" value="<?=$academicdetails->diploma_marking_scheme;?>"> -->
-			<select class="form-control" name="diploma_marking_scheme" required>
-				<option value="">Select</option>					  
-				<option value="Percentage" <?=($academicdetails->diploma_marking_scheme =='Percentage')? 'selected': ''; ?>>Percentage</option>
-				<option value="CGPA out of 10" <?=($academicdetails->diploma_marking_scheme == 'CGPA out of 10')? 'selected': ''; ?>>CGPA out of 10</option>
-				<option value="CGPA out of 9" <?=($academicdetails->diploma_marking_scheme == 'CGPA out of 9')? 'selected': ''; ?>>CGPA out of 9</option>
-				<option value="CGPA out of 7" <?=($academicdetails->diploma_marking_scheme == 'CGPA out of 7')? 'selected': ''; ?>>CGPA out of 7</option>
-				<option value="CGPA out of 4" <?=($academicdetails->diploma_marking_scheme == 'CGPA out of 4')? 'selected': ''; ?>>CGPA out of 4</option>
-			</select>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Obtained Percentage / CGPA</p>
-        </div>
-	<div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Diploma Percentage" name="diploma_percentage" maxlength="3" id="diploma_percentage" value="<?=$academicdetails->diploma_percentage;?>">
-			  
-  		</div>
-  	</div>
-</div>
-<!-- end diploma details-->
-
-<!-- Under Graduate details-->
-<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate')? '':'hide'; ?>" id="graduationAcademicDetails">
-  		<h4>Graduation Details</h4>
-  		<div class="col-lg-1 border2 border1">
-  			<div class="c1">
-  			<p>&nbsp;</p>
-  		</div>
-
-  			<div class="c2">
-  			<p>Graduation</p>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  			<div class="c1">
-  			<p>Institute Name</p>
-  		</div>
-  		<div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Course Name" name="graduation_course" value="<?=$academicdetails->graduation_course;?>">
-  		</div>
-  		</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Board / University</p>
-  		</div>
-  			<div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="graduation_board" value="<?=$academicdetails->graduation_board;?>">
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Year of Passing 	</p>
-  		</div>
-  			<div class="c2">
-			<select class="form-control" name="graduation_passing_year" id="graduation_passing_year">
-				<option value="">Select</option>
-				<?php for($i = 0; $i<15; $i++): ?>
-				<option value="<?=date("Y")-$i;?>" <?=((date("Y")-$i) ==$academicdetails->graduation_passing_year)? 'selected': '' ?>><?=date("Y")-$i;?></option>
-				<?php endfor; ?>
-			</select>
-  		</div>
-  	</div>
-  	<div class="col-lg-1 border2 border1">
-  				<div class="c1">
-  			<p>Result Status</p>
-  		</div>
-  			<div class="c2">
-			  <select class="form-control" name="graduation_result_status" id="graduation_result_status">
-				<option >Select</option>
-				<option value="Awaited">Awaited</option>
-				<option value="Declared">Declared</option>
-			</select>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1" id="graduation_marking_scheme_div">
-  				<div class="c1">
-  			<p>Marking Scheme</p>
-  		</div>
-  			<div class="c2">
-  			<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="graduation_marking_scheme" id="graduation_marking_scheme" value="<?=$academicdetails->graduation_marking_scheme;?>"> -->
-			<select class="form-control" name="graduation_marking_scheme" required id="graduation_marking_scheme">
-				<option value="">Select</option>					  
-				<option value="Percentage" <?=($academicdetails->graduation_marking_scheme =='Percentage')? 'selected': ''; ?>>Percentage</option>
-				<option value="CGPA out of 10" <?=($academicdetails->graduation_marking_scheme == 'CGPA out of 10')? 'selected': ''; ?>>CGPA out of 10</option>
-				<option value="CGPA out of 9" <?=($academicdetails->graduation_marking_scheme == 'CGPA out of 9')? 'selected': ''; ?>>CGPA out of 9</option>
-				<option value="CGPA out of 7" <?=($academicdetails->graduation_marking_scheme == 'CGPA out of 7')? 'selected': ''; ?>>CGPA out of 7</option>
-				<option value="CGPA out of 4" <?=($academicdetails->graduation_marking_scheme == 'CGPA out of 4')? 'selected': ''; ?>>CGPA out of 4</option>
-			</select>
-  		</div>
-  	</div>
-  	<div class="col-lg-2 border2 border1">
-  		<div class="c1">
-  			<p>Obtained Percentage / CGPA</p>
-        </div>
-	    <div class="c2">
-  			<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" maxlength="3" id="graduation_percentage" value="<?=$academicdetails->graduation_percentage;?>">
-  		</div>
-  	</div>
-</div>
-<!-- end ug details-->
-
-<hr>
-<?php // if($basicdetails->entrance_exam_details !=''){ ?>
-    	<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '')? 'hide':''; ?>" >
-  		<h4>Entrance Exam</h4>
-  		<div class="col-lg-1 border2 border1">
-  			<div class="c1">
-  			<p>&nbsp;</p>
-  		</div>
-
-  			<div class="c2">
-  			<p><?=$admissionpreferences->entrance_exam_details ;?></p>
-  		</div>
-  	</div>
-  		<div class="col-lg-3 border2 border1">
-  			<div class="c1">
-  			<p>Roll No. / Registration No.</p>
-  		</div>
-  		<div class="c2">
-  			<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?=$academicdetails->entrance_roll;?>">
-  		</div>
-  		</div>
-  		<div class="col-lg-3 border2 border1">
-  				<div class="c1">
-  			<p>Year</p>
-  		</div>
-  			<div class="c2">
-  			<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?=$academicdetails->entrance_year;?>"> -->
-			<select  name="entrance_year" id="entrance_year">
-				<option value="">Select</option>
-				<option value="<?=date("Y")-3;?>" <?=((date("Y")-3) ==$academicdetails->entrance_year)? 'selected': '' ?>><?=date("Y")-3;?></option>
-				<option value="<?=date("Y")-2;?>" <?=((date("Y")-2) ==$academicdetails->entrance_year)? 'selected': '' ?>><?=date("Y")-2;?></option>
-				<option value="<?=date("Y")-1;?>" <?=((date("Y")-1) ==$academicdetails->entrance_year)? 'selected': '' ?>><?=date("Y")-1;?></option>
-				<option value="<?=date("Y");?>" <?=((date("Y")) ==$academicdetails->entrance_year)? 'selected': '' ?>><?=date("Y");?></option>
-			</select>
-  		</div>
-  	</div>
-  		<div class="col-lg-2 border2 border1">
-  				<div class="c1">
-  			<p>Result Status</p>
-  		</div>
-  			<div class="c2">
-  			<select class="form-control" name="entrance_result_status" id="entrance_result_status" >
-				<option >Select</option>
-				<option value="Awaited" <?=($academicdetails->entrance_result_status=='Awaited')? 'selected':''?>>Awaited</option>
-				<option value="Declared" <?=($academicdetails->entrance_result_status=='Declared')? 'selected':''?>>Declared</option>
-			</select>
-  	</div>
-  </div>
-  	<div class="col-lg-3 border2 border1">
-  		<div class="c1">
-  			<p>Marks / AIR</p>
-  		</div>
-  		<div class="c2">
-			<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?=$academicdetails->tenth_board;?>">
-  		</div>
-  	</div>
-
-  	</div>
-  				<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
-				  	<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
-				  		<a href="/clients/academic_details" class="btn btn-primary button-23">Edit Academic Details</a>
-				  		<!-- <button type="submit" class="btn btn-primary">Save & Next</button> -->
-				  	</div>
-				  	<div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
-				  		<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
-						<!-- <a href="/clients/upload_documents" class="btn btn-primary button-23 pull-right">Next</a> -->
-				  		
-				  	</div>
+					<div class="c2">
+						<p>10<sup>th</sup></p>
+					</div>
 				</div>
-				<?php // echo form_close(); ?>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>School Name</p>
+					</div>
+					<div class="c2">
+						<input type="hidden" name="academicDetailsId" value="<?= $academicdetails->id; ?>">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter School Name" name="tenth_school_name" value="<?= $academicdetails->tenth_school_name; ?>" required>
+						<?php echo form_error('academicDetailsId'); ?>
 
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Board </p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" placeholder="Enter Board Name" name="tenth_board" value="<?= $academicdetails->tenth_board; ?>" required>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Year of Passing </p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control tenth_passing_year" type="text" placeholder="YYYY" name="tenth_passing_year" id="tenth_passing_year" value="<?= $academicdetails->tenth_passing_year; ?>"> -->
+						<select class="form-control" name="tenth_passing_year" id="tenth_passing_year">
+							<option value="">Select</option>
+							<?php for ($i = 0; $i < 15; $i++) : ?>
+								<option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->tenth_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
+							<?php endfor; ?>
+
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Marking Scheme</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" class="form-group" placeholder="Enter Marking Scheme" name="tenth_marking_scheme" value=""> -->
+						<select class="form-control" name="tenth_marking_scheme" required>
+							<option value="">Select</option>
+							<option value="Percentage" <?= ($academicdetails->tenth_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
+							<option value="CGPA out of 10" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
+							<option value="CGPA out of 9" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
+							<option value="CGPA out of 7" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
+							<option value="CGPA out of 4" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-3 border2 border1">
+					<div class="c1">
+						<p>Obtained Percentage / CGPA</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" maxlength="3" value="<?= $academicdetails->tenth_marking_scheme; ?>">
+					</div>
+				</div>
+			</div>
+			<div class="row after hide">
+				<label>After Xth Qualification *</label><br>
+				<input type="radio" name="after_tenth" value="12th">&nbsp;&nbsp;12th
+				<input type="radio" name="after_tenth" value="Diploma">&nbsp;&nbsp;Diploma
+				<input type="radio" name="after_tenth" value="Both">&nbsp;&nbsp;Both
 			</div>
 
+			<div class="row <?php echo ($academicdetails->twelth_school_name == '') ? 'hide' : ''; ?>" id="twelthAcademicDetails">
+				<h4>12th Academic Details</h4>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>&nbsp;</p>
+					</div>
+
+					<div class="c2">
+						<p>12<sup>th</sup></p>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Institute Name</p>
+					</div>
+					<div class="c2">
+						<input type="hidden" name="academicDetailsId" value="">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter 12th School Name" name="twelth_school_name" value="<?= $academicdetails->twelth_school_name; ?>">
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Board / University</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="twelth_board" value="<?= $academicdetails->twelth_board; ?>">
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Year of Passing</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="twelth_passing_year" id="twelth_passing_year" value="<?= $academicdetails->twelth_passing_year; ?>"> -->
+						<select class="form-control" name="twelth_passing_year" id="twelth_passing_year">
+							<option value="">Select</option>
+							<?php for ($i = 0; $i < 15; $i++) : ?>
+								<option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->twelth_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
+							<?php endfor; ?>
+
+						</select>
+
+					</div>
+				</div>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>Result Status</p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="twelth_result_status" id="twelth_result_status">
+							<option>Select</option>
+							<option value="Awaited">Awaited</option>
+							<option value="Declared">Declared</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1 " id="twelth_marking_scheme_div">
+					<div class="c1">
+						<p>Marking Scheme</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" placeholder="CGPA / Percentage" name="twelth_marking_scheme" id="twelth_marking_scheme" value="<?= $academicdetails->twelth_marking_scheme; ?>"> -->
+						<select class="form-control" name="twelth_marking_scheme" required>
+							<option value="">Select</option>
+							<option value="Percentage" <?= ($academicdetails->twelth_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
+							<option value="CGPA out of 10" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
+							<option value="CGPA out of 9" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
+							<option value="CGPA out of 7" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
+							<option value="CGPA out of 4" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
+						</select>
+
+
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Obtained Percentage / CGPA</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" placeholder="Enter Your 12th Percentage" name="twelth_percentage" id="twelth_percentage" value="<?= $academicdetails->twelth_percentage; ?>">
+					</div>
+				</div>
+			</div>
+			<!-- diploma details-->
+
+			<div class="row <?php echo ($academicdetails->diploma_institute == '') ? 'hide' : ''; ?>" id="diplomaAcademicDetails">
+				<h4>Diploma Academic Details</h4>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>&nbsp;</p>
+					</div>
+
+					<div class="c2">
+						<p>Diploma</p>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Institute Name</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Institute Name" name="diploma_institute" value="<?= $academicdetails->diploma_institute; ?>">
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Board / University</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="diploma_board" value="<?= $academicdetails->diploma_board; ?>">
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Year of Passing </p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="diploma_passing_year" value="<?= $academicdetails->diploma_passing_year; ?>"> -->
+						<select class="form-control" name="diploma_passing_year" id="diploma_passing_year">
+							<option value="">Select</option>
+							<?php for ($i = 0; $i < 15; $i++) : ?>
+								<option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->diploma_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
+							<?php endfor; ?>
+
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>Result Status</p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="diploma_result_status" id="diploma_result_status">
+							<option>Select</option>
+							<option value="Awaited">Awaited</option>
+							<option value="Declared">Declared</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1" id="diploma_marking_scheme_div">
+					<div class="c1">
+						<p>Marking Scheme </p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="diploma_marking_scheme" id="diploma_marking_scheme" value="<?= $academicdetails->diploma_marking_scheme; ?>"> -->
+						<select class="form-control" name="diploma_marking_scheme" required>
+							<option value="">Select</option>
+							<option value="Percentage" <?= ($academicdetails->diploma_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
+							<option value="CGPA out of 10" <?= ($academicdetails->diploma_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
+							<option value="CGPA out of 9" <?= ($academicdetails->diploma_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
+							<option value="CGPA out of 7" <?= ($academicdetails->diploma_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
+							<option value="CGPA out of 4" <?= ($academicdetails->diploma_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Obtained Percentage / CGPA</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Diploma Percentage" name="diploma_percentage" maxlength="3" id="diploma_percentage" value="<?= $academicdetails->diploma_percentage; ?>">
+
+					</div>
+				</div>
+			</div>
+			<!-- end diploma details-->
+
+			<!-- Under Graduate details-->
+			<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
+				<h4>Graduation Details</h4>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>&nbsp;</p>
+					</div>
+
+					<div class="c2">
+						<p>Graduation</p>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Institute Name</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Course Name" name="graduation_course" value="<?= $academicdetails->graduation_course; ?>">
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Board / University</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="graduation_board" value="<?= $academicdetails->graduation_board; ?>">
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Year of Passing </p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="graduation_passing_year" id="graduation_passing_year">
+							<option value="">Select</option>
+							<?php for ($i = 0; $i < 15; $i++) : ?>
+								<option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->graduation_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
+							<?php endfor; ?>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>Result Status</p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="graduation_result_status" id="graduation_result_status">
+							<option>Select</option>
+							<option value="Awaited">Awaited</option>
+							<option value="Declared">Declared</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1" id="graduation_marking_scheme_div">
+					<div class="c1">
+						<p>Marking Scheme</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="graduation_marking_scheme" id="graduation_marking_scheme" value="<?= $academicdetails->graduation_marking_scheme; ?>"> -->
+						<select class="form-control" name="graduation_marking_scheme" required id="graduation_marking_scheme">
+							<option value="">Select</option>
+							<option value="Percentage" <?= ($academicdetails->graduation_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
+							<option value="CGPA out of 10" <?= ($academicdetails->graduation_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
+							<option value="CGPA out of 9" <?= ($academicdetails->graduation_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
+							<option value="CGPA out of 7" <?= ($academicdetails->graduation_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
+							<option value="CGPA out of 4" <?= ($academicdetails->graduation_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Obtained Percentage / CGPA</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" maxlength="3" id="graduation_percentage" value="<?= $academicdetails->graduation_percentage; ?>">
+					</div>
+				</div>
+			</div>
+			<!-- end ug details-->
+
+			<hr>
+			<?php // if($basicdetails->entrance_exam_details !=''){ 
+			?>
+			<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
+				<h4>Entrance Exam</h4>
+				<div class="col-lg-1 border2 border1">
+					<div class="c1">
+						<p>&nbsp;</p>
+					</div>
+
+					<div class="c2">
+						<p><?= $admissionpreferences->entrance_exam_details; ?></p>
+					</div>
+				</div>
+				<div class="col-lg-3 border2 border1">
+					<div class="c1">
+						<p>Roll No. / Registration No.</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+					</div>
+				</div>
+				<div class="col-lg-3 border2 border1">
+					<div class="c1">
+						<p>Year</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
+						<select name="entrance_year" id="entrance_year">
+							<option value="">Select</option>
+							<option value="<?= date("Y") - 3; ?>" <?= ((date("Y") - 3) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 3; ?></option>
+							<option value="<?= date("Y") - 2; ?>" <?= ((date("Y") - 2) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 2; ?></option>
+							<option value="<?= date("Y") - 1; ?>" <?= ((date("Y") - 1) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 1; ?></option>
+							<option value="<?= date("Y"); ?>" <?= ((date("Y")) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y"); ?></option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Result Status</p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="entrance_result_status" id="entrance_result_status">
+							<option>Select</option>
+							<option value="Awaited" <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->entrance_result_status == 'Declared') ? 'selected' : '' ?>>Declared</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-3 border2 border1">
+					<div class="c1">
+						<p>Marks / AIR</p>
+					</div>
+					<div class="c2">
+						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->tenth_board; ?>">
+					</div>
+				</div>
+
+			</div>
+			<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
+				<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
+					<a href="<?= base_url() ?>/clients/academic_details" class="btn btn-primary button-23">Edit Academic Details</a>
+					<!-- <button type="submit" class="btn btn-primary">Save & Next</button> -->
+				</div>
+				<div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
+					<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
+					<!-- <a href="<?= base_url() ?>/clients/upload_documents" class="btn btn-primary button-23 pull-right">Next</a> -->
+
+				</div>
+			</div>
+			<?php // echo form_close(); 
+			?>
 
 		</div>
+
+
 	</div>
-</div>
-<!-- End Academic Details Section -->
-<!-- documents details section -->
-<div class="container">
-	<div class="row">
-		<div class="col-lg-12">
-			<div class="card">
-				<div class="row">
-					<?php foreach($files as $file){ 
-                      $url = site_url() .'download/file/client/';
-                      $path = get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name'];
-                      $is_image = false;
-                      if(!isset($file['external'])) {
-                        $attachment_url = $url . $file['attachment_key'];
-                        $is_image = is_image($path);
-                        $img_url = site_url('download/preview_image?path='.protected_file_url_by_path($path,true).'&type='.$file['filetype']);
-                    } 
-                    if($is_image){
-                       
-                    ?>
-						<div class="col-lg-3">
-							<img src="<?php echo $img_url; ?>" width="200px">
-							<h2><?php echo $file['doctype'] ?></h2>
-						</div>
-					<?php } } ?>
-				</div>
-				<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
-				  	<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
-				  		<a href="/clients/upload_document" class="btn btn-primary button-23">Edit Document</a>
-				  		<!-- <button type="submit" class="btn btn-primary">Save & Next</button> -->
-				  	</div>
-				  	<div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
-				  		<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
-						<!-- <a href="/clients/upload_documents" class="btn btn-primary button-23 pull-right">Next</a> -->
-				  		
-				  	</div>
-				</div>
-			</div>	
-		</div>
 	</div>
-</div>
-<!-- ens documents details section -->
-<!-- Declaration details section -->
-<div class="container">
+	</div>
+	<!-- End Academic Details Section -->
+	<!-- documents details section -->
+	<div class="container">
 		<div class="row">
 			<div class="col-lg-12">
 				<div class="card">
-				<?php // echo  form_open($this->uri->uri_string()); ?>
-					<input type="hidden" name="declarationDetailsId" value="<?=$declarationdetails->id?>">
-					<h4>Declaration</h4>
-					<p>I certify that the information submitted by me in support of this application, is true to the best of knowledge and belief. I understand that in the event of any information being found false or incorrect, my admission is liable to be rejected / cancelled at any stage of the program. I undertake to abide by the disciplinary rules and regulations of the institute.</p>
-				  	<div class="row">
+					<div class="row">
+						<?php foreach ($files as $file) {
+							$url = site_url() . 'download/file/client/';
+							$path = get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name'];
+							$is_image = false;
+							if (!isset($file['external'])) {
+								$attachment_url = $url . $file['attachment_key'];
+								$is_image = is_image($path);
+								$img_url = site_url('download/preview_image?path=' . protected_file_url_by_path($path, true) . '&type=' . $file['filetype']);
+							}
+							if ($is_image) {
 
-
-				  <div class="col-lg-4">
-				  	<div class="form-group">
-				  		<label for="exampleInputMiddleName">Applicant Name</label>
-				  	<input class="form-control" type="text" name="name" value="<?php echo $declarationdetails->name; ?>">
-				  </div>
-				</div><div class="col-lg-4">
-				  	<div class="form-group">
-				  		<label for="exampleInputLastName">Parent Name</label>
-				  	<input class="form-control" type="text" placeholder="Enter Parent Name" name="father_name" value="<?=$declarationdetails->father_name?>">
-				  </div>
-				</div>
-					
-						
-				  <div class="col-lg-4">
-				  	   <div class="form-group">
-				  	   	<label for="exampleInputMobileNumber">Date</label>
-				  		<input class="form-control" type="text" class="form-group"  name="declaration_date" value="<?php echo date("Y-m-d h:i:s");?>">
-				  </div>
-				  </div>
-				  <div class="col-lg-6">
-				   
-				</div>
+						?>
+								<div class="col-lg-3">
+									<img src="<?php echo $img_url; ?>" width="200px">
+									<h2><?php echo $file['doctype'] ?></h2>
+								</div>
+						<?php }
+						} ?>
 					</div>
-				  <div class="row">
-				  	<div class="col-lg-6 col-xs-6">
-						<a href="/clients/declaration" class="btn btn-primary button-23">Edit Declaration Details</a>
-				  		<!-- <button type="submit" class="btn btn-primary ">Save & Next</button> -->
-				  	</div>
-				  	<div class="col-lg-6 col-xs-6" >
-				  		<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
-						  <a href="/clients/invoices" class="btn btn-primary button-23 pull-right">Final Submit</a>
+					<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
+						<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
+							<a href="<?= base_url() ?>/clients/upload_document" class="btn btn-primary button-23">Edit Document</a>
+							<!-- <button type="submit" class="btn btn-primary">Save & Next</button> -->
+						</div>
+						<div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
+							<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
+							<!-- <a href="<?= base_url() ?>/clients/upload_documents" class="btn btn-primary button-23 pull-right">Next</a> -->
 
-				  		
-				  	</div>
-				  </div>
-				<?php // echo form_close(); ?>
-			</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
-<!-- end Declaration details section -->
+	<!-- ens documents details section -->
+	<!-- Declaration details section -->
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="card">
+					<?php // echo  form_open($this->uri->uri_string()); 
+					?>
+					<input type="hidden" name="declarationDetailsId" value="<?= $declarationdetails->id ?>">
+					<h4>Declaration</h4>
+					<p>I certify that the information submitted by me in support of this application, is true to the best of knowledge and belief. I understand that in the event of any information being found false or incorrect, my admission is liable to be rejected / cancelled at any stage of the program. I undertake to abide by the disciplinary rules and regulations of the institute.</p>
+					<div class="row">
 
-<script>
-	
-	const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",",$admissionpreferences->study_country)) : '[]' ?>;
-	const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}' ?>;
-	$('#study_country').on('change select2:opening',function(){
-		let value = $(this).val()
-		if(value.length > 0){
-			if(value.length <= 3){
-				let selectedUniversityArr = []
-				$('#countries').val(value.join(','))
-				var str = ''
-				$.each(value, function(k,v){
-					var countryName = v.search("_") != -1 ? v.replace("_"," ") : v
 
-					str += `<div class="col-lg-4">
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label for="exampleInputMiddleName">Applicant Name</label>
+								<input class="form-control" type="text" name="name" value="<?php echo $declarationdetails->name; ?>">
+							</div>
+						</div>
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label for="exampleInputLastName">Parent Name</label>
+								<input class="form-control" type="text" placeholder="Enter Parent Name" name="father_name" value="<?= $declarationdetails->father_name ?>">
+							</div>
+						</div>
+
+
+						<div class="col-lg-4">
+							<div class="form-group">
+								<label for="exampleInputMobileNumber">Date</label>
+								<input class="form-control" type="text" class="form-group" name="declaration_date" value="<?php echo date("Y-m-d h:i:s"); ?>">
+							</div>
+						</div>
+						<div class="col-lg-6">
+
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-lg-6 col-xs-6">
+							<a href="<?= base_url() ?>/clients/declaration" class="btn btn-primary button-23">Edit Declaration Details</a>
+							<!-- <button type="submit" class="btn btn-primary ">Save & Next</button> -->
+						</div>
+						<div class="col-lg-6 col-xs-6">
+							<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
+							<a href="<?= base_url() ?>/clients/invoices" class="btn btn-primary button-23 pull-right">Final Submit</a>
+
+
+						</div>
+					</div>
+					<?php // echo form_close(); 
+					?>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- end Declaration details section -->
+
+	<script>
+		$("input,select").attr("disabled", true);
+		const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
+		const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}' ?>;
+		$('#study_country').on('change select2:opening', function() {
+			let value = $(this).val()
+			if (value.length > 0) {
+				if (value.length <= 3) {
+					let selectedUniversityArr = []
+					$('#countries').val(value.join(','))
+					var str = ''
+					$.each(value, function(k, v) {
+						var countryName = v.search("_") != -1 ? v.replace("_", " ") : v
+
+						str += `<div class="col-lg-4">
 								<div class="form-group">
 									<label for="university${v}">${countryName} University</label>
 									<input type="hidden" class="form-control" name="university${v}" id="university${v}" value="" required>
 								</div>
 							</div>`
 
-					if(Object.keys(universityArr).length > 0){
-						if(v in universityArr){
-							selectedUniversityArr[v] = universityArr[v]
-						}else{
+						if (Object.keys(universityArr).length > 0) {
+							if (v in universityArr) {
+								selectedUniversityArr[v] = universityArr[v]
+							} else {
+								var prevUniversityVal = $(`#university${v}`).val()
+								var newPrevUniversityVal = typeof prevUniversityVal != 'undefined' ? prevUniversityVal : ''
+								selectedUniversityArr[v] = newPrevUniversityVal
+							}
+						} else {
 							var prevUniversityVal = $(`#university${v}`).val()
 							var newPrevUniversityVal = typeof prevUniversityVal != 'undefined' ? prevUniversityVal : ''
 							selectedUniversityArr[v] = newPrevUniversityVal
-						}	
-					}else{
-						var prevUniversityVal = $(`#university${v}`).val()
-						var newPrevUniversityVal = typeof prevUniversityVal != 'undefined' ? prevUniversityVal : ''
-						selectedUniversityArr[v] = newPrevUniversityVal
-					}
-				})
-
-				console.log(selectedUniversityArr)
-				$('.universities').html(str)
-				if(Object.keys(selectedUniversityArr).length > 0){
-					var count2 = 0
-					$.each(Object.keys(selectedUniversityArr), function(k,v){
-						var tagInput1 = new TagsInput({
-							selector: `university${v}`,
-							duplicate : false,
-							max : 3
-						});
-
-						if(selectedUniversityArr[v] != ''){
-							if(typeof v !== 'undefined'){
-								var defaultVal = selectedUniversityArr[v].split(",")
-								$.each(defaultVal, function(k1,v1){
-									tagInput1.addData([v1])
-								})
-							}
 						}
-						count2++
 					})
-				}else{
-					$.each(value, function(k,v){
-						var tagInput1 = new TagsInput({
-							selector: `university${v}`,
-							duplicate : false,
-							max : 3
-						});
-					})
+
+					console.log(selectedUniversityArr)
+					$('.universities').html(str)
+					if (Object.keys(selectedUniversityArr).length > 0) {
+						var count2 = 0
+						$.each(Object.keys(selectedUniversityArr), function(k, v) {
+							var tagInput1 = new TagsInput({
+								selector: `university${v}`,
+								duplicate: false,
+								max: 3
+							});
+
+							if (selectedUniversityArr[v] != '') {
+								if (typeof v !== 'undefined') {
+									var defaultVal = selectedUniversityArr[v].split(",")
+									$.each(defaultVal, function(k1, v1) {
+										tagInput1.addData([v1])
+									})
+								}
+							}
+							count2++
+						})
+					} else {
+						$.each(value, function(k, v) {
+							var tagInput1 = new TagsInput({
+								selector: `university${v}`,
+								duplicate: false,
+								max: 3
+							});
+						})
+					}
 				}
+
+				if (value.length >= 3) {
+					$(`#study_country option`).prop('disabled', true)
+					$.each(value, function(k, v) {
+						$(`#study_country option[value="${v}"]`).prop('disabled', false)
+					})
+				} else {
+					$(`#study_country option`).prop('disabled', false)
+				}
+				$('#study_country').selectpicker('refresh');
+			} else {
+				$('#countries').val("")
+				$('.universities').html('')
 			}
 
-			if(value.length >= 3){
-				$(`#study_country option`).prop('disabled',true)
-				$.each(value, function(k,v){
-					$(`#study_country option[value="${v}"]`).prop('disabled',false)
-				})
-			}else{
-				$(`#study_country option`).prop('disabled',false)
-			}
-			$('#study_country').selectpicker('refresh');
-		}else{
-			$('#countries').val("")
-			$('.universities').html('')
+		})
+
+		// TAG INPUTS
+
+
+		// Plugin Constructor
+		var TagsInput = function(opts) {
+			this.options = Object.assign(TagsInput.defaults, opts);
+			this.init();
 		}
 
-	})
+		// Initialize the plugin
+		TagsInput.prototype.init = function(opts) {
+			this.options = opts ? Object.assign(this.options, opts) : this.options;
 
-	// TAG INPUTS
+			if (this.initialized)
+				this.destroy();
+			if (!(this.orignal_input = document.getElementById(this.options.selector))) {
+				console.error("tags-input couldn't find an element with the specified ID");
+				return this;
+			}
 
-	
-    // Plugin Constructor
-    var TagsInput = function(opts){
-        this.options = Object.assign(TagsInput.defaults , opts);
-        this.init();
-    }
+			this.arr = [];
+			this.wrapper = document.createElement('div');
+			this.input = document.createElement('input');
+			init(this);
+			initEvents(this);
 
-    // Initialize the plugin
-    TagsInput.prototype.init = function(opts){
-        this.options = opts ? Object.assign(this.options, opts) : this.options;
+			this.initialized = true;
+			return this;
+		}
 
-        if(this.initialized)
-            this.destroy();
-        if(!(this.orignal_input = document.getElementById(this.options.selector)) ){
-            console.error("tags-input couldn't find an element with the specified ID");
-            return this;
-        }
+		// Add Tags
+		TagsInput.prototype.addTag = function(string) {
 
-        this.arr = [];
-        this.wrapper = document.createElement('div');
-        this.input = document.createElement('input');
-        init(this);
-        initEvents(this);
+			if (this.anyErrors(string))
+				return;
 
-        this.initialized =  true;
-        return this;
-    }
+			this.arr.push(string);
+			var tagInput = this;
 
-    // Add Tags
-    TagsInput.prototype.addTag = function(string){
+			var tag = document.createElement('span');
+			tag.className = this.options.tagClass;
+			tag.innerText = string;
 
-        if(this.anyErrors(string))
-            return ;
+			var closeIcon = document.createElement('a');
+			closeIcon.innerHTML = '&times;';
 
-        this.arr.push(string);
-        var tagInput = this;
+			// delete the tag when icon is clicked
+			closeIcon.addEventListener('click', function(e) {
+				e.preventDefault();
+				var tag = this.parentNode;
 
-        var tag = document.createElement('span');
-        tag.className = this.options.tagClass;
-        tag.innerText = string;
-
-        var closeIcon = document.createElement('a');
-        closeIcon.innerHTML = '&times;';
-        
-        // delete the tag when icon is clicked
-        closeIcon.addEventListener('click' , function(e){
-            e.preventDefault();
-            var tag = this.parentNode;
-
-            for(var i =0 ;i < tagInput.wrapper.childNodes.length ; i++){
-                if(tagInput.wrapper.childNodes[i] == tag)
-                    tagInput.deleteTag(tag , i);
-            }
-        })
+				for (var i = 0; i < tagInput.wrapper.childNodes.length; i++) {
+					if (tagInput.wrapper.childNodes[i] == tag)
+						tagInput.deleteTag(tag, i);
+				}
+			})
 
 
-        tag.appendChild(closeIcon);
-        this.wrapper.insertBefore(tag , this.input);
-        this.orignal_input.value = this.arr.join(',');
+			tag.appendChild(closeIcon);
+			this.wrapper.insertBefore(tag, this.input);
+			this.orignal_input.value = this.arr.join(',');
 
-        return this;
-    }
+			return this;
+		}
 
-    // Delete Tags
-    TagsInput.prototype.deleteTag = function(tag , i){
-        tag.remove();
-        this.arr.splice( i , 1);
-        this.orignal_input.value =  this.arr.join(',');
-        return this;
-    }
+		// Delete Tags
+		TagsInput.prototype.deleteTag = function(tag, i) {
+			tag.remove();
+			this.arr.splice(i, 1);
+			this.orignal_input.value = this.arr.join(',');
+			return this;
+		}
 
-    // Make sure input string have no error with the plugin
-    TagsInput.prototype.anyErrors = function(string){
-        if( this.options.max != null && this.arr.length >= this.options.max ){
-            alert('max university limit reached for this country');
-            return true;
-        }
-        
-        if(!this.options.duplicate && this.arr.indexOf(string) != -1 ){
-            alert('duplicate found " '+string+' " ')
-            return true;
-        }
+		// Make sure input string have no error with the plugin
+		TagsInput.prototype.anyErrors = function(string) {
+			if (this.options.max != null && this.arr.length >= this.options.max) {
+				alert('max university limit reached for this country');
+				return true;
+			}
 
-        return false;
-    }
+			if (!this.options.duplicate && this.arr.indexOf(string) != -1) {
+				alert('duplicate found " ' + string + ' " ')
+				return true;
+			}
 
-    // Add tags programmatically 
-    TagsInput.prototype.addData = function(array){
-        var plugin = this;
-        
-        array.forEach(function(string){
-            plugin.addTag(string);
-        })
-        return this;
-    }
+			return false;
+		}
 
-    // Get the Input String
-    TagsInput.prototype.getInputString = function(){
-        return this.arr.join(',');
-    }
+		// Add tags programmatically 
+		TagsInput.prototype.addData = function(array) {
+			var plugin = this;
 
+			array.forEach(function(string) {
+				plugin.addTag(string);
+			})
+			return this;
+		}
 
-    // destroy the plugin
-    TagsInput.prototype.destroy = function(){
-        this.orignal_input.removeAttribute('hidden');
-
-        delete this.orignal_input;
-        var self = this;
-        
-        Object.keys(this).forEach(function(key){
-            if(self[key] instanceof HTMLElement)
-                self[key].remove();
-            
-            if(key != 'options')
-                delete self[key];
-        });
-
-        this.initialized = false;
-    }
-
-    // Private function to initialize the tag input plugin
-    function init(tags){
-        tags.wrapper.append(tags.input);
-        tags.wrapper.classList.add(tags.options.wrapperClass);
-        tags.orignal_input.setAttribute('hidden' , 'true');
-        // tags.orignal_input.hide();
-        tags.orignal_input.parentNode.insertBefore(tags.wrapper , tags.orignal_input);
-    }
-
-    // initialize the Events
-    function initEvents(tags){
-        tags.wrapper.addEventListener('click' ,function(){
-            tags.input.focus();           
-        });
-        
-
-        tags.input.addEventListener('keydown' , function(e){
-            var str = tags.input.value.trim(); 
-
-            if( !!(~[9 , 13 , 188].indexOf( e.keyCode ))  )
-            {
-                e.preventDefault();
-                tags.input.value = "";
-                if(str != "")
-                    tags.addTag(str);
-            }
-
-        });
-    }
+		// Get the Input String
+		TagsInput.prototype.getInputString = function() {
+			return this.arr.join(',');
+		}
 
 
-    // Set All the Default Values
-    TagsInput.defaults = {
-        selector : '',
-        wrapperClass : 'tags-input-wrapper',
-        tagClass : 'tag',
-        max : null,
-        duplicate: false
-    }
+		// destroy the plugin
+		TagsInput.prototype.destroy = function() {
+			this.orignal_input.removeAttribute('hidden');
 
-    window.TagsInput = TagsInput;
+			delete this.orignal_input;
+			var self = this;
 
-	$('#study_country').trigger('change')
-</script>
+			Object.keys(this).forEach(function(key) {
+				if (self[key] instanceof HTMLElement)
+					self[key].remove();
+
+				if (key != 'options')
+					delete self[key];
+			});
+
+			this.initialized = false;
+		}
+
+		// Private function to initialize the tag input plugin
+		function init(tags) {
+			tags.wrapper.append(tags.input);
+			tags.wrapper.classList.add(tags.options.wrapperClass);
+			tags.orignal_input.setAttribute('hidden', 'true');
+			// tags.orignal_input.hide();
+			tags.orignal_input.parentNode.insertBefore(tags.wrapper, tags.orignal_input);
+		}
+
+		// initialize the Events
+		function initEvents(tags) {
+			tags.wrapper.addEventListener('click', function() {
+				tags.input.focus();
+			});
+
+
+			tags.input.addEventListener('keydown', function(e) {
+				var str = tags.input.value.trim();
+
+				if (!!(~[9, 13, 188].indexOf(e.keyCode))) {
+					e.preventDefault();
+					tags.input.value = "";
+					if (str != "")
+						tags.addTag(str);
+				}
+
+			});
+		}
+
+
+		// Set All the Default Values
+		TagsInput.defaults = {
+			selector: '',
+			wrapperClass: 'tags-input-wrapper',
+			tagClass: 'tag',
+			max: null,
+			duplicate: false
+		}
+
+		window.TagsInput = TagsInput;
+
+		$('#study_country').trigger('change')
+	</script>
