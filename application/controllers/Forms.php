@@ -97,7 +97,7 @@ class Forms extends ClientsController
                         $facebook_lead_name = !empty($post_data['website']) ? $post_data['website'] : '';
                         $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, '', $facebook_lead_name);
                         $status_fb_lead_assign = false;
-                        if (!empty($assign_staff_id)) {
+                         if (!empty($assign_staff_id)) {
                             foreach ($assign_staff_id as $fl) {
 
                                   $form->responsible = $fl["staffid"];
@@ -116,7 +116,7 @@ class Forms extends ClientsController
                                 //             }
                                 //         }
                                 //     }
-                                }
+                                // }
                             }
                         }
                         if ($status_fb_lead_assign == false) {
