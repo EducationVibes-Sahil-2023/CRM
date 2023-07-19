@@ -71,7 +71,7 @@ class Leads extends AdminController
         $data['summary']  = get_leads_summary();
         $data['updateCount'] = leads_update_count();
         $data['call_count'] = calls_update_count();
-        die;
+
         $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
