@@ -2588,4 +2588,39 @@ class Leads_model extends App_Model
         $this->db->where_in('id', $ids);
         return  $this->db->get(db_prefix() . 'leads')->result_array();
     }
+
+    public function get_vendor($id = '', $where = [])
+
+    {
+
+        $this->db->where($where);
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'profile_creater_vendor')->row();
+        }
+
+
+
+        $type = $this->app_object_cache->get('leads-all-vendor');
+
+
+
+        if (!$type) {
+
+            $this->db->order_by('sequence', 'asc');
+
+            $type = $this->db->get(db_prefix() . 'profile_creater_vendor')->result_array();
+
+            $this->app_object_cache->add('leads-all-vendor', $type);
+        }
+
+
+
+        return $type;
+    }
 }

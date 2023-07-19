@@ -20,6 +20,7 @@ $aColumns = [
     db_prefix() . 'leads_status.name as status_name',
     db_prefix() . 'leads_type.name as type_name',
     db_prefix() . 'leads_sources.name as source_name',
+    'GROUP_CONCAT(' . db_prefix() . 'client_university_shortlisting.vendor_id) as vendor_id',
 
 ];
 
@@ -37,8 +38,11 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
     'LEFT JOIN ' . db_prefix() . 'applicant_tracker ON ' . db_prefix() . 'applicant_tracker.id = (' . db_prefix() . 'clients.applicant_status+1)',
+    'LEFT JOIN ' . db_prefix() . 'client_university_shortlisting ON ' . db_prefix() . 'client_university_shortlisting.client_id = ' . db_prefix() . 'clients.userid',
 
 ];
+
+
 foreach ($custom_fields as $key => $field) {
 
     if (is_admin()) {
@@ -227,6 +231,12 @@ if ($this->ci->input->post('application_sub_stage')) {
 
     array_push($where, 'AND ' . db_prefix() . 'clients.application_text IN ("' . implode(',', $this->ci->db->escape_str($this->ci->input->post('application_sub_stage'))) . '")');
 }
+
+if ($this->ci->input->post('vendor_type')) {
+
+    array_push($where, 'AND ' . db_prefix() . 'client_university_shortlisting.vendor_id IN ("' . implode(',', $this->ci->db->escape_str($this->ci->input->post('vendor_type'))) . '")');
+}
+
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date = $this->ci->input->post('to_date');
@@ -247,7 +257,7 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'registration_confirmed',
     db_prefix() . 'applicant_tracker.name applicant_stage_name',
     db_prefix() . 'applicant_tracker.id applicant_stage_id',
-]);
+], 'GROUP BY ' . db_prefix() . 'clients.userid');
 
 
 $output  = $result['output'];
