@@ -245,8 +245,8 @@ class Clients extends AdminController
             $data['members'] = $this->staff_model->get('', ['active' => 1]);
 
             $data['staff'] = [];
-            if (!empty($data["lead_data"]->form_data->lead_status)) {
-                $lead_status_data = $data["lead_data"]->form_data->lead_status;
+            if (!empty($data["lead_data"]->form_data->type)) {
+                $lead_status_data = $data["lead_data"]->form_data->type;
                 foreach ($data['members'] as $members) {
                     if ($members["lead_type"] == $lead_status_data) {
                         $data['staff'][] = $members;
