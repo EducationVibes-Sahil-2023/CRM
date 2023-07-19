@@ -45,8 +45,8 @@ class Clients extends AdminController
         $data['countries'] = $this->clients_model->get_clients_distinct_countries();
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['sources']  = $this->leads_model->get_source();
-        $data['leadType']  = $this->leads_model->get_type();
-
+        $data['leadType'] = $this->leads_model->get_type();
+        $data['vendorType'] = $this->leads_model->get_vendor();
         $this->load->view('admin/clients/manage', $data);
     }
 
