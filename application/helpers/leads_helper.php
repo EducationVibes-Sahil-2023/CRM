@@ -1236,7 +1236,7 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 function calls_update_count($params = false, $max_status = 0)
 {
 
-    die;
+
     $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
@@ -1291,8 +1291,8 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= 'left join tblreminders  on  tblreminders.rel_id = l.id ';
     }
 
-   echo  $sql .= " Where LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
-die;
+    $sql .= " Where LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+
     if (!$has_permission_view) {
         $sql .= ' AND ' . $whereNoViewPermission;
     }
@@ -1354,8 +1354,8 @@ die;
     $sql = trim($sql);
     // die;
 
-    echo  $sql = "SELECT ifnull(SUM(call_duration),0) as total_sum FROM ( {$sql} )  as subquery ";
-    die;
+    $sql = "SELECT ifnull(SUM(call_duration),0) as total_sum FROM ( {$sql} )  as subquery ";
+
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     return !empty($update_count) ?  convertToHMS($update_count) :  convertToHMS(0);
