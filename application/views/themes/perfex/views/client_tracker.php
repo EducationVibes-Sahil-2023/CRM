@@ -992,7 +992,7 @@ if (empty($customer_admins)) { ?>
         })
 
         if (check_offer_letter == true) {
-            $("#progressbar li.active").addClass("previous");
+            $("#progressbar li.active").removeClass("active").addClass("previous");
         }
 
     }
