@@ -1322,7 +1322,7 @@ if (empty($customer_admins)) { ?>
 
         }
 
-        if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
+        if ($("#offer_div select[name='university_status_submit_offer']:not(:disabled)").length == 0) {
             $("#offer_div .next").attr("disabled", true);
 
         }

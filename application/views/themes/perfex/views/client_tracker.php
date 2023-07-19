@@ -444,7 +444,7 @@ if (empty($customer_admins)) { ?>
 
                                             </div>
 
-                                            
+
 
 
                                         </div>
@@ -455,7 +455,7 @@ if (empty($customer_admins)) { ?>
                                         <div class="row col-md-12 document_upload_files ">
                                             <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
                                             <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" onchange="real_time_media_show(this)" name="document_file[]" placeholder=""></div>
-                                          
+
                                         </div>
                                     </div>
                                 <?php }
@@ -489,7 +489,7 @@ if (empty($customer_admins)) { ?>
                                         $selected_vendor = !empty($profile_creation_data[0]["vendor"]) ? explode(",", $profile_creation_data[0]["vendor"]) : [];
                                         echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); ?>
                                     </div>
-                                   
+
                                 </div>
                                 <div class="row profile-div-save">
                                     <div class="col-md-4">
@@ -587,7 +587,7 @@ if (empty($customer_admins)) { ?>
                                                 <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
                                                 <?php if ($short_list["university_status"] == 1) { ?>
                                                 <?php } else { ?>
-                                                   
+
                                                 <?php } ?>
 
                                             </div>
@@ -634,7 +634,7 @@ if (empty($customer_admins)) { ?>
                                             ?>
                                         </div>
 
-                                      
+
                                     </div>
                                 <?php } ?>
                             </div>
@@ -827,7 +827,7 @@ if (empty($customer_admins)) { ?>
                                                         <div class="col-md-1">Condition</div>
                                                         <div class="col-md-6"><textarea placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"></textarea></div>
                                                         <div class="col-md-3"><input type="file" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf"></div>
-                                                        
+
                                                     </div>
                                                 </div>
                                             <?php } ?>
