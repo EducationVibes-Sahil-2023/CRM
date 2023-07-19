@@ -225,7 +225,7 @@ if ($this->ci->input->post('application_stage')) {
 
 if ($this->ci->input->post('application_sub_stage')) {
 
-    array_push($where, 'AND ' . db_prefix() . 'clients.application_text IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('application_sub_stage'))) . ')');
+    array_push($where, 'AND ' . db_prefix() . 'clients.application_text IN ("' . implode(',', $this->ci->db->escape_str($this->ci->input->post('application_sub_stage'))) . '")');
 }
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
