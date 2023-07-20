@@ -97,26 +97,26 @@ class Forms extends ClientsController
                         $facebook_lead_name = !empty($post_data['website']) ? $post_data['website'] : '';
                         $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, '', $facebook_lead_name);
                         $status_fb_lead_assign = false;
-                         if (!empty($assign_staff_id)) {
+                        if (!empty($assign_staff_id)) {
                             foreach ($assign_staff_id as $fl) {
 
-                                  $form->responsible = $fl["staffid"];
-                                    $status_fb_lead_assign = true;
-                                    break;
-                                // if (!empty($fl["facebook_lead_name"])) {
-                                //     $fb_form_name = explode(",", $fl["facebook_lead_name"]);
-                                //     if (!empty($fb_form_name)) {
-                                //         foreach ($fb_form_name as $fb_name) {
-                                //             if (!empty($fb_name)) {
-                                //                 if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
-                                //                     $form->responsible = $fl["staffid"];
-                                //                     $status_fb_lead_assign = true;
-                                //                     break;
-                                //                 }
-                                //             }
-                                //         }
-                                //     }
-                                // }
+                                $form->responsible = $fl["staffid"];
+                                $status_fb_lead_assign = true;
+                                break;
+                                if (!empty($fl["facebook_lead_name"])) {
+                                    $fb_form_name = explode(",", $fl["facebook_lead_name"]);
+                                    if (!empty($fb_form_name)) {
+                                        foreach ($fb_form_name as $fb_name) {
+                                            if (!empty($fb_name)) {
+                                                if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
+                                                    $form->responsible = $fl["staffid"];
+                                                    $status_fb_lead_assign = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                         if ($status_fb_lead_assign == false) {
@@ -263,7 +263,7 @@ class Forms extends ClientsController
                             $this->db->where($where);
                             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
                             $updateStatus = [
-                               
+
                                 'status' => $form->lead_status,
                                 // 'description' => 'Re Query',
                                 // 'assigned' => $form->responsible,
@@ -271,8 +271,8 @@ class Forms extends ClientsController
                                 'lastcontact' => date("Y-m-d h:i:s"),
                                 'dateassigned' => date("Y-m-d")
                             ];
-                            
-                          if (!empty($form->lead_source)) {
+
+                            if (!empty($form->lead_source)) {
                                 $updateStatus['source'] = $form->lead_source;
                             }
 
