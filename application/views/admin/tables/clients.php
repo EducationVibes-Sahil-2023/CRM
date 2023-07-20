@@ -322,15 +322,15 @@ foreach ($rResult as $aRow) {
     $row[] = $toggleActive;
 
     // Customer groups parsing
-    $groupsRow = '';
-    if ($aRow['customerGroups']) {
-        $groups = explode(',', $aRow['customerGroups']);
-        foreach ($groups as $group) {
-            $groupsRow .= '<span class="label label-default mleft5 inline-block customer-group-list pointer">' . $group . '</span>';
-        }
-    }
+    // $groupsRow = '';
+    // if ($aRow['customerGroups']) {
+    //     $groups = explode(',', $aRow['customerGroups']);
+    //     foreach ($groups as $group) {
+    //         $groupsRow .= '<span class="label label-default mleft5 inline-block customer-group-list pointer">' . $group . '</span>';
+    //     }
+    // }
 
-    $row[] = $groupsRow;
+    // $row[] = $groupsRow;
     $row[] = $aRow['applicant_stage_name'];
     $check_applicant_status = get_applicant_status($aRow['applicant_stage_id'], $aRow['userid']);
 

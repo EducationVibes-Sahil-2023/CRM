@@ -12,6 +12,11 @@ class Clients extends AdminController
                 access_denied('customers');
             }
         }
+        $user_lead_type = get_user_lead_type(get_staff_user_id());
+        $data["user_lead_type"] = 0;
+        if (!empty($user_lead_type->lead_type)) {
+            $data["user_lead_type"] = $user_lead_type->lead_type;
+        }
 
         $this->load->model('contracts_model');
         $this->load->model('leads_model');
@@ -253,8 +258,8 @@ class Clients extends AdminController
                     }
                 }
             }
-            // echo $data["lead_data"]->form_data->lead_status;
-      
+                // echo $data["lead_data"]->form_data->lead_status;
+            ;
 
             $data['client'] = $client;
             $title          = $client->company;
