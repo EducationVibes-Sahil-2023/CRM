@@ -205,7 +205,7 @@
 
  <?php $value = (!empty($member->facebook_lead_name) ? $member->facebook_lead_name : ''); ?>
                         <?php $attrs = ""; ?>
-                        <?php echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); ?>
+                        <?php //echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); ?>
 
                         <?php //$selected_value =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
                         ?>
@@ -217,10 +217,10 @@
 
 
                         <?php
-                        // $select_fb_array =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
-                        // echo '<div id="leads-filter-source">';
-                        // echo render_select('facebook_lead_name[]', $facebook_form_names, array('id', 'name'), '', $select_fb_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Facebook Form', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "facebook_lead_name");
-                        // echo '</div>';
+                        $select_fb_array =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
+                        echo '<div id="leads-filter-source">';
+                        echo render_select('facebook_lead_name[]', $facebook_form_names, array('id', 'name'), '', $select_fb_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Facebook Form', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "facebook_lead_name");
+                        echo '</div>';
                         ?>
 
 
