@@ -662,7 +662,7 @@ function update_application_sub_category($stage, $text)
 function get_stage_1($stage, $client_id)
 {
     $CI = &get_instance();
-    $sql = "Select if(updated_date='0000-00-00 00:00:00',created_date,updated_date) updated_date,if(document_status=1,'Document Approved','Pending') applicant_stage_status from " . db_prefix() . "client_documents  where client_id='{$client_id}' and status = 1 ";
+    $sql = "Select if(updated_date='0000-00-00 00:00:00',created_date,updated_date) updated_date,if(document_status=1,'Approved',if(document_status=2,'Rejected','Pending')) applicant_stage_status from " . db_prefix() . "client_documents  where client_id='{$client_id}' and status = 1 ";
     return $result = $CI->db->query($sql)->row();
 }
 function get_stage_2($stage, $client_id)
