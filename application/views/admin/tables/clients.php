@@ -262,19 +262,15 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
-
+$user_lead_type = get_user_lead_type(get_staff_user_id());
+if (!empty($user_lead_type->lead_type)) {
+    $user_lead_type = $user_lead_type->lead_type;
+} else {
+    $user_lead_type = 0;
+}
 foreach ($rResult as $aRow) {
     $row = [];
-
-    // Bulk actions
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
-    // User id
-    // $row[] = $aRow['userid'];
-
-    // Company
-
-
-
     $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
     $url = admin_url('clients/client/' . $aRow['userid']);
 
@@ -343,7 +339,18 @@ foreach ($rResult as $aRow) {
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {
-        $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
+        if (!empty($user_lead_type)) {
+            if (is_admin()) {
+            } else {
+                if ($user_lead_type == 1 && !in_array(strtolower($field['name']), ['course', 'degree'])) {
+                    $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
+                } else if ($user_lead_type == 2 && !in_array(strtolower($field['name']), ['neet score'])) {
+                    $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
+                }
+            }
+        } else {
+            $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
+        }
     }
 
     $row['DT_RowClass'] = 'has-row-options';
