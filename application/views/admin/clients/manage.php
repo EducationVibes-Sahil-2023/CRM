@@ -456,9 +456,9 @@
                            // Check conditions based on the user_lead_type.
                            if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
                               $showField = false;
-                           } elseif ($user_lead_type == 1 && !in_array(strtolower($field['name']), ['course', 'degree'])) {
+                           } elseif ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
                               $showField = false;
-                           } elseif ($user_lead_type == 2 && !in_array(strtolower($field['name']), ['neet score'])) {
+                           } elseif ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
                               $showField = false;
                            }
                         }
