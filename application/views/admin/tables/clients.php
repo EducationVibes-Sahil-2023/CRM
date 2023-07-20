@@ -2,6 +2,13 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+$user_lead_type = get_user_lead_type(get_staff_user_id());
+if (!empty($user_lead_type->lead_type)) {
+    $user_lead_type = $user_lead_type->lead_type;
+} else {
+    $user_lead_type = 0;
+}
+
 $hasPermissionDelete = has_permission('customers', '', 'delete');
 $customFieldsColumns = [];
 $custom_fields = get_table_custom_fields('customers');
@@ -44,10 +51,22 @@ $join = [
 
 
 foreach ($custom_fields as $key => $field) {
-
-    if (is_admin()) {
-    } else {
-        if (!empty($_SESSION["staff_department"]) &&  !empty($field['show_lead_type']) &&  $_SESSION["staff_department"] != $field['show_lead_type']) {
+    // Check if the user_lead_type is not empty and it is not an admin
+    if (!empty($user_lead_type) && !is_admin()) {
+        if ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
+            // Check if staff_department is not empty and it does not match the show_lead_type
+            if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
+                continue;
+            }
+        } else if ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
+            // Check if staff_department is not empty and it does not match the show_lead_type
+            if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
+                continue;
+            }
+        }
+    } elseif (!is_admin()) {
+        // Check if staff_department is not empty and it does not match the show_lead_type
+        if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
             continue;
         }
     }
@@ -57,6 +76,7 @@ foreach ($custom_fields as $key => $field) {
     array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
     array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'clients.userid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
 }
+
 
 
 $join = hooks()->apply_filters('customers_table_sql_join', $join);
@@ -262,12 +282,7 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
-$user_lead_type = get_user_lead_type(get_staff_user_id());
-if (!empty($user_lead_type->lead_type)) {
-    $user_lead_type = $user_lead_type->lead_type;
-} else {
-    $user_lead_type = 0;
-}
+
 foreach ($rResult as $aRow) {
     $row = [];
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
@@ -339,18 +354,7 @@ foreach ($rResult as $aRow) {
 
     // Custom fields add values
     foreach ($customFieldsColumns as $customFieldColumn) {
-        if (!empty($user_lead_type)) {
-            if (is_admin()) {
-            } else {
-                if ($user_lead_type == 1 && !in_array(strtolower(trim($customFieldColumn['name'])), ['course', 'degree'])) {
-                    $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
-                } else if ($user_lead_type == 2 && !in_array(strtolower(trim($customFieldColumn['name'])), ['neet score'])) {
-                    $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
-                }
-            }
-        } else {
-            $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
-        }
+        $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
     }
 
     $row['DT_RowClass'] = 'has-row-options';
