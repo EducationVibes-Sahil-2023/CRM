@@ -342,9 +342,9 @@ foreach ($rResult as $aRow) {
         if (!empty($user_lead_type)) {
             if (is_admin()) {
             } else {
-                if ($user_lead_type == 1 && !in_array(strtolower($field['name']), ['course', 'degree'])) {
+                if ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
                     $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
-                } else if ($user_lead_type == 2 && !in_array(strtolower($field['name']), ['neet score'])) {
+                } else if ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
                     $row[] = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
                 }
             }
