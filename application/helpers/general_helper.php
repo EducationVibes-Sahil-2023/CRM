@@ -944,3 +944,11 @@ function convertSeconds($seconds)
     $dt2 = new DateTime("@$seconds");
     return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
 }
+
+function get_user_lead_type($id)
+{
+    $CI = &get_instance();
+    $CI->db->select("lead_type");
+    $CI->db->where("staffid", $id);
+    return $CI->db->get(db_prefix() . 'staff')->row();
+}

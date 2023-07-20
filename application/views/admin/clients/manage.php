@@ -406,10 +406,10 @@
                         'name' => _l('customer_active'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-active')
                      ),
-                     array(
-                        'name' => _l('customer_groups'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
+                     // array(
+                     //    'name' => _l('customer_groups'),
+                     //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
+                     // ),
                      array(
                         'name' => _l('applicant_name_table'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
@@ -439,6 +439,7 @@
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
                   );
+
                   foreach ($_table_data as $_t) {
                      array_push($table_data, $_t);
                   }
@@ -446,14 +447,32 @@
                   $custom_fields = get_custom_fields('customers', array('show_on_table' => 1));
 
                   foreach ($custom_fields as $field) {
-                     if (is_admin()) {
+                     $showField = true;
+
+                     if (!empty($user_lead_type)) {
+                        if (is_admin()) {
+                           // Do nothing; all fields are included for admin.
+                        } else {
+                           // Check conditions based on the user_lead_type.
+                           if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                              $showField = false;
+                           } elseif ($user_lead_type == 1 && !in_array(strtolower($field['name']), ['course', 'degree'])) {
+                              $showField = false;
+                           } elseif ($user_lead_type == 2 && !in_array(strtolower($field['name']), ['neet score'])) {
+                              $showField = false;
+                           }
+                        }
                      } else {
-                        if (!empty($this->session->userdata("staff_department")) &&  !empty($field['show_lead_type']) &&  $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                           continue;
+                        if (!is_admin() && !empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                           $showField = false;
                         }
                      }
-                     array_push($table_data, $field['name']);
+
+                     if ($showField) {
+                        array_push($table_data, $field['name']);
+                     }
                   }
+
                   $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
 
 
