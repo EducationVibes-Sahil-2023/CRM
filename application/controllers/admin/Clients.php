@@ -1218,9 +1218,9 @@ class Clients extends AdminController
             $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
 
 
-            for ($k = $i = 0; $i < count($label_data); $i++) {
+            for ($i = 0; $i < count($label_data); $i++) {
                 $upload_data = [];
-                $files = $_FILES['document_file_' . $k];
+                $files = $_FILES['document_file_' . $i];
 
                 if (!empty($files['name'])) {
                     $upload_data["name"] = $files['name'];
@@ -1230,9 +1230,8 @@ class Clients extends AdminController
                     $upload_data["size"] = $files['size'];
                     if ($upload_data["error"] === UPLOAD_ERR_OK) {;
                         $file_name = upload_applicant_documents($client_id, $upload_data);
-                        array_push($update_array, array("label_name" => $label_data[$k], "document_file" => $file_name["file_path"]));
+                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
                     }
-                    $k++;
                 } else if (!empty($document_url[$i])) {
                     array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
                 }
