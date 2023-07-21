@@ -51,30 +51,54 @@ $join = [
 
 
 foreach ($custom_fields as $key => $field) {
+    $showField = true;
     // Check if the user_lead_type is not empty and it is not an admin
-    if (!empty($user_lead_type) && !is_admin()) {
-        if ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
-            // Check if staff_department is not empty and it does not match the show_lead_type
-            if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
-                continue;
+    // if (!empty($user_lead_type) && !is_admin()) {
+    //     if ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
+    //         // Check if staff_department is not empty and it does not match the show_lead_type
+    //         if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
+    //             continue;
+    //         }
+    //     } else if ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
+    //         // Check if staff_department is not empty and it does not match the show_lead_type
+    //         if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
+    //             continue;
+    //         }
+    //     }
+    // } elseif (!is_admin()) {
+    //     // Check if staff_department is not empty and it does not match the show_lead_type
+    //     if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
+    //         continue;
+    //     }
+
+    // if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
+    //     continue;
+    // }
+
+    // if (!is_admin() && !empty($user_lead_type) && !empty($field['show_lead_type']) && !in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
+    //     continue;
+    // }
+
+
+    if (!is_admin()) {
+        $showField = false;
+        if (!empty($user_lead_type) && !empty($field['show_lead_type'])) {
+            print_r(explode(",", $field['show_lead_type']));
+            if (in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
+                $showField = true;
+            } else {
+                $showField = false;
             }
-        } else if ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
-            // Check if staff_department is not empty and it does not match the show_lead_type
-            if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
-                continue;
-            }
-        }
-    } elseif (!is_admin()) {
-        // Check if staff_department is not empty and it does not match the show_lead_type
-        if (!empty($_SESSION["staff_department"]) && !empty($field['show_lead_type']) && $_SESSION["staff_department"] != $field['show_lead_type']) {
-            continue;
         }
     }
 
-    $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
-    array_push($customFieldsColumns, $selectAs);
-    array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'clients.userid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+
+    if ($showField) {
+        $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
+        array_push($customFieldsColumns, $selectAs);
+        array_push($aColumns, 'ctable_' . $key . '.value as ' . $selectAs);
+        array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'clients.userid = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    }
 }
 
 

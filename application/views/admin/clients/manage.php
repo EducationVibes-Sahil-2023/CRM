@@ -449,24 +449,37 @@
                   foreach ($custom_fields as $field) {
                      $showField = true;
 
-                     if (!empty($user_lead_type)) {
-                        if (is_admin()) {
-                           // Do nothing; all fields are included for admin.
-                        } else {
-                           // Check conditions based on the user_lead_type.
-                           if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                              $showField = false;
-                           } elseif ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
-                              $showField = false;
-                           } elseif ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
+                     // if (!empty($user_lead_type)) {
+                     //    if (is_admin()) {
+                     //       // Do nothing; all fields are included for admin.
+                     //    } else {
+                     //       // Check conditions based on the user_lead_type.
+                     //       if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                     //          $showField = false;
+                     //       } elseif ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
+                     //          $showField = false;
+                     //       } elseif ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
+                     //          $showField = false;
+                     //       }
+                     //    }
+                     // } else {
+                     //    if (!is_admin() && !empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                     //       $showField = false;
+                     //    }
+
+
+                     if (!is_admin()) {
+                        $showField = false;
+                        if (!empty($user_lead_type) && !empty($field['show_lead_type'])) {
+                           print_r(explode(",", $field['show_lead_type']));
+                           if (in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
+                              $showField = true;
+                           } else {
                               $showField = false;
                            }
                         }
-                     } else {
-                        if (!is_admin() && !empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                           $showField = false;
-                        }
                      }
+                     // }
 
                      if ($showField) {
                         array_push($table_data, $field['name']);
