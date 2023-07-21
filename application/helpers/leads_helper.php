@@ -1236,8 +1236,8 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 function calls_update_count($params = false, $max_status = 0)
 {
 
-    return convertToHMS(0);
-    die;
+    // return convertToHMS(0);
+    // die;
     $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
@@ -1275,80 +1275,91 @@ function calls_update_count($params = false, $max_status = 0)
         }
     }
 
+    $get_lead_ids = $CI->db->query("select id,RIGHT(TRIM(phonenumber), 10) phonenumber,assigned as staffid from tblleads")->result_array();
+    $update_count = 0;
+    foreach ($get_lead_ids as $leads) {
+
+        $result = call_duration($leads);
+        if (!empty($result[0]["duration"])) {
+            $update_count += $result[0]["duration"];
+        }
+    }
+    return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
+
     // Assuming this code is written in PHP, and you are concatenating the SQL query into the $sql variable
 
-    $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
-    $sql .= "SELECT SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
-    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
+    // $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
+    // $sql .= "SELECT SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
+    // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
 
-    if (!empty($params['assigned'])) {
-        $sql .= " AND calls.staffid = " . (int)$params['assigned'];
-    }
+    // if (!empty($params['assigned'])) {
+    //     $sql .= " AND calls.staffid = " . (int)$params['assigned'];
+    // }
 
-    $sql .= " WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') ";
+    // $sql .= " WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') ";
 
-    if (!$has_permission_view) {
-        $sql .= ' AND ' . $whereNoViewPermission;
-    }
+    // if (!$has_permission_view) {
+    //     $sql .= ' AND ' . $whereNoViewPermission;
+    // }
 
-    if (!empty($params['status'])) {
-        $sql .= ' AND l.status IN (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
-    }
+    // if (!empty($params['status'])) {
+    //     $sql .= ' AND l.status IN (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
+    // }
 
-    if (!empty($params['source'])) {
-        $sql .= ' AND l.source IN (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
-    }
+    // if (!empty($params['source'])) {
+    //     $sql .= ' AND l.source IN (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+    // }
 
-    if (!empty($params['lead_type'])) {
-        $sql .= ' AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-    }
+    // if (!empty($params['lead_type'])) {
+    //     $sql .= ' AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+    // }
 
-    if (!empty($params['neet_score'])) {
-        $neet_range = explode("-", $params['neet_score']);
-        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
-    }
+    // if (!empty($params['neet_score'])) {
+    //     $neet_range = explode("-", $params['neet_score']);
+    //     $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
+    // }
 
-    if (!empty($params['to_date'])) {
-        $from_date = $params['from_date'];
-        $to_date = $params['to_date'];
-        $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
-    }
+    // if (!empty($params['to_date'])) {
+    //     $from_date = $params['from_date'];
+    //     $to_date = $params['to_date'];
+    //     $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+    // }
 
-    if (!empty($params['followup_to_date'])) {
-        $followup_from_date = $params['followup_from_date'];
-        $followup_to_date = $params['followup_to_date'];
-        $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
-    }
+    // if (!empty($params['followup_to_date'])) {
+    //     $followup_from_date = $params['followup_from_date'];
+    //     $followup_to_date = $params['followup_to_date'];
+    //     $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
+    // }
 
-    if (!empty($params['assign_to_date'])) {
-        $assign_from_date = $params['assign_from_date'];
-        $assign_to_date = $params['assign_to_date'];
-        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-    } elseif (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND (DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '")';
-    }
+    // if (!empty($params['assign_to_date'])) {
+    //     $assign_from_date = $params['assign_from_date'];
+    //     $assign_to_date = $params['assign_to_date'];
+    //     $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+    // } elseif (!empty($params['up_to_date'])) {
+    //     $up_from_date = $params['up_from_date'];
+    //     $up_to_date = $params['up_to_date'];
+    //     $sql .= ' AND (DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '")';
+    // }
 
-    $grup_by = "";
-    if (!empty($params['neet_score'])) {
-        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
-    }
+    // $grup_by = "";
+    // if (!empty($params['neet_score'])) {
+    //     $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+    // }
 
-    $sql_add = "";
-    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        $min = $params['update_count_min'];
-        $max = $params['update_count_max'];
-        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
-    }
+    // $sql_add = "";
+    // if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+    //     $min = $params['update_count_min'];
+    //     $max = $params['update_count_max'];
+    //     $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    // }
 
-    $sql .= " GROUP BY calls.contact" . $grup_by . " " . $sql_add . ") AS subquery";
+    // $sql .= " GROUP BY calls.contact" . $grup_by . " " . $sql_add . ") AS subquery";
 
-    $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
+    // $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
 
-    $update_count = $CI->db->query($sql)->row()->total_sum;
+    // $update_count = $CI->db->query($sql)->row()->total_sum;
 
-    return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
+    // return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
 }
 
 function convertToHMS($seconds, $status = 0)
@@ -1368,6 +1379,7 @@ function convertToHMS($seconds, $status = 0)
 
 function call_duration($row_data, $post_data = "")
 {
+
 
     $phone = trim($row_data["phonenumber"]);
     $staff_id = $row_data["staffid"];
