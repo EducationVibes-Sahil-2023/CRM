@@ -169,7 +169,7 @@ class Clients extends ClientsController
                     'userid' => get_client_user_id(),
                     'program' => $data['program'],
                     'course' => $data['course'],
-                    'specialization' => $data['specialization'],
+                    'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
                     'entrance_exam_given' => $data['entrance_exam_given'],
                     'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES') ? $data['entrance_exam_details'] : '',
                     'session_intake' => $data['session_intake'],
@@ -177,12 +177,13 @@ class Clients extends ClientsController
                 ];
 
                 if ($data['countries'] != "") {
-                    // $dataArr['study_country'] = $data['countries'];
+                    $dataArr['study_country'] = $data['countries'];
                     $dataArr['university'] = json_encode($university_array, true);
                 }
 
 
                 $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $admissionPreferencesIds);
+        
                 if ($admissionPreferencesId) {
                     $this->session->set_flashdata('success', "Admission Preferences successfully updated");
                     redirect(site_url('clients/academic_details'));
