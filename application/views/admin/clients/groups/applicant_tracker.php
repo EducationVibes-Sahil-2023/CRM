@@ -2038,7 +2038,7 @@ if (empty($customer_admins)) { ?>
         return new Promise(async (resolve, reject) => {
             let upload_data = new FormData();
 
-            $(".document_upload_files").each(function() {
+            $(".document_upload_files").each(function(index) {
                 let label_name = $(this).find("input[name='document_label[]']").val();
                 let document = $(this).find("input[name='document_file[]']").prop("files")[0];
                 let document_url = $(this).find("input[name='document_file[]']").attr("data-url");
@@ -2049,7 +2049,7 @@ if (empty($customer_admins)) { ?>
                     document = document_url;
                 }
                 upload_data.append("document_label[]", label_name);
-                upload_data.append("document_file[]", document);
+                upload_data.append("document_file_" + index, document);
                 upload_data.append("document_url[]", document_url);
 
 
