@@ -162,37 +162,37 @@
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Father Name</label>
-								<input type="text" name="father_name" class="form-control" id="father_name" value="<?php echo $basicdetails->father_name ;?>">
+								<input type="text" name="father_name" class="form-control" id="father_name" value="<?php echo $basicdetails->father_name ;?>" required>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Mother Name</label>
-								<input type="text" name="mother_name" class="form-control" id="mother_name" value="<?php echo $basicdetails->mother_name ;?>">
+								<input type="text" name="mother_name" class="form-control" id="mother_name" value="<?php echo $basicdetails->mother_name ;?>" required>
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Father's Mobile Number</label>
-								<input type="text" name="fathers_mobile" class="form-control" id="fathers_mobile" value="<?php echo $basicdetails->fathers_mobile ;?>">
+								<input type="number" name="fathers_mobile" class="form-control" id="fathers_mobile" value="<?php echo $basicdetails->fathers_mobile ;?>">
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Mother's Mobile Number</label>
-								<input type="text" name="mothers_mobile" class="form-control" id="mothers_mobile" value="<?php echo $basicdetails->mothers_mobile ;?>">
+								<input type="number" name="mothers_mobile" class="form-control" id="mothers_mobile" value="<?php echo $basicdetails->mothers_mobile ;?>">
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Father's Email Number</label>
-								<input type="text" name="fathers_email" class="form-control" id="fathers_email" value="<?php echo $basicdetails->fathers_email ;?>">
+								<input type="email" name="fathers_email" class="form-control" id="fathers_email" value="<?php echo $basicdetails->fathers_email ;?>">
 							</div>
 						</div>
 						<div class="col-lg-3">
 							<div class="form-group">
 								<label for="exampleInputPassword1">Mother's Email Number</label>
-								<input type="text" name="mothers_email" class="form-control" id="mothers_email" value="<?php echo $basicdetails->mothers_email ;?>">
+								<input type="email" name="mothers_email" class="form-control" id="mothers_email" value="<?php echo $basicdetails->mothers_email ;?>">
 							</div>
 						</div>
 					</div>
