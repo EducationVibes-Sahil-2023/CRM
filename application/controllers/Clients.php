@@ -177,9 +177,10 @@ class Clients extends ClientsController
                 ];
 
                 if ($data['countries'] != "") {
-                    $dataArr['study_country'] = $data['countries'];
+                    // $dataArr['study_country'] = $data['countries'];
                     $dataArr['university'] = json_encode($university_array, true);
                 }
+
 
                 $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $admissionPreferencesIds);
                 if ($admissionPreferencesId) {
