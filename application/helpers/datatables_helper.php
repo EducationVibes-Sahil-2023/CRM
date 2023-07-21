@@ -481,8 +481,12 @@ function get_applicant_status($stage, $client_id)
             $response["applicant_stage_status"] = "Pending";
             $response["updated_date"] = "";
         } else {
-            if ($result->profile_status) {
-                $response["applicant_stage_status"] = "Profile completed";
+            if (!empty($result->profile_status)) {
+                if ($result->profile_status == 1) {
+                    $response["applicant_stage_status"] = "Approved";
+                } else if ($result->profile_status == 2) {
+                    $response["applicant_stage_status"] = "Rejected";
+                }
                 $response["updated_date"] = $result->email_updated_date;
             } else if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
                 $response["applicant_stage_status"] = "Profile completed not approved";
@@ -501,6 +505,8 @@ function get_applicant_status($stage, $client_id)
                     $response["updated_date"] = $result->sop_updated_date;
                 }
                 if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
+                    $response["applicant_stage_status"] = "Application sop updated";
+                    $response["updated_date"] = $result->sop_updated_date;
                 }
             }
         }
