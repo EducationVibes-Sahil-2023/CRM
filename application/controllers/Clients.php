@@ -167,12 +167,12 @@ class Clients extends ClientsController
 
                 $dataArr = [
                     'userid' => get_client_user_id(),
-                    'program' => $data['program'],
-                    'course' => $data['course'],
+                    'program' => !empty($data['program']) ? $data['program'] : '',
+                    'course' => !empty($data['course']) ? $data['course'] : '',
                     'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
-                    'entrance_exam_given' => $data['entrance_exam_given'],
+                    'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
                     'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES') ? $data['entrance_exam_details'] : '',
-                    'session_intake' => $data['session_intake'],
+                    'session_intake' => !empty($data['session_intake']) ? $data['session_intake'] : '',
                     'created_by' => get_client_user_id(),
                 ];
 
@@ -183,7 +183,7 @@ class Clients extends ClientsController
 
 
                 $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $admissionPreferencesIds);
-        
+
                 if ($admissionPreferencesId) {
                     $this->session->set_flashdata('success', "Admission Preferences successfully updated");
                     redirect(site_url('clients/academic_details'));
