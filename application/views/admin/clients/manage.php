@@ -471,7 +471,6 @@
                      if (!is_admin()) {
                         $showField = false;
                         if (!empty($user_lead_type) && !empty($field['show_lead_type'])) {
-                           print_r(explode(",", $field['show_lead_type']));
                            if (in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
                               $showField = true;
                            } else {
