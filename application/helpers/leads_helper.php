@@ -1237,8 +1237,8 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 function calls_update_count($params = false, $max_status = 0)
 {
 
-    // return convertToHMS(0);
-    // die;
+    return convertToHMS(0);
+    die;
     $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
@@ -1276,22 +1276,22 @@ function calls_update_count($params = false, $max_status = 0)
         }
     }
 
-    $CI = get_instance();
-    $batchSize = 1000; // Choose an appropriate batch size based on your data and system's capacity
+    // $CI = get_instance();
+    // $batchSize = 1000; // Choose an appropriate batch size based on your data and system's capacity
 
-    // Prepare the database query
-    $query = $CI->db->query("SELECT id, RIGHT(TRIM(phonenumber), 10) AS phonenumber, assigned AS staffid FROM tblleads");
+    // // Prepare the database query
+    // $query = $CI->db->query("SELECT id, RIGHT(TRIM(phonenumber), 10) AS phonenumber, assigned AS staffid FROM tblleads");
 
-    $totalRows = $query->num_rows();
-    $update_count = 0;
+    // $totalRows = $query->num_rows();
+    // $update_count = 0;
 
-    for ($offset = 0; $offset < $totalRows; $offset += $batchSize) {
-        $leads = array_slice($query->result_array(), $offset, $batchSize);
+    // for ($offset = 0; $offset < $totalRows; $offset += $batchSize) {
+    //     $leads = array_slice($query->result_array(), $offset, $batchSize);
 
-        $update_count += processBatchLeads($leads);
-    }
+    //     $update_count += processBatchLeads($leads);
+    // }
 
-    return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
+    // return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
 
     // $get_lead_ids = $CI->db->query("select id,RIGHT(TRIM(phonenumber), 10) phonenumber,assigned as staffid from tblleads")->result_array();
     // $update_count = 0;
@@ -1381,20 +1381,6 @@ function calls_update_count($params = false, $max_status = 0)
 }
 
 
-// Function to process a batch of leads
-function processBatchLeads($leads)
-{
-    $update_count = 0;
-
-    foreach ($leads as $lead) {
-        $result = call_duration($lead);
-        if (!empty($result[0]["duration"])) {
-            $update_count += $result[0]["duration"];
-        }
-    }
-
-    return $update_count;
-}
 
 function convertToHMS($seconds, $status = 0)
 {
