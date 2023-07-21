@@ -1598,7 +1598,7 @@ class Clients_model extends App_Model
 
     public function addAdmissionPreferences($data, $admissionPreferencesIds)
     {
-        // print_r($admissionPreferencesIds);die;
+        print_r($data);die;
         if ($admissionPreferencesIds < 1) {
             $this->db->insert(db_prefix() . 'admission_preferences', $data);
             $admission_preferencesid = $this->db->insert_id();
