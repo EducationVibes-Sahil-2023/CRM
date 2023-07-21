@@ -576,14 +576,14 @@
 						<div class="card">
 							<div class="row">
 								<h4>10th Academic Details</h4>
-								<div class="col-lg-1 border2 border1">
+								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
 										<p>&nbsp;</p>
 									</div>
 									<div class="c2">
 										<p>10<sup>th</sup></p>
 									</div>
-								</div>
+								</div> -->
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>School Name</p>
@@ -649,14 +649,14 @@
 							</div>
 							<div class="row <?php echo ($academicdetails->twelth_school_name == '') ? 'hide' : ''; ?>" id="twelthAcademicDetails">
 								<h4>12th Academic Details</h4>
-								<div class="col-lg-1 border2 border1">
+								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
 										<p>&nbsp;</p>
 									</div>
 									<div class="c2">
 										<p>12<sup>th</sup></p>
 									</div>
-								</div>
+								</div> -->
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Institute Name</p>
@@ -728,14 +728,14 @@
 							<!-- diploma details-->
 							<div class="row <?php echo ($academicdetails->diploma_institute == '') ? 'hide' : ''; ?>" id="diplomaAcademicDetails">
 								<h4>Diploma Academic Details</h4>
-								<div class="col-lg-1 border2 border1">
+								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
 										<p>&nbsp;</p>
 									</div>
 									<div class="c2">
 										<p>Diploma</p>
 									</div>
-								</div>
+								</div> -->
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Institute Name</p>
@@ -807,14 +807,14 @@
 							<!-- Under Graduate details-->
 							<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
 								<h4>Graduation Details</h4>
-								<div class="col-lg-1 border2 border1">
+								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
 										<p>&nbsp;</p>
 									</div>
 									<div class="c2">
 										<p>Graduation</p>
 									</div>
-								</div>
+								</div> -->
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Institute Name</p>
@@ -909,7 +909,7 @@
 									</div>
 									<div class="c2">
 										<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
-										<select name="entrance_year" id="entrance_year">
+										<select name="entrance_year" id="entrance_year" class="form-control">
 											<option value="">Select</option>
 											<option value="<?= date("Y") - 3; ?>" <?= ((date("Y") - 3) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 3; ?></option>
 											<option value="<?= date("Y") - 2; ?>" <?= ((date("Y") - 2) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 2; ?></option>

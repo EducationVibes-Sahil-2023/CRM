@@ -1217,16 +1217,17 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
 
-            $files = $_FILES['document_file'];
 
             for ($k = $i = 0; $i < count($label_data); $i++) {
                 $upload_data = [];
-                if (!empty($files['name'][$k])) {
-                    $upload_data["name"] = $files['name'][$k];
-                    $upload_data["type"] = $files['type'][$k];
-                    $upload_data["tmp_name"] = $files['tmp_name'][$k];
-                    $upload_data["error"] = $files['error'][$k];
-                    $upload_data["size"] = $files['size'][$k];
+                $files = $_FILES['document_file_' . $k];
+
+                if (!empty($files['name'])) {
+                    $upload_data["name"] = $files['name'];
+                    $upload_data["type"] = $files['type'];
+                    $upload_data["tmp_name"] = $files['tmp_name'];
+                    $upload_data["error"] = $files['error'];
+                    $upload_data["size"] = $files['size'];
                     if ($upload_data["error"] === UPLOAD_ERR_OK) {;
                         $file_name = upload_applicant_documents($client_id, $upload_data);
                         array_push($update_array, array("label_name" => $label_data[$k], "document_file" => $file_name["file_path"]));
