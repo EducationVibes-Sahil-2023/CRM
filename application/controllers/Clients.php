@@ -204,6 +204,12 @@ class Clients extends ClientsController
 
         $this->load->model("leads_model");
         $client = $this->clients_model->get(get_client_user_id());
+        $lead_type_status = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row();
+        if (!empty($lead_type_status->type)) {
+            $data['lead_type_status'] = $lead_type_status->type;
+        } else {
+            $data['lead_type_status'] = "";
+        }
         $data['lead_type'] = $this->leads_model->get_type();
         $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
         $data["lead_data"]                = $this->leads_model->get($client->leadid);
@@ -341,13 +347,7 @@ class Clients extends ClientsController
                 }
             }
         }
-        $client = $this->clients_model->get(get_client_user_id());
-        $lead_type_status = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row();
-        if (!empty($lead_type_status->type)) {
-            $data['lead_type_status'] = $lead_type_status->type;
-        } else {
-            $data['lead_type_status'] = "";
-        }
+
         $data['title']         = "Academic Details";
         $data['announcements'] = $this->announcements_model->get();
         $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
