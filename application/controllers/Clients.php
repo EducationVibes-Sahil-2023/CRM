@@ -331,7 +331,7 @@ class Clients extends ClientsController
                     'after_x_status' => $data['after_tenth'],
 
                 ], $academicDetailsIds);
-            
+
 
                 if ($academicDetailsid) {
                     // echo json_encode(['status'=>1, 'message' =>'Academic details successfully updated.'.$academicDetailsid]);
@@ -341,7 +341,12 @@ class Clients extends ClientsController
                 }
             }
         }
-
+        $lead_type_status = $this->db->select('type')->where('id', get_client_user_id())->get(db_prefix() . 'leads')->row();
+        if (!empty($lead_type_status->type)) {
+            $data['lead_type_status'] = $lead_type_status->type;
+        } else {
+            $data['lead_type_status'] = "";
+        }
         $data['title']         = "Academic Details";
         $data['announcements'] = $this->announcements_model->get();
         $data['university_shortlisting_notification'] = $this->announcements_model->get_university_shortlist_status();
