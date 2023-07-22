@@ -444,7 +444,7 @@
 										<?php
 										array_unshift($lead_type, array("id" => "", "name" => "Select Lead Type"));
 
-										echo render_select('lead_type', $lead_type, array('id', 'name'), "", $lead_data->form_data->lead_status, [], [], "", "", "", "lead_type");
+										echo render_select('lead_type', $lead_type, array('id', 'name'), "", $lead_type_status, [], [], "", "", "", "lead_type");
 										?>
 
 									</div>

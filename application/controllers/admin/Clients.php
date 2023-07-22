@@ -166,7 +166,7 @@ class Clients extends AdminController
             if (!$data['tab']) {
                 show_404();
             }
-            
+
 
             // Fetch data based on groups
             if ($group == 'profile') {
@@ -274,7 +274,7 @@ class Clients extends AdminController
                 }
             }
         }
-
+        $data['lead_type_status'] = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row()->type;
         $this->load->model('currencies_model');
         $data['currencies'] = $this->currencies_model->get();
 
@@ -1154,6 +1154,7 @@ class Clients extends AdminController
                 $dataArr['study_country'] = $params['countries'];
                 $dataArr['university'] = json_encode($params['universities'], true);
             }
+
 
             $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $params['admissionPreferencesId']);
             if ($admissionPreferencesId) {
