@@ -173,6 +173,8 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 }
                 if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
                 } else {
+
+                    $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
                     // Use index
                     if (str_contains($search_value, '!=')) {
                         $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
@@ -201,6 +203,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 if (strpos($columnName, ' as ') !== false) {
                     $columnName = strbefore($columnName, ' as');
                 }
+                $columnName = explode(" ", $columnName)[0];
                 if ($search_value != '') {
                     if (str_contains($search_value, '!=')) {
                         $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
@@ -209,6 +212,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                     }
                     if (count($additionalSelect) > 0) {
                         foreach ($additionalSelect as $searchAdditionalField) {
+                            $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
                             if (str_contains($search_value, '!=')) {
                                 $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
                             } else {
@@ -485,7 +489,7 @@ function get_applicant_status($stage, $client_id)
                 if ($result->profile_status == 1) {
                     $response["applicant_stage_status"] = "Approved";
                 } else if ($result->profile_status == 2) {
-                    $response["applicant_stage_status"] = "Rejected";
+                    $response["applicant_stage_status"] = "Reject";
                 }
                 $response["updated_date"] = $result->email_updated_date;
             } else if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
@@ -501,11 +505,11 @@ function get_applicant_status($stage, $client_id)
                     $response["updated_date"] = $result->vendor_updated_date;
                 }
                 if (!empty($result->sop)) {
-                    $response["applicant_stage_status"] = "Application sop updated";
+                    $response["applicant_stage_status"] = "Application SOP updated";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
                 if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
-                    $response["applicant_stage_status"] = "Application sop updated";
+                    $response["applicant_stage_status"] = "Application SOP updated";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
             }

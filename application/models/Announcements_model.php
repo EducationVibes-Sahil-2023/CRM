@@ -196,10 +196,11 @@ class Announcements_model extends App_Model
 
     public function get_university_shortlist_status()
     {
+        $this->db->where('client_id', get_client_user_id());
         $this->db->where('status', 1);
         $this->db->where('university_status', 0);
         $result = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
 
-        return ($result !== null); // Returns true if a row is found, false otherwise
+        return $result; // Returns true if a row is found, false otherwise
     }
 }

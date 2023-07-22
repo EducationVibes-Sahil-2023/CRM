@@ -135,9 +135,9 @@
 	.tags-input-wrapper input {
 		display: none;
 	}
-	.tags-input-wrapper .tag a
-	{
-		display:none;
+
+	.tags-input-wrapper .tag a {
+		display: none;
 	}
 </style>
 </head>
@@ -572,8 +572,8 @@
 					<div class="c2">
 						<select class="form-control" name="twelth_result_status" id="twelth_result_status">
 							<option>Select</option>
-							<option value="Awaited">Awaited</option>
-							<option value="Declared">Declared</option>
+							<option value="Awaited" <?= ($academicdetails->twelth_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->twelth_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
 						</select>
 					</div>
 				</div>
@@ -655,8 +655,8 @@
 					<div class="c2">
 						<select class="form-control" name="diploma_result_status" id="diploma_result_status">
 							<option>Select</option>
-							<option value="Awaited">Awaited</option>
-							<option value="Declared">Declared</option>
+							<option value="Awaited" <?= ($academicdetails->diploma_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->diploma_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
 						</select>
 					</div>
 				</div>
@@ -875,7 +875,7 @@
 					</div>
 					<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
 						<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
-							<a href="<?= base_url() ?>/clients/upload_document" class="btn btn-primary button-23">Edit Document</a>
+							<a href="<?= base_url() ?>/clients/upload_documents" class="btn btn-primary button-23">Edit Document</a>
 							<!-- <button type="submit" class="btn btn-primary">Save & Next</button> -->
 						</div>
 						<div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
@@ -1193,5 +1193,82 @@
 
 		window.TagsInput = TagsInput;
 
-		$('#study_country').trigger('change')
+
+
+		$(document).ready(function() {
+
+			$('input[type=radio][name=after_tenth]').change(function() {
+				if (this.value == 'Both') {
+					$('#twelthAcademicDetails').css("display", "block");
+					$('#diplomaAcademicDetails').css("display", "block");
+				} else if (this.value == '12th') {
+					$('#diplomaAcademicDetails').css("display", "none");
+					$('#twelthAcademicDetails').css("display", "block");
+				} else if (this.value == 'Diploma') {
+					$('#twelthAcademicDetails').css("display", "none");
+					$('#diplomaAcademicDetails').css("display", "block");
+				}
+			});
+			$("#twelth_result_status").on('change', function() {
+				var trs = $("#twelth_result_status").val();
+				if (trs == 'Awaited') {
+					$("#twelth_marking_scheme_div").hide();
+					$("#twelth_marking_scheme_div").find("select").val('').selectpicker("refresh");
+					$("#twelth_percentage").hide();
+					$("#twelth_percentage").val('');
+
+				} else if (trs == 'Declared') {
+					$("#twelth_marking_scheme_div").show();
+					$("#twelth_percentage").show();
+				}
+			})
+			$("#diploma_result_status").on('change', function() {
+				var drs = $("#diploma_result_status").val();
+				if (drs == 'Awaited') {
+					$("#diploma_marking_scheme_div").hide();
+					$("#diploma_marking_scheme_div").find("select").val('').selectpicker("refresh");
+					$("#diploma_percentage").hide();
+					$("#diploma_percentage").val('');
+
+				} else if (drs == 'Declared') {
+					$("#diploma_marking_scheme_div").show();
+					$("#diploma_percentage").show();
+				}
+			})
+
+			$("#entrance_result_status").on('change', function() {
+				var ers = $("#entrance_result_status").val();
+				if (ers == 'Awaited') {
+					$("#entrance_percentage").hide();
+					$("#entrance_percentage").val('');
+
+				} else if (ers == 'Declared') {
+					$("#entrance_percentage").show();
+				}
+			})
+			$("#graduation_result_status").on('change', function() {
+				var grs = $("#graduation_result_status").val();
+				if (grs == 'Awaited') {
+					$("#graduation_marking_scheme_div").hide();
+					$("#graduation_percentage").hide();
+				} else if (grs == 'Declared') {
+					$("#graduation_percentage").show();
+					$("#graduation_marking_scheme_div").show();
+				}
+			})
+
+			var selectedRadioButton = $("input[type='radio']");
+
+			// Trigger a click event on the selected radio button
+			selectedRadioButton.click();
+			$("input[name='after_tenth']").change(function() {
+				$("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+				$("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
+			})
+			setTimeout(() => {
+				$('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
+
+			}, 1000);
+			$('#study_country').trigger('change');
+		})
 	</script>
