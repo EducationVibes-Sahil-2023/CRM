@@ -186,7 +186,9 @@
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="program">Program</label>
+
 								<input type="hidden" name="admissionPreferencesId" value="<?= $admissionpreferences->id ?>">
+								<input type="hidden" name="direct_pass" value="<?= $admissionpreferences->freeze == 1 ? '1' : '0' ?>">
 								<select class="form-control" name="program" id="program" required <?php echo $freezed ?>>
 									<option value="">Select a Program</option>
 									<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate') ? 'selected' : ''; ?>>Under Graduate</option>

@@ -894,7 +894,7 @@
             program: $('#program').val(),
             course: $('#course').val(),
             sessionIntake: $('#session_intake').val(),
-            countries: $('#countries').val(),
+            countries: $('#study_country').val().join(","),
             entranceExamGiven: $('#entrance_exam_given').val(),
             entranceExamDetails: $('#entrance_exam_details').val(),
             admissionPreferencesId: $('#admissionpreferencesid').val(),
@@ -902,10 +902,15 @@
             universities: {}
         }
 
-        let countriesArr = params.countries.split(',')
+        // let countriesArr = params.countries.split(',')
+        let countriesArr = $('#study_country').val();
 
         $.each(countriesArr, function(k, v) {
             params.universities[v] = $(`#university${k}`).val()
+            if (params.universities[v] == "") {
+                alert_float('danger', "Select " + v + " university is requried.");
+                return false;
+            }
         })
 
         $.ajax({
@@ -941,10 +946,111 @@
             success: function(res) {
                 if (res.resp_code == 'RCS') {
                     var freeze = res.data.is_freezed == 0 ? 'Freeze' : 'Unfreeze'
+                    if (res.data.is_freezed != 0) {
+                        set_frezee();
+                    } else {
+                        un_set_frezee();
+                    }
                     $('#freeze_admission_preferences').html(freeze)
                 }
                 alert(res.resp_desc)
             }
         })
+    })
+
+    function set_frezee() {
+        $("#admission_preferences").find('input,select').attr("disabled", true).selectpicker("refresh");
+        setTimeout(() => {
+            $(".tags-input-wrapper").css("pointer-events", "none");
+        }, 2000);
+        $("#save_admission_preferences").attr("disabled", true);
+    }
+
+    function un_set_frezee() {
+        $("#admission_preferences").find('input,select').attr("disabled", false).selectpicker("refresh");
+        $(".tags-input-wrapper").css("pointer-events", "");
+        $("#save_admission_preferences").attr("disabled", false);
+
+    }
+    if ( admissionpreferences_freeze == 1) {
+        set_frezee();
+    }
+
+    $(document).ready(function() {
+
+        $('input[type=radio][name=after_tenth]').change(function() {
+            if (this.value == 'Both') {
+                $('#twelthAcademicDetails').css("display", "block");
+                $('#diplomaAcademicDetails').css("display", "block");
+            } else if (this.value == '12th') {
+                $('#diplomaAcademicDetails').css("display", "none");
+                $('#twelthAcademicDetails').css("display", "block");
+            } else if (this.value == 'Diploma') {
+                $('#twelthAcademicDetails').css("display", "none");
+                $('#diplomaAcademicDetails').css("display", "block");
+            }
+        });
+        $("#twelth_result_status").on('change', function() {
+            var trs = $("#twelth_result_status").val();
+            if (trs == 'Awaited') {
+                $("#twelth_marking_scheme_div").hide();
+                $("#twelth_marking_scheme_div").find("select").val('').selectpicker("refresh");
+                $("#twelth_percentage").parents(".border2").hide();
+                $("#twelth_percentage").val('');
+
+            } else if (trs == 'Declared') {
+                $("#twelth_marking_scheme_div").show();
+                $("#twelth_percentage").parents(".border2").show();
+            }
+        })
+        $("#diploma_result_status").on('change', function() {
+            var drs = $("#diploma_result_status").val();
+            if (drs == 'Awaited') {
+                $("#diploma_marking_scheme_div").hide();
+                $("#diploma_marking_scheme_div").find("select").val('').selectpicker("refresh");
+                $("#diploma_percentage").parents(".border2").hide();
+                $("#diploma_percentage").val('');
+
+            } else if (drs == 'Declared') {
+                $("#diploma_marking_scheme_div").show();
+                $("#diploma_percentage").parents(".border2").show();
+            }
+        })
+
+        $("#entrance_result_status").on('change', function() {
+            var ers = $("#entrance_result_status").val();
+            if (ers == 'Awaited') {
+                $("#entrance_percentage").parents(".border2").hide();
+                $("#entrance_percentage").val('');
+
+            } else if (ers == 'Declared') {
+                $("#entrance_percentage").parents(".border2").show();
+            }
+        })
+        $("#graduation_result_status").on('change', function() {
+            var grs = $("#graduation_result_status").val();
+            if (grs == 'Awaited') {
+                $("#graduation_marking_scheme_div").hide();
+                $("#graduation_percentage").parents(".border2").hide();
+            } else if (grs == 'Declared') {
+                $("#graduation_percentage").parents(".border2").show();
+                $("#graduation_marking_scheme_div").show();
+            }
+        })
+
+        var selectedRadioButton = $("input[type='radio']");
+
+        // Trigger a click event on the selected radio button
+        selectedRadioButton.click();
+        $("input[name='after_tenth']").change(function() {
+            $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+            $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
+        })
+        setTimeout(() => {
+            $('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
+
+        }, 1000);
+        $('#study_country').trigger('change');
+        $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
     })
 </script>

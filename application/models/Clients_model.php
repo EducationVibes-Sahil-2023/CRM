@@ -1567,6 +1567,7 @@ class Clients_model extends App_Model
     public function getAcademicDetails($userid)
     {
         $this->db->where('userid', $userid);
+        $this->db->order_by('id', "DESC");
         return $this->db->get(db_prefix() . 'academic_details')->row();
     }
     public function getDeclarationDetails($userid)
@@ -1634,8 +1635,17 @@ class Clients_model extends App_Model
 
     public function addAcademicDetails($data)
     {
-        $this->db->insert(db_prefix() . 'academic_details', $data);
-        $academic_detailsid = $this->db->insert_id();
+        $check_data = $this->db->select("id")->where("userid", $data["userid"])->order_by("id", "desc")->get(db_prefix() . 'academic_details')->row();
+        if (!empty($check_data->id)) {
+            $data["id"] = $check_data->id;
+            $academic_detailsid = $check_data->id;
+            $this->db->where('id', $check_data->id);
+            $this->db->update(db_prefix() . 'academic_details', $data);
+        } else {
+            $this->db->insert(db_prefix() . 'academic_details', $data);
+            $academic_detailsid = $this->db->insert_id();
+        }
+
         if ($academic_detailsid) {
             $this->db->where('userid', $data['userid']);
             $this->db->update(db_prefix() . 'contacts', ['academic_details_status' => 1]);

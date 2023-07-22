@@ -22,12 +22,12 @@ $aColumns = [
     db_prefix() . 'contacts.email  as email',
     db_prefix() . 'clients.phonenumber as phonenumber',
     db_prefix() . 'clients.active',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'customer_groups JOIN ' . db_prefix() . 'customers_groups ON ' . db_prefix() . 'customer_groups.groupid = ' . db_prefix() . 'customers_groups.id WHERE customer_id = ' . db_prefix() . 'clients.userid ORDER by name ASC) as customerGroups',
+    // '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'customer_groups JOIN ' . db_prefix() . 'customers_groups ON ' . db_prefix() . 'customer_groups.groupid = ' . db_prefix() . 'customers_groups.id WHERE customer_id = ' . db_prefix() . 'clients.userid ORDER by name ASC) as customerGroups',
     db_prefix() . 'clients.datecreated as datecreated',
     db_prefix() . 'leads_status.name as status_name',
     db_prefix() . 'leads_type.name as type_name',
     db_prefix() . 'leads_sources.name as source_name',
-    'GROUP_CONCAT(' . db_prefix() . 'client_university_shortlisting.vendor_id) as vendor_id',
+    // 'GROUP_CONCAT(' . db_prefix() . 'client_university_shortlisting.vendor_id) as vendor_id',
 
 ];
 
@@ -113,7 +113,7 @@ foreach ($groups as $group) {
     }
 }
 if (count($groupIds) > 0) {
-    array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_groups WHERE groupid IN (' . implode(', ', $groupIds) . '))');
+    // array_push($filter, 'AND ' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_groups WHERE groupid IN (' . implode(', ', $groupIds) . '))');
 }
 
 $countries  = $this->ci->clients_model->get_clients_distinct_countries();
@@ -285,6 +285,8 @@ if ($this->ci->input->post('to_date')) {
     $to_date = $this->ci->input->post('to_date');
     array_push($where, 'AND DATE(' . db_prefix() . 'clients.datecreated) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
 }
+// echo "<pre>";
+// print_r($aColumns);
 
 $aColumns = hooks()->apply_filters('customers_table_sql_columns', $aColumns);
 
@@ -292,6 +294,8 @@ $aColumns = hooks()->apply_filters('customers_table_sql_columns', $aColumns);
 if (count($custom_fields) > 4) {
     @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
 }
+// print_r($aColumns);
+// die;
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     db_prefix() . 'contacts.id as contact_id',
@@ -301,7 +305,6 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     db_prefix() . 'applicant_tracker.name applicant_stage_name',
     db_prefix() . 'applicant_tracker.id applicant_stage_id',
 ], 'GROUP BY ' . db_prefix() . 'clients.userid');
-
 
 $output  = $result['output'];
 $rResult = $result['rResult'];

@@ -1,8 +1,20 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
-
+<script>
+	var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
+</script>
 <style>
+	.accadmic-education-div {
+		padding: 10px;
+		background: lightgrey;
+		margin-bottom: 10px;
+	}
+
+	.accadmic-education-div h4 {
+		text-align: center;
+	}
+
 	.tags-input-wrapper {
 		background: transparent;
 		padding: 10px;
@@ -64,8 +76,10 @@
 	}
 </style>
 
+
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
+
 	<?php echo form_open($this->uri->uri_string(), array('class' => 'client-form', 'autocomplete' => 'off')); ?>
 	<div class="additional"></div>
 	<div class="col-md-12">
@@ -103,9 +117,9 @@
 					<li role="presentation">
 						<a href="#academic_details" aria-controls="academic_details" role="tab" data-toggle="tab">Academic Details</a>
 					</li>
-					<li role="presentation">
+					<!-- <li role="presentation">
 						<a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a>
-					</li>
+					</li> -->
 					<li role="presentation">
 						<a href="#declaration" aria-controls="declaration" role="tab" data-toggle="tab">Declaration</a>
 					</li>
@@ -574,7 +588,7 @@
 				<div class="row">
 					<div class="col-md-12">
 						<div class="card">
-							<div class="row">
+							<div class="row accadmic-education-div">
 								<h4>10th Academic Details</h4>
 								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
@@ -634,7 +648,7 @@
 								</div>
 								<div class="col-lg-3 border2 border1">
 									<div class="c1">
-										<p>Obtained Percentage / CGPA</p>
+										<p>Percentage / CGPA</p>
 									</div>
 									<div class="c2">
 										<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" maxlength="3" value="<?= $academicdetails->tenth_marking_scheme; ?>">
@@ -647,8 +661,9 @@
 								<input type="radio" name="after_tenth" value="Diploma">&nbsp;&nbsp;Diploma
 								<input type="radio" name="after_tenth" value="Both">&nbsp;&nbsp;Both
 							</div>
-							<div class="row <?php echo ($academicdetails->twelth_school_name == '') ? 'hide' : ''; ?>" id="twelthAcademicDetails">
+							<div class="row accadmic-education-div <?php echo ($academicdetails->twelth_school_name == '') ? 'hide' : ''; ?>" id="twelthAcademicDetails">
 								<h4>12th Academic Details</h4>
+
 								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
 										<p>&nbsp;</p>
@@ -688,15 +703,15 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-lg-1 border2 border1">
+								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Result Status</p>
 									</div>
 									<div class="c2">
 										<select class="form-control" name="twelth_result_status" id="twelth_result_status">
 											<option>Select</option>
-											<option value="Awaited">Awaited</option>
-											<option value="Declared">Declared</option>
+											<option value="Awaited" <?= ($academicdetails->twelth_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+											<option value="Declared" <?= ($academicdetails->twelth_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
 										</select>
 									</div>
 								</div>
@@ -718,7 +733,7 @@
 								</div>
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
-										<p>Obtained Percentage / CGPA</p>
+										<p>Percentage / CGPA</p>
 									</div>
 									<div class="c2">
 										<input class="form-control" type="text" placeholder="Enter Your 12th Percentage" name="twelth_percentage" id="twelth_percentage" value="<?= $academicdetails->twelth_percentage; ?>">
@@ -726,7 +741,7 @@
 								</div>
 							</div>
 							<!-- diploma details-->
-							<div class="row <?php echo ($academicdetails->diploma_institute == '') ? 'hide' : ''; ?>" id="diplomaAcademicDetails">
+							<div class="row accadmic-education-div <?php echo ($academicdetails->diploma_institute == '') ? 'hide' : ''; ?>" id="diplomaAcademicDetails">
 								<h4>Diploma Academic Details</h4>
 								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
@@ -766,15 +781,15 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-lg-1 border2 border1">
+								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Result Status</p>
 									</div>
 									<div class="c2">
 										<select class="form-control" name="diploma_result_status" id="diploma_result_status">
 											<option>Select</option>
-											<option value="Awaited">Awaited</option>
-											<option value="Declared">Declared</option>
+											<option value="Awaited" <?= ($academicdetails->diploma_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+											<option value="Declared" <?= ($academicdetails->diploma_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
 										</select>
 									</div>
 								</div>
@@ -796,7 +811,7 @@
 								</div>
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
-										<p>Obtained Percentage / CGPA</p>
+										<p>Percentage / CGPA</p>
 									</div>
 									<div class="c2">
 										<input class="form-control" type="text" class="form-group" placeholder="Enter Diploma Percentage" name="diploma_percentage" maxlength="3" id="diploma_percentage" value="<?= $academicdetails->diploma_percentage; ?>">
@@ -805,7 +820,7 @@
 							</div>
 							<!-- end diploma details-->
 							<!-- Under Graduate details-->
-							<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
+							<div class="row accadmic-education-div <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
 								<h4>Graduation Details</h4>
 								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
@@ -874,7 +889,7 @@
 								</div>
 								<div class="col-lg-2 border2 border1">
 									<div class="c1">
-										<p>Obtained Percentage / CGPA</p>
+										<p> Percentage / CGPA</p>
 									</div>
 									<div class="c2">
 										<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" maxlength="3" id="graduation_percentage" value="<?= $academicdetails->graduation_percentage; ?>">
@@ -885,16 +900,16 @@
 							<hr>
 							<?php // if($basicdetails->entrance_exam_details !=''){ 
 							?>
-							<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
-								<h4>Entrance Exam</h4>
-								<div class="col-lg-1 border2 border1">
+							<div class="row accadmic-education-div <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
+								<h4>Entrance Exam - (<?= $admissionpreferences->entrance_exam_details; ?>)</h4>
+								<!-- <div class="col-lg-1 border2 border1">
 									<div class="c1">
 										<p>&nbsp;</p>
 									</div>
 									<div class="c2">
 										<p><?= $admissionpreferences->entrance_exam_details; ?></p>
 									</div>
-								</div>
+								</div> -->
 								<div class="col-lg-3 border2 border1">
 									<div class="c1">
 										<p>Roll No. / Registration No.</p>

@@ -166,6 +166,7 @@ class Clients extends AdminController
             if (!$data['tab']) {
                 show_404();
             }
+            
 
             // Fetch data based on groups
             if ($group == 'profile') {
@@ -173,9 +174,7 @@ class Clients extends AdminController
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
-
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
-
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
                 $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
             } elseif ($group == 'attachments') {
