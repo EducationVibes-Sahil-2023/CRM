@@ -341,7 +341,8 @@ class Clients extends ClientsController
                 }
             }
         }
-        $lead_type_status = $this->db->select('type')->where('id', get_client_user_id())->get(db_prefix() . 'leads')->row();
+        $client = $this->clients_model->get(get_client_user_id());
+        $lead_type_status = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row();
         if (!empty($lead_type_status->type)) {
             $data['lead_type_status'] = $lead_type_status->type;
         } else {
