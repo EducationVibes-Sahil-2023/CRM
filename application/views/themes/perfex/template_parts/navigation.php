@@ -119,7 +119,8 @@
 
 <?php
 $university_shortlisting_notification = $this->announcements_model->get_university_shortlist_status();
-if (is_client_logged_in() && !empty($university_shortlisting_notification) && $university_shortlisting_notification == true) {
+
+if (is_client_logged_in() && !empty($university_shortlisting_notification) ) {
 ?>
    <div class="container">
       <div class="alert alert-info" role="alert">

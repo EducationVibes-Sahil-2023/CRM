@@ -1218,7 +1218,12 @@ if (empty($customer_admins)) { ?>
                         html += '</h3>';
                     }
                     $("#upload_documents").find(".remove_document_btn").show();
-                    $("#upload_documents").find(".remove_document_btn:first").hide();
+                    if ($(".remove_document_btn").length == 1) {
+                        $("#upload_documents").find(".remove_document_btn:first").hide();
+                    } else {
+
+
+                    }
                     $("#upload_documents").find(".add_document_btn:last").show();
                 }
                 $(".document_approval_message_action").html(html);
@@ -1830,32 +1835,29 @@ if (empty($customer_admins)) { ?>
             }
 
         } else if (type === "offer_div") {
-
             if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
-
                 return false;
             }
 
             let validate_offer_letter = await is_validate_offer_letter();
 
             if (validate_offer_letter) {
-                check_offer_status
+                check_offer_status();
                 let update_university_offer_status = await update_university_offer_application();
 
                 if (update_university_offer_status.resp_code === "RCS") {
                     location.reload();
-
                     alert_float("success", update_university_offer_status.resp_desc);
-                    return false;
                 } else {
                     hide_loader();
                     alert_float("danger", update_university_offer_status.resp_desc);
                 }
                 return false;
+
             } else {
                 hide_loader();
+                return false;
             }
-
         }
 
 
@@ -1876,79 +1878,172 @@ if (empty($customer_admins)) { ?>
         next_fs.slideDown("slow");
     }
 
-    function is_validate_offer_letter() {
-        return new Promise(async function(resolve, reject) {
-            try {
-                $("#offer_div .university_div_application").each(async function() {
-                    let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
-                    let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
-                    let media_file = $(this).find("input[name='offer_letter']").val();
-                    let media_file_url = $(this).find("input[name='offer_letter']").data("file-name"); // Fix: Retrieve the 'href' attribute correctly
-                    // console.log(upload_media_status);
-                    // console.log(offer_letter_status);
-                    if (upload_media_status == 1) {
-                        if (media_file === "" && media_file_url === "") {
-                            hide_loader();
-                            $(this).find("input[name='offer_letter']").focus();
-                            alert_float("danger", "Upload offer letter file.");
-                            reject("Offer letter file is missing."); // Reject the promise if the offer letter file is missing
-                            return false;
-                        }
-                        if (offer_letter_status == 2) {
-                            try {
-                                let check_condition = await is_validate_offer_condition(this); // Await the validation of offer conditions
-                                hide_loader();
-                                // console.log(check_condition);
-                                if (!check_condition) {
-                                    return false;
-                                }
-                            } catch (error) {
-                                hide_loader();
-                                reject(error); // Reject the promise if offer conditions are invalid
-                                return false;
-                            }
-                        }
-                    }
-                });
+    // async function is_validate_offer_letter() {
+    //     try {
+    //         let isValid = true;
+    //         $("#offer_div .university_div_application").each(async function() {
+    //             let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
+    //             let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
+    //             let media_file = $(this).find("input[name='offer_letter']").val();
+    //             let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
 
-                resolve(true); // Resolve the promise if all validations pass
-            } catch (error) {
-                hide_loader();
-                reject(error); // Reject the promise in case of any other errors
+    //             if (upload_media_status == 1) {
+    //                 if (media_file === "" && media_file_url === "") {
+    //                     hide_loader();
+    //                     $(this).find("input[name='offer_letter']").focus();
+    //                     alert_float("danger", "Upload offer letter file.");
+    //                     isValid = false;
+    //                     return false; // Return false if the offer letter file is missing
+    //                 }
+
+    //                 if (offer_letter_status == 2) {
+    //                     try {
+    //                         let check_condition = await is_validate_offer_condition(this);
+    //                         console.log(check_condition);
+    //                         hide_loader();
+
+    //                         if (check_condition === false) {
+    //                             isValid = false;
+    //                             return false; // Return false if the offer conditions are invalid
+    //                         }
+    //                     } catch (error) {
+    //                         hide_loader();
+    //                         isValid = false;
+    //                         return false; // Return false if there's an error validating offer conditions
+    //                     }
+    //                 }
+    //             }
+    //         });
+
+    //         console.log(isValid);
+    //         return isValid; // Return the validation result
+    //     } catch (error) {
+    //         hide_loader();
+    //         throw error; // Rethrow the error if there's any other unexpected error
+    //     }
+    // }
+
+    // async function is_validate_offer_condition(obj) {
+    //     try {
+    //         let isValid = true;
+
+    //         $(obj).find(".text-area-field .text-area-field-div").each(function() {
+    //             let condition = $(this).find("textarea[name='condition_text']").val();
+    //             let condition_file = $(this).find("input[name='condition_file']").val();
+    //             let condition_file_url = $(this).find("input[name='condition_file']").data("file-url");
+
+    //             if (condition === '') {
+    //                 $(this).find("textarea[name='condition_text']").focus();
+    //                 alert_float("danger", "Upload offer letter condition.");
+    //                 isValid = false;
+    //                 return false; // Return false if the offer letter condition is missing
+    //             } else if (condition_file === '' && condition_file_url === "") {
+    //                 $(this).find("input[name='condition_file']").focus();
+    //                 alert_float("danger", "Upload offer letter condition file.");
+    //                 isValid = false;
+    //                 return false; // Return false if the offer letter condition file is missing
+    //             }
+    //         });
+
+    //         return isValid; // Return the validation result
+    //     } catch (error) {
+    //         throw error; // Rethrow the error if there's any other unexpected error
+    //     }
+    // }
+
+
+    async function is_validate_offer_letter() {
+        try {
+            let isValid = true;
+            const validations = [];
+
+            $("#offer_div .university_div_application").each(async function() {
+                let offer_letter_status = $(this).find("select[name='university_status_submit_offer']").val();
+                let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
+                let media_file = $(this).find("input[name='offer_letter']").val();
+                let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
+
+                if (upload_media_status == 1) {
+                    if (media_file === "" && media_file_url === "") {
+                        hide_loader();
+                        $(this).find("input[name='offer_letter']").focus();
+                        alert_float("danger", "Upload offer letter file.");
+                        isValid = false;
+                        return false; // Return false if the offer letter file is missing
+                    }
+
+                    if (offer_letter_status == 2) {
+                        // validations.push(is_validate_offer_condition(this));
+
+                        // $(this).find(".text-area-field .text-area-field-div").each(function() {
+                        //     let condition = $(this).find("textarea[name='condition_text']").val();
+                        //     let condition_file = $(this).find("input[name='condition_file']").val();
+                        //     let condition_file_url = $(this).find("input[name='condition_file']").data("file-url");
+
+                        //     if (condition === '') {
+                        //         $(this).find("textarea[name='condition_text']").focus();
+                        //         alert_float("danger", "Upload offer letter condition.");
+                        //         isValid = false;
+                        //         return false; // Return false if the offer letter condition is missing
+                        //     } else if (condition_file === '' && condition_file_url === "") {
+                        //         $(this).find("input[name='condition_file']").focus();
+                        //         alert_float("danger", "Upload offer letter condition file.");
+                        //         isValid = false;
+                        //         return false; // Return false if the offer letter condition file is missing
+                        //     }
+                        // });
+                        isValid = await is_validate_offer_condition(this);
+                        console.log(isValid);
+                    }
+                }
+            });
+
+            // Wait for all the validations to complete using Promise.all
+            await Promise.all(validations);
+
+            if (!isValid) {
+                return false; // Return false if the offer letter is not valid
             }
-        });
+
+            // Continue with other validations or actions if needed
+            // ...
+
+            return isValid; // Return the validation result
+        } catch (error) {
+            hide_loader();
+            throw error; // Rethrow the error if there's any other unexpected error
+        }
     }
 
-    function is_validate_offer_condition(obj) {
-        return new Promise(function(resolve, reject) {
-            var isValid = true;
+    async function is_validate_offer_condition(obj) {
+        try {
+            let isValid = true;
 
             $(obj).find(".text-area-field .text-area-field-div").each(function() {
                 let condition = $(this).find("textarea[name='condition_text']").val();
                 let condition_file = $(this).find("input[name='condition_file']").val();
                 let condition_file_url = $(this).find("input[name='condition_file']").data("file-url");
-
+                if (condition_file_url === undefined) {
+                    condition_file_url = "";
+                }
                 if (condition === '') {
                     $(this).find("textarea[name='condition_text']").focus();
                     alert_float("danger", "Upload offer letter condition.");
                     isValid = false;
-                    resolve(false); // Resolve with 'false' if the offer letter condition is missing
-                    return false;
+                    return false; // Return false if the offer letter condition is missing
                 } else if (condition_file === '' && condition_file_url === "") {
                     $(this).find("input[name='condition_file']").focus();
                     alert_float("danger", "Upload offer letter condition file.");
                     isValid = false;
-                    resolve(false); // Resolve with 'false' if the offer letter condition file is missing
-                    return false;
+                    return false; // Return false if the offer letter condition file is missing
                 }
             });
 
-            if (isValid) {
-                resolve(true); // Resolve with 'true' if all conditions are valid
-            }
-        });
+            return isValid; // Return the validation result
+        } catch (error) {
+            throw error; // Rethrow the error if there's any other unexpected error
+        }
     }
-
 
 
     function is_validate_profile() {

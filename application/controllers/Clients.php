@@ -147,7 +147,12 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('course', _l('Course'), 'required');
             $this->form_validation->set_rules('study_country', _l('Country'), 'required');
 
-            if ($this->form_validation->run() !== false) {
+            if ($_POST["direct_pass"] == 1) {
+                $this->session->set_flashdata('success', "Admission Preferences successfully updated");
+                redirect(site_url('clients/academic_details'));
+            }
+
+            if ($this->form_validation->run() !== false && $_POST["direct_pass"] == 0) {
                 $data = $this->input->post();
 
                 $admissionPreferencesIds = (($this->input->post('admissionPreferencesId')) > 0) ? $this->input->post('admissionPreferencesId') : 0;
@@ -195,6 +200,7 @@ class Clients extends ClientsController
             //    echo validation_errors('<div class="alert alert-danger text-center">', '</div>');
             // }
         }
+
 
         $this->load->model("leads_model");
         $client = $this->clients_model->get(get_client_user_id());
@@ -287,6 +293,7 @@ class Clients extends ClientsController
 
             if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
+
                 // define('CONTACT_REGISTERING', true);
                 $academicDetailsIds = (($this->input->post('academicDetailsId')) > 0) ? $this->input->post('academicDetailsId') : 0;
                 $academicDetailsid = $this->clients_model->addAcademicDetails([
@@ -299,6 +306,7 @@ class Clients extends ClientsController
                     'twelth_school_name' => $data['twelth_school_name'],
                     'twelth_board' => $data['twelth_board'],
                     'twelth_passing_year' => $data['twelth_passing_year'],
+                    'twelth_result_status'  => $data['twelth_result_status'],
                     'twelth_marking_scheme' => $data['twelth_marking_scheme'],
                     'twelth_percentage' => $data['twelth_percentage'],
                     'diploma_institute' => $data['diploma_institute'],
@@ -319,10 +327,11 @@ class Clients extends ClientsController
                     'entrance_roll' => $data['entrance_roll'],
                     'entrance_year' => $data['entrance_year'],
                     'entrance_result_status' => $data['entrance_result_status'],
-                    'entrance_percentage' => $data['entrance_percentage']
+                    'entrance_percentage' => $data['entrance_percentage'],
+                    'after_x_status' => $data['after_tenth'],
 
                 ], $academicDetailsIds);
-
+            
 
                 if ($academicDetailsid) {
                     // echo json_encode(['status'=>1, 'message' =>'Academic details successfully updated.'.$academicDetailsid]);
