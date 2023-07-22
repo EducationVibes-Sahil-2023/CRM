@@ -1749,6 +1749,7 @@ class Clients extends AdminController
                     get_applicant_status(2, $client_id);
                     $rows_affected = $this->db->affected_rows();
                 } else {
+                    get_applicant_status(1, $client_id);
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile is Reject by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
 
