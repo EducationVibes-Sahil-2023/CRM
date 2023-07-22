@@ -1848,6 +1848,7 @@ class Clients extends AdminController
 
             $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
             $media_file_condition = !empty($_FILES["conditional_media_file"]) ? $_FILES["conditional_media_file"] : [];
+     
 
             $university_shortlisting_update_arr = [];
             if (!empty($university_ids)) {
@@ -1886,8 +1887,6 @@ class Clients extends AdminController
                 $index_u = 0;
                 foreach ($conditional_array as $keyy => $con) {
                     $con_array = json_decode($con);
-
-
                     if (empty($con_array->university_status) || $con_array->university_status == '' || $con_array->university_status <= 0) {
 
                         $this->db->where('client_id', $client_id);
@@ -1926,7 +1925,6 @@ class Clients extends AdminController
                         }
                     }
                 }
-
 
 
                 $update_university = "";

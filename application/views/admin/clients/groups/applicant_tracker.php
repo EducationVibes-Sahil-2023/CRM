@@ -1962,7 +1962,9 @@ if (empty($customer_admins)) { ?>
                 let upload_media_status = $("option:selected", $(this).find("select[name='university_status_submit_offer']")).data("selected-file");
                 let media_file = $(this).find("input[name='offer_letter']").val();
                 let media_file_url = $(this).find("input[name='offer_letter']").data("file-name");
-
+                if (media_file_url === undefined) {
+                    media_file_url = "";
+                }
                 if (upload_media_status == 1) {
                     if (media_file === "" && media_file_url === "") {
                         hide_loader();
