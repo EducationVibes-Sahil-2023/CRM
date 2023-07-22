@@ -462,8 +462,8 @@ if (empty($customer_admins)) { ?>
                                 ?>
                             </div>
 
-                            <div class="document_approval_message_action">
-                            </div>
+                            <!-- <div class="document_approval_message_action">
+                            </div> -->
                         <?php
                         } else if ($track["show_div_name"] == "profile_div") { ?>
                             <div id="profile_creation_div">
@@ -480,17 +480,18 @@ if (empty($customer_admins)) { ?>
                                         <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
                                     </div>
                                 </div>
-                                <div class="row profile-div-save">
+                                <!-- <div class="row profile-div-save">
                                     <div class="col-md-4">
                                         <label>Vendor <span class="text-danger">*</span></label>
                                     </div>
                                     <div class="col-md-4">
                                         <?php
-                                        $selected_vendor = !empty($profile_creation_data[0]["vendor"]) ? explode(",", $profile_creation_data[0]["vendor"]) : [];
-                                        echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); ?>
+                                        // $selected_vendor = !empty($profile_creation_data[0]["vendor"]) ? explode(",", $profile_creation_data[0]["vendor"]) : [];
+                                        // echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); 
+                                        ?>
                                     </div>
 
-                                </div>
+                                </div> -->
                                 <div class="row profile-div-save">
                                     <div class="col-md-4">
                                         <label>Sop <span class="text-danger">*</span></label>
@@ -527,8 +528,8 @@ if (empty($customer_admins)) { ?>
                                     </div>
                                 </div>
                             </div>
-                            <div class="profile_approval_message_action">
-                            </div>
+                            <!-- <div class="profile_approval_message_action">
+                            </div> -->
                         <?php } else if ($track["show_div_name"] == "university_div") {
                             $selected_university = json_decode($admissionpreferences->university, true);
                             $university_drop_down = [];
@@ -543,9 +544,9 @@ if (empty($customer_admins)) { ?>
                                 <?php if (!empty($university_shortlisting)) {
                                     foreach ($university_shortlisting as $key_u => $short_list) {
                                 ?>
-                                        <div class="col-md-12 university_div <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>">
-                                            <div class="col-md-2">
-                                                <?= ($short_list["university_status"] == 1) ? 'Approved' : (($short_list["university_status"] == 2) ? 'Reject' : '') ?>
+                                        <div class="col-md-12 university_div  <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>   <?= ($short_list["university_status"] == 1) ? 'bg-success' : (($short_list["university_status"] == 2) ? 'bg-danger' : 'bg-warning') ?>" style="    padding: 20px; margin: 4px;">
+
+                                            <div class="col-md-4">
                                             </div>
                                             <div class="col-md-4">
                                                 <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
@@ -576,12 +577,17 @@ if (empty($customer_admins)) { ?>
                                                 </select>
                                             </div>
                                             <div class="col-md-4">
+                                            </div>
+                                            <!-- <div class="col-md-2">
+                                                <?= ($short_list["university_status"] == 1) ? 'Approved' : (($short_list["university_status"] == 2) ? 'Reject' : '') ?>
+                                            </div> -->
+                                            <!-- <div class="col-md-4">
                                                 <?php
                                                 $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
                                                 echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
                                                 ?>
                                                 <input type="hidden" class="university_status_check" value="<?= $short_list["university_status"] ?>">
-                                            </div>
+                                            </div> -->
 
                                             <div class="col-md-2">
                                                 <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
@@ -597,7 +603,7 @@ if (empty($customer_admins)) { ?>
 
                                 <?php } else { ?>
                                     <div class="col-md-12 university_div university_div_">
-                                        <div class="col-md-2">
+                                        <div class="col-md-4">
                                         </div>
                                         <div class="col-md-4">
                                             <input type="hidden" name="university_id">
@@ -627,19 +633,14 @@ if (empty($customer_admins)) { ?>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <?php
-                                            // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
-
-                                            echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'));
-                                            ?>
                                         </div>
 
 
                                     </div>
                                 <?php } ?>
                             </div>
-                            <div class="university_approval_message_action">
-                            </div>
+                            <!-- <div class="university_approval_message_action">
+                            </div> -->
 
                         <?php } else if ($track["show_div_name"] == "application_div") {
                             $selected_university = json_decode($admissionpreferences->university, true);
@@ -659,22 +660,22 @@ if (empty($customer_admins)) { ?>
                                         if (!empty($selected_university_application) && $selected_university_application == 1) {
                                 ?>
                                             <div class="col-md-12 university_div_application mt-2">
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
                                                     <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
                                                     <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
                                                 </div>
-                                                <div class="col-md-3">
+                                                <!-- <div class="col-md-3">
                                                     <?php
                                                     // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
-                                                    $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
+                                                    // $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
                                                     // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
                                                     // echo $select_dropdown_value[$selected_vendor];
 
                                                     ?>
                                                     <input type="input" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
-                                                </div>
+                                                </div> -->
 
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
                                                     <?php
 
 
@@ -683,7 +684,7 @@ if (empty($customer_admins)) { ?>
 
                                                 </div>
 
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
                                                     <?php
 
                                                     $university_status_submit_new = array($university_status_submit[0]);
@@ -729,12 +730,12 @@ if (empty($customer_admins)) { ?>
                                                 <input type="hidden" class="form-control" name="university_status" value="<?= $short_list["university_offer_status"] ?>">
                                                 <input type="input" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
                                             </div>
-                                            <div class="col-md-2">
+                                            <!-- <div class="col-md-2">
                                                 <?php $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : ""; ?>
                                                 <input type="input" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
-                                            </div>
+                                            </div> -->
 
-                                            <div class="col-md-2">
+                                            <div class="col-md-3">
                                                 <?php
                                                 // $selected_university_application = 2;
                                                 $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
@@ -742,7 +743,7 @@ if (empty($customer_admins)) { ?>
                                                 ?>
                                             </div>
 
-                                            <div class="col-md-2">
+                                            <div class="col-md-3">
                                                 <select name="university_status_submit_offer" class=" university_status_submit_offer selectpicker" data-width="100%" data-none-selected-text="Non selected" data-live-search="true">
                                                     <option></option>
                                                     <?php

@@ -493,23 +493,23 @@ function get_applicant_status($stage, $client_id)
                 }
                 $response["updated_date"] = $result->email_updated_date;
             } else if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
-                $response["applicant_stage_status"] = "Profile completed not approved";
+                $response["applicant_stage_status"] = "Profile pending";
                 $response["updated_date"] = $result->email_updated_date;
             } else {
                 if (!empty($result->email)) {
-                    $response["applicant_stage_status"] = "Application email created";
+                    $response["applicant_stage_status"] = "Email created";
                     $response["updated_date"] = $result->email_updated_date;
                 }
                 if (!empty($result->vendor)) {
-                    $response["applicant_stage_status"] = "Application vendor selected";
+                    $response["applicant_stage_status"] = "Vendor updated";
                     $response["updated_date"] = $result->vendor_updated_date;
                 }
                 if (!empty($result->sop)) {
-                    $response["applicant_stage_status"] = "Application SOP updated";
+                    $response["applicant_stage_status"] = "SOP completed";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
                 if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
-                    $response["applicant_stage_status"] = "Application SOP updated";
+                    $response["applicant_stage_status"] = "SOP completed";
                     $response["updated_date"] = $result->sop_updated_date;
                 }
             }
@@ -603,7 +603,7 @@ function get_applicant_status($stage, $client_id)
     } else if ($stage == 5) {
         $result =  get_stage_5($stage, $client_id);
         if (empty($result)) {
-            $response["applicant_stage_status"] = "Offer letter is pedding";
+            $response["applicant_stage_status"] = "Pending";
             $response["updated_date"] = "";
         } else {
             $max_date = $result->created_date;

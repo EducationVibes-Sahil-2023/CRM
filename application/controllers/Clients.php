@@ -1993,10 +1993,12 @@ class Clients extends ClientsController
                 $this->db->where("userid", get_client_user_id());
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
                 $rows_affected = $this->db->affected_rows();
+                get_applicant_status(3, get_client_user_id());
+            } else {
+                get_applicant_status(2, get_client_user_id());
             }
 
             $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisting by Applicant - " . get_contact_user_name(), "date" => date('Y-m-d H:i:s'), "contact_id" => get_contact_user_id(), "client_id" => get_client_user_id()));
-            get_applicant_status(3, get_client_user_id());
             if ($rows_affected > 0) {
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
