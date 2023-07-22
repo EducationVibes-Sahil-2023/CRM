@@ -652,8 +652,8 @@ function get_applicant_status($stage, $client_id)
     if (empty($update_array_data["application_text"])) {
         $update_array_data["application_text"] = "pending";
     }
-    if (empty($response["application_text"])) {
-        $response["application_text"] = "pending";
+    if (empty($response["applicant_stage_status"])) {
+        $response["applicant_stage_status"] = "pending";
     }
     if (!empty($update_array_data) && !empty($update_array_data["application_text"])) {
         $CI->db->where("userid", $client_id);
