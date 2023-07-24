@@ -4,7 +4,7 @@ $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 ?>
-<script type="text/javascript" id="jquery-migrate-js" src="https://localhost/git_crm/assets/plugins/jquery/jquery-migrate.min.js?v=2.6.0"></script>
+<script type="text/javascript" id="jquery-migrate-js" src="<?=base_url()?>/assets/plugins/jquery/jquery-migrate.min.js?v=2.6.0"></script>
 <!-- <script type="text/javascript" id="vendor-js" src="https://localhost/git_crm/assets/builds/vendor-admin.js?v=2.6.0"></script> -->
 
 <style>
