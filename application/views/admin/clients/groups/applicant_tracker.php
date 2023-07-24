@@ -522,7 +522,10 @@ if (empty($customer_admins)) { ?>
                 foreach ($applicant_tracker as $k => $track) {
                 ?>
                     <fieldset id="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '12' ?>" style="display:<?= ($applicant_status == $k) ? "show" : "none" ?>">
-                        <h2 class="fs-title" style="margin-bottom: 20px!important;"><?= !empty($track["name"]) ? $track["name"] : 'Document' ?></h2>
+                        <h2 class="fs-title" style="margin-bottom: 20px!important;"><?= !empty($track["name"]) ? $track["name"] : 'Document' ?>
+                            <?php if ($track["show_div_name"] == "document_div") { ?> <button class="col-md-2 add_document add_document_btn float-right" style="display:block!important;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> <?php } ?>
+                        </h2>
+
                         <?php if ($track["show_div_name"] == "document_div") { ?>
                             <div id="upload_documents">
                                 <?php
@@ -560,7 +563,7 @@ if (empty($customer_admins)) { ?>
 
                                                 <button class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
 
-                                                <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                <!-- <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                             </div>
 
 
@@ -574,7 +577,7 @@ if (empty($customer_admins)) { ?>
                                             <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" onchange="real_time_media_show(this)" name="document_file[]" placeholder=""></div>
                                             <div class="col-md-2">
                                                 <button class="col-md-2 add_document remove_document_btn" style="display:none;" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                <button class="col-md-2 add_document add_document_btn" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                <!-- <button class="col-md-2 add_document add_document_btn" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                             </div>
                                         </div>
                                     </div>
@@ -596,8 +599,8 @@ if (empty($customer_admins)) { ?>
                                         <?php echo render_input('email_creation', "", !empty($profile_creation_data[0]["email"]) ? $profile_creation_data[0]["email"] : '', "Email", ["required" => "required", "placeholder" => "Enter Email"]); ?>
                                     </div>
                                     <div class="col-md-4 edit_save_block email_creation_block">
-                                        <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
-                                        <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
+                                        <i class="fa fa-pencil-square-o fa-pencil-square-o-hide col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                        <i class="fa fa-file fa-file-hide col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
                                     </div>
                                 </div>
                                 <div class="row profile-div-save">
@@ -610,7 +613,7 @@ if (empty($customer_admins)) { ?>
                                         echo render_select('profile_creator_vendor[]', $profile_creator_vendor, array('id', 'name'), '', $selected_vendor, array('multiple' => true), array(), '', '', false, "select_vendor"); ?>
                                     </div>
                                     <div class="col-md-4 edit_save_block vendor_creation_block">
-                                        <i class="fa fa-pencil-square-o col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                        <i class="fa fa-pencil-square-o  col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
                                         <i class="fa fa-file col-md-1" style="display:none;" onclick="save_data(this,'vendor')"></i>
                                     </div>
                                 </div>
@@ -1195,6 +1198,7 @@ if (empty($customer_admins)) { ?>
                     $(".document_upload_files").find(".add_document").hide();
                     $(".document_upload_files").each(function() {
                         $(this).find("input[type='file']").hide();
+                        $(this).find("button.remove_document_btn").remove();
                         $(".document-file-name").show();
                         $(this).find("input").attr("disabled", true);
 
@@ -1233,6 +1237,7 @@ if (empty($customer_admins)) { ?>
 
                     $(".document_upload_files").each(function() {
                         $(this).find("input[type='file']").hide();
+                        $(this).find("button.remove_document_btn").remove();
                         $(".document-file-name").show();
                         $(this).find("input").attr("disabled", true);
                         $(".document_upload_files").find(".add_document").hide();
@@ -1270,8 +1275,8 @@ if (empty($customer_admins)) { ?>
                         }
 
 
-                        $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-                        $("#profile_creation_div").find(".fa-file").hide();
+                        $("#profile_creation_div").find(".fa-pencil-square-o-hide").hide();
+                        $("#profile_creation_div").find(".fa-file-hide").hide();
                     } else {
                         // console.log(profile_creation_data);
                         if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
@@ -1304,8 +1309,8 @@ if (empty($customer_admins)) { ?>
                 } else {
                     if (profile_creation_data.profile_status != undefined && profile_creation_data.profile_status == 1) {
                         html = '<h3 class="message-notification ' + profile_creation_data.color_name + '">Your Profile is ' + profile_creation_data.profile_status_name + ' by ' + profile_creation_data.staffname + '</h3>';
-                        $("#profile_creation_div").find(".fa-pencil-square-o").hide();
-                        $("#profile_creation_div").find(".fa-file").hide();
+                        $("#profile_creation_div").find(".fa-pencil-square-o-hide").hide();
+                        $("#profile_creation_div").find(".fa-file-hide").hide();
                     } else {
 
                         if (profile_creation_data.email == "" || profile_creation_data.vendor == "" || profile_creation_data.sop == "") {
@@ -1528,7 +1533,7 @@ if (empty($customer_admins)) { ?>
                                            </div>     
                                 <div class="col-md-2">
                                 <button class="col-md-6 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                <button class="col-md-6 add_document add_document_btn" type="button" onclick="add_documents(this)"><i class="fa fa-plus " aria-hidden="true"></i></button>
+                              
                                 </div>
                     </div>`;
             $("#upload_documents").append(html);
@@ -1662,7 +1667,7 @@ if (empty($customer_admins)) { ?>
 
 
         if (type === "document_div") {
-            if (upload_documents.document_status != undefined && upload_documents.document_status == 1) {
+            if (upload_documents.document_status != undefined && upload_documents.document_status == 1 && $("#document_div .remove_document_btn").length == 0) {
                 hide_loader();
             } else {
                 let isDocumentValid = await is_validate_document();

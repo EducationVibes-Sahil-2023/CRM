@@ -1245,6 +1245,8 @@ class Clients extends AdminController
                 $_update_data = array(
                     "data" => json_encode($update_array, true),
                     "updated_date" => date('Y-m-d H:i:s'),
+                    "document_status" => 0,
+                    "document_update_datetime" => date('Y-m-d H:i:s'),
                     "updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
@@ -1392,6 +1394,7 @@ class Clients extends AdminController
                     "vendor_updated_date" => date('Y-m-d H:i:s'),
                     "vendor_updated_by" => get_staff_user_id()
                 );
+                $_update["profile_status"] = 0;
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
@@ -1465,7 +1468,10 @@ class Clients extends AdminController
                     $_update["sop"] = $document_url;
                 }
 
+                $_update["profile_status"] = 0;
+
                 if (isset($applicant_status)) {
+
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                 }
@@ -1848,7 +1854,7 @@ class Clients extends AdminController
 
             $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
             $media_file_condition = !empty($_FILES["conditional_media_file"]) ? $_FILES["conditional_media_file"] : [];
-     
+
 
             $university_shortlisting_update_arr = [];
             if (!empty($university_ids)) {
