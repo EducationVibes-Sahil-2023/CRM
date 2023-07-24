@@ -343,7 +343,7 @@
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('view_application_sub_stage[]', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -517,7 +517,7 @@ init_tail(); ?>
       CustomersServerParams['from_date'] = "[name='from_date']";
       CustomersServerParams['to_date'] = "[name='to_date']";
       CustomersServerParams['application_stage'] = "[name='view_application_stage']";
-      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage[]']";
+      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
       CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
 
 
@@ -540,7 +540,10 @@ init_tail(); ?>
       let childDropdown = $('#view_application_sub_stage');
       childDropdown.empty();
       let childOptions = sub_category.filter(item => item.application_tracker === parentValue);;
-      console.log(childOptions);
+      childDropdown.append($('<option>', {
+         value: '',
+         text: ''
+      }));
       if (childOptions && childOptions.length > 0) {
          childOptions.forEach(option => {
             childDropdown.append($('<option>', {
