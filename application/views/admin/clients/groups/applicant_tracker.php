@@ -1215,14 +1215,7 @@ if (empty($customer_admins)) { ?>
         })
 
 
-        $("#progressbar li").addClass("inactive");
-        $("#progressbar li:eq(" + applicant_status + ")").removeClass("inactive").removeClass("previous").addClass("active");
 
-        $("#progressbar li:eq(" + applicant_status + ")")
-            .removeClass("inactive").removeClass("previous")
-            .addClass("active")
-            .prevAll().removeClass("inactive").removeClass("active")
-            .addClass("previous permanent_previous");
 
         notes_url = "<?= base_url() ?>admin/clients/get_application_notes/<?= $client_id ?>";
         activity_url = "<?= base_url() ?>admin/clients/get_application_activity/<?= $client_id ?>";
@@ -1472,6 +1465,17 @@ if (empty($customer_admins)) { ?>
             $(this).parents(".university_div_application").find(".hide-fee-div").find("input,select").prop('disabled', true).selectpicker('refresh');
             $("#offer_div").find(".hide-fee-div").find("button").attr("disabled", true);
         }
+
+
+        $("#progressbar li").addClass("inactive");
+        $("#progressbar li:eq(" + applicant_status + ")").removeClass("inactive").removeClass("previous").addClass("active");
+
+        $("#progressbar li:eq(" + applicant_status + ")")
+            .removeClass("inactive").removeClass("previous")
+            .addClass("active")
+            .prevAll().removeClass("inactive").removeClass("active")
+            .addClass("previous permanent_previous");
+
 
     });
 
