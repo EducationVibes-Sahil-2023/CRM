@@ -1496,6 +1496,7 @@ if (empty($customer_admins)) { ?>
     async function validate_fees_ajax(status, university_id) {
         return new Promise(async (resolve, reject) => {
             let upload_data = new FormData();
+            let step_stage = $("#progressbar").find("li.active").index() + 1;
             upload_data.append("applicant_status", step_stage);
             try {
                 upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
