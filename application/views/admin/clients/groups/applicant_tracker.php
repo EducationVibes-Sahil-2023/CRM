@@ -2029,7 +2029,7 @@ if (empty($customer_admins)) { ?>
 
         } else if (type === "offer_div") {
 
-            if (<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "true" : 'false' ?>) {
+            if (<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? 1 : 0 ?> == 1) {
 
             } else {
                 if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
