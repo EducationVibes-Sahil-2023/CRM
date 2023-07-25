@@ -99,10 +99,6 @@
                                     </div>
 
                                 </div>
-                                <!-- <div class="col-md-2"> -->
-                                <!-- <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                                <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
-                                <!-- </div> -->
                             </div>
 
                         <?php
@@ -155,7 +151,7 @@
                 response = JSON.parse(response);
                 if (response.resp_code == "RCS") {
                     alert_float("success", response.resp_desc);
-                    location.reload();
+                    // location.reload();
                 } else {
                     alert_float("danger", response.resp_desc);
                 }
