@@ -1472,6 +1472,8 @@ if (empty($customer_admins)) { ?>
             $(this).parents(".university_div_application").find(".hide-fee-div").find("input,select,button").prop('disabled', true).selectpicker('refresh');
             $("#offer_div").find(".hide-fee-div").find("button").attr("disabled", true);
         }
+
+        $(".hide-fee-div-").find("button").attr("disabled", false);
     });
 
 
