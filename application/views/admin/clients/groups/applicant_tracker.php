@@ -99,6 +99,26 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         -o-transition: All 0.5s ease-in;
     }
 
+
+
+    #university_div .add_university_div_block .university_div {
+        padding: 10px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    .university_div.bg-success {
+        background-color: #dff0d8;
+    }
+
+    .university_div.bg-danger {
+        background-color: #f2dede;
+    }
+
+    .university_div.bg-warning {
+        background-color: #fcf8e3;
+    }
+
     /*buttons*/
     #msform .action-button {
         width: 100px;
@@ -493,6 +513,38 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         border-radius: 10px;
         box-shadow: 1px 1px 4px 0px;
     }
+
+    .document_approval_message_action,
+    .university_approval_message_action,
+    .profile_approval_message_action,
+    .acceptance_text_approval_message_action {
+        display: inline-block !important;
+    }
+
+    .acceptance_text_approval_message_action {
+        padding-top: 14px;
+        margin: 0px;
+    }
+
+    .hide-fee-div {
+        border-top: 1px solid #b4b4b4;
+        /* background: black; */
+        margin-top: 25px;
+        line-height: 10px;
+    }
+
+
+    #offer_div .university_div_application.bg-success {
+        background-color: #dff0d8;
+    }
+
+    /* .university_div.bg-danger {
+        background-color: #f2dede;
+    }
+
+    .university_div.bg-warning {
+        background-color: #fcf8e3;
+    } */
 </style>
 <!-- MultiStep Form -->
 <?php
@@ -523,7 +575,11 @@ if (empty($customer_admins)) { ?>
                 ?>
                     <fieldset id="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '12' ?>" style="display:<?= ($applicant_status == $k) ? "show" : "none" ?>">
                         <h2 class="fs-title" style="margin-bottom: 20px!important;"><?= !empty($track["name"]) ? $track["name"] : 'Document' ?>
-                            <?php if ($track["show_div_name"] == "document_div") { ?> <button class="col-md-2 add_document add_document_btn float-right" style="display:block!important;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> <?php } ?>
+                            <?php if ($track["show_div_name"] == "document_div") { ?> <button class="col-md-2 add_document add_document_btn float-right" style="display:block!important;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> <?php } else if ($track["show_div_name"] == "university_div") { ?>
+                                <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+
+                            <?php } ?>
+
                         </h2>
 
                         <?php if ($track["show_div_name"] == "document_div") { ?>
@@ -547,14 +603,16 @@ if (empty($customer_admins)) { ?>
                                                 <div class="margin-bottom ">
                                                     <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $docs["document_file"] ?>" onchange="real_time_media_show(this)" name="document_file[]" placeholder="">
                                                 </div>
-                                                <div class="row media-text-div">
-                                                    <div class="col-md-10">
-                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                <?php if (!empty($docs['document_file'])) { ?>
+                                                    <div class="row media-text-div">
+                                                        <div class="col-md-10">
+                                                            <p class="document-file-name"><?= $file_name ?></p>
+                                                        </div>
+                                                        <div class="col-md-2 file-download-block">
+                                                            <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2 file-download-block">
-                                                        <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                                    </div>
-                                                </div>
+                                                <?php } ?>
 
                                             </div>
 
@@ -598,10 +656,17 @@ if (empty($customer_admins)) { ?>
                                     <div class="col-md-4">
                                         <?php echo render_input('email_creation', "", !empty($profile_creation_data[0]["email"]) ? $profile_creation_data[0]["email"] : '', "Email", ["required" => "required", "placeholder" => "Enter Email"]); ?>
                                     </div>
-                                    <div class="col-md-4 edit_save_block email_creation_block">
-                                        <i class="fa fa-pencil-square-o fa-pencil-square-o-hide col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
-                                        <i class="fa fa-file fa-file-hide col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
-                                    </div>
+                                    <?php if ($profile_creation_data[0]["email_verified"] != 1) : ?>
+                                        <div class="col-md-4 edit_save_block email_creation_block">
+                                            <i class="fa fa-pencil-square-o fa-pencil-square-o-hide col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                            <i class="fa fa-file fa-file-hide col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
+                                        </div>
+                                    <?php else : ?>
+                                        <div class="col-md-4 edit_save_block email_creation_block">
+                                            <i class="fa fa-pencil-square-o fa-pencil-square-o col-md-1" style="display:none; cursor:not-allowed!important"></i>
+                                        </div>
+                                    <?php endif; ?>
+
                                 </div>
                                 <div class="row profile-div-save">
                                     <div class="col-md-4">
@@ -632,15 +697,16 @@ if (empty($customer_admins)) { ?>
                                                     $file_name =  trim(explode("_", basename($profile_creation_data[0]["sop"]))[2]);
                                                 }
                                             ?>
-
-                                                <div class="row mt-5 margin-bottom">
-                                                    <div class="col-md-10">
-                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                <?php if (!empty($profile_creation_data[0]['sop'])) { ?>
+                                                    <div class="row mt-5 margin-bottom">
+                                                        <div class="col-md-10">
+                                                            <p class="document-file-name"><?= $file_name ?></p>
+                                                        </div>
+                                                        <div class="col-md-2 file-download-block">
+                                                            <a class="col-md-12 download_document" href="javascript:void(0);" onclick="window.open(`<?= base_url($profile_creation_data[0]['sop']) ?>`, '_blank');" type=" button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2 file-download-block">
-                                                        <a class="col-md-12 download_document" href="javascript:void(0);" onclick="window.open(`<?= base_url($profile_creation_data[0]['sop']) ?>`, '_blank');" type=" button"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                                    </div>
-                                                </div>
+                                                <?php } ?>
 
                                             <?php } ?>
                                         </div>
@@ -669,9 +735,9 @@ if (empty($customer_admins)) { ?>
                                 <?php if (!empty($university_shortlisting)) {
                                     foreach ($university_shortlisting as $key_u => $short_list) {
                                 ?>
-                                        <div class="col-md-12 university_div <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>">
+                                        <div class="col-md-12 university_div <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>   bg-<?= ($short_list["university_status"] == 1) ? 'success' : (($short_list["university_status"] == 2) ? 'danger' : 'warning') ?>">
                                             <div class="col-md-2">
-                                                <?= ($short_list["university_status"] == 1) ? 'Approved' : (($short_list["university_status"] == 2) ? 'Reject' : '') ?>
+
                                             </div>
                                             <div class="col-md-4">
                                                 <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
@@ -714,7 +780,7 @@ if (empty($customer_admins)) { ?>
                                                 <?php if ($short_list["university_status"] == 1) { ?>
                                                 <?php } else { ?>
                                                     <button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                    <button class="col-md-2 add_document add_university_btn" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                    <!-- <button class="col-md-2 add_document add_university_btn" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                                 <?php } ?>
 
                                             </div>
@@ -764,7 +830,7 @@ if (empty($customer_admins)) { ?>
                                         <div class="col-md-2">
                                             <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
                                             <button class="col-md-2 add_document remove_university_btn" type="button" style="display:none;" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                            <button class="col-md-2 add_document add_university_btn" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                            <!-- <button class="col-md-2 add_document add_university_btn" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                         </div>
                                     </div>
                                 <?php } ?>
@@ -853,8 +919,13 @@ if (empty($customer_admins)) { ?>
                                         if (!empty($short_list["media_file"])) {
                                             $file_name =  trim(explode("_", basename($short_list["media_file"]))[2]);
                                         }
+
+                                        $fees_file_name = "";
+                                        if (!empty($short_list["fee_media"])) {
+                                            $fees_file_name =  trim(explode("_", basename($short_list["fee_media"]))[2]);
+                                        }
                                 ?>
-                                        <div class="col-md-12 university_div_application mt-2">
+                                        <div class="col-md-12 university_div_application mt-2 <?= $short_list["fee_status"] == 1 ? "bg-success pre-select-offer" : '' ?>">
                                             <div class="col-md-3">
                                                 <input type="hidden" name="university_id" value="<?= $short_list["id"] ?>">
                                                 <input type="hidden" class="form-control" name="university_status" value="<?= $short_list["university_offer_status"] ?>">
@@ -893,21 +964,20 @@ if (empty($customer_admins)) { ?>
 
                                             </div>
                                             <div class="col-md-3">
-                                                <input type="file" disabled data-file-name="<?= !empty($docs["document_file"]) ? $docs["document_file"] : '' ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" onchange="real_time_media_show_offer(this)" name="offer_letter">
-
-                                                <div class="row media-text-div-offer">
-                                                    <div class="col-md-8">
-
-                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                <input type="file" disabled data-file-name="<?= !empty($short_list["media_file"]) ? $short_list["media_file"] : '' ?>" class="form-control" id="offer_letter" accept="images/*,application/pdf" onchange="real_time_media_show_offer(this)" name="offer_letter">
+                                                <?php if (!empty($short_list['media_file'])) { ?>
+                                                    <div class="row media-text-div-offer">
+                                                        <div class="col-md-8">
+                                                            <p class="document-file-name"><?= $file_name ?></p>
+                                                        </div>
+                                                        <div class="col-md-2">
+                                                            <?php if (!empty($short_list["media_file"])) { ?>
+                                                                <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($short_list['media_file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                            <?php }
+                                                            ?>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-md-2">
-                                                        <?php if (!empty($short_list["media_file"])) { ?>
-                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                                        <?php }
-                                                        ?>
-                                                    </div>
-
-                                                </div>
+                                                <?php } ?>
                                             </div>
                                             <?php
                                             $condition_array = get_condition_offer($short_list["client_id"], $short_list["id"]);
@@ -927,18 +997,19 @@ if (empty($customer_admins)) { ?>
                                                             <div class="col-md-3">Condition</div>
                                                             <div class="col-md-6"><textarea disabled placeholder="Write conditions ...... " class="conditional_textarea form-control" name="condition_text"><?= $con["condition_text"] ?></textarea></div>
                                                             <div class="col-md-3"><input type="file" disabled data-file-url="<?= $con["file"] ?>" class="form-control" onchange="real_time_media_show_offer_condition(this)" name="condition_file" accept="image/*,application/pdf">
-
-                                                                <div class="row media-text-div-offer-condition">
-                                                                    <div class="col-md-8">
-                                                                        <p class="document-file-name"><?= $file_name ?></p>
+                                                                <?php if (!empty($con['file'])) { ?>
+                                                                    <div class="row media-text-div-offer-condition">
+                                                                        <div class="col-md-8">
+                                                                            <p class="document-file-name"><?= $file_name ?></p>
+                                                                        </div>
+                                                                        <div class="col-md-2">
+                                                                            <?php if (!empty($con["file"])) { ?>
+                                                                                <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($con['file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                            <?php }
+                                                                            ?>
+                                                                        </div>
                                                                     </div>
-                                                                    <div class="col-md-2">
-                                                                        <?php if (!empty($con["file"])) { ?>
-                                                                            <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($con['file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                                                        <?php }
-                                                                        ?>
-                                                                    </div>
-                                                                </div>
+                                                                <?php } ?>
 
                                                             </div>
                                                             <!-- <div class="col-md-2"> -->
@@ -965,11 +1036,55 @@ if (empty($customer_admins)) { ?>
                                                     </div>
                                                 </div>
                                             <?php } ?>
+
+                                            <div class="col-lg-12 hide-fee-div" style="display:<?= $short_list["fee_status"] == 1 ? "block" : 'none' ?>">
+                                                <h3 class="text-center mb-5 p-5">Upload Fees Slip</h3>
+                                                <div class="col-lg-6">
+
+                                                    <input type="file" class="form-control" name="university_<?= $short_list['id'] ?>_file">
+                                                    <?php if (!empty($short_list['fee_media'])) { ?>
+                                                        <div class="row">
+                                                            <div class="col-md-10">
+                                                                <p class="document-file-name"><?= $fees_file_name ?></p>
+                                                            </div>
+                                                            <div class="col-md-2">
+                                                                <?php if (!empty($fees_file_name)) { ?>
+                                                                    <a class="col-md-12 download_document" accept="image/*,application/pdf" onclick="window.open(`<?= base_url($short_list['fee_media']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                <?php }
+                                                                ?>
+                                                            </div>
+                                                        </div>
+                                                    <?php } ?>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <button class="btn btn-success" onclick="fee_upload(this)">Fee Submitted</button>
+                                                </div>
+                                            </div>
+                                            <?php if ($short_list["fee_status"] == 1) {
+                                                $selected_university_name = $short_list["university_name"];
+                                            ?>
+                                                <div class="col-lg-12 hide-fee-div- " style="margin-top:5px; padding-top:10px;">
+                                                    <div class="col-lg-4"></div>
+                                                    <div class="col-lg-4">
+
+                                                        <input type="button" disabled="<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "true" : 'false' ?>" class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)" value="Approved">
+                                                    </div>
+                                                    <div class="col-lg-4"></div>
+                                                </div>
+                                            <?php } ?>
                                         </div>
                                     <?php }
                                     ?>
 
                                 <?php } ?>
+
+                            </div>
+                        <?php } else if ($track["show_div_name"] == "fees_div") { ?>
+                            <div class="fees_div">
+                                <h2 class="text-center text-success">Congratulations !!!!</h2>
+                                <h4 class="text-success">
+                                    The applicant's payment has been successfully submitted under the <?= !empty($selected_university_name) ? $selected_university_name : '' ?>
+                                </h4>
                             </div>
                         <?php } ?>
                         <?php if ($k > 0) { ?>
@@ -977,9 +1092,9 @@ if (empty($customer_admins)) { ?>
                         <?php } ?>
                         <?php
                         if (($k + 1) < count($applicant_tracker)) { ?>
-                            <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Next" />
-                        <?php } else if (($k + 1) == count($applicant_tracker)) {  ?>
-                            <input type="button" name="next" class="next action-button" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Update" />
+                            <input type="button" name="next" class="next action-button next-<?= $track ?>" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Save & Next" />
+                        <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
+                            <input type="button" name="next" class="next action-button next-<?= $track ?>" onclick="next_step('<?= $track['show_div_name'] ?>',this,<?= $track['orderby'] ?>)" value="Update" />
                         <?php } ?>
 
                     </fieldset>
@@ -1072,7 +1187,7 @@ if (empty($customer_admins)) { ?>
     var notes_url = "";
     var activity_url = "";
     var check_offer_letter = true;
-
+    var fee_status = "<?= !empty($short_list["fee_status"]) ? $short_list["fee_status"] : 0 ?> ";
 
     $("document").ready(function() {
         if (document_verification != 1) {
@@ -1136,9 +1251,9 @@ if (empty($customer_admins)) { ?>
         $(".university_div_").find(".remove_university_btn").show();
         $(".university_div_").find(".add_university_btn").hide();
         $(".university_div_:last").find(".add_university_btn").show();
-        if ($(".university_div_").length == 1) {
-            $(".university_div_").find(".remove_university_btn").hide();
-        }
+        // if ($(".university_div_").length == 1) {
+        //     $(".university_div_").find(".remove_university_btn").hide();
+        // }
         $("select[name='university_status_submit_offer']").change(function() {
             let upload_media = $("option:selected", this).data("selected-file");
             $(this).parents(".university_div_application").find(".text-area-field").hide();
@@ -1333,10 +1448,62 @@ if (empty($customer_admins)) { ?>
         }
 
         if ($("#offer_div select[name='university_status_submit_offer']:not(:disabled)").length == 0) {
-            $("#offer_div .next").attr("disabled", true);
+            // $("#offer_div .next").attr("disabled", true);
 
         }
-    })
+        if (fee_status == 1) {
+            $(".hide-fee-div-").show();
+        }
+
+
+        $(".check_university").each(function() {
+            $(this).find('input, select').prop('disabled', true).selectpicker('refresh');
+        })
+        $("input[name='university_id[]'").attr("disabled", false);
+
+        if ($(".not_check_university").length == 0) {
+            $(".action-button-update").attr("disabled", true);
+        }
+        $(".hide-fee-div").find("input,select,button").prop('disabled', true).selectpicker('refresh');
+
+        // $("#offer_div").find("input[name='select_university']").attr("disabled", false);
+        if ($(".pre-select-offer").length > 0) {
+            // $("#offer_div").find("input[name='select_university']").attr("disabled", true);
+            $(this).parents(".university_div_application").find(".hide-fee-div").find("input,select,button").prop('disabled', true).selectpicker('refresh');
+            $("#offer_div").find(".hide-fee-div").find("button").attr("disabled", true);
+        }
+    });
+
+
+    async function validate_fees(status, university_id) {
+        return new Promise(async (resolve, reject) => {
+            let upload_data = new FormData();
+            upload_data.append("applicant_status", step_stage);
+            try {
+                upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+                upload_data.append("client_id", <?= $client_id ?>);
+                upload_data.append("applicant_status", applicant_status);
+                upload_data.append("university_id", university_id);
+                upload_data.append("status", status);
+
+                let response = await $.ajax({
+                    url: "<?= base_url("admin/clients/update_approval") ?>",
+                    method: "POST",
+                    data: upload_data,
+                    contentType: false,
+                    processData: false
+                });
+
+                // Handle the success response from the server
+                resolve(JSON.parse(response));
+            } catch (error) {
+                // Handle the error response from the server
+                console.error(error);
+                reject(error);
+            }
+        });
+    }
+
 
     // Function to reload the DataTable with a specified URL
     function reloadNote_list(url) {
@@ -1749,7 +1916,7 @@ if (empty($customer_admins)) { ?>
         } else if (type === "university_div") {
             let isUniversityValid = await is_validate_university();
             if (isUniversityValid) {
-                if (check_university_status_direct == true) {
+                if (check_university_status_direct == true && $("#university_div .remove_university_btn").length == 0) {
                     hide_loader();
                 } else {
                     let update_university_status = await update_university(check_university_status);
@@ -1840,28 +2007,33 @@ if (empty($customer_admins)) { ?>
             }
 
         } else if (type === "offer_div") {
-            if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
-                return false;
-            }
 
-            let validate_offer_letter = await is_validate_offer_letter();
-
-            if (validate_offer_letter) {
-                check_offer_status();
-                let update_university_offer_status = await update_university_offer_application();
-
-                if (update_university_offer_status.resp_code === "RCS") {
-                    location.reload();
-                    alert_float("success", update_university_offer_status.resp_desc);
-                } else {
-                    hide_loader();
-                    alert_float("danger", update_university_offer_status.resp_desc);
-                }
-                return false;
+            if (<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "true" : 'false' ?>) {
 
             } else {
-                hide_loader();
-                return false;
+                if ($(".offer_div input[name='offer_letter']:not(:disabled)").length == 0) {
+                    hide_loader();
+                    return false;
+                }
+
+                let validate_offer_letter = await is_validate_offer_letter();
+                if (validate_offer_letter) {
+                    check_offer_status();
+                    let update_university_offer_status = await update_university_offer_application();
+
+                    if (update_university_offer_status.resp_code === "RCS") {
+                        location.reload();
+                        alert_float("success", update_university_offer_status.resp_desc);
+                    } else {
+                        hide_loader();
+                        alert_float("danger", update_university_offer_status.resp_desc);
+                    }
+                    return false;
+
+                } else {
+                    hide_loader();
+                    return false;
+                }
             }
         }
 
@@ -2463,7 +2635,7 @@ if (empty($customer_admins)) { ?>
     async function add_university_div() {
         let response = await is_validate_university();
         if (response) {
-            let html = `<div class="col-md-12 university_div university_div_">
+            let html = `<div class="col-md-12 university_div university_div_  bg-warning">
                                 <div class="col-md-2">
                                 </div>
                                 <div class="col-md-4">
@@ -2500,7 +2672,7 @@ if (empty($customer_admins)) { ?>
 
                                 <div class="col-md-2">
                                 <button class="col-md-2 add_document remove_university_btn" type="button" style="display:none;" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                            <button class="col-md-2 add_document add_university_btn" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                         
                                     
                                 </div>
                             </div>`;
@@ -2512,7 +2684,7 @@ if (empty($customer_admins)) { ?>
         $(".university_div_").find(".add_university_btn").hide();
         $(".university_div_:last").find(".add_university_btn").show();
         if ($(".university_div_").length == 1) {
-            $(".university_div_").find(".remove_university_btn").hide();
+            // $(".university_div_").find(".remove_university_btn").hide();
         }
         // $("#university_div").find('button.next').attr("disabled", false);
 
@@ -2555,7 +2727,7 @@ if (empty($customer_admins)) { ?>
         $(".university_div").find(".add_university_btn").hide();
         $(".university_div:last").find(".add_university_btn").show();
         if ($(".university_div").length == 1) {
-            $(".university_div").find(".remove_university_btn").hide();
+            // $(".university_div").find(".remove_university_btn").hide();
         }
         is_validate_application_status();
     }
