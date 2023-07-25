@@ -1067,7 +1067,7 @@ if (empty($customer_admins)) { ?>
                                                     <div class="col-lg-4"></div>
                                                     <div class="col-lg-4">
 
-                                                        <button type="button" disabled="<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "true" : 'false' ?>" class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)">Approved</button>
+                                                        <button type="button" `<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "disabled" : 'false' ?>` class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)">Approved</button>
                                                     </div>
                                                     <div class="col-lg-4"></div>
                                                 </div>
