@@ -753,7 +753,7 @@ if (empty($customer_admins)) { ?>
 
                             <div class="offer_div">
                                 <?php if (!empty($university_shortlisting)) {
-                                    $acceptance_text = "Waiting for confirmation";
+                                    $acceptance_text = "";
                                     $select_dropdown_value = array_column($customer_vendors, "name", "id");
                                     foreach ($university_shortlisting as $key_u => $short_list) {
 
@@ -916,8 +916,10 @@ if (empty($customer_admins)) { ?>
                                         </div>
 
                                     <?php
-                                        if ($short_list["acceptance_status"] == 1 || $short_list["fee_status"] == 1)
-                                            $acceptance_text = '';
+
+                                        if ($short_list["acceptance_status"] != 1  && $short_list["fee_status"] == 1) {
+                                            $acceptance_text = 'Waiting for confirmation';
+                                        }
                                     }
                                     ?>
 
