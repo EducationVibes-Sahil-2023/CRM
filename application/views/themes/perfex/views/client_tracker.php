@@ -51,7 +51,8 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 
     body {
         font-family: Montserrat, arial, verdana;
-        background: transparent;
+        /* background: transparent; */
+        background: white;
     }
 
     /*form styles*/
