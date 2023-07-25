@@ -1496,7 +1496,7 @@ if (empty($customer_admins)) { ?>
             try {
                 upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
                 upload_data.append("client_id", <?= $client_id ?>);
-                upload_data.append("applicant_status", applicant_status);
+                upload_data.append("applicant_status", step_stage);
                 upload_data.append("university_id", university_id);
                 upload_data.append("status", status);
 
