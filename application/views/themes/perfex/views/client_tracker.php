@@ -757,9 +757,9 @@ if (empty($customer_admins)) { ?>
                                     foreach ($university_shortlisting as $key_u => $short_list) {
 
 
-if ($short_list["fee_status"] == 1) {
-    $selected_university_name = $short_list["university_name"];
-}
+                                        if ($short_list["fee_status"] == 1) {
+                                            $selected_university_name = $short_list["university_name"];
+                                        }
 
 
                                         if ($short_list["university_submit_status"] != 1) {
@@ -2713,7 +2713,7 @@ if ($short_list["fee_status"] == 1) {
                             let data = await response.json();
                             if (data.resp_code === "RCS") {
                                 alert_float("success", data.resp_desc);
-                                // location.reload();
+                                location.reload();
                             } else {
                                 alert_float("danger", data.resp_desc);
                             }

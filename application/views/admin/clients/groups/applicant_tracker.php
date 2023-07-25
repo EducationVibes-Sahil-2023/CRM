@@ -1464,12 +1464,12 @@ if (empty($customer_admins)) { ?>
         if ($(".not_check_university").length == 0) {
             $(".action-button-update").attr("disabled", true);
         }
-        $(".hide-fee-div").find("input,select,button").prop('disabled', true).selectpicker('refresh');
+        $(".hide-fee-div").find("input,select").prop('disabled', true).selectpicker('refresh');
 
         // $("#offer_div").find("input[name='select_university']").attr("disabled", false);
         if ($(".pre-select-offer").length > 0) {
             // $("#offer_div").find("input[name='select_university']").attr("disabled", true);
-            $(this).parents(".university_div_application").find(".hide-fee-div").find("input,select,button").prop('disabled', true).selectpicker('refresh');
+            $(this).parents(".university_div_application").find(".hide-fee-div").find("input,select").prop('disabled', true).selectpicker('refresh');
             $("#offer_div").find(".hide-fee-div").find("button").attr("disabled", true);
         }
 
