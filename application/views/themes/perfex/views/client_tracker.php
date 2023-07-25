@@ -3,7 +3,7 @@ $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 ?>
-<script type="text/javascript" id="jquery-migrate-js" src="<?=base_url()?>/assets/plugins/jquery/jquery-migrate.min.js?v=2.6.0"></script>
+<script type="text/javascript" id="jquery-migrate-js" src="<?= base_url() ?>/assets/plugins/jquery/jquery-migrate.min.js?v=2.6.0"></script>
 <!-- <script type="text/javascript" id="vendor-js" src="https://localhost/git_crm/assets/builds/vendor-admin.js?v=2.6.0"></script> -->
 
 <style>
@@ -52,7 +52,6 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
     body {
         font-family: Montserrat, arial, verdana;
         background: transparent;
-        background-color: white;
     }
 
     /*form styles*/
@@ -60,18 +59,6 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
         text-align: center;
         position: relative;
         margin-top: 30px;
-    }
-
-
-    ul li.active~li:before {
-        color: green;
-        background-color: green !important;
-    }
-
-    ul li.active~li:before {
-        content: "•";
-        color: green;
-        margin-right: 5px;
     }
 
     #msform fieldset {
@@ -770,9 +757,9 @@ if (empty($customer_admins)) { ?>
                                     foreach ($university_shortlisting as $key_u => $short_list) {
 
 
-                                        if ($short_list["fee_status"] == 1) {
-                                            $selected_university_name = $short_list["university_name"];
-                                        }
+if ($short_list["fee_status"] == 1) {
+    $selected_university_name = $short_list["university_name"];
+}
 
 
                                         if ($short_list["university_submit_status"] != 1) {
@@ -2614,7 +2601,6 @@ if (empty($customer_admins)) { ?>
                         $("body").find("input[type=button]").attr("disabled", false);
                         $(".not_check_university").find("select").attr("disabled", false).selectpicker("refresh");
 
-<<<<<<< HEAD
                     })
 
                     var csrfToken = "<?= $this->security->get_csrf_hash() ?>";
@@ -2736,7 +2722,3 @@ if (empty($customer_admins)) { ?>
                         }
                     }
                 </script>
-=======
-    })
-</script>
->>>>>>> 3f655ad592bd479ffd125774bc4b95a6b0f6691d
