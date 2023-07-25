@@ -915,7 +915,7 @@ if (empty($customer_admins)) { ?>
                                         </div>
 
                                     <?php
-                                        if ($short_list["acceptance_status"] == 1)
+                                        if ($short_list["acceptance_status"] == 1 || $short_list["fee_status"] == 1)
                                             $acceptance_text = '';
                                     }
                                     ?>
