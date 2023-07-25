@@ -1067,7 +1067,7 @@ if (empty($customer_admins)) { ?>
                                                     <div class="col-lg-4"></div>
                                                     <div class="col-lg-4">
 
-                                                        <input type="button" disabled="<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "true" : 'false' ?>" class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)" value="Approved">
+                                                        <button type="button" disabled="<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "true" : 'false' ?>" class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)">Approved</button>
                                                     </div>
                                                     <div class="col-lg-4"></div>
                                                 </div>
@@ -1473,7 +1473,6 @@ if (empty($customer_admins)) { ?>
             $("#offer_div").find(".hide-fee-div").find("button").attr("disabled", true);
         }
 
-        $(".hide-fee-div-").find("button").attr("disabled", false);
     });
 
 
