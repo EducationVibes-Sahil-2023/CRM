@@ -1245,6 +1245,8 @@ class Clients extends AdminController
                 $_update_data = array(
                     "data" => json_encode($update_array, true),
                     "updated_date" => date('Y-m-d H:i:s'),
+                    "document_status" => 0,
+                    "document_update_datetime" => date('Y-m-d H:i:s'),
                     "updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
@@ -1392,6 +1394,7 @@ class Clients extends AdminController
                     "vendor_updated_date" => date('Y-m-d H:i:s'),
                     "vendor_updated_by" => get_staff_user_id()
                 );
+                $_update["profile_status"] = 0;
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
@@ -1465,7 +1468,10 @@ class Clients extends AdminController
                     $_update["sop"] = $document_url;
                 }
 
+                $_update["profile_status"] = 0;
+
                 if (isset($applicant_status)) {
+
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                 }
@@ -1736,7 +1742,9 @@ class Clients extends AdminController
                     "approved_date" => date('Y-m-d H:i:s'),
                     "approved_by" => get_staff_user_id()
                 );
-
+                if ($document_status == 1) {
+                    $_update["email_verified"] = 1;
+                }
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
@@ -1848,7 +1856,7 @@ class Clients extends AdminController
 
             $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
             $media_file_condition = !empty($_FILES["conditional_media_file"]) ? $_FILES["conditional_media_file"] : [];
-     
+
 
             $university_shortlisting_update_arr = [];
             if (!empty($university_ids)) {
@@ -2088,5 +2096,59 @@ class Clients extends AdminController
 
 
         echo $html;
+    }
+
+    public function update_approval()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $university_id = $this->input->post("university_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : null;
+            $status = !empty($this->input->post("status")) ? $this->input->post("status") : "0";
+
+            $client_id = intval($client_id);
+            $university_id = intval($university_id);
+            $applicant_status = ($applicant_status !== null) ? intval($applicant_status) : null;
+            $status = intval($status);
+
+            try {
+                if (!empty($university_id) && !empty($client_id)) {
+                    $this->db->where(array("client_id" => $client_id, "id" => $university_id));
+                    $this->db->update(db_prefix() . 'client_university_shortlisting', array(
+                        "updated_by" => get_staff_user_id(),
+                        "updated_date" => date('Y-m-d H:i:s'),
+                        "acceptance_status" => $status,
+                    ));
+
+                    if (isset($applicant_status)) {
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                        get_applicant_status($applicant_status, $client_id);
+                    }
+                    $rows_affected = $this->db->affected_rows();
+                    if ($rows_affected) {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = "University update successfully.";
+                        set_alert('success', "University update successfully.");
+                    } else {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = "University update failed";
+                        set_alert('danger', "University update failed");
+                    }
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Invalid parameters";
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
     }
 }

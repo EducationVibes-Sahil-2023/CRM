@@ -125,8 +125,9 @@ class Clients extends ClientsController
         $data['customer_admins'] = $this->clients_model->get_admins($id);
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
         $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
-        $data['university_application_status'] = $this->clients_model->university_status_update();
+        $data['university_status_update'] = $data['university_application_status'] = $this->clients_model->university_status_update();
         $data['university_status_submit'] = $this->clients_model->university_status_submit();
+        // $data['university_status_update'] = $this->clients_model->university_status_update();
         $data['customer_vendors'] = [];
         if (!empty($data['profile_creation_data'][0]["vendor"])) {
             $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
@@ -2011,6 +2012,66 @@ class Clients extends ClientsController
         } else {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+
+    public function university_fee_update()
+    {
+
+        try {
+            if (!empty($_POST["university_id"]) && !empty($_FILES["media_file"])) {
+                $upload_data = [];
+                $media_url = "";
+                if (!empty($_FILES["media_file"]['name'])) {
+                    $upload_data["name"] = $_FILES["media_file"]['name'];
+                    $upload_data["type"] = $_FILES["media_file"]['type'];
+                    $upload_data["tmp_name"] = $_FILES["media_file"]['tmp_name'];
+                    $upload_data["error"] = $_FILES["media_file"]['error'];
+                    $upload_data["size"] = $_FILES["media_file"]['size'];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
+                        $media_url = $file_name["file_path"];
+                    } else {
+                        $data['resp_code'] = 'ERR';
+                        $data['resp_desc'] = "Upload failed.";
+                        set_alert('danger', "Upload failed.");
+                        echo json_encode($data);
+                        die;
+                    }
+                }
+
+                $this->db->where(array("client_id" => get_client_user_id(), "id" => $_POST["university_id"]));
+                $this->db->update(db_prefix() . 'client_university_shortlisting', array("fee_status" => 1, "fee_media" => $media_url));
+
+                $status_check = $this->db->affected_rows();
+                if ($status_check) {
+                    $this->db->where("userid", get_client_user_id());
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 4));
+                    $rows_affected = $this->db->affected_rows();
+                    get_applicant_status(4, get_client_user_id());
+                }
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University selected and fees uploaded by Applicant - " . get_contact_user_name(), "date" => date('Y-m-d H:i:s'), "contact_id" => get_contact_user_id(), "client_id" => get_client_user_id()));
+
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
+                    set_alert('success', _l('update_custumer_update_successfully', _l('customer')));
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_custumer_failed_failed', _l('customer'));
+                    set_alert('danger', _l('update_custumer_failed_failed', _l('customer')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Invalid request method';
+            }
+        } catch (Exception $e) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
         }
 
         echo json_encode($data);
