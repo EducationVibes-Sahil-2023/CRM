@@ -1067,7 +1067,7 @@ if (empty($customer_admins)) { ?>
                                                     <div class="col-lg-4"></div>
                                                     <div class="col-lg-4">
 
-                                                        <button type="button" `<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "disabled" : 'false' ?>` class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)">Approved</button>
+                                                        <button type="button" <?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? "disabled" : '' ?> class="btn btn-success" onclick="validate_fees(1,<?= $short_list['id'] ?>)">Approved</button>
                                                     </div>
                                                     <div class="col-lg-4"></div>
                                                 </div>
@@ -1475,8 +1475,21 @@ if (empty($customer_admins)) { ?>
 
     });
 
-
     async function validate_fees(status, university_id) {
+        let uploadResponse = await validate_fees_ajax(status, university_id);
+
+        if (uploadResponse.resp_code === "RCS") {
+            alert_float("success", uploadResponse.resp_desc);
+        } else {
+            if (uploadResponse.resp_code !== undefined) {
+                alert_float("danger", uploadResponse.resp_desc);
+            } else {
+                alert_float("danger", uploadResponse);
+            }
+        }
+        location.reload();
+    }
+    async function validate_fees_ajax(status, university_id) {
         return new Promise(async (resolve, reject) => {
             let upload_data = new FormData();
             upload_data.append("applicant_status", step_stage);
@@ -1497,6 +1510,8 @@ if (empty($customer_admins)) { ?>
 
                 // Handle the success response from the server
                 resolve(JSON.parse(response));
+
+
             } catch (error) {
                 // Handle the error response from the server
                 console.error(error);
@@ -1849,8 +1864,8 @@ if (empty($customer_admins)) { ?>
                                 let html = '<h3 class="message-notification">Your Documents under Processing</h3>';
                                 $(".document_approval_message_action").html(html);
 
-                                location.reload();
                             }
+                            location.reload();
                         } else {
                             if (uploadResponse.resp_code != undefined) {
                                 alert_float("danger", uploadResponse.resp_desc);
