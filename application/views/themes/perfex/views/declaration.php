@@ -97,7 +97,7 @@
 				</div><div class="col-lg-4">
 				  	<div class="form-group">
 				  		<label for="exampleInputLastName">Parent Name</label>
-				  	<input class="form-control" type="text" placeholder="Enter Parent Name" name="father_name" value="<?php echo $parentdetails->fname ; ?>">
+				  	<input class="form-control" type="text" placeholder="Enter Parent Name" name="father_name" value="<?php echo $declarationdetails->father_name ; ?>">
 				  </div>
 				</div>
 					

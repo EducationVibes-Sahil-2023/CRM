@@ -31,7 +31,10 @@ class Clients extends ClientsController
 
 
         // echo "basicdet:".$basicDetailsStatus."parentDet: ".$admissionPreferencesStatus."academicDet: ".$academicDetailsStatus;
-        if ($basicDetailsStatus == '' && $admissionPreferencesStatus == '' && $academicDetailsStatus == '') {
+        if ($declarationDetailsStatus == 1) {
+            redirect(site_url('clients/invoices'));
+        }
+        if ($basicDetailsStatus == '') {
             redirect(site_url('clients/basic_details'));
         }
         if ($basicDetailsStatus == 1 && $admissionPreferencesStatus == '') {
@@ -46,9 +49,7 @@ class Clients extends ClientsController
         if ($documentDetailsStatus == 1 && $declarationDetailsStatus == '') {
             redirect(site_url('clients/declaration'));
         }
-        if ($declarationDetailsStatus == 1) {
-            redirect(site_url('clients/invoices'));
-        }
+
 
 
         $this->load->model('reports_model');
@@ -407,7 +408,6 @@ class Clients extends ClientsController
         $data['declarationdetails'] = $this->clients_model->getDeclarationDetails(get_client_user_id());
         $data['parentdetails'] = $this->clients_model->getParentDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
-
         $this->data($data);
         $this->view('declaration');
         $this->layout();
