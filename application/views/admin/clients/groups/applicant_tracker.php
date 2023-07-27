@@ -1476,6 +1476,10 @@ if (empty($customer_admins)) { ?>
             .prevAll().removeClass("inactive").removeClass("active")
             .addClass("previous permanent_previous");
 
+        if (<?= (!empty($short_list["acceptance_status"]) && $short_list["acceptance_status"] == 1) ? 1 : 0 ?> == 1) {
+            $(".add_document_btn").hide();
+            $(".add_university_btn").hide();
+        }
 
     });
 
