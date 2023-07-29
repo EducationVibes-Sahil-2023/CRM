@@ -370,7 +370,7 @@ foreach ($rResult as $aRow) {
     // $row[] = $groupsRow;
     $row[] = $aRow['applicant_stage_name'];
     $check_applicant_status = get_applicant_status($aRow['applicant_stage_id'], $aRow['userid']);
-
+    // $check_applicant_status = [];
     $row[] = !empty($check_applicant_status["applicant_stage_status"]) ? $check_applicant_status["applicant_stage_status"] : "";
     $row[] = !empty($check_applicant_status["updated_date"]) ? $check_applicant_status["updated_date"] : "";
     $row[] = _dt($aRow['datecreated']);
