@@ -2474,7 +2474,7 @@ class Leads_model extends App_Model
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
 
-        $sql .= " order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
+        $sql .= "  group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc  ";
         if (!empty($facebook_lead)) {
         } else {
             $sql .= " limit 1 ";
