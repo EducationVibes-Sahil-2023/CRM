@@ -30,10 +30,9 @@ class Expenses extends AdminController
         $data['years']      = $this->expenses_model->get_expenses_years();
         $data['title']      = _l('expenses');
         $data['type']  = $this->leads_model->get_type();
-        $data['categories']    = $this->expenses_model->get_category();
         $data['payment_modes'] = $this->payment_modes_model->get('', [
             'invoices_only !=' => 1,
-        ]);
+        ]);;
 
         $this->load->view('admin/expenses/manage', $data);
     }
