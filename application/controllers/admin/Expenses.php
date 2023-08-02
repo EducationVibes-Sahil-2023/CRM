@@ -22,11 +22,18 @@ class Expenses extends AdminController
         if (!has_permission('expenses', '', 'view') && !has_permission('expenses', '', 'view_own')) {
             access_denied('expenses');
         }
+        $this->load->model('leads_model');
+        $this->load->model('payment_modes_model');
 
         $data['expenseid']  = $id;
         $data['categories'] = $this->expenses_model->get_category();
         $data['years']      = $this->expenses_model->get_expenses_years();
         $data['title']      = _l('expenses');
+        $data['type']  = $this->leads_model->get_type();
+        $data['categories']    = $this->expenses_model->get_category();
+        $data['payment_modes'] = $this->payment_modes_model->get('', [
+            'invoices_only !=' => 1,
+        ]);
 
         $this->load->view('admin/expenses/manage', $data);
     }
@@ -70,8 +77,8 @@ class Expenses extends AdminController
             if (!has_permission('expenses', '', 'edit')) {
                 set_alert('danger', _l('access_denied'));
                 echo json_encode([
-                        'url' => admin_url('expenses/expense/' . $id),
-                    ]);
+                    'url' => admin_url('expenses/expense/' . $id),
+                ]);
                 die;
             }
             $success = $this->expenses_model->update($this->input->post(), $id);
@@ -79,9 +86,9 @@ class Expenses extends AdminController
                 set_alert('success', _l('updated_successfully', _l('expense')));
             }
             echo json_encode([
-                    'url'       => admin_url('expenses/list_expenses/' . $id),
-                    'expenseid' => $id,
-                ]);
+                'url'       => admin_url('expenses/list_expenses/' . $id),
+                'expenseid' => $id,
+            ]);
             die;
         }
         if ($id == '') {
@@ -311,7 +318,7 @@ class Expenses extends AdminController
     {
         $this->db->where('rel_id', $id);
         $this->db->where('rel_type', 'expense');
-        $file = $this->db->get(db_prefix().'files')->row();
+        $file = $this->db->get(db_prefix() . 'files')->row();
 
         if ($file->staffid == get_staff_user_id() || is_admin()) {
             $success = $this->expenses_model->delete_expense_attachment($id);

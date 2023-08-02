@@ -3,7 +3,9 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $project_id = $this->ci->input->post('project_id');
-
+$lead_types = !empty($this->ci->input->post('lead_types')) ? $this->ci->input->post('lead_types') : '';
+$applicant_id = !empty($this->ci->input->post('applicant_id')) ? $this->ci->input->post('applicant_id') : '';
+$invoice_status = !empty($this->ci->input->post('invoice_status')) ? $this->ci->input->post('invoice_status') : '';
 $aColumns = [
     'number',
     'total',
@@ -15,13 +17,15 @@ $aColumns = [
     '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'invoices.id and rel_type="invoice" ORDER by tag_order ASC) as tags',
     'duedate',
     db_prefix() . 'invoices.status',
-    ];
+];
 
 $sIndexColumn = 'id';
 $sTable       = db_prefix() . 'invoices';
 
 $join = [
     'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'invoices.clientid',
+    'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid',
+    'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'invoices.currency',
     'LEFT JOIN ' . db_prefix() . 'projects ON ' . db_prefix() . 'projects.id = ' . db_prefix() . 'invoices.project_id',
 ];
@@ -40,14 +44,17 @@ $where  = [];
 $filter = [];
 
 if ($this->ci->input->post('not_sent')) {
-    array_push($filter, 'AND sent = 0 AND ' . db_prefix() . 'invoices.status NOT IN('.Invoices_model::STATUS_PAID.','.Invoices_model::STATUS_CANCELLED.')');
+    array_push($filter, 'AND sent = 0 AND ' . db_prefix() . 'invoices.status NOT IN(' . Invoices_model::STATUS_PAID . ',' . Invoices_model::STATUS_CANCELLED . ')');
 }
 if ($this->ci->input->post('not_have_payment')) {
-    array_push($filter, 'AND ' . db_prefix() . 'invoices.id NOT IN(SELECT invoiceid FROM ' . db_prefix() . 'invoicepaymentrecords) AND ' . db_prefix() . 'invoices.status != '.Invoices_model::STATUS_CANCELLED);
+    array_push($filter, 'AND ' . db_prefix() . 'invoices.id NOT IN(SELECT invoiceid FROM ' . db_prefix() . 'invoicepaymentrecords) AND ' . db_prefix() . 'invoices.status != ' . Invoices_model::STATUS_CANCELLED);
 }
 if ($this->ci->input->post('recurring')) {
     array_push($filter, 'AND recurring > 0');
 }
+
+
+
 
 $statuses  = $this->ci->invoices_model->get_statuses();
 $statusIds = [];
@@ -104,6 +111,25 @@ if ($project_id) {
     array_push($where, 'AND project_id=' . $this->ci->db->escape_str($project_id));
 }
 
+if ($applicant_id) {
+    array_push($where, 'AND ' . db_prefix() . 'invoices.clientid=' . $this->ci->db->escape_str($applicant_id));
+}
+
+if ($lead_types) {
+    array_push($where, 'AND ' . db_prefix() . 'leads.type IN (' . $lead_types . ')');
+}
+
+
+if ($invoice_status) {
+    array_push($where, 'AND ' . db_prefix() . 'invoices.status IN (' . $invoice_status . ')');
+}
+
+if ($this->ci->input->post('to_date')) {
+    $from_date = $this->ci->input->post('from_date');
+    $to_date = $this->ci->input->post('to_date');
+    array_push($where, 'AND DATE(' . db_prefix() . 'invoices.datecreated) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+}
+
 if (!has_permission('invoices', '', 'view')) {
     $userWhere = 'AND ' . get_invoices_where_sql_for_staff(get_staff_user_id());
     array_push($where, $userWhere);
@@ -119,12 +145,15 @@ if (count($custom_fields) > 4) {
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     db_prefix() . 'invoices.id',
     db_prefix() . 'invoices.clientid',
-    db_prefix(). 'currencies.name as currency_name',
+    db_prefix() . 'currencies.name as currency_name',
     'project_id',
-    'hash',
+    db_prefix() . 'invoices.hash',
+    db_prefix() . 'leads.type',
+    db_prefix() . 'leads_type.name as lead_status_name',
     'recurring',
     'deleted_customer_name',
-    ]);
+]);
+
 $output  = $result['output'];
 $rResult = $result['rResult'];
 
@@ -168,8 +197,8 @@ foreach ($rResult as $aRow) {
         $row[] = $aRow['deleted_customer_name'];
     }
 
-    $row[] = '<a href="' . admin_url('projects/view/' . $aRow['project_id']) . '">' . $aRow['project_name'] . '</a>';
-    ;
+    // $row[] = '<a href="' . admin_url('projects/view/' . $aRow['project_id']) . '">' . $aRow['project_name'] . '</a>';;
+    $row[] = $aRow['lead_status_name'];
 
     $row[] = render_tags($aRow['tags']);
 

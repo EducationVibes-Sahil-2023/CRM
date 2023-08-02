@@ -23,10 +23,11 @@ class Clients_model extends App_Model
      */
     public function get($id = '', $where = [])
     {
-        $this->db->select(implode(',', prefixed_table_fields_array(db_prefix() . 'clients')) . ',' . get_sql_select_client_company());
 
+        $this->db->select(implode(',', prefixed_table_fields_array(db_prefix() . 'clients')) . ',' . get_sql_select_client_company());
         $this->db->join(db_prefix() . 'countries', '' . db_prefix() . 'countries.country_id = ' . db_prefix() . 'clients.country', 'left');
         $this->db->join(db_prefix() . 'contacts', '' . db_prefix() . 'contacts.userid = ' . db_prefix() . 'clients.userid AND is_primary = 1', 'left');
+        $this->db->join(db_prefix() . 'leads', '' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid', 'left');
 
         if ((is_array($where) && count($where) > 0) || (is_string($where) && $where != '')) {
             $this->db->where($where);

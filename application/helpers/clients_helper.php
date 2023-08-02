@@ -1146,13 +1146,13 @@ function _check_vault_entries_visibility($entries)
 function get_sql_select_client_company()
 {
     return 'CASE 
-    WHEN company IS NULL OR company = \'\' THEN 
+    WHEN ' . db_prefix() . 'clients.company IS NULL OR ' . db_prefix() . 'clients.company = \'\' THEN 
       (SELECT CONCAT(firstname, \' \', lastname) 
        FROM ' . db_prefix() . 'contacts 
        WHERE userid = ' . db_prefix() . 'clients.userid AND is_primary = 1) 
     ELSE 
-      company 
-  END AS company';
+    ' . db_prefix() . 'clients.company 
+  END AS  company';
 }
 
 function can_logged_in_contact_change_language()
