@@ -49,9 +49,9 @@ class Staff extends AdminController
                 if (!has_permission('staff', '', 'create')) {
                     access_denied('staff');
                 }
-                // if (!empty($data["facebook_lead_name"])) {
-                //     $data["facebook_lead_name"] = implode(",", $data["facebook_lead_name"]);
-                // }
+                if (!empty($data["facebook_lead_name"])) {
+                    $data["facebook_lead_name"] = implode(",", $data["facebook_lead_name"]);
+                }
                 $id = $this->staff_model->add($data);
                 if ($id) {
                     handle_staff_profile_image_upload($id);
@@ -59,9 +59,9 @@ class Staff extends AdminController
                     redirect(admin_url('staff/member/' . $id));
                 }
             } else {
-                // if (!empty($data["facebook_lead_name"])) {
-                //     $data["facebook_lead_name"] = implode(",", $data["facebook_lead_name"]);
-                // }
+                if (!empty($data["facebook_lead_name"])) {
+                    $data["facebook_lead_name"] = implode(",", $data["facebook_lead_name"]);
+                }
                 if (!has_permission('staff', '', 'edit')) {
                     access_denied('staff');
                 }
