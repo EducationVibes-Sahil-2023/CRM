@@ -115,7 +115,7 @@ class Staff extends AdminController
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['state_list'] = $this->staff_model->state_list();
         $data['lead_type']  = $this->staff_model->get_type();
-        $data['facebook_form_names']  = $this->staff_model->get_facebook_names();
+        // $data['facebook_form_names']  = $this->staff_model->get_facebook_names();
         $this->load->view('admin/staff/member', $data);
     }
 
