@@ -5,6 +5,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 $lead_types = !empty($this->ci->input->post('lead_types')) ? $this->ci->input->post('lead_types') : '';
 $applicant_id = !empty($this->ci->input->post('applicant_id')) ? $this->ci->input->post('applicant_id') : '';
 $allowed_payment_modes = !empty($this->ci->input->post('allowed_payment_modes')) ? $this->ci->input->post('allowed_payment_modes') : '';
+$category = !empty($this->ci->input->post('category')) ? $this->ci->input->post('category') : '';
 
 $aColumns = [
     db_prefix() . 'expenses.id as id',
@@ -57,10 +58,14 @@ if ($allowed_payment_modes) {
     array_push($where, 'AND ' . db_prefix() . 'expenses.paymentmode IN ("' . str_replace(",", '","', $allowed_payment_modes) . '")');
 }
 
+if ($category) {
+    array_push($where, 'AND ' . db_prefix() . 'expenses.category IN (' . $category . ')');
+}
 
 if ($applicant_id) {
     array_push($where, 'AND ' . db_prefix() . 'expenses.clientid=' . $this->ci->db->escape_str($applicant_id));
 }
+
 
 
 

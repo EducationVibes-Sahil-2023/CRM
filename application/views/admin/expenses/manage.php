@@ -37,6 +37,17 @@
                               ?>
                            </div>
 
+                           <div class="col-md-2 leads-filter-column">
+                              <?php
+                              echo '<div id="leads-filter-source">';
+                              echo render_select('categories[]', $categories, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Categories'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "categories");
+                              echo '</div>';
+                              ?>
+                           </div>
+
+
+
+
                            <div class="f_client_id col-md-2">
                               <div class="form-group select-placeholder">
                                  <select id="clientid" name="clientid" data-live-search="true" data-width="100%" class="ajax-search<?php if (isset($estimate) && empty($estimate->clientid)) {
@@ -219,6 +230,11 @@
          let to_date = $(this).val();
          $("._filters._hidden_inputs").find("input[name='to_date']").val(to_date);
       });
+      $("input[name='categories[]']").change(function() {
+         let categories = $(this).val();
+         $("._filters._hidden_inputs").find("input[name='categories']").val(categories);
+      });
+
 
 
 

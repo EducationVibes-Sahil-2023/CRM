@@ -15,6 +15,8 @@ if (!isset($filter_table_name)) {
     echo form_hidden('applicant');
     echo form_hidden('allowed_payment_modes');
     echo form_hidden('lead_types');
+    echo form_hidden('categories');
+
     foreach ($years as $year) {
         echo form_hidden('year_' . $year['year'], $year['year']);
     }
