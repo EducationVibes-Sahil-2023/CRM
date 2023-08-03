@@ -579,6 +579,7 @@ if (!isset($config['csrf_exclude_uris'])) {
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/webhook'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/get_lead_data'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/new_webhook'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/webhook_shikshalogy'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/login'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/followup_contact'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/call_update'));
