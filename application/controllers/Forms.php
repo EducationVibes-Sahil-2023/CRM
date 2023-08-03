@@ -108,12 +108,14 @@ class Forms extends ClientsController
                                     $fb_form_name = explode(",", $fl["facebook_lead_name"]);
                                     if (!empty($fb_form_name)) {
                                         foreach ($fb_form_name as $fb_name) {
-                                            if (!empty($fb_name)) {
+                                            if (!empty($fb_name) && $status_fb_lead_assign == false) {
                                                 if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($fb_name))) !== false) {
                                                     $form->responsible = $fl["staffid"];
                                                     $status_fb_lead_assign = true;
-                                                    break;
                                                 }
+                                            }
+                                            if ($status_fb_lead_assign == true) {
+                                                break;
                                             }
                                         }
                                     }
