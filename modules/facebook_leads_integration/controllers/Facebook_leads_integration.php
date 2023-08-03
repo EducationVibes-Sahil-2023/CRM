@@ -595,6 +595,62 @@ class Facebook_leads_integration extends ClientsController
             $json = file_get_contents('php://input');
             $lead_data = json_decode($json, true);
             $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data, true), "ledgen_id" => "", "form_name" => "Sikshalogy_google", "form_id" => "", "datetime" => date("Y-m-d h:i:s")));
+
+
+
+
+            // Retrieve form data from the POST request
+            $name = !empty($_POST['full_name']) ? $_POST['full_name'] : '';
+            $email = !empty($_POST['email']) ? $_POST['email'] : '';
+            $phonenumber = !empty($_POST['phone_number']) ? $_POST['phone_number'] : '';
+            $neet_score = !empty($_POST['neet_score']) ? $_POST['neet_score'] : '';
+            $csrf_token_name = !empty($_POST['csrf_token_name']) ? $_POST['csrf_token_name'] : '';
+            $type = 3;
+
+
+            // Your form data to be sent
+            $dataString = 'name=' . $name . '&email=' . $email . '&phonenumber=' . $phonenumber . '&csrf_token_name=' . $csrf_token_name . '&key=' . $key . '&type=' . $type . '&form-cf-8=' . $neet_score . '&auto_assign=1';
+
+            // The URL to send the POST request to
+            $url = base_url("forms/wtl/" . $key);
+
+            // Initialize cURL session
+            $ch = curl_init($url);
+
+            // Set cURL options
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            // Execute the cURL session
+            $response = curl_exec($ch);
+
+            // Check for cURL errors
+            if (curl_errno($ch)) {
+                echo 'cURL Error: ' . curl_error($ch);
+            }
+
+            // Close cURL session
+            curl_close($ch);
+
+            // Handle the response (if needed)
+            // For example, you can check the response and hide/show elements accordingly
+            if ($response === false) {
+                echo 'Error: cURL request failed';
+            } else {
+                // Process the response
+                // For example, you can decode JSON response and perform specific actions
+                $responseData = json_decode($response, true);
+                if ($responseData['status'] === 'success') {
+                    // Success handling
+                    echo 'Form submitted successfully';
+                } else {
+                    // Error handling
+                    echo 'Form submission failed: ' . $responseData['message'];
+                }
+            }
+
+
             // $lead_data_array = [];
             // $token = $this->security->get_csrf_hash();
             // if (!empty($lead_data_response["field_data"])) {
