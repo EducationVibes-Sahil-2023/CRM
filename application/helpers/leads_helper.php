@@ -1308,7 +1308,8 @@ function calls_update_count($params = false, $max_status = 0)
 
     $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
     $sql .= "SELECT SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
-    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
+    // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
+    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND l.phonenumber = calls.contact and l.phonenumber!='' and LENGTH(l.phonenumber)=10) ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND calls.staffid = " . (int)$params['assigned'];
@@ -1373,8 +1374,8 @@ function calls_update_count($params = false, $max_status = 0)
 
     $sql .= " GROUP BY calls.contact" . $grup_by . " " . $sql_add . ") AS subquery";
 
-    echo $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
-    die;
+    $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
+
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
