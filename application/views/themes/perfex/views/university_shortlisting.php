@@ -19,18 +19,9 @@
                         <input type="hidden" name="university_id[]" value="<?= $short_list["id"] ?>">
                         <input type="input" name="university_name" class="form-control" disabled value="<?= $short_list["university_name"] ?>">
                     </div>
-                    <div class="col-md-2">
-                        <?php
-                        // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
-                        $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
-                        // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
-                        // echo $select_dropdown_value[$selected_vendor];
+                 
 
-                        ?>
-                        <input type="input" name="vendor_id" class="form-control" disabled value="<?= $select_dropdown_value[$selected_vendor] ?>">
-                    </div>
-
-                    <div class="col-md-2  <?= ($short_list["university_status"] == 1) ? 'check_university' : '' ?>">
+                    <div class="col-md-3  <?= ($short_list["university_status"] == 1) ? 'check_university' : '' ?>">
                         <?php
 
                         $selected_university_status_update = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
@@ -38,7 +29,7 @@
                     </div>
 
 
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <select name="university_status_submit_offer" disabled class=" university_status_submit_offer selectpicker" data-width="100%" data-none-selected-text="Non selected" data-live-search="true">
                             <option></option>
                             <?php
@@ -108,10 +99,6 @@
                                     </div>
 
                                 </div>
-                                <!-- <div class="col-md-2"> -->
-                                <!-- <button class="col-md-2 add_document remove_condition_btn" type="button" style="display:none;" onclick="remove_condition_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                                                <button class="col-md-2 add_document add_condition_btn" type="button" onclick="add_condition_div(this)"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
-                                <!-- </div> -->
                             </div>
 
                         <?php
@@ -164,7 +151,7 @@
                 response = JSON.parse(response);
                 if (response.resp_code == "RCS") {
                     alert_float("success", response.resp_desc);
-                    location.reload();
+                    // location.reload();
                 } else {
                     alert_float("danger", response.resp_desc);
                 }

@@ -12,6 +12,11 @@ class Clients extends AdminController
                 access_denied('customers');
             }
         }
+        $user_lead_type = get_user_lead_type(get_staff_user_id());
+        $data["user_lead_type"] = 0;
+        if (!empty($user_lead_type->lead_type)) {
+            $data["user_lead_type"] = $user_lead_type->lead_type;
+        }
 
         $this->load->model('contracts_model');
         $this->load->model('leads_model');
@@ -45,8 +50,8 @@ class Clients extends AdminController
         $data['countries'] = $this->clients_model->get_clients_distinct_countries();
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['sources']  = $this->leads_model->get_source();
-        $data['leadType']  = $this->leads_model->get_type();
-
+        $data['leadType'] = $this->leads_model->get_type();
+        $data['vendorType'] = $this->leads_model->get_vendor();
         $this->load->view('admin/clients/manage', $data);
     }
 
@@ -162,15 +167,14 @@ class Clients extends AdminController
                 show_404();
             }
 
+
             // Fetch data based on groups
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
-
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
-
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
                 $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
             } elseif ($group == 'attachments') {
@@ -240,7 +244,21 @@ class Clients extends AdminController
             }
 
 
-            $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+            // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+
+            $data['members'] = $this->staff_model->get('', ['active' => 1]);
+
+            $data['staff'] = [];
+            if (!empty($data["lead_data"]->type)) {
+                $lead_status_data = $data["lead_data"]->type;
+                foreach ($data['members'] as $members) {
+                    if ($members["lead_type"] == $lead_status_data) {
+                        $data['staff'][] = $members;
+                    }
+                }
+            }
+                // echo $data["lead_data"]->form_data->lead_status;
+            ;
 
             $data['client'] = $client;
             $title          = $client->company;
@@ -256,7 +274,7 @@ class Clients extends AdminController
                 }
             }
         }
-
+        $data['lead_type_status'] = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row()->type;
         $this->load->model('currencies_model');
         $data['currencies'] = $this->currencies_model->get();
 
@@ -1137,6 +1155,7 @@ class Clients extends AdminController
                 $dataArr['university'] = json_encode($params['universities'], true);
             }
 
+
             $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $params['admissionPreferencesId']);
             if ($admissionPreferencesId) {
                 $data['resp_code'] = 'RCS';
@@ -1198,21 +1217,21 @@ class Clients extends AdminController
             $client_id = $this->input->post("client_id");
             $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
 
-            $files = $_FILES['document_file'];
 
-            for ($k = $i = 0; $i < count($label_data); $i++) {
+            for ($i = 0; $i < count($label_data); $i++) {
                 $upload_data = [];
-                if (!empty($files['name'][$k])) {
-                    $upload_data["name"] = $files['name'][$k];
-                    $upload_data["type"] = $files['type'][$k];
-                    $upload_data["tmp_name"] = $files['tmp_name'][$k];
-                    $upload_data["error"] = $files['error'][$k];
-                    $upload_data["size"] = $files['size'][$k];
+                $files = $_FILES['document_file_' . $i];
+
+                if (!empty($files['name'])) {
+                    $upload_data["name"] = $files['name'];
+                    $upload_data["type"] = $files['type'];
+                    $upload_data["tmp_name"] = $files['tmp_name'];
+                    $upload_data["error"] = $files['error'];
+                    $upload_data["size"] = $files['size'];
                     if ($upload_data["error"] === UPLOAD_ERR_OK) {;
                         $file_name = upload_applicant_documents($client_id, $upload_data);
-                        array_push($update_array, array("label_name" => $label_data[$k], "document_file" => $file_name["file_path"]));
+                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
                     }
-                    $k++;
                 } else if (!empty($document_url[$i])) {
                     array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
                 }
@@ -1226,6 +1245,8 @@ class Clients extends AdminController
                 $_update_data = array(
                     "data" => json_encode($update_array, true),
                     "updated_date" => date('Y-m-d H:i:s'),
+                    "document_status" => 0,
+                    "document_update_datetime" => date('Y-m-d H:i:s'),
                     "updated_by" => get_staff_user_id()
                 );
                 $this->db->where("id", $check_->id);
@@ -1373,6 +1394,7 @@ class Clients extends AdminController
                     "vendor_updated_date" => date('Y-m-d H:i:s'),
                     "vendor_updated_by" => get_staff_user_id()
                 );
+                $_update["profile_status"] = 0;
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
@@ -1446,7 +1468,10 @@ class Clients extends AdminController
                     $_update["sop"] = $document_url;
                 }
 
+                $_update["profile_status"] = 0;
+
                 if (isset($applicant_status)) {
+
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
                 }
@@ -1717,7 +1742,9 @@ class Clients extends AdminController
                     "approved_date" => date('Y-m-d H:i:s'),
                     "approved_by" => get_staff_user_id()
                 );
-
+                if ($document_status == 1) {
+                    $_update["email_verified"] = 1;
+                }
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_profile_creation', $_update);
                 $rows_affected = $this->db->affected_rows();
@@ -1730,6 +1757,7 @@ class Clients extends AdminController
                     get_applicant_status(2, $client_id);
                     $rows_affected = $this->db->affected_rows();
                 } else {
+                    get_applicant_status(1, $client_id);
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Profile is Reject by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
 
@@ -1829,6 +1857,7 @@ class Clients extends AdminController
             $media_file = !empty($_FILES["media_file"]) ? $_FILES["media_file"] : [];
             $media_file_condition = !empty($_FILES["conditional_media_file"]) ? $_FILES["conditional_media_file"] : [];
 
+
             $university_shortlisting_update_arr = [];
             if (!empty($university_ids)) {
                 $i = 0;
@@ -1866,8 +1895,6 @@ class Clients extends AdminController
                 $index_u = 0;
                 foreach ($conditional_array as $keyy => $con) {
                     $con_array = json_decode($con);
-
-
                     if (empty($con_array->university_status) || $con_array->university_status == '' || $con_array->university_status <= 0) {
 
                         $this->db->where('client_id', $client_id);
@@ -1906,7 +1933,6 @@ class Clients extends AdminController
                         }
                     }
                 }
-
 
 
                 $update_university = "";
@@ -2070,5 +2096,59 @@ class Clients extends AdminController
 
 
         echo $html;
+    }
+
+    public function update_approval()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $university_id = $this->input->post("university_id");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : null;
+            $status = !empty($this->input->post("status")) ? $this->input->post("status") : "0";
+
+            $client_id = intval($client_id);
+            $university_id = intval($university_id);
+            $applicant_status = ($applicant_status !== null) ? intval($applicant_status) : null;
+            $status = intval($status);
+
+            try {
+                if (!empty($university_id) && !empty($client_id)) {
+                    $this->db->where(array("client_id" => $client_id, "id" => $university_id));
+                    $this->db->update(db_prefix() . 'client_university_shortlisting', array(
+                        "updated_by" => get_staff_user_id(),
+                        "updated_date" => date('Y-m-d H:i:s'),
+                        "acceptance_status" => $status,
+                    ));
+
+                    if (isset($applicant_status)) {
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                        get_applicant_status($applicant_status, $client_id);
+                    }
+                    $rows_affected = $this->db->affected_rows();
+                    if ($rows_affected) {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = "University update successfully.";
+                        set_alert('success', "University update successfully.");
+                    } else {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = "University update failed";
+                        set_alert('danger', "University update failed");
+                    }
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Invalid parameters";
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
     }
 }

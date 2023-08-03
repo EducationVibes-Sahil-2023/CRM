@@ -2,6 +2,11 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+$lead_types = !empty($this->ci->input->post('lead_types')) ? $this->ci->input->post('lead_types') : '';
+$applicant_id = !empty($this->ci->input->post('applicant_id')) ? $this->ci->input->post('applicant_id') : '';
+$allowed_payment_modes = !empty($this->ci->input->post('allowed_payment_modes')) ? $this->ci->input->post('allowed_payment_modes') : '';
+$category = !empty($this->ci->input->post('category')) ? $this->ci->input->post('category') : '';
+
 $aColumns = [
     db_prefix() . 'expenses.id as id',
     db_prefix() . 'expenses_categories.name as category_name',
@@ -17,6 +22,8 @@ $aColumns = [
 ];
 $join = [
     'LEFT JOIN ' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . db_prefix() . 'expenses.clientid',
+    'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid',
+    'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'JOIN ' . db_prefix() . 'expenses_categories ON ' . db_prefix() . 'expenses_categories.id = ' . db_prefix() . 'expenses.category',
     'LEFT JOIN ' . db_prefix() . 'projects ON ' . db_prefix() . 'projects.id = ' . db_prefix() . 'expenses.project_id',
     'LEFT JOIN ' . db_prefix() . 'files ON ' . db_prefix() . 'files.rel_id = ' . db_prefix() . 'expenses.id AND rel_type="expense"',
@@ -43,6 +50,30 @@ if ($clientid != '') {
 if (!has_permission('expenses', '', 'view')) {
     array_push($where, 'AND ' . db_prefix() . 'expenses.addedfrom=' . get_staff_user_id());
 }
+if ($lead_types) {
+    array_push($where, 'AND ' . db_prefix() . 'leads.type IN (' . $lead_types . ')');
+}
+
+if ($allowed_payment_modes) {
+    array_push($where, 'AND ' . db_prefix() . 'expenses.paymentmode IN ("' . str_replace(",", '","', $allowed_payment_modes) . '")');
+}
+
+if ($category) {
+    array_push($where, 'AND ' . db_prefix() . 'expenses.category IN (' . $category . ')');
+}
+
+if ($applicant_id) {
+    array_push($where, 'AND ' . db_prefix() . 'expenses.clientid=' . $this->ci->db->escape_str($applicant_id));
+}
+
+
+
+
+if ($this->ci->input->post('to_date')) {
+    $from_date = $this->ci->input->post('from_date');
+    $to_date = $this->ci->input->post('to_date');
+    array_push($where, 'AND DATE(' . db_prefix() . 'expenses.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+}
 
 $sIndexColumn = 'id';
 $sTable       = db_prefix() . 'expenses';
@@ -56,12 +87,13 @@ if (count($custom_fields) > 4) {
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'billable',
-    db_prefix().'currencies.name as currency_name',
+    db_prefix() . 'currencies.name as currency_name',
     db_prefix() . 'expenses.clientid',
     'tax',
     'tax2',
     'project_id',
     'recurring',
+    db_prefix() . 'leads_type.name as   lead_type_name'
 ]);
 $output  = $result['output'];
 $rResult = $result['rResult'];
@@ -92,7 +124,7 @@ foreach ($rResult as $aRow) {
             if (total_rows(db_prefix() . 'invoices', [
                 'id' => $aRow['invoiceid'],
                 'status' => 2,
-                ]) > 0) {
+            ]) > 0) {
                 $categoryOutput .= ' <p class="text-success">' . _l('expense_list_billed') . '</p>';
             } else {
                 $categoryOutput .= ' <p class="text-success">' . _l('expense_list_invoice') . '</p>';
@@ -145,6 +177,7 @@ foreach ($rResult as $aRow) {
     $row[] = '<a href="' . admin_url('projects/view/' . $aRow['project_id']) . '">' . $aRow['project_name'] . '</a>';
 
     $row[] = '<a href="' . admin_url('clients/client/' . $aRow['clientid']) . '">' . $aRow['company'] . '</a>';
+    $row[] = $aRow['lead_type_name'];
 
     if ($aRow['invoiceid']) {
         $row[] = '<a href="' . admin_url('invoices/list_invoices/' . $aRow['invoiceid']) . '">' . format_invoice_number($aRow['invoiceid']) . '</a>';

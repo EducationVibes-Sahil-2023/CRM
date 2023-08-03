@@ -23,10 +23,11 @@ class Clients_model extends App_Model
      */
     public function get($id = '', $where = [])
     {
-        $this->db->select(implode(',', prefixed_table_fields_array(db_prefix() . 'clients')) . ',' . get_sql_select_client_company());
 
+        $this->db->select(implode(',', prefixed_table_fields_array(db_prefix() . 'clients')) . ',' . get_sql_select_client_company());
         $this->db->join(db_prefix() . 'countries', '' . db_prefix() . 'countries.country_id = ' . db_prefix() . 'clients.country', 'left');
         $this->db->join(db_prefix() . 'contacts', '' . db_prefix() . 'contacts.userid = ' . db_prefix() . 'clients.userid AND is_primary = 1', 'left');
+        $this->db->join(db_prefix() . 'leads', '' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid', 'left');
 
         if ((is_array($where) && count($where) > 0) || (is_string($where) && $where != '')) {
             $this->db->where($where);
@@ -1504,6 +1505,8 @@ class Clients_model extends App_Model
 
     public function send_notification_customer_profile_file_uploaded_to_responsible_staff($contact_id, $customer_id)
     {
+        return true;
+        die;
         $staff         = $this->get_staff_members_that_can_access_customer($customer_id);
         $merge_fields  = $this->app_merge_fields->format_feature('client_merge_fields', $customer_id, $contact_id);
         $notifiedUsers = [];
@@ -1565,6 +1568,7 @@ class Clients_model extends App_Model
     public function getAcademicDetails($userid)
     {
         $this->db->where('userid', $userid);
+        $this->db->order_by('id', "DESC");
         return $this->db->get(db_prefix() . 'academic_details')->row();
     }
     public function getDeclarationDetails($userid)
@@ -1575,7 +1579,7 @@ class Clients_model extends App_Model
 
     public function addBasicDetails($data, $basicDetailsId)
     {
-        // print_r($basicDetailsId);die;
+
         if ($basicDetailsId < 1) {
             $this->db->insert(db_prefix() . 'basic_details', $data);
             $basic_detailsid = $this->db->insert_id();
@@ -1596,15 +1600,16 @@ class Clients_model extends App_Model
 
     public function addAdmissionPreferences($data, $admissionPreferencesIds)
     {
-        // print_r($admissionPreferencesIds);die;
         if ($admissionPreferencesIds < 1) {
             $this->db->insert(db_prefix() . 'admission_preferences', $data);
             $admission_preferencesid = $this->db->insert_id();
+
             if ($admission_preferencesid) {
                 $this->db->where('userid', $data['userid']);
                 $this->db->update(db_prefix() . 'contacts', ['admission_preferences_status' => 1]);
             }
         } else if ($admissionPreferencesIds > 0) {
+
             $this->db->where('id', $admissionPreferencesIds);
             $this->db->update(db_prefix() . 'admission_preferences', $data);
             $admission_preferencesid = $admissionPreferencesIds;
@@ -1631,8 +1636,17 @@ class Clients_model extends App_Model
 
     public function addAcademicDetails($data)
     {
-        $this->db->insert(db_prefix() . 'academic_details', $data);
-        $academic_detailsid = $this->db->insert_id();
+        $check_data = $this->db->select("id")->where("userid", $data["userid"])->order_by("id", "desc")->get(db_prefix() . 'academic_details')->row();
+        if (!empty($check_data->id)) {
+            $data["id"] = $check_data->id;
+            $academic_detailsid = $check_data->id;
+            $this->db->where('id', $check_data->id);
+            $this->db->update(db_prefix() . 'academic_details', $data);
+        } else {
+            $this->db->insert(db_prefix() . 'academic_details', $data);
+            $academic_detailsid = $this->db->insert_id();
+        }
+
         if ($academic_detailsid) {
             $this->db->where('userid', $data['userid']);
             $this->db->update(db_prefix() . 'contacts', ['academic_details_status' => 1]);

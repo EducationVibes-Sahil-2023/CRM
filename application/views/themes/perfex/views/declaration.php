@@ -18,7 +18,7 @@
 			  <div class="col-lg-1"></div>
 			<div class="col-lg-2 col-xs-2">
 				<center>
-				<a href="/clients/basic_details">
+				<a href="<?=base_url()?>/clients/basic_details">
 					<img src="/uploads/company/basic_details.png" class="img-responsive">
 					<p>Basic Details</p>
 				</a>
@@ -27,7 +27,7 @@
 			<div class="col-lg-2 col-xs-2">
 				<div class="icon-box">
 				<center>
-				<a href="/clients/admission_preferences">
+				<a href="<?=base_url()?>/clients/admission_preferences">
 					<img src="/uploads/company/Parents_details.png" class="img-responsive">
 					<p>Admission Preferences</p>
 				</a>
@@ -45,7 +45,7 @@
 			<div class="col-lg-2 col-xs-2">
 				<div class="icon-box">
 				<center>
-				<a href="/clients/academic_details">
+				<a href="<?=base_url()?>/clients/academic_details">
 					<img src="/uploads/company/Academics_details.png" class="img-responsive">
 					<p>Academics Details</p>
 				</a>
@@ -55,7 +55,7 @@
 			<div class="col-lg-2 col-xs-2">
 				<div class="icon-box">
 				<center>
-				<a href="/clients/upload_documents">
+				<a href="<?=base_url()?>/clients/upload_documents">
 					<img src="/uploads/company/Address_details.png" class="img-responsive">
 					<p>Upload Documents</p>
 				</a>
@@ -64,7 +64,7 @@
 			</div>
 			<div class="col-lg-2 col-xs-2">
 				<center>
-					<img src="/uploads/company/declaration.png" class="img-responsive">
+					<img src="<?=base_url()?>/uploads/company/declaration.png" class="img-responsive">
 					<p>Declaration</p>
 				</center>
 			</div>
@@ -97,7 +97,7 @@
 				</div><div class="col-lg-4">
 				  	<div class="form-group">
 				  		<label for="exampleInputLastName">Parent Name</label>
-				  	<input class="form-control" type="text" placeholder="Enter Parent Name" name="father_name" value="<?php echo $parentdetails->fname ; ?>">
+				  	<input class="form-control" type="text" placeholder="Enter Parent Name" name="father_name" value="<?php echo $declarationdetails->father_name ; ?>">
 				  </div>
 				</div>
 					
@@ -114,7 +114,7 @@
 					</div>
 				  <div class="row">
 				  	<div class="col-lg-6 col-xs-6">
-						<a href="/clients/upload_documents" class="btn btn-primary button-23">Back</a>
+						<a href="<?=base_url()?>/clients/upload_documents" class="btn btn-primary button-23">Back</a>
 				  		<button type="submit" class="btn btn-primary">Save & Next</button>
 				  	</div>
 				  	<div class="col-lg-6 col-xs-6" >

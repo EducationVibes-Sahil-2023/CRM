@@ -9,7 +9,7 @@ get_template_part($navigationEnabled ? 'navigation' : '');
             <?php get_template_part('alerts'); ?>
          </div>
       </div>
-      <?php if(isset($knowledge_base_search)){ ?>
+      <?php if (isset($knowledge_base_search)) { ?>
          <?php get_template_part('knowledge_base/search'); ?>
       <?php } ?>
       <div class="container">
@@ -19,11 +19,18 @@ get_template_part($navigationEnabled ? 'navigation' : '');
             /**
              * Don't show calendar for invoices, estimates, proposals etc.. views where no navigation is included or in kb area
              */
-            if(is_client_logged_in() && $subMenuEnabled && !isset($knowledge_base_search)){ ?>
+            if (is_client_logged_in() && $subMenuEnabled && !isset($knowledge_base_search)) { ?>
                <ul class="submenu customer-top-submenu">
                   <?php hooks()->do_action('before_customers_area_sub_menu_start'); ?>
-                  <li class="customers-top-submenu-files"><a href="<?php echo site_url('clients/files'); ?>"><i class="fa fa-file" aria-hidden="true"></i> <?php echo _l('customer_profile_files'); ?></a></li>
-                  <li class="customers-top-submenu-calendar"><a href="<?php echo site_url('clients/calendar'); ?>"><i class="fa fa-calendar-minus-o" aria-hidden="true"></i> <?php echo _l('calendar'); ?></a></li>
+                  <!-- <li class="customers-top-submenu-files"><a href="<?php echo site_url('clients/files'); ?>"><i class="fa fa-file" aria-hidden="true"></i> <?php echo _l('customer_profile_files'); ?></a></li> -->
+                  <!-- <li class="customers-top-submenu-calendar"><a href="<?php echo site_url('clients/calendar'); ?>"><i class="fa fa-calendar-minus-o" aria-hidden="true"></i> <?php echo _l('calendar'); ?></a></li> -->
+
+                  <li class="customers-nav-item-app-tracker">
+                     <i class="fa fa-address-card" aria-hidden="true"></i><a href="<?php echo site_url('clients/client_tracker'); ?>">
+                        <?php echo _l('Application Tracker'); ?>
+
+                     </a>
+                  </li>
                   <?php hooks()->do_action('after_customers_area_sub_menu_end'); ?>
                </ul>
                <div class="clearfix"></div>
@@ -39,10 +46,11 @@ get_template_part($navigationEnabled ? 'navigation' : '');
 <?php
 /* Always have app_customers_footer() just before the closing </body>  */
 app_customers_footer();
-   /**
-   * Check for any alerts stored in session
-   */
-   app_js_alerts();
-   ?>
+/**
+ * Check for any alerts stored in session
+ */
+app_js_alerts();
+?>
 </body>
+
 </html>

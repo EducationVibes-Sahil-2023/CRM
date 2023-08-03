@@ -1,6 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
 <div id="wrapper">
+   <style>
+      .margin-top {
+         margin-top: 20px;
+      }
+   </style>
    <div class="content">
       <div class="row">
 
@@ -300,12 +305,12 @@
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
                               <?php if (has_permission('leads', '', 'view')) { ?>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2  margin-top leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                  </div>
                               <?php } ?>
                               <?php if (is_admin()) { ?>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2  margin-top leads-filter-column">
                                     <?php
 
                                     echo '<div id="leads-filter-source">';
@@ -318,7 +323,7 @@
                               <?php } ?>
 
 
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
@@ -326,7 +331,7 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
@@ -335,24 +340,32 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('view_application_sub_stage[]', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
-                              <div class="col-md-2 leads-filter-column">
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-vendor">';
+                                 echo render_select('vendor_type[]', $vendorType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Vendor'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-2 leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-4 leads-filter-column">
+                              <div class="col-md-4 margin-top leads-filter-column">
                                  <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
@@ -393,10 +406,10 @@
                         'name' => _l('customer_active'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-active')
                      ),
-                     array(
-                        'name' => _l('customer_groups'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
+                     // array(
+                     //    'name' => _l('customer_groups'),
+                     //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
+                     // ),
                      array(
                         'name' => _l('applicant_name_table'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
@@ -426,6 +439,7 @@
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
                   );
+
                   foreach ($_table_data as $_t) {
                      array_push($table_data, $_t);
                   }
@@ -433,14 +447,44 @@
                   $custom_fields = get_custom_fields('customers', array('show_on_table' => 1));
 
                   foreach ($custom_fields as $field) {
-                     if (is_admin()) {
-                     } else {
-                        if (!empty($this->session->userdata("staff_department")) &&  !empty($field['show_lead_type']) &&  $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                           continue;
+                     $showField = true;
+
+                     // if (!empty($user_lead_type)) {
+                     //    if (is_admin()) {
+                     //       // Do nothing; all fields are included for admin.
+                     //    } else {
+                     //       // Check conditions based on the user_lead_type.
+                     //       if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                     //          $showField = false;
+                     //       } elseif ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
+                     //          $showField = false;
+                     //       } elseif ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
+                     //          $showField = false;
+                     //       }
+                     //    }
+                     // } else {
+                     //    if (!is_admin() && !empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
+                     //       $showField = false;
+                     //    }
+
+
+                     if (!is_admin()) {
+                        $showField = false;
+                        if (!empty($user_lead_type) && !empty($field['show_lead_type'])) {
+                           if (in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
+                              $showField = true;
+                           } else {
+                              $showField = false;
+                           }
                         }
                      }
-                     array_push($table_data, $field['name']);
+                     // }
+
+                     if ($showField) {
+                        array_push($table_data, $field['name']);
+                     }
                   }
+
                   $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
 
 
@@ -473,7 +517,9 @@ init_tail(); ?>
       CustomersServerParams['from_date'] = "[name='from_date']";
       CustomersServerParams['to_date'] = "[name='to_date']";
       CustomersServerParams['application_stage'] = "[name='view_application_stage']";
-      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage[]']";
+      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
+      CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
+
 
       tAPI = initDataTable('.table-clients', admin_url + 'clients/table', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
       $('input[name="exclude_inactive"]').on('change', function() {
@@ -494,7 +540,10 @@ init_tail(); ?>
       let childDropdown = $('#view_application_sub_stage');
       childDropdown.empty();
       let childOptions = sub_category.filter(item => item.application_tracker === parentValue);;
-      console.log(childOptions);
+      childDropdown.append($('<option>', {
+         value: '',
+         text: ''
+      }));
       if (childOptions && childOptions.length > 0) {
          childOptions.forEach(option => {
             childDropdown.append($('<option>', {

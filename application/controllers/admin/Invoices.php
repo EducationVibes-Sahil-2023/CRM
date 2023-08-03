@@ -20,21 +20,27 @@ class Invoices extends AdminController
     /* List all invoices datatables */
     public function list_invoices($id = '')
     {
-        if (!has_permission('invoices', '', 'view')
+        if (
+            !has_permission('invoices', '', 'view')
             && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+            && get_option('allow_staff_view_invoices_assigned') == '0'
+        ) {
             access_denied('invoices');
         }
 
         close_setup_menu();
 
         $this->load->model('payment_modes_model');
+        $this->load->model('leads_model');
         $data['payment_modes']        = $this->payment_modes_model->get('', [], true);
         $data['invoiceid']            = $id;
         $data['title']                = _l('invoices');
         $data['invoices_years']       = $this->invoices_model->get_invoices_years();
         $data['invoices_sale_agents'] = $this->invoices_model->get_sale_agents();
         $data['invoices_statuses']    = $this->invoices_model->get_statuses();
+        // $data['invoices_status']    = $this->invoices_model->get_status();
+
+        $data['type']  = $this->leads_model->get_type();
         $data['bodyclass']            = 'invoices-total-manual';
         $this->load->view('admin/invoices/manage', $data);
     }
@@ -42,9 +48,11 @@ class Invoices extends AdminController
     /* List all recurring invoices */
     public function recurring($id = '')
     {
-        if (!has_permission('invoices', '', 'view')
+        if (
+            !has_permission('invoices', '', 'view')
             && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+            && get_option('allow_staff_view_invoices_assigned') == '0'
+        ) {
             access_denied('invoices');
         }
 
@@ -59,9 +67,11 @@ class Invoices extends AdminController
 
     public function table($clientid = '')
     {
-        if (!has_permission('invoices', '', 'view')
+        if (
+            !has_permission('invoices', '', 'view')
             && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+            && get_option('allow_staff_view_invoices_assigned') == '0'
+        ) {
             ajax_access_denied();
         }
 
@@ -378,9 +388,11 @@ class Invoices extends AdminController
     /* Get all invoice data used when user click on invoiec number in a datatable left side*/
     public function get_invoice_data_ajax($id)
     {
-        if (!has_permission('invoices', '', 'view')
+        if (
+            !has_permission('invoices', '', 'view')
             && !has_permission('invoices', '', 'view_own')
-            && get_option('allow_staff_view_invoices_assigned') == '0') {
+            && get_option('allow_staff_view_invoices_assigned') == '0'
+        ) {
             echo _l('access_denied');
             die;
         }
@@ -456,9 +468,9 @@ class Invoices extends AdminController
         $total_credits_applied = 0;
         foreach ($this->input->post('amount') as $credit_id => $amount) {
             $success = $this->credit_notes_model->apply_credits($credit_id, [
-            'invoice_id' => $invoice_id,
-            'amount'     => $amount,
-        ]);
+                'invoice_id' => $invoice_id,
+                'amount'     => $amount,
+            ]);
             if ($success) {
                 $total_credits_applied++;
             }
@@ -705,5 +717,10 @@ class Invoices extends AdminController
                 echo $duedate;
             }
         }
+    }
+    public function get_invoice_summary()
+    {
+        $data['invoices_statuses']    = $this->invoices_model->get_statuses();
+        return $this->load->view('admin/invoices/invoices_top_stats', $data);
     }
 }

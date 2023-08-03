@@ -69,12 +69,12 @@
                            <?php } ?>
                         </a>
                      </li>
-                     <li class="customers-nav-item-app-tracker">
+                     <!-- <li class="customers-nav-item-app-tracker">
                         <a href="<?php echo site_url('clients/client_tracker'); ?>">
                            <?php echo _l('Application Tracker'); ?>
 
                         </a>
-                     </li>
+                     </li> -->
                      <?php if (can_logged_in_contact_change_language()) {
                      ?>
                         <li class="dropdown-submenu pull-left customers-nav-item-languages">
@@ -119,7 +119,8 @@
 
 <?php
 $university_shortlisting_notification = $this->announcements_model->get_university_shortlist_status();
-if (is_client_logged_in() && !empty($university_shortlisting_notification) && $university_shortlisting_notification == true) {
+
+if (is_client_logged_in() && !empty($university_shortlisting_notification) ) {
 ?>
    <div class="container">
       <div class="alert alert-info" role="alert">

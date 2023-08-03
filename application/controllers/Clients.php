@@ -31,7 +31,10 @@ class Clients extends ClientsController
 
 
         // echo "basicdet:".$basicDetailsStatus."parentDet: ".$admissionPreferencesStatus."academicDet: ".$academicDetailsStatus;
-        if ($basicDetailsStatus == '' && $admissionPreferencesStatus == '' && $academicDetailsStatus == '') {
+        if ($declarationDetailsStatus == 1) {
+            redirect(site_url('clients/invoices'));
+        }
+        if ($basicDetailsStatus == '') {
             redirect(site_url('clients/basic_details'));
         }
         if ($basicDetailsStatus == 1 && $admissionPreferencesStatus == '') {
@@ -46,9 +49,7 @@ class Clients extends ClientsController
         if ($documentDetailsStatus == 1 && $declarationDetailsStatus == '') {
             redirect(site_url('clients/declaration'));
         }
-        if ($declarationDetailsStatus == 1) {
-            redirect(site_url('clients/invoices'));
-        }
+
 
 
         $this->load->model('reports_model');
@@ -125,8 +126,9 @@ class Clients extends ClientsController
         $data['customer_admins'] = $this->clients_model->get_admins($id);
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
         $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
-        $data['university_application_status'] = $this->clients_model->university_status_update();
+        $data['university_status_update'] = $data['university_application_status'] = $this->clients_model->university_status_update();
         $data['university_status_submit'] = $this->clients_model->university_status_submit();
+        // $data['university_status_update'] = $this->clients_model->university_status_update();
         $data['customer_vendors'] = [];
         if (!empty($data['profile_creation_data'][0]["vendor"])) {
             $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
@@ -147,15 +149,21 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('course', _l('Course'), 'required');
             $this->form_validation->set_rules('study_country', _l('Country'), 'required');
 
-            if ($this->form_validation->run() !== false) {
+            if ($_POST["direct_pass"] == 1) {
+                $this->session->set_flashdata('success', "Admission Preferences successfully updated");
+                redirect(site_url('clients/academic_details'));
+            }
+
+            if ($this->form_validation->run() !== false && $_POST["direct_pass"] == 0) {
                 $data = $this->input->post();
+
                 $admissionPreferencesIds = (($this->input->post('admissionPreferencesId')) > 0) ? $this->input->post('admissionPreferencesId') : 0;
                 $university_array = array();
                 if ($data['countries'] != '') {
                     $countriesArr = explode(',', $data['countries']);
                     if (is_array($countriesArr) && count($countriesArr) > 0) {
                         foreach ($countriesArr as $key => $val) {
-                            $university = isset($data['university' . $val]) ? $data['university' . $val] : '';
+                            $university = isset($data['university' . $key]) ? $data['university' . $key] : '';
                             if ($university != '') {
                                 $university_array[$val] = $university;
                             }
@@ -163,14 +171,15 @@ class Clients extends ClientsController
                     }
                 }
 
+
                 $dataArr = [
                     'userid' => get_client_user_id(),
-                    'program' => $data['program'],
-                    'course' => $data['course'],
-                    'specialization' => $data['specialization'],
-                    'entrance_exam_given' => $data['entrance_exam_given'],
+                    'program' => !empty($data['program']) ? $data['program'] : '',
+                    'course' => !empty($data['course']) ? $data['course'] : '',
+                    'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
+                    'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
                     'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES') ? $data['entrance_exam_details'] : '',
-                    'session_intake' => $data['session_intake'],
+                    'session_intake' => !empty($data['session_intake']) ? $data['session_intake'] : '',
                     'created_by' => get_client_user_id(),
                 ];
 
@@ -179,7 +188,9 @@ class Clients extends ClientsController
                     $dataArr['university'] = json_encode($university_array, true);
                 }
 
+
                 $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $admissionPreferencesIds);
+
                 if ($admissionPreferencesId) {
                     $this->session->set_flashdata('success', "Admission Preferences successfully updated");
                     redirect(site_url('clients/academic_details'));
@@ -193,9 +204,21 @@ class Clients extends ClientsController
         }
 
 
+        $this->load->model("leads_model");
+        $client = $this->clients_model->get(get_client_user_id());
+        $lead_type_status = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row();
+        if (!empty($lead_type_status->type)) {
+            $data['lead_type_status'] = $lead_type_status->type;
+        } else {
+            $data['lead_type_status'] = "";
+        }
+        $data['lead_type'] = $this->leads_model->get_type();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["lead_data"]                = $this->leads_model->get($client->leadid);
         $data['title']         = "Admission Preferences";
         $data['announcements'] = $this->announcements_model->get();
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
+
         // echo "<pre>";print_r($data);die;
         $this->data($data);
         $this->view('admission_preferences');
@@ -278,6 +301,7 @@ class Clients extends ClientsController
 
             if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
+
                 // define('CONTACT_REGISTERING', true);
                 $academicDetailsIds = (($this->input->post('academicDetailsId')) > 0) ? $this->input->post('academicDetailsId') : 0;
                 $academicDetailsid = $this->clients_model->addAcademicDetails([
@@ -290,6 +314,7 @@ class Clients extends ClientsController
                     'twelth_school_name' => $data['twelth_school_name'],
                     'twelth_board' => $data['twelth_board'],
                     'twelth_passing_year' => $data['twelth_passing_year'],
+                    'twelth_result_status'  => $data['twelth_result_status'],
                     'twelth_marking_scheme' => $data['twelth_marking_scheme'],
                     'twelth_percentage' => $data['twelth_percentage'],
                     'diploma_institute' => $data['diploma_institute'],
@@ -310,7 +335,8 @@ class Clients extends ClientsController
                     'entrance_roll' => $data['entrance_roll'],
                     'entrance_year' => $data['entrance_year'],
                     'entrance_result_status' => $data['entrance_result_status'],
-                    'entrance_percentage' => $data['entrance_percentage']
+                    'entrance_percentage' => $data['entrance_percentage'],
+                    'after_x_status' => $data['after_tenth'],
 
                 ], $academicDetailsIds);
 
@@ -382,7 +408,6 @@ class Clients extends ClientsController
         $data['declarationdetails'] = $this->clients_model->getDeclarationDetails(get_client_user_id());
         $data['parentdetails'] = $this->clients_model->getParentDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
-
         $this->data($data);
         $this->view('declaration');
         $this->layout();
@@ -1969,10 +1994,12 @@ class Clients extends ClientsController
                 $this->db->where("userid", get_client_user_id());
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => 3));
                 $rows_affected = $this->db->affected_rows();
+                get_applicant_status(3, get_client_user_id());
+            } else {
+                get_applicant_status(2, get_client_user_id());
             }
 
             $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisting by Applicant - " . get_contact_user_name(), "date" => date('Y-m-d H:i:s'), "contact_id" => get_contact_user_id(), "client_id" => get_client_user_id()));
-            get_applicant_status(3, get_client_user_id());
             if ($rows_affected > 0) {
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
@@ -1985,6 +2012,59 @@ class Clients extends ClientsController
         } else {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+
+    public function university_fee_update()
+    {
+
+        try {
+            if (!empty($_POST["university_id"]) && !empty($_FILES["media_file"])) {
+                $upload_data = [];
+                $media_url = "";
+                if (!empty($_FILES["media_file"]['name'])) {
+                    $upload_data["name"] = $_FILES["media_file"]['name'];
+                    $upload_data["type"] = $_FILES["media_file"]['type'];
+                    $upload_data["tmp_name"] = $_FILES["media_file"]['tmp_name'];
+                    $upload_data["error"] = $_FILES["media_file"]['error'];
+                    $upload_data["size"] = $_FILES["media_file"]['size'];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
+                        $media_url = $file_name["file_path"];
+                    } else {
+                        $data['resp_code'] = 'ERR';
+                        $data['resp_desc'] = "Upload failed.";
+                        set_alert('danger', "Upload failed.");
+                        echo json_encode($data);
+                        die;
+                    }
+                }
+
+                $this->db->where(array("client_id" => get_client_user_id(), "id" => $_POST["university_id"]));
+                $this->db->update(db_prefix() . 'client_university_shortlisting', array("fee_status" => 1, "fee_media" => $media_url));
+
+                $status_check = $this->db->affected_rows();
+                if ($status_check) {
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University selected and fees uploaded by Applicant - " . get_contact_user_name(), "date" => date('Y-m-d H:i:s'), "contact_id" => get_contact_user_id(), "client_id" => get_client_user_id()));
+                    $this->db->where("userid", get_client_user_id());
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 4));
+                    $rows_affected = $this->db->affected_rows();
+                    get_applicant_status(4, get_client_user_id());
+
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = _l('update_custumer_update_successfully', _l('customer'));
+                    set_alert('success', _l('update_custumer_update_successfully', _l('customer')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Invalid request method';
+            }
+        } catch (Exception $e) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
         }
 
         echo json_encode($data);

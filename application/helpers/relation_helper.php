@@ -10,18 +10,25 @@ defined('BASEPATH') or exit('No direct script access allowed');
  */
 function get_relation_data($type, $rel_id = '')
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     $q  = '';
     if ($CI->input->post('q')) {
         $q = $CI->input->post('q');
         $q = trim($q);
+    }
+    if (!empty($CI->input->post('l'))) {
+        $l = $CI->input->post('l');
+        $l = implode(",", $l);
     }
 
     $data = [];
     if ($type == 'customer' || $type == 'customers') {
         $where_clients = '';
         if ($q) {
-            $where_clients .= '(company LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\' OR CONCAT(firstname, " ", lastname) LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\' OR email LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\') AND ' . db_prefix() . 'clients.active = 1';
+            $where_clients .= '(' . db_prefix() . 'clients.company LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\' OR CONCAT(firstname, " ", lastname) LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\' OR ' . db_prefix() . 'contacts.email LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\') AND ' . db_prefix() . 'clients.active = 1';
+        }
+        if (!empty($l)) {
+            $where_clients .= ' AND ' . db_prefix() . 'leads.type in (' . $l . ') ';
         }
 
         $data = $CI->clients_model->get($rel_id, $where_clients);
@@ -98,7 +105,7 @@ function get_relation_data($type, $rel_id = '')
         } else {
             $search = $CI->misc_model->_search_leads($q, 0, [
                 'junk' => 0,
-                ]);
+            ]);
             $data = $search['result'];
         }
     } elseif ($type == 'proposal') {
@@ -155,7 +162,7 @@ function get_relation_values($relation, $type)
             'link'      => '',
             'addedfrom' => 0,
             'subtext'   => '',
-            ];
+        ];
     }
 
     $addedfrom = 0;
@@ -327,7 +334,7 @@ function get_relation_values($relation, $type)
         'addedfrom' => $addedfrom,
         'subtext'   => $subtext,
         'type'      => $type,
-        ]);
+    ]);
 }
 
 /**
@@ -350,7 +357,7 @@ function init_relation_options($data, $type, $rel_id = '')
     $has_permission_expenses_view  = has_permission('expenses', '', 'view');
     $has_permission_proposals_view = has_permission('proposals', '', 'view');
     $is_admin                      = is_admin();
-    $CI                            = & get_instance();
+    $CI                            = &get_instance();
     $CI->load->model('projects_model');
 
     foreach ($data as $relation) {
