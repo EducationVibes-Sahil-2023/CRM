@@ -2480,7 +2480,7 @@ class Leads_model extends App_Model
         //     $sql .= " limit 1 ";
         // }
 
-        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(f.name) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
+        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
