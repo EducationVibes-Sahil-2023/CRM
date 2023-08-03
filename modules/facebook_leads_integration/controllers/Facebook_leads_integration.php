@@ -588,28 +588,33 @@ class Facebook_leads_integration extends ClientsController
 
 
     public function webhook_shikshalogy()
-
     {
         $key = SHIKSHALOGY_FORM_KEY;
         if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            // Get the JSON data from the POST request
             $json = file_get_contents('php://input');
             $lead_data = json_decode($json, true);
-            $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data, true), "ledgen_id" => "", "form_name" => "Sikshalogy_google", "form_id" => "", "datetime" => date("Y-m-d h:i:s")));
 
+            // Insert the JSON data into the database
+            $this->db->insert(db_prefix() . 'facebook_leads_logs', array(
+                "lead_details" => json_encode($lead_data, true),
+                "lead_data" => json_encode($lead_data, true),
+                "ledgen_id" => "",
+                "form_name" => "Sikshalogy_google",
+                "form_id" => "",
+                "datetime" => date("Y-m-d h:i:s")
+            ));
 
-
-
-            // Retrieve form data from the POST request
-            $name = !empty($_POST['full_name']) ? $_POST['full_name'] : '';
-            $email = !empty($_POST['email']) ? $_POST['email'] : '';
-            $phonenumber = !empty($_POST['phone_number']) ? $_POST['phone_number'] : '';
-            $neet_score = !empty($_POST['neet_score']) ? $_POST['neet_score'] : '';
-            $csrf_token_name = !empty($_POST['csrf_token_name']) ? $_POST['csrf_token_name'] : '';
+            // Retrieve form data from the decoded JSON data
+            $name = !empty($lead_data['full_name']) ? $lead_data['full_name'] : '';
+            $email = !empty($lead_data['email']) ? $lead_data['email'] : '';
+            $phonenumber = !empty($lead_data['phone_number']) ? $lead_data['phone_number'] : '';
+            $neet_score = !empty($lead_data['neet_score']) ? $lead_data['neet_score'] : '';
+            $csrf_token_name = !empty($lead_data['csrf_token_name']) ? $lead_data['csrf_token_name'] : '';
             $type = 3;
 
-
             // Your form data to be sent
-            $dataString = 'name=' . $name . '&email=' . $email . '&phonenumber=' . $phonenumber . '&csrf_token_name=' . $csrf_token_name . '&key=' . $key . '&type=' . $type . '&form-cf-8=' . $neet_score . '&auto_assign=1';
+            $dataString = 'name=' . urlencode($name) . '&email=' . urlencode($email) . '&phonenumber=' . urlencode($phonenumber) . '&csrf_token_name=' . urlencode($csrf_token_name) . '&key=' . urlencode($key) . '&type=' . urlencode($type) . '&form-cf-8=' . urlencode($neet_score) . '&auto_assign=1';
 
             // The URL to send the POST request to
             $url = base_url("forms/wtl/" . $key);
@@ -649,64 +654,6 @@ class Facebook_leads_integration extends ClientsController
                     echo 'Form submission failed: ' . $responseData['message'];
                 }
             }
-
-
-            // $lead_data_array = [];
-            // $token = $this->security->get_csrf_hash();
-            // if (!empty($lead_data_response["field_data"])) {
-            //     $lead_data["csrf_token_name"] = $token;
-            //     foreach ($lead_data_response["field_data"] as $field_data) {
-            //         if (!empty($field_data["name"])) {
-            //             if ($field_data["name"] == "full_name") {
-            //                 $lead_data_array["name"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if ($field_data["name"] == "phone_number") {
-            //                 $lead_data_array["phonenumber"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if ($field_data["name"] == "email") {
-            //                 $lead_data_array["email"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "intake") !== false) {
-            //                 $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "country") !== false) {
-            //                 $lead_data_array["form-cf-32"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "course") !== false) {
-            //                 $lead_data_array["form-cf-16"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "neet") !== false) {
-            //                 $lead_data_array["form-cf-8"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "passing") !== false) {
-            //                 $lead_data_array["form-cf-18"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "city") !== false) {
-            //                 $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "state") !== false) {
-            //                 $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "do_you_have_the__offer_letter") !== false) {
-            //                 $lead_data_array["form-cf-35"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             } else if (strpos(strtolower($field_data["name"]), "what_kind_of_assistance_you_are_looking_for") !== false) {
-            //                 $lead_data_array["form-cf-36"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
-            //             }
-            //         }
-            //     }
-
-
-            //     $lead_data_array["type"] = '3';
-
-
-
-            //     $ch = curl_init();
-            //     $url = base_url("forms/wtl/" . $key);
-            //     curl_setopt($ch, CURLOPT_URL, $url);
-            //     $headers = array(
-            //         'X-CSRF-TOKEN: ' . $token
-            //     );
-            //     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            //     curl_setopt($ch, CURLOPT_POST, 1);
-            //     curl_setopt($ch, CURLOPT_POSTFIELDS, $lead_data_array);
-            //     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            //     $result = curl_exec($ch);
-            //     // Check for errors
-            //     if (curl_errno($ch)) {
-            //         echo 'cURL error: ' . curl_error($ch);
-            //     }
-            //     curl_close($ch);
-            // }
         }
     }
 
