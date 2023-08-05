@@ -18,6 +18,7 @@ if (!isset($project)) {
 }
 
 $table_data = array_merge($table_data, [
+  _l('Lead Type'),
   _l('invoice'),
   _l('expense_dt_table_heading_reference_no'),
   _l('expense_dt_table_heading_payment_mode'),

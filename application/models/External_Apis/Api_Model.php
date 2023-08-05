@@ -77,6 +77,16 @@ class Api_Model extends CI_Model
                 $response["login_token"] = $access_token;
                 $response["followup_contact"] = [];
 
+                $issuedAt = time();
+                $expirationTime = $issuedAt + 60 * 60 * 24 * 60;
+                $data = array(
+                    "login_token" => $access_token,
+                    'iat' => $issuedAt,
+                    'exp' => $expirationTime,
+                );
+                $jwt_token =  $this->generate_token($data);
+                $response["jwt_token"] = !empty($jwt_token) ? $jwt_token : '';
+
                 if (!empty($user->staffid)) {
                     $follow_up_contact = $this->follow_up_contact($user->staffid);
                     if (!empty($follow_up_contact["data"])) {
@@ -312,7 +322,7 @@ class Api_Model extends CI_Model
     {
         $response = [];
         try {
-            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 25);
+            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 1000);
             $delete_ids = [];
             if (!empty($get_all_activity_temp["data"])) {
                 foreach ($get_all_activity_temp["data"] as $key => $call_data) {
@@ -337,7 +347,7 @@ class Api_Model extends CI_Model
                         }
                         if (!empty($staffid)) {
                             $delete_ids[] = $call_data["id"];
-
+  if (!empty($call_data["staff_contact"]) && !empty($staffid)) {
                             $insert_data = array(
                                 "staffid" => $staffid,
                                 "staff_contact" => $call_data["staff_contact"],
@@ -351,6 +361,7 @@ class Api_Model extends CI_Model
                                 "datetime" => $call_data["datetime"],
                             );
                             $this->insert_data(db_prefix() . 'calls_activity_logs', $insert_data);
+  }
                         }
                     }
                 }
@@ -370,6 +381,18 @@ class Api_Model extends CI_Model
         } catch (Exception $e) {
             $response["status"] = 0;
             $response["message"] = $e->getMessage();
+        }
+        return $response;
+    }
+
+    public function generate_token($data)
+    {
+        $response = [];
+        try {
+            $jwt = new JWT();
+            $response = $jwt->encode($data, $this->secretKey, "HS256");
+        } catch (Exception $e) {
+            $response = array("status" => 0, "message" => "Not generate token.");
         }
         return $response;
     }

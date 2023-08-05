@@ -17,6 +17,7 @@ function _app_init_load()
         'mails/app_mail_template',
         'merge_fields/app_merge_fields',
         'app_object_cache',
+        'process'
     ]);
 }
 

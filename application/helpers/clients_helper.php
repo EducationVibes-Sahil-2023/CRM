@@ -157,14 +157,14 @@ function app_init_customer_profile_tabs()
         $client_id = $client->userid;
 
         $total_reminders = total_rows(
-              db_prefix() . 'reminders',
+            db_prefix() . 'reminders',
             [
-             'isnotified' => 0,
-             'staff'      => get_staff_user_id(),
-             'rel_type'   => 'customer',
-             'rel_id'     => $client_id,
-           ]
-          );
+                'isnotified' => 0,
+                'staff'      => get_staff_user_id(),
+                'rel_type'   => 'customer',
+                'rel_id'     => $client_id,
+            ]
+        );
 
         if ($total_reminders > 0) {
             $remindersText .= ' <span class="badge">' . $total_reminders . '</span>';
@@ -315,6 +315,12 @@ function app_init_customer_profile_tabs()
         'view'     => 'admin/clients/groups/map',
         'position' => 95,
     ]);
+    $CI->app_tabs->add_customer_profile_tab('tracker', [
+        'name'     => _l('customer_tracker'),
+        'icon'     => 'fa fa-map-marker',
+        'view'     => 'admin/clients/groups/applicant_tracker',
+        'position' => 95,
+    ]);
 }
 
 /**
@@ -325,7 +331,7 @@ function app_init_customer_profile_tabs()
  */
 function get_client_id_by_lead_id($id)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->db->select('userid')->from(db_prefix() . 'clients')->where('leadid', $id);
 
     return $CI->db->get()->row()->userid;
@@ -360,7 +366,7 @@ function is_client_using_multiple_currencies($clientid = '', $table = null)
         $table = db_prefix() . 'invoices';
     }
 
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $clientid = $clientid == '' ? get_client_user_id() : $clientid;
     $CI->load->model('currencies_model');
@@ -397,7 +403,7 @@ function is_client_using_multiple_currencies($clientid = '', $table = null)
  */
 function is_empty_customer_company($id)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->db->select('company');
     $CI->db->from(db_prefix() . 'clients');
     $CI->db->where('userid', $id);
@@ -420,7 +426,7 @@ function is_empty_customer_company($id)
  */
 function get_customer_profile_file_sharing($where = [])
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->db->where($where);
 
     return $CI->db->get(db_prefix() . 'shared_customer_files')->result_array();
@@ -433,12 +439,12 @@ function get_customer_profile_file_sharing($where = [])
  */
 function get_user_id_by_contact_id($id)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $userid = $CI->app_object_cache->get('user-id-by-contact-id-' . $id);
     if (!$userid) {
         $CI->db->select('userid')
-        ->where('id', $id);
+            ->where('id', $id);
         $client = $CI->db->get(db_prefix() . 'contacts')->row();
 
         if ($client) {
@@ -457,7 +463,7 @@ function get_user_id_by_contact_id($id)
  */
 function get_primary_contact_user_id($userid)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->db->where('userid', $userid);
     $CI->db->where('is_primary', 1);
     $row = $CI->db->get(db_prefix() . 'contacts')->row();
@@ -478,7 +484,7 @@ function get_contact_full_name($contact_id = '')
 {
     $contact_id == '' ? get_contact_user_id() : $contact_id;
 
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $contact = $CI->app_object_cache->get('contact-full-name-data-' . $contact_id);
 
@@ -503,7 +509,7 @@ function get_contact_full_name($contact_id = '')
 function contact_profile_image_url($contact_id, $type = 'small')
 {
     $url  = base_url('assets/images/user-placeholder.jpg');
-    $CI   = & get_instance();
+    $CI   = &get_instance();
     $path = $CI->app_object_cache->get('contact-profile-image-path-' . $contact_id);
 
     if (!$path) {
@@ -540,15 +546,15 @@ function get_company_name($userid, $prevent_empty_company = false)
     if ($userid !== '') {
         $_userid = $userid;
     }
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $select = ($prevent_empty_company == false ? get_sql_select_client_company() : 'company');
 
     $client = $CI->db->select($select)
-    ->where('userid', $_userid)
-    ->from(db_prefix() . 'clients')
-    ->get()
-    ->row();
+        ->where('userid', $_userid)
+        ->from(db_prefix() . 'clients')
+        ->get()
+        ->row();
     if ($client) {
         return $client->company;
     }
@@ -568,7 +574,7 @@ function get_client_default_language($clientid = '')
         $clientid = get_client_user_id();
     }
 
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->db->select('default_language');
     $CI->db->from(db_prefix() . 'clients');
     $CI->db->where('userid', $clientid);
@@ -636,7 +642,7 @@ function have_assigned_customers($staff_id = '')
  */
 function has_contact_permission($permission, $contact_id = '')
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     if (!class_exists('app')) {
         $CI->load->library('app');
@@ -666,14 +672,16 @@ function has_contact_permission($permission, $contact_id = '')
  */
 function load_client_language($customer_id = '')
 {
-    $CI       = & get_instance();
+    $CI       = &get_instance();
     $language = get_option('active_language');
 
     if (is_client_logged_in() || $customer_id != '') {
         $client_language = get_client_default_language($customer_id);
 
-        if (!empty($client_language)
-            && file_exists(APPPATH . 'language/' . $client_language)) {
+        if (
+            !empty($client_language)
+            && file_exists(APPPATH . 'language/' . $client_language)
+        ) {
             $language = $client_language;
         }
     }
@@ -723,9 +731,9 @@ function client_have_transactions($id)
 
 
 /**
-* Predefined contact permission
-* @return array
-*/
+ * Predefined contact permission
+ * @return array
+ */
 function get_contact_permissions()
 {
     $permissions = [
@@ -784,10 +792,12 @@ function get_contact_permission($name)
  */
 function can_contact_view_email_notifications_options()
 {
-    if (has_contact_permission('invoices')
+    if (
+        has_contact_permission('invoices')
         || has_contact_permission('estimates')
         || has_contact_permission('projects')
-        || has_contact_permission('contracts')) {
+        || has_contact_permission('contracts')
+    ) {
         return true;
     }
 
@@ -795,16 +805,16 @@ function can_contact_view_email_notifications_options()
 }
 
 /**
-* With this function staff can login as client in the clients area
-* @param  mixed $id client id
-*/
+ * With this function staff can login as client in the clients area
+ * @param  mixed $id client id
+ */
 function login_as_client($id)
 {
     $CI = &get_instance();
 
     $CI->db->select(db_prefix() . 'contacts.id, active')
-    ->where('userid', $id)
-    ->where('is_primary', 1);
+        ->where('userid', $id)
+        ->where('is_primary', 1);
 
     $primary = $CI->db->get(db_prefix() . 'contacts')->row();
 
@@ -866,10 +876,10 @@ function contact_consent_url($contact_id)
 }
 
 /**
-*  Get customer attachment
-* @param   mixed $id   customer id
-* @return  array
-*/
+ *  Get customer attachment
+ * @param   mixed $id   customer id
+ * @return  array
+ */
 function get_all_customer_attachments($id)
 {
     $CI = &get_instance();
@@ -1042,7 +1052,7 @@ function get_all_customer_attachments($id)
     }
 
     $CI->db->select('leadid')
-    ->where('userid', $id);
+        ->where('userid', $id);
     $customer = $CI->db->get(db_prefix() . 'clients')->row();
 
     if ($customer->leadid != null) {
@@ -1135,7 +1145,14 @@ function _check_vault_entries_visibility($entries)
  */
 function get_sql_select_client_company()
 {
-    return 'CASE company WHEN \' \' THEN (SELECT CONCAT(firstname, \' \', lastname) FROM ' . db_prefix() . 'contacts WHERE userid = ' . db_prefix() . 'clients.userid and is_primary = 1) ELSE company END as company';
+    return 'CASE 
+    WHEN ' . db_prefix() . 'clients.company IS NULL OR ' . db_prefix() . 'clients.company = \'\' THEN 
+      (SELECT CONCAT(firstname, \' \', lastname) 
+       FROM ' . db_prefix() . 'contacts 
+       WHERE userid = ' . db_prefix() . 'clients.userid AND is_primary = 1) 
+    ELSE 
+    ' . db_prefix() . 'clients.company 
+  END AS  company';
 }
 
 function can_logged_in_contact_change_language()
@@ -1145,4 +1162,29 @@ function can_logged_in_contact_change_language()
     }
 
     return $GLOBALS['contact']->is_primary == '1' && get_option('disable_language') == 0;
+}
+
+
+function applicant_tracker()
+{
+    $CI = &get_instance();
+    return $client_tracker = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'applicant_tracker')
+        ->order_by("orderby", "asc")
+        ->get()
+        ->result_array();
+}
+
+function get_condition_offer($client_id, $university_id)
+{
+    $CI = &get_instance();
+    return $client_tracker = $CI->db->select("*")
+        ->where('status', 1)
+        ->where('client_id', $client_id)
+        ->where('university_id', $university_id)
+        ->from(db_prefix() . 'offer_condition')
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
 }

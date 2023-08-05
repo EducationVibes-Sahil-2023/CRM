@@ -206,7 +206,7 @@ function is_client_logged_in()
  */
 function is_staff_logged_in()
 {
-    return get_instance()->session->has_userdata('staff_logged_in');
+    return get_instance()->session->has_userdata('staff_logged_in_new');
 }
 /**
  * Return logged staff User ID from session
@@ -250,6 +250,25 @@ function get_client_user_id()
     return get_instance()->session->userdata('client_user_id');
 }
 
+function get_staff_user_name()
+{
+    $CI = &get_instance();
+
+    $CI->db->select('CONCAT(' . db_prefix() . 'staff.firstname, " ", ' . db_prefix() . 'staff.lastname) AS staffname')
+        ->where('staffid', get_staff_user_id());
+    $query = $CI->db->get(db_prefix() . 'staff');
+    return $query->row()->staffname;
+}
+
+function get_contact_user_name()
+{
+    $CI = &get_instance();
+
+    $CI->db->select('CONCAT(' . db_prefix() . 'contacts.firstname, " ", ' . db_prefix() . 'contacts.lastname) AS fullname')
+        ->where('id', $CI->session->userdata('contact_user_id'));
+    $query = $CI->db->get(db_prefix() . 'contacts');
+    return $query->row()->fullname;
+}
 /**
  * Get contact user id
  * @return mixed
@@ -924,4 +943,12 @@ function convertSeconds($seconds)
     $dt1 = new DateTime("@0");
     $dt2 = new DateTime("@$seconds");
     return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
+}
+
+function get_user_lead_type($id)
+{
+    $CI = &get_instance();
+    $CI->db->select("lead_type");
+    $CI->db->where("staffid", $id);
+    return $CI->db->get(db_prefix() . 'staff')->row();
 }

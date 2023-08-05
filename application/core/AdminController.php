@@ -7,7 +7,6 @@ class AdminController extends App_Controller
     public function __construct()
     {
         parent::__construct();
-
         if ($this->app->is_db_upgrade_required($this->current_db_version)) {
             if ($this->input->post('upgrade_database')) {
                 hooks()->do_action('pre_upgrade_database');
@@ -87,11 +86,13 @@ class AdminController extends App_Controller
          * Autoloaded view variables
          * @var array
          */
-        $this->session->unset_userdata("Facebook_Error");
-        $this->session->unset_userdata("Facebook_Error_show");
-        $this->session->set_userdata("Facebook_Error_fetch_date", date("d-m-Y"));
-
+        // $this->session->unset_userdata("Facebook_Error");
+        // $this->session->unset_userdata("Facebook_Error_show");
+        // $this->session->unset_userdata("Facebook_Error_fetch_date");
+        // echo date("d-m-Y");
+        // echo $this->session->userdata("Facebook_Error_fetch_date");
         if (is_admin() && date("d-m-Y") != $this->session->userdata("Facebook_Error_fetch_date")) {
+            $this->session->set_userdata("Facebook_Error_fetch_date", date("d-m-Y"));
             $access_token = $this->generate_access_token();
             if (empty($access_token["access_token"])) {
                 // echo $access_token["error"]["message"];

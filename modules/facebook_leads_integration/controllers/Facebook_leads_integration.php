@@ -545,9 +545,14 @@ class Facebook_leads_integration extends ClientsController
                                 $lead_data_array["city"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             } else if (strpos(strtolower($field_data["name"]), "state") !== false) {
                                 $lead_data_array["state"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "do_you_have_the__offer_letter") !== false) {
+                                $lead_data_array["form-cf-35"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            } else if (strpos(strtolower($field_data["name"]), "what_kind_of_assistance_you_are_looking_for") !== false) {
+                                $lead_data_array["form-cf-36"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             }
                         }
                     }
+
 
                     $lead_data_array["type"] = '';
                     $lead_type_array  = $this->staff_model->get_type();
@@ -581,6 +586,76 @@ class Facebook_leads_integration extends ClientsController
         }
     }
 
+
+    public function webhook_shikshalogy()
+    {
+        $key = SHIKSHALOGY_FORM_KEY;
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            // Get the JSON data from the POST request
+            $json = file_get_contents('php://input');
+            $lead_data = json_decode($json, true);
+
+            // Insert the JSON data into the database
+            $this->db->insert(db_prefix() . 'facebook_leads_logs', array(
+                "lead_details" => json_encode($lead_data, true),
+                "lead_data" => json_encode($lead_data, true),
+                "ledgen_id" => "",
+                "form_name" => "Sikshalogy_google",
+                "form_id" => "",
+                "datetime" => date("Y-m-d h:i:s")
+            ));
+
+            // Retrieve form data from the decoded JSON data
+            $name = !empty($lead_data['full_name']) ? $lead_data['full_name'] : '';
+            $email = !empty($lead_data['email']) ? $lead_data['email'] : '';
+            $phonenumber = !empty($lead_data['phone_number']) ? $lead_data['phone_number'] : '';
+            $neet_score = !empty($lead_data['neet_score']) ? $lead_data['neet_score'] : '';
+            $csrf_token_name = !empty($lead_data['csrf_token_name']) ? $lead_data['csrf_token_name'] : '';
+            $type = 3;
+
+            // Your form data to be sent
+            $dataString = 'name=' . urlencode($name) . '&email=' . urlencode($email) . '&phonenumber=' . urlencode($phonenumber) . '&csrf_token_name=' . urlencode($csrf_token_name) . '&key=' . urlencode($key) . '&type=' . urlencode($type) . '&form-cf-8=' . urlencode($neet_score) . '&auto_assign=1';
+
+            // The URL to send the POST request to
+            $url = base_url("forms/wtl/" . $key);
+
+            // Initialize cURL session
+            $ch = curl_init($url);
+
+            // Set cURL options
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            // Execute the cURL session
+            $response = curl_exec($ch);
+
+            // Check for cURL errors
+            if (curl_errno($ch)) {
+                echo 'cURL Error: ' . curl_error($ch);
+            }
+
+            // Close cURL session
+            curl_close($ch);
+
+            // Handle the response (if needed)
+            // For example, you can check the response and hide/show elements accordingly
+            if ($response === false) {
+                echo 'Error: cURL request failed';
+            } else {
+                // Process the response
+                // For example, you can decode JSON response and perform specific actions
+                $responseData = json_decode($response, true);
+                if ($responseData['status'] === 'success') {
+                    // Success handling
+                    echo 'Form submitted successfully';
+                } else {
+                    // Error handling
+                    echo 'Form submission failed: ' . $responseData['message'];
+                }
+            }
+        }
+    }
 
     public function new_webhook_test()
 

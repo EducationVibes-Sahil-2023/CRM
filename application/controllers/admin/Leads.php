@@ -1,6 +1,6 @@
 <?php
 
-
+use BackgroundProcess\Process;
 
 header('Content-Type: text/html; charset=utf-8');
 
@@ -67,9 +67,12 @@ class Leads extends AdminController
 
             $data['consent_purposes'] = $this->gdpr_model->get_consent_purposes();
         }
-
+ 
         $data['summary']  = get_leads_summary();
         $data['updateCount'] = leads_update_count();
+        $data['call_count'] = calls_update_count();
+    
+        $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
 
@@ -88,12 +91,12 @@ class Leads extends AdminController
 
         $this->load->view('admin/leads/manage_leads', $data);
     }
-
     public function lead_summary_filter()
     {
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
-
+        $max_count = leads_update_count("", 1);
+        $call_count = calls_update_count($_POST);
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -108,8 +111,9 @@ class Leads extends AdminController
             $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
         }
         // echo $ret;
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "max_count" => $max_count, "call_count" => $call_count]);
     }
+
 
     public function updated_count()
     {
@@ -2462,6 +2466,63 @@ class Leads extends AdminController
 
             $has_permission_delete = has_permission('leads', '', 'delete');
             $notifiedUsers = [];
+            $re_assign_array = [];
+
+            if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
+                if ($has_permission_delete) {
+                    $lead_data = $this->leads_model->lead_data($ids);
+                    if (!empty($lead_data)) {
+                        $keysToRemove = array('id', 'dateadded', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
+                        $re_assign_array = [];
+                        foreach ($lead_data as $key => $lead_d) {
+                            foreach ($keysToRemove as $k) {
+                                if (isset($lead_data[$key][$k])) {
+                                    unset($lead_data[$key][$k]);
+                                    if (!empty($this->input->post('assigned'))) {
+                                        $lead_data[$key]["assigned"] = $this->input->post('assigned');
+                                    }
+                                    if (!empty($this->input->post('status'))) {
+                                        $lead_data[$key]["status"] = $this->input->post('status');
+                                    }
+                                    if (!empty($this->input->post('source'))) {
+                                        $lead_data[$key]["source"] = $this->input->post('source');
+                                    }
+                                    if (!empty($this->input->post('leadtype'))) {
+                                        $lead_data[$key]["type"] = $this->input->post('leadtype');
+                                    }
+                                }
+                            }
+
+                            $re_assign_array[] = array(
+                                "data" => json_encode($lead_data[$key], true),
+                                "status" => 1,
+                                "date" => date('Y-m-d H:i:s')
+                            );
+                        }
+                    }
+
+                    if (!empty($re_assign_array)) {
+
+                        $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
+
+                        $this->db->where_in('id', $ids);
+                        $this->db->delete(db_prefix() . 'leads');
+
+                        set_alert('success', "Re-assign lead successfully.");
+                    } else {
+                        set_alert('danger', "Something bad happen.");
+                    }
+
+                    die;
+                    // if ($this->leads_model->re_assign($id,$this->input->post())) {
+                    //     $total_assign++;
+
+                    // }
+
+                }
+            }
+
+
             if (is_array($ids)) {
 
                 foreach ($ids as $id) {
@@ -2473,6 +2534,12 @@ class Leads extends AdminController
                             if ($this->leads_model->delete($id)) {
 
                                 $total_deleted++;
+                            }
+                        }
+                    } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
+                        if ($has_permission_delete) {
+                            if ($this->leads_model->re_assign($id, $this->input->post())) {
+                                $total_assign++;
                             }
                         }
                     } else {
@@ -2788,5 +2855,41 @@ class Leads extends AdminController
                 }
             }
         }
+    }
+
+    public function re_assign_leads()
+    {
+        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1 limit 30")->result_array();
+        if (!empty($data_leads)) {
+            foreach ($data_leads as $leads) {
+                if (!empty($leads["data"])) {
+                    $temp_lead_data = json_decode($leads["data"], true);
+                    $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
+                    $phonenumber = substr($phonenumber, -10);
+                    $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
+                    FROM " . db_prefix() . "leads where phonenumber like '%{$phonenumber}%'
+                    GROUP BY RIGHT(phonenumber, 10)
+                    HAVING COUNT(*) > 0 ")->row();
+
+                    if (empty($check_exist)) {
+                        if ($this->leads_model->add($temp_lead_data)) {
+                            $this->db->where('id', $leads["id"]);
+                            $this->db->delete(db_prefix() . 'lead_temp');
+                        }
+                    } else {
+                        $this->db->where('id', $leads["id"]);
+                        $this->db->update(db_prefix() . 'lead_temp', ["status" => 2]);
+                    }
+                }
+            }
+            echo json_encode(array("status" => 1, "message" => "Lead reassign successfully."));
+        }
+    }
+
+    public function callUrlInBackground()
+    {
+
+        $url = base_url("admin/leads/re_assign_leads");
+        $pid = $this->process->do_in_background($url, "", "POST");
     }
 }

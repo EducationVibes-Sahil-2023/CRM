@@ -192,8 +192,6 @@ class Reports extends AdminController
     public function lead_summary_filter($return_status = '')
     {
         $this->load->model('leads_model');
-
-
         $ret = "";
         $updateCount = 0;
         if (!empty($_POST["assigned"]) && empty($return_status)) {
@@ -456,10 +454,9 @@ class Reports extends AdminController
                             if (!empty($percentage)) {
                                 if (!empty($total_sum)) {
                                     $percentage = ($percentage / $total_sum) * 100;
-
                                     $ret .= number_format((float)$percentage, 2, '.', '');
                                 } else {
-                                    $ret .= number_format((float)$percentage, 2, '.', '');
+                                    $ret .= number_format(0, 2, '.', '');
                                 }
                             } else {
                                 $ret .= number_format((float)$percentage, 2, '.', '');
@@ -732,15 +729,12 @@ class Reports extends AdminController
                     // Is regular status
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
                         if (!empty($percentage)) {
-                            // $percentage = ($percentage / $total_sum) * 100;
-
-                            // $ret .= number_format((float)$percentage, 2, '.', '');
                             if (!empty($total_sum)) {
                                 $percentage = ($percentage / $total_sum) * 100;
 
                                 $ret .= number_format((float)$percentage, 2, '.', '');
                             } else {
-                                $ret .= number_format((float)$percentage, 2, '.', '');
+                                $ret .= number_format(0, 2, '.', '');
                             }
                         } else {
                             $ret .= number_format((float)$percentage, 2, '.', '');

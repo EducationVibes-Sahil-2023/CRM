@@ -1915,7 +1915,7 @@ class Leads_model extends App_Model
 
     public function get_lead_call_activity_log($id)
     {
-        $sql = "SELECT c.*,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON l.phonenumber = c.contact join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id DESC";
+        $sql = "SELECT c.*,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON l.phonenumber = c.contact join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id order by FROM_UNIXTIME(c.call_start) DESC";
         return $this->db->query($sql)->result_array();
     }
 
@@ -2452,7 +2452,35 @@ class Leads_model extends App_Model
     function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array())
     {
 
-        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(f.name) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
+        //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
+        // if (!empty($lead_type)) {
+        //     $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        // }
+        // $sql .= " ) where 1=1 ";
+
+        // if (!empty($state_name)) {
+        //     $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
+        // }
+        // if (!empty($deprtment_head_status)) {
+        //     $sql .= " and st.department_head = '1' ";
+        // }
+        // if (!empty($facebook_lead)) {
+        //     $sql .= " and st.facebook_lead_name != '' ";
+        // }
+        // if (!empty($lead_type)) {
+        //     $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        // }
+        // if (!empty($staff_ids)) {
+        //     $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
+        // }
+
+        // $sql .= "  group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc  ";
+        // if (!empty($facebook_lead)) {
+        // } else {
+        //     $sql .= " limit 1 ";
+        // }
+
+        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
@@ -2556,5 +2584,71 @@ class Leads_model extends App_Model
 
 
         return false;
+    }
+    public function re_assign($id = "", $data)
+    {
+        $this->db->where('id', $id);
+        $temp_lead =  $this->db->get(db_prefix() . 'leads')->row();
+
+        $this->delete($id);
+        unset($temp_lead->id);
+        unset($temp_lead->dateadded);
+        unset($temp_lead->lastcontact);
+        unset($temp_lead->dateassigned);
+        unset($temp_lead->last_status_change);
+        unset($temp_lead->last_type_change);
+        $temp_lead->assigned = $data["assigned"];
+        if (!empty($data["status"])) {
+            $temp_lead->status = $data["status"];
+        }
+        if (!empty($data["source"])) {
+            $temp_lead->source = $data["source"];
+        }
+        if (!empty($data["leadtype"])) {
+            $temp_lead->type = $data["leadtype"];
+        }
+        $temp_lead = (array)$temp_lead;
+        return $this->add($temp_lead);
+    }
+
+    public function lead_data($ids)
+    {
+        $this->db->where_in('id', $ids);
+        return  $this->db->get(db_prefix() . 'leads')->result_array();
+    }
+
+    public function get_vendor($id = '', $where = [])
+
+    {
+
+        $this->db->where($where);
+
+        if (is_numeric($id)) {
+
+            $this->db->where('id', $id);
+
+
+
+            return $this->db->get(db_prefix() . 'profile_creater_vendor')->row();
+        }
+
+
+
+        $type = $this->app_object_cache->get('leads-all-vendor');
+
+
+
+        if (!$type) {
+
+            $this->db->order_by('sequence', 'asc');
+
+            $type = $this->db->get(db_prefix() . 'profile_creater_vendor')->result_array();
+
+            $this->app_object_cache->add('leads-all-vendor', $type);
+        }
+
+
+
+        return $type;
     }
 }

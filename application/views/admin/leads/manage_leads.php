@@ -1,6 +1,28 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
+<script src="<?= base_url("assets/js/uislider.js") ?>"></script>
+<style>
+   div#rangeSlider {
+      margin: 0px 0px 30px !important;
+   }
 
+   .noUi-horizontal {
+      height: 10px !important;
+   }
+
+   .noUi-horizontal .noUi-handle {
+      width: 20px;
+      height: 20px;
+      top: -7px;
+   }
+
+   .noUi-tooltip {
+      width: 30px !important;
+      bottom: -35px !important;
+      top: auto !important;
+   }
+</style>
 <div id="wrapper">
    <div class="content">
       <div class="row">
@@ -17,7 +39,7 @@
                         </a>
                      <?php } ?>
                      <div class="row">
-                        <div class="col-md-5">
+                        <div class="col-md-8">
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
                            <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                            <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
@@ -27,10 +49,19 @@
                               echo _l('switch_to_list_view');
                            }; ?>
                            </a> -->
-                           <div class="text-center pull-right">
-                              <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
-                              <span id="updationCounterText">Updates Count</span>
+                           <div class="row">
+
+                              <div class="text-center  col-md-6">
+                                 <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
+                                 <span id="updationCounterText">Updates Count</span>
+                              </div>
+                              <div class="text-center  col-md-6">
+                                 <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
+                                 <span id="updationCounterText_time">Updates Calls Duration</span>
+                              </div>
                            </div>
+
+
                         </div>
 
                         <div class="col-md-4 col-xs-12 pull-right leads-search">
@@ -224,6 +255,9 @@
                                     ?>
                                  </div>
 
+
+
+
                                  <?php /*                
 							<!--    <div class="col-md-2 leads-filter-column">-->
        <!--                          <?php-->
@@ -307,6 +341,16 @@
                                        <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                     </div>
                                  </div>
+                                 <div class="col-md-2 leads-filter-column" style="display: none;">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="up_from_date_call" id="up_from_date_call" placeholder="From Call Date" autocomplete="off">
+                                    </div>
+                                 </div>
+                                 <div class="col-md-2 leads-filter-column" style="display: none;">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="up_to_date_call" id="up_to_date_call" placeholder="To Call Date" autocomplete="off">
+                                    </div>
+                                 </div>
                                  <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="followup_from_date" id="followup_from_date" placeholder="From Followup Date" autocomplete="off">
@@ -327,10 +371,17 @@
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-4 leads-filter-column">
+                                 <div class="col-md-3 leads-filter-column">
+                                    <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
+                                    <div id="rangeSlider" style="display:none;"></div>
+                                    <input type="hidden" id="update_count_min" name="update_count_min">
+                                    <input type="hidden" id="update_count_max" name="update_count_max">
+                                 </div>
+                                 <div class="col-md-3 text-center leads-filter-column">
                                     <div class="form-group">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
-                                       <button class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                        <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                     </div>
                                  </div>
@@ -352,6 +403,12 @@
                                              <div class="checkbox checkbox-danger">
                                                 <input type="checkbox" name="mass_delete" id="mass_delete">
                                                 <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
+                                             </div>
+                                          <?php } ?>
+                                          <?php if (has_permission('leads', '', 'delete')) { ?>
+                                             <div class="checkbox checkbox-danger">
+                                                <input type="checkbox" name="mass_re-assignation" id="mass_re-assignation">
+                                                <label for="mass_re-assignation"><?php echo _l('mass_re-assignation'); ?></label>
                                              </div>
                                              <hr class="mass_delete_separator" />
                                           <?php } ?>
@@ -410,6 +467,10 @@
                                                 </div>
                                              </div>
                                           </div>
+                                          <div id="re-assignation_div" style="display:none;">
+                                             <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
+
+                                          </div>
                                        </div>
                                        <div class="modal-footer">
                                           <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
@@ -431,6 +492,14 @@
                                  ),
                                  array(
                                     'name' => _l('Update Count'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Call Durations'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Last-Call-Date'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
@@ -613,6 +682,94 @@
 <?php include_once(APPPATH . 'views/admin/leads/status.php'); ?>
 <?php init_tail(); ?>
 <script>
+   var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
+
+   function show_update_count_range(obj) {
+      if ($(obj).is(":checked")) {
+         $("#rangeSlider").show();
+         setMinMaxValues();
+      } else {
+         $("#rangeSlider").hide();
+
+      }
+   }
+
+   function setMinMaxValues() {
+      // Get the current values of the slider
+      var currentValues = rangeSlider.noUiSlider.get();
+
+      // Update the options with new min and max values
+      rangeSlider.noUiSlider.updateOptions({
+         range: {
+            'min': 0,
+            'max': max_count
+         },
+         start: [0, max_count] // Preserve the current slider values
+      });
+   }
+
+   function recreate_range_slider(max) {
+      if (max != undefined && parseInt(max) != max_count) {
+         rangeSlider.noUiSlider.destroy();
+         max_count = parseInt(max) + 10;
+         let min_ = document.getElementById("update_count_min").value;
+         let max_ = document.getElementById("update_count_max").value;
+         make_range_slider(min_, max_);
+      }
+   }
+   // Initialize the range slider
+   function make_range_slider(min = 0, max = 0) {
+      var rangeSlider = document.getElementById('rangeSlider');
+      if (max == 0) {
+         max = max_count;
+      }
+      noUiSlider.create(rangeSlider, {
+         start: [min, max], // Initial values for min and max
+         connect: true,
+         tooltips: [true, true],
+         format: {
+            to: function(value) {
+               return Math.round(value); // Round the tooltip values
+            },
+            from: function(value) {
+               return parseFloat(value); // Convert tooltip values to numbers
+            }
+         },
+         step: 1,
+         range: {
+            'min': 0,
+            'max': max_count
+         }
+      });
+
+      // Get handles for min and max sliders
+      var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+      var minSliderHandle = sliderHandles[0];
+      var maxSliderHandle = sliderHandles[1];
+
+      // Set event listeners for slider change
+      rangeSlider.noUiSlider.on('update', function(values, handle) {
+         var minValue = parseFloat(values[0]);
+         var maxValue = parseFloat(values[1]);
+
+         // Update the hidden input values
+         document.getElementById('update_count_min').value = minValue;
+         document.getElementById('update_count_max').value = maxValue;
+      });
+
+      // Set event listeners for slider handle drag
+      minSliderHandle.addEventListener('drag', function() {
+         var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+         rangeSlider.noUiSlider.set([minValue, null]);
+      });
+
+      maxSliderHandle.addEventListener('drag', function() {
+         var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+         rangeSlider.noUiSlider.set([null, maxValue]);
+      });
+   }
+   make_range_slider("", "");
+
    var openLeadID = '<?php echo $leadid; ?>';
    $(function() {
       leads_kanban();
@@ -717,7 +874,9 @@
       //    // summary();
       // })
 
+
       $('#apply_filter').on('click', function() {
+
          var from_date = document.getElementById("from_date").value;
          var to_date = document.getElementById("to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
@@ -726,6 +885,8 @@
          var followup_to_date = document.getElementById("followup_to_date").value;
          var up_from_date = document.getElementById("up_from_date").value;
          var up_to_date = document.getElementById("up_to_date").value;
+         var up_from_date_call = document.getElementById("up_from_date_call").value;
+         var up_to_date_call = document.getElementById("up_to_date_call").value;
 
          if (to_date != '') {
             if (from_date == '') {
@@ -781,12 +942,32 @@
                return false;
             }
          }
+
+         if (up_to_date_call != '') {
+            if (up_from_date_call == '') {
+               $("#up_from_date_call").focus();
+               return false;
+            }
+         }
+
+         if (up_from_date_call != '') {
+            if (up_to_date_call == '') {
+               $("#up_to_date_call").focus();
+               return false;
+            }
+         }
+         show_loader("apply_filter");
          periodFilter();
          summary();
       });
 
       function periodFilter() {
-         table_leads.DataTable().ajax.reload(null, false);
+
+
+         table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
+            hide_loader("apply_filter");
+         });
+
       }
       var xhr = null;
 
@@ -847,6 +1028,14 @@
          var followup_to_date = document.getElementById("followup_to_date").value;
          var assign_from_date = document.getElementById("assign_from_date").value;
          var assign_to_date = document.getElementById("assign_to_date").value;
+         var update_count_min, update_count_max = '';
+         var up_from_date_call = document.getElementById("up_from_date_call").value;
+         var up_to_date_call = document.getElementById("up_to_date_call").value;
+         if ($("#show_update_counts").is(":checked")) {
+            update_count_min = document.getElementById("update_count_min").value;
+            update_count_max = document.getElementById("update_count_max").value;
+         }
+
          if (xhr != null) {
             xhr.abort();
          }
@@ -869,7 +1058,11 @@
                assign_from_date: assign_from_date,
                assign_to_date: assign_to_date,
                status: view_status_options,
+               update_count_min: update_count_min,
+               update_count_max: update_count_max,
                neet_score: $("#neet_score").val(),
+               up_from_date_call: up_from_date_call,
+               up_to_date_call: up_to_date_call,
 
 
             },
@@ -881,6 +1074,10 @@
                $("#leadSum").html(data.status);
                $("#leadSum").innerHTML = data.status;
                $("#updationCounter").html(data.update_count);
+               $("#updationCounter_time").html(data.call_count);
+               if (data.max_count != undefined && parseInt(data.max_count) > 0) {
+                  recreate_range_slider(data.max_count);
+               }
             }
          }); // you have missed this bracket
          return false;

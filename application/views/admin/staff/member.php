@@ -202,6 +202,11 @@
                            echo '</div>';
                            ?>
                         </div>
+
+ <?php $value = (!empty($member->facebook_lead_name) ? $member->facebook_lead_name : ''); ?>
+                        <?php $attrs = ""; ?>
+                        <?php //echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); ?>
+
                         <?php //$selected_value =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
                         ?>
                         <?php // $attrs = ""; 

@@ -176,10 +176,10 @@ class Announcements_model extends App_Model
             $announcements = $this->db->get()->result_array();
             foreach ($announcements as $announcement) {
                 $this->db->insert(db_prefix() . 'dismissed_announcements', [
-                        'announcementid' => $announcement['announcementid'],
-                        'staff'          => (bool) $staff,
-                        'userid'         => $user_id,
-                    ]);
+                    'announcementid' => $announcement['announcementid'],
+                    'staff'          => (bool) $staff,
+                    'userid'         => $user_id,
+                ]);
             }
         }
     }
@@ -192,5 +192,15 @@ class Announcements_model extends App_Model
             $this->db->where('showtostaff', 1);
         }
         $this->db->order_by('dateadded', 'desc');
+    }
+
+    public function get_university_shortlist_status()
+    {
+        $this->db->where('client_id', get_client_user_id());
+        $this->db->where('status', 1);
+        $this->db->where('university_status', 0);
+        $result = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+
+        return $result; // Returns true if a row is found, false otherwise
     }
 }

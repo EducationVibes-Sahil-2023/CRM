@@ -8,9 +8,10 @@
         /* box-shadow: 0px 0px 10px lightgray; */
         /* margin-top: 20px; */
 
-        box-shadow: 2px 2px 5px 1px lightgray;;
-    padding: 15px;
-    margin: 15px 0px;
+        box-shadow: 2px 2px 5px 1px lightgray;
+        ;
+        padding: 15px;
+        margin: 15px 0px;
 
     }
 
@@ -43,44 +44,6 @@
         margin: 5px 0px !important;
     }
 
-
-    .loading {
-        height: 0;
-        width: 0;
-        padding: 15px;
-        border: 6px solid #ccc;
-        border-right-color: #888;
-        border-radius: 22px;
-        -webkit-animation: rotate 1s infinite linear;
-        /* left, top and position just for the demo! */
-        position: absolute;
-        left: 40%;
-        top: 50%;
-        z-index: 999;
-    }
-
-    @-webkit-keyframes rotate {
-
-        /* 100% keyframe for  clockwise. 
-     use 0% instead for anticlockwise */
-        100% {
-            -webkit-transform: rotate(360deg);
-        }
-    }
-
-    .loading-upper {
-        position: fixed;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background: black;
-        opacity: 0.2;
-        z-index: 9;
-
-    .switch .btn-toggle {
-        top: 50%;
-        transform: translateY(-50%);
-    }
 
     .btn-toggle {
         margin: 0 7rem;
@@ -172,9 +135,7 @@
 </style>
 
 <div id="wrapper">
-    <div class="loading-upper" style="display:none;">
-        <div class="loading"></div>
-    </div>
+
     <div class="content">
         <div class="row">
             <div class="col-md-12">
@@ -207,7 +168,7 @@
                         </div>
 
                         <div class="col-md-2 leads-filter-column">
-                             <?php
+                            <?php
                             echo '<div id="leads-filter-source">';
                             echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
                             echo '</div>';
@@ -327,9 +288,7 @@
         $(".hide-btn-response").hide();
         $(".leadSum").html('');
         $('#apply_filter').attr("disabled", true);
-        $('#apply_filter').button('loading');
-        $(".loading-upper").show();
-
+        show_loader("apply_filter");
         xhr = $.ajax({
             type: "POST",
             url: admin_url + "reports/lead_summary_filter",
@@ -352,9 +311,7 @@
             cache: false,
             success: function(data) {
                 $('#apply_filter').attr("disabled", false);
-                $(".loading-upper").hide();
-
-                $('#apply_filter').button('reset');
+                hide_loader("apply_filter");
                 //alert(data);  //as a debugging message.
                 $(".leadSum").html('');
                 $(".leadSum").html(data.status);

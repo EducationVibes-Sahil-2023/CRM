@@ -130,7 +130,11 @@ function get_leads_summary()
         $sids = implode(",", $idsarr);
         // echo "<pre>";print_r($sids);
 
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
         // print_r($where);die;
     }
 
@@ -210,30 +214,36 @@ function get_leads_summary_filter($params)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-
         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
+        $sql .= ' SELECT SUM(subquery.total) AS total FROM ( ';
         $sql .= ' SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total';
         $sql .= ' FROM ' . db_prefix() . 'leads';
 
@@ -244,6 +254,8 @@ function get_leads_summary_filter($params)
             $up_from_date_join = $params['up_from_date'];
             $up_to_date_join = $params['up_to_date'];
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+        } else if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = tblleads.id ';
@@ -308,7 +320,8 @@ function get_leads_summary_filter($params)
             $up_from_date = $params['up_from_date'];
             $up_to_date = $params['up_to_date'];
             //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            //             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
         }
         if (!empty($params['followup_to_date'])) {
             $followup_from_date = $params['followup_from_date'];
@@ -322,13 +335,19 @@ function get_leads_summary_filter($params)
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
+        if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+            $min = $params['update_count_min'];
+            $max = $params['update_count_max'];
+            $sql .= ' GROUP BY tblleads.id HAVING COUNT(tblleads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        }
+
         $grup_by = "";
         if (!empty($params['neet_score'])) {
             // $grup_by = db_prefix() . 'customfieldsvalues.relid';
             // $sql .= ' group by ' . $grup_by;
         }
 
-
+        $sql .= " ) AS subquery ";
         $sql .= ' UNION ALL ';
         $sql = trim($sql);
     }
@@ -406,7 +425,13 @@ function get_status_summary_filter($params)
         $idsarr = array_column($query, 'staffid');
         $sids = implode(",", $idsarr);
 
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($sources as $source) {
@@ -509,7 +534,7 @@ function get_status_summary_filter($params)
 
     foreach ($sources as $key => $source) {
         $sources[$key]['total'] = 0;
-     
+
         if (!empty($_POST["source"])) {
             if (in_array($source["id"], $_POST["source"])) {
                 $sources[$key]['total'] = !empty($result[$key]->total) ? $result[$key]->total : 0;
@@ -529,7 +554,7 @@ function get_status_summary_filter($params)
 
     return $sources;
 }
-function leads_update_count($params = false)
+function leads_update_count($params = false, $max_status = 0)
 {
 
     $CI = &get_instance();
@@ -561,14 +586,29 @@ function leads_update_count($params = false)
 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
     }
 
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
-    $sql .= " SELECT count(concat(l.id,'-',CAST(n.dateadded AS date))) as total ";
-    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on l.id = n.rel_id  ';
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " SELECT count((concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+    } else {
+        $sql .= " SELECT count(DISTINCT(concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+    }
+    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
 
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    }
+    $sql .= ' ) ';
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
     }
@@ -625,7 +665,7 @@ function leads_update_count($params = false)
     } else if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+        $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
@@ -634,12 +674,27 @@ function leads_update_count($params = false)
     if (!empty($params['neet_score'])) {
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
-    $sql .= " group by l.id" . $grup_by . ",(CAST(n.dateadded AS date)) order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-    $sql = trim($sql);
+    $sql_add = "";
+    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+        $min = $params['update_count_min'];
+        $max = $params['update_count_max'];
+        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    }
 
 
-    $sql = "SELECT SUM(total) as total_sum FROM ( {$sql} )  as subquery ";
-    $sql = trim($sql);
+    if (!empty($max_status) && $max_status == 1) {
+        $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
+        $sql = trim($sql);
+        $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
+    } else {
+        $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql = trim($sql);
+        $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
+    }
+
+    // echo $sql;
+    // die;
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
@@ -682,7 +737,12 @@ function leads_update_count_id($id, $params = false)
 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     $sql .= ' SELECT COUNT(l.id) as total';
@@ -867,27 +927,33 @@ function get_leads_summary_filter_excel($params)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-
         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
+
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
@@ -1034,27 +1100,31 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     if ($role == 3) {
         // $this->load->database();
         $sid = get_staff_user_id(); //48;//get_staff_user_id();
-        // $teamids = $CI->db->query("select staffid
-        // 	from    (select * from tblstaff
-        // 	where active = '1' order by reporting_person, staffid) products_sorted,
-        // 			(select @pv := $sid) initialisation
-        // 	where   find_in_set(reporting_person, @pv)
-        // 	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-        // $idsarr = array_column($teamids, 'staffid');
-        // $sids = implode(",", $idsarr);
-        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
-
-        $query = [];
-        $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        if (!empty($staff_ids)) {
-            $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        }
-        $idsarr = array_column($query, 'staffid');
+        $teamids = $CI->db->query("select staffid
+        	from    (select * from tblstaff
+        	where active = '1' order by reporting_person, staffid) products_sorted,
+        			(select @pv := $sid) initialisation
+        	where   find_in_set(reporting_person, @pv)
+        	and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-
         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        // $query = [];
+        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
+        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
+
+        // if (!empty($staff_ids)) {
+        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
+        // }
+        // $idsarr = array_column($query, 'staffid');
+        // $sids = implode(",", $idsarr);
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
@@ -1161,4 +1231,187 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 
 
     return $result;
+}
+
+
+function calls_update_count($params = false, $max_status = 0)
+{
+
+    // return convertToHMS(0);
+    // die;
+    $CI = &get_instance();
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+    $statuses = $CI->leads_model->get_status();
+
+    $totalStatuses         = count($statuses);
+    $has_permission_view   = has_permission('leads', '', 'view');
+    $sql                   = '';
+    $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
+
+    $statuses[] = [
+        'lost'  => true,
+        'name'  => _l('lost_leads'),
+        'color' => '#f0f0f0',
+    ];
+
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    if ($role == 3) {
+        // $this->load->database();
+        $sid = get_staff_user_id(); //48;//get_staff_user_id();
+        $teamids = $CI->db->query("select staffid
+			from    (select * from tblstaff
+			where active = '1' order by reporting_person, staffid) products_sorted,
+					(select @pv := $sid) initialisation
+			where   find_in_set(reporting_person, @pv)
+			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        // $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+    }
+
+    // $CI = get_instance();
+    // $batchSize = 1000; // Choose an appropriate batch size based on your data and system's capacity
+
+    // // Prepare the database query
+    // $query = $CI->db->query("SELECT id, RIGHT(TRIM(phonenumber), 10) AS phonenumber, assigned AS staffid FROM tblleads");
+
+    // $totalRows = $query->num_rows();
+    // $update_count = 0;
+
+    // for ($offset = 0; $offset < $totalRows; $offset += $batchSize) {
+    //     $leads = array_slice($query->result_array(), $offset, $batchSize);
+
+    //     $update_count += processBatchLeads($leads);
+    // }
+
+    // return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
+
+    // $get_lead_ids = $CI->db->query("select id,RIGHT(TRIM(phonenumber), 10) phonenumber,assigned as staffid from tblleads")->result_array();
+    // $update_count = 0;
+    // foreach ($get_lead_ids as $leads) {
+
+    //     $result = call_duration($leads);
+    //     if (!empty($result[0]["duration"])) {
+    //         $update_count += $result[0]["duration"];
+    //     }
+    // }
+    // return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
+
+    // Assuming this code is written in PHP, and you are concatenating the SQL query into the $sql variable
+
+    $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
+    $sql .= "SELECT SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
+    // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
+    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND l.phonenumber = calls.contact ";
+
+    if (!empty($params['assigned'])) {
+        $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
+    }
+    $sql .= " ) ";
+    $sql .= " WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') ";
+
+    if (!$has_permission_view) {
+        $sql .= ' AND ' . $whereNoViewPermission;
+    }
+
+    if (!empty($params['status'])) {
+        $sql .= ' AND l.status IN (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
+    }
+
+    if (!empty($params['source'])) {
+        $sql .= ' AND l.source IN (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+    }
+
+    if (!empty($params['lead_type'])) {
+        $sql .= ' AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+    }
+
+    if (!empty($params['neet_score'])) {
+        $neet_range = explode("-", $params['neet_score']);
+        $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
+    }
+
+    if (!empty($params['to_date'])) {
+        $from_date = $params['from_date'];
+        $to_date = $params['to_date'];
+        $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+    }
+
+    if (!empty($params['followup_to_date'])) {
+        $followup_from_date = $params['followup_from_date'];
+        $followup_to_date = $params['followup_to_date'];
+        $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
+    }
+
+    if (!empty($params['assign_to_date'])) {
+        $assign_from_date = $params['assign_from_date'];
+        $assign_to_date = $params['assign_to_date'];
+        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+    } elseif (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND (DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '")';
+    }
+
+    $grup_by = "";
+    if (!empty($params['neet_score'])) {
+        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+    }
+
+    $sql_add = "";
+    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+        $min = $params['update_count_min'];
+        $max = $params['update_count_max'];
+        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    }
+
+    $sql .= " GROUP BY calls.contact" . $grup_by . " " . $sql_add . ") AS subquery";
+
+    $sql = "SELECT IFNULL(SUM(call_duration), 0) AS total_sum FROM (" . $sql . ") AS subquery";
+
+    $update_count = $CI->db->query($sql)->row()->total_sum;
+
+    return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
+}
+
+
+
+function convertToHMS($seconds, $status = 0)
+{
+    if ($seconds == "") {
+        $seconds = 0;
+    }
+    $hours = floor($seconds / 3600);
+    $minutes = floor(($seconds % 3600) / 60);
+    $seconds = $seconds % 60;
+    if ($status == 1) {
+        return sprintf('%d:%d:%d', $hours, $minutes, $seconds);
+    } else {
+        return sprintf('%d Hours : %d Mins : %d Sec', $hours, $minutes, $seconds);
+    }
+}
+
+function call_duration($row_data, $post_data = "")
+{
+
+
+    $phone = trim($row_data["phonenumber"]);
+    $staff_id = $row_data["staffid"];
+    $lead_id = $row_data["id"];
+    $CI = &get_instance();
+    $sql = " SELECT  IFNULL(SUM(calls.duration), 0) AS duration,if(max(calls.call_start)!='',DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (ifnull(max(calls.call_start),'')+(5 * 3600 + 30 * 60)) SECOND),'%Y-%m-%d %H:%i:%s'),'') last_contact_date  FROM " . db_prefix() . "calls_activity_logs calls where SUBSTRING(TRIM(calls.contact), LENGTH(TRIM(calls.contact)) - 9) = SUBSTRING(TRIM('{$phone}'), LENGTH(TRIM('{$phone}')) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
+    if (!empty($calling_from_date) && !empty($calling_to_date)) {
+        $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
+    }
+    $sql .= " LIMIT 1 ";
+
+
+    return $CI->db->query($sql)->result_array();
 }

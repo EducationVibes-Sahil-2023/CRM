@@ -102,8 +102,31 @@ $db['default'] = array_merge([
     'encrypt'      => $db_encrypt,
     'compress'     => false,
     'failover'     => [],
-    'save_queries' => true,
+    'save_queries' => true
 ], defined('APP_DB_STRICTON') && APP_DB_STRICTON || !defined('APP_DB_STRICTON') ? ['stricton' => false] : []);
+
+$db['secondary'] = array(
+    'dsn'      => '',
+    'hostname' => APP_DB_HOSTNAME, // Replace with the actual hostname of your secondary database
+    'username' => APP_DB_S_USERNAME, // Replace with the actual username of your secondary database
+    'password' => APP_DB_S_PASSWORD, // Replace with the actual password of your secondary database
+    'database' => APP_DB_NAME_SECONDARY, // Replace with the actual name of your secondary database
+    'dbdriver' => 'mysqli',
+    'dbprefix' => '',
+    'pconnect' => FALSE,
+    'db_debug' => (ENVIRONMENT !== 'production'),
+    'cache_on' => FALSE,
+    'cachedir' => '',
+    'char_set' => 'utf8',
+    'dbcollat' => 'utf8_general_ci',
+    'swap_pre' => '',
+    'encrypt'  => FALSE,
+    'compress' => FALSE,
+    'stricton' => FALSE,
+    'failover' => array(),
+    'save_queries' => TRUE
+);
+
 
 /**
  * APP_DB_STRICTON
