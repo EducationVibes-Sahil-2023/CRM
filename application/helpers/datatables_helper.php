@@ -168,7 +168,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 
         if (count($additionalSelect) > 0) {
             foreach ($additionalSelect as $searchAdditionalField) {
-                if (strpos($searchAdditionalField, ' as ') !== false) {
+                if (strpos($searchAdditionalField, 'as') !== false) {
                     $searchAdditionalField = strbefore($searchAdditionalField, ' as');
                 }
                 if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
