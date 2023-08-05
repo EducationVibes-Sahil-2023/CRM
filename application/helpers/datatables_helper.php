@@ -145,9 +145,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                                 $sMatchCustomFields[] = $columnName;
                             } else {
                                 if (str_contains($search_value, '!=')) {
-                                    $sWhere .= ' convert(' . $columnName . ' USING utf8)' . " NOT LIKE '%" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
                                 } else {
-                                    $sWhere .= ' convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
                                 }
                             }
                         }
@@ -156,7 +156,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             }
         }
         if (count($sMatchCustomFields) > 0) {
-            $s = $CI->db->escape_like_str($search_value);
+            $s = $CI->db->escape_str($search_value);
             foreach ($sMatchCustomFields as $matchCustomField) {
                 if (str_contains($s, '!=')) {
                     $sWhere .= " NOT MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('" . str_replace("!=", "", $s) . "') USING utf8)) AND ";
@@ -168,16 +168,18 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 
         if (count($additionalSelect) > 0) {
             foreach ($additionalSelect as $searchAdditionalField) {
-                if (strpos($searchAdditionalField, ' as ') !== false) {
+                if (strpos($searchAdditionalField, 'as') !== false) {
                     $searchAdditionalField = strbefore($searchAdditionalField, ' as');
                 }
                 if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
                 } else {
+
+                    // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
                     // Use index
                     if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " NOT LIKE '%" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
                     } else {
-                        $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
                     }
                 }
             }
@@ -201,18 +203,23 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 if (strpos($columnName, ' as ') !== false) {
                     $columnName = strbefore($columnName, ' as');
                 }
+                // $columnName = explode(" ", $columnName)[0];
                 if ($search_value != '') {
                     if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " NOT LIKE '%" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
                     } else {
-                        $sWhere .= 'convert(' . $columnName . ' USING utf8)' . " LIKE '%" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
                     }
                     if (count($additionalSelect) > 0) {
                         foreach ($additionalSelect as $searchAdditionalField) {
+                            // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
+                            if (strpos($searchAdditionalField, ' as ') !== false) {
+                                $searchAdditionalField = strbefore($searchAdditionalField, ' as');
+                            }
                             if (str_contains($search_value, '!=')) {
-                                $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " NOT LIKE '" . $CI->db->escape_like_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
                             } else {
-                                $sWhere .= 'convert(' . $searchAdditionalField . ' USING utf8)' . " LIKE '" . $CI->db->escape_like_str($search_value) . "%' OR ";
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '" . $CI->db->escape_str($search_value) . "%' OR ";
                             }
                         }
                     }
@@ -456,4 +463,337 @@ function multi_strpos($haystack, $needles, $offset = 0)
             return strpos($haystack, $n, $offset);
     }
     return false;
+}
+
+
+function get_applicant_status($stage, $client_id)
+{
+    $CI = &get_instance();
+    try {
+        $response = [];
+        if ($stage == 1) {
+            $result =  get_stage_1($stage, $client_id);
+            if (empty($result)) {
+                $response["applicant_stage_status"] = "Pending";
+                $response["updated_date"] = "";
+            } else {
+                $response["applicant_stage_status"] = $result->applicant_stage_status;
+                $response["updated_date"] = $result->updated_date;
+            }
+        } else if ($stage == 2) {
+
+            $result =  get_stage_2($stage, $client_id);
+            if (empty($result)) {
+                // $result = get_stage_1($stage, $client_id);
+                $response["applicant_stage_status"] = "Pending";
+                $response["updated_date"] = "";
+            } else {
+                if (!empty($result->profile_status)) {
+                    if ($result->profile_status == 1) {
+                        $response["applicant_stage_status"] = "Approved";
+                    } else if ($result->profile_status == 2) {
+                        $response["applicant_stage_status"] = "Reject";
+                    }
+                    $response["updated_date"] = $result->email_updated_date;
+                } else if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
+                    $response["applicant_stage_status"] = "Profile pending";
+                    $response["updated_date"] = $result->email_updated_date;
+                } else {
+                    if (!empty($result->email)) {
+                        $response["applicant_stage_status"] = "Email created";
+                        $response["updated_date"] = $result->email_updated_date;
+                    }
+                    if (!empty($result->vendor)) {
+                        $response["applicant_stage_status"] = "Vendor updated";
+                        $response["updated_date"] = $result->vendor_updated_date;
+                    }
+                    if (!empty($result->sop)) {
+                        $response["applicant_stage_status"] = "SOP completed";
+                        $response["updated_date"] = $result->sop_updated_date;
+                    }
+                    if (!empty($result->email) && !empty($result->vendor) && !empty($result->sop)) {
+                        $response["applicant_stage_status"] = "SOP completed";
+                        $response["updated_date"] = $result->sop_updated_date;
+                    }
+                }
+            }
+        } else if ($stage == 3) {
+            $result =  get_stage_3($stage, $client_id);
+            if (empty($result)) {
+                $response["applicant_stage_status"] = "Pending";
+                $response["updated_date"] = "";
+            } else {
+                $max_date = $result->created_date;
+
+                $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+                $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+                if ($date1 !== null && $date2 !== null) {
+                    if ($date1 > $date2) {
+                        $max_date = $result->created_date;
+                    } elseif ($date1 < $date2) {
+                        $max_date = $result->updated_date;
+                    } else {
+                        $max_date = $result->created_date;
+                    }
+                } elseif ($date1 === null && $date2 === null) {
+                } elseif ($date1 === null) {
+                } else {
+                    $max_date = $result->created_date;
+                }
+                // if ($client_id == 175) {
+                //     echo $result->university_count;
+                //     echo "<br>";
+                //     echo $result->approved_count;
+                //     echo "<br>";
+                //     echo $result->reject_count;
+                //     echo "<br>";
+                //     die;
+                // }
+
+
+                if (!empty($result->university_count) && !empty($result->approved_count) && ($result->university_count == $result->approved_count)) {
+                    $response["applicant_stage_status"] = "All approved";
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count) && !empty($result->reject_count) && ($result->university_count == $result->reject_count)) {
+                    $response["applicant_stage_status"] = "All reject";
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count) && !empty($result->approved_count) && !empty($result->reject_count)) {
+                    $response["applicant_stage_status"] = "University shortlisted";
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count)) {
+                    $response["applicant_stage_status"] = "University shortlisting is pending";
+                    $response["updated_date"] = $max_date;
+                }
+            }
+        } else if ($stage == 4) {
+            $result =  get_stage_4($stage, $client_id);
+            if (empty($result)) {
+                $response["applicant_stage_status"] = "Pending";
+                $response["updated_date"] = "";
+            } else {
+                $max_date = $result->created_date;
+
+                $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+                $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+                if ($date1 !== null && $date2 !== null) {
+                    if ($date1 > $date2) {
+                        $max_date = $result->created_date;
+                    } elseif ($date1 < $date2) {
+                        $max_date = $result->updated_date;
+                    } else {
+                        $max_date = $result->created_date;
+                    }
+                } elseif ($date1 === null && $date2 === null) {
+                } elseif ($date1 === null) {
+                } else {
+                    $max_date = $result->created_date;
+                }
+
+                if (!empty($result->university_count) && !empty($result->action_taken) && ($result->university_count == $result->action_taken)) {
+                    $response["applicant_stage_status"] = "All application submitting by Admin.Waiting for offer letter";
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count) && !empty($result->action_taken) && !empty($result->not_take_action)) {
+                    $response["applicant_stage_status"] = "Total " . $result->university_count . " Application." . $result->action_taken . " Application submitting AND " . $result->not_take_action . " Application not submitting by admin";
+                    $response["applicant_stage_status_"] = "Application shortlisting";
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count)) {
+                    $response["applicant_stage_status"] = "Application submitting by Admin.Waiting for offer letter";
+                    $response["updated_date"] = $max_date;
+                }
+            }
+        } else if ($stage == 5) {
+            $result =  get_stage_5($stage, $client_id);
+            if (empty($result)) {
+                $response["applicant_stage_status"] = "Pending";
+                $response["updated_date"] = "";
+            } else {
+                $max_date = $result->created_date;
+
+                $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+                $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+                if ($date1 !== null && $date2 !== null) {
+                    if ($date1 > $date2) {
+                        $max_date = $result->created_date;
+                    } elseif ($date1 < $date2) {
+                        $max_date = $result->updated_date;
+                    } else {
+                        $max_date = $result->created_date;
+                    }
+                } elseif ($date1 === null && $date2 === null) {
+                } elseif ($date1 === null) {
+                } else {
+                    $max_date = $result->created_date;
+                }
+
+                if (!empty($result->university_count) && !empty($result->offer_letter) && ($result->university_count == $result->offer_letter)) {
+                    $response["applicant_stage_status"] = "Offer shortlisted Completed.Wating for applicant acceptance";
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count) && !empty($result->offer_letter) && !empty($result->offer_letter_not)) {
+                    $response["applicant_stage_status"] = "Total " . $result->university_count . " Application Submittind." . $result->offer_letter . " Application Offer response AND " . $result->offer_letter_not . " Application is pending";
+                    $response["applicant_stage_status_"] = "Offer shortlisted";
+
+                    $response["updated_date"] = $result->client_updated_date;
+                } else if (!empty($result->university_count)) {
+                    $response["applicant_stage_status"] =  "Application submitting by Admin.Pending offer letter";
+                    $response["updated_date"] = $max_date;
+                }
+            }
+        } else if ($stage == 6) {
+            $result =  get_stage_6($stage, $client_id);
+
+            $max_date = $result->created_date;
+
+            $date1 = isset($result->created_date) ? new DateTime($result->created_date) : null;
+            $date2 = isset($result->updated_date) ? new DateTime($result->updated_date) : null;
+
+            if ($date1 !== null && $date2 !== null) {
+                if ($date1 > $date2) {
+                    $max_date = $result->created_date;
+                } elseif ($date1 < $date2) {
+                    $max_date = $result->updated_date;
+                } else {
+                    $max_date = $result->created_date;
+                }
+            } elseif ($date1 === null && $date2 === null) {
+            } elseif ($date1 === null) {
+            } else {
+                $max_date = $result->created_date;
+            }
+            $response["applicant_stage_status"] = "Pending";
+            $response["updated_date"] = $result->client_updated_date;
+            if (!empty($result->acceptance_status) && $result->acceptance_status == 1) {
+                $response["applicant_stage_status"] = "Completed";
+                $response["updated_date"] = $result->client_updated_date;
+            }
+        } else {
+            $response["applicant_stage_status"] =  "Stage is not found";
+        }
+
+        $update_array_data = [];
+
+        if (!empty($response["applicant_stage_status_"])) {
+            $update_array_data["application_text"] = $response["applicant_stage_status_"];
+        } else {
+            if (!empty($response["applicant_stage_status"])) {
+                $update_array_data["application_text"] = $response["applicant_stage_status"];
+            }
+        }
+        if (empty($update_array_data["application_text"])) {
+            $update_array_data["application_text"] = "pending";
+        }
+        if (empty($response["applicant_stage_status"])) {
+            $response["applicant_stage_status"] = "pending";
+        }
+        if (!empty($update_array_data) && !empty($update_array_data["application_text"])) {
+            $CI->db->where("userid", $client_id);
+            $CI->db->update(db_prefix() . 'clients', $update_array_data);
+            update_application_sub_category($stage, $update_array_data["application_text"]);
+        }
+
+        return $response;
+    } catch (Exception $e) {
+        return $response;
+    }
+}
+
+function update_application_sub_category($stage, $text)
+{
+    $CI = &get_instance();
+    $check = $CI->db->select("id")->where(array("application_tracker" => $stage, "name" => $text))->get(db_prefix() . "application_sub_category")->row();
+    if (!empty($check->id)) { // Corrected variable name from $$check->id to $check->id
+        // Do something if the record already exists
+    } else {
+        $CI->db->insert(db_prefix() . 'application_sub_category', array("application_tracker" => $stage, "name" => $text, "status" => 1));
+    }
+    return true;
+}
+function get_stage_1($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "Select if(updated_date='0000-00-00 00:00:00',created_date,updated_date) updated_date,if(document_status=1,'Approved',if(document_status=2,'Rejected','Pending')) applicant_stage_status from " . db_prefix() . "client_documents  where client_id='{$client_id}' and status = 1 ";
+    return $result = $CI->db->query($sql)->row();
+}
+function get_stage_2($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "Select email,vendor,sop,if(email_updated_date='0000-00-00 00:00:00',created_date,email_updated_date) email_updated_date,if(sop_updated_date='0000-00-00 00:00:00',created_date,sop_updated_date) sop_updated_date,if(vendor_updated_date='0000-00-00 00:00:00',created_date,vendor_updated_date) vendor_updated_date,profile_status  from " . db_prefix() . "client_profile_creation  where client_id='{$client_id}' and status = 1 ";
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_3($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "SELECT 
+    COUNT(1) AS university_count,
+    SUM(IF(university_status = 1, 1, 0)) AS approved_count,
+    SUM(IF(university_status = 2, 1, 0)) AS reject_count,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(client_updated_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_4($stage, $client_id)
+{
+
+    $CI = &get_instance();
+    $sql = "SELECT 
+    university_submit_status,
+    COUNT(1) AS university_count,
+    SUM(IF(university_submit_status != 1, 1, 0)) AS action_taken,
+    SUM(IF(university_submit_status = 0, 1, 0)) AS not_take_action,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(submit_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_5($stage, $client_id)
+{
+
+    $CI = &get_instance();
+    $sql = "SELECT 
+    sum(fee_status) fee_status_check,
+    university_submit_status,
+    COUNT(1) AS university_count,
+    SUM(IF(media_file != '', 1, 0)) AS offer_letter,
+    SUM(IF(media_file = '', 1, 0)) AS offer_letter_not,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(offer_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
+    return $result = $CI->db->query($sql)->row();
+}
+
+function get_stage_6($stage, $client_id)
+{
+    $CI = &get_instance();
+    $sql = "SELECT 
+    university_submit_status,
+    sum(acceptance_status) acceptance_status,
+    COUNT(1) AS university_count,
+    SUM(IF(media_file != '', 1, 0)) AS offer_letter,
+    SUM(IF(media_file = '', 1, 0)) AS offer_letter_not,
+    MAX(created_date) AS created_date,
+    MAX(updated_date) AS updated_date,
+    MAX(offer_date) AS client_updated_date
+  FROM " . db_prefix() . "client_university_shortlisting
+  WHERE client_id = '{$client_id}' AND status = '1';
+   ";
+
+    return $result = $CI->db->query($sql)->row();
 }
