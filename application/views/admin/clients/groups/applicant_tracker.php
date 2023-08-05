@@ -656,7 +656,7 @@ if (empty($customer_admins)) { ?>
                                     <div class="col-md-4">
                                         <?php echo render_input('email_creation', "", !empty($profile_creation_data[0]["email"]) ? $profile_creation_data[0]["email"] : '', "Email", ["required" => "required", "placeholder" => "Enter Email"]); ?>
                                     </div>
-                                    <?php if ($profile_creation_data[0]["email_verified"] != 1) : ?>
+                                    <?php if (!empty($profile_creation_data[0]["email_verified"]) && $profile_creation_data[0]["email_verified"] != 1) : ?>
                                         <div class="col-md-4 edit_save_block email_creation_block">
                                             <i class="fa fa-pencil-square-o fa-pencil-square-o-hide col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
                                             <i class="fa fa-file fa-file-hide col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
