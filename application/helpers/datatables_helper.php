@@ -174,7 +174,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
                 } else {
 
-                    $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
+                    // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
                     // Use index
                     if (str_contains($search_value, '!=')) {
                         $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
@@ -203,7 +203,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 if (strpos($columnName, ' as ') !== false) {
                     $columnName = strbefore($columnName, ' as');
                 }
-                $columnName = explode(" ", $columnName)[0];
+                // $columnName = explode(" ", $columnName)[0];
                 if ($search_value != '') {
                     if (str_contains($search_value, '!=')) {
                         $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
