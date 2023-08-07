@@ -216,7 +216,7 @@
 				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "Diploma" ? "selected" : '') ?> value="Diploma">&nbsp;&nbsp;Diploma
 				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "Both" ? "selected" : '') ?> value="Both">&nbsp;&nbsp;Both
 			</div>
-		
+
 			<div class="row" id="twelthAcademicDetails" style="display:none">
 				<h4>12th Academic Details</h4>
 				<div class="col-lg-1 border2 border1">
@@ -433,8 +433,8 @@
 					<div class="c2">
 						<select class="form-control" name="graduation_result_status" id="graduation_result_status" <?php echo ($admissionpreferences->program == 'Post Graduate') ? 'required' : ''; ?>>
 							<option>Select</option>
-							<option value="Awaited">Awaited</option>
-							<option value="Declared">Declared</option>
+							<option value="Awaited" <?= ($academicdetails->graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
 						</select>
 					</div>
 				</div>
@@ -519,7 +519,7 @@
 						<p>Marks / AIR</p>
 					</div>
 					<div class="c2">
-						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->tenth_board; ?>">
+						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 					</div>
 				</div>
 
@@ -544,18 +544,37 @@
 	</div>
 	</div>
 	<script type="text/javascript">
+		// $('input[type=radio][name=after_tenth]').change(function() {
+		// 	if (this.value == 'Both') {
+		// 		$('#twelthAcademicDetails').css("display", "block");
+		// 		$('#diplomaAcademicDetails').css("display", "block");
+		// 	} else if (this.value == '12th') {
+		// 		$('#diplomaAcademicDetails').css("display", "none");
+		// 		$("#diplomaAcademicDetails").find("input,select").val("").selectpicker("refresh");
+		// 		$('#twelthAcademicDetails').css("display", "block");
+		// 	} else if (this.value == 'Diploma') {
+		// 		$('#twelthAcademicDetails').css("display", "none");
+		// 		$("#twelthAcademicDetails").find("input,select").val("").selectpicker("refresh");
+		// 		$('#diplomaAcademicDetails').css("display", "block");
+		// 	}
+		// });
+
 		$('input[type=radio][name=after_tenth]').change(function() {
-			if (this.value == 'Both') {
-				$('#twelthAcademicDetails').css("display", "block");
-				$('#diplomaAcademicDetails').css("display", "block");
-			} else if (this.value == '12th') {
-				$('#diplomaAcademicDetails').css("display", "none");
-				$('#twelthAcademicDetails').css("display", "block");
-			} else if (this.value == 'Diploma') {
-				$('#twelthAcademicDetails').css("display", "none");
-				$('#diplomaAcademicDetails').css("display", "block");
+			let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
+
+			// Hide both academic details by default.
+			$('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
+
+			if (selected_value === 'Both') {
+				$('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
+			} else if (selected_value === '12th') {
+				$('#twelthAcademicDetails').removeClass("hide").addClass("show");
+			} else if (selected_value === 'Diploma') {
+				$('#diplomaAcademicDetails').removeClass("hide").addClass("show");
 			}
 		});
+
+
 		$("#twelth_result_status").on('change', function() {
 			var trs = $("#twelth_result_status").val();
 			if (trs == 'Awaited') {
@@ -604,10 +623,15 @@
 			}
 		})
 
-		var selectedRadioButton = $("input[type='radio']");
+		// var selectedRadioButton = $("input[type='radio']");
 
-		// Trigger a click event on the selected radio button
+		// // Trigger a click event on the selected radio button
+		// selectedRadioButton.click();
+
+		var selectedRadioButton = $("input[type='radio']:checked");
+
 		selectedRadioButton.click();
+
 		$("input[name='after_tenth']").change(function() {
 			$("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
 			$("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
