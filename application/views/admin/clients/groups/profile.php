@@ -9,6 +9,7 @@
 		padding: 10px;
 		background: lightgrey;
 		margin-bottom: 10px;
+		padding-bottom: 30px;
 	}
 
 	.accadmic-education-div h4 {
@@ -240,7 +241,8 @@
 							<?php } ?>
 						</div>
 					</div>
-					<div class="col-md-12">
+					<div class="col-md-12 profile-data-div">
+						<input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
 						<div class="col-md-6">
 							<?php $value = (isset($client) ? $client->phonenumber : ''); ?>
 							<?php echo render_input('phonenumber', 'client_phonenumber', $value); ?>
@@ -272,9 +274,14 @@
 							echo render_custom_fields('customers', $client->userid, "", "", !empty($lead_data->type) ? $lead_data->type : '');
 							?>
 						</div>
-
+						<div class="">
+							<div class="col-md-12">
+								<button type="button" id="save_profile_data" class="btn btn-primary button-22">Save changes</button>
+							</div>
+						</div>
 
 					</div>
+
 				</div>
 			</div>
 			<?php if (isset($client)) { ?>
@@ -314,7 +321,7 @@
 					</table>
 				</div>
 			<?php } ?>
-			<div role="tabpanel" class="tab-pane" id="student_details">
+			<div role="tabpanel" class="tab-pane student-data-div" id="student_details">
 				<div class="row">
 					<div class="col-md-12">
 						<div class="card">
@@ -325,7 +332,7 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="title">Title</label>
-										<select class="form-control" name="title" id="title" readonly>
+										<select class="form-control" name="title" id="title">
 											<option value="Mr" <?php echo ($basicdetails->title == 'Mr') ? 'selected' : ''; ?>>Mr</option>
 											<option value="Ms" <?php echo ($basicdetails->title == 'Ms') ? 'selected' : ''; ?>>Ms</option>
 											<option value="Mrs" <?php echo ($basicdetails->title == 'Mrs') ? 'selected' : ''; ?>>Mrs</option>
@@ -336,38 +343,38 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputFirstName">First Name</label>
-										<input class="form-control" type="text" class="form-group" placeholder="First Name" name="first_name" id="first_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->first_name : $contact->firstname; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="First Name" name="first_name" id="first_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->first_name : $contact->firstname; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputLastName">Last Name</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Last Name" name="last_name" id="last_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->last_name : $contact->lastname; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Last Name" name="last_name" id="last_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->last_name : $contact->lastname; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputEmail">Email Address</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Mobile Number</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Mobile Number" name="mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Mobile Number" name="mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputDateOfBirth">Date Of Birth</label>
-										<input type="date" class="form-control" name="dob" value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' required="required" readonly>
+										<input type="date" class="form-control" name="dob" value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' required="required">
 										<?php echo form_error('dob'); ?>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputPassword1">Gender</label>
-										<select class="form-control" name="gender" id="gender" required readonly>
+										<select class="form-control" name="gender" id="gender" required>
 											<option value="">Select</option>
 											<option <?php echo ($basicdetails->gender == 'Male') ? 'selected' : ''; ?>>Male</option>
 											<option <?php echo ($basicdetails->gender == 'Female') ? 'selected' : ''; ?>>Female</option>
@@ -379,50 +386,45 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father Name</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father's Mobile</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Father's Mobile" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Father's Mobile" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father's Email</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Father's Email" name="fathers_email" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_email : ''; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Father's Email" name="fathers_email" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_email : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Mother Name</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Mother Name" name="mother_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->mother_name : ''; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Mother Name" name="mother_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->mother_name : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Mother's Mobile</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Mother's Mobile" name="mothers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mothers_mobile : ''; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Mother's Mobile" name="mothers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mothers_mobile : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Mother's Email</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Mother's Email" name="mothers_email" value='<?php echo (isset($basicdetails)) ? $basicdetails->mothers_email : ''; ?>' readonly>
+										<input class="form-control" type="text" class="form-group" placeholder="Mother's Email" name="mothers_email" value='<?php echo (isset($basicdetails)) ? $basicdetails->mothers_email : ''; ?>'>
 									</div>
 								</div>
-								<div class="row">
-									<div class="col-lg-6 col-xs-6">
-										<!-- <a href="/clients/basic_details" class="btn btn-primary button-23 pull-right">Edit Basic Details</a> -->
-									</div>
-									<div class="col-lg-6 col-xs-6">
-										<!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button> -->
-										<?php if ($basicdetails->id > 1) { ?>
-											<!-- <a href="/clients/parent_details" class="btn btn-primary button-23 pull-right">Next</a> -->
-										<?php } ?>
+								<div class="">
+									<div class="col-md-12">
+										<button type="button" id="save_student_data" class="btn btn-primary button-22">Save changes</button>
 									</div>
 								</div>
+
 								<?php // echo form_close(); 
 								?>
 							</div>
@@ -589,16 +591,10 @@
 					<div class="col-md-12">
 						<div class="card">
 							<div class="row accadmic-education-div">
+
 								<h4>10th Academic Details</h4>
-								<!-- <div class="col-lg-1 border2 border1">
-									<div class="c1">
-										<p>&nbsp;</p>
-									</div>
-									<div class="c2">
-										<p>10<sup>th</sup></p>
-									</div>
-								</div> -->
-								<div class="col-lg-2 border2 border1">
+
+								<div class="col-lg-3 border2 border1">
 									<div class="c1">
 										<p>School Name</p>
 									</div>
@@ -608,7 +604,7 @@
 										<?php echo form_error('academicDetailsId'); ?>
 									</div>
 								</div>
-								<div class="col-lg-2 border2 border1">
+								<div class="col-lg-3 border2 border1">
 									<div class="c1">
 										<p>Board </p>
 									</div>
@@ -646,22 +642,22 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-lg-3 border2 border1">
+								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Percentage / CGPA</p>
 									</div>
 									<div class="c2">
-										<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" maxlength="3" value="<?= $academicdetails->tenth_marking_scheme; ?>">
+										<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" maxlength="3" value="<?= $academicdetails->tenth_percentage; ?>">
 									</div>
 								</div>
 							</div>
-							<div class="row after hide">
+							<div class="row after accadmic-education-div">
 								<label>After Xth Qualification *</label><br>
-								<input type="radio" name="after_tenth" value="12th">&nbsp;&nbsp;12th
-								<input type="radio" name="after_tenth" value="Diploma">&nbsp;&nbsp;Diploma
-								<input type="radio" name="after_tenth" value="Both">&nbsp;&nbsp;Both
+								<input type="radio" name="after_x_status" selected <?= (trim($academicdetails->after_x_status) == "12th" ? "checked" : '') ?> value="12th">&nbsp;&nbsp;12th
+								<input type="radio" name="after_x_status" <?= (trim($academicdetails->after_x_status) == "Diploma" ? "checked" : '') ?> value="Diploma">&nbsp;&nbsp;Diploma
+								<input type="radio" name="after_x_status" <?= (trim($academicdetails->after_x_status) == "Both" ? "checked" : '') ?> value="Both">&nbsp;&nbsp;Both
 							</div>
-							<div class="row accadmic-education-div <?php echo ($academicdetails->twelth_school_name == '') ? 'hide' : ''; ?>" id="twelthAcademicDetails">
+							<div class="row accadmic-education-div <?php echo ($academicdetails->twelth_school_name == '') ? '' : ''; ?>" id="twelthAcademicDetails">
 								<h4>12th Academic Details</h4>
 
 								<!-- <div class="col-lg-1 border2 border1">
@@ -677,7 +673,6 @@
 										<p>Institute Name</p>
 									</div>
 									<div class="c2">
-										<input type="hidden" name="academicDetailsId" value="">
 										<input class="form-control" type="text" class="form-group" placeholder="Enter 12th School Name" name="twelth_school_name" value="<?= $academicdetails->twelth_school_name; ?>">
 									</div>
 								</div>
@@ -859,15 +854,15 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-lg-1 border2 border1">
+								<div class="col-lg-2 border2 border1">
 									<div class="c1">
 										<p>Result Status</p>
 									</div>
 									<div class="c2">
 										<select class="form-control" name="graduation_result_status" id="graduation_result_status">
 											<option>Select</option>
-											<option value="Awaited">Awaited</option>
-											<option value="Declared">Declared</option>
+											<option value="Awaited" <?= ($academicdetails->graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+											<option value="Declared" <?= ($academicdetails->graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
 										</select>
 									</div>
 								</div>
@@ -933,7 +928,7 @@
 										</select>
 									</div>
 								</div>
-								<div class="col-lg-2 border2 border1">
+								<div class="col-lg-3 border2 border1">
 									<div class="c1">
 										<p>Result Status</p>
 									</div>
@@ -950,7 +945,7 @@
 										<p>Marks / AIR</p>
 									</div>
 									<div class="c2">
-										<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->tenth_board; ?>">
+										<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 									</div>
 								</div>
 							</div>
@@ -967,6 +962,11 @@
 							<?php // echo form_close(); 
 							?>
 						</div>
+					</div>
+				</div>
+				<div class="">
+					<div class="col-md-12">
+						<button type="button" id="save_admission_details" class="btn btn-primary button-22">Save changes</button>
 					</div>
 				</div>
 			</div>

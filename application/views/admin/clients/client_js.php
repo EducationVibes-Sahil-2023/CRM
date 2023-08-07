@@ -972,24 +972,27 @@
         $("#save_admission_preferences").attr("disabled", false);
 
     }
-    if ( admissionpreferences_freeze == 1) {
+    if (admissionpreferences_freeze == 1) {
         set_frezee();
     }
 
     $(document).ready(function() {
 
-        $('input[type=radio][name=after_tenth]').change(function() {
-            if (this.value == 'Both') {
-                $('#twelthAcademicDetails').css("display", "block");
-                $('#diplomaAcademicDetails').css("display", "block");
-            } else if (this.value == '12th') {
-                $('#diplomaAcademicDetails').css("display", "none");
-                $('#twelthAcademicDetails').css("display", "block");
-            } else if (this.value == 'Diploma') {
-                $('#twelthAcademicDetails').css("display", "none");
-                $('#diplomaAcademicDetails').css("display", "block");
+        $('input[type=radio][name=after_x_status]').change(function() {
+            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
+            // Hide both academic details by default.
+            $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
+            if (selected_value === 'Both') {
+                $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value === '12th') {
+                $('#diplomaAcademicDetails').removeClass("show").addClass("hide");
+                $('#twelthAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value === 'Diploma') {
+                $('#twelthAcademicDetails').removeClass("show").addClass("hide");
+                $('#diplomaAcademicDetails').removeClass("hide").addClass("show");
             }
         });
+
         $("#twelth_result_status").on('change', function() {
             var trs = $("#twelth_result_status").val();
             if (trs == 'Awaited') {
@@ -1038,11 +1041,17 @@
             }
         })
 
-        var selectedRadioButton = $("input[type='radio']");
 
-        // Trigger a click event on the selected radio button
+        var selectedRadioButton = $("input[type='radio']:checked");
+
         selectedRadioButton.click();
-        $("input[name='after_tenth']").change(function() {
+
+
+        // var selectedRadioButton = $("input[type='radio']");
+
+        // // Trigger a click event on the selected radio button
+        // // selectedRadioButton.click();
+        $("input[name='after_x_status']").change(function() {
             $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
             $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
         })
@@ -1051,6 +1060,221 @@
 
         }, 1000);
         $('#study_country').trigger('change');
-        $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
+        $("#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
+        // $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
+    })
+
+
+    $('#save_profile_data').on('click', function(e) {
+        e.preventDefault()
+        let data = []; // Define data as an array, not an object
+        $(".profile-data-div  div > input").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();;
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".profile-data-div  div > textarea").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".profile-data-div  div > select").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).find("option:selected").val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+
+        data.push({
+            name: "csrf_token_name",
+            value: $('input[name="csrf_token_name"]').val()
+        });
+
+        data.push({
+            name: "clientid",
+            value: $('input[name="clientid"]').val()
+        });
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/profile_update' ?>",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(res) {
+                // alert(res.resp_desc)
+                if (res.resp_code == "RCS") {
+                    alert_float('success', res.resp_desc);
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
+    })
+
+
+    $('#save_student_data').on('click', function(e) {
+        e.preventDefault()
+        let data = []; // Define data as an array, not an object
+        $(".student-data-div  div > input").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();;
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".student-data-div  div > textarea").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".student-data-div  div > select").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).find("option:selected").val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+
+
+        data.push({
+            name: "csrf_token_name",
+            value: $('input[name="csrf_token_name"]').val()
+        });
+
+        data.push({
+            name: "clientid",
+            value: $('input[name="clientid"]').val()
+        });
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/student_update' ?>",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(res) {
+                // alert(res.resp_desc)
+                if (res.resp_code == "RCS") {
+                    alert_float('success', res.resp_desc);
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
+    })
+
+    $('#save_admission_details').on('click', function(e) {
+        e.preventDefault()
+        let data = []; // Define data as an array, not an object
+
+        $("#academic_details div > input").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            let type = $(this).attr("type");
+
+            if (type === "radio") {
+                if ($(this).prop("checked")) {
+                    data.push({
+                        name: name,
+                        value: value
+                    });
+                }
+            } else {
+                if (name !== undefined && value !== undefined) {
+                    data.push({
+                        name: name,
+                        value: value
+                    });
+                }
+            }
+        });
+
+
+        $("#academic_details  div > textarea").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $("#academic_details  div > select").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).find("option:selected").val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+
+        data.push({
+            name: "csrf_token_name",
+            value: $('input[name="csrf_token_name"]').val()
+        });
+
+        data.push({
+            name: "clientid",
+            value: $('input[name="clientid"]').val()
+        });
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/student_acadmic' ?>",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(res) {
+                // alert(res.resp_desc)
+                if (res.resp_code == "RCS") {
+                    alert_float('success', res.resp_desc);
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
     })
 </script>

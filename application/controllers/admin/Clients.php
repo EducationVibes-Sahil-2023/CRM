@@ -2151,4 +2151,155 @@ class Clients extends AdminController
 
         echo json_encode($data);
     }
+
+    public function profile_update()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $update_applicant_data = [];
+                $update_applicant_custom_data["customers"] = [];
+                unset($_POST["clientid"]);
+                foreach ($_POST as $key => $value) {
+                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                        foreach ($value as $k => $custom_value) {
+                            $update_applicant_custom_data["customers"] = $custom_value;
+                        }
+                    } else {
+                        // Otherwise, add to general data array
+                        if ($key != 'clientid') {
+                            $update_applicant_data[$key] = $value;
+                        }
+                    }
+                }
+
+                $this->db->where('userid', $client_id);
+                $rows_affected = $this->db->update(db_prefix() . 'clients', $update_applicant_data);
+                if ($rows_affected) {
+                    handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Profile update successfully.";
+                    set_alert('success', "Profile update successfully.");
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Profile update failed";
+                    set_alert('danger', "Profile update failed");
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function student_update()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $update_student_data = [];
+                $update_applicant_custom_data["customers"] = [];
+                unset($_POST["clientid"]);
+                foreach ($_POST as $key => $value) {
+                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                        foreach ($value as $k => $custom_value) {
+                            $update_applicant_custom_data["customers"] = $custom_value;
+                        }
+                    } else {
+                        // Otherwise, add to general data array
+                        if ($key != 'clientid') {
+                            $update_student_data[$key] = $value;
+                        }
+                    }
+                }
+                $update_student_data["updated_at"] = date('Y-m-d H:i:s');
+                $this->db->where('userid', $client_id);
+                $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
+                if ($rows_affected) {
+                    // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Basic information update successfully.";
+                    set_alert('success', "Basic information update successfully.");
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Basic information update failed";
+                    set_alert('danger', "Basic information update failed");
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function student_acadmic()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $academicDetailsId = $this->input->post("academicDetailsId");
+                $update_academic_data = [];
+                $update_applicant_custom_data["customers"] = [];
+                unset($_POST["clientid"]);
+                unset($_POST["academicDetailsId"]);
+
+                foreach ($_POST as $key => $value) {
+                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                        foreach ($value as $k => $custom_value) {
+                            $update_applicant_custom_data["customers"] = $custom_value;
+                        }
+                    } else {
+                        // Otherwise, add to general data array
+                        if ($key != 'clientid') {
+                            $update_academic_data[$key] = $value;
+                        }
+                    }
+                }
+
+                if (empty($academicDetailsId)) {
+                    $update_academic_data["created_at"] = date('Y-m-d H:i:s');
+                    $rows_affected = $this->db->insert(db_prefix() . 'academic_details', $update_academic_data);
+                } else {
+                    $update_academic_data["updated_at"] = date('Y-m-d H:i:s');
+                    $this->db->where('userid', $client_id);
+                    $this->db->where('id', $academicDetailsId);
+                    $rows_affected = $this->db->update(db_prefix() . 'academic_details', $update_academic_data);
+                }
+                if ($rows_affected) {
+                    // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Academic information update successfully.";
+                    set_alert('success', "Academic information update successfully.");
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Academic information update failed";
+                    set_alert('danger', "Academic information update failed");
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
 }
