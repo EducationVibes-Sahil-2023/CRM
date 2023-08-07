@@ -630,7 +630,7 @@
 
 		var selectedRadioButton = $("input[type='radio']:checked");
 
-		selectedRadioButton.click();
+		selectedRadioButton.prop("checked", true).trigger("change");
 
 		$("input[name='after_tenth']").change(function() {
 			$("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
