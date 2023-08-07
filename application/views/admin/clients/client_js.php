@@ -1044,7 +1044,7 @@
 
         var selectedRadioButton = $("input[type='radio']:checked");
 
-        selectedRadioButton.click();
+        selectedRadioButton.prop("checked", true).trigger("change");
 
 
         // var selectedRadioButton = $("input[type='radio']");
