@@ -1095,22 +1095,22 @@
         $("#entrance_result_status").on('change', function() {
             var ers = $("#entrance_result_status").val();
             if (ers == 'Awaited') {
-                $("#entrance_percentage").parents(".hide_ input").hide();
+                $(".hide_ input").hide();
                 $("#entrance_percentage").val('');
 
             } else if (ers == 'Declared') {
-                $("#entrance_percentage").parents(".hide_ input").show();
+                $(".hide_ input").show();
             }
         })
 
         $("#entrance_result_status_1").on('change', function() {
             var ers = $("#entrance_result_status_1").val();
             if (ers == 'Awaited') {
-                $("#entrance_percentage_1").parents(".hide_1 input").hide();
+                $(".hide_1 input").hide();
                 $("#entrance_percentage_1").val('');
 
             } else if (ers == 'Declared') {
-                $("#entrance_percentage_1").parents(".hide_1 input").show();
+                $(".hide_1 input").show();
             }
         })
         $("#graduation_result_status").on('change', function() {
