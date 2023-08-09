@@ -1844,4 +1844,26 @@ class Clients_model extends App_Model
         $this->db->order_by('ts.sequence', 'asc');
         return $get_application_sub_stage = $this->db->get()->result_array();
     }
+
+    function getProgram()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'admission_program');
+        $this->db->where("status", 1);
+        return $getProgram = $this->db->get()->result_array();
+    }
+    function getCourse()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'admission_course');
+        $this->db->where("status", 1);
+        return $getCourse = $this->db->get()->result_array();
+    }
+    function getEntrance()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'admission_entrance');
+        $this->db->where("status", 1);
+        return $getEntrance = $this->db->get()->result_array();
+    }
 }
