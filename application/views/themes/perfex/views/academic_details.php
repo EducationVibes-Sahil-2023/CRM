@@ -672,6 +672,7 @@
 
 		}, 1000);
 
+
 		$('#entrance_exam_details').on('change select2:opening', async function() {
 			let value = $(this).val();
 			value = value.filter(function(element) {
@@ -686,8 +687,9 @@
 			} else {
 				$(this).find('option').prop('disabled', false);
 				$(".course_name_field").hide();
-				$(this).selectpicker("refresh")
 			}
+			$(this).selectpicker("refresh")
+
 		});
 
 		$('#entrance_exam_details').change();
