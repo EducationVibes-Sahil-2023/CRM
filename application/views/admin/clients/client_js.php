@@ -1048,6 +1048,8 @@
     $(document).ready(function() {
 
         $('input[type=radio][name=after_x_status]').change(function() {
+            $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+            $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
             let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
             // console.log(selected_value);
             // Hide both academic details by default.
@@ -1123,23 +1125,22 @@
         })
 
 
-        var selectedRadioButton = $("input[type='radio']:checked");
+        // var selectedRadioButton = $("input[type='radio']:checked");
 
-        selectedRadioButton.prop("checked", true).trigger("change");
-
+        // selectedRadioButton.prop("checked", true).trigger("change");
 
         // var selectedRadioButton = $("input[type='radio']");
 
         // // Trigger a click event on the selected radio button
         // // selectedRadioButton.click();
-        $("input[name='after_x_status']").change(function() {
-            $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
-            $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
-        })
-        setTimeout(() => {
-            $('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
+        // $("input[name='after_x_status']").change(function() {
+        //     $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+        //     $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
+        // })
+        // setTimeout(() => {
+        //     $('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
 
-        }, 1000);
+        // }, 1000);
         $('#study_country').trigger('change');
         $("#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
         // $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
