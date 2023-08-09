@@ -572,8 +572,9 @@
         } else {
             $(this).find('option').prop('disabled', false);
             $(".course_name_field").hide();
-            $(this).selectpicker("refresh")
         }
+        $(this).selectpicker("refresh")
+
     });
 
     $('#entrance_exam_details').change();
