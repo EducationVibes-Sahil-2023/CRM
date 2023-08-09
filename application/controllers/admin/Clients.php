@@ -2187,7 +2187,7 @@ class Clients extends AdminController
                     $data['resp_desc'] = "Profile update successfully.";
                     set_alert('success', "Profile update successfully.");
                 } else {
-                    $data['resp_code'] = 'RCS';
+                    $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = "Profile update failed";
                     set_alert('danger', "Profile update failed");
                 }
@@ -2234,7 +2234,7 @@ class Clients extends AdminController
                     $data['resp_desc'] = "Basic information update successfully.";
                     set_alert('success', "Basic information update successfully.");
                 } else {
-                    $data['resp_code'] = 'RCS';
+                    $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = "Basic information update failed";
                     set_alert('danger', "Basic information update failed");
                 }
@@ -2291,7 +2291,7 @@ class Clients extends AdminController
                     $data['resp_desc'] = "Academic information update successfully.";
                     set_alert('success', "Academic information update successfully.");
                 } else {
-                    $data['resp_code'] = 'RCS';
+                    $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = "Academic information update failed";
                     set_alert('danger', "Academic information update failed");
                 }
