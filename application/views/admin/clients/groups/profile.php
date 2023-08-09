@@ -939,10 +939,10 @@
 									<div class="c1">
 										<p>Marks / AIR</p>
 									</div>
-									<div class="c2 border2new">
+									<div class="c2 hide_">
 										<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 									</div>
-									<div class="c2 border2new_1" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+									<div class="c2 hide_2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
 										<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
 									</div>
 								</div>
