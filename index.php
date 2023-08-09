@@ -154,7 +154,7 @@ switch (ENVIRONMENT)
 
 	case 'production':
 
-		ini_set('display_errors', 0);
+		ini_set('display_errors', 1);
 
 		if (version_compare(PHP_VERSION, '5.3', '>='))
 

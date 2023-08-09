@@ -212,14 +212,10 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                     }
                     if (count($additionalSelect) > 0) {
                         foreach ($additionalSelect as $searchAdditionalField) {
-<<<<<<< HEAD
                             // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
                             if (strpos($searchAdditionalField, ' as ') !== false) {
                                 $searchAdditionalField = strbefore($searchAdditionalField, ' as');
                             }
-=======
-                            $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
->>>>>>> 5953cfe7584057a1ac853758043b103c3bdac75b
                             if (str_contains($search_value, '!=')) {
                                 $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
                             } else {
