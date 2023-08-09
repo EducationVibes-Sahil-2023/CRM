@@ -1357,7 +1357,7 @@ function calls_update_count($params = false, $max_status = 0)
     } elseif (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
-        $sql .= ' AND (DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '")';
+        $sql .= ' AND (Date(FROM_UNIXTIME(calls.call_start)) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '")';
     }
 
     $grup_by = "";

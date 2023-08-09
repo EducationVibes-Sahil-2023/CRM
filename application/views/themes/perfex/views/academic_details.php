@@ -206,18 +206,19 @@
 						<p>Obtained Percentage / CGPA</p>
 					</div>
 					<div class="c2">
-						<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" value="<?= $academicdetails->tenth_marking_scheme; ?>">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" value="<?= $academicdetails->tenth_percentage; ?>">
 					</div>
 				</div>
 			</div>
 			<div class="row after">
+
 				<label>After Xth Qualification *</label><br>
-				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "12th" ? "selected" : '') ?> value="12th">&nbsp;&nbsp;12th
-				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "Diploma" ? "selected" : '') ?> value="Diploma">&nbsp;&nbsp;Diploma
-				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "Both" ? "selected" : '') ?> value="Both">&nbsp;&nbsp;Both
+				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "12th" ? "checked" : '') ?> <?= empty($academicdetails->after_x_status) ? 'checked' : '' ?> value="12th">&nbsp;&nbsp;12th
+				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "Diploma" ? "checked" : '') ?> value="Diploma">&nbsp;&nbsp;Diploma
+				<input type="radio" name="after_tenth" <?= ($academicdetails->after_x_status == "Both" ? "checked" : '') ?> value="Both">&nbsp;&nbsp;Both
 			</div>
 
-			<div class="row" id="twelthAcademicDetails" style="display:none">
+			<div class="row" id="twelthAcademicDetails" style="display:<?= ($academicdetails->after_x_status == '12th' || $academicdetails->after_x_status == 'Both') ? 'block' : 'none' ?>">
 				<h4>12th Academic Details</h4>
 				<div class="col-lg-1 border2 border1">
 					<div class="c1">
@@ -303,7 +304,7 @@
 			</div>
 			<!-- diploma details-->
 
-			<div class="row" id="diplomaAcademicDetails" style="display:none;">
+			<div class="row" id="diplomaAcademicDetails" style="display:<?= ($academicdetails->after_x_status == 'Diploma' || $academicdetails->after_x_status == 'Both') ? 'block' : 'none' ?>">
 				<h4>Diploma Academic Details</h4>
 				<div class="col-lg-1 border2 border1">
 					<div class="c1">
@@ -386,7 +387,7 @@
 			<!-- end diploma details-->
 
 			<!-- Under Graduate details-->
-			<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
+			<div class="row <?php echo ($admissionpreferences->program != "") ? '' : 'hide'; ?>" id="graduationAcademicDetails">
 				<h4>Graduation Details</h4>
 				<div class="col-lg-1 border2 border1">
 					<div class="c1">
@@ -466,7 +467,9 @@
 			<!-- end ug details-->
 
 			<hr>
-			<?php // if($admissionpreferences->entrance_exam_details !=''){ 
+			<?php
+			$entrance_names = array_values(array_filter(explode(",", $admissionpreferences->entrance_exam_details), 'strlen'));
+			$entrance_data = array_column($entrance_data, null, 'id');
 			?>
 			<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
 				<h4>Entrance Exam</h4>
@@ -476,7 +479,11 @@
 					</div>
 
 					<div class="c2">
-						<p><?= $admissionpreferences->entrance_exam_details; ?></p>
+						<p><?= !empty($entrance_data[$entrance_names[0]]) ? $entrance_data[$entrance_names[0]]["name"] : ''; ?></p>
+					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<p><?= !empty($entrance_data[$entrance_names[1]]) ? $entrance_data[$entrance_names[1]]["name"] : ''; ?></p>
+
 					</div>
 				</div>
 				<div class="col-lg-3 border2 border1">
@@ -486,6 +493,9 @@
 					<div class="c2">
 						<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
 					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll_1" value="<?= !empty($academicdetails->entrance_roll_1) ? $academicdetails->entrance_roll_1 : ''; ?>">
+					</div>
 				</div>
 				<div class="col-lg-3 border2 border1">
 					<div class="c1">
@@ -493,13 +503,12 @@
 					</div>
 					<div class="c2">
 						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
-						<select name="entrance_year" id="entrance_year">
-							<option value="">Select</option>
-							<option value="<?= date("Y") - 3; ?>" <?= ((date("Y") - 3) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 3; ?></option>
-							<option value="<?= date("Y") - 2; ?>" <?= ((date("Y") - 2) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 2; ?></option>
-							<option value="<?= date("Y") - 1; ?>" <?= ((date("Y") - 1) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 1; ?></option>
-							<option value="<?= date("Y"); ?>" <?= ((date("Y")) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y"); ?></option>
-						</select>
+						<input type="month" name="entrance_year" id="entrance_year" class="form-control" value="<?= ($academicdetails->entrance_year) ? $academicdetails->entrance_year : '' ?>" placeholder="Select Month and Year">
+					</div>
+
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
+						<input type="month" name="entrance_year_1" id="entrance_year_1" value="<?= ($academicdetails->entrance_year_1) ? $academicdetails->entrance_year_1 : '' ?>" class="form-control" placeholder="Select Month and Year">
 					</div>
 				</div>
 				<div class="col-lg-2 border2 border1">
@@ -513,6 +522,13 @@
 							<option value="Declared" <?= ($academicdetails->entrance_result_status == 'Declared') ? 'selected' : '' ?>>Declared</option>
 						</select>
 					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<select class="form-control" name="entrance_result_status_1" id="entrance_result_status_1">
+							<option>Select</option>
+							<option value="Awaited" <?= ($academicdetails->entrance_result_status_1 == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->entrance_result_status_1 == 'Declared') ? 'selected' : '' ?>>Declared</option>
+						</select>
+					</div>
 				</div>
 				<div class="col-lg-3 border2 border1">
 					<div class="c1">
@@ -520,6 +536,9 @@
 					</div>
 					<div class="c2">
 						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
 					</div>
 				</div>
 
@@ -561,15 +580,16 @@
 
 		$('input[type=radio][name=after_tenth]').change(function() {
 			let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
-
+			console.log(selected_value);
 			// Hide both academic details by default.
 			$('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
 
-			if (selected_value === 'Both') {
+			if (selected_value == 'Both') {
 				$('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
-			} else if (selected_value === '12th') {
+			} else if (selected_value == '12th') {
+				console.log("12 select");
 				$('#twelthAcademicDetails').removeClass("hide").addClass("show");
-			} else if (selected_value === 'Diploma') {
+			} else if (selected_value == 'Diploma') {
 				$('#diplomaAcademicDetails').removeClass("hide").addClass("show");
 			}
 		});
@@ -610,6 +630,17 @@
 
 			} else if (ers == 'Declared') {
 				$("#entrance_percentage").show();
+			}
+		})
+
+		$("#entrance_result_status_1").on('change', function() {
+			var ers = $("#entrance_result_status_1").val();
+			if (ers == 'Awaited') {
+				$("#entrance_percentage_1").hide();
+				$("#entrance_percentage_1").val('');
+
+			} else if (ers == 'Declared') {
+				$("#entrance_percentage_1").show();
 			}
 		})
 		$("#graduation_result_status").on('change', function() {

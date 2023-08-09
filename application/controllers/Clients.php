@@ -177,11 +177,12 @@ class Clients extends ClientsController
                     'program' => !empty($data['program']) ? $data['program'] : '',
                     'course' => !empty($data['course']) ? $data['course'] : '',
                     'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
-                    'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
-                    'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES') ? $data['entrance_exam_details'] : '',
+                    // 'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
+                    'entrance_exam_details' => (!empty($data['entrance_exam_details'])) ? implode(",", $data['entrance_exam_details']) : '',
                     'session_intake' => !empty($data['session_intake']) ? $data['session_intake'] : '',
                     'created_by' => get_client_user_id(),
                 ];
+
 
                 if ($data['countries'] != "") {
                     $dataArr['study_country'] = $data['countries'];
@@ -218,6 +219,9 @@ class Clients extends ClientsController
         $data['title']         = "Admission Preferences";
         $data['announcements'] = $this->announcements_model->get();
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
+        $data['program_data'] = $this->clients_model->getProgram();
+        $data['course_data'] = $this->clients_model->getCourse();
+        $data['entrance_data'] = $this->clients_model->getEntrance();
 
         // echo "<pre>";print_r($data);die;
         $this->data($data);
@@ -336,6 +340,11 @@ class Clients extends ClientsController
                     'entrance_year' => $data['entrance_year'],
                     'entrance_result_status' => $data['entrance_result_status'],
                     'entrance_percentage' => $data['entrance_percentage'],
+                    'entrance_exam_name_1' => $data['entrance_exam_name_1'],
+                    'entrance_roll_1' => $data['entrance_roll_1'],
+                    'entrance_year_1' => $data['entrance_year_1'],
+                    'entrance_result_status_1' => $data['entrance_result_status_1'],
+                    'entrance_percentage_1' => $data['entrance_percentage_1'],
                     'after_x_status' => $data['after_tenth'],
 
                 ], $academicDetailsIds);
@@ -356,6 +365,7 @@ class Clients extends ClientsController
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
+        $data['entrance_data'] = $this->clients_model->getEntrance();
         $this->data($data);
         $this->view('academic_details');
         $this->layout();

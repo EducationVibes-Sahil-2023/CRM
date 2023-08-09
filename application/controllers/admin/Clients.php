@@ -177,6 +177,9 @@ class Clients extends AdminController
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
                 $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
+                $data['program_data'] = $this->clients_model->getProgram();
+                $data['course_data'] = $this->clients_model->getCourse();
+                $data['entrance_data'] = $this->clients_model->getEntrance();
             } elseif ($group == 'attachments') {
                 $data['attachments'] = get_all_customer_attachments($id);
             } elseif ($group == 'vault') {
@@ -1144,10 +1147,11 @@ class Clients extends AdminController
             $dataArr = [
                 'program' => $params['program'],
                 'course' => $params['course'],
-                'entrance_exam_given' => $params['entranceExamGiven'],
-                'entrance_exam_details' => ($params['entranceExamGiven'] == 'YES') ? $params['entranceExamDetails'] : '',
+                // 'entrance_exam_given' => $params['entranceExamGiven'],
+                'entrance_exam_details' => (!empty($params['entranceExamDetails'])) ? implode(",", $params['entranceExamDetails']) : '',
                 'session_intake' => $params['sessionIntake'],
                 'userid' => $params['client_id'],
+                'course_name' => $params['course_name'],
             ];
 
             if ($params['countries'] != "") {
