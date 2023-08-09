@@ -75,6 +75,11 @@
 		overflow: hidden;
 		background: lightgrey;
 	}
+
+	.c2 {
+		min-height: 50px;
+		vertical-align: middle;
+	}
 </style>
 
 

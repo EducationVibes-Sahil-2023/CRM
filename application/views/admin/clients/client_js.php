@@ -1106,11 +1106,11 @@
         $("#entrance_result_status_1").on('change', function() {
             var ers = $("#entrance_result_status_1").val();
             if (ers == 'Awaited') {
-                $(".hide_1 input").hide();
+                $(".hide_2 input").hide();
                 $("#entrance_percentage_1").val('');
 
             } else if (ers == 'Declared') {
-                $(".hide_1 input").show();
+                $(".hide_2 input").show();
             }
         })
         $("#graduation_result_status").on('change', function() {
