@@ -97,7 +97,7 @@ class Leads extends AdminController
         $updateCount = leads_update_count($_POST);
         $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
-        die;
+        
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
