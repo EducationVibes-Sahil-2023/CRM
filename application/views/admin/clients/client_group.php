@@ -67,18 +67,6 @@
             course();
         });
 
-        $("#entrance_result_status_1").on('change', function() {
-            var ers = $("#entrance_result_status_1").val();
-            if (ers == 'Awaited') {
-                $("#entrance_percentage_1").parents(".border2").hide();
-                $("#entrance_percentage_1").val('');
-
-            } else if (ers == 'Declared') {
-                $("#entrance_percentage_1").parents(".border2").show();
-            }
-        })
-
-
 
     });
 
