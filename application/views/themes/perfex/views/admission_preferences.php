@@ -215,6 +215,13 @@
 
 							</div>
 						</div>
+						<div class="col-lg-4 course_name_field" style="display:<?= !empty($admissionpreferences->course_name) ? 'block' : 'none' ?>">
+							<div class="form-group">
+								<label for="course_name">Course Name</label>
+								<input type="text" class="form-control" name="course_name" id="course_name" value="<?= !empty($admissionpreferences->course_name) ? $admissionpreferences->course_name : '' ?>">
+							</div>
+						</div>
+
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="session_intake">Session Intake</label>
@@ -466,15 +473,16 @@
 			});
 		}
 
-		function get_entrance(course_id) {
+		function get_entrance() {
 			return new Promise((resolve, reject) => {
 				let entrance_array = [];
 				entrance_array.push({
 					id: '',
 					name: 'Select Entrance'
 				})
+				let lead_type = $("#lead_type").val();
 				for (let j = 0; j < getEntrance.length; j++) {
-					if (course_id === getEntrance[j].course_id) {
+					if (lead_type === getEntrance[j].segment_id) {
 						entrance_array.push({
 							id: getEntrance[j].id,
 							name: getEntrance[j].name
@@ -485,7 +493,6 @@
 				resolve(entrance_array);
 			});
 		}
-
 
 
 
@@ -844,7 +851,7 @@
 					for (let k = 0; k < value.length; k++) {
 						var v = value[k];
 						var countryName = v.search("_") != -1 ? v.replace("_", " ") : v;
-
+						let c = v.replace(" ", "_");
 						str += `<div class="col-lg-4">
 						<div class="form-group">
 						<label for="university${k}">${countryName} University</label>
@@ -853,8 +860,8 @@
 						</div>`;
 
 						if (Object.keys(universityArr).length > 0) {
-							if (v in universityArr) {
-								selectedUniversityArr[v] = universityArr[v];
+							if (c in universityArr) {
+								selectedUniversityArr[v] = universityArr[c];
 							} else {
 								selectedUniversityArr[v] = "";
 							}

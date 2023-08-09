@@ -165,6 +165,7 @@ class Clients extends ClientsController
                         foreach ($countriesArr as $key => $val) {
                             $university = isset($data['university' . $key]) ? $data['university' . $key] : '';
                             if ($university != '') {
+                                $val = str_replace($val, " ", "_");
                                 $university_array[$val] = $university;
                             }
                         }
