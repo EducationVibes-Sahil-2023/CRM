@@ -487,7 +487,7 @@
 								<div class="col-lg-4 course_name_field" style="display:<?= !empty($admissionpreferences->course_name) ? 'block' : 'none' ?>">
 									<div class="form-group">
 										<label for="course_name">Course Name</label>
-										<input type="text" class="form-control" name="course_name" id="course_name" value="<?= $admissionpreferences->course_name ?>">
+										<input type="text" class="form-control" name="course_name" id="course_name">
 									</div>
 								</div>
 
