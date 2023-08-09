@@ -602,145 +602,42 @@
 		// }
 
 		async function course() {
-			var course = $("#course").val();
 
-			var study_country = $("#study_country").val();
+			var course = $("#course").val();
+			var selectedCourseText = $("#course option:selected").text();
+
+			$("#course_name_field input").val('');
+			if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+				$(".course_name_field").show();
+				$(".course_name_field").find("input").attr("required", true)
+			} else {
+				$(".course_name_field").hide();
+				$(".course_name_field").find("input").attr("required", false)
+				$(".course_name_field").find("input").removeAttr("required")
+			}
+
 			var getEntrance_array = [];
 			for (let i = 0; i < getCourse.length; i++) {
-				getEntrance_array[getCourse[i].id] = await get_entrance(getCourse[i].id);
+				getEntrance_array = await get_entrance();
 			}
 
+			console.log(getEntrance_array);
 			var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
 			selectedExam_array = selectedExam.split(",");
-			var $select = $('#entrance_exam_details');
+			var $select = $("#entrance_exam_details");
 			$select.find('option').remove();
-
-			if (getEntrance[course] !== undefined) {
-				$.each(getEntrance_array[course], function(key, value) {
-					var sel = '';
-					if (selectedExam_array.length > 0) { // Check if selectedExam array is not empty
-						if ($.inArray(value.id, [selectedExam]) && value.id != "") {
-							console.log(value.id);
-							sel = "selected";
-						}
+			$.each(getEntrance_array, function(key, value) {
+				var sel = '';
+				if (selectedExam_array.length > 0) {
+					if (selectedExam_array.includes(value.id.toString()) && parseInt(value.id) > 0) {
+						sel = "selected";
 					}
-
-					$select.append('<option value="' + value.id + '"' + sel + '>' + value.name + '</option>');
-				});
-			}
-
+				}
+				$select.append('<option value="' + value.id + '" ' + sel + '>' + value.name + '</option>');
+			});
 			$select.selectpicker("refresh");
 
-
-			$select.selectpicker("refresh");
-
-
-			// var mbbs = {
-			// 	"0": "Select",
-			// 	"1": "NEET UG",
-			// 	"2": "OTHER"
-			// };
-			// var btech = {
-			// 	"0": "Select",
-			// 	"1": "JEE",
-			// 	"2": "VITEEE",
-			// 	"3": "UPSEE",
-			// 	"4": "SRMJEE",
-			// 	"5": "BITSAT",
-			// 	"6": "MET",
-			// 	"7": "MAT CET",
-			// 	"8": "IPUCET",
-			// 	"9": "COMEDK"
-			// };
-			// var mdms = {
-			// 	"0": "Select",
-			// 	"1": "NEET PG",
-			// 	"2": "OTHER"
-			// };
-			// var mbapgdm = {
-			// 	"0": "Select",
-			// 	"1": "CAT",
-			// 	"2": "MAT",
-			// 	"3": "XAT",
-			// 	"4": "CMAT",
-			// 	"5": "SNAP"
-			// };
-			// var abroad = {
-			// 	"0": "Select",
-			// 	"1": "IELTS",
-			// 	"2": "TOEFL",
-			// 	"3": "PTE",
-			// 	"4": "SAT",
-			// 	"5": "GMAT",
-			// 	"6": "GRE",
-			// 	"7": "OTHER"
-			// };
-
-			// var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
-
-			// var $select = $('#entrance_exam_details');
-			// // console.log($select);
-
-			// if (study_country == 'ABROAD') {
-			// 	if (course == 'MBBS') {
-			// 		$select.find('option').remove();
-			// 		$.each(mbbs, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	} else if (course == 'MD/MS') {
-			// 		$select.find('option').remove();
-			// 		$.each(mdms, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	} else {
-			// 		$select.find('option').remove();
-			// 		$.each(abroad, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	}
-			// } else {
-			// 	if (course == 'MBBS') {
-			// 		$select.find('option').remove();
-			// 		$.each(mbbs, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	} else if (course == 'B.Tech') {
-			// 		$select.find('option').remove();
-			// 		$.each(btech, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	} else if (course == 'MD/MS') {
-			// 		$select.find('option').remove();
-			// 		$.each(mdms, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	} else if (course == 'MBA/PGDM') {
-			// 		$select.find('option').remove();
-			// 		$.each(mbapgdm, function(key, value) {
-			// 			var sel = (value == selectedExam) ? 'selected' : '';
-			// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 		});
-			// 		$select.selectpicker("refresh")
-			// 	} else {
-			// 		$select.find('option').remove();
-			// 		$select.append('<option value="OTHER">OTHER</option>');
-			// 		$select.selectpicker("refresh")
-			// 	}
-			// }
 		}
-
 		// function study_country(){
 		// 	var course = $("#course").val();
 		// 	var study_country = $("#study_country").val();
