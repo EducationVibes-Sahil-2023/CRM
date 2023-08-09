@@ -963,7 +963,7 @@
                         return false;
 
                     }
-                    if (params.course != "") {
+                    if (params.course != "") 
                         {
                             selectedCourseText = $("#course option:selected").text();
                             if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
@@ -974,10 +974,6 @@
                             }
                         }
 
-                        // if()
-                        // if (course.toLowerCase() === 'other') {
-                        // console.log(params);
-                        // console.log(params.universities);
                         $.ajax({
                             url: "<?php echo base_url() . 'admin/clients/update_admission_preferences' ?>",
                             type: "POST",
