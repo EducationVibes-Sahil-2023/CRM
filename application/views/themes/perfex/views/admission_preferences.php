@@ -602,7 +602,7 @@
 		$('#study_country').on('change select2:opening', async function() {
 			let value = $(this).val();
 			if (value.length > 0) {
-				if (value.length <= 3) {
+				if (value.length <= 2) {
 					selectedUniversityArr = [];
 					$('#countries').val(value.join(','));
 					var str = '';
@@ -642,7 +642,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${count2}`,
 								duplicate: false,
-								max: 3,
+								max: 5,
 								suggestions: university_list
 							});
 
@@ -670,7 +670,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${k}`,
 								duplicate: false,
-								max: 3,
+								max: 5,
 								suggestions: university_list
 							});
 
@@ -679,7 +679,7 @@
 					}
 				}
 
-				if (value.length >= 3) {
+				if (value.length >= 2) {
 					$(`#study_country option`).prop('disabled', true);
 					for (let k = 0; k < value.length; k++) {
 						var v = value[k];
@@ -984,7 +984,7 @@
 						var tagInput1 = new TagsInput({
 							selector: `university${set_count}`,
 							duplicate: false,
-							max: 3,
+							max: 5,
 							suggestions: university_list
 						});
 

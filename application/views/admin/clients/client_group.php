@@ -189,14 +189,14 @@
 
         var course = $("#course").val();
         var selectedCourseText = $("#course option:selected").text();
-        $("#course_name_field input").val('');
+        $("#course_name").val('');
         if (course != "") {
             $(".course_name_field").show();
             if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
                 $(".course_name_field").show();
                 $(".course_name_field").find("label").text("Course Name with Specialization");
             } else {
-                $(".course_name_field").hide();
+                $(".course_name_field").show();
                 $(".course_name_field").find("label").text("Course Name");
 
             }

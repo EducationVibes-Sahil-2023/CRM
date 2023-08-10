@@ -463,7 +463,7 @@
     $('#study_country').on('change select2:opening', async function() {
         let value = $(this).val();
         if (value.length > 0) {
-            if (value.length <= 3) {
+            if (value.length <= 2) {
                 selectedUniversityArr = [];
                 $('#countries').val(value.join(','));
                 var str = '';
@@ -504,7 +504,7 @@
                         var tagInput1 = new TagsInput({
                             selector: `university${count2}`,
                             duplicate: false,
-                            max: 3,
+                            max: 5,
                             suggestions: university_list
                         });
 
@@ -532,7 +532,7 @@
                         var tagInput1 = new TagsInput({
                             selector: `university${k}`,
                             duplicate: false,
-                            max: 3,
+                            max: 5,
                             suggestions: university_list
                         });
 
@@ -849,7 +849,7 @@
                     var tagInput1 = new TagsInput({
                         selector: `university${set_count}`,
                         duplicate: false,
-                        max: 3,
+                        max: 5,
                         suggestions: university_list
                     });
 
@@ -947,16 +947,21 @@
                 return false;
 
             }
-            if (params.course != "") {
-                selectedCourseText = $("#course option:selected").text();
-                if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
-                    if (params.course_name == "") {
-                        alert_float('danger', "Course exam is requried.");
-                        return false;
-                    }
-                } else {
-                    params.course_name = '';
-                }
+            // if (params.course != "") {
+            //     selectedCourseText = $("#course option:selected").text();
+            //     if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+            //         if (params.course_name == "") {
+            //             alert_float('danger', "Course exam is requried.");
+            //             return false;
+            //         }
+            //     } else {
+            //         params.course_name = '';
+            //     }
+            // }
+
+            if (params.course_name == "") {
+                alert_float('danger', "Course Name/Specialization is requried.");
+                return false;
             }
 
             $.ajax({
@@ -1144,8 +1149,6 @@
         $("#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
         // $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
 
-        $('#entrance_exam_details').change();
-
         $("input[type='tel']").keyup(function() {
             var inputValue = $(this).val();
 
@@ -1159,6 +1162,29 @@
 
             $(this).val(inputValue);
         });
+
+
+        $('#entrance_exam_details').on('change select2:opening', async function() {
+            let value = $(this).val();
+            value = value.filter(function(element) {
+                return element !== "" && element !== " " && element !== null && element !== undefined;
+            });
+            if (value.length >= 2) {
+                $(`#entrance_exam_details option`).prop('disabled', true);
+                for (let k = 0; k < value.length; k++) {
+                    var v = value[k];
+                    $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+                }
+            } else {
+                $(this).find('option').prop('disabled', false);
+            }
+            $(this).selectpicker("refresh")
+
+        });
+
+
+        $('#entrance_exam_details').change();
+
 
     })
 
