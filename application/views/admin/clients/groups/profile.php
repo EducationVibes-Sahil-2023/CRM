@@ -250,7 +250,7 @@
 						<input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
 						<div class="col-md-6">
 							<?php $value = (isset($client) ? $client->phonenumber : ''); ?>
-							<?php echo render_input('phonenumber', 'client_phonenumber', $value), "tel"; ?>
+							<?php echo render_input('phonenumber', 'client_phonenumber', $value, "tel"); ?>
 						</div>
 
 						<div class="col-md-6">
