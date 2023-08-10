@@ -441,7 +441,9 @@ class Clients extends ClientsController
         $data['declarationdetails'] = $this->clients_model->getDeclarationDetails(get_client_user_id());
 
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
-
+        $data['program_data'] = $this->clients_model->getProgram();
+        $data['course_data'] = $this->clients_model->getCourse();
+        $data['entrance_data'] = $this->clients_model->getEntrance();
         $this->data($data);
         $this->view('preview');
         $this->layout();

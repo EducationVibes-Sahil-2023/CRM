@@ -295,56 +295,57 @@
 								<input type="hidden" name="basicDetailsId" value="<?= $admissionpreferences->id ?>">
 								<select class="form-control" name="program" id="program" required readonly>
 									<option value="">Select a Program</option>
-									<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate') ? 'selected' : ''; ?>>Under Graduate</option>
-									<option vaue="Post Graduate" <?php echo ($admissionpreferences->program == 'Post Graduate') ? 'selected' : ''; ?>>Post Graduate</option>
+									<?php foreach ($program_data as $p) {
+										$selected = "";
+										if ($admissionpreferences->program == $p["id"]) {
+											$selected = "selected";
+										}
+									?>
+										<option value="<?= $p["id"] ?>" <?= $selected ?>><?= $p["name"] ?></option>
+									<?php
+									}
+									?>
 								</select>
 								<?php echo form_error('program'); ?>
 							</div>
 						</div>
+
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="course">Course</label>
 								<select class="form-control" name="course" id="course" readonly>
 									<option value="">Select a course </option>
-									<?php if ($admissionpreferences->course != '') : ?>
-										<option value="<?= $admissionpreferences->course; ?>" selected><?= $admissionpreferences->course; ?></option>
-									<?php endif; ?>
 
 								</select>
 								<?php echo form_error('course'); ?>
 							</div>
 						</div>
+						<div class="col-lg-4 course_name_field" style="display:<?= !empty($admissionpreferences->course_name) ? 'block' : 'none' ?>">
+							<div class="form-group">
+								<label for="course_name">Course Name</label>
+								<input type="text" class="form-control" name="course_name" required id="course_name" value="<?= !empty($admissionpreferences->course_name) ? $admissionpreferences->course_name : '' ?>">
+							</div>
+						</div>
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="session_intake">Session Intake</label>
-								<select class="form-control" name="session_intake" id="session_intake" <?php echo $freezed ?>>
-									<option value="">Select</option>
-									<?php
-									$intakeArr = array(
-										"May_2023" => "May 2023",
-										"July_2023" => "July 2023",
-										"September_2023" => "September 2023",
-										"November_2023" => "November 2023",
-									);
-
-									foreach ($intakeArr as $key => $val) {
-									?>
-										<option value="<?php echo $key ?>" <?php echo ($admissionpreferences->session_intake == $key) ? 'selected' : ''; ?>><?php echo $val ?></option>
-									<?php
-									}
-									?>
-								</select>
+								<input type="month" class="form-control" name="session_intake" required value="<?= !empty($admissionpreferences->session_intake) ? $admissionpreferences->session_intake : '' ?>" placeholder="Select Month and Year">
 							</div>
 						</div>
-					</div>
-					<div class="row">
+						<?php
+						$allCountriesArr_temp = explode(",", $admissionpreferences->study_country);
+						$allCountriesArr = [];
+						foreach ($allCountriesArr_temp as $country) {
+							$allCountriesArr[$country] = $country;
+						}
+						?>
+
+
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="study_country">Where would you like to study?</label>
 								<select class="form-control" name="study_country" id="study_country" multiple readonly>
-									<?php
-									$allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
-									?>
+
 									<option value="">Select country </option>
 									<?php
 									if (!empty($admissionpreferences)) {
@@ -361,30 +362,17 @@
 							</div>
 						</div>
 						<div class="col-lg-4">
-							<div class="form-group">
-								<label for="entrance_exam_given">Have You Given any Entrance Exam?</label>
-								<select class="form-control" name="entrance_exam_given" id="entrance_exam_given">
-									<option value="">Select</option>
-									<option value="YES" <?php echo ($admissionpreferences->entrance_exam_given == 'YES') ? 'selected' : ''; ?>>YES</option>
-									<option value="NO" <?php echo ($admissionpreferences->entrance_exam_given == 'NO') ? 'selected' : ''; ?>>NO</option>
-								</select>
-							</div>
-						</div>
-						<div class="col-lg-4">
 							<div class="form-group" id="entrance_exam_details_div">
 								<label for="exampleInputCourse">Entrance exam details</label>
 								<select class="form-control" name="entrance_exam_details" id="entrance_exam_details" readonly>
 									<option value="">Select</option>
-									<?php if ($admissionpreferences->entrance_exam_details != '') : ?>
-										<option value="<?= $admissionpreferences->entrance_exam_details; ?>" selected><?= $admissionpreferences->entrance_exam_details; ?></option>
-									<?php else : ?>
-										<option value="NEET UG">NEET UG</option>
-									<?php endif; ?>
+
 
 								</select>
 							</div>
 						</div>
 					</div>
+
 
 					<div class="row">
 						<div class="universities">
@@ -947,8 +935,32 @@
 	<!-- end Declaration details section -->
 
 	<script>
+		var getProgram = <?= !empty($program_data) ? (json_encode($program_data, true)) : "[]"; ?>;
+		var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
+		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
+
+		$(document).ready(function() {
+			prog();
+			setTimeout(() => {
+				course();
+
+			}, 200);
+			setTimeout(() => {
+				// entrance_exam_given();
+				$('#entrance_exam_details').change();
+
+			}, 400);
+
+			$("#program").on('change', function() {
+				prog();
+			});
+			$("#course").on('change', function() {
+				course();
+			});
+		});
+
 		$("input,select").attr("disabled", true);
-		const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
+		const countriesArr = <?php echo !empty($admissionpreferences->study_country) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
 		const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}' ?>;
 		$('#study_country').on('change select2:opening', function() {
 			let value = $(this).val()
@@ -1029,6 +1041,136 @@
 			}
 
 		})
+
+
+		function get_course(program_id) {
+			return new Promise((resolve, reject) => {
+				let course_array = [];
+				course_array.push({
+					id: '',
+					name: 'Select Course'
+				})
+				for (let j = 0; j < getCourse.length; j++) {
+					if (program_id === getCourse[j].program_id) {
+						course_array.push({
+							id: getCourse[j].id,
+							name: getCourse[j].name
+						});
+					}
+				}
+
+				resolve(course_array);
+			});
+		}
+
+		function get_entrance() {
+			return new Promise((resolve, reject) => {
+				let entrance_array = [];
+				entrance_array.push({
+					id: '',
+					name: 'Select Entrance'
+				})
+				let lead_type = $("#lead_type").val();
+				for (let j = 0; j < getEntrance.length; j++) {
+					// if (lead_type === getEntrance[j].segment_id) {
+					entrance_array.push({
+						id: getEntrance[j].id,
+						name: getEntrance[j].name
+					});
+					// }
+				}
+
+				resolve(entrance_array);
+			});
+		}
+
+
+		async function prog() {
+			var program = $("#program").val();
+			var getProgram_array = [];
+			for (let i = 0; i < getProgram.length; i++) {
+				getProgram_array[getProgram[i].id] = await get_course(getProgram[i].id);
+			}
+
+			var $select = $('#course');
+			$select.val('').selectpicker("refresh")
+			var selectedCourse = "<?php echo $admissionpreferences->course ?>";
+			console.log(selectedCourse);
+			console.log(getProgram_array);
+			$select.find('option').remove();
+			if (getProgram_array[program] != undefined) {
+				$.each(getProgram_array[program], function(key, value) {
+					var sel = "";
+
+					if (selectedCourse != '') {
+						sel = (value.id == selectedCourse) ? 'selected' : '';
+					}
+					$select.append('<option value="' + value.id + '"' + sel + ' >' + value.name + '</option>');
+				});
+			}
+			$select.selectpicker("refresh")
+			$("#course_name_field input").val('');
+			$(".course_name_field").hide();
+		}
+
+
+
+		async function course() {
+
+			var course = $("#course").val();
+			var selectedCourseText = $("#course option:selected").text();
+			if (course != "") {
+				$(".course_name_field").show();
+				if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Course Name with Specialization");
+				} else {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Specialization Name");
+
+				}
+			} else {
+				$(".course_name_field").hide();
+			}
+
+			var getEntrance_array = [];
+			for (let i = 0; i < getCourse.length; i++) {
+				getEntrance_array = await get_entrance();
+			}
+
+			console.log(getEntrance_array);
+			var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
+			console.log(selectedExam);
+			selectedExam_array = selectedExam.split(",");
+			var $select = $("#entrance_exam_details");
+			$select.find('option').remove();
+			$.each(getEntrance_array, function(key, value) {
+				var sel = '';
+				if (selectedExam_array.length > 0) {
+					if (selectedExam_array.includes(value.id.toString()) && parseInt(value.id) > 0) {
+						sel = "selected";
+					}
+				}
+				$select.append('<option value="' + value.id + '" ' + sel + '>' + value.name + '</option>');
+			});
+			$select.selectpicker("refresh");
+
+			let value = $("#entrance_exam_details").val();
+			value = value.filter(function(element) {
+				return element !== "" && element !== " " && element !== null && element !== undefined;
+			});
+			if (value.length >= 2) {
+				$(`#entrance_exam_details option`).prop('disabled', true);
+				for (let k = 0; k < value.length; k++) {
+					var v = value[k];
+					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+				}
+			} else {
+				$(this).find('option').prop('disabled', false);
+			}
+			$(this).selectpicker("refresh")
+
+		}
 
 		// TAG INPUTS
 
