@@ -2278,6 +2278,7 @@ class Clients extends AdminController
 
                 if (empty($academicDetailsId)) {
                     $update_academic_data["created_at"] = date('Y-m-d H:i:s');
+                    $update_academic_data["userid"] = $client_id;
                     $rows_affected = $this->db->insert(db_prefix() . 'academic_details', $update_academic_data);
                 } else {
                     $update_academic_data["updated_at"] = date('Y-m-d H:i:s');
