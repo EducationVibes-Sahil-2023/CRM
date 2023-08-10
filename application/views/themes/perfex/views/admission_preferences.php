@@ -438,20 +438,20 @@
 
 			}, 400);
 
-		});
-		$("#program").on('change', function() {
-			prog();
-		});
-		$("#course").on('change', function() {
-			course();
-		});
-		// $("#study_country").on('change', function(){
-		// 	study_country();
-		// });
-		$("#entrance_exam_given").on('change', function() {
-			// entrance_exam_given();
+			$("#program").on('change', function() {
+				prog();
+			});
+			$("#course").on('change', function() {
+				course();
+			});
+			$('#entrance_exam_details').change();
 		});
 
+
+
+		var getProgram = <?= !empty($program_data) ? (json_encode($program_data, true)) : "[]"; ?>;
+		var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
+		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
 
 		function get_course(program_id) {
 			return new Promise((resolve, reject) => {
@@ -495,7 +495,6 @@
 		}
 
 
-
 		async function prog() {
 			// console.log("start");
 			var program = $("#program").val();
@@ -506,6 +505,7 @@
 			}
 
 			var $select = $('#course');
+			$select.val('').selectpicker("refresh")
 			var selectedCourse = "<?php echo $admissionpreferences->course ?>";
 			// console.log(selectedCourse);
 			$select.find('option').remove();
@@ -520,101 +520,53 @@
 				});
 			}
 			$select.selectpicker("refresh")
-
-			// if (program == 'Under Graduate') {
-			// 	$select.find('option').remove();
-			// 	$.each(ug, function(key, value) {
-			// 		var sel = (value == selectedCourse) ? 'selected' : '';
-			// 		$select.append('<option value="' + value + '"' + sel + ' >' + value + '</option>');
-			// 	});
-			// 	$select.selectpicker("refresh")
-			// } else if (program == 'Post Graduate') {
-			// 	$select.find('option').remove();
-			// 	$.each(pg, function(key, value) {
-			// 		var sel = (value == selectedCourse) ? 'selected' : '';
-			// 		$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-			// 	});
-			// 	$select.selectpicker("refresh")
-			// } else {
-			// 	$select.find('option').remove();
-			// 	$select.append('<option>Select a Course</option>');
-			// 	$select.selectpicker("refresh")
-			// }
+			$("#course_name_field input").val('');
+			$(".course_name_field").hide();
 		}
 
+		$('#entrance_exam_details').on('change select2:opening', async function() {
+			let value = $(this).val();
+			value = value.filter(function(element) {
+				return element !== "" && element !== " " && element !== null && element !== undefined;
+			});
+			if (value.length >= 2) {
+				$(`#entrance_exam_details option`).prop('disabled', true);
+				for (let k = 0; k < value.length; k++) {
+					var v = value[k];
+					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+				}
+			} else {
+				$(this).find('option').prop('disabled', false);
+			}
+			$(this).selectpicker("refresh")
 
-		// function get_course(program_id) {
-		// 	let course_array = [];
-
-		// 	for (let j = 0; j < course_data.length; j++) {
-		// 		if (program_id === course_data[j].program_id) {
-		// 			course_array.push({
-		// 				id: course_data[j].id,
-		// 				name: course_data[j].name
-		// 			});
-		// 		}
-		// 	}
-
-		// 	return course_array;
-		// }
-
-		// async function prog() {
-		// 	var program = $("#program").val();
-		// 	var getProgram = [];
-		// 	for (let i = 0; i < program_data.length; i++) {
-		// 		getProgram[i] = await get_course(program_data[i].id);
-		// 	}
-
-
-		// 	var ug = {
-		// 		"0": "Select",
-		// 		"1": "MBBS",
-		// 		"2": "B.Tech",
-		// 		"3": "OTHER"
-		// 	};
-		// 	var pg = {
-		// 		"1": "MD/MS",
-		// 		"2": "MBA/PGDM",
-		// 		"3": "OTHER"
-		// 	};
-		// 	var $select = $('#course');
-		// 	var selectedCourse = "<?php echo $admissionpreferences->course ?>";
-		// 	console.log(selectedCourse);
-		// 	if (program == 'Under Graduate') {
-		// 		$select.find('option').remove();
-		// 		$.each(ug, function(key, value) {
-		// 			var sel = (value == selectedCourse) ? 'selected' : '';
-		// 			$select.append('<option value="' + value + '"' + sel + ' >' + value + '</option>');
-		// 		});
-		// 		$select.selectpicker("refresh")
-		// 	} else if (program == 'Post Graduate') {
-		// 		$select.find('option').remove();
-		// 		$.each(pg, function(key, value) {
-		// 			var sel = (value == selectedCourse) ? 'selected' : '';
-		// 			$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-		// 		});
-		// 		$select.selectpicker("refresh")
-		// 	} else {
-		// 		$select.find('option').remove();
-		// 		$select.append('<option>Select a Course</option>');
-		// 		$select.selectpicker("refresh")
-		// 	}
-		// }
+		});
 
 		async function course() {
 
 			var course = $("#course").val();
 			var selectedCourseText = $("#course option:selected").text();
-
 			$("#course_name_field input").val('');
-			if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+			if (course != "") {
 				$(".course_name_field").show();
-				$(".course_name_field").find("input").attr("required", true)
+				if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Course Name with Specialization");
+				} else {
+					$(".course_name_field").hide();
+					$(".course_name_field").find("label").text("Course Name");
+
+				}
 			} else {
 				$(".course_name_field").hide();
-				$(".course_name_field").find("input").attr("required", false)
-				$(".course_name_field").find("input").removeAttr("required")
 			}
+
+			// $("#course_name_field input").val('');
+			// if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+			//     $(".course_name_field").show();
+			// } else {
+			//     $(".course_name_field").hide();
+			// }
 
 			var getEntrance_array = [];
 			for (let i = 0; i < getCourse.length; i++) {
@@ -638,97 +590,6 @@
 			$select.selectpicker("refresh");
 
 		}
-		// function study_country(){
-		// 	var course = $("#course").val();
-		// 	var study_country = $("#study_country").val();
-
-		// 	var mbbs = {"0":"Select","1":"NEET UG","2":"OTHER"};
-		// 	var btech = {"1":"JEE","2":"VITEEE","3":"UPSEE","4":"SRMJEE","5":"BITSAT","6":"MET","7":"MAT CET","8":"IPUCET","9":"COMEDK"};
-		// 	var mdms = {"1":"NEET PG","2":"OTHER"};
-		// 	var mbapgdm = {"1":"CAT","2":"MAT","3":"XAT","4":"CMAT","5":"SNAP"};
-		// 	var abroad = {"1":"IELTS","2":"TOEFL","3":"PTE","4":"SAT","5":"GMAT","6":"GRE","7":"OTHER"};
-		// 	var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
-		// 	var $select = $('#entrance_exam_details'); 
-		// 	// console.log($select);
-
-		// 	if(study_country == 'ABROAD'){
-		// 		if(course == 'MBBS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mbbs,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}else if(course == 'MD/MS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mdms,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}else{
-		// 			$select.find('option').remove();  
-		// 			$.each(abroad,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 	}else{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-		// 		if(course == 'MBBS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mbbs,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else if(course == 'B.Tech'){
-		// 			$select.find('option').remove();  
-		// 			$.each(btech,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else if(course == 'MD/MS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mdms,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else if(course == 'MBA/PGDM'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mbapgdm,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else{
-		// 			$select.find('option').remove();  
-		// 			$select.append('<option value="OTHER">OTHER</option>');
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 	}
-		// }
-		// function entrance_exam_given() {
-		// 	var eeg = $("#entrance_exam_given").val();
-		// 	if (eeg == 'YES') {
-		// 		$("#entrance_exam_details_div").show();
-		// 	} else {
-		// 		$("#entrance_exam_details_div").hide();
-		// 	}
-		// }
 
 		// UNIVERSITY AND COUNTRY JS
 

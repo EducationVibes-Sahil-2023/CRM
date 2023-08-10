@@ -96,9 +96,6 @@
     var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
     var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
 
-
-
-
     function get_course(program_id) {
         return new Promise((resolve, reject) => {
             let course_array = [];
@@ -166,19 +163,53 @@
             });
         }
         $select.selectpicker("refresh")
+        $("#course_name_field input").val('');
+        $(".course_name_field").hide();
     }
+
+    $('#entrance_exam_details').on('change select2:opening', async function() {
+        let value = $(this).val();
+        value = value.filter(function(element) {
+            return element !== "" && element !== " " && element !== null && element !== undefined;
+        });
+        if (value.length >= 2) {
+            $(`#entrance_exam_details option`).prop('disabled', true);
+            for (let k = 0; k < value.length; k++) {
+                var v = value[k];
+                $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+            }
+        } else {
+            $(this).find('option').prop('disabled', false);
+        }
+        $(this).selectpicker("refresh")
+
+    });
 
     async function course() {
 
         var course = $("#course").val();
         var selectedCourseText = $("#course option:selected").text();
-
         $("#course_name_field input").val('');
-        if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+        if (course != "") {
             $(".course_name_field").show();
+            if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+                $(".course_name_field").show();
+                $(".course_name_field").find("label").text("Course Name with Specialization");
+            } else {
+                $(".course_name_field").hide();
+                $(".course_name_field").find("label").text("Course Name");
+
+            }
         } else {
             $(".course_name_field").hide();
         }
+
+        // $("#course_name_field input").val('');
+        // if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+        //     $(".course_name_field").show();
+        // } else {
+        //     $(".course_name_field").hide();
+        // }
 
         var getEntrance_array = [];
         for (let i = 0; i < getCourse.length; i++) {
@@ -201,29 +232,5 @@
         });
         $select.selectpicker("refresh");
 
-
-        // var study_country = $("#study_country").val();
-        // var getEntrance_array = [];
-        // for (let i = 0; i < getCourse.length; i++) {
-        //     getEntrance_array[getCourse[i].id] = await get_entrance(getCourse[i].id);
-        // }
-
-        // var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
-        // selectedExam_array = selectedExam.split(",");
-        // $select.find('option').remove();
-        // console.log(selectedExam);
-        // if (getEntrance[course] !== undefined) {
-        //     $.each(getEntrance_array[course], function(key, value) {
-        //         var sel = '';
-        //         if (selectedExam_array.length > 0) {
-        //             if (selectedExam_array.includes(value.id.toString()) && parseInt(value.id) > 0) {
-        //                 sel = "selected";
-        //             }
-        //         }
-        //         $select.append('<option value="' + value.id + '" ' + sel + '>' + value.name + '</option>');
-        //     });
-        // }
-
-        // $select.selectpicker("refresh");
     }
 </script>
