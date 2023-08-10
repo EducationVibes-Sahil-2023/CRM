@@ -198,12 +198,12 @@
         for (let i = 0; i < getCourse.length; i++) {
             getEntrance_array = await get_entrance();
         }
-
-        console.log(getEntrance_array);
         var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
         selectedExam_array = selectedExam.split(",");
         var $select = $("#entrance_exam_details");
         $select.find('option').remove();
+
+
         $.each(getEntrance_array, function(key, value) {
             var sel = '';
             if (selectedExam_array.length > 0) {
@@ -213,7 +213,23 @@
             }
             $select.append('<option value="' + value.id + '" ' + sel + '>' + value.name + '</option>');
         });
+
         $select.selectpicker("refresh");
+
+        let value = $("#entrance_exam_details").val();
+        value = value.filter(function(element) {
+            return element !== "" && element !== " " && element !== null && element !== undefined;
+        });
+        if (value.length >= 2) {
+            $(`#entrance_exam_details option`).prop('disabled', true);
+            for (let k = 0; k < value.length; k++) {
+                var v = value[k];
+                $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+            }
+        } else {
+            $(this).find('option').prop('disabled', false);
+        }
+        $(this).selectpicker("refresh")
 
     }
 </script>
