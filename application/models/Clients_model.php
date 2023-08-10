@@ -1866,4 +1866,11 @@ class Clients_model extends App_Model
         $this->db->where("status", 1);
         return $getEntrance = $this->db->get()->result_array();
     }
+    function get_document_upload()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'document_upload_type');
+        $this->db->where("status", 1);
+        return $document = $this->db->get()->result_array();
+    }
 }

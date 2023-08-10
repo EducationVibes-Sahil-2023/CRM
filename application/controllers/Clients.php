@@ -383,6 +383,7 @@ class Clients extends ClientsController
         // print_r($data);die;
         $data['title']         = "Upload Document";
         $data['announcements'] = $this->announcements_model->get();
+        $data['document_type'] =  $this->clients_model->get_document_upload();
         $this->data($data);
         $this->view('upload_documents');
         $this->layout();
@@ -436,10 +437,8 @@ class Clients extends ClientsController
         // print_r($data);die;
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['parentdetails'] = $this->clients_model->getParentDetails(get_client_user_id());
-
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['declarationdetails'] = $this->clients_model->getDeclarationDetails(get_client_user_id());
-
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
         $data['program_data'] = $this->clients_model->getProgram();
         $data['course_data'] = $this->clients_model->getCourse();
