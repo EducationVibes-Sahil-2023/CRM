@@ -577,7 +577,9 @@
 		// 		$('#diplomaAcademicDetails').css("display", "block");
 		// 	}
 		// });
-
+		$(document).ready(function() {
+			$('#entrance_exam_details').change();
+		})
 		$('input[type=radio][name=after_tenth]').change(function() {
 			let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
 			console.log(selected_value);
@@ -691,6 +693,4 @@
 			$(this).selectpicker("refresh")
 
 		});
-
-		$('#entrance_exam_details').change();
 	</script>
