@@ -789,7 +789,7 @@ if (empty($customer_admins)) { ?>
                                     ?>
 
                                 <?php } else { ?>
-                                    <div class="col-md-12 university_div university_div_">
+                                    <div class="col-md-12 university_div university_div_  bg-warning">
                                         <div class="col-md-2">
                                         </div>
                                         <div class="col-md-4">

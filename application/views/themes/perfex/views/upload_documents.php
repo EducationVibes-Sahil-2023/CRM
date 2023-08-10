@@ -109,11 +109,11 @@
 
 
         <div class="card">
-          <?php echo form_open_multipart('clients/upload_docs', array('autocomplete' => 'off')); ?>
+          <?php echo form_open_multipart('clients/upload_docs_new', array('autocomplete' => 'off')); ?>
           <table class="table">
             <tbody class="document_upload_div">
               <tr class="row">
-                <td class="col-6">
+                <td class="col-4">
                   <select class="selectpicker form-control" name="document_type[]" required>
                     <option value="">Select Document</option>
                     <?php
@@ -127,8 +127,11 @@
                     ?>
                   </select>
                 </td>
-                <td class="col-6">
+                <td class="col-4">
                   <input class="form-control" name="media_file[]" type="file" required>
+                </td>
+                <td class="col-4">
+                  <button onclick="remove_document(this)"><i class="fa fa-trash text-danger"></i></button>
                 </td>
               </tr>
             </tbody>
@@ -160,8 +163,6 @@
 
   <script>
     var document_type = <?= !empty($document_type) ? json_encode($document_type, true) : [] ?>;
-    console.log(document_type);
-
 
     function validate_documents() {
       return new Promise((resolve, reject) => {
@@ -193,38 +194,60 @@
       });
     }
 
-    // Example usage:
-    add_documents();
 
     async function add_documents() {
       try {
         let status = await validate_documents();
         console.log("All document validations passed.");
-        let html = `<tr class="row">
-            <td class="col-6">
-            <select class="selectpicker form-control" name="document_type[]" required>
-            <option value="">Select Document</option>`;
 
-        if (!empty(document_type)) {
+        // Assuming 'document_type' is an array of objects with 'id' and 'name'
+        let selected_dropdown = $(".selectpicker").map(function() {
+          return $(this).val();
+        }).get();
+
+        let html = `<tr class="row">
+      <td class="col-4">
+        <select class="selectpicker form-control" name="document_type[]" required>
+          <option value="">Select Document</option>`;
+
+        if (document_type && document_type.length > 0) {
           document_type.forEach(type => {
-            html += `<option value="${type.id}">${type.name}</option>`;
+            let disabled = "";
+            if (selected_dropdown.includes(type.id)) {
+              disabled = "disabled";
+            }
+            html += `<option ${disabled} value="${type.id}">${type.name}</option>`;
           });
         }
 
         html += `</select>
-            </td>
-            <td class="col-6">
-            <input class="form-control" name="media_file[]" type="file" required>
-            </td>
-            </tr>`;
-
+      </td>
+      <td class="col-4">
+        <input class="form-control" name="media_file[]" type="file" required>
+      </td>
+      <td class="col-4">
+                  <button onclick="remove_document(this)" ><i class="fa fa-trash text-danger"></i></button>
+                </td>
+    </tr>`;
 
         $("tbody").append(html);
-        $(".selectpicker").selectpicker();
+        $(".selectpicker").selectpicker('refresh'); // Refresh the Bootstrap Selectpicker
+
         // Continue with further processing if needed
       } catch (error) {
         console.error("Error during document validation:", error);
         // Handle the error
       }
     }
+
+    function remove_document(obj) {
+      $(obj).parents("tr").remove();
+    }
+    $("form").submit(function() {
+      $(".selectpicker").each(function() {
+        let title = $(this).find("option:selected").text();
+        let input = '<input name="title[]" value="' + title + '" > ';
+        $(this).after(input);
+      });
+    });
   </script>
