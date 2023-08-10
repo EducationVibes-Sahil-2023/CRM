@@ -2225,9 +2225,23 @@ class Clients extends AdminController
                         }
                     }
                 }
-                $update_student_data["updated_at"] = date('Y-m-d H:i:s');
-                $this->db->where('userid', $client_id);
-                $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
+                // Assuming this is part of a function or method in a CodeIgniter controller or model
+                $check_client = $this->db->select('id')
+                    ->where('userid', $client_id)
+                    ->get(db_prefix() . 'basic_details')->row();;
+
+
+                if (!empty($check_client->id)) {
+                    $update_student_data["updated_at"] = date('Y-m-d H:i:s');
+                    $this->db->where('userid', $client_id);
+                    $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
+                } else {
+                    $update_student_data["created_at"] = date('Y-m-d H:i:s');
+                    $update_student_data["userid"] = $client_id;
+                    $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
+                }
+
+
                 if ($rows_affected) {
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     $data['resp_code'] = 'RCS';
