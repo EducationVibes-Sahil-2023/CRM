@@ -1094,15 +1094,15 @@
             } else if (ers == 'Declared') {
                 $(".hide_ input").show();
             } else if (ers == 'Not Appeared') {
-                $("input[name='entrance_roll']").attr("disabled", true);
-                $("input[name='entrance_year']").attr("disabled", true);
-                $("input[name='entrance_percentage']").attr("disabled", true);
+                $("input[name='entrance_roll']").val('').attr("disabled", true);
+                $("input[name='entrance_year']").val('').attr("disabled", true);
+                $("input[name='entrance_percentage']").val('').attr("disabled", true);
             }
         })
 
         $("#entrance_result_status_1").on('change', function() {
             var ers = $("#entrance_result_status_1").val();
-            $("input[name='entrance_roll_1']").val('').attr("disabled", false);
+            $("input[name='entrance_roll_1']").attr("disabled", false);
             $("input[name='entrance_year_1']").attr("disabled", false);
             $("input[name='entrance_percentage_1']").attr("disabled", false);
             if (ers == 'Awaited') {
@@ -1113,8 +1113,8 @@
                 $(".hide_2 input").show();
             } else if (ers == 'Not Appeared') {
                 $("input[name='entrance_roll_1']").val('').attr("disabled", true);
-                $("input[name='entrance_year_1']").attr("disabled", true);
-                $("input[name='entrance_percentage_1']").attr("disabled", true);
+                $("input[name='entrance_year_1']").val('').attr("disabled", true);
+                $("input[name='entrance_percentage_1']").val('').attr("disabled", true);
             }
         })
         $("#graduation_result_status").on('change', function() {
