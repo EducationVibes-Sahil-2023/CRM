@@ -959,7 +959,7 @@
 					var str = ''
 					$.each(value, function(k, v) {
 						var countryName = v.search("_") != -1 ? v.replace("_", " ") : v
-
+						let c = v.replace(" ", "_");
 						str += `<div class="col-lg-4">
 								<div class="form-group">
 									<label for="university${v}">${countryName} University</label>
@@ -968,8 +968,8 @@
 							</div>`
 
 						if (Object.keys(universityArr).length > 0) {
-							if (v in universityArr) {
-								selectedUniversityArr[v] = universityArr[v]
+							if (c in universityArr) {
+								selectedUniversityArr[v] = universityArr[c]
 							} else {
 								var prevUniversityVal = $(`#university${v}`).val()
 								var newPrevUniversityVal = typeof prevUniversityVal != 'undefined' ? prevUniversityVal : ''
@@ -990,7 +990,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${v}`,
 								duplicate: false,
-								max: 3
+								max: 5
 							});
 
 							if (selectedUniversityArr[v] != '') {
@@ -1008,7 +1008,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${v}`,
 								duplicate: false,
-								max: 3
+								max: 5
 							});
 						})
 					}
