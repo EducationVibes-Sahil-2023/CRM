@@ -250,7 +250,7 @@
 						<input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
 						<div class="col-md-6">
 							<?php $value = (isset($client) ? $client->phonenumber : ''); ?>
-							<?php echo render_input('phonenumber', 'client_phonenumber', $value); ?>
+							<?php echo render_input('phonenumber', 'client_phonenumber', $value), "tel"; ?>
 						</div>
 
 						<div class="col-md-6">
@@ -366,7 +366,7 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Mobile Number</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Mobile Number" name="mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
+										<input class="form-control" type="tel" class="form-group" placeholder="Mobile Number" name="mobile" pattern="[0-9]{10}" maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
@@ -391,7 +391,7 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father Name</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
+										<input class="form-control" type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
@@ -415,7 +415,7 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Mother's Mobile</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Mother's Mobile" name="mothers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mothers_mobile : ''; ?>'>
+										<input class="form-control" type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Mother's Mobile" name="mothers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->mothers_mobile : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
@@ -698,6 +698,9 @@
 											<option>Select</option>
 											<option value="Awaited" <?= ($academicdetails->twelth_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
 											<option value="Declared" <?= ($academicdetails->twelth_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+											<!-- <option value="Not Appeared" <?= ($academicdetails->twelth_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
+
+
 										</select>
 									</div>
 								</div>
@@ -773,6 +776,7 @@
 											<option>Select</option>
 											<option value="Awaited" <?= ($academicdetails->diploma_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
 											<option value="Declared" <?= ($academicdetails->diploma_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+											<!-- <option value="Not Appeared" <?= ($academicdetails->diploma_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
 										</select>
 									</div>
 								</div>
@@ -846,6 +850,7 @@
 											<option>Select</option>
 											<option value="Awaited" <?= ($academicdetails->graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
 											<option value="Declared" <?= ($academicdetails->graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+											<!-- <option value="Not Appeared" <?= ($academicdetails->graduation_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
 										</select>
 									</div>
 								</div>
@@ -881,7 +886,7 @@
 							$entrance_names = array_values(array_filter(explode(",", $admissionpreferences->entrance_exam_details), 'strlen'));
 							$entrance_data = array_column($entrance_data, null, 'id');
 							?>
-							<div class="row accadmic-education-div <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
+							<div id="entrance_exam_div" class="row accadmic-education-div <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
 								<h4>Entrance Exam</h4>
 								<div class="col-lg-1 border2 border1">
 									<div class="c1">
@@ -930,6 +935,8 @@
 											<option>Select</option>
 											<option value="Awaited" <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
 											<option value="Declared" <?= ($academicdetails->entrance_result_status == 'Declared') ? 'selected' : '' ?>>Declared</option>
+											<option value="Not Appeared" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
+
 										</select>
 									</div>
 									<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
@@ -937,6 +944,8 @@
 											<option>Select</option>
 											<option value="Awaited" <?= ($academicdetails->entrance_result_status_1 == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
 											<option value="Declared" <?= ($academicdetails->entrance_result_status_1 == 'Declared') ? 'selected' : '' ?>>Declared</option>
+											<option value="Not Appeared" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
+
 										</select>
 									</div>
 								</div>
