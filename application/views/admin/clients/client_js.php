@@ -1146,7 +1146,7 @@
 
         $('#entrance_exam_details').change();
 
-        $("input[name='tel']").keyup(function() {
+        $("input[type='tel']").keyup(function() {
             var inputValue = $(this).val();
 
             // Remove any non-digit characters
