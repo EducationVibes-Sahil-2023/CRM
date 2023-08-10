@@ -1164,30 +1164,32 @@
         });
 
 
-        $('#entrance_exam_details').on('change select2:opening', async function() {
-            let value = $(this).val();
-            value = value.filter(function(element) {
-                return element !== "" && element !== " " && element !== null && element !== undefined;
-            });
-            if (value.length >= 2) {
-                $(`#entrance_exam_details option`).prop('disabled', true);
-                for (let k = 0; k < value.length; k++) {
-                    var v = value[k];
-                    $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
-                }
-            } else {
-                $(this).find('option').prop('disabled', false);
-            }
-            $(this).selectpicker("refresh")
-
-        });
 
 
-        $('#entrance_exam_details').change();
+
+
 
 
     })
 
+
+    $('#entrance_exam_details').on('change select2:opening', async function() {
+        let value = $(this).val();
+        value = value.filter(function(element) {
+            return element !== "" && element !== " " && element !== null && element !== undefined;
+        });
+        if (value.length >= 2) {
+            $(`#entrance_exam_details option`).prop('disabled', true);
+            for (let k = 0; k < value.length; k++) {
+                var v = value[k];
+                $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+            }
+        } else {
+            $(this).find('option').prop('disabled', false);
+        }
+        $(this).selectpicker("refresh")
+
+    });
 
     $('#save_profile_data').on('click', function(e) {
         e.preventDefault()

@@ -56,7 +56,7 @@
         }, 200);
         setTimeout(() => {
             // entrance_exam_given();
-
+            $('#entrance_exam_details').change();
         }, 400);
         // study_country();
         // entrance_exam_given();
@@ -167,29 +167,12 @@
         $(".course_name_field").hide();
     }
 
-    $('#entrance_exam_details').on('change select2:opening', async function() {
-        let value = $(this).val();
-        value = value.filter(function(element) {
-            return element !== "" && element !== " " && element !== null && element !== undefined;
-        });
-        if (value.length >= 2) {
-            $(`#entrance_exam_details option`).prop('disabled', true);
-            for (let k = 0; k < value.length; k++) {
-                var v = value[k];
-                $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
-            }
-        } else {
-            $(this).find('option').prop('disabled', false);
-        }
-        $(this).selectpicker("refresh")
 
-    });
 
     async function course() {
 
         var course = $("#course").val();
         var selectedCourseText = $("#course option:selected").text();
-        $("#course_name").val('');
         if (course != "") {
             $(".course_name_field").show();
             if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
@@ -197,7 +180,7 @@
                 $(".course_name_field").find("label").text("Course Name with Specialization");
             } else {
                 $(".course_name_field").show();
-                $(".course_name_field").find("label").text("Course Name");
+                $(".course_name_field").find("label").text("Specialization Name");
 
             }
         } else {

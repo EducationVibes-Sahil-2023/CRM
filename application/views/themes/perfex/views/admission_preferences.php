@@ -208,7 +208,7 @@
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="course">Course</label>
-								<select class="form-control" name="course" id="course" <?php echo $freezed ?>>
+								<select class="form-control" name="course" id="course" required <?php echo $freezed ?>>
 									<option value="">Select a course </option>
 								</select>
 								<?php echo form_error('course'); ?>
@@ -218,14 +218,14 @@
 						<div class="col-lg-4 course_name_field" style="display:<?= !empty($admissionpreferences->course_name) ? 'block' : 'none' ?>">
 							<div class="form-group">
 								<label for="course_name">Course Name</label>
-								<input type="text" class="form-control" name="course_name" id="course_name" value="<?= !empty($admissionpreferences->course_name) ? $admissionpreferences->course_name : '' ?>">
+								<input type="text" class="form-control" name="course_name" required id="course_name" value="<?= !empty($admissionpreferences->course_name) ? $admissionpreferences->course_name : '' ?>">
 							</div>
 						</div>
 
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="session_intake">Session Intake</label>
-								<input type="month" class="form-control" name="session_intake" value="<?= !empty($admissionpreferences->session_intake) ? $admissionpreferences->session_intake : '' ?>" placeholder="Select Month and Year">
+								<input type="month" class="form-control" name="session_intake" required value="<?= !empty($admissionpreferences->session_intake) ? $admissionpreferences->session_intake : '' ?>" placeholder="Select Month and Year">
 
 								<!-- <select class="form-control" name="session_intake" id="session_intake" <?php echo $freezed ?>>
 									<option value="">Select</option> -->
@@ -253,21 +253,8 @@
 								<label for="study_country">Where would you like to study?</label>
 								<input type="hidden" name="countries" id="countries">
 								<select class="form-control" name="study_country" id="study_country" multiple required <?php echo $freezed ?>>
-									<?php
-									$allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
-									?>
 									<option value="">Select country </option>
-									<?php
-									if (!empty($admissionpreferences)) {
-										$countries = $admissionpreferences->study_country;
-										$countriesArr = explode(",", $countries);
-									}
-									foreach ($allCountriesArr as $key => $val) {
-									?>
-										<option value="<?php echo $key; ?>" <?php echo !empty($admissionpreferences) ? ((in_array($val, $countriesArr)) ? 'selected' : '') : ''; ?>><?php echo $val; ?></option>
-									<?php
-									}
-									?>
+
 								</select>
 							</div>
 						</div>
@@ -435,6 +422,7 @@
 			}, 200);
 			setTimeout(() => {
 				// entrance_exam_given();
+				$('#entrance_exam_details').change();
 
 			}, 400);
 
@@ -444,7 +432,6 @@
 			$("#course").on('change', function() {
 				course();
 			});
-			$('#entrance_exam_details').change();
 		});
 
 
@@ -524,37 +511,20 @@
 			$(".course_name_field").hide();
 		}
 
-		$('#entrance_exam_details').on('change select2:opening', async function() {
-			let value = $(this).val();
-			value = value.filter(function(element) {
-				return element !== "" && element !== " " && element !== null && element !== undefined;
-			});
-			if (value.length >= 2) {
-				$(`#entrance_exam_details option`).prop('disabled', true);
-				for (let k = 0; k < value.length; k++) {
-					var v = value[k];
-					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
-				}
-			} else {
-				$(this).find('option').prop('disabled', false);
-			}
-			$(this).selectpicker("refresh")
 
-		});
 
 		async function course() {
 
 			var course = $("#course").val();
 			var selectedCourseText = $("#course option:selected").text();
-			$("#course_name_field input").val('');
 			if (course != "") {
 				$(".course_name_field").show();
 				if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
 					$(".course_name_field").show();
 					$(".course_name_field").find("label").text("Course Name with Specialization");
 				} else {
-					$(".course_name_field").hide();
-					$(".course_name_field").find("label").text("Course Name");
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Specialization Name");
 
 				}
 			} else {
@@ -590,6 +560,25 @@
 			$select.selectpicker("refresh");
 
 		}
+
+		$('#entrance_exam_details').on('change select2:opening', async function() {
+			let value = $(this).val();
+			value = value.filter(function(element) {
+				return element !== "" && element !== " " && element !== null && element !== undefined;
+			});
+			if (value.length >= 2) {
+				$(`#entrance_exam_details option`).prop('disabled', true);
+				for (let k = 0; k < value.length; k++) {
+					var v = value[k];
+					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+				}
+			} else {
+				$(this).find('option').prop('disabled', false);
+			}
+			$(this).selectpicker("refresh")
+
+		});
+
 
 		// UNIVERSITY AND COUNTRY JS
 
