@@ -391,13 +391,13 @@
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father Name</label>
-										<input class="form-control" type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
+										<input class="form-control" type="text" maxlength="10" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father's Mobile</label>
-										<input class="form-control" type="text" class="form-group" placeholder="Father's Mobile" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
+										<input class="form-control" type="tel" pattern="[0-9]{10}" class="form-group" placeholder="Father's Mobile" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">

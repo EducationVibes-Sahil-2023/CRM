@@ -491,10 +491,10 @@
 						<p>Roll No. / Registration No.</p>
 					</div>
 					<div class="c2">
-						<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+						<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
 					</div>
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
-						<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll_1" value="<?= !empty($academicdetails->entrance_roll_1) ? $academicdetails->entrance_roll_1 : ''; ?>">
+						<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll_1" value="<?= !empty($academicdetails->entrance_roll_1) ? $academicdetails->entrance_roll_1 : ''; ?>">
 					</div>
 				</div>
 				<div class="col-lg-3 border2 border1">
@@ -503,12 +503,12 @@
 					</div>
 					<div class="c2">
 						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
-						<input type="month" name="entrance_year" id="entrance_year" class="form-control" value="<?= ($academicdetails->entrance_year) ? $academicdetails->entrance_year : '' ?>" placeholder="Select Month and Year">
+						<input type="month" name="entrance_year" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> id="entrance_year" class="form-control" value="<?= ($academicdetails->entrance_year) ? $academicdetails->entrance_year : '' ?>" placeholder="Select Month and Year">
 					</div>
 
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
 						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
-						<input type="month" name="entrance_year_1" id="entrance_year_1" value="<?= ($academicdetails->entrance_year_1) ? $academicdetails->entrance_year_1 : '' ?>" class="form-control" placeholder="Select Month and Year">
+						<input type="month" name="entrance_year_1" id="entrance_year_1" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> value="<?= ($academicdetails->entrance_year_1) ? $academicdetails->entrance_year_1 : '' ?>" class="form-control" placeholder="Select Month and Year">
 					</div>
 				</div>
 				<div class="col-lg-2 border2 border1">
@@ -520,6 +520,7 @@
 							<option>Select</option>
 							<option value="Awaited" <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
 							<option value="Declared" <?= ($academicdetails->entrance_result_status == 'Declared') ? 'selected' : '' ?>>Declared</option>
+							<option value="Not Appeared" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
 						</select>
 					</div>
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
@@ -527,6 +528,7 @@
 							<option>Select</option>
 							<option value="Awaited" <?= ($academicdetails->entrance_result_status_1 == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
 							<option value="Declared" <?= ($academicdetails->entrance_result_status_1 == 'Declared') ? 'selected' : '' ?>>Declared</option>
+							<option value="Not Appeared" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
 						</select>
 					</div>
 				</div>
@@ -535,10 +537,10 @@
 						<p>Marks / AIR</p>
 					</div>
 					<div class="c2">
-						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 					</div>
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
-						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
+						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
 					</div>
 				</div>
 
@@ -625,26 +627,41 @@
 		})
 
 		$("#entrance_result_status").on('change', function() {
+			$("input[name='entrance_roll']").attr("disabled", false);
+			$("input[name='entrance_year']").attr("disabled", false);
+			$("input[name='entrance_percentage']").attr("disabled", false);
 			var ers = $("#entrance_result_status").val();
 			if (ers == 'Awaited') {
-				$("#entrance_percentage").hide();
+				$(".hide_ input").hide();
 				$("#entrance_percentage").val('');
 
 			} else if (ers == 'Declared') {
-				$("#entrance_percentage").show();
+				$(".hide_ input").show();
+			} else if (ers == 'Not Appeared') {
+				$("input[name='entrance_roll']").val('').attr("disabled", true);
+				$("input[name='entrance_year']").val('').attr("disabled", true);
+				$("input[name='entrance_percentage']").val('').attr("disabled", true);
 			}
 		})
 
 		$("#entrance_result_status_1").on('change', function() {
 			var ers = $("#entrance_result_status_1").val();
+			$("input[name='entrance_roll_1']").attr("disabled", false);
+			$("input[name='entrance_year_1']").attr("disabled", false);
+			$("input[name='entrance_percentage_1']").attr("disabled", false);
 			if (ers == 'Awaited') {
-				$("#entrance_percentage_1").hide();
+				$(".hide_2 input").hide();
 				$("#entrance_percentage_1").val('');
 
 			} else if (ers == 'Declared') {
-				$("#entrance_percentage_1").show();
+				$(".hide_2 input").show();
+			} else if (ers == 'Not Appeared') {
+				$("input[name='entrance_roll_1']").val('').attr("disabled", true);
+				$("input[name='entrance_year_1']").val('').attr("disabled", true);
+				$("input[name='entrance_percentage_1']").val('').attr("disabled", true);
 			}
 		})
+
 		$("#graduation_result_status").on('change', function() {
 			var grs = $("#graduation_result_status").val();
 			if (grs == 'Awaited') {

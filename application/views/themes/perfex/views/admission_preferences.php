@@ -246,8 +246,6 @@
 								<!-- </select> -->
 							</div>
 						</div>
-					</div>
-					<div class="row" id="add_university">
 						<div class="col-lg-4">
 							<div class="form-group" id="study_countries">
 								<label for="study_country">Where would you like to study?</label>
@@ -258,16 +256,6 @@
 								</select>
 							</div>
 						</div>
-						<!-- <div class="col-lg-4">
-							<div class="form-group">
-								<label for="entrance_exam_given">Have You Given any Entrance Exam?</label>
-								<select class="form-control" name="entrance_exam_given" id="entrance_exam_given" <?php echo $freezed ?>>
-									<option value="">Select</option>
-									<option value="YES" <?php echo ($admissionpreferences->entrance_exam_given == 'YES') ? 'selected' : ''; ?>>YES</option>
-									<option value="NO" <?php echo ($admissionpreferences->entrance_exam_given == 'NO') ? 'selected' : ''; ?>>NO</option>
-								</select>
-							</div>
-						</div> -->
 						<div class="col-lg-4">
 							<div class="form-group" id="entrance_exam_details_div">
 								<label for="exampleInputCourse">Entrance exam details</label>
@@ -278,27 +266,11 @@
 								</select>
 							</div>
 						</div>
+					</div>
+					<div class="row" id="add_university">
 
 						<div class="universities">
-							<?php
-							// if ($admissionpreferences->university != '') {
-							// 	$universitiesArr = json_decode($admissionpreferences->university, true);
-							// 	$count = 0;
-							// 	foreach ($universitiesArr as $key => $val) {
-							// 		if ($val != '') {
-							?>
-							<!-- <div class="col-lg-4">
-											<div class="form-group">
-												<label for="university<?php echo $key ?>"><?php  ?> <?php echo $key; ?> University</label>
-												<input type="text" class="form-control" name="university<?php echo $key ?>" id="university<?php echo $key ?>" value="<?php echo $val ?>" required <?php echo $freezed ?>>
-											</div>
-										</div> -->
-							<?php
-							// 		}
-							// 		$count++;
-							// 	}
-							// }
-							?>
+
 						</div>
 					</div>
 
