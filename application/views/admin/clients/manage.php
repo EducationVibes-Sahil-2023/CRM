@@ -305,25 +305,24 @@
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
                               <?php if (has_permission('leads', '', 'view')) { ?>
-                                 <div class="col-md-2  margin-top leads-filter-column">
+                                 <div class="col-md-3  margin-top leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                  </div>
                               <?php } ?>
-                              <?php if (is_admin()) { ?>
-                                 <div class="col-md-2  margin-top leads-filter-column">
-                                    <?php
 
-                                    echo '<div id="leads-filter-source">';
-                                    echo render_select('lead_type[]', $leadType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
-                                    echo '</div>';
+                              <div class="col-md-3  margin-top leads-filter-column">
+                                 <?php
 
-                                    // die;
-                                    ?>
-                                 </div>
-                              <?php } ?>
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('lead_type[]', $leadType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                                 echo '</div>';
+
+                                 // die;
+                                 ?>
+                              </div>
 
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-3  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
@@ -331,7 +330,7 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-3  margin-top leads-filter-column">
                                  <?php
                                  array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
@@ -340,7 +339,7 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-3  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
@@ -348,19 +347,19 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-3  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-vendor">';
                                  echo render_select('vendor_type[]', $vendorType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Vendor'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-3  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-3  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
                                  </div>
@@ -427,6 +426,10 @@
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
                      array(
+                        'name' => _l('Assignee'),
+                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
+                     ),
+                     array(
                         'name' => _l('leads_dt_status'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
@@ -438,6 +441,7 @@
                         'name' => _l('leads_source'),
                         'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
                      ),
+
                   );
 
                   foreach ($_table_data as $_t) {
