@@ -250,7 +250,7 @@
 						<input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
 						<div class="col-md-6">
 							<?php $value = (isset($client) ? $client->phonenumber : ''); ?>
-							<?php echo render_input('phonenumber', 'client_phonenumber', $value, "tel"); ?>
+							<?php echo render_input('phonenumber', 'client_phonenumber', $value, "tel", ["readonly" => "readonly"]); ?>
 						</div>
 
 						<div class="col-md-6">
@@ -906,7 +906,7 @@
 										<p>Roll No. / Registration No.</p>
 									</div>
 									<div class="c2">
-										<input class="form-control" type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+										<input class="form-control" type="text" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
 									</div>
 									<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
 										<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll_1" value="<?= !empty($academicdetails->entrance_roll_1) ? $academicdetails->entrance_roll_1 : ''; ?>">

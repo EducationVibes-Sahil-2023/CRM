@@ -985,6 +985,8 @@
 		}
 
 		set_university();
+		setTimeout(() => {
+			$('#study_country').trigger('change')
 
-		// $('#study_country').trigger('change')
+		}, 500);
 	</script>

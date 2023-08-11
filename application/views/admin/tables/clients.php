@@ -18,7 +18,7 @@ $aColumns = [
     '1',
     db_prefix() . 'clients.userid as userid',
     db_prefix() . 'clients.company',
-    db_prefix() . 'contacts.firstname firstname',
+    'CONCAT(' . db_prefix() . 'contacts.firstname, " ", ' . db_prefix() . 'contacts.lastname) as client_name',
     db_prefix() . 'contacts.email  as email',
     db_prefix() . 'clients.phonenumber as phonenumber',
     db_prefix() . 'clients.active',
@@ -302,7 +302,6 @@ if (count($custom_fields) > 4) {
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     db_prefix() . 'contacts.id as contact_id',
-    db_prefix() . 'contacts.lastname lastname',
     db_prefix() . 'clients.zip as zip',
     'registration_confirmed',
     db_prefix() . 'applicant_tracker.name applicant_stage_name',
@@ -315,7 +314,7 @@ $rResult = $result['rResult'];
 foreach ($rResult as $aRow) {
     $row = [];
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
-    $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
+    $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['client_name'] . '</a>' : '');
     $url = admin_url('clients/client/' . $aRow['userid']);
 
     if ($isPerson && $aRow['contact_id']) {

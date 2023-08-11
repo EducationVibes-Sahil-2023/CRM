@@ -1,6 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<?php
 
+$documents_data = $documents;
+$document_files = !empty($documents_data[0]["documents"]) ? json_decode($documents_data[0]["documents"], true) : '';
+
+?>
 
 <style type="text/css">
 	.card {
@@ -863,24 +868,38 @@
 			<div class="col-lg-12">
 				<div class="card">
 					<div class="row">
-						<?php foreach ($files as $file) {
-							$url = site_url() . 'download/file/client/';
-							$path = get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name'];
-							$is_image = false;
-							if (!isset($file['external'])) {
-								$attachment_url = $url . $file['attachment_key'];
-								$is_image = is_image($path);
-								$img_url = site_url('download/preview_image?path=' . protected_file_url_by_path($path, true) . '&type=' . $file['filetype']);
-							}
-							if ($is_image) {
+						<table class="table">
+							<tbody class="document_upload_div">
+								<?php if (!empty($document_files)) {
+									foreach ($document_files as $doc_files) {
+										$doc_type = $doc_files["title"];
+										$file_name = "";
+										if (!empty($doc_files["file_path"])) {
+											$file_name =  trim(explode("_", basename($doc_files["file_path"]))[2]);
+										}
+								?>
+										<tr class="row">
+											<td class="col-6">
+												<?= $doc_type ?>
+											</td>
+											<td class="col-6">
 
-						?>
-								<div class="col-lg-3">
-									<img src="<?php echo $img_url; ?>" width="200px">
-									<h2><?php echo $file['doctype'] ?></h2>
-								</div>
-						<?php }
-						} ?>
+												<a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" type="button"><?= $file_name ?> <i class="fa fa-download" aria-hidden="true"></i></a>
+											</td>
+
+										</tr>
+									<?php
+									}
+								} else {
+									?>
+									<tr class="row">
+										<td class="col-12" colspan="12">
+											<h3>No Documents</h3>
+										</td>
+									</tr>
+								<?php } ?>
+							</tbody>
+						</table>
 					</div>
 					<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
 						<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">

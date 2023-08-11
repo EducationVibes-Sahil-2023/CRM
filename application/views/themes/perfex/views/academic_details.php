@@ -491,7 +491,7 @@
 						<p>Roll No. / Registration No.</p>
 					</div>
 					<div class="c2">
-						<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+						<input class="form-control" type="text" class="form-group" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
 					</div>
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
 						<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll_1" value="<?= !empty($academicdetails->entrance_roll_1) ? $academicdetails->entrance_roll_1 : ''; ?>">
@@ -634,9 +634,13 @@
 			if (ers == 'Awaited') {
 				$(".hide_ input").hide();
 				$("#entrance_percentage").val('');
+				$("#entrance_percentage").hide();
+
 
 			} else if (ers == 'Declared') {
 				$(".hide_ input").show();
+				$("#entrance_percentage").show();
+
 			} else if (ers == 'Not Appeared') {
 				$("input[name='entrance_roll']").val('').attr("disabled", true);
 				$("input[name='entrance_year']").val('').attr("disabled", true);
@@ -652,9 +656,12 @@
 			if (ers == 'Awaited') {
 				$(".hide_2 input").hide();
 				$("#entrance_percentage_1").val('');
+				$("#entrance_percentage_1").show();
 
 			} else if (ers == 'Declared') {
 				$(".hide_2 input").show();
+				$("#entrance_percentage_1").show();
+
 			} else if (ers == 'Not Appeared') {
 				$("input[name='entrance_roll_1']").val('').attr("disabled", true);
 				$("input[name='entrance_year_1']").val('').attr("disabled", true);

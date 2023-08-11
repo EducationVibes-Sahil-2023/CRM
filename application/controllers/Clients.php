@@ -164,25 +164,29 @@ class Clients extends ClientsController
                     if (is_array($countriesArr) && count($countriesArr) > 0) {
                         foreach ($countriesArr as $key => $val) {
                             $university = isset($data['university' . $key]) ? $data['university' . $key] : '';
+
+
                             if ($university != '') {
-                                $val = str_replace($val, " ", "_");
+                                $val = str_replace(" ", "_", trim($countriesArr[$key]));
+
                                 $university_array[$val] = $university;
                             }
                         }
                     }
                 }
 
-
                 $dataArr = [
                     'userid' => get_client_user_id(),
                     'program' => !empty($data['program']) ? $data['program'] : '',
                     'course' => !empty($data['course']) ? $data['course'] : '',
-                    'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
+                    'course_name' => !empty($data['course_name']) ? $data['course_name'] : '',
+                    // 'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
                     // 'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
                     'entrance_exam_details' => (!empty($data['entrance_exam_details'])) ? implode(",", $data['entrance_exam_details']) : '',
                     'session_intake' => !empty($data['session_intake']) ? $data['session_intake'] : '',
                     'created_by' => get_client_user_id(),
                 ];
+
 
 
                 if ($data['countries'] != "") {
@@ -445,6 +449,7 @@ class Clients extends ClientsController
         $data['program_data'] = $this->clients_model->getProgram();
         $data['course_data'] = $this->clients_model->getCourse();
         $data['entrance_data'] = $this->clients_model->getEntrance();
+        $data['documents'] =  $this->clients_model->get_documents(get_client_user_id());
         $this->data($data);
         $this->view('preview');
         $this->layout();
