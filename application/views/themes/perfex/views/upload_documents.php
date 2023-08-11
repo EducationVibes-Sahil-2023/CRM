@@ -182,9 +182,9 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
             <div class="col-lg-6 col-xs-6">
               <!-- <button type="submit" class="btn btn-primary button-23">Back</button> -->
               <a href="<?= base_url() ?>/clients/academic_details" class="btn btn-primary button-23">Back</a>
-              <?php if (count($files) < 1) { ?>
-                <button type="submit" class="btn btn-primary">Save & Next</button>
-              <?php } ?>
+
+              <button type="submit" class="btn btn-primary">Save & Next</button>
+
             </div>
             <div class="col-lg-6 col-xs-6">
               <!-- <button type="submit" class="btn btn-primary" style="float: right;">Next</button>  -->
