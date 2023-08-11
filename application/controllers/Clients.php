@@ -975,7 +975,14 @@ class Clients extends ClientsController
                         $upload_data["error"] = $_FILES["media_file"]['error'][$key];
                         $upload_data["size"] = $_FILES["media_file"]['size'][$key];
                         if ($upload_data["error"] === UPLOAD_ERR_OK) {
-                            $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
+                            try {
+                                $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
+                                // If the upload is successful, $file_name will contain the file name or other relevant information.
+                            } catch (Exception $e) {
+                                // Handle the exception
+                                $this->session->set_flashdata('danger', "Documents upload failed. " . $e->getMessage());
+                                redirect(site_url('clients/upload_documents'));
+                            }
                             $file_path = $file_name["file_path"];
                         } else {
                             $data['resp_code'] = 'ERR';
