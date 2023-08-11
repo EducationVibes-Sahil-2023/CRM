@@ -960,58 +960,64 @@ class Clients extends ClientsController
     }
     public function upload_docs_new()
     {
-        if (!empty($_POST)) {
-            $client_id = get_client_user_id();
-            $document_id = !empty($_POST["document_id"]) ? $_POST["document_id"] : '';
-            $document_infomation = [];
-            foreach ($_POST["document_type"] as $key => $document) {
-                $file_path = "";
+        try {
+            if (!empty($_POST)) {
+                $client_id = get_client_user_id();
+                $document_id = !empty($_POST["document_id"]) ? $_POST["document_id"] : '';
+                $document_infomation = [];
+                foreach ($_POST["document_type"] as $key => $document) {
+                    $file_path = "";
 
-                if (!empty($_FILES["media_file"]['name'][$key])) {
-                    $upload_data["name"] = $_FILES["media_file"]['name'][$key];
-                    $upload_data["type"] = $_FILES["media_file"]['type'][$key];
-                    $upload_data["tmp_name"] = $_FILES["media_file"]['tmp_name'][$key];
-                    $upload_data["error"] = $_FILES["media_file"]['error'][$key];
-                    $upload_data["size"] = $_FILES["media_file"]['size'][$key];
-                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
-                        $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
-                        $file_path = $file_name["file_path"];
+                    if (!empty($_FILES["media_file"]['name'][$key])) {
+                        $upload_data["name"] = $_FILES["media_file"]['name'][$key];
+                        $upload_data["type"] = $_FILES["media_file"]['type'][$key];
+                        $upload_data["tmp_name"] = $_FILES["media_file"]['tmp_name'][$key];
+                        $upload_data["error"] = $_FILES["media_file"]['error'][$key];
+                        $upload_data["size"] = $_FILES["media_file"]['size'][$key];
+                        if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                            $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
+                            $file_path = $file_name["file_path"];
+                        } else {
+                            $data['resp_code'] = 'ERR';
+                            $data['resp_desc'] = "Upload failed.";
+                            set_alert('danger', "Upload failed.");
+                            echo json_encode($data);
+                            die;
+                        }
                     } else {
-                        $data['resp_code'] = 'ERR';
-                        $data['resp_desc'] = "Upload failed.";
-                        set_alert('danger', "Upload failed.");
-                        echo json_encode($data);
-                        die;
+                        $file_path = $_POST["media_file"][$key];
                     }
-                } else {
-                    $file_path = $_POST["media_file"][$key];
-                }
 
-                $title = !empty($_POST["title"][$key]) ? $_POST["title"][$key] : '';
-                $document_type = !empty($_POST["document_type"][$key]) ? $_POST["document_type"][$key] : '';
-                array_push($document_infomation, array("title" => $title, "document_type" => $document_type, "file_path" => $file_path));
-            }
-            if (!empty($document_id)) {
-                $data["documents"] = json_encode($document_infomation, true);
-                $data["status"] = 1;
-                $this->db->where("client_id", $client_id)->update(db_prefix() . 'acadmic_documents', $data);
-            } else {
-                if (!empty($document_infomation)) {
-                    $data["client_id"] = $client_id;
+                    $title = !empty($_POST["title"][$key]) ? $_POST["title"][$key] : '';
+                    $document_type = !empty($_POST["document_type"][$key]) ? $_POST["document_type"][$key] : '';
+                    array_push($document_infomation, array("title" => $title, "document_type" => $document_type, "file_path" => $file_path));
+                }
+                if (!empty($document_id)) {
                     $data["documents"] = json_encode($document_infomation, true);
                     $data["status"] = 1;
-                    $this->db->insert(db_prefix() . 'acadmic_documents', $data);
+                    $this->db->where("client_id", $client_id)->update(db_prefix() . 'acadmic_documents', $data);
+                } else {
+                    if (!empty($document_infomation)) {
+                        $data["client_id"] = $client_id;
+                        $data["documents"] = json_encode($document_infomation, true);
+                        $data["status"] = 1;
+                        $this->db->insert(db_prefix() . 'acadmic_documents', $data);
+                    }
                 }
-            }
 
-            $this->session->set_flashdata('success', "Documents successfully Uploaded");
-        } else {
-            $this->session->set_flashdata('danger', "Documents failed");
+                $this->session->set_flashdata('success', "Documents successfully Uploaded");
+                redirect(site_url('clients/declaration'));
+            } else {
+                $this->session->set_flashdata('danger', "Documents failed");
+                redirect(site_url('clients/upload_documents'));
+            }
+        } catch (Exception $e) {
+            // Error message
+            $this->session->set_flashdata('danger', "Documents upload failed. " . $e->getMessage());
+
+            // Redirect to the error page or the appropriate location
             redirect(site_url('clients/upload_documents'));
         }
-
-
-        redirect(site_url('clients/declaration'));
     }
     public function upload_docs()
     {
