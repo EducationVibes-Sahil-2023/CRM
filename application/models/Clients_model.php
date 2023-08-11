@@ -1873,4 +1873,13 @@ class Clients_model extends App_Model
         $this->db->where("status", 1);
         return $document = $this->db->get()->result_array();
     }
+
+    function get_documents($client_id)
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'acadmic_documents');
+        $this->db->where("status", 1);
+        $this->db->where("client_id", $client_id);
+        return $document = $this->db->get()->result_array();
+    }
 }

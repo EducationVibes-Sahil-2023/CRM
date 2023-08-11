@@ -180,6 +180,7 @@ class Clients extends AdminController
                 $data['program_data'] = $this->clients_model->getProgram();
                 $data['course_data'] = $this->clients_model->getCourse();
                 $data['entrance_data'] = $this->clients_model->getEntrance();
+                $data['documents'] =  $this->clients_model->get_documents($id);
             } elseif ($group == 'attachments') {
                 $data['attachments'] = get_all_customer_attachments($id);
             } elseif ($group == 'vault') {
@@ -240,6 +241,8 @@ class Clients extends AdminController
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+
                 $data['customer_vendors'] = [];
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
                     $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);

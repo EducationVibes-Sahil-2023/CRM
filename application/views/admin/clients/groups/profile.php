@@ -123,9 +123,9 @@
 					<li role="presentation">
 						<a href="#academic_details" aria-controls="academic_details" role="tab" data-toggle="tab">Academic Details</a>
 					</li>
-					<!-- <li role="presentation">
+					<li role="presentation">
 						<a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a>
-					</li> -->
+					</li>
 					<li role="presentation">
 						<a href="#declaration" aria-controls="declaration" role="tab" data-toggle="tab">Declaration</a>
 					</li>
@@ -988,10 +988,38 @@
 					</div>
 				</div>
 			</div>
-			<div role="tabpanel" class="tab-pane" id="document">
+			<div role="tabpanel" class="tab-pane" id="documents">
 				<div class="row">
 					<div class="col-md-12">
 						<div class="row">
+							<table class="table datatable">
+								<tbody class="document_upload_div ">
+									<?php
+									$document_files = !empty($documents[0]["documents"]) ? json_decode($documents[0]["documents"], true) : '';
+									if (!empty($document_files)) {
+										foreach ($document_files as $doc_files) {
+											$doc_type = $doc_files["title"]
+									?>
+											<tr class="row">
+												<td class="col-6">
+													<?= $doc_type ?>
+												</td>
+												<td class="col-6">
+													<a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+												</td>
+											</tr>
+										<?php
+										}
+									} else {
+										?>
+										<tr class="row">
+											<td class="col-12" colspan="2">
+												<h3 class="text-center">No Documents</h3>
+											</td>
+										</tr>
+									<?php } ?>
+								</tbody>
+							</table>
 						</div>
 					</div>
 				</div>

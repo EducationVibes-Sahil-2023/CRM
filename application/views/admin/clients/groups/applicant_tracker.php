@@ -3,6 +3,7 @@
 $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
+$document_files = !empty($documents[0]["documents"]) ? json_decode($documents[0]["documents"], true) : '';
 
 ?>
 <style>
@@ -610,6 +611,45 @@ if (empty($customer_admins)) { ?>
                                                         </div>
                                                         <div class="col-md-2 file-download-block">
                                                             <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
+
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
+
+                                                <button class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+
+                                                <!-- <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
+                                            </div>
+
+
+                                        </div>
+                                    <?php
+                                    }
+                                } else if (!empty($document_files)) {
+                                    foreach ($document_files as $doc_files) {
+                                        $file_name = "";
+                                        if (!empty($doc_files['file_path'])) {
+                                            $file_name =  trim(explode("_", basename($doc_files['file_path']))[2]);
+                                        }
+
+                                    ?>
+                                        <div class="row col-md-12 document_upload_files ">
+                                            <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= $doc_files['title'] ?>"></div>
+                                            <div class="col-md-5">
+                                                <div class="margin-bottom ">
+                                                    <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $doc_files['file_path'] ?>" onchange="real_time_media_show(this)" name="document_file[]" placeholder="">
+                                                </div>
+                                                <?php if (!empty($doc_files['file_path'])) { ?>
+                                                    <div class="row media-text-div">
+                                                        <div class="col-md-10">
+                                                            <p class="document-file-name"><?= $file_name ?></p>
+                                                        </div>
+                                                        <div class="col-md-2 file-download-block">
+                                                            <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
                                                         </div>
                                                     </div>
                                                 <?php } ?>

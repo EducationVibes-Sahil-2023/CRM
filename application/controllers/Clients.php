@@ -312,41 +312,41 @@ class Clients extends ClientsController
                 $academicDetailsid = $this->clients_model->addAcademicDetails([
                     'userid' => get_client_user_id(),
                     'tenth_school_name' => $data['tenth_school_name'],
-                    'tenth_board' => !empty($data['tenth_board'])?$data['tenth_board']:'',
-                    'tenth_passing_year' => !empty($data['tenth_passing_year'])?$data['tenth_passing_year']:'',
-                    'tenth_marking_scheme' => !empty($data['tenth_marking_scheme'])?$data['tenth_marking_scheme']:'',
-                    'tenth_percentage' => !empty($data['tenth_percentage'])?$data['tenth_percentage']:'',
-                    'twelth_school_name' => !empty($data['twelth_school_name'])?$data['twelth_school_name']:'',
-                    'twelth_board' => !empty($data['twelth_board'])?$data['twelth_board']:'',
-                    'twelth_passing_year' => !empty($data['twelth_passing_year'])?$data['twelth_passing_year']:'',
-                    'twelth_result_status'  => !empty($data['twelth_result_status'])?$data['twelth_result_status']:'',
-                    'twelth_marking_scheme' => !empty($data['twelth_marking_scheme'])?$data['twelth_marking_scheme']:'',
-                    'twelth_percentage' => !empty($data['twelth_percentage'])?$data['twelth_percentage']:'',
-                    'diploma_institute' => !empty($data['diploma_institute'])?$data['diploma_institute']:'',
-                    'diploma_board' => !empty($data['diploma_board'])?$data['diploma_board']:'',
-                    'diploma_stream' => !empty($data['diploma_stream'])?$data['diploma_stream']:'',
-                    'diploma_passing_year' => !empty($data['diploma_passing_year'])?$data['diploma_passing_year']:'',
-                    'diploma_result_status' => !empty($data['diploma_result_status'])?$data['diploma_result_status']:'',
-                    'diploma_marking_scheme' => !empty($data['diploma_marking_scheme'])?$data['diploma_marking_scheme']:'',
-                    'diploma_percentage' => !empty($data['diploma_percentage'])?$data['diploma_percentage']:'',
-                    'graduation_course' => !empty($data['graduation_course'])?$data['graduation_course']:'',
-                    'graduation_board'  => !empty($data['graduation_board'])?$data['graduation_board']:'',
-                    'graduation_passing_year'  => !empty($data['graduation_passing_year'])?$data['graduation_passing_year']:'',
-                    'graduation_result_status'  => !empty($data['graduation_result_status'])?$data['graduation_result_status']:'',
-                    'graduation_marking_scheme'  => !empty($data['graduation_marking_scheme'])?$data['graduation_marking_scheme']:'',
-                    'graduation_percentage'  => !empty($data['graduation_percentage'])?$data['graduation_percentage']:'',
-                    'graduation_marking_scheme'  => !empty($data['graduation_marking_scheme'])?$data['graduation_marking_scheme']:'',
-                    'entrance_exam_name' => !empty($data['entrance_exam_name'])?$data['entrance_exam_name']:'',
-                    'entrance_roll' => !empty($data['entrance_roll'])?$data['entrance_roll']:'',
-                    'entrance_year' => !empty($data['entrance_year'])?$data['entrance_year']:'',
-                    'entrance_result_status' => !empty($data['entrance_result_status'])?$data['entrance_result_status']:'',
-                    'entrance_percentage' => !empty($data['entrance_percentage'])?$data['entrance_percentage']:'',
-                    'entrance_exam_name_1' => !empty($data['entrance_exam_name_1'])?$data['entrance_exam_name_1']:'',
-                    'entrance_roll_1' => !empty($data['entrance_roll_1'])?$data['entrance_roll_1']:'',
-                    'entrance_year_1' => !empty($data['entrance_year_1'])?$data['entrance_year_1']:'',
-                    'entrance_result_status_1' => !empty($data['entrance_result_status_1'])?$data['entrance_result_status_1']:'',
-                    'entrance_percentage_1' => !empty($data['entrance_percentage_1'])?$data['entrance_percentage_1']:'',
-                    'after_x_status' => !empty($data['after_tenth'])?$data['after_tenth']:'',
+                    'tenth_board' => !empty($data['tenth_board']) ? $data['tenth_board'] : '',
+                    'tenth_passing_year' => !empty($data['tenth_passing_year']) ? $data['tenth_passing_year'] : '',
+                    'tenth_marking_scheme' => !empty($data['tenth_marking_scheme']) ? $data['tenth_marking_scheme'] : '',
+                    'tenth_percentage' => !empty($data['tenth_percentage']) ? $data['tenth_percentage'] : '',
+                    'twelth_school_name' => !empty($data['twelth_school_name']) ? $data['twelth_school_name'] : '',
+                    'twelth_board' => !empty($data['twelth_board']) ? $data['twelth_board'] : '',
+                    'twelth_passing_year' => !empty($data['twelth_passing_year']) ? $data['twelth_passing_year'] : '',
+                    'twelth_result_status'  => !empty($data['twelth_result_status']) ? $data['twelth_result_status'] : '',
+                    'twelth_marking_scheme' => !empty($data['twelth_marking_scheme']) ? $data['twelth_marking_scheme'] : '',
+                    'twelth_percentage' => !empty($data['twelth_percentage']) ? $data['twelth_percentage'] : '',
+                    'diploma_institute' => !empty($data['diploma_institute']) ? $data['diploma_institute'] : '',
+                    'diploma_board' => !empty($data['diploma_board']) ? $data['diploma_board'] : '',
+                    'diploma_stream' => !empty($data['diploma_stream']) ? $data['diploma_stream'] : '',
+                    'diploma_passing_year' => !empty($data['diploma_passing_year']) ? $data['diploma_passing_year'] : '',
+                    'diploma_result_status' => !empty($data['diploma_result_status']) ? $data['diploma_result_status'] : '',
+                    'diploma_marking_scheme' => !empty($data['diploma_marking_scheme']) ? $data['diploma_marking_scheme'] : '',
+                    'diploma_percentage' => !empty($data['diploma_percentage']) ? $data['diploma_percentage'] : '',
+                    'graduation_course' => !empty($data['graduation_course']) ? $data['graduation_course'] : '',
+                    'graduation_board'  => !empty($data['graduation_board']) ? $data['graduation_board'] : '',
+                    'graduation_passing_year'  => !empty($data['graduation_passing_year']) ? $data['graduation_passing_year'] : '',
+                    'graduation_result_status'  => !empty($data['graduation_result_status']) ? $data['graduation_result_status'] : '',
+                    'graduation_marking_scheme'  => !empty($data['graduation_marking_scheme']) ? $data['graduation_marking_scheme'] : '',
+                    'graduation_percentage'  => !empty($data['graduation_percentage']) ? $data['graduation_percentage'] : '',
+                    'graduation_marking_scheme'  => !empty($data['graduation_marking_scheme']) ? $data['graduation_marking_scheme'] : '',
+                    'entrance_exam_name' => !empty($data['entrance_exam_name']) ? $data['entrance_exam_name'] : '',
+                    'entrance_roll' => !empty($data['entrance_roll']) ? $data['entrance_roll'] : '',
+                    'entrance_year' => !empty($data['entrance_year']) ? $data['entrance_year'] : '',
+                    'entrance_result_status' => !empty($data['entrance_result_status']) ? $data['entrance_result_status'] : '',
+                    'entrance_percentage' => !empty($data['entrance_percentage']) ? $data['entrance_percentage'] : '',
+                    'entrance_exam_name_1' => !empty($data['entrance_exam_name_1']) ? $data['entrance_exam_name_1'] : '',
+                    'entrance_roll_1' => !empty($data['entrance_roll_1']) ? $data['entrance_roll_1'] : '',
+                    'entrance_year_1' => !empty($data['entrance_year_1']) ? $data['entrance_year_1'] : '',
+                    'entrance_result_status_1' => !empty($data['entrance_result_status_1']) ? $data['entrance_result_status_1'] : '',
+                    'entrance_percentage_1' => !empty($data['entrance_percentage_1']) ? $data['entrance_percentage_1'] : '',
+                    'after_x_status' => !empty($data['after_tenth']) ? $data['after_tenth'] : '',
 
                 ], $academicDetailsIds);
 
@@ -384,6 +384,8 @@ class Clients extends ClientsController
         $data['title']         = "Upload Document";
         $data['announcements'] = $this->announcements_model->get();
         $data['document_type'] =  $this->clients_model->get_document_upload();
+        $data['documents'] =  $this->clients_model->get_documents(get_client_user_id());
+
         $this->data($data);
         $this->view('upload_documents');
         $this->layout();
@@ -958,10 +960,9 @@ class Clients extends ClientsController
     }
     public function upload_docs_new()
     {
-        print_r($_FILES);
-        die;
         if (!empty($_POST)) {
             $client_id = get_client_user_id();
+            $document_id = !empty($_POST["document_id"]) ? $_POST["document_id"] : '';
             $document_infomation = [];
             foreach ($_POST["document_type"] as $key => $document) {
                 $file_path = "";
@@ -982,25 +983,35 @@ class Clients extends ClientsController
                         echo json_encode($data);
                         die;
                     }
+                } else {
+                    $file_path = $_POST["media_file"][$key];
                 }
 
                 $title = !empty($_POST["title"][$key]) ? $_POST["title"][$key] : '';
                 $document_type = !empty($_POST["document_type"][$key]) ? $_POST["document_type"][$key] : '';
                 array_push($document_infomation, array("title" => $title, "document_type" => $document_type, "file_path" => $file_path));
             }
-
-            if(!empty($document_infomation))
-            {
-                // $this->db->update(tblacadmic_documents)
+            if (!empty($document_id)) {
+                $data["documents"] = json_encode($document_infomation, true);
+                $data["status"] = 1;
+                $this->db->where("client_id", $client_id)->update(db_prefix() . 'acadmic_documents', $data);
+            } else {
+                if (!empty($document_infomation)) {
+                    $data["client_id"] = $client_id;
+                    $data["documents"] = json_encode($document_infomation, true);
+                    $data["status"] = 1;
+                    $this->db->insert(db_prefix() . 'acadmic_documents', $data);
+                }
             }
-            
+
             $this->session->set_flashdata('success', "Documents successfully Uploaded");
         } else {
             $this->session->set_flashdata('danger', "Documents failed");
+            redirect(site_url('clients/upload_documents'));
         }
 
-        die;
-        redirect(site_url('clients/upload_documents'));
+
+        redirect(site_url('clients/declaration'));
     }
     public function upload_docs()
     {
