@@ -1882,4 +1882,20 @@ class Clients_model extends App_Model
         $this->db->where("client_id", $client_id);
         return $document = $this->db->get()->result_array();
     }
+
+    function get_scroe_column()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'academic_type');
+        $this->db->where("status", 1);
+        return $document = $this->db->get()->result_array();
+    }
+
+    function get_scroe_value($client_id)
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'academic_entrance_score');
+        $this->db->where("client_id", $client_id);
+        return $document = $this->db->get()->result_array();
+    }
 }

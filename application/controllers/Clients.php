@@ -371,6 +371,8 @@ class Clients extends ClientsController
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
         $data['entrance_data'] = $this->clients_model->getEntrance();
+        $data['score_columns'] =  $this->clients_model->get_scroe_column();
+        $data['score_value'] =  $this->clients_model->get_scroe_value(get_client_user_id());
         $this->data($data);
         $this->view('academic_details');
         $this->layout();
@@ -450,6 +452,8 @@ class Clients extends ClientsController
         $data['course_data'] = $this->clients_model->getCourse();
         $data['entrance_data'] = $this->clients_model->getEntrance();
         $data['documents'] =  $this->clients_model->get_documents(get_client_user_id());
+        $data['score_columns'] =  $this->clients_model->get_scroe_column();
+        $data['score_value'] =  $this->clients_model->get_scroe_value(get_client_user_id());
         $this->data($data);
         $this->view('preview');
         $this->layout();

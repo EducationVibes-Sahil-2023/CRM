@@ -5,6 +5,12 @@
 $documents_data = $documents;
 $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documents_data[0]["documents"], true) : '';
 
+
+if (!empty($score_value)) {
+	$score_value = array_column($score_value, null, "type");
+}
+
+
 ?>
 
 <style type="text/css">
@@ -682,20 +688,22 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 			<!-- end diploma details-->
 
 			<!-- Under Graduate details-->
-			<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
-				<h4>Graduation Details</h4>
-				<div class="col-lg-1 border2 border1">
-					<div class="c1">
-						<p>&nbsp;</p>
-					</div>
 
-					<div class="c2">
-						<p>Graduation</p>
-					</div>
-				</div>
+			<div class="row after accadmic-education-div">
+				<label>Qualification *</label><br>
+				<input type="radio" name="after_xx_status" <?= ($academicdetails->after_xx_status == "Graduation" ? "checked" : '') ?> <?= empty($academicdetails->after_xx_status) ? 'checked' : '' ?> value="Graduation">&nbsp;&nbsp;Graduation
+				<input type="radio" name="after_xx_status" <?= ($academicdetails->after_xx_status == "Post Graduation" ? "checked" : '') ?> value="Post Graduation">&nbsp;&nbsp;Post Graduation
+				<input type="radio" name="after_xx_status" <?= ($academicdetails->after_xx_status == "Both" ? "checked" : '') ?> value="Both">&nbsp;&nbsp;Both
+			</div>
+			<!-- end diploma details-->
+
+			<!-- Under Graduate details-->
+			<div class="row accadmic-education-div" id="graduationAcademicDetails" style="display:<?= ($academicdetails->after_xx_status == 'Graduation' || $academicdetails->after_xx_status == 'Both' || empty($academicdetails->after_xx_status)) ? 'block' : 'none' ?>">
+				<h4>Graduation Details</h4>
+
 				<div class="col-lg-2 border2 border1">
 					<div class="c1">
-						<p>Institute Name</p>
+						<p>Course Name</p>
 					</div>
 					<div class="c2">
 						<input class="form-control" type="text" class="form-group" placeholder="Enter Course Name" name="graduation_course" value="<?= $academicdetails->graduation_course; ?>">
@@ -722,15 +730,16 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 						</select>
 					</div>
 				</div>
-				<div class="col-lg-1 border2 border1">
+				<div class="col-lg-2 border2 border1">
 					<div class="c1">
 						<p>Result Status</p>
 					</div>
 					<div class="c2">
 						<select class="form-control" name="graduation_result_status" id="graduation_result_status">
 							<option>Select</option>
-							<option value="Awaited">Awaited</option>
-							<option value="Declared">Declared</option>
+							<option value="Awaited" <?= ($academicdetails->graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+							<!-- <option value="Not Appeared" <?= ($academicdetails->graduation_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
 						</select>
 					</div>
 				</div>
@@ -740,7 +749,7 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 					</div>
 					<div class="c2">
 						<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="graduation_marking_scheme" id="graduation_marking_scheme" value="<?= $academicdetails->graduation_marking_scheme; ?>"> -->
-						<select class="form-control" name="graduation_marking_scheme" required id="graduation_marking_scheme">
+						<select class="form-control" name="graduation_marking_scheme" id="graduation_marking_scheme">
 							<option value="">Select</option>
 							<option value="Percentage" <?= ($academicdetails->graduation_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
 							<option value="CGPA out of 10" <?= ($academicdetails->graduation_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
@@ -755,10 +764,83 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 						<p>Obtained Percentage / CGPA</p>
 					</div>
 					<div class="c2">
-						<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" maxlength="3" id="graduation_percentage" value="<?= $academicdetails->graduation_percentage; ?>">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" id="graduation_percentage" value="<?= $academicdetails->graduation_percentage; ?>">
 					</div>
 				</div>
 			</div>
+			<!-- end ug details-->
+
+			<div class="row accadmic-education-div" id="post_graduationAcademicDetails" style="display:<?= ($academicdetails->after_xx_status == 'Post Graduation' || $academicdetails->after_xx_status == 'Both') ? 'block' : 'none' ?>">
+				<h4>Post Graduation Details</h4>
+
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Course Name</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Course Name" name="post_graduation_course" value="<?= $academicdetails->post_graduation_course; ?>" ?>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Board / University</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="post_graduation_board" value="<?= $academicdetails->post_graduation_board; ?>" ?>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Year of Passing </p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="post_graduation_passing_year" id="post_graduation_passing_year" ?>>
+							<option value="">Select</option>
+							<?php for ($i = 0; $i < 15; $i++) : ?>
+								<option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->post_graduation_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
+							<?php endfor; ?>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Result Status</p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="post_graduation_result_status" id="post_graduation_result_status">
+							<option>Select</option>
+							<option value="Awaited" <?= ($academicdetails->post_graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->post_graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+							<!-- <option value="Not Appeared" <?= ($academicdetails->post_graduation_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1" id="post_graduation_marking_scheme_div">
+					<div class="c1">
+						<p>Marking Scheme</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="post_graduation_marking_scheme" id="post_graduation_marking_scheme" value="<?= $academicdetails->post_graduation_marking_scheme; ?>"> -->
+						<select class="form-control" name="post_graduation_marking_scheme" id="post_graduation_marking_scheme">
+							<option value="">Select</option>
+							<option value="Percentage" <?= ($academicdetails->post_graduation_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
+							<option value="CGPA out of 10" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
+							<option value="CGPA out of 9" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
+							<option value="CGPA out of 7" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
+							<option value="CGPA out of 4" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Obtained Percentage / CGPA</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Post Graduation Percentage" name="post_graduation_percentage" id="post_graduation_percentage" value="<?= $academicdetails->post_graduation_percentage; ?>">
+					</div>
+				</div>
+			</div>
+
 			<!-- end ug details-->
 
 			<hr>
@@ -767,7 +849,7 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 			$entrance_data = array_column($entrance_data, null, 'id');
 			?>
 
-			<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
+			<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>" id="entrance_exam_div">
 				<h4>Entrance Exam</h4>
 				<div class="col-lg-1 border2 border1">
 					<div class="c1">
@@ -834,9 +916,42 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 					</div>
 					<div class="c2">
 						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+
+						<?php
+
+						if (!empty($score_columns)) {
+							foreach ($score_columns as $column) {
+								if (!empty($entrance_data[$entrance_names[0]]["id"]) && $entrance_data[$entrance_names[0]]["id"] == $column["exam_type"]) {
+						?>
+									<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+
+						<?php
+								}
+							}
+						}
+
+						// score_columns
+						?>
+
 					</div>
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
 						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
+
+						<?php
+
+						if (!empty($score_columns)) {
+							foreach ($score_columns as $column) {
+								if (!empty($entrance_data[$entrance_names[0]]["id"]) && $entrance_data[$entrance_names[0]]["id"] == $column["exam_type"]) {
+						?>
+									<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+
+						<?php
+								}
+							}
+						}
+
+						// score_columns
+						?>
 					</div>
 				</div>
 
@@ -980,6 +1095,10 @@ $document_files = !empty($documents_data[0]["documents"]) ? json_decode($documen
 		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
 
 		$(document).ready(function() {
+
+			if ($("input.column_score").length > 0) {
+				$("#entrance_exam_div").find(".c2").css("height", "210px");
+			}
 			prog();
 			setTimeout(() => {
 				course();

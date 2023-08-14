@@ -1037,8 +1037,8 @@
     $(document).ready(function() {
 
         $('input[type=radio][name=after_x_status]').change(function() {
-            $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
-            $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
+            // $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+            // $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
             let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
             // console.log(selected_value);
             // Hide both academic details by default.
@@ -1051,6 +1051,22 @@
                 $('#twelthAcademicDetails').removeClass("hide").addClass("show");
             } else if (selected_value == 'Diploma') {
                 $('#diplomaAcademicDetails').removeClass("hide").addClass("show");
+            }
+        });
+
+        $('input[type=radio][name=after_xx_status]').change(function() {
+            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
+            // console.log(selected_value);
+            // Hide both academic details by default.
+            $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("show").addClass("hide");
+
+            if (selected_value == 'Both') {
+                $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Graduation') {
+                // console.log("12 select");
+                $('#graduationAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Post Graduation') {
+                $('#post_graduationAcademicDetails').removeClass("hide").addClass("show");
             }
         });
 
@@ -1165,7 +1181,9 @@
 
 
 
-
+        if ($("input.column_score").length > 0) {
+            $("#entrance_exam_div").find(".c2").css("height", "200px");
+        }
 
 
 

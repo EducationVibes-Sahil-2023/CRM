@@ -181,6 +181,8 @@ class Clients extends AdminController
                 $data['course_data'] = $this->clients_model->getCourse();
                 $data['entrance_data'] = $this->clients_model->getEntrance();
                 $data['documents'] =  $this->clients_model->get_documents($id);
+                $data['score_columns'] =  $this->clients_model->get_scroe_column();
+                $data['score_value'] =  $this->clients_model->get_scroe_value($id);
             } elseif ($group == 'attachments') {
                 $data['attachments'] = get_all_customer_attachments($id);
             } elseif ($group == 'vault') {
@@ -2278,30 +2280,61 @@ class Clients extends AdminController
                 $update_applicant_custom_data["customers"] = [];
                 unset($_POST["clientid"]);
                 unset($_POST["academicDetailsId"]);
-
+                $scrore_update = [];
                 foreach ($_POST as $key => $value) {
-                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
-                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
-                        foreach ($value as $k => $custom_value) {
-                            $update_applicant_custom_data["customers"] = $custom_value;
+                    // print_r($_POST[$key]);
+                    // print_r($key);
+                    // print_r($value);
+                    if (strpos($key, 'score_column') !== false) {
+                        $score_data = explode("-", $key);
+                        if (!empty($score_data[1])) {
+                            array_push($scrore_update, array("client_id" => $client_id, "type" => $score_data[1], "value" => $value));
                         }
-                    } else {
-                        // Otherwise, add to general data array
-                        if ($key != 'clientid') {
-                            $update_academic_data[$key] = $value;
+
+                        unset($_POST[$key]);
+                        $key = '';
+                    }
+                    if (!empty($key)) {
+                        if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                            // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                            foreach ($value as $k => $custom_value) {
+                                $update_applicant_custom_data["customers"] = $custom_value;
+                            }
+                        } else {
+                            // Otherwise, add to general data array
+                            if ($key != 'clientid') {
+                                $update_academic_data[$key] = $value;
+                            }
                         }
                     }
                 }
+                $this->db->delete(db_prefix() . "academic_entrance_score", array("client_id" => $client_id));
 
                 if (empty($academicDetailsId)) {
                     $update_academic_data["created_at"] = date('Y-m-d H:i:s');
                     $update_academic_data["userid"] = $client_id;
                     $rows_affected = $this->db->insert(db_prefix() . 'academic_details', $update_academic_data);
+
+                    // Assuming you're using CodeIgniter Active Record, adjust if you're using a different database framework or raw SQL
+                    // Delete existing academic entrance scores for the given client_id
+
+
+                    if (!empty($scrore_update)) {
+                        // Insert the new batch of academic entrance scores
+
+                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
+                    }
                 } else {
                     $update_academic_data["updated_at"] = date('Y-m-d H:i:s');
                     $this->db->where('userid', $client_id);
                     $this->db->where('id', $academicDetailsId);
                     $rows_affected = $this->db->update(db_prefix() . 'academic_details', $update_academic_data);
+
+                    if (!empty($scrore_update)) {
+                        // Insert the new batch of academic entrance scores
+
+                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
+                    }
                 }
                 if ($rows_affected) {
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
