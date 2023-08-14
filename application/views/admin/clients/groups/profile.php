@@ -1039,10 +1039,10 @@ if (!empty($score_value)) {
 										<input type="text" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 
 										<?php
-
+									
 										if (!empty($score_columns)) {
 											foreach ($score_columns as $column) {
-												if (!empty($entrance_data[$entrance_names[0]]["id"]) && $entrance_data[$entrance_names[0]]["id"] == $column["exam_type"]) {
+												if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
 										?>
 													<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
