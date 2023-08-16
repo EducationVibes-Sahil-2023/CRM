@@ -75,6 +75,10 @@ if (!empty($score_value)) {
 		padding-left: 25px;
 		padding-right: 25px;
 	}
+
+	#entrance_exam_div label {
+		margin: 8px 0px 0px 0px;
+	}
 </style>
 
 <body>
@@ -697,7 +701,7 @@ if (!empty($score_value)) {
 		$(document).ready(function() {
 			$('#entrance_exam_details').change();
 			if ($("input.column_score").length > 0) {
-				$("#entrance_exam_div").find(".c2").css("height", "210px");
+				$("#entrance_exam_div").find(".c2").css("height", "300px");
 			}
 		})
 		$('input[type=radio][name=after_tenth]').change(function() {

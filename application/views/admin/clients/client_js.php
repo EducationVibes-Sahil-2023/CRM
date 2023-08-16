@@ -1182,7 +1182,7 @@
 
 
         if ($("input.column_score").length > 0) {
-            $("#entrance_exam_div").find(".c2").css("height", "200px");
+            $("#entrance_exam_div").find(".c2").css("height", "290px");
         }
 
 

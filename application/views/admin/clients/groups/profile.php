@@ -84,6 +84,10 @@ if (!empty($score_value)) {
 		min-height: 50px;
 		vertical-align: middle;
 	}
+	#entrance_exam_div label 
+	{
+		margin: 8px 0px 0px 0px;
+	}
 </style>
 
 
@@ -1044,7 +1048,7 @@ if (!empty($score_value)) {
 											foreach ($score_columns as $column) {
 												if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
 										?>
-										<label><?= $column['name'] ?></label>
+													<label><?= $column['name'] ?></label>
 													<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
 										<?php
@@ -1065,7 +1069,7 @@ if (!empty($score_value)) {
 											foreach ($score_columns as $column) {
 												if (!empty($entrance_data[$entrance_names[1]]["academic_type"]) && $entrance_data[$entrance_names[1]]["academic_type"] == $column["exam_type"]) {
 										?>
-										<label><?= $column['name'] ?></label>
+													<label><?= $column['name'] ?></label>
 													<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
 										<?php

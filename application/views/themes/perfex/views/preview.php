@@ -36,6 +36,10 @@ if (!empty($score_value)) {
 		background: #415165;
 		border-color: #415165;
 	}
+
+	#entrance_exam_div label {
+		margin: 8px 0px 0px 0px;
+	}
 </style>
 <style type="text/css">
 	.c1 {
@@ -1099,7 +1103,7 @@ if (!empty($score_value)) {
 		$(document).ready(function() {
 
 			if ($("input.column_score").length > 0) {
-				$("#entrance_exam_div").find(".c2").css("height", "210px");
+				$("#entrance_exam_div").find(".c2").css("height", "300px");
 			}
 			prog();
 			setTimeout(() => {
