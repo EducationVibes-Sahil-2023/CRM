@@ -507,7 +507,7 @@ class Facebook_leads_integration extends ClientsController
                 $leadgen_id =  $lead_data['entry'][0]['changes'][0]['value']['leadgen_id'];
                 $form_name = "";
                 $form_id =  !empty($lead_data['entry'][0]['changes'][0]['value']['form_id']) ? $lead_data['entry'][0]['changes'][0]['value']['form_id'] : '';
-                $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true), "lengen_id" => $leadgen_id, "form_id" => $form_id));
+                
                 $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"), true);
                 if (!empty($form_id)) {
                     $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"), true);
@@ -582,6 +582,12 @@ class Facebook_leads_integration extends ClientsController
                     }
                     curl_close($ch);
                 }
+            }
+        }
+        else
+        {
+            if(!empty($lead_data)){
+            $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true)));
             }
         }
     }
