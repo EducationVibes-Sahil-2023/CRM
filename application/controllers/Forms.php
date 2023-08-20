@@ -935,6 +935,7 @@ if (!empty($call_data)) {
         public function test_db_connection()
     {
         $response = $this->db->select("*")->from(db_prefix() . "leads")->get()->result_array();
+        echo $this->db->last_query();
         echo json_encode($response);
     }
     public function test_code()
