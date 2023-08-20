@@ -932,11 +932,11 @@ if (!empty($call_data)) {
         return json_encode($result);
     }
 
-        public function test_db_connection()
+      public function test_db_connection()
     {
         $response = $this->db->select("*")->from(db_prefix() . "leads")->get()->result_array();
         echo $this->db->last_query();
-        echo json_encode($response);
+        echo json_encode($response,true);
     }
     public function test_code()
     {
