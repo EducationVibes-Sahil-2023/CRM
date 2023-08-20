@@ -932,4 +932,14 @@ if (!empty($call_data)) {
         return json_encode($result);
     }
 
+        public function test_db_connection()
+    {
+        $response = $this->db->select("*")->from(db_prefix() . "leads")->get()->result_array();
+        echo json_encode($response);
+    }
+    public function test_code()
+    {
+        echo json_encode(array("success" => 1, "message" => "Run Successfully"));
+    }
+
 }
