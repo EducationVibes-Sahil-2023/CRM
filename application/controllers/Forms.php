@@ -936,7 +936,7 @@ if (!empty($call_data)) {
     {
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
-        $response = $this->db->select("*")->from(db_prefix() . "leads")->get()->result_array();
+        $response = $this->db->select("*")->from(db_prefix() . "leads")->get()->limit(500)->result_array();
         echo $this->db->last_query();
         echo json_encode($response,true);
         error_reporting(E_ALL & ~E_NOTICE); // Or the appropriate level
