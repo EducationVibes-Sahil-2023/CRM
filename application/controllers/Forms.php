@@ -921,7 +921,7 @@ if (!empty($call_data)) {
             $result = curl_exec($ch); // Execute the cURL statement
             curl_close($ch); // Close the cURL connection
 
-            $result = json_decode($result, true);
+            $result = array(json_decode($result, true));
         } catch (Exception $e) {
             $result = array(array(
                 "status" => 0,
