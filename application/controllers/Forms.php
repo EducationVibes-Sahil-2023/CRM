@@ -934,13 +934,13 @@ if (!empty($call_data)) {
 
       public function test_db_connection()
     {
-        // error_reporting(E_ALL);
-        // ini_set('display_errors', 1);
+        error_reporting(E_ALL);
+        ini_set('display_errors', 1);
         $response = $this->db->select("*")->from(db_prefix() . "leads")->get()->result_array();
         echo $this->db->last_query();
         echo json_encode($response,true);
-        // error_reporting(E_ALL & ~E_NOTICE); // Or the appropriate level
-        // ini_set('display_errors', 0); // Set to 0 for production
+        error_reporting(E_ALL & ~E_NOTICE); // Or the appropriate level
+        ini_set('display_errors', 0); // Set to 0 for production
     }
     public function test_code()
     {
