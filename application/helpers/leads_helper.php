@@ -1358,7 +1358,7 @@ function calls_update_count($params = false, $max_status = 0)
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
         $sql .= " AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
-        . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "')";
+            . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "')";
     }
 
     $grup_by = "";

@@ -190,8 +190,16 @@
 								<input type="hidden" name="direct_pass" value="<?= $admissionpreferences->freeze == 1 ? '1' : '0' ?>">
 								<select class="form-control" name="program" id="program" required <?php echo $freezed ?>>
 									<option value="">Select a Program</option>
-									<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate') ? 'selected' : ''; ?>>Under Graduate</option>
-									<option vaue="Post Graduate" <?php echo ($admissionpreferences->program == 'Post Graduate') ? 'selected' : ''; ?>>Post Graduate</option>
+									<?php foreach ($program_data as $p) {
+										$selected = "";
+										if ($admissionpreferences->program == $p["id"]) {
+											$selected = "selected";
+										}
+									?>
+										<option value="<?= $p["id"] ?>" <?= $selected ?>><?= $p["name"] ?></option>
+									<?php
+									}
+									?>
 								</select>
 								<?php echo form_error('program'); ?>
 
@@ -200,28 +208,29 @@
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="course">Course</label>
-								<select class="form-control" name="course" id="course" <?php echo $freezed ?>>
+								<select class="form-control" name="course" id="course" required <?php echo $freezed ?>>
 									<option value="">Select a course </option>
-									<!-- <option  value="MBBS" <?php echo ($admissionpreferences->course == 'MBBS') ? 'selected' : ''; ?>>MBBS</option>
-							<option  value="MBA" <?php echo ($admissionpreferences->course == 'MBA') ? 'selected' : ''; ?>>MBA</option>
-							<option  value="B.Tech" <?php echo ($admissionpreferences->course == 'B.Tech') ? 'selected' : ''; ?>>B.Tech</option> -->
-
-									<?php if ($admissionpreferences->course != '') : ?>
-										<option value="<?= $admissionpreferences->course; ?>" selected><?= $admissionpreferences->course; ?></option>
-									<?php endif; ?>
-
 								</select>
 								<?php echo form_error('course'); ?>
 
 							</div>
 						</div>
+						<div class="col-lg-4 course_name_field" style="display:<?= !empty($admissionpreferences->course_name) ? 'block' : 'none' ?>">
+							<div class="form-group">
+								<label for="course_name">Course Name</label>
+								<input type="text" class="form-control" name="course_name" required id="course_name" value="<?= !empty($admissionpreferences->course_name) ? $admissionpreferences->course_name : '' ?>">
+							</div>
+						</div>
+
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="session_intake">Session Intake</label>
-								<select class="form-control" name="session_intake" id="session_intake" <?php echo $freezed ?>>
-									<option value="">Select</option>
-									<?php
-									$intakeArr = array(
+								<input type="month" class="form-control" name="session_intake" required value="<?= !empty($admissionpreferences->session_intake) ? $admissionpreferences->session_intake : '' ?>" placeholder="Select Month and Year">
+
+								<!-- <select class="form-control" name="session_intake" id="session_intake" <?php echo $freezed ?>>
+									<option value="">Select</option> -->
+								<?php
+								/*$intakeArr = array(
 										"May_2023" => "May 2023",
 										"July_2023" => "July 2023",
 										"September_2023" => "September 2023",
@@ -232,81 +241,36 @@
 									?>
 										<option value="<?php echo $key ?>" <?php echo ($admissionpreferences->session_intake == $key) ? 'selected' : ''; ?>><?php echo $val ?></option>
 									<?php
-									}
-									?>
-								</select>
+									}*/
+								?>
+								<!-- </select> -->
 							</div>
 						</div>
-					</div>
-					<div class="row" id="add_university">
 						<div class="col-lg-4">
 							<div class="form-group" id="study_countries">
 								<label for="study_country">Where would you like to study?</label>
 								<input type="hidden" name="countries" id="countries">
 								<select class="form-control" name="study_country" id="study_country" multiple required <?php echo $freezed ?>>
-									<?php
-									$allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
-									?>
 									<option value="">Select country </option>
-									<?php
-									if (!empty($admissionpreferences)) {
-										$countries = $admissionpreferences->study_country;
-										$countriesArr = explode(",", $countries);
-									}
-									foreach ($allCountriesArr as $key => $val) {
-									?>
-										<option value="<?php echo $key; ?>" <?php echo !empty($admissionpreferences) ? ((in_array($val, $countriesArr)) ? 'selected' : '') : ''; ?>><?php echo $val; ?></option>
-									<?php
-									}
-									?>
-								</select>
-							</div>
-						</div>
-						<div class="col-lg-4">
-							<div class="form-group">
-								<label for="entrance_exam_given">Have You Given any Entrance Exam?</label>
-								<select class="form-control" name="entrance_exam_given" id="entrance_exam_given" <?php echo $freezed ?>>
-									<option value="">Select</option>
-									<option value="YES" <?php echo ($admissionpreferences->entrance_exam_given == 'YES') ? 'selected' : ''; ?>>YES</option>
-									<option value="NO" <?php echo ($admissionpreferences->entrance_exam_given == 'NO') ? 'selected' : ''; ?>>NO</option>
+
 								</select>
 							</div>
 						</div>
 						<div class="col-lg-4">
 							<div class="form-group" id="entrance_exam_details_div">
 								<label for="exampleInputCourse">Entrance exam details</label>
-								<select class="form-control" name="entrance_exam_details" id="entrance_exam_details" <?php echo $freezed ?>>
+								<select class="form-control" name="entrance_exam_details[]" id="entrance_exam_details" <?php echo $freezed ?> multiple>
 									<option value="">Select</option>
-									<?php if ($admissionpreferences->entrance_exam_details != '') : ?>
-										<option value="<?= $admissionpreferences->entrance_exam_details; ?>" selected><?= $admissionpreferences->entrance_exam_details; ?></option>
-									<?php else : ?>
-										<option value="NEET UG">NEET UG</option>
-									<?php endif; ?>
+
 
 								</select>
 							</div>
 						</div>
+					</div>
+					<div class="row" id="add_university">
 
 						<div class="universities">
-							<?php
-							// if ($admissionpreferences->university != '') {
-							// 	$universitiesArr = json_decode($admissionpreferences->university, true);
-							// 	$count = 0;
-							// 	foreach ($universitiesArr as $key => $val) {
-							// 		if ($val != '') {
-							?>
-							<!-- <div class="col-lg-4">
-											<div class="form-group">
-												<label for="university<?php echo $key ?>"><?php  ?> <?php echo $key; ?> University</label>
-												<input type="text" class="form-control" name="university<?php echo $key ?>" id="university<?php echo $key ?>" value="<?php echo $val ?>" required <?php echo $freezed ?>>
-											</div>
-										</div> -->
-							<?php
-							// 		}
-							// 		$count++;
-							// 	}
-							// }
-							?>
+
 						</div>
 					</div>
 
@@ -329,17 +293,22 @@
 		</div>
 	</div>
 	<script>
+		var getProgram = <?= !empty($program_data) ? (json_encode($program_data, true)) : "[]"; ?>;
+		var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
+		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
+
+
 		var select_segment_default = "";
 		var user_id = "<?= !empty($admissionpreferences->user_id) ? $admissionpreferences->user_id : '' ?>";
 		var study_country_selected = <?= !empty(json_encode(explode(",", $admissionpreferences->study_country))) ? json_encode(explode(",", $admissionpreferences->study_country), true) : "" ?>;
-		console.log(study_country_selected.length);
+
 		if (study_country_selected.length > 0) {
 			study_country_selected = study_country_selected.map(function(value) {
 				return value.trim().toLowerCase();
 			});
 		}
 		var dropdown_country_university_selection = <?= !empty($dropdown_country_university_selection) ? json_encode($dropdown_country_university_selection, true) : [] ?>;
-		console.log(dropdown_country_university_selection);
+		// console.log(dropdown_country_university_selection);
 
 
 
@@ -382,8 +351,8 @@
 		}
 
 		function show_university_dropdown(select_segment, country) {
-			console.log("select_segment" + select_segment);
-			console.log("country" + country);
+			// console.log("select_segment" + select_segment);
+			// console.log("country" + country);
 			return new Promise(function(resolve, reject) {
 				var filteredData = dropdown_country_university_selection.filter(function(entry) {
 					return entry.name.toLowerCase() === select_segment.trim().toLowerCase() && entry.country_name.toLowerCase() === country.trim().toLowerCase();
@@ -419,257 +388,184 @@
 
 		$(document).ready(function() {
 			prog();
-			course();
-			// study_country();
-			entrance_exam_given();
-		});
-		$("#program").on('change', function() {
-			prog();
-		});
-		$("#course").on('change', function() {
-			course();
-		});
-		// $("#study_country").on('change', function(){
-		// 	study_country();
-		// });
-		$("#entrance_exam_given").on('change', function() {
-			entrance_exam_given();
+			setTimeout(() => {
+				course();
+
+			}, 200);
+			setTimeout(() => {
+				// entrance_exam_given();
+				$('#entrance_exam_details').change();
+
+			}, 400);
+
+			$("#program").on('change', function() {
+				prog();
+			});
+			$("#course").on('change', function() {
+				course();
+			});
 		});
 
-		function prog() {
+
+
+		var getProgram = <?= !empty($program_data) ? (json_encode($program_data, true)) : "[]"; ?>;
+		var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
+		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
+
+		function get_course(program_id) {
+			return new Promise((resolve, reject) => {
+				let course_array = [];
+				course_array.push({
+					id: '',
+					name: 'Select Course'
+				})
+				for (let j = 0; j < getCourse.length; j++) {
+					if (program_id === getCourse[j].program_id) {
+						course_array.push({
+							id: getCourse[j].id,
+							name: getCourse[j].name
+						});
+					}
+				}
+
+				resolve(course_array);
+			});
+		}
+
+		function get_entrance() {
+			return new Promise((resolve, reject) => {
+				let entrance_array = [];
+				entrance_array.push({
+					id: '',
+					name: 'Select Entrance'
+				})
+				let lead_type = $("#lead_type").val();
+				for (let j = 0; j < getEntrance.length; j++) {
+					if (lead_type === getEntrance[j].segment_id) {
+						entrance_array.push({
+							id: getEntrance[j].id,
+							name: getEntrance[j].name
+						});
+					}
+				}
+
+				resolve(entrance_array);
+			});
+		}
+
+
+		async function prog() {
+			// console.log("start");
 			var program = $("#program").val();
-			var ug = {
-				"0": "Select",
-				"1": "MBBS",
-				"2": "B.Tech",
-				"3": "OTHER"
-			};
-			var pg = {
-				"1": "MD/MS",
-				"2": "MBA/PGDM",
-				"3": "OTHER"
-			};
+			var getProgram_array = [];
+			// console.log(getProgram);
+			for (let i = 0; i < getProgram.length; i++) {
+				getProgram_array[getProgram[i].id] = await get_course(getProgram[i].id);
+			}
+
 			var $select = $('#course');
+			$select.val('').selectpicker("refresh")
 			var selectedCourse = "<?php echo $admissionpreferences->course ?>";
-			console.log(selectedCourse);
-			if (program == 'Under Graduate') {
-				$select.find('option').remove();
-				$.each(ug, function(key, value) {
-					var sel = (value == selectedCourse) ? 'selected' : '';
-					$select.append('<option value="' + value + '"' + sel + ' >' + value + '</option>');
+			// console.log(selectedCourse);
+			$select.find('option').remove();
+			if (getProgram_array[program] != undefined) {
+				$.each(getProgram_array[program], function(key, value) {
+					var sel = "";
+
+					if (selectedCourse != '') {
+						sel = (value.id == selectedCourse) ? 'selected' : '';
+					}
+					$select.append('<option value="' + value.id + '"' + sel + ' >' + value.name + '</option>');
 				});
-				$select.selectpicker("refresh")
-			} else if (program == 'Post Graduate') {
-				$select.find('option').remove();
-				$.each(pg, function(key, value) {
-					var sel = (value == selectedCourse) ? 'selected' : '';
-					$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-				});
-				$select.selectpicker("refresh")
-			} else {
-				$select.find('option').remove();
-				$select.append('<option>Select a Course</option>');
-				$select.selectpicker("refresh")
 			}
+			$select.selectpicker("refresh")
+			$("#course_name_field input").val('');
+			$(".course_name_field").hide();
 		}
 
-		function course() {
+
+
+		async function course() {
+
 			var course = $("#course").val();
-			var study_country = $("#study_country").val();
+			var selectedCourseText = $("#course option:selected").text();
+			if (course != "") {
+				$(".course_name_field").show();
+				if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Course Name with Specialization");
+				} else {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Specialization Name");
 
-			var mbbs = {
-				"0": "Select",
-				"1": "NEET UG",
-				"2": "OTHER"
-			};
-			var btech = {
-				"1": "JEE",
-				"2": "VITEEE",
-				"3": "UPSEE",
-				"4": "SRMJEE",
-				"5": "BITSAT",
-				"6": "MET",
-				"7": "MAT CET",
-				"8": "IPUCET",
-				"9": "COMEDK"
-			};
-			var mdms = {
-				"1": "NEET PG",
-				"2": "OTHER"
-			};
-			var mbapgdm = {
-				"1": "CAT",
-				"2": "MAT",
-				"3": "XAT",
-				"4": "CMAT",
-				"5": "SNAP"
-			};
-			var abroad = {
-				"1": "IELTS",
-				"2": "TOEFL",
-				"3": "PTE",
-				"4": "SAT",
-				"5": "GMAT",
-				"6": "GRE",
-				"7": "OTHER"
-			};
+				}
+			} else {
+				$(".course_name_field").hide();
+			}
 
+			// $("#course_name_field input").val('');
+			// if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+			//     $(".course_name_field").show();
+			// } else {
+			//     $(".course_name_field").hide();
+			// }
+
+			var getEntrance_array = [];
+			for (let i = 0; i < getCourse.length; i++) {
+				getEntrance_array = await get_entrance();
+			}
+
+			console.log(getEntrance_array);
 			var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
+			selectedExam_array = selectedExam.split(",");
+			var $select = $("#entrance_exam_details");
+			$select.find('option').remove();
+			$.each(getEntrance_array, function(key, value) {
+				var sel = '';
+				if (selectedExam_array.length > 0) {
+					if (selectedExam_array.includes(value.id.toString()) && parseInt(value.id) > 0) {
+						sel = "selected";
+					}
+				}
+				$select.append('<option value="' + value.id + '" ' + sel + '>' + value.name + '</option>');
+			});
+			$select.selectpicker("refresh");
 
-			var $select = $('#entrance_exam_details');
-			// console.log($select);
-
-			if (study_country == 'ABROAD') {
-				if (course == 'MBBS') {
-					$select.find('option').remove();
-					$.each(mbbs, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
-				} else if (course == 'MD/MS') {
-					$select.find('option').remove();
-					$.each(mdms, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
-				} else {
-					$select.find('option').remove();
-					$.each(abroad, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
+			let value = $("#entrance_exam_details").val();
+			value = value.filter(function(element) {
+				return element !== "" && element !== " " && element !== null && element !== undefined;
+			});
+			if (value.length >= 2) {
+				$(`#entrance_exam_details option`).prop('disabled', true);
+				for (let k = 0; k < value.length; k++) {
+					var v = value[k];
+					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
 				}
 			} else {
-				if (course == 'MBBS') {
-					$select.find('option').remove();
-					$.each(mbbs, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
-				} else if (course == 'B.Tech') {
-					$select.find('option').remove();
-					$.each(btech, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
-				} else if (course == 'MD/MS') {
-					$select.find('option').remove();
-					$.each(mdms, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
-				} else if (course == 'MBA/PGDM') {
-					$select.find('option').remove();
-					$.each(mbapgdm, function(key, value) {
-						var sel = (value == selectedExam) ? 'selected' : '';
-						$select.append('<option value="' + value + '"' + sel + '>' + value + '</option>');
-					});
-					$select.selectpicker("refresh")
-				} else {
-					$select.find('option').remove();
-					$select.append('<option value="OTHER">OTHER</option>');
-					$select.selectpicker("refresh")
+				$(this).find('option').prop('disabled', false);
+			}
+			$(this).selectpicker("refresh")
+
+		}
+
+		$('#entrance_exam_details').on('change select2:opening', async function() {
+			let value = $(this).val();
+			value = value.filter(function(element) {
+				return element !== "" && element !== " " && element !== null && element !== undefined;
+			});
+			if (value.length >= 2) {
+				$(`#entrance_exam_details option`).prop('disabled', true);
+				for (let k = 0; k < value.length; k++) {
+					var v = value[k];
+					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
 				}
-			}
-		}
-
-		// function study_country(){
-		// 	var course = $("#course").val();
-		// 	var study_country = $("#study_country").val();
-
-		// 	var mbbs = {"0":"Select","1":"NEET UG","2":"OTHER"};
-		// 	var btech = {"1":"JEE","2":"VITEEE","3":"UPSEE","4":"SRMJEE","5":"BITSAT","6":"MET","7":"MAT CET","8":"IPUCET","9":"COMEDK"};
-		// 	var mdms = {"1":"NEET PG","2":"OTHER"};
-		// 	var mbapgdm = {"1":"CAT","2":"MAT","3":"XAT","4":"CMAT","5":"SNAP"};
-		// 	var abroad = {"1":"IELTS","2":"TOEFL","3":"PTE","4":"SAT","5":"GMAT","6":"GRE","7":"OTHER"};
-		// 	var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
-		// 	var $select = $('#entrance_exam_details'); 
-		// 	// console.log($select);
-
-		// 	if(study_country == 'ABROAD'){
-		// 		if(course == 'MBBS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mbbs,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}else if(course == 'MD/MS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mdms,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}else{
-		// 			$select.find('option').remove();  
-		// 			$.each(abroad,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 	}else{                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
-		// 		if(course == 'MBBS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mbbs,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else if(course == 'B.Tech'){
-		// 			$select.find('option').remove();  
-		// 			$.each(btech,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else if(course == 'MD/MS'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mdms,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else if(course == 'MBA/PGDM'){
-		// 			$select.find('option').remove();  
-		// 			$.each(mbapgdm,function(key, value) 
-		// 			{
-		// 				var sel = (value == selectedExam)?'selected':'';				
-		// 				$select.append('<option value="' + value + '"'+ sel + '>' + value + '</option>');
-		// 			});
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 		else{
-		// 			$select.find('option').remove();  
-		// 			$select.append('<option value="OTHER">OTHER</option>');
-		// 			$select.selectpicker("refresh")
-		// 		}
-		// 	}
-		// }
-		function entrance_exam_given() {
-			var eeg = $("#entrance_exam_given").val();
-			if (eeg == 'YES') {
-				$("#entrance_exam_details_div").show();
 			} else {
-				$("#entrance_exam_details_div").hide();
+				$(this).find('option').prop('disabled', false);
 			}
-		}
+			$(this).selectpicker("refresh")
+
+		});
+
 
 		// UNIVERSITY AND COUNTRY JS
 
@@ -682,14 +578,14 @@
 		$('#study_country').on('change select2:opening', async function() {
 			let value = $(this).val();
 			if (value.length > 0) {
-				if (value.length <= 3) {
+				if (value.length <= 2) {
 					selectedUniversityArr = [];
 					$('#countries').val(value.join(','));
 					var str = '';
 					for (let k = 0; k < value.length; k++) {
 						var v = value[k];
 						var countryName = v.search("_") != -1 ? v.replace("_", " ") : v;
-
+						let c = v.replace(" ", "_");
 						str += `<div class="col-lg-4">
 						<div class="form-group">
 						<label for="university${k}">${countryName} University</label>
@@ -698,8 +594,8 @@
 						</div>`;
 
 						if (Object.keys(universityArr).length > 0) {
-							if (v in universityArr) {
-								selectedUniversityArr[v] = universityArr[v];
+							if (c in universityArr) {
+								selectedUniversityArr[v] = universityArr[c];
 							} else {
 								selectedUniversityArr[v] = "";
 							}
@@ -722,7 +618,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${count2}`,
 								duplicate: false,
-								max: 3,
+								max: 5,
 								suggestions: university_list
 							});
 
@@ -750,7 +646,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${k}`,
 								duplicate: false,
-								max: 3,
+								max: 5,
 								suggestions: university_list
 							});
 
@@ -759,7 +655,7 @@
 					}
 				}
 
-				if (value.length >= 3) {
+				if (value.length >= 2) {
 					$(`#study_country option`).prop('disabled', true);
 					for (let k = 0; k < value.length; k++) {
 						var v = value[k];
@@ -946,7 +842,8 @@
 
 				if (suggestions && suggestions.length > 0) {
 					var matchedSuggestions = suggetions_university[country_name].filter(function(suggestion) {
-						return suggestion.toLowerCase().startsWith(str.toLowerCase());
+						// return suggestion.toLowerCase().startsWith(str.toLowerCase());
+						return suggestion.toLowerCase().includes(str.toLowerCase());
 					});
 
 					var div_elements = document.querySelectorAll('.suggestions-container');
@@ -1063,7 +960,7 @@
 						var tagInput1 = new TagsInput({
 							selector: `university${set_count}`,
 							duplicate: false,
-							max: 3,
+							max: 5,
 							suggestions: university_list
 						});
 
@@ -1088,6 +985,8 @@
 		}
 
 		set_university();
+		setTimeout(() => {
+			$('#study_country').trigger('change')
 
-		// $('#study_country').trigger('change')
+		}, 500);
 	</script>

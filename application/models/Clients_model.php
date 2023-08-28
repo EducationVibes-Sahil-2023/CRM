@@ -1844,4 +1844,58 @@ class Clients_model extends App_Model
         $this->db->order_by('ts.sequence', 'asc');
         return $get_application_sub_stage = $this->db->get()->result_array();
     }
+
+    function getProgram()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'admission_program');
+        $this->db->where("status", 1);
+        return $getProgram = $this->db->get()->result_array();
+    }
+    function getCourse()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'admission_course');
+        $this->db->where("status", 1);
+        return $getCourse = $this->db->get()->result_array();
+    }
+    function getEntrance()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'admission_entrance');
+        $this->db->where("status", 1);
+        return $getEntrance = $this->db->get()->result_array();
+    }
+    function get_document_upload()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'document_upload_type');
+        $this->db->where("status", 1);
+        return $document = $this->db->get()->result_array();
+    }
+
+    function get_documents($client_id)
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'acadmic_documents');
+        $this->db->where("status", 1);
+        $this->db->where("client_id", $client_id);
+        return $document = $this->db->get()->result_array();
+    }
+
+    function get_scroe_column()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'academic_type');
+        $this->db->where("status", 1);
+        return $document = $this->db->get()->result_array();
+    }
+
+    function get_scroe_value($client_id)
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'academic_entrance_score');
+        $this->db->where("client_id", $client_id);
+        return $document = $this->db->get()->result_array();
+    }
 }
