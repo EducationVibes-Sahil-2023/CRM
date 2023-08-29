@@ -831,9 +831,15 @@ if (!empty($score_value)) {
 			$("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
 		})
 		setTimeout(() => {
-			$('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
+			$('#twelth_result_status,#diploma_result_status,#entrance_result_status,#graduation_result_status,post_graduation_result_status,#entrance_result_status_1').trigger('change');
 
 		}, 1000);
+
+
+		$("input[name='after_xx_status']").change(function() {
+			$("#graduationAcademicDetails").find("input,select").val('').selectpicker("refresh");
+			$("#post_graduationAcademicDetails").find("input,select").val('').selectpicker("refresh");
+		})
 
 
 		$('#entrance_exam_details').on('change select2:opening', async function() {
