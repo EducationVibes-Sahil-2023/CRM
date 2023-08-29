@@ -960,6 +960,6 @@ class Staff_model extends App_Model
 
     public function post_sale_get()
     {
-        return $this->db->where(["post_sales" => 1])->get(db_prefix() . 'staff')->result_array();
+        return $this->db->where(["post_sales" => 1,"active"=>1])->get(db_prefix() . 'staff')->result_array();
     }
 }

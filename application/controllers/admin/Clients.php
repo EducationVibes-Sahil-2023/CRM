@@ -49,6 +49,7 @@ class Clients extends AdminController
 
         $data['countries'] = $this->clients_model->get_clients_distinct_countries();
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+        // $data['staff'] = $this->staff_model->post_sale_get('', ['active' => 1]);
         $data['sources']  = $this->leads_model->get_source();
         $data['leadType'] = $this->leads_model->get_type();
         $data['vendorType'] = $this->leads_model->get_vendor();
@@ -254,15 +255,15 @@ class Clients extends AdminController
 
             // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
 
-            $data['members'] = $this->staff_model->get('', ['active' => 1]);
+            $data['members'] = $this->staff_model->post_sale_get();
 
             $data['staff'] = [];
             if (!empty($data["lead_data"]->type)) {
                 $lead_status_data = $data["lead_data"]->type;
                 foreach ($data['members'] as $members) {
-                    if ($members["lead_type"] == $lead_status_data) {
-                        $data['staff'][] = $members;
-                    }
+                    // if ($members["lead_type"] == $lead_status_data) {
+                    $data['staff'][] = $members;
+                    // }
                 }
             }
                 // echo $data["lead_data"]->form_data->lead_status;
