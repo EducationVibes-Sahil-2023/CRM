@@ -630,8 +630,8 @@ if (!empty($score_value)) {
 							foreach ($score_columns as $column) {
 								if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
 						?>
-									<label><?= $column['name'] ?></label>
-									<input type="text" style="margin-top:3px" class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+									<label class="multiple_score_label"><?= $column['name'] ?></label>
+									<input type="text" style="margin-top:3px" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
 						<?php
 								}
@@ -642,7 +642,7 @@ if (!empty($score_value)) {
 						?>
 					</div>
 					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
-						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
+						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage_1" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
 
 						<?php
 
@@ -650,7 +650,7 @@ if (!empty($score_value)) {
 							foreach ($score_columns as $column) {
 								if (!empty($entrance_data[$entrance_names[1]]["academic_type"]) && $entrance_data[$entrance_names[1]]["academic_type"] == $column["exam_type"]) {
 						?>
-									<label><?= $column['name'] ?></label>
+									<label class="multiple_score_1_label"><?= $column['name'] ?></label>
 									<input type="text" style="margin-top:3px" class="form-control column_score multiple_score_1" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
 						<?php
@@ -763,69 +763,139 @@ if (!empty($score_value)) {
 			}
 		})
 
+		// $("#entrance_result_status").on('change', function() {
+		// 	$("input[name='entrance_roll']").attr("disabled", false);
+		// 	$("input[name='entrance_year']").attr("disabled", false);
+		// 	$("input[name='entrance_percentage']").attr("disabled", false);
+		// 	$("input.multiple_score").attr("disabled", false);
+
+		// 	var ers = $("#entrance_result_status").val();
+		// 	if (ers == 'Awaited') {
+		// 		$(".hide_ input").hide();
+		// 		$("#entrance_percentage").val('');
+		// 		$("#entrance_percentage").hide();
+		// 		$("input.multiple_score").hide();
+		// 		$("input.multiple_score").val('');
+
+
+		// 	} else if (ers == 'Declared') {
+		// 		$(".hide_ input").show();
+		// 		$("#entrance_percentage").show();
+		// 		$("input.multiple_score").show();
+		// 		$("input.multiple_score").val('');
+
+		// 	} else if (ers == 'Not Appeared') {
+		// 		$("input[name='entrance_roll']").val('').attr("disabled", true);
+		// 		$("input[name='entrance_year']").val('').attr("disabled", true);
+		// 		$("input[name='entrance_percentage']").val('').attr("disabled", true);
+		// 		$("input.multiple_score").attr("disabled", true);
+		// 		$("input.multiple_score").show();
+		// 		$("input.multiple_score").val('');
+
+
+		// 	}
+		// })
+
+		// $("#entrance_result_status_1").on('change', function() {
+		// 	var ers = $("#entrance_result_status_1").val();
+		// 	$("input[name='entrance_roll_1']").attr("disabled", false);
+		// 	$("input[name='entrance_year_1']").attr("disabled", false);
+		// 	$("input[name='entrance_percentage_1']").attr("disabled", false);
+		// 	$("input.multiple_score_1").attr("disabled", false);
+		// 	if (ers == 'Awaited') {
+		// 		$(".hide_2 input").hide();
+		// 		$("#entrance_percentage_1").val('');
+		// 		$("#entrance_percentage_1").hide();
+		// 		$("input.multiple_score_1").val('');
+		// 		$("input.multiple_score_1").hide();
+
+		// 	} else if (ers == 'Declared') {
+		// 		$(".hide_2 input").show();
+		// 		$("#entrance_percentage_1").show();
+		// 		$("input.multiple_score_1").val('');
+		// 		$("input.multiple_score_1").show();
+
+
+		// 	} else if (ers == 'Not Appeared') {
+		// 		$("input[name='entrance_roll_1']").val('').attr("disabled", true);
+		// 		$("input[name='entrance_year_1']").val('').attr("disabled", true);
+		// 		$("input[name='entrance_percentage_1']").val('').attr("disabled", true);
+		// 		$("input.multiple_score_1").attr("disabled", true);
+		// 		$("input.multiple_score_1").show();
+		// 		$("input.multiple_score_1").val('');
+
+		// 	}
+		// })
+
 		$("#entrance_result_status").on('change', function() {
-			$("input[name='entrance_roll']").attr("disabled", false);
-			$("input[name='entrance_year']").attr("disabled", false);
-			$("input[name='entrance_percentage']").attr("disabled", false);
-			$("input.multiple_score").attr("disabled", false);
+            $("input[name='entrance_roll']").attr("disabled", false);
+            $("input[name='entrance_year']").attr("disabled", false);
+            $("input[name='entrance_percentage']").attr("disabled", false);
+            $("input.multiple_score").attr("disabled", false);
 
-			var ers = $("#entrance_result_status").val();
-			if (ers == 'Awaited') {
-				$(".hide_ input").hide();
-				$("#entrance_percentage").val('');
-				$("#entrance_percentage").hide();
-				$("input.multiple_score").hide();
-				$("input.multiple_score").val('');
-
-
-			} else if (ers == 'Declared') {
-				$(".hide_ input").show();
-				$("#entrance_percentage").show();
-				$("input.multiple_score").show();
-				$("input.multiple_score").val('');
-
-			} else if (ers == 'Not Appeared') {
-				$("input[name='entrance_roll']").val('').attr("disabled", true);
-				$("input[name='entrance_year']").val('').attr("disabled", true);
-				$("input[name='entrance_percentage']").val('').attr("disabled", true);
-				$("input.multiple_score").attr("disabled", true);
-				$("input.multiple_score").show();
-				$("input.multiple_score").val('');
+            var ers = $("#entrance_result_status").val();
+            if (ers == 'Awaited') {
+                $(".hide_ input").hide();
+                $("#entrance_percentage").val('');
+                $("#entrance_percentage").hide();
+                $("input.multiple_score").hide();
+                $(".multiple_score_label").hide();
+                $("input.multiple_score").val('');
 
 
-			}
-		})
+            } else if (ers == 'Declared') {
+                $(".hide_ input").show();
+                $("#entrance_percentage").show();
+                $("input.multiple_score").show();
+                $(".multiple_score_label").show();
+                $("input.multiple_score").val('');
 
-		$("#entrance_result_status_1").on('change', function() {
-			var ers = $("#entrance_result_status_1").val();
-			$("input[name='entrance_roll_1']").attr("disabled", false);
-			$("input[name='entrance_year_1']").attr("disabled", false);
-			$("input[name='entrance_percentage_1']").attr("disabled", false);
-			$("input.multiple_score_1").attr("disabled", false);
-			if (ers == 'Awaited') {
-				$(".hide_2 input").hide();
-				$("#entrance_percentage_1").val('');
-				$("#entrance_percentage_1").hide();
-				$("input.multiple_score_1").val('');
-				$("input.multiple_score_1").hide();
-
-			} else if (ers == 'Declared') {
-				$(".hide_2 input").show();
-				$("#entrance_percentage_1").show();
-				$("input.multiple_score_1").val('');
-				$("input.multiple_score_1").show();
+            } else if (ers == 'Not Appeared') {
+                $("input[name='entrance_roll']").val('').attr("disabled", true);
+                $("input[name='entrance_year']").val('').attr("disabled", true);
+                $("input[name='entrance_percentage']").val('').attr("disabled", true);
+                $("input.multiple_score").attr("disabled", true);
+                $("input.multiple_score").show();
+                $(".multiple_score_label").show();
+                $("input.multiple_score").val('');
 
 
-			} else if (ers == 'Not Appeared') {
-				$("input[name='entrance_roll_1']").val('').attr("disabled", true);
-				$("input[name='entrance_year_1']").val('').attr("disabled", true);
-				$("input[name='entrance_percentage_1']").val('').attr("disabled", true);
-				$("input.multiple_score_1").attr("disabled", true);
-				$("input.multiple_score_1").show();
-				$("input.multiple_score_1").val('');
+            }
+        })
 
-			}
-		})
+        $("#entrance_result_status_1").on('change', function() {
+            var ers = $("#entrance_result_status_1").val();
+            $("input[name='entrance_roll_1']").attr("disabled", false);
+            $("input[name='entrance_year_1']").attr("disabled", false);
+            $("input[name='entrance_percentage_1']").attr("disabled", false);
+            $("input.multiple_score_1").attr("disabled", false);
+            if (ers == 'Awaited') {
+                $(".hide_2 input").hide();
+                $("#entrance_percentage_1").val('');
+                $("#entrance_percentage_1").hide();
+                $("input.multiple_score_1").val('');
+                $("input.multiple_score_1").hide();
+                $(".multiple_score_1_label").hide();
+
+            } else if (ers == 'Declared') {
+                $(".hide_2 input").show();
+                $("#entrance_percentage_1").show();
+                $("input.multiple_score_1").val('');
+                $(".multiple_score_1_label").show();
+                $("input.multiple_score_1").show();
+
+
+            } else if (ers == 'Not Appeared') {
+                $("input[name='entrance_roll_1']").val('').attr("disabled", true);
+                $("input[name='entrance_year_1']").val('').attr("disabled", true);
+                $("input[name='entrance_percentage_1']").val('').attr("disabled", true);
+                $("input.multiple_score_1").attr("disabled", true);
+                $("input.multiple_score_1").show();
+                $(".multiple_score_1_label").show();
+                $("input.multiple_score_1").val('');
+
+            }
+        })
 
 		$("#graduation_result_status").on('change', function() {
 			var grs = $("#graduation_result_status").val();

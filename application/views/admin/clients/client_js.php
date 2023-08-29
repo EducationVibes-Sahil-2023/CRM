@@ -1154,6 +1154,7 @@
                 $("#entrance_percentage").val('');
                 $("#entrance_percentage").hide();
                 $("input.multiple_score").hide();
+                $(".multiple_score_label").hide();
                 $("input.multiple_score").val('');
 
 
@@ -1161,6 +1162,7 @@
                 $(".hide_ input").show();
                 $("#entrance_percentage").show();
                 $("input.multiple_score").show();
+                $(".multiple_score_label").show();
                 $("input.multiple_score").val('');
 
             } else if (ers == 'Not Appeared') {
@@ -1169,6 +1171,7 @@
                 $("input[name='entrance_percentage']").val('').attr("disabled", true);
                 $("input.multiple_score").attr("disabled", true);
                 $("input.multiple_score").show();
+                $(".multiple_score_label").show();
                 $("input.multiple_score").val('');
 
 
@@ -1187,11 +1190,13 @@
                 $("#entrance_percentage_1").hide();
                 $("input.multiple_score_1").val('');
                 $("input.multiple_score_1").hide();
+                $(".multiple_score_1_label").hide();
 
             } else if (ers == 'Declared') {
                 $(".hide_2 input").show();
                 $("#entrance_percentage_1").show();
                 $("input.multiple_score_1").val('');
+                $(".multiple_score_1_label").show();
                 $("input.multiple_score_1").show();
 
 
@@ -1201,11 +1206,12 @@
                 $("input[name='entrance_percentage_1']").val('').attr("disabled", true);
                 $("input.multiple_score_1").attr("disabled", true);
                 $("input.multiple_score_1").show();
+                $(".multiple_score_1_label").show();
                 $("input.multiple_score_1").val('');
 
             }
         })
-        
+
         $("#graduation_result_status").on('change', function() {
             var grs = $("#graduation_result_status").val();
             if (grs == 'Awaited') {
