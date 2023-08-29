@@ -631,7 +631,7 @@ if (!empty($score_value)) {
 								if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
 						?>
 									<label><?= $column['name'] ?></label>
-									<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+									<input type="text" style="margin-top:3px" class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
 						<?php
 								}
@@ -651,7 +651,7 @@ if (!empty($score_value)) {
 								if (!empty($entrance_data[$entrance_names[1]]["academic_type"]) && $entrance_data[$entrance_names[1]]["academic_type"] == $column["exam_type"]) {
 						?>
 									<label><?= $column['name'] ?></label>
-									<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+									<input type="text" style="margin-top:3px" class="form-control column_score multiple_score_1" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
 						<?php
 								}
@@ -767,6 +767,8 @@ if (!empty($score_value)) {
 			$("input[name='entrance_roll']").attr("disabled", false);
 			$("input[name='entrance_year']").attr("disabled", false);
 			$("input[name='entrance_percentage']").attr("disabled", false);
+			$("input.multiple_score").attr("disabled", false);
+
 			var ers = $("#entrance_result_status").val();
 			if (ers == 'Awaited') {
 				$(".hide_ input").hide();
@@ -782,6 +784,8 @@ if (!empty($score_value)) {
 				$("input[name='entrance_roll']").val('').attr("disabled", true);
 				$("input[name='entrance_year']").val('').attr("disabled", true);
 				$("input[name='entrance_percentage']").val('').attr("disabled", true);
+				$("input.multiple_score").attr("disabled", true);
+
 			}
 		})
 
@@ -790,6 +794,7 @@ if (!empty($score_value)) {
 			$("input[name='entrance_roll_1']").attr("disabled", false);
 			$("input[name='entrance_year_1']").attr("disabled", false);
 			$("input[name='entrance_percentage_1']").attr("disabled", false);
+			$("input.multiple_score_1").attr("disabled", false);
 			if (ers == 'Awaited') {
 				$(".hide_2 input").hide();
 				$("#entrance_percentage_1").val('');
@@ -803,6 +808,7 @@ if (!empty($score_value)) {
 				$("input[name='entrance_roll_1']").val('').attr("disabled", true);
 				$("input[name='entrance_year_1']").val('').attr("disabled", true);
 				$("input[name='entrance_percentage_1']").val('').attr("disabled", true);
+				$("input.multiple_score_1").attr("disabled", true);
 			}
 		})
 
