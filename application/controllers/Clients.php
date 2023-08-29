@@ -360,7 +360,7 @@ class Clients extends ClientsController
                     'post_graduation_percentage' => $data['post_graduation_percentage'],
 
                 ], $academicDetailsIds);
-                $score_values = [];
+                $scrore_update = [];
                 foreach ($data as $key => $value) {
                     if (strpos($key, 'score_column') !== false) {
                         $score_data = explode("-", $key);
@@ -376,8 +376,8 @@ class Clients extends ClientsController
                     // echo json_encode(['status'=>1, 'message' =>'Academic details successfully updated.'.$academicDetailsid]);
                     // $academicDetailsStatusUpdate = $this->clients_model->updateAcademicDetailsStatus($basicDetailsid);
                     $this->session->set_flashdata('success', "Academic details successfully updated.");
-                    if (!empty($score_values)) {
-                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $score_values);
+                    if (!empty($scrore_update)) {
+                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
                     }
                     redirect(site_url('clients/upload_documents'));
                 }
