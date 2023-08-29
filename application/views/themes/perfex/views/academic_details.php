@@ -785,6 +785,8 @@ if (!empty($score_value)) {
 				$("input[name='entrance_year']").val('').attr("disabled", true);
 				$("input[name='entrance_percentage']").val('').attr("disabled", true);
 				$("input.multiple_score").attr("disabled", true);
+                $("input.multiple_score").val('');
+
 
 			}
 		})
@@ -809,6 +811,8 @@ if (!empty($score_value)) {
 				$("input[name='entrance_year_1']").val('').attr("disabled", true);
 				$("input[name='entrance_percentage_1']").val('').attr("disabled", true);
 				$("input.multiple_score_1").attr("disabled", true);
+                $("input.multiple_score_1").val('');
+
 			}
 		})
 
