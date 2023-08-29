@@ -701,7 +701,7 @@ if (!empty($score_value)) {
 		$(document).ready(function() {
 			$('#entrance_exam_details').change();
 			if ($("input.column_score").length > 0) {
-				$("#entrance_exam_div").find(".c2").css("height", "300px");
+				$("#entrance_exam_div").find(".c2").css("height", "320px");
 			}
 		})
 		$('input[type=radio][name=after_tenth]').change(function() {
