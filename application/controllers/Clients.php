@@ -337,6 +337,13 @@ class Clients extends ClientsController
                     'entrance_result_status' => $data['entrance_result_status'],
                     'entrance_percentage' => $data['entrance_percentage'],
                     'after_x_status' => $data['after_tenth'],
+                    'after_xx_status' => $data['after_xx_status'],
+                    'post_graduation_course' => $data['post_graduation_course'],
+                    'post_graduation_board' => $data['post_graduation_board'],
+                    'post_graduation_passing_year' => $data['post_graduation_passing_year'],
+                    'post_graduation_result_status' => $data['post_graduation_result_status'],
+                    'post_graduation_marking_scheme' => $data['post_graduation_marking_scheme'],
+                    'post_graduation_percentage' => $data['post_graduation_percentage'],
 
                 ], $academicDetailsIds);
 
