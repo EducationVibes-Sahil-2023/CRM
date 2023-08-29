@@ -473,7 +473,7 @@ if (!empty($score_value)) {
 										<select class="form-control" name="program" id="program" required>
 											<option value="">Select a Program</option>
 											<?php foreach ($program_data as $p) {
-												if ($p["lead_type_status"] == $lead_type_status) {
+												if ($p["segment"] == $lead_type_status) {
 													$selected = "";
 													if ($admissionpreferences->program == $p["id"]) {
 														$selected = "selected";
