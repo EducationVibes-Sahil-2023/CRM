@@ -42,6 +42,7 @@ class Staff extends AdminController
             $data['assign_state'] = !empty($this->input->post('assign_state')) ? implode(',', $this->input->post('assign_state')) : '';
             $data['lead_type'] = !empty($this->input->post('lead_type')) ? $this->input->post('lead_type') : '';
             $data['department_head'] = !empty($this->input->post('department_head')) ? $this->input->post('department_head') : '';
+            $data['post_sales'] = !empty($this->input->post('post_sales')) ? $this->input->post('post_sales') : '';
             $data['facebook_lead_name'] = !empty($this->input->post('facebook_lead_name')) ? $this->input->post('facebook_lead_name') : '';
 
 

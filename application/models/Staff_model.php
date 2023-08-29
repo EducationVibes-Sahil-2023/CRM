@@ -957,4 +957,9 @@ class Staff_model extends App_Model
 
         return $this->db->get(db_prefix() . 'facebook_name')->result_array();
     }
+
+    public function post_sale_get()
+    {
+        return $this->db->where(["post_sales" => 1])->get(db_prefix() . 'staff')->result_array();
+    }
 }

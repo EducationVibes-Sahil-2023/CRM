@@ -168,6 +168,14 @@
                               } ?>
                            </select>
                         </div>
+                        
+                        <div class="checkbox checkbox-primary">
+                           <input type="checkbox" value="1" name="post_sales" id="post_sales" <?php if (isset($member->post_sales) && $member->post_sales == 1) {
+                                                                                                                                                echo ' checked';
+                                                                                                                                             } ?>>
+                           <label for="post_sales"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Post Sales"></i>
+                              Post Sales</label>
+                        </div>
                         <div class="checkbox checkbox-primary">
                            <input type="checkbox" value="1" name="department_head" id="department_head" onclick="set_department_head(this)" <?php if (isset($member) && $member->department_head == 1) {
                                                                                                                                                 echo ' checked';
@@ -175,6 +183,7 @@
                            <label for="department_head"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Department head"></i>
                               Department head</label>
                         </div>
+
                         <div class="form-group select-placeholder assign_state_div" style="display:<?= !empty($member->department_head) ? 'none' : '' ?>">
                            <label for="assign_state" class="control-label">Select State</label>
                            <!-- <select name="assign_state[]" data-live-search="true" multiple id="assign_state" class="form-control selectpicker" data-none-selected-text="Select State">
