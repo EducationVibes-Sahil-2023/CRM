@@ -455,21 +455,22 @@
 
     var suggetions_university = [];
     const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
-    const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}'
-                            ?>;
+    const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}' ?>;
+
+
     var selectedUniversityArr = [];
     // const universityArr = {};
     $('#study_country').on('change select2:opening', async function() {
         let value = $(this).val();
         if (value.length > 0) {
-            if (value.length <= 3) {
+            if (value.length <= 2) {
                 selectedUniversityArr = [];
                 $('#countries').val(value.join(','));
                 var str = '';
                 for (let k = 0; k < value.length; k++) {
                     var v = value[k];
                     var countryName = v.search("_") != -1 ? v.replace("_", " ") : v;
-
+                    let c = v.replace(" ", "_");
                     str += `<div class="col-lg-4">
           <div class="form-group">
             <label for="university${k}">${countryName} University</label>
@@ -478,10 +479,10 @@
         </div>`;
 
                     if (Object.keys(universityArr).length > 0) {
-                        if (v in universityArr) {
-                            selectedUniversityArr[v] = universityArr[v];
+                        if (c in universityArr) {
+                            selectedUniversityArr[countryName] = universityArr[c];
                         } else {
-                            selectedUniversityArr[v] = "";
+                            selectedUniversityArr[countryName] = "";
                         }
                     }
                 }
@@ -489,12 +490,13 @@
                 $('.universities').html(str);
 
                 if (Object.keys(selectedUniversityArr).length > 0) {
-                    //console.log(selectedUniversityArr);
+                    // console.log(selectedUniversityArr);
                     var count2 = 0;
 
                     for (const k in selectedUniversityArr) {
                         const v = selectedUniversityArr[k];
                         var countryName = k.search("_") != -1 ? k.replace("_", " ") : k;
+                        // console.log(countryName);
 
                         let university_list = await show_university_dropdown(select_segment_default, k);
                         //console.log(university_list);
@@ -502,7 +504,7 @@
                         var tagInput1 = new TagsInput({
                             selector: `university${count2}`,
                             duplicate: false,
-                            max: 3,
+                            max: 5,
                             suggestions: university_list
                         });
 
@@ -530,7 +532,7 @@
                         var tagInput1 = new TagsInput({
                             selector: `university${k}`,
                             duplicate: false,
-                            max: 3,
+                            max: 5,
                             suggestions: university_list
                         });
 
@@ -539,7 +541,7 @@
                 }
             }
 
-            if (value.length >= 3) {
+            if (value.length >= 2) {
                 $(`#study_country option`).prop('disabled', true);
                 for (let k = 0; k < value.length; k++) {
                     var v = value[k];
@@ -555,6 +557,8 @@
         }
         // set_university();
     });
+
+
 
     // Plugin Constructor
     var TagsInput = function(opts) {
@@ -726,7 +730,9 @@
 
             if (suggestions && suggestions.length > 0) {
                 var matchedSuggestions = suggetions_university[country_name].filter(function(suggestion) {
-                    return suggestion.toLowerCase().startsWith(str.toLowerCase());
+                    // return suggestion.toLowerCase().startsWith(str.toLowerCase());
+
+                    return suggestion.toLowerCase().includes(str.toLowerCase());
                 });
 
                 var div_elements = document.querySelectorAll('.suggestions-container');
@@ -843,7 +849,7 @@
                     var tagInput1 = new TagsInput({
                         selector: `university${set_count}`,
                         duplicate: false,
-                        max: 3,
+                        max: 5,
                         suggestions: university_list
                     });
 
@@ -885,7 +891,9 @@
 
     $('#study_country').trigger('change')
 
-
+    // $(".client-form").find("#course").change(function() {
+    //     $("#entrance_exam_details").val('').selectpicker('refresh');
+    // })
     // SUBMIT ADMISSION PREFERENCES
 
     $('#save_admission_preferences').on('click', function(e) {
@@ -895,38 +903,88 @@
             course: $('#course').val(),
             sessionIntake: $('#session_intake').val(),
             countries: $('#study_country').val().join(","),
-            entranceExamGiven: $('#entrance_exam_given').val(),
+            // entranceExamGiven: $('#entrance_exam_given').val(),
             entranceExamDetails: $('#entrance_exam_details').val(),
             admissionPreferencesId: $('#admissionpreferencesid').val(),
             client_id: $('#client_id').val(),
+            course_name: $('#course_name').val(),
             universities: {}
-        }
+        };
 
-        // let countriesArr = params.countries.split(',')
-        let countriesArr = $('#study_country').val();
 
-        $.each(countriesArr, function(k, v) {
-            params.universities[v] = $(`#university${k}`).val()
-            if (params.universities[v] == "") {
-                alert_float('danger', "Select " + v + " university is requried.");
+        // Let's use a try-catch block to handle any errors during AJAX request
+        try {
+            let countriesArr = $('#study_country').val();
+
+            $.each(countriesArr, function(index, value) {
+                let value_new = value.replace(" ", "_");
+                params.universities[value_new] = $(`#university${index}`).val();
+                if (params.universities[value_new] === "") {
+                    alert_float('danger', "Select " + value + " university is required.");
+                    throw new Error('University selection is required.');
+                    return false;
+                }
+            });
+            var selectedCourseText = $("#course option:selected").text();
+
+
+            if (params.program == "") {
+                alert_float('danger', "Select Program is requried.");
+                return false;
+            } else if (params.course == "") {
+                alert_float('danger', "Select Course is requried.");
+                return false;
+            } else if (params.sessionIntake == "") {
+
+                alert_float('danger', "Select Session Intake is requried.");
+                return false;
+            } else if (params.countries == "") {
+                alert_float('danger', "Select Where would you like to study is requried.");
+                return false;
+
+            } else if (params.entranceExamDetails == "") {
+                alert_float('danger', "Select Entrance exam is requried.");
+                return false;
+
+            }
+            // if (params.course != "") {
+            //     selectedCourseText = $("#course option:selected").text();
+            //     if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+            //         if (params.course_name == "") {
+            //             alert_float('danger', "Course exam is requried.");
+            //             return false;
+            //         }
+            //     } else {
+            //         params.course_name = '';
+            //     }
+            // }
+
+            if (params.course_name == "") {
+                alert_float('danger', "Course Name/Specialization is requried.");
                 return false;
             }
-        })
 
-        $.ajax({
-            url: "<?php echo base_url() . 'admin/clients/update_admission_preferences' ?>",
-            type: "POST",
-            data: params,
-            dataType: "JSON",
-            success: function(res) {
-                // alert(res.resp_desc)
-                if (res.resp_id != undefined) {
-                    $('#admissionpreferencesid').val(res.resp_id);
+            $.ajax({
+                url: "<?php echo base_url() . 'admin/clients/update_admission_preferences' ?>",
+                type: "POST",
+                data: params,
+                dataType: "JSON",
+                success: function(res) {
+                    if (res.resp_id !== undefined) {
+                        $('#admissionpreferencesid').val(res.resp_id);
+                    }
+                    alert_float('success', res.resp_desc);
+                    window.location.reload();
+                },
+                error: function(err) {
+                    alert_float('danger', "An error occurred during submission.");
+                    console.error(err);
                 }
-                alert_float('success', res.resp_desc);
+            });
+        } catch (error) {
+            console.error(error);
+        }
 
-            }
-        })
     })
 
     // FREEZE ADMISSION PREFERENCES
@@ -972,24 +1030,46 @@
         $("#save_admission_preferences").attr("disabled", false);
 
     }
-    if ( admissionpreferences_freeze == 1) {
+    if (admissionpreferences_freeze == 1) {
         set_frezee();
     }
 
     $(document).ready(function() {
 
-        $('input[type=radio][name=after_tenth]').change(function() {
-            if (this.value == 'Both') {
-                $('#twelthAcademicDetails').css("display", "block");
-                $('#diplomaAcademicDetails').css("display", "block");
-            } else if (this.value == '12th') {
-                $('#diplomaAcademicDetails').css("display", "none");
-                $('#twelthAcademicDetails').css("display", "block");
-            } else if (this.value == 'Diploma') {
-                $('#twelthAcademicDetails').css("display", "none");
-                $('#diplomaAcademicDetails').css("display", "block");
+        $('input[type=radio][name=after_x_status]').change(function() {
+            // $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+            // $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
+            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
+            // console.log(selected_value);
+            // Hide both academic details by default.
+            $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
+
+            if (selected_value == 'Both') {
+                $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == '12th') {
+                // console.log("12 select");
+                $('#twelthAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Diploma') {
+                $('#diplomaAcademicDetails').removeClass("hide").addClass("show");
             }
         });
+
+        $('input[type=radio][name=after_xx_status]').change(function() {
+            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
+            // console.log(selected_value);
+            // Hide both academic details by default.
+            $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("show").addClass("hide");
+
+            if (selected_value == 'Both') {
+                $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Graduation') {
+                // console.log("12 select");
+                $('#graduationAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Post Graduation') {
+                $('#post_graduationAcademicDetails').removeClass("hide").addClass("show");
+            }
+        });
+
         $("#twelth_result_status").on('change', function() {
             var trs = $("#twelth_result_status").val();
             if (trs == 'Awaited') {
@@ -1002,6 +1082,7 @@
                 $("#twelth_marking_scheme_div").show();
                 $("#twelth_percentage").parents(".border2").show();
             }
+
         })
         $("#diploma_result_status").on('change', function() {
             var drs = $("#diploma_result_status").val();
@@ -1018,13 +1099,38 @@
         })
 
         $("#entrance_result_status").on('change', function() {
+            $("input[name='entrance_roll']").attr("disabled", false);
+            $("input[name='entrance_year']").attr("disabled", false);
+            $("input[name='entrance_percentage']").attr("disabled", false);
             var ers = $("#entrance_result_status").val();
             if (ers == 'Awaited') {
-                $("#entrance_percentage").parents(".border2").hide();
+                $(".hide_ input").hide();
                 $("#entrance_percentage").val('');
 
             } else if (ers == 'Declared') {
-                $("#entrance_percentage").parents(".border2").show();
+                $(".hide_ input").show();
+            } else if (ers == 'Not Appeared') {
+                $("input[name='entrance_roll']").val('').attr("disabled", true);
+                $("input[name='entrance_year']").val('').attr("disabled", true);
+                $("input[name='entrance_percentage']").val('').attr("disabled", true);
+            }
+        })
+
+        $("#entrance_result_status_1").on('change', function() {
+            var ers = $("#entrance_result_status_1").val();
+            $("input[name='entrance_roll_1']").attr("disabled", false);
+            $("input[name='entrance_year_1']").attr("disabled", false);
+            $("input[name='entrance_percentage_1']").attr("disabled", false);
+            if (ers == 'Awaited') {
+                $(".hide_2 input").hide();
+                $("#entrance_percentage_1").val('');
+
+            } else if (ers == 'Declared') {
+                $(".hide_2 input").show();
+            } else if (ers == 'Not Appeared') {
+                $("input[name='entrance_roll_1']").val('').attr("disabled", true);
+                $("input[name='entrance_year_1']").val('').attr("disabled", true);
+                $("input[name='entrance_percentage_1']").val('').attr("disabled", true);
             }
         })
         $("#graduation_result_status").on('change', function() {
@@ -1038,19 +1144,281 @@
             }
         })
 
-        var selectedRadioButton = $("input[type='radio']");
 
-        // Trigger a click event on the selected radio button
-        selectedRadioButton.click();
-        $("input[name='after_tenth']").change(function() {
-            $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
-            $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
-        })
-        setTimeout(() => {
-            $('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
+        // var selectedRadioButton = $("input[type='radio']:checked");
 
-        }, 1000);
+        // selectedRadioButton.prop("checked", true).trigger("change");
+
+        // var selectedRadioButton = $("input[type='radio']");
+
+        // // Trigger a click event on the selected radio button
+        // // selectedRadioButton.click();
+        // $("input[name='after_x_status']").change(function() {
+        //     $("#twelthAcademicDetails").find("input,select").val('').selectpicker("refresh");
+        //     $("#diplomaAcademicDetails").find("input,select").val('').selectpicker("refresh");
+        // })
+        // setTimeout(() => {
+        //     $('#twelth_result_status,#diploma_result_status,#entrance_result_status').trigger('change');
+
+        // }, 1000);
         $('#study_country').trigger('change');
-        $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
+        $("#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
+        // $("#academic_details,#declaration").find("input,select").attr("disabled", true).selectpicker("refresh");
+
+        $("input[type='tel']").keyup(function() {
+            var inputValue = $(this).val();
+
+            // Remove any non-digit characters
+            inputValue = inputValue.replace(/\D/g, '');
+
+            // Limit the input to 10 digits
+            if (inputValue.length > 10) {
+                inputValue = inputValue.slice(0, 10);
+            }
+
+            $(this).val(inputValue);
+        });
+
+
+
+        if ($("input.column_score").length > 0) {
+            $("#entrance_exam_div").find(".c2").css("height", "290px");
+        }
+
+
+
+
+    })
+
+
+    $('#entrance_exam_details').on('change select2:opening', async function() {
+        let value = $(this).val();
+        value = value.filter(function(element) {
+            return element !== "" && element !== " " && element !== null && element !== undefined;
+        });
+        if (value.length >= 2) {
+            $(`#entrance_exam_details option`).prop('disabled', true);
+            for (let k = 0; k < value.length; k++) {
+                var v = value[k];
+                $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+            }
+        } else {
+            $(this).find('option').prop('disabled', false);
+        }
+        $(this).selectpicker("refresh")
+
+    });
+
+    $('#save_profile_data').on('click', function(e) {
+        e.preventDefault()
+        let data = []; // Define data as an array, not an object
+        $(".profile-data-div  div > input").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();;
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".profile-data-div  div > textarea").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".profile-data-div  div > select").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).find("option:selected").val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+
+        data.push({
+            name: "csrf_token_name",
+            value: $('input[name="csrf_token_name"]').val()
+        });
+
+        data.push({
+            name: "clientid",
+            value: $('input[name="clientid"]').val()
+        });
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/profile_update' ?>",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(res) {
+                // alert(res.resp_desc)
+                if (res.resp_code == "RCS") {
+                    alert_float('success', res.resp_desc);
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
+    })
+
+
+    $('#save_student_data').on('click', function(e) {
+        e.preventDefault()
+        let data = []; // Define data as an array, not an object
+        $(".student-data-div  div > input").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();;
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".student-data-div  div > textarea").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $(".student-data-div  div > select").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).find("option:selected").val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+
+
+        data.push({
+            name: "csrf_token_name",
+            value: $('input[name="csrf_token_name"]').val()
+        });
+
+        data.push({
+            name: "clientid",
+            value: $('input[name="clientid"]').val()
+        });
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/student_update' ?>",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(res) {
+                // alert(res.resp_desc)
+                if (res.resp_code == "RCS") {
+                    alert_float('success', res.resp_desc);
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
+    })
+
+    $('#save_admission_details').on('click', function(e) {
+        e.preventDefault()
+        let data = []; // Define data as an array, not an object
+
+        $("#academic_details div > input").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            let type = $(this).attr("type");
+
+            if (type === "radio") {
+                if ($(this).prop("checked")) {
+                    data.push({
+                        name: name,
+                        value: value
+                    });
+                }
+            } else {
+                if (name !== undefined && value !== undefined) {
+                    data.push({
+                        name: name,
+                        value: value
+                    });
+                }
+            }
+        });
+
+
+        $("#academic_details  div > textarea").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+        $("#academic_details  div > select").each(function() {
+            let name = $(this).attr("name");
+            let value = $(this).find("option:selected").val();
+            if (name != undefined && value != undefined) {
+                data.push({
+                    name: name,
+                    value: value
+                });
+            }
+        });
+
+
+        data.push({
+            name: "csrf_token_name",
+            value: $('input[name="csrf_token_name"]').val()
+        });
+
+        data.push({
+            name: "clientid",
+            value: $('input[name="clientid"]').val()
+        });
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/student_acadmic' ?>",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(res) {
+                // alert(res.resp_desc)
+                if (res.resp_code == "RCS") {
+                    alert_float('success', res.resp_desc);
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
     })
 </script>

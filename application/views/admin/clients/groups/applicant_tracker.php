@@ -3,6 +3,7 @@
 $applicant_tracker = applicant_tracker();
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
+$document_files = !empty($documents[0]["documents"]) ? json_decode($documents[0]["documents"], true) : '';
 
 ?>
 <style>
@@ -628,6 +629,45 @@ if (empty($customer_admins)) { ?>
                                         </div>
                                     <?php
                                     }
+                                } else if (!empty($document_files)) {
+                                    foreach ($document_files as $doc_files) {
+                                        $file_name = "";
+                                        if (!empty($doc_files['file_path'])) {
+                                            $file_name =  trim(explode("_", basename($doc_files['file_path']))[2]);
+                                        }
+
+                                    ?>
+                                        <div class="row col-md-12 document_upload_files ">
+                                            <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= $doc_files['title'] ?>"></div>
+                                            <div class="col-md-5">
+                                                <div class="margin-bottom ">
+                                                    <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $doc_files['file_path'] ?>" onchange="real_time_media_show(this)" name="document_file[]" placeholder="">
+                                                </div>
+                                                <?php if (!empty($doc_files['file_path'])) { ?>
+                                                    <div class="row media-text-div">
+                                                        <div class="col-md-10">
+                                                            <p class="document-file-name"><?= $file_name ?></p>
+                                                        </div>
+                                                        <div class="col-md-2 file-download-block">
+                                                            <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                        </div>
+                                                    </div>
+                                                <?php } ?>
+
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
+
+                                                <button class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+
+                                                <!-- <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
+                                            </div>
+
+
+                                        </div>
+                                    <?php
+                                    }
                                 } else { ?>
                                     <div id="upload_documents">
                                         <div class="row col-md-12 document_upload_files ">
@@ -656,14 +696,14 @@ if (empty($customer_admins)) { ?>
                                     <div class="col-md-4">
                                         <?php echo render_input('email_creation', "", !empty($profile_creation_data[0]["email"]) ? $profile_creation_data[0]["email"] : '', "Email", ["required" => "required", "placeholder" => "Enter Email"]); ?>
                                     </div>
-                                    <?php if (!empty($profile_creation_data[0]["email_verified"]) && $profile_creation_data[0]["email_verified"] != 1) : ?>
+                                    <?php if (!empty($profile_creation_data[0]["email_verified"]) && $profile_creation_data[0]["email_verified"] == 1) : ?>
                                         <div class="col-md-4 edit_save_block email_creation_block">
-                                            <i class="fa fa-pencil-square-o fa-pencil-square-o-hide col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
-                                            <i class="fa fa-file fa-file-hide col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
+                                            <i class="fa fa-pencil-square-o fa-pencil-square-o col-md-1" style="display:none; cursor:not-allowed!important"></i>
                                         </div>
                                     <?php else : ?>
                                         <div class="col-md-4 edit_save_block email_creation_block">
-                                            <i class="fa fa-pencil-square-o fa-pencil-square-o col-md-1" style="display:none; cursor:not-allowed!important"></i>
+                                            <i class="fa fa-pencil-square-o fa-pencil-square-o-hide col-md-1" style="display:none;" onclick="edit_data(this,1)"></i>
+                                            <i class="fa fa-file fa-file-hide col-md-1" style="display:none;" onclick="save_data(this,'email')"></i>
                                         </div>
                                     <?php endif; ?>
 
@@ -789,7 +829,7 @@ if (empty($customer_admins)) { ?>
                                     ?>
 
                                 <?php } else { ?>
-                                    <div class="col-md-12 university_div university_div_">
+                                    <div class="col-md-12 university_div university_div_  bg-warning">
                                         <div class="col-md-2">
                                         </div>
                                         <div class="col-md-4">

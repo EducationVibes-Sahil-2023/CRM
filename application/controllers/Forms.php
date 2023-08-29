@@ -228,11 +228,22 @@ class Forms extends ClientsController
                 $insert_to_db = true;
 
 
-                if (!empty($call_data)) {
-                    $this->curl_function($call_data);
+                // if (!empty($call_data)) {
+                //     $this->curl_function($call_data);
+                // }
+
+if (!empty($call_data)) {
+                    $response_call = $this->curl_function($call_data);
+                    $response_call = json_decode($response_call);
+
+                    if (isset($response_call[0]->status) && $response_call[0]->status == 0) {
+                        echo json_encode([
+                            'success' => 0,
+                            'message' => $response_call[0]->message
+                        ]);
+                        die;
+                    }
                 }
-
-
 
                 if ($form->allow_duplicate == 0) {
                     $where = [];
@@ -822,6 +833,73 @@ class Forms extends ClientsController
 
 
 
+    // private function curl_function($post_data)
+    // {
+    //     $data = array("call_data" => json_encode($post_data));
+    //     try {
+    //         $token = JWT_TOKEN;
+    //         header('Content-Type: application/json'); // Specify the type of data
+    //         $ch = curl_init(base_url("external/call_update")); // Initialise cURL
+    //         $authorization = "Authorization: Bearer " . $token; // Prepare the authorisation token
+    //         curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
+    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //         curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
+    //         curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // Set the posted fields
+    //         // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
+    //         $result = curl_exec($ch); // Execute the cURL statement
+    //         curl_close($ch); // Close the cURL connection
+    //     } catch (Exception $e) {
+    //         return true;
+    //     }
+    // }
+
+//     private function curl_function($post_data)
+// {
+//     $data = array("call_data" => json_encode($post_data));
+    
+//     try {
+//         $token = JWT_TOKEN;
+//         $url = base_url("external/call_update");
+        
+//         $ch = curl_init($url);
+        
+//         if ($ch === false) {
+//             throw new Exception('Failed to initialize cURL');
+//         }
+
+//         $authorization = "Authorization: Bearer " . $token;
+//         $headers = array('Content-Type: application/json', $authorization);
+        
+//         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+//         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//         curl_setopt($ch, CURLOPT_POST, true);
+//         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+
+//         $result = curl_exec($ch);
+
+//         if ($result === false) {
+//             throw new Exception('cURL error: ' . curl_error($ch));
+//         }
+
+//         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+//         if ($http_code !== 200) {
+//             throw new Exception('HTTP error: ' . $http_code);
+//         }
+
+//         curl_close($ch);
+        
+//         // Return the result or handle it as needed.
+//         return $result;
+//     } catch (Exception $e) {
+//         // Handle the error here, e.g., log the error message or take appropriate action.
+//         // You can also echo or return the error message for debugging purposes.
+//         echo "Error: " . $e->getMessage();
+//         return false;
+//     }
+// }
+
+
     private function curl_function($post_data)
     {
         $data = array("call_data" => json_encode($post_data));
@@ -829,16 +907,44 @@ class Forms extends ClientsController
             $token = JWT_TOKEN;
             header('Content-Type: application/json'); // Specify the type of data
             $ch = curl_init(base_url("external/call_update")); // Initialise cURL
-            $authorization = "Authorization: Bearer " . $token; // Prepare the authorisation token
+            $authorization = "Authorization: Bearer " . $token; // Prepare the authorization token
             curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // Set the posted fields
+
+            // Disable SSL certificate validation for a local server
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+
             // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
             $result = curl_exec($ch); // Execute the cURL statement
             curl_close($ch); // Close the cURL connection
+
+            $result = array(json_decode($result, true));
         } catch (Exception $e) {
-            return true;
+            $result = array(array(
+                "status" => 0,
+                "message" => "something bad happen"
+            ));
         }
+   
+        return json_encode($result);
     }
+
+      public function test_db_connection()
+    {
+        error_reporting(E_ALL);
+        ini_set('display_errors', 1);
+        $response = $this->db->select("*")->from(db_prefix() . "leads")->limit(500)->get()->result_array();
+        echo $this->db->last_query();
+        echo json_encode($response,true);
+        error_reporting(E_ALL & ~E_NOTICE); // Or the appropriate level
+        ini_set('display_errors', 0); // Set to 0 for production
+    }
+    public function test_code()
+    {
+        echo json_encode(array("success" => 1, "message" => "Run Successfully"));
+    }
+
 }

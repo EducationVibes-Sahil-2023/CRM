@@ -18,7 +18,7 @@ $aColumns = [
     '1',
     db_prefix() . 'clients.userid as userid',
     db_prefix() . 'clients.company',
-    'firstname',
+    'CONCAT(' . db_prefix() . 'contacts.firstname, " ", ' . db_prefix() . 'contacts.lastname) as client_name',
     db_prefix() . 'contacts.email  as email',
     db_prefix() . 'clients.phonenumber as phonenumber',
     db_prefix() . 'clients.active',
@@ -27,6 +27,8 @@ $aColumns = [
     db_prefix() . 'leads_status.name as status_name',
     db_prefix() . 'leads_type.name as type_name',
     db_prefix() . 'leads_sources.name as source_name',
+    'CONCAT(' . db_prefix() . 'staff.firstname, " ", ' . db_prefix() . 'staff.lastname) as assigned_name',
+
     // 'GROUP_CONCAT(' . db_prefix() . 'client_university_shortlisting.vendor_id) as vendor_id',
 
 ];
@@ -41,6 +43,7 @@ $filter = [];
 $join = [
     'LEFT JOIN ' . db_prefix() . 'contacts ON ' . db_prefix() . 'contacts.userid=' . db_prefix() . 'clients.userid AND ' . db_prefix() . 'contacts.is_primary=1',
     'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id=' . db_prefix() . 'clients.leadid ',
+    'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'leads.assigned=' . db_prefix() . 'staff.staffid ',
     'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
@@ -299,7 +302,6 @@ if (count($custom_fields) > 4) {
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     db_prefix() . 'contacts.id as contact_id',
-    'lastname',
     db_prefix() . 'clients.zip as zip',
     'registration_confirmed',
     db_prefix() . 'applicant_tracker.name applicant_stage_name',
@@ -312,7 +314,7 @@ $rResult = $result['rResult'];
 foreach ($rResult as $aRow) {
     $row = [];
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
-    $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>' : '');
+    $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['client_name'] . '</a>' : '');
     $url = admin_url('clients/client/' . $aRow['userid']);
 
     if ($isPerson && $aRow['contact_id']) {
@@ -374,6 +376,7 @@ foreach ($rResult as $aRow) {
     $row[] = !empty($check_applicant_status["applicant_stage_status"]) ? $check_applicant_status["applicant_stage_status"] : "";
     $row[] = !empty($check_applicant_status["updated_date"]) ? $check_applicant_status["updated_date"] : "";
     $row[] = _dt($aRow['datecreated']);
+    $row[] = $aRow['assigned_name'];
     $row[] = $aRow['status_name'];
     $row[] = $aRow['type_name'];
     $row[] = $aRow['source_name'];

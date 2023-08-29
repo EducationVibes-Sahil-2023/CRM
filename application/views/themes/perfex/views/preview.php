@@ -1,6 +1,17 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<?php
 
+$documents_data = $documents;
+$document_files = !empty($documents_data[0]["documents"]) ? json_decode($documents_data[0]["documents"], true) : '';
+
+
+if (!empty($score_value)) {
+	$score_value = array_column($score_value, null, "type");
+}
+
+
+?>
 
 <style type="text/css">
 	.card {
@@ -24,6 +35,10 @@
 	.button-22 {
 		background: #415165;
 		border-color: #415165;
+	}
+
+	#entrance_exam_div label {
+		margin: 8px 0px 0px 0px;
 	}
 </style>
 <style type="text/css">
@@ -295,56 +310,57 @@
 								<input type="hidden" name="basicDetailsId" value="<?= $admissionpreferences->id ?>">
 								<select class="form-control" name="program" id="program" required readonly>
 									<option value="">Select a Program</option>
-									<option value="Under Graduate" <?php echo ($admissionpreferences->program == 'Under Graduate') ? 'selected' : ''; ?>>Under Graduate</option>
-									<option vaue="Post Graduate" <?php echo ($admissionpreferences->program == 'Post Graduate') ? 'selected' : ''; ?>>Post Graduate</option>
+									<?php foreach ($program_data as $p) {
+										$selected = "";
+										if ($admissionpreferences->program == $p["id"]) {
+											$selected = "selected";
+										}
+									?>
+										<option value="<?= $p["id"] ?>" <?= $selected ?>><?= $p["name"] ?></option>
+									<?php
+									}
+									?>
 								</select>
 								<?php echo form_error('program'); ?>
 							</div>
 						</div>
+
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="course">Course</label>
 								<select class="form-control" name="course" id="course" readonly>
 									<option value="">Select a course </option>
-									<?php if ($admissionpreferences->course != '') : ?>
-										<option value="<?= $admissionpreferences->course; ?>" selected><?= $admissionpreferences->course; ?></option>
-									<?php endif; ?>
 
 								</select>
 								<?php echo form_error('course'); ?>
 							</div>
 						</div>
+						<div class="col-lg-4 course_name_field" style="display:<?= !empty($admissionpreferences->course_name) ? 'block' : 'none' ?>">
+							<div class="form-group">
+								<label for="course_name">Course Name</label>
+								<input type="text" class="form-control" name="course_name" required id="course_name" value="<?= !empty($admissionpreferences->course_name) ? $admissionpreferences->course_name : '' ?>">
+							</div>
+						</div>
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="session_intake">Session Intake</label>
-								<select class="form-control" name="session_intake" id="session_intake" <?php echo $freezed ?>>
-									<option value="">Select</option>
-									<?php
-									$intakeArr = array(
-										"May_2023" => "May 2023",
-										"July_2023" => "July 2023",
-										"September_2023" => "September 2023",
-										"November_2023" => "November 2023",
-									);
-
-									foreach ($intakeArr as $key => $val) {
-									?>
-										<option value="<?php echo $key ?>" <?php echo ($admissionpreferences->session_intake == $key) ? 'selected' : ''; ?>><?php echo $val ?></option>
-									<?php
-									}
-									?>
-								</select>
+								<input type="month" class="form-control" name="session_intake" required value="<?= !empty($admissionpreferences->session_intake) ? $admissionpreferences->session_intake : '' ?>" placeholder="Select Month and Year">
 							</div>
 						</div>
-					</div>
-					<div class="row">
+						<?php
+						$allCountriesArr_temp = explode(",", $admissionpreferences->study_country);
+						$allCountriesArr = [];
+						foreach ($allCountriesArr_temp as $country) {
+							$allCountriesArr[$country] = $country;
+						}
+						?>
+
+
 						<div class="col-lg-4">
 							<div class="form-group">
 								<label for="study_country">Where would you like to study?</label>
 								<select class="form-control" name="study_country" id="study_country" multiple readonly>
-									<?php
-									$allCountriesArr = array("USA" => "USA", "UK" => "UK", "Canada" => "Canada", "Australia" => "Australia", "New_Zealand" => "New zealand", "Germany" => "Germany", "Italy" => "Italy", "France" => "France", "UAE" => "UAE", "Russia" => "Russia", "Georgia" => "Georgia", "Kazakhstan" => "Kazakhstan", "Krygstan" => "Krygstan", "Bangladesh" => "Bangladesh", "Nepal" => "Nepal");
-									?>
+
 									<option value="">Select country </option>
 									<?php
 									if (!empty($admissionpreferences)) {
@@ -361,30 +377,17 @@
 							</div>
 						</div>
 						<div class="col-lg-4">
-							<div class="form-group">
-								<label for="entrance_exam_given">Have You Given any Entrance Exam?</label>
-								<select class="form-control" name="entrance_exam_given" id="entrance_exam_given">
-									<option value="">Select</option>
-									<option value="YES" <?php echo ($admissionpreferences->entrance_exam_given == 'YES') ? 'selected' : ''; ?>>YES</option>
-									<option value="NO" <?php echo ($admissionpreferences->entrance_exam_given == 'NO') ? 'selected' : ''; ?>>NO</option>
-								</select>
-							</div>
-						</div>
-						<div class="col-lg-4">
 							<div class="form-group" id="entrance_exam_details_div">
 								<label for="exampleInputCourse">Entrance exam details</label>
 								<select class="form-control" name="entrance_exam_details" id="entrance_exam_details" readonly>
 									<option value="">Select</option>
-									<?php if ($admissionpreferences->entrance_exam_details != '') : ?>
-										<option value="<?= $admissionpreferences->entrance_exam_details; ?>" selected><?= $admissionpreferences->entrance_exam_details; ?></option>
-									<?php else : ?>
-										<option value="NEET UG">NEET UG</option>
-									<?php endif; ?>
+
 
 								</select>
 							</div>
 						</div>
 					</div>
+
 
 					<div class="row">
 						<div class="universities">
@@ -689,20 +692,22 @@
 			<!-- end diploma details-->
 
 			<!-- Under Graduate details-->
-			<div class="row <?php echo ($admissionpreferences->program == 'Post Graduate') ? '' : 'hide'; ?>" id="graduationAcademicDetails">
-				<h4>Graduation Details</h4>
-				<div class="col-lg-1 border2 border1">
-					<div class="c1">
-						<p>&nbsp;</p>
-					</div>
 
-					<div class="c2">
-						<p>Graduation</p>
-					</div>
-				</div>
+			<div class="row after accadmic-education-div">
+				<label>Qualification *</label><br>
+				<input type="radio" name="after_xx_status" <?= ($academicdetails->after_xx_status == "Graduation" ? "checked" : '') ?> <?= empty($academicdetails->after_xx_status) ? 'checked' : '' ?> value="Graduation">&nbsp;&nbsp;Graduation
+				<input type="radio" name="after_xx_status" <?= ($academicdetails->after_xx_status == "Post Graduation" ? "checked" : '') ?> value="Post Graduation">&nbsp;&nbsp;Post Graduation
+				<input type="radio" name="after_xx_status" <?= ($academicdetails->after_xx_status == "Both" ? "checked" : '') ?> value="Both">&nbsp;&nbsp;Both
+			</div>
+			<!-- end diploma details-->
+
+			<!-- Under Graduate details-->
+			<div class="row accadmic-education-div" id="graduationAcademicDetails" style="display:<?= ($academicdetails->after_xx_status == 'Graduation' || $academicdetails->after_xx_status == 'Both' || empty($academicdetails->after_xx_status)) ? 'block' : 'none' ?>">
+				<h4>Graduation Details</h4>
+
 				<div class="col-lg-2 border2 border1">
 					<div class="c1">
-						<p>Institute Name</p>
+						<p>Course Name</p>
 					</div>
 					<div class="c2">
 						<input class="form-control" type="text" class="form-group" placeholder="Enter Course Name" name="graduation_course" value="<?= $academicdetails->graduation_course; ?>">
@@ -729,15 +734,16 @@
 						</select>
 					</div>
 				</div>
-				<div class="col-lg-1 border2 border1">
+				<div class="col-lg-2 border2 border1">
 					<div class="c1">
 						<p>Result Status</p>
 					</div>
 					<div class="c2">
 						<select class="form-control" name="graduation_result_status" id="graduation_result_status">
 							<option>Select</option>
-							<option value="Awaited">Awaited</option>
-							<option value="Declared">Declared</option>
+							<option value="Awaited" <?= ($academicdetails->graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+							<!-- <option value="Not Appeared" <?= ($academicdetails->graduation_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
 						</select>
 					</div>
 				</div>
@@ -747,7 +753,7 @@
 					</div>
 					<div class="c2">
 						<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="graduation_marking_scheme" id="graduation_marking_scheme" value="<?= $academicdetails->graduation_marking_scheme; ?>"> -->
-						<select class="form-control" name="graduation_marking_scheme" required id="graduation_marking_scheme">
+						<select class="form-control" name="graduation_marking_scheme" id="graduation_marking_scheme">
 							<option value="">Select</option>
 							<option value="Percentage" <?= ($academicdetails->graduation_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
 							<option value="CGPA out of 10" <?= ($academicdetails->graduation_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
@@ -762,16 +768,92 @@
 						<p>Obtained Percentage / CGPA</p>
 					</div>
 					<div class="c2">
-						<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" maxlength="3" id="graduation_percentage" value="<?= $academicdetails->graduation_percentage; ?>">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Graduation Percentage" name="graduation_percentage" id="graduation_percentage" value="<?= $academicdetails->graduation_percentage; ?>">
 					</div>
 				</div>
 			</div>
 			<!-- end ug details-->
 
+			<div class="row accadmic-education-div" id="post_graduationAcademicDetails" style="display:<?= ($academicdetails->after_xx_status == 'Post Graduation' || $academicdetails->after_xx_status == 'Both') ? 'block' : 'none' ?>">
+				<h4>Post Graduation Details</h4>
+
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Course Name</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Course Name" name="post_graduation_course" value="<?= $academicdetails->post_graduation_course; ?>" ?>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Board / University</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="post_graduation_board" value="<?= $academicdetails->post_graduation_board; ?>" ?>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Year of Passing </p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="post_graduation_passing_year" id="post_graduation_passing_year" ?>>
+							<option value="">Select</option>
+							<?php for ($i = 0; $i < 15; $i++) : ?>
+								<option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->post_graduation_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
+							<?php endfor; ?>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Result Status</p>
+					</div>
+					<div class="c2">
+						<select class="form-control" name="post_graduation_result_status" id="post_graduation_result_status">
+							<option>Select</option>
+							<option value="Awaited" <?= ($academicdetails->post_graduation_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->post_graduation_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
+							<!-- <option value="Not Appeared" <?= ($academicdetails->post_graduation_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1" id="post_graduation_marking_scheme_div">
+					<div class="c1">
+						<p>Marking Scheme</p>
+					</div>
+					<div class="c2">
+						<!-- <input class="form-control" type="text" class="form-group" placeholder="CGPA / Percentage" name="post_graduation_marking_scheme" id="post_graduation_marking_scheme" value="<?= $academicdetails->post_graduation_marking_scheme; ?>"> -->
+						<select class="form-control" name="post_graduation_marking_scheme" id="post_graduation_marking_scheme">
+							<option value="">Select</option>
+							<option value="Percentage" <?= ($academicdetails->post_graduation_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
+							<option value="CGPA out of 10" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
+							<option value="CGPA out of 9" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
+							<option value="CGPA out of 7" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
+							<option value="CGPA out of 4" <?= ($academicdetails->post_graduation_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
+						</select>
+					</div>
+				</div>
+				<div class="col-lg-2 border2 border1">
+					<div class="c1">
+						<p>Obtained Percentage / CGPA</p>
+					</div>
+					<div class="c2">
+						<input class="form-control" type="text" class="form-group" placeholder="Enter Post Graduation Percentage" name="post_graduation_percentage" id="post_graduation_percentage" value="<?= $academicdetails->post_graduation_percentage; ?>">
+					</div>
+				</div>
+			</div>
+
+			<!-- end ug details-->
+
 			<hr>
-			<?php // if($basicdetails->entrance_exam_details !=''){ 
+			<?php
+			$entrance_names = array_values(array_filter(explode(",", $admissionpreferences->entrance_exam_details), 'strlen'));
+			$entrance_data = array_column($entrance_data, null, 'id');
 			?>
-			<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>">
+
+			<div class="row <?php echo ($admissionpreferences->entrance_exam_details == '') ? 'hide' : ''; ?>" id="entrance_exam_div">
 				<h4>Entrance Exam</h4>
 				<div class="col-lg-1 border2 border1">
 					<div class="c1">
@@ -779,7 +861,11 @@
 					</div>
 
 					<div class="c2">
-						<p><?= $admissionpreferences->entrance_exam_details; ?></p>
+						<p><?= !empty($entrance_data[$entrance_names[0]]) ? $entrance_data[$entrance_names[0]]["name"] : ''; ?></p>
+					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<p><?= !empty($entrance_data[$entrance_names[1]]) ? $entrance_data[$entrance_names[1]]["name"] : ''; ?></p>
+
 					</div>
 				</div>
 				<div class="col-lg-3 border2 border1">
@@ -787,7 +873,10 @@
 						<p>Roll No. / Registration No.</p>
 					</div>
 					<div class="c2">
-						<input class="form-control" type="number" class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+						<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<input class="form-control" type="number" class="form-group" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Enter Entrance Roll No" name="entrance_roll_1" value="<?= !empty($academicdetails->entrance_roll_1) ? $academicdetails->entrance_roll_1 : ''; ?>">
 					</div>
 				</div>
 				<div class="col-lg-3 border2 border1">
@@ -796,13 +885,12 @@
 					</div>
 					<div class="c2">
 						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
-						<select name="entrance_year" id="entrance_year">
-							<option value="">Select</option>
-							<option value="<?= date("Y") - 3; ?>" <?= ((date("Y") - 3) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 3; ?></option>
-							<option value="<?= date("Y") - 2; ?>" <?= ((date("Y") - 2) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 2; ?></option>
-							<option value="<?= date("Y") - 1; ?>" <?= ((date("Y") - 1) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y") - 1; ?></option>
-							<option value="<?= date("Y"); ?>" <?= ((date("Y")) == $academicdetails->entrance_year) ? 'selected' : '' ?>><?= date("Y"); ?></option>
-						</select>
+						<input type="month" name="entrance_year" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> id="entrance_year" class="form-control" value="<?= ($academicdetails->entrance_year) ? $academicdetails->entrance_year : '' ?>" placeholder="Select Month and Year">
+					</div>
+
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
+						<input type="month" name="entrance_year_1" id="entrance_year_1" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> value="<?= ($academicdetails->entrance_year_1) ? $academicdetails->entrance_year_1 : '' ?>" class="form-control" placeholder="Select Month and Year">
 					</div>
 				</div>
 				<div class="col-lg-2 border2 border1">
@@ -814,6 +902,15 @@
 							<option>Select</option>
 							<option value="Awaited" <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
 							<option value="Declared" <?= ($academicdetails->entrance_result_status == 'Declared') ? 'selected' : '' ?>>Declared</option>
+							<option value="Not Appeared" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
+						</select>
+					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<select class="form-control" name="entrance_result_status_1" id="entrance_result_status_1">
+							<option>Select</option>
+							<option value="Awaited" <?= ($academicdetails->entrance_result_status_1 == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
+							<option value="Declared" <?= ($academicdetails->entrance_result_status_1 == 'Declared') ? 'selected' : '' ?>>Declared</option>
+							<option value="Not Appeared" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
 						</select>
 					</div>
 				</div>
@@ -822,7 +919,45 @@
 						<p>Marks / AIR</p>
 					</div>
 					<div class="c2">
-						<input type="text" class="form-control" placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->tenth_board; ?>">
+						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+
+						<?php
+
+						if (!empty($score_columns)) {
+							foreach ($score_columns as $column) {
+								if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
+						?>
+									<label><?= $column['name'] ?></label>
+									<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+
+						<?php
+								}
+							}
+						}
+
+						// score_columns
+						?>
+
+					</div>
+					<div class="c2" style="display:<?= !empty($entrance_data[$entrance_names[1]]) ? 'block' : 'none'; ?>" ;>
+						<input type="text" class="form-control" <?= ($academicdetails->entrance_result_status_1 == 'Not Appeared') ? 'disabled' : ''; ?> placeholder="Marks/ AIR" name="entrance_percentage_1" id="entrance_percentage_1" value="<?= $academicdetails->entrance_percentage_1; ?>">
+
+						<?php
+
+						if (!empty($score_columns)) {
+							foreach ($score_columns as $column) {
+								if (!empty($entrance_data[$entrance_names[1]]["academic_type"]) && $entrance_data[$entrance_names[1]]["academic_type"] == $column["exam_type"]) {
+						?>
+									<label><?= $column['name'] ?></label>
+									<input type="text" style="margin-top:3px" class="form-control column_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+
+						<?php
+								}
+							}
+						}
+
+						// score_columns
+						?>
 					</div>
 				</div>
 
@@ -854,24 +989,38 @@
 			<div class="col-lg-12">
 				<div class="card">
 					<div class="row">
-						<?php foreach ($files as $file) {
-							$url = site_url() . 'download/file/client/';
-							$path = get_upload_path_by_type('customer') . $file['rel_id'] . '/' . $file['file_name'];
-							$is_image = false;
-							if (!isset($file['external'])) {
-								$attachment_url = $url . $file['attachment_key'];
-								$is_image = is_image($path);
-								$img_url = site_url('download/preview_image?path=' . protected_file_url_by_path($path, true) . '&type=' . $file['filetype']);
-							}
-							if ($is_image) {
+						<table class="table">
+							<tbody class="document_upload_div">
+								<?php if (!empty($document_files)) {
+									foreach ($document_files as $doc_files) {
+										$doc_type = $doc_files["title"];
+										$file_name = "";
+										if (!empty($doc_files["file_path"])) {
+											$file_name =  trim(explode("_", basename($doc_files["file_path"]))[2]);
+										}
+								?>
+										<tr class="row">
+											<td class="col-6">
+												<?= $doc_type ?>
+											</td>
+											<td class="col-6">
 
-						?>
-								<div class="col-lg-3">
-									<img src="<?php echo $img_url; ?>" width="200px">
-									<h2><?php echo $file['doctype'] ?></h2>
-								</div>
-						<?php }
-						} ?>
+												<a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" type="button"><?= $file_name ?> <i class="fa fa-download" aria-hidden="true"></i></a>
+											</td>
+
+										</tr>
+									<?php
+									}
+								} else {
+									?>
+									<tr class="row">
+										<td class="col-12" colspan="12">
+											<h3>No Documents</h3>
+										</td>
+									</tr>
+								<?php } ?>
+							</tbody>
+						</table>
 					</div>
 					<div class="row" style="padding-top: 30px;padding-bottom: 20px;">
 						<div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
@@ -947,8 +1096,36 @@
 	<!-- end Declaration details section -->
 
 	<script>
+		var getProgram = <?= !empty($program_data) ? (json_encode($program_data, true)) : "[]"; ?>;
+		var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
+		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
+
+		$(document).ready(function() {
+
+			if ($("input.column_score").length > 0) {
+				$("#entrance_exam_div").find(".c2").css("height", "300px");
+			}
+			prog();
+			setTimeout(() => {
+				course();
+
+			}, 200);
+			setTimeout(() => {
+				// entrance_exam_given();
+				$('#entrance_exam_details').change();
+
+			}, 400);
+
+			$("#program").on('change', function() {
+				prog();
+			});
+			$("#course").on('change', function() {
+				course();
+			});
+		});
+
 		$("input,select").attr("disabled", true);
-		const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
+		const countriesArr = <?php echo !empty($admissionpreferences->study_country) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
 		const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}' ?>;
 		$('#study_country').on('change select2:opening', function() {
 			let value = $(this).val()
@@ -959,7 +1136,7 @@
 					var str = ''
 					$.each(value, function(k, v) {
 						var countryName = v.search("_") != -1 ? v.replace("_", " ") : v
-
+						let c = v.replace(" ", "_");
 						str += `<div class="col-lg-4">
 								<div class="form-group">
 									<label for="university${v}">${countryName} University</label>
@@ -968,8 +1145,8 @@
 							</div>`
 
 						if (Object.keys(universityArr).length > 0) {
-							if (v in universityArr) {
-								selectedUniversityArr[v] = universityArr[v]
+							if (c in universityArr) {
+								selectedUniversityArr[v] = universityArr[c]
 							} else {
 								var prevUniversityVal = $(`#university${v}`).val()
 								var newPrevUniversityVal = typeof prevUniversityVal != 'undefined' ? prevUniversityVal : ''
@@ -990,7 +1167,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${v}`,
 								duplicate: false,
-								max: 3
+								max: 5
 							});
 
 							if (selectedUniversityArr[v] != '') {
@@ -1008,7 +1185,7 @@
 							var tagInput1 = new TagsInput({
 								selector: `university${v}`,
 								duplicate: false,
-								max: 3
+								max: 5
 							});
 						})
 					}
@@ -1029,6 +1206,136 @@
 			}
 
 		})
+
+
+		function get_course(program_id) {
+			return new Promise((resolve, reject) => {
+				let course_array = [];
+				course_array.push({
+					id: '',
+					name: 'Select Course'
+				})
+				for (let j = 0; j < getCourse.length; j++) {
+					if (program_id === getCourse[j].program_id) {
+						course_array.push({
+							id: getCourse[j].id,
+							name: getCourse[j].name
+						});
+					}
+				}
+
+				resolve(course_array);
+			});
+		}
+
+		function get_entrance() {
+			return new Promise((resolve, reject) => {
+				let entrance_array = [];
+				entrance_array.push({
+					id: '',
+					name: 'Select Entrance'
+				})
+				let lead_type = $("#lead_type").val();
+				for (let j = 0; j < getEntrance.length; j++) {
+					// if (lead_type === getEntrance[j].segment_id) {
+					entrance_array.push({
+						id: getEntrance[j].id,
+						name: getEntrance[j].name
+					});
+					// }
+				}
+
+				resolve(entrance_array);
+			});
+		}
+
+
+		async function prog() {
+			var program = $("#program").val();
+			var getProgram_array = [];
+			for (let i = 0; i < getProgram.length; i++) {
+				getProgram_array[getProgram[i].id] = await get_course(getProgram[i].id);
+			}
+
+			var $select = $('#course');
+			$select.val('').selectpicker("refresh")
+			var selectedCourse = "<?php echo $admissionpreferences->course ?>";
+			console.log(selectedCourse);
+			console.log(getProgram_array);
+			$select.find('option').remove();
+			if (getProgram_array[program] != undefined) {
+				$.each(getProgram_array[program], function(key, value) {
+					var sel = "";
+
+					if (selectedCourse != '') {
+						sel = (value.id == selectedCourse) ? 'selected' : '';
+					}
+					$select.append('<option value="' + value.id + '"' + sel + ' >' + value.name + '</option>');
+				});
+			}
+			$select.selectpicker("refresh")
+			$("#course_name_field input").val('');
+			$(".course_name_field").hide();
+		}
+
+
+
+		async function course() {
+
+			var course = $("#course").val();
+			var selectedCourseText = $("#course option:selected").text();
+			if (course != "") {
+				$(".course_name_field").show();
+				if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Course Name with Specialization");
+				} else {
+					$(".course_name_field").show();
+					$(".course_name_field").find("label").text("Specialization Name");
+
+				}
+			} else {
+				$(".course_name_field").hide();
+			}
+
+			var getEntrance_array = [];
+			for (let i = 0; i < getCourse.length; i++) {
+				getEntrance_array = await get_entrance();
+			}
+
+			console.log(getEntrance_array);
+			var selectedExam = "<?php echo $admissionpreferences->entrance_exam_details ?>";
+			console.log(selectedExam);
+			selectedExam_array = selectedExam.split(",");
+			var $select = $("#entrance_exam_details");
+			$select.find('option').remove();
+			$.each(getEntrance_array, function(key, value) {
+				var sel = '';
+				if (selectedExam_array.length > 0) {
+					if (selectedExam_array.includes(value.id.toString()) && parseInt(value.id) > 0) {
+						sel = "selected";
+					}
+				}
+				$select.append('<option value="' + value.id + '" ' + sel + '>' + value.name + '</option>');
+			});
+			$select.selectpicker("refresh");
+
+			let value = $("#entrance_exam_details").val();
+			value = value.filter(function(element) {
+				return element !== "" && element !== " " && element !== null && element !== undefined;
+			});
+			if (value.length >= 2) {
+				$(`#entrance_exam_details option`).prop('disabled', true);
+				for (let k = 0; k < value.length; k++) {
+					var v = value[k];
+					$(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+				}
+			} else {
+				$(this).find('option').prop('disabled', false);
+			}
+			$(this).selectpicker("refresh")
+
+		}
 
 		// TAG INPUTS
 

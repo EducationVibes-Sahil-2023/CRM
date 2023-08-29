@@ -177,6 +177,12 @@ class Clients extends AdminController
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
                 $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
+                $data['program_data'] = $this->clients_model->getProgram();
+                $data['course_data'] = $this->clients_model->getCourse();
+                $data['entrance_data'] = $this->clients_model->getEntrance();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+                $data['score_columns'] =  $this->clients_model->get_scroe_column();
+                $data['score_value'] =  $this->clients_model->get_scroe_value($id);
             } elseif ($group == 'attachments') {
                 $data['attachments'] = get_all_customer_attachments($id);
             } elseif ($group == 'vault') {
@@ -237,6 +243,8 @@ class Clients extends AdminController
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+
                 $data['customer_vendors'] = [];
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
                     $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
@@ -1144,10 +1152,11 @@ class Clients extends AdminController
             $dataArr = [
                 'program' => $params['program'],
                 'course' => $params['course'],
-                'entrance_exam_given' => $params['entranceExamGiven'],
-                'entrance_exam_details' => ($params['entranceExamGiven'] == 'YES') ? $params['entranceExamDetails'] : '',
+                // 'entrance_exam_given' => $params['entranceExamGiven'],
+                'entrance_exam_details' => (!empty($params['entranceExamDetails'])) ? implode(",", $params['entranceExamDetails']) : '',
                 'session_intake' => $params['sessionIntake'],
                 'userid' => $params['client_id'],
+                'course_name' => $params['course_name'],
             ];
 
             if ($params['countries'] != "") {
@@ -2139,6 +2148,203 @@ class Clients extends AdminController
                 } else {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = "Invalid parameters";
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function profile_update()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $update_applicant_data = [];
+                $update_applicant_custom_data["customers"] = [];
+                unset($_POST["clientid"]);
+                foreach ($_POST as $key => $value) {
+                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                        foreach ($value as $k => $custom_value) {
+                            $update_applicant_custom_data["customers"] = $custom_value;
+                        }
+                    } else {
+                        // Otherwise, add to general data array
+                        if ($key != 'clientid') {
+                            $update_applicant_data[$key] = $value;
+                        }
+                    }
+                }
+
+                $this->db->where('userid', $client_id);
+                $rows_affected = $this->db->update(db_prefix() . 'clients', $update_applicant_data);
+                if ($rows_affected) {
+                    handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Profile update successfully.";
+                    set_alert('success', "Profile update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Profile update failed";
+                    set_alert('danger', "Profile update failed");
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function student_update()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $update_student_data = [];
+                $update_applicant_custom_data["customers"] = [];
+                unset($_POST["clientid"]);
+                foreach ($_POST as $key => $value) {
+                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                        foreach ($value as $k => $custom_value) {
+                            $update_applicant_custom_data["customers"] = $custom_value;
+                        }
+                    } else {
+                        // Otherwise, add to general data array
+                        if ($key != 'clientid') {
+                            $update_student_data[$key] = $value;
+                        }
+                    }
+                }
+                // Assuming this is part of a function or method in a CodeIgniter controller or model
+                $check_client = $this->db->select('id')
+                    ->where('userid', $client_id)
+                    ->get(db_prefix() . 'basic_details')->row();;
+
+
+                if (!empty($check_client->id)) {
+                    $update_student_data["updated_at"] = date('Y-m-d H:i:s');
+                    $this->db->where('userid', $client_id);
+                    $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
+                } else {
+                    $update_student_data["created_at"] = date('Y-m-d H:i:s');
+                    $update_student_data["userid"] = $client_id;
+                    $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
+                }
+
+
+                if ($rows_affected) {
+                    // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Basic information update successfully.";
+                    set_alert('success', "Basic information update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Basic information update failed";
+                    set_alert('danger', "Basic information update failed");
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function student_acadmic()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $academicDetailsId = $this->input->post("academicDetailsId");
+                $update_academic_data = [];
+                $update_applicant_custom_data["customers"] = [];
+                unset($_POST["clientid"]);
+                unset($_POST["academicDetailsId"]);
+                $scrore_update = [];
+                foreach ($_POST as $key => $value) {
+                    // print_r($_POST[$key]);
+                    // print_r($key);
+                    // print_r($value);
+                    if (strpos($key, 'score_column') !== false) {
+                        $score_data = explode("-", $key);
+                        if (!empty($score_data[1])) {
+                            array_push($scrore_update, array("client_id" => $client_id, "type" => $score_data[1], "value" => $value));
+                        }
+
+                        unset($_POST[$key]);
+                        $key = '';
+                    }
+                    if (!empty($key)) {
+                        if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                            // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                            foreach ($value as $k => $custom_value) {
+                                $update_applicant_custom_data["customers"] = $custom_value;
+                            }
+                        } else {
+                            // Otherwise, add to general data array
+                            if ($key != 'clientid') {
+                                $update_academic_data[$key] = $value;
+                            }
+                        }
+                    }
+                }
+                $this->db->delete(db_prefix() . "academic_entrance_score", array("client_id" => $client_id));
+
+                if (empty($academicDetailsId)) {
+                    $update_academic_data["created_at"] = date('Y-m-d H:i:s');
+                    $update_academic_data["userid"] = $client_id;
+                    $rows_affected = $this->db->insert(db_prefix() . 'academic_details', $update_academic_data);
+
+                    // Assuming you're using CodeIgniter Active Record, adjust if you're using a different database framework or raw SQL
+                    // Delete existing academic entrance scores for the given client_id
+
+
+                    if (!empty($scrore_update)) {
+                        // Insert the new batch of academic entrance scores
+
+                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
+                    }
+                } else {
+                    $update_academic_data["updated_at"] = date('Y-m-d H:i:s');
+                    $this->db->where('userid', $client_id);
+                    $this->db->where('id', $academicDetailsId);
+                    $rows_affected = $this->db->update(db_prefix() . 'academic_details', $update_academic_data);
+
+                    if (!empty($scrore_update)) {
+                        // Insert the new batch of academic entrance scores
+
+                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
+                    }
+                }
+                if ($rows_affected) {
+                    // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Academic information update successfully.";
+                    set_alert('success', "Academic information update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Academic information update failed";
+                    set_alert('danger', "Academic information update failed");
                 }
             } catch (Exception $e) {
                 $data['resp_code'] = 'ERR';

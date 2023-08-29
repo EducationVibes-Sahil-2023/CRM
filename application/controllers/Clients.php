@@ -164,24 +164,30 @@ class Clients extends ClientsController
                     if (is_array($countriesArr) && count($countriesArr) > 0) {
                         foreach ($countriesArr as $key => $val) {
                             $university = isset($data['university' . $key]) ? $data['university' . $key] : '';
+
+
                             if ($university != '') {
+                                $val = str_replace(" ", "_", trim($countriesArr[$key]));
+
                                 $university_array[$val] = $university;
                             }
                         }
                     }
                 }
 
-
                 $dataArr = [
                     'userid' => get_client_user_id(),
                     'program' => !empty($data['program']) ? $data['program'] : '',
                     'course' => !empty($data['course']) ? $data['course'] : '',
-                    'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
-                    'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
-                    'entrance_exam_details' => ($data['entrance_exam_given'] == 'YES') ? $data['entrance_exam_details'] : '',
+                    'course_name' => !empty($data['course_name']) ? $data['course_name'] : '',
+                    // 'specialization' => !empty($data['specialization']) ? $data['specialization'] : '',
+                    // 'entrance_exam_given' => !empty($data['entrance_exam_given']) ? $data['entrance_exam_given'] : '',
+                    'entrance_exam_details' => (!empty($data['entrance_exam_details'])) ? implode(",", $data['entrance_exam_details']) : '',
                     'session_intake' => !empty($data['session_intake']) ? $data['session_intake'] : '',
                     'created_by' => get_client_user_id(),
                 ];
+
+
 
                 if ($data['countries'] != "") {
                     $dataArr['study_country'] = $data['countries'];
@@ -218,6 +224,9 @@ class Clients extends ClientsController
         $data['title']         = "Admission Preferences";
         $data['announcements'] = $this->announcements_model->get();
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
+        $data['program_data'] = $this->clients_model->getProgram();
+        $data['course_data'] = $this->clients_model->getCourse();
+        $data['entrance_data'] = $this->clients_model->getEntrance();
 
         // echo "<pre>";print_r($data);die;
         $this->data($data);
@@ -363,6 +372,9 @@ class Clients extends ClientsController
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
+        $data['entrance_data'] = $this->clients_model->getEntrance();
+        $data['score_columns'] =  $this->clients_model->get_scroe_column();
+        $data['score_value'] =  $this->clients_model->get_scroe_value(get_client_user_id());
         $this->data($data);
         $this->view('academic_details');
         $this->layout();
@@ -379,6 +391,9 @@ class Clients extends ClientsController
         // print_r($data);die;
         $data['title']         = "Upload Document";
         $data['announcements'] = $this->announcements_model->get();
+        $data['document_type'] =  $this->clients_model->get_document_upload();
+        $data['documents'] =  $this->clients_model->get_documents(get_client_user_id());
+
         $this->data($data);
         $this->view('upload_documents');
         $this->layout();
@@ -432,12 +447,15 @@ class Clients extends ClientsController
         // print_r($data);die;
         $data['basicdetails'] = $this->clients_model->getBasicDetails(get_client_user_id());
         $data['parentdetails'] = $this->clients_model->getParentDetails(get_client_user_id());
-
         $data['academicdetails'] = $this->clients_model->getAcademicDetails(get_client_user_id());
         $data['declarationdetails'] = $this->clients_model->getDeclarationDetails(get_client_user_id());
-
         $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences(get_client_user_id());
-
+        $data['program_data'] = $this->clients_model->getProgram();
+        $data['course_data'] = $this->clients_model->getCourse();
+        $data['entrance_data'] = $this->clients_model->getEntrance();
+        $data['documents'] =  $this->clients_model->get_documents(get_client_user_id());
+        $data['score_columns'] =  $this->clients_model->get_scroe_column();
+        $data['score_value'] =  $this->clients_model->get_scroe_value(get_client_user_id());
         $this->data($data);
         $this->view('preview');
         $this->layout();
@@ -951,7 +969,74 @@ class Clients extends ClientsController
             );
         }
     }
+    public function upload_docs_new()
+    {
+        try {
+            if (!empty($_POST)) {
+                $client_id = get_client_user_id();
+                $document_id = !empty($_POST["document_id"]) ? $_POST["document_id"] : '';
+                $document_infomation = [];
+                foreach ($_POST["document_type"] as $key => $document) {
+                    $file_path = "";
 
+                    if (!empty($_FILES["media_file"]['name'][$key])) {
+                        $upload_data["name"] = $_FILES["media_file"]['name'][$key];
+                        $upload_data["type"] = $_FILES["media_file"]['type'][$key];
+                        $upload_data["tmp_name"] = $_FILES["media_file"]['tmp_name'][$key];
+                        $upload_data["error"] = $_FILES["media_file"]['error'][$key];
+                        $upload_data["size"] = $_FILES["media_file"]['size'][$key];
+                        if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                            try {
+                                $file_name = upload_applicant_documents(get_client_user_id(), $upload_data);
+                                // If the upload is successful, $file_name will contain the file name or other relevant information.
+                            } catch (Exception $e) {
+                                // Handle the exception
+                                $this->session->set_flashdata('danger', "Documents upload failed. " . $e->getMessage());
+                                redirect(site_url('clients/upload_documents'));
+                            }
+                            $file_path = $file_name["file_path"];
+                        } else {
+                            $data['resp_code'] = 'ERR';
+                            $data['resp_desc'] = "Upload failed.";
+                            set_alert('danger', "Upload failed.");
+                            echo json_encode($data);
+                            die;
+                        }
+                    } else {
+                        $file_path = $_POST["media_file"][$key];
+                    }
+
+                    $title = !empty($_POST["title"][$key]) ? $_POST["title"][$key] : '';
+                    $document_type = !empty($_POST["document_type"][$key]) ? $_POST["document_type"][$key] : '';
+                    array_push($document_infomation, array("title" => $title, "document_type" => $document_type, "file_path" => $file_path));
+                }
+                if (!empty($document_id)) {
+                    $data["documents"] = json_encode($document_infomation, true);
+                    $data["status"] = 1;
+                    $this->db->where("client_id", $client_id)->update(db_prefix() . 'acadmic_documents', $data);
+                } else {
+                    if (!empty($document_infomation)) {
+                        $data["client_id"] = $client_id;
+                        $data["documents"] = json_encode($document_infomation, true);
+                        $data["status"] = 1;
+                        $this->db->insert(db_prefix() . 'acadmic_documents', $data);
+                    }
+                }
+
+                $this->session->set_flashdata('success', "Documents successfully Uploaded");
+                redirect(site_url('clients/declaration'));
+            } else {
+                $this->session->set_flashdata('danger', "Documents failed");
+                redirect(site_url('clients/upload_documents'));
+            }
+        } catch (Exception $e) {
+            // Error message
+            $this->session->set_flashdata('danger', "Documents upload failed. " . $e->getMessage());
+
+            // Redirect to the error page or the appropriate location
+            redirect(site_url('clients/upload_documents'));
+        }
+    }
     public function upload_docs()
     {
         $success = false;

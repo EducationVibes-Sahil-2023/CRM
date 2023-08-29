@@ -117,16 +117,3 @@
    <!-- /.container-fluid -->
 </nav>
 
-<?php
-$university_shortlisting_notification = $this->announcements_model->get_university_shortlist_status();
-
-if (is_client_logged_in() && !empty($university_shortlisting_notification) ) {
-?>
-   <div class="container">
-      <div class="alert alert-info" role="alert">
-         Check university list for shortlisting click here to take action <a href="<?= base_url("clients/university_shortlisting") ?>">Click here</a>
-      </div>
-   </div>
-<?php
-}
-?>
