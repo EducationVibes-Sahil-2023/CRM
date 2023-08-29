@@ -229,12 +229,12 @@ if(!empty($custom_field->show_lead_type)) {
                             $column_name = $custom_field->column_map; 
                             foreach($lead_table_column as $cfl){ 
                                 $selected ="";
-                                if(strtolower(trim($column_name)) == strtolower(trim($cfl["column_name"])))
+                                if(strtolower(trim($column_name)) == strtolower(trim($cfl["COLUMN_NAME"])))
                                 {
                                     $selected ="selected";
                                 }
                                 ?>
-                                <option <?=$selected?> value="<?=$cfl["column_name"]?>"><?=$cfl["column_name"] ?></option>
+                                <option <?=$selected?> value="<?=$cfl["COLUMN_NAME"]?>"><?=$cfl["COLUMN_NAME"] ?></option>
                                 <?php } ?>
                             </select>
                             </div>

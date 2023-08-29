@@ -23,7 +23,8 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
      */
     $sLimit = '';
     if ((is_numeric($CI->input->post('start'))) && $CI->input->post('length') != '-1') {
-        $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
+        // $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
+        $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', 50 ';
     }
     $_aColumns = [];
     foreach ($aColumns as $column) {
