@@ -774,18 +774,23 @@ if (!empty($score_value)) {
 				$(".hide_ input").hide();
 				$("#entrance_percentage").val('');
 				$("#entrance_percentage").hide();
+				$("input.multiple_score").hide();
+				$("input.multiple_score").val('');
 
 
 			} else if (ers == 'Declared') {
 				$(".hide_ input").show();
 				$("#entrance_percentage").show();
+				$("input.multiple_score").show();
+				$("input.multiple_score").val('');
 
 			} else if (ers == 'Not Appeared') {
 				$("input[name='entrance_roll']").val('').attr("disabled", true);
 				$("input[name='entrance_year']").val('').attr("disabled", true);
 				$("input[name='entrance_percentage']").val('').attr("disabled", true);
 				$("input.multiple_score").attr("disabled", true);
-                $("input.multiple_score").val('');
+				$("input.multiple_score").show();
+				$("input.multiple_score").val('');
 
 
 			}
@@ -800,18 +805,24 @@ if (!empty($score_value)) {
 			if (ers == 'Awaited') {
 				$(".hide_2 input").hide();
 				$("#entrance_percentage_1").val('');
-				$("#entrance_percentage_1").show();
+				$("#entrance_percentage_1").hide();
+				$("input.multiple_score_1").val('');
+				$("input.multiple_score_1").hide();
 
 			} else if (ers == 'Declared') {
 				$(".hide_2 input").show();
 				$("#entrance_percentage_1").show();
+				$("input.multiple_score_1").val('');
+				$("input.multiple_score_1").show();
+
 
 			} else if (ers == 'Not Appeared') {
 				$("input[name='entrance_roll_1']").val('').attr("disabled", true);
 				$("input[name='entrance_year_1']").val('').attr("disabled", true);
 				$("input[name='entrance_percentage_1']").val('').attr("disabled", true);
 				$("input.multiple_score_1").attr("disabled", true);
-                $("input.multiple_score_1").val('');
+				$("input.multiple_score_1").show();
+				$("input.multiple_score_1").val('');
 
 			}
 		})

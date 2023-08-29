@@ -1098,24 +1098,80 @@
             }
         })
 
+        // $("#entrance_result_status").on('change', function() {
+        //     $("input[name='entrance_roll']").attr("disabled", false);
+        //     $("input[name='entrance_year']").attr("disabled", false);
+        //     $("input[name='entrance_percentage']").attr("disabled", false);
+        //     $("input.multiple_score").attr("disabled", false);
+        //     var ers = $("#entrance_result_status").val();
+        //     if (ers == 'Awaited') {
+        //         $(".hide_ input").hide();
+        //         $("#entrance_percentage").val('');
+
+        //     } else if (ers == 'Declared') {
+        //         $(".hide_ input").show();
+        //     } else if (ers == 'Not Appeared') {
+        //         $("input[name='entrance_roll']").val('').attr("disabled", true);
+        //         $("input[name='entrance_year']").val('').attr("disabled", true);
+        //         $("input[name='entrance_percentage']").val('').attr("disabled", true);
+        //         $("input.multiple_score").attr("disabled", true);
+        //         $("input.multiple_score").val('');
+        //     }
+        // })
+
+        // $("#entrance_result_status_1").on('change', function() {
+        //     var ers = $("#entrance_result_status_1").val();
+        //     $("input[name='entrance_roll_1']").attr("disabled", false);
+        //     $("input[name='entrance_year_1']").attr("disabled", false);
+        //     $("input[name='entrance_percentage_1']").attr("disabled", false);
+        //     $("input.multiple_score_1").attr("disabled", false);
+        //     if (ers == 'Awaited') {
+        //         $(".hide_2 input").hide();
+        //         $("#entrance_percentage_1").val('');
+
+        //     } else if (ers == 'Declared') {
+        //         $(".hide_2 input").show();
+        //     } else if (ers == 'Not Appeared') {
+        //         $("input[name='entrance_roll_1']").val('').attr("disabled", true);
+        //         $("input[name='entrance_year_1']").val('').attr("disabled", true);
+        //         $("input[name='entrance_percentage_1']").val('').attr("disabled", true);
+        //         $("input.multiple_score_1").attr("disabled", true);
+        //         $("input.multiple_score_1").val('');
+
+        //     }
+        // })
+
+
         $("#entrance_result_status").on('change', function() {
             $("input[name='entrance_roll']").attr("disabled", false);
             $("input[name='entrance_year']").attr("disabled", false);
             $("input[name='entrance_percentage']").attr("disabled", false);
             $("input.multiple_score").attr("disabled", false);
+
             var ers = $("#entrance_result_status").val();
             if (ers == 'Awaited') {
                 $(".hide_ input").hide();
                 $("#entrance_percentage").val('');
+                $("#entrance_percentage").hide();
+                $("input.multiple_score").hide();
+                $("input.multiple_score").val('');
+
 
             } else if (ers == 'Declared') {
                 $(".hide_ input").show();
+                $("#entrance_percentage").show();
+                $("input.multiple_score").show();
+                $("input.multiple_score").val('');
+
             } else if (ers == 'Not Appeared') {
                 $("input[name='entrance_roll']").val('').attr("disabled", true);
                 $("input[name='entrance_year']").val('').attr("disabled", true);
                 $("input[name='entrance_percentage']").val('').attr("disabled", true);
                 $("input.multiple_score").attr("disabled", true);
+                $("input.multiple_score").show();
                 $("input.multiple_score").val('');
+
+
             }
         })
 
@@ -1128,18 +1184,28 @@
             if (ers == 'Awaited') {
                 $(".hide_2 input").hide();
                 $("#entrance_percentage_1").val('');
+                $("#entrance_percentage_1").hide();
+                $("input.multiple_score_1").val('');
+                $("input.multiple_score_1").hide();
 
             } else if (ers == 'Declared') {
                 $(".hide_2 input").show();
+                $("#entrance_percentage_1").show();
+                $("input.multiple_score_1").val('');
+                $("input.multiple_score_1").show();
+
+
             } else if (ers == 'Not Appeared') {
                 $("input[name='entrance_roll_1']").val('').attr("disabled", true);
                 $("input[name='entrance_year_1']").val('').attr("disabled", true);
                 $("input[name='entrance_percentage_1']").val('').attr("disabled", true);
                 $("input.multiple_score_1").attr("disabled", true);
+                $("input.multiple_score_1").show();
                 $("input.multiple_score_1").val('');
 
             }
         })
+        
         $("#graduation_result_status").on('change', function() {
             var grs = $("#graduation_result_status").val();
             if (grs == 'Awaited') {
