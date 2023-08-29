@@ -360,12 +360,29 @@ class Clients extends ClientsController
                     'post_graduation_percentage' => $data['post_graduation_percentage'],
 
                 ], $academicDetailsIds);
+                $score_values = [];
+                foreach ($data as $key => $value) {
+                    if (strpos($key, 'score_column') !== false) {
+                        $score_data = explode("-", $key);
+                        if (!empty($score_data[1])) {
+                            $score_values[] = array(
+                                "type" => $type,
+                                "value" => $value,
+                                "client_id" => get_client_user_id()
+                            );
+                        }
+                    }
+                }
 
+                $this->db->delete(db_prefix() . "academic_entrance_score", array("client_id" => get_client_user_id()));
 
                 if ($academicDetailsid) {
                     // echo json_encode(['status'=>1, 'message' =>'Academic details successfully updated.'.$academicDetailsid]);
                     // $academicDetailsStatusUpdate = $this->clients_model->updateAcademicDetailsStatus($basicDetailsid);
                     $this->session->set_flashdata('success', "Academic details successfully updated.");
+                    if (!empty($score_values)) {
+                        $this->db->insert_batch(db_prefix() . "academic_entrance_score", $score_values);
+                    }
                     redirect(site_url('clients/upload_documents'));
                 }
             }
