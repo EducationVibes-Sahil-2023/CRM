@@ -365,11 +365,7 @@ class Clients extends ClientsController
                     if (strpos($key, 'score_column') !== false) {
                         $score_data = explode("-", $key);
                         if (!empty($score_data[1])) {
-                            $score_values[] = array(
-                                "type" => $type,
-                                "value" => $value,
-                                "client_id" => get_client_user_id()
-                            );
+                            array_push($scrore_update, array("client_id" => get_client_user_id(), "type" => $score_data[1], "value" => $value));
                         }
                     }
                 }
