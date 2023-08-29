@@ -1163,7 +1163,7 @@
                 $("#entrance_percentage").show();
                 $("input.multiple_score").show();
                 $(".multiple_score_label").show();
-                $("input.multiple_score").val('');
+                // $("input.multiple_score").val('');
 
             } else if (ers == 'Not Appeared') {
                 $("input[name='entrance_roll']").val('').attr("disabled", true);
@@ -1195,7 +1195,7 @@
             } else if (ers == 'Declared') {
                 $(".hide_2 input").show();
                 $("#entrance_percentage_1").show();
-                $("input.multiple_score_1").val('');
+                // $("input.multiple_score_1").val('');
                 $(".multiple_score_1_label").show();
                 $("input.multiple_score_1").show();
 
