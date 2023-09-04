@@ -417,6 +417,10 @@ $output  = $result['output'];
 
 $rResult = $result['rResult'];
 
+$call_data =  data_call_data();
+
+$call_data = array_column($call_data, null, 'contact');
+
 
 foreach ($rResult as $aRow) {
 
@@ -447,20 +451,24 @@ foreach ($rResult as $aRow) {
     // $row[]    = convertToHMS($aRow["call_duration"], 1);
 
 
-    // $row[]    = 0;
-    $call_duration = 0;
-    $last_call_update = "";
-    if (!empty($aRow['phonenumber'])) {
-        $call_data =  call_duration($aRow, $_POST);
-        if (!empty($call_data[0]["duration"])) {
-            $call_duration = $call_data[0]["duration"];
-        }
-        if (!empty($call_data[0]["last_contact_date"])) {
-            $last_call_update = $call_data[0]["last_contact_date"];
-        }
-    }
-    $row[]    =  !empty($call_duration) ? convertToHMS($call_duration, 1) : convertToHMS(0, 1);
-    $row[]    =  $last_call_update;
+       // $row[]    = 0;
+       $call_duration = 0;
+       $last_call_update = "";
+       // if (!empty($aRow['phonenumber'])) {
+       //     $call_data =  call_duration($aRow, $_POST);
+       //     if (!empty($call_data[0]["duration"])) {
+       //         $call_duration = $call_data[0]["duration"];
+       //     }
+       //     if (!empty($call_data[0]["last_contact_date"])) {
+       //         $last_call_update = $call_data[0]["last_contact_date"];
+       //     }
+       // }
+       // $row[]    =  !empty($call_duration) ? convertToHMS($call_duration, 1) : convertToHMS(0, 1);
+       // $row[]    =  $last_call_update;
+   
+       $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
+       $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? $call_data[$aRow['phonenumber']]["last_contact_date"] : $last_call_update;
+   
 
 
 

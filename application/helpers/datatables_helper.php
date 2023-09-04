@@ -23,8 +23,8 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
      */
     $sLimit = '';
     if ((is_numeric($CI->input->post('start'))) && $CI->input->post('length') != '-1') {
-        // $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
-        $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', 50 ';
+        $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
+        // $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', 50 ';
     }
     $_aColumns = [];
     foreach ($aColumns as $column) {
@@ -798,3 +798,27 @@ function get_stage_6($stage, $client_id)
 
     return $result = $CI->db->query($sql)->row();
 }
+
+function data_call_data()
+{
+    $CI = &get_instance();
+    return   $CI->db->query("
+    SELECT
+        contact,
+        IFNULL(SUM(calls.duration), 0) AS duration,
+        IF(MAX(calls.call_start) != '',
+            DATE_FORMAT(
+                DATE_ADD('1970-01-01', INTERVAL IFNULL(MAX(calls.call_start), 0) + (5 * 3600 + 30 * 60) SECOND),
+                '%Y-%m-%d %H:%i:%s'
+            ),
+            ''
+        ) AS last_contact_date
+    FROM
+        " . db_prefix() . "calls_activity_logs calls
+    WHERE
+        LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')
+    GROUP BY
+        contact
+")->result_array();
+}
+

@@ -1082,6 +1082,8 @@
          }); // you have missed this bracket
          return false;
       }
+
+      summary();
       /* End Created date filter*/
    });
 </script>
