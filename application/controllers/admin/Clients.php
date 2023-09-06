@@ -266,6 +266,11 @@ class Clients extends AdminController
                 $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
                 $data['vendor'] = $this->clients_model->visa_vendor();
                 $data["visa_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'visa_documents')->result_array();
+            } else if ($group == 'accommodation') {
+                $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+                $data['vendor'] = $this->clients_model->accommodation_vendor();
+                $data["accommodation_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'accommodation')->result_array();
+                $data["flight_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'flight')->result_array();
             }
 
 
@@ -2433,8 +2438,8 @@ class Clients extends AdminController
             }
 
             if (!empty($update_array)) {
-                $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_documents" => json_encode($update_array, true)]);
-                $rows_affected = $this->db->affected_rows();
+                $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_documents" => json_encode($update_array, true)]);
+                // $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected) {
                     $data['resp_code'] = 'RCS';
@@ -2452,8 +2457,8 @@ class Clients extends AdminController
         } else if ($type == 'vendor') {
             $vendor = $this->input->post("vendor");
             if (!empty($vendor)) {
-                $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["vendor" => $vendor]);
-                $rows_affected = $this->db->affected_rows();
+                $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["vendor" => $vendor]);
+                // $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected) {
                     $data['resp_code'] = 'RCS';
@@ -2490,8 +2495,8 @@ class Clients extends AdminController
                     $update_array["vfs_fee"] = 1;
                 }
 
-                $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', $update_array);
-                $rows_affected = $this->db->affected_rows();
+                $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', $update_array);
+                // $rows_affected = $this->db->affected_rows();
 
                 if ($rows_affected) {
                     $data['resp_code'] = 'RCS';
@@ -2512,8 +2517,8 @@ class Clients extends AdminController
             $interview_status = $this->input->post("interview_status");
             $interview_date = $this->input->post("interview_date");
 
-            $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["biometric_status" => $biometric_status, "biometric_date" => $biometric_date, "interview_status" => $interview_status, "interview_date" => $interview_date]);
-            $rows_affected = $this->db->affected_rows();
+            $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["biometric_status" => $biometric_status, "biometric_date" => $biometric_date, "interview_status" => $interview_status, "interview_date" => $interview_date]);
+            // $rows_affected = $this->db->affected_rows();
 
             if ($rows_affected) {
                 $data['resp_code'] = 'RCS';
@@ -2546,8 +2551,8 @@ class Clients extends AdminController
                 $visa_file_path = $visa_file_url;
             }
 
-            $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_status" => $visa_status, "note" => $note, "visa_file" => $visa_file_path]);
-            $rows_affected = $this->db->affected_rows();
+            $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_status" => $visa_status, "note" => $note, "visa_file" => $visa_file_path]);
+            // $rows_affected = $this->db->affected_rows();
 
             if ($rows_affected) {
                 $data['resp_code'] = 'RCS';
@@ -2558,6 +2563,136 @@ class Clients extends AdminController
                 $data['resp_desc'] = "Visa status update failed";
                 set_alert('danger', "Visa status update failed");
             }
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_accommodation()
+    {
+
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+        $client_id = $this->input->post("client_id");
+
+        if (empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+        $check_accommodation = $this->db->select('*')->where(['client_id' => $client_id])->get(db_prefix() . 'accommodation')->result_array();
+
+        if (empty($check_accommodation)) {
+            $this->db->insert(db_prefix() . 'accommodation', [
+                "created_date"  => date('Y-m-d H:i:s'),
+                "created_by"    => get_staff_user_id(),
+                "client_id"     => $client_id,
+            ]);
+        }
+        $update_data = $_POST;
+
+
+        if (!empty($_FILES)) {
+            foreach ($_FILES as $key => $files) {
+                if (!empty($files['name'])) {
+                    $upload_data["name"] = $files['name'];
+                    $upload_data["type"] = $files['type'];
+                    $upload_data["tmp_name"] = $files['tmp_name'];
+                    $upload_data["error"] = $files['error'];
+                    $upload_data["size"] = $files['size'];
+
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        $update_data[$key] = $file_name["file_path"];
+                    }
+                }
+            }
+        }
+
+        $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'accommodation', $update_data);
+        // $rows_affected = $this->db->affected_rows();
+
+        if ($rows_affected) {
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = "Accommodation details update successfully.";
+            set_alert('success', "Accommodation details update successfully.");
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = "Accommodation details update failed";
+            set_alert('danger', "Accommodation details update failed");
+        }
+
+        echo json_encode($data);
+    }
+
+    function update_flight()
+    {
+
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+        $client_id = $this->input->post("client_id");
+
+        if (empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+        $check_flight = $this->db->select('*')->where(['client_id' => $client_id])->get(db_prefix() . 'flight')->result_array();
+
+        if (empty($check_flight)) {
+            $this->db->insert(db_prefix() . 'flight', [
+                "created_date"  => date('Y-m-d H:i:s'),
+                "created_by"    => get_staff_user_id(),
+                "client_id"     => $client_id,
+            ]);
+        }
+        $update_data = $_POST;
+
+
+        if (!empty($_FILES)) {
+            foreach ($_FILES as $key => $files) {
+                if (!empty($files['name'])) {
+                    $upload_data["name"] = $files['name'];
+                    $upload_data["type"] = $files['type'];
+                    $upload_data["tmp_name"] = $files['tmp_name'];
+                    $upload_data["error"] = $files['error'];
+                    $upload_data["size"] = $files['size'];
+
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        $update_data[$key] = $file_name["file_path"];
+                    }
+                }
+            }
+        }
+
+        $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'flight', $update_data);
+        // $rows_affected = $this->db->affected_rows();
+
+        if ($rows_affected) {
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = "Flight details update successfully.";
+            set_alert('success', "Flight details update successfully.");
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = "Flight details update failed";
+            set_alert('danger', "Flight details update failed");
         }
 
         echo json_encode($data);
