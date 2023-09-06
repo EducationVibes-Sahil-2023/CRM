@@ -89,10 +89,17 @@ class Clients extends AdminController
         // $database_secondary = $this->load->database('database_secondary', TRUE);
         $this->load->model('leads_model');
         $data['lead_type'] = $this->leads_model->get_type();
+        $client = "";
+        if (!empty($id)) {
+            $client = $this->clients_model->get($id);
+        }
         $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
-                access_denied('customers');
+                if ($client->addedfrom == get_staff_user_id()) {
+                } else {
+                    access_denied('customers');
+                }
             }
         }
 
@@ -125,7 +132,11 @@ class Clients extends AdminController
             } else {
                 if (!has_permission('customers', '', 'edit')) {
                     if (!is_customer_admin($id)) {
-                        access_denied('customers');
+                        if ($client->addedfrom == get_staff_user_id()) {
+                        } else {
+                            access_denied('customers');
+                        }
+                        // access_denied('customers');
                     }
                 }
                 $success = $this->clients_model->update($this->input->post(), $id);
@@ -152,6 +163,7 @@ class Clients extends AdminController
             $this->load->model('leads_model');
 
             $client                = $this->clients_model->get($id);
+
             $data["lead_data"]                = $this->leads_model->get($client->leadid);
             $data['customer_tabs'] = get_customer_profile_tabs();
 
@@ -250,6 +262,10 @@ class Clients extends AdminController
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
                     $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
                 }
+            } else if ($group == 'visa') {
+                $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+                $data['vendor'] = $this->clients_model->visa_vendor();
+                $data["visa_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'visa_documents')->result_array();
             }
 
 
@@ -2354,6 +2370,194 @@ class Clients extends AdminController
         } else {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function upload_visa_documents()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+
+        $type = $this->input->post("type");
+        $client_id = $this->input->post("client_id");
+
+        if (empty($type) || empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+
+        $check_visa_documents = $this->db->select('*')->where(['client_id' => $client_id])->get(db_prefix() . 'visa_documents')->result_array();
+
+        if (empty($check_visa_documents)) {
+            $this->db->insert(db_prefix() . 'visa_documents', [
+                "created_date"  => date('Y-m-d H:i:s'),
+                "created_by"    => get_staff_user_id(),
+                "client_id"     => $client_id,
+            ]);
+        }
+
+        if ($type == 'document') {
+            $label_data = $this->input->post("document_label");
+            $document_url = $this->input->post("document_url");
+            $update_array = [];
+
+            for ($i = 0; $i < count($label_data); $i++) {
+                $upload_data = [];
+                $files = $_FILES['document_file_' . $i];
+
+                if (!empty($files['name'])) {
+                    $upload_data["name"] = $files['name'];
+                    $upload_data["type"] = $files['type'];
+                    $upload_data["tmp_name"] = $files['tmp_name'];
+                    $upload_data["error"] = $files['error'];
+                    $upload_data["size"] = $files['size'];
+
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
+                    }
+                } elseif (!empty($document_url[$i])) {
+                    array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
+                }
+            }
+
+            if (!empty($update_array)) {
+                $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_documents" => json_encode($update_array, true)]);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Visa documents update successfully.";
+                    set_alert('success', "Visa documents update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Visa documents update failed";
+                    set_alert('danger', "Visa documents update failed");
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'No files to upload';
+            }
+        } else if ($type == 'vendor') {
+            $vendor = $this->input->post("vendor");
+            if (!empty($vendor)) {
+                $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["vendor" => $vendor]);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Visa vendor update successfully.";
+                    set_alert('success', "Visa vendor update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Visa vendor update failed";
+                    set_alert('danger', "Visa vendor update failed");
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'No vendor update';
+            }
+        } else if ($type == 'visa') {
+            $visa_type = !empty($this->input->post("visa_type")) ? explode(",", $this->input->post("visa_type")) : '';
+
+            if (!empty($visa_type)) {
+                $update_array = [
+                    "ihs_fee" => 0,
+                    "visa_fee" => 0,
+                    "vfs_fee" => 0,
+                ];
+
+                if (in_array("ihs_fee", $visa_type)) {
+                    $update_array["ihs_fee"] = 1;
+                }
+
+                if (in_array("visa_fee", $visa_type)) {
+                    $update_array["visa_fee"] = 1;
+                }
+
+                if (in_array("vfs_fee", $visa_type)) {
+                    $update_array["vfs_fee"] = 1;
+                }
+
+                $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', $update_array);
+                $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Visa update successfully.";
+                    set_alert('success', "Visa update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Visa update failed";
+                    set_alert('danger', "Visa update failed");
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'No visa update';
+            }
+        } else if ($type == "date") {
+            $biometric_status = $this->input->post("biometric_status");
+            $biometric_date = $this->input->post("biometric_date");
+            $interview_status = $this->input->post("interview_status");
+            $interview_date = $this->input->post("interview_date");
+
+            $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["biometric_status" => $biometric_status, "biometric_date" => $biometric_date, "interview_status" => $interview_status, "interview_date" => $interview_date]);
+            $rows_affected = $this->db->affected_rows();
+
+            if ($rows_affected) {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Visa details update successfully.";
+                set_alert('success', "Visa details update successfully.");
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = "Visa details update failed";
+                set_alert('danger', "Visa details update failed");
+            }
+        } else if ($type == 'status') {
+            $visa_status = !empty($this->input->post("visa_status")) ? $this->input->post("visa_status") : '';
+            $note = !empty($this->input->post("note")) ? trim($this->input->post("note")) : '';
+            $files = $_FILES["visa_file"];
+            $visa_file_url = !empty($this->input->post("visa_file_url")) ? $this->input->post("visa_file_url") : '';
+            $visa_file_path = "";
+
+            if (!empty($files['name'])) {
+                $upload_data["name"] = $files['name'];
+                $upload_data["type"] = $files['type'];
+                $upload_data["tmp_name"] = $files['tmp_name'];
+                $upload_data["error"] = $files['error'];
+                $upload_data["size"] = $files['size'];
+
+                if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                    $file_name = upload_applicant_documents($client_id, $upload_data);
+                    $visa_file_path = $file_name["file_path"];
+                }
+            } else {
+                $visa_file_path = $visa_file_url;
+            }
+
+            $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_status" => $visa_status, "note" => $note, "visa_file" => $visa_file_path]);
+            $rows_affected = $this->db->affected_rows();
+
+            if ($rows_affected) {
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Visa status update successfully.";
+                set_alert('success', "Visa status update successfully.");
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = "Visa status update failed";
+                set_alert('danger', "Visa status update failed");
+            }
         }
 
         echo json_encode($data);
