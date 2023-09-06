@@ -473,10 +473,11 @@ if (empty($country_name)) {
             }
 
         } else if (type == "visa") {
+            let checkedValues = [];
             $("input[name='visa_type[]']:checked").each(function() {
                 checkedValues.push($(this).val());
             });
-            let checkedValues = [];
+
 
             console.log("Checked values:", checkedValues);
             if (checkedValues.includes("visa_fee")) {

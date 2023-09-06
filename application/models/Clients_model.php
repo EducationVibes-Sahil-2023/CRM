@@ -1911,4 +1911,11 @@ class Clients_model extends App_Model
         $this->db->where("status", 1);
         return $document = $this->db->get()->result_array();
     }
+    function accommodation_vendor()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'vendor_accommodation');
+        $this->db->where("status", 1);
+        return $document = $this->db->get()->result_array();
+    }
 }
