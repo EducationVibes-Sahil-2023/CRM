@@ -1898,4 +1898,17 @@ class Clients_model extends App_Model
         $this->db->where("client_id", $client_id);
         return $document = $this->db->get()->result_array();
     }
+
+    function selected_university_country($client_id)
+    {
+        return $this->db->query("SELECT us.university_name,ap.university  FROM " . db_prefix() . "client_university_shortlisting us join " . db_prefix() . "admission_preferences ap on us.client_id = ap.userid where us.client_id = '{$client_id}' and us.fee_status = 1")->row();
+    }
+
+    function visa_vendor()
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'vendor_visa');
+        $this->db->where("status", 1);
+        return $document = $this->db->get()->result_array();
+    }
 }
