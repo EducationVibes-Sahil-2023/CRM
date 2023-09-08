@@ -84,6 +84,250 @@ class Clients extends AdminController
     }
 
     /* Edit client or add new client*/
+    // public function client($id = '')
+    // {
+    //     // $database_secondary = $this->load->database('database_secondary', TRUE);
+    //     $this->load->model('leads_model');
+    //     $data['lead_type'] = $this->leads_model->get_type();
+    //     $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+    //     if (!has_permission('customers', '', 'view')) {
+    //         if ($id != '' && !is_customer_admin($id)) {
+    //             access_denied('customers');
+    //         }
+    //     }
+
+    //     if ($this->input->post() && !$this->input->is_ajax_request()) {
+    //         if ($id == '') {
+    //             if (!has_permission('customers', '', 'create')) {
+    //                 access_denied('customers');
+    //             }
+
+    //             $data = $this->input->post();
+    //             $save_and_add_contact = false;
+    //             if (isset($data['save_and_add_contact'])) {
+    //                 unset($data['save_and_add_contact']);
+    //                 $save_and_add_contact = true;
+    //             }
+    //             $id = $this->clients_model->add($data);
+    //             if (!has_permission('customers', '', 'view')) {
+    //                 $assign['customer_admins']   = [];
+    //                 $assign['customer_admins'][] = get_staff_user_id();
+    //                 $this->clients_model->assign_admins($assign, $id);
+    //             }
+    //             if ($id) {
+    //                 set_alert('success', _l('added_successfully', _l('client')));
+    //                 if ($save_and_add_contact == false) {
+    //                     redirect(admin_url('clients/client/' . $id));
+    //                 } else {
+    //                     redirect(admin_url('clients/client/' . $id . '?group=contacts&new_contact=true'));
+    //                 }
+    //             }
+    //         } else {
+    //             if (!has_permission('customers', '', 'edit')) {
+    //                 if (!is_customer_admin($id)) {
+    //                     access_denied('customers');
+    //                 }
+    //             }
+    //             $success = $this->clients_model->update($this->input->post(), $id);
+    //             if ($success == true) {
+    //                 set_alert('success', _l('updated_successfully', _l('client')));
+    //             }
+    //             redirect(admin_url('clients/client/' . $id));
+    //         }
+    //     }
+
+    //     $group         = !$this->input->get('group') ? 'profile' : $this->input->get('group');
+    //     $data['group'] = $group;
+
+    //     if ($group != 'contacts' && $contact_id = $this->input->get('contactid')) {
+    //         redirect(admin_url('clients/client/' . $id . '?group=contacts&contactid=' . $contact_id));
+    //     }
+
+    //     // Customer groups
+    //     $data['groups'] = $this->clients_model->get_groups();
+
+    //     if ($id == '') {
+    //         $title = _l('add_new', _l('client_lowercase'));
+    //     } else {
+    //         $this->load->model('leads_model');
+
+    //         $client                = $this->clients_model->get($id);
+    //         $data["lead_data"]                = $this->leads_model->get($client->leadid);
+    //         $data['customer_tabs'] = get_customer_profile_tabs();
+
+    //         if (!$client) {
+    //             show_404();
+    //         }
+
+    //         $data['contacts'] = $this->clients_model->get_contacts($id);
+    //         $data['basicDetails'] = $this->clients_model->get_contact_by_userid($data['contacts'][0]['userid']);
+
+    //         $data['tab']      = isset($data['customer_tabs'][$group]) ? $data['customer_tabs'][$group] : null;
+
+    //         if (!$data['tab']) {
+    //             show_404();
+    //         }
+
+
+    //         // Fetch data based on groups
+    //         if ($group == 'profile') {
+    //             $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
+    //             $data['customer_admins'] = $this->clients_model->get_admins($id);
+    //             $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
+    //             $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+    //             $data['parentdetails'] = $this->clients_model->getParentDetails($id);
+    //             $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
+    //             $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
+    //             $data['program_data'] = $this->clients_model->getProgram();
+    //             $data['course_data'] = $this->clients_model->getCourse();
+    //             $data['entrance_data'] = $this->clients_model->getEntrance();
+    //             $data['documents'] =  $this->clients_model->get_documents($id);
+    //             $data['score_columns'] =  $this->clients_model->get_scroe_column();
+    //             $data['score_value'] =  $this->clients_model->get_scroe_value($id);
+    //         } elseif ($group == 'attachments') {
+    //             $data['attachments'] = get_all_customer_attachments($id);
+    //         } elseif ($group == 'vault') {
+    //             $data['vault_entries'] = hooks()->apply_filters('check_vault_entries_visibility', $this->clients_model->get_vault_entries($id));
+
+    //             if ($data['vault_entries'] === -1) {
+    //                 $data['vault_entries'] = [];
+    //             }
+    //         } elseif ($group == 'estimates') {
+    //             $this->load->model('estimates_model');
+    //             $data['estimate_statuses'] = $this->estimates_model->get_statuses();
+    //         } elseif ($group == 'invoices') {
+    //             $this->load->model('invoices_model');
+    //             $data['invoice_statuses'] = $this->invoices_model->get_statuses();
+    //         } elseif ($group == 'credit_notes') {
+    //             $this->load->model('credit_notes_model');
+    //             $data['credit_notes_statuses'] = $this->credit_notes_model->get_statuses();
+    //             $data['credits_available']     = $this->credit_notes_model->total_remaining_credits_by_customer($id);
+    //         } elseif ($group == 'payments') {
+    //             $this->load->model('payment_modes_model');
+    //             $data['payment_modes'] = $this->payment_modes_model->get();
+    //         } elseif ($group == 'notes') {
+    //             $data['user_notes'] = $this->misc_model->get_notes($id, 'customer');
+    //         } elseif ($group == 'projects') {
+    //             $this->load->model('projects_model');
+    //             $data['project_statuses'] = $this->projects_model->get_project_statuses();
+    //         } elseif ($group == 'statement') {
+    //             if (!has_permission('invoices', '', 'view') && !has_permission('payments', '', 'view')) {
+    //                 set_alert('danger', _l('access_denied'));
+    //                 redirect(admin_url('clients/client/' . $id));
+    //             }
+
+    //             $data = array_merge($data, prepare_mail_preview_data('customer_statement', $id));
+    //         } elseif ($group == 'map') {
+    //             if (get_option('google_api_key') != '' && !empty($client->latitude) && !empty($client->longitude)) {
+    //                 $this->app_scripts->add('map-js', base_url($this->app_scripts->core_file('assets/js', 'map.js')) . '?v=' . $this->app_css->core_version());
+
+    //                 $this->app_scripts->add('google-maps-api-js', [
+    //                     'path'       => 'https://maps.googleapis.com/maps/api/js?key=' . get_option('google_api_key') . '&callback=initMap',
+    //                     'attributes' => [
+    //                         'async',
+    //                         'defer',
+    //                         'latitude'       => "$client->latitude",
+    //                         'longitude'      => "$client->longitude",
+    //                         'mapMarkerTitle' => "$client->company",
+    //                     ],
+    //                 ]);
+    //             }
+    //         } elseif ($group == 'tracker') {
+
+    //             $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+    //             $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
+    //             $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
+    //             $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+    //             $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
+    //             $data['customer_admins'] = $this->clients_model->get_admins($id);
+    //             $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+    //             $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+    //             $data['university_application_status'] = $this->clients_model->university_status_update();
+    //             $data['university_status_submit'] = $this->clients_model->university_status_submit();
+    //             $data['documents'] =  $this->clients_model->get_documents($id);
+
+    //             $data['customer_vendors'] = [];
+    //             if (!empty($data['profile_creation_data'][0]["vendor"])) {
+    //                 $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+    //             }
+    //         }
+
+
+    //         // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+
+    //         $data['members'] = $this->staff_model->post_sale_get();
+
+    //         $data['staff'] = [];
+    //         if (!empty($data["lead_data"]->type)) {
+    //             $lead_status_data = $data["lead_data"]->type;
+    //             foreach ($data['members'] as $members) {
+    //                 // if ($members["lead_type"] == $lead_status_data) {
+    //                 $data['staff'][] = $members;
+    //                 // }
+    //             }
+    //         }
+    //             // echo $data["lead_data"]->form_data->lead_status;
+    //         ;
+
+    //         $data['client'] = $client;
+    //         $title          = $client->company;
+
+    //         // Get all active staff members (used to add reminder)
+    //         $data['members'] = $data['staff'];
+
+    //         if (!empty($data['client']->company)) {
+    //             // Check if is realy empty client company so we can set this field to empty
+    //             // The query where fetch the client auto populate firstname and lastname if company is empty
+    //             if (is_empty_customer_company($data['client']->userid)) {
+    //                 $data['client']->company = '';
+    //             }
+    //         }
+    //     }
+    //     $data['lead_type_status'] = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row()->type;
+    //     $this->load->model('currencies_model');
+    //     $data['currencies'] = $this->currencies_model->get();
+
+    //     if ($id != '') {
+    //         $customer_currency = $data['client']->default_currency;
+
+    //         foreach ($data['currencies'] as $currency) {
+    //             if ($customer_currency != 0) {
+    //                 if ($currency['id'] == $customer_currency) {
+    //                     $customer_currency = $currency;
+
+    //                     break;
+    //                 }
+    //             } else {
+    //                 if ($currency['isdefault'] == 1) {
+    //                     $customer_currency = $currency;
+
+    //                     break;
+    //                 }
+    //             }
+    //         }
+
+    //         if (is_array($customer_currency)) {
+    //             $customer_currency = (object) $customer_currency;
+    //         }
+
+    //         $data['customer_currency'] = $customer_currency;
+
+    //         $slug_zip_folder = ($client->company != ''
+    //             ? $client->companyclient
+    //             : get_contact_full_name(get_primary_contact_user_id($client->userid))
+    //         );
+
+    //         $data['zip_in_folder'] = slug_it($slug_zip_folder);
+    //     }
+
+    //     $data['bodyclass'] = 'customer-profile dynamic-create-groups';
+    //     $data['title']     = $title;
+    //     $data['client_id']     = $id;
+
+    //     $this->load->view('admin/clients/client', $data);
+    // }
+
+
     public function client($id = '')
     {
         // $database_secondary = $this->load->database('database_secondary', TRUE);
