@@ -85,7 +85,7 @@ if (empty($country_name)) {
                 <div class="row mt-5">
                     <div class="col-md-4">
                         <label for="contract-file">Contract</label>
-                        <input type="file" name="contract" id="contract-file" class="form-control">
+                        <!-- <input type="file" accept="image/*,application/pdf" name="contract" id="contract-file" class="form-control"> -->
                         <?php if (!empty($accommodation_data[0]["contract"])) { ?>
                             <div class="row media-text-div">
                                 <div class="col-md-10">
@@ -111,7 +111,7 @@ if (empty($country_name)) {
 
                 <div class="mt-5">
                     <label for="payment-receipt">Payment (Receipt)</label>
-                    <input type="file" id="payment-receipt" name="payment" class="form-control">
+                    <!-- <input type="file" accept="image/*,application/pdf" id="payment-receipt" name="payment" class="form-control"> -->
 
                     <?php if (!empty($accommodation_data[0]["payment"])) { ?>
                         <div class="row media-text-div">
@@ -168,7 +168,7 @@ if (empty($country_name)) {
                     </div>
                     <div class="col-md-4">
                         <label for="flight-ticket">Flight Ticket</label>
-                        <input type="file" name="flight_ticket" id="flight-ticket" class="form-control">
+                        <!-- <input type="file" accept="image/*,application/pdf" name="flight_ticket" id="flight-ticket" class="form-control"> -->
 
 
                         <?php if (!empty($flight_data[0]["flight_ticket"])) { ?>

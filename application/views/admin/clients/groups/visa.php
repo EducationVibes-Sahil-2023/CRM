@@ -705,27 +705,27 @@ if (empty($country_name)) {
     }
 
     function real_time_media_show(input) {
-        var file = input.files[0];
+        // var file = input.files[0];
 
-        if (file) {
-            var $parent = $(input).parents(".document_upload_files");
-            $parent.find(".media-text-div").remove();
+        // if (file) {
+        //     var $parent = $(input).parents(".document_upload_files");
+        //     $parent.find(".media-text-div").remove();
 
-            var mediaTextDiv = $('<div class="row media-text-div">' +
-                '<div class="col-md-10">' +
-                '<p class="document-file-name">' + file.name + '</p>' +
-                '</div>' +
-                '<div class="col-md-2 file-download-block">' +
-                '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="window.open(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
-                '<i class="fa fa-download" aria-hidden="true"></i>' +
-                '</a>' +
-                '</div>' +
-                '</div>');
+        //     var mediaTextDiv = $('<div class="row media-text-div">' +
+        //         '<div class="col-md-10">' +
+        //         '<p class="document-file-name">' + file.name + '</p>' +
+        //         '</div>' +
+        //         '<div class="col-md-2 file-download-block">' +
+        //         '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="window.open(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
+        //         '<i class="fa fa-download" aria-hidden="true"></i>' +
+        //         '</a>' +
+        //         '</div>' +
+        //         '</div>');
 
-            $(input).after(mediaTextDiv);
-        } else {
-            $(input).parents(".document_upload_files").find(".media-text-div").remove();
+        //     $(input).after(mediaTextDiv);
+        // } else {
+        //     $(input).parents(".document_upload_files").find(".media-text-div").remove();
 
-        }
+        // }
     }
 </script>
