@@ -232,7 +232,7 @@ if (empty($country_name)) {
                         </textarea>
                     </div>
                     <div id="stamped_div" class="mt-5" style="display: <?= !empty($visa_data[0]["visa_status"] && $visa_data[0]["visa_status"] == 'stamped') ? "" : 'none' ?>">
-                        <input type="file" class="form-control" data-url="<?= !empty($visa_data[0]["visa_file"]) ? $visa_data[0]["visa_file"] : '' ?>" id="visa_file" accept="image/*,application/pdf" onchange="real_time_media_show(this)">
+                        <!-- <input type="file" class="form-control" data-url="<?= !empty($visa_data[0]["visa_file"]) ? $visa_data[0]["visa_file"] : '' ?>" id="visa_file" accept="image/*,application/pdf" onchange="real_time_media_show(this)"> -->
                         <?php if (!empty($visa_data[0]["visa_file"])) { ?>
                             <div class="row media-text-div">
                                 <div class="col-md-10">
@@ -699,27 +699,28 @@ console.log(client_id);
     }
 
     function real_time_media_show(input) {
-        var file = input.files[0];
+        // var file = input.files[0];
 
-        if (file) {
-            var $parent = $(input).parents(".document_upload_files");
-            $parent.find(".media-text-div").remove();
+        // if (file) {
+        //     var $parent = $(input).parents(".document_upload_files");
+        //     $parent.find(".media-text-div").remove();
 
-            var mediaTextDiv = $('<div class="row media-text-div">' +
-                '<div class="col-md-10">' +
-                '<p class="document-file-name">' + file.name + '</p>' +
-                '</div>' +
-                '<div class="col-md-2 file-download-block">' +
-                '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="window.open(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
-                '<i class="fa fa-download" aria-hidden="true"></i>' +
-                '</a>' +
-                '</div>' +
-                '</div>');
+        //     var mediaTextDiv = $('<div class="row media-text-div">' +
+        //         '<div class="col-md-10">' +
+        //         '<p class="document-file-name">' + file.name + '</p>' +
+        //         '</div>' +
+        //         '<div class="col-md-2 file-download-block">' +
+        //         '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="window.open(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
+        //         '<i class="fa fa-download" aria-hidden="true"></i>' +
+        //         '</a>' +
+        //         '</div>' +
+        //         '</div>');
+        //         $(input).siblings(".media-text-div").remove();
+        //                     $(input).after(mediaTextDiv);
+        // } else {
+        //     $(input).siblings(".media-text-div").remove();
+        //     $(input).parents(".document_upload_files").find(".media-text-div").remove();
 
-            $(input).after(mediaTextDiv);
-        } else {
-            $(input).parents(".document_upload_files").find(".media-text-div").remove();
-
-        }
+        // }
     }
 </script>

@@ -2235,7 +2235,7 @@ class Clients extends ClientsController
         if (empty($check_visa_documents)) {
             $this->db->insert(db_prefix() . 'visa_documents', [
                 "created_date"  => date('Y-m-d H:i:s'),
-                "created_by"    => get_staff_user_id(),
+                "created_by"    => get_client_user_id(),
                 "client_id"     => $client_id,
             ]);
         }
