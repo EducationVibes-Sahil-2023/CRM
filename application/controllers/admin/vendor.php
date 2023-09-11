@@ -23,7 +23,7 @@ class Vendor extends AdminController
         $data['title']                = _l('Visa Vendors');
         $data['type']                = _l('visa');
 
-        $this->load->view('admin//vendor/visa_manage', $data);
+        $this->load->view('admin/vendor/visa_manage', $data);
     }
     public function accommodation()
     {
@@ -39,7 +39,7 @@ class Vendor extends AdminController
         $data['title']                = _l('Accommodation Vendors');
         $data['type']                = _l('accommodation');
 
-        $this->load->view('admin//vendor/accommodation_manage', $data);
+        $this->load->view('admin/vendor/accommodation_manage', $data);
     }
     public function applicant()
     {
@@ -55,7 +55,7 @@ class Vendor extends AdminController
         $data['title']                = _l('Applicant Vendors');
         $data['type']                = _l('applicant');
 
-        $this->load->view('admin//vendor/applicant_manage', $data);
+        $this->load->view('admin/vendor/applicant_manage', $data);
     }
 
     public function vendor_name()
