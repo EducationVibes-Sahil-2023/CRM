@@ -153,6 +153,11 @@ class App_menu
         }
 
         $items = hooks()->apply_filters("{$group}_menu_items", $items);
+        $items = array_map(function ($parent_array) {
+            $parent_array['children'] = array_values(array_unique($parent_array['children'], SORT_REGULAR));
+            return $parent_array;
+        }, $items);
+
 
         return app_sort_by_position($items);
     }

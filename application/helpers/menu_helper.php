@@ -413,6 +413,56 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 5,
                 ]);
 
+                // $CI->app_menu->add_setup_menu_item('vendors_module', [
+                //         'collapse' => true,
+                //         'name'     => _l('Vendor'),
+                //         'position' => 0,
+                // ]);
+                // $CI->app_menu->add_setup_children_item('vendors_module', [
+                //         'slug'     => 'visa-vendors',
+                //         'name'     => _l('visa_vendors'),
+                //         'href'     => admin_url('vendors/visa'),
+                //         'position' => 5,
+                // ]);
+                // $CI->app_menu->add_setup_children_item('vendors_module', [
+                //         'slug'     => 'accommodation-vendors',
+                //         'name'     => _l('accommodation_vendors'),
+                //         'href'     => admin_url('vendors/accommodation'),
+                //         'position' => 10,
+                // ]);
+                // $CI->app_menu->add_setup_children_item('vendors_module', [
+                //         'slug'     => 'applicant-vendors',
+                //         'name'     => _l('applicant_vendors'),
+                //         'href'     => admin_url('vendors/applicant'),
+                //         'position' => 15,
+                // ]);
+
+
+                $CI->app_menu->add_setup_menu_item('vendor', [
+                        'collapse' => true,
+                        'name'     => _l('vendors'),
+                        'position' => 25,
+                ]);
+                $CI->app_menu->add_setup_children_item('vendor', [
+                        'slug'     => 'visa',
+                        'name'     => _l('visa_vendors'),
+                        'href'     => admin_url('vendor/visa'),
+                        'position' => 5,
+                ]);
+                $CI->app_menu->add_setup_children_item('vendor', [
+                        'slug'     => 'accommodation',
+                        'name'     => _l('accommodation_vendors'),
+                        'href'     => admin_url('vendor/accommodation'),
+                        'position' => 10,
+                ]);
+                $CI->app_menu->add_setup_children_item('vendor', [
+                        'slug'     => 'applicant',
+                        'name'     => _l('applicant_vendors'),
+                        'href'     => admin_url('vendor/applicant'),
+                        'position' => 15,
+                ]);
+
+
                 $modules_name = _l('modules');
 
                 if ($modulesNeedsUpgrade = $CI->app_modules->number_of_modules_that_require_database_upgrade()) {
