@@ -694,10 +694,9 @@ function leads_update_count($params = false, $max_status = 0)
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
         $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
-        
     }
 
-    
+
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
@@ -1282,7 +1281,7 @@ function calls_update_count($params = false, $max_status = 0)
     $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
     $sql .= "SELECT SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
     // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
-    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND l.phonenumber = calls.contact ";
+    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.phonenumber = calls.contact ";
 
     if (!empty($params['assigned'])) {
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";

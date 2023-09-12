@@ -93,10 +93,12 @@ class Leads extends AdminController
     }
     public function lead_summary_filter()
     {
-        $summary = get_leads_summary_filter($_POST);
-        $updateCount = leads_update_count($_POST);
-        $max_count = leads_update_count("", 1);
+        // $summary = get_leads_summary_filter($_POST);
+        // $updateCount = leads_update_count($_POST);
+        // $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
+
+        die;
             
         $ret = "";
         $ret1 = '';
