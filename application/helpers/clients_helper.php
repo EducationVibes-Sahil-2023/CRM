@@ -321,6 +321,24 @@ function app_init_customer_profile_tabs()
         'view'     => 'admin/clients/groups/applicant_tracker',
         'position' => 95,
     ]);
+
+    $post_staff = array_column($CI->staff_model->post_sale_get(), "staffid");
+
+
+    if (is_admin() || in_array(get_staff_user_id(), $post_staff)) {
+        $CI->app_tabs->add_customer_profile_tab('visa', [
+            'name'     => _l('visa_tracker'),
+            'icon'     => 'fa fa-cc-visa',
+            'view'     => 'admin/clients/groups/visa',
+            'position' => 95,
+        ]);
+        $CI->app_tabs->add_customer_profile_tab('accommodation', [
+            'name'     => _l('accomodation_tracker'),
+            'icon'     => 'fa fa-plane',
+            'view'     => 'admin/clients/groups/accommodation',
+            'position' => 95,
+        ]);
+    }
 }
 
 /**

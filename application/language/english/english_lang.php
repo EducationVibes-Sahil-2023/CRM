@@ -3655,6 +3655,8 @@ $lang['leads_fb_ads_name'] = 'Facebook Ads Name';
 $lang['fb_new_name'] = 'New Facebook Form Name';
 $lang['facebook_form_name'] = 'Form Name';
 $lang['customer_tracker'] = 'Applicant Tracker';
+$lang['visa_tracker'] = 'Visa';
+$lang['accomodation_tracker'] = 'Accommodation & Flight';
 $lang['update_client_document_successfully'] =  '%s document update successfully.';
 $lang['update_client_document_failed'] =  '%s document update Failed.';
 $lang['update_client_email_successfully'] =  '%s email update successfully.';
@@ -3675,3 +3677,14 @@ $lang['no_admin_assign_tracker'] =  'No admin assigned.';
 $lang['applicant_name_table'] =  'Application Stage';
 $lang['applicant_status_table'] =  'Application Status';
 $lang['applicant_updated_table'] =  'Application Updated by';
+
+
+# Vendors
+$lang['vendors']                = 'Vendors';
+$lang['visa_vendors']                = 'Visa';
+$lang['accommodation_vendors']                = 'Accommodation';
+$lang['applicant_vendors']                = 'Applicant';
+$lang['new_vendor']                = 'New Vendor';
+$lang['vendor_name']                = 'Vendor Name';
+$lang['vendor']                = 'Vendor';
+$lang['edit_vendor']                = 'Edit Vendor';

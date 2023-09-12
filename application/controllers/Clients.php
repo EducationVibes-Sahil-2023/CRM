@@ -2179,4 +2179,111 @@ class Clients extends ClientsController
 
         echo json_encode($data);
     }
+
+    public function Visa()
+    {
+        $id = get_client_user_id();
+        $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+        $data['vendor'] = $this->clients_model->visa_vendor();
+        $data["visa_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'visa_documents')->result_array();
+        $data['title']         = "Visa Details";
+        $data['client_id']         = $id;
+        // echo "<pre>";print_r($data);die;
+        $this->data($data);
+        $this->view('visa');
+        $this->layout();
+    }
+    public function Accommodation()
+    {
+        $id = get_client_user_id();
+        $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+        $data['vendor'] = $this->clients_model->accommodation_vendor();
+        $data["accommodation_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'accommodation')->result_array();
+        $data["flight_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'flight')->result_array();
+        $data['title']         = "Accommodation & Flight Details";
+        $data['client_id']         = $id;
+        // echo "<pre>";print_r($data);die;
+        $this->data($data);
+        $this->view('accommodation');
+        $this->layout();
+    }
+
+    public function upload_visa_documents()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+
+        $type = $this->input->post("type");
+        $client_id = $this->input->post("client_id");
+
+        if (empty($type) || empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+
+        $check_visa_documents = $this->db->select('*')->where(['client_id' => $client_id])->get(db_prefix() . 'visa_documents')->result_array();
+
+        if (empty($check_visa_documents)) {
+            $this->db->insert(db_prefix() . 'visa_documents', [
+                "created_date"  => date('Y-m-d H:i:s'),
+                "created_by"    => get_client_user_id(),
+                "client_id"     => $client_id,
+            ]);
+        }
+
+        if ($type == 'document') {
+            $label_data = $this->input->post("document_label");
+            $document_url = $this->input->post("document_url");
+            $update_array = [];
+
+            for ($i = 0; $i < count($label_data); $i++) {
+                $upload_data = [];
+                $files = $_FILES['document_file_' . $i];
+
+                if (!empty($files['name'])) {
+                    $upload_data["name"] = $files['name'];
+                    $upload_data["type"] = $files['type'];
+                    $upload_data["tmp_name"] = $files['tmp_name'];
+                    $upload_data["error"] = $files['error'];
+                    $upload_data["size"] = $files['size'];
+
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
+                    }
+                } elseif (!empty($document_url[$i])) {
+                    array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
+                }
+            }
+
+            if (!empty($update_array)) {
+                $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'visa_documents', ["visa_documents" => json_encode($update_array, true)]);
+                // $rows_affected = $this->db->affected_rows();
+
+                if ($rows_affected) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Visa documents update successfully.";
+                    set_alert('success', "Visa documents update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Visa documents update failed";
+                    set_alert('danger', "Visa documents update failed");
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'No files to upload';
+            }
+        }
+        echo json_encode($data);
+
+    }
 }
