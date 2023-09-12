@@ -75,7 +75,7 @@ $aColumns = array_merge($aColumns, [
 
     db_prefix() . 'leads.dateadded',
 
-    '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
+    // '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
 
     '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup',
 
@@ -147,13 +147,13 @@ $lead_date_query = '';
 if (!empty($this->ci->input->post('up_to_date'))) {
     $from_date = $this->ci->input->post('up_from_date');
     $to_date = $this->ci->input->post('up_to_date');
-    $lead_date_query = ' AND DATE(n.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"';
+    // $lead_date_query = ' AND DATE(n.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"';
 }
 
-$lead_count_join = 'LEFT JOIN ' . db_prefix() . 'notes as n on  (' . db_prefix() . 'leads.id = n.rel_id and n.rel_type="lead" ' . $lead_date_query . ') ';
+// $lead_count_join = 'LEFT JOIN ' . db_prefix() . 'notes as n on  (' . db_prefix() . 'leads.id = n.rel_id and n.rel_type="lead" ' . $lead_date_query . ') ';
 
 array_push($join, $lead_count_join);
-array_push($aColumns, ' count(n.id) as update_count ');
+// array_push($aColumns, ' count(n.id) as update_count ');
 
 $where  = [];
 
@@ -301,7 +301,7 @@ if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
     //     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
-    array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
+    // array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
 }
 
 if ($this->ci->input->post('followup_to_date')) {
@@ -339,13 +339,13 @@ if (count($custom_fields) > 4) {
 }
 
 // $call_query = "";
-$call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  LIMIT 1) last_call_date ";
+$call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9)  AND staffid = " . db_prefix() . "leads.assigned  LIMIT 1) last_call_date ";
 $call_query_having = "";
-if ($this->ci->input->post('up_from_date_call')) {
-    $up_from_date = $this->ci->input->post('up_from_date_call');
-    $up_to_date = $this->ci->input->post('up_to_date_call');
+if ($this->ci->input->post('up_to_date')) {
+    $up_from_date = $this->ci->input->post('up_from_date');
+    $up_to_date = $this->ci->input->post('up_to_date');
     // $call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) call_duration ";
-    $call_query_having = "(SELECT sum(id)  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1)";
+    $call_query_having = " (SELECT sum(id)  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) ";
 
 
     // //     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
@@ -371,14 +371,11 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
 
-    'zip'
-
-
-
-    // '(SELECT sum(calls.duration)
-    // FROM tblcalls_activity_logs AS calls
-    // WHERE RIGHT(TRIM(calls.contact), 10) = RIGHT(TRIM(' . db_prefix() . 'leads.phonenumber), 10)
-    // LIMIT 1) AS  call_duration'
+    ' zip',
+    '(SELECT count(1)
+    FROM '. db_prefix() .'calls_activity_logs AS calls
+    WHERE calls.contact = ' . db_prefix() . 'leads.phonenumber
+    LIMIT 1) AS  update_count '
 
 ]);
 // if (!empty($call_query)) {
@@ -397,25 +394,33 @@ $having = "";
 if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
     $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
     $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
-    $having .= " Having count(n.id) between {$min} AND {$max} ";
+
+    $having .= " Having (SELECT count(1)
+    FROM " . db_prefix() . "calls_activity_logs AS calls
+    WHERE calls.contact = " . db_prefix() . "leads.phonenumber
+    LIMIT 1) between {$min} AND {$max} ";
+    // $having .= " Having count(n.id) between {$min} AND {$max} ";
 }
 
-// if ($call_query_having) {
+if ($call_query_having) {
 
-//     if (!empty($having)) {
-//         $having .= " AND ";
-//     }
-//     $having .= " Having " . $call_query_having . " > 0 ";
-// }
+    if (!empty($having)) {
+        $having .= " AND ";
+    }
+    $having .= " Having " . $call_query_having . " > 0 ";
+}
 
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
-
-
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
+
+$call_data =  data_call_data();
+
+$call_data = array_column($call_data, null, 'contact');
+
 
 $call_data =  data_call_data();
 
@@ -469,8 +474,6 @@ foreach ($rResult as $aRow) {
        $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
        $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? $call_data[$aRow['phonenumber']]["last_contact_date"] : $last_call_update;
    
-
-
 
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 

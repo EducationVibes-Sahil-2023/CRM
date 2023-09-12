@@ -554,6 +554,7 @@ function get_status_summary_filter($params)
 
     return $sources;
 }
+
 function leads_update_count($params = false, $max_status = 0)
 {
 
@@ -597,16 +598,18 @@ function leads_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT COUNT(l.id) as total';
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
     if (!empty($max_status) && $max_status == 1) {
-        $sql .= " SELECT count((concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+        $sql .= " SELECT count(DISTINCT(calls.id)) as total ";
     } else {
-        $sql .= " SELECT count(DISTINCT(concat(l.id,'-',CAST(n.dateadded AS date)))) as total ";
+        $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     }
-    $sql .= ' FROM ' . db_prefix() . 'leads as l inner join tblnotes as n on ( l.id = n.rel_id  ';
+    $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
 
     if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+        // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+
+        $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' AND staffid = l.assigned ";
     }
     $sql .= ' ) ';
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
@@ -663,9 +666,9 @@ function leads_update_count($params = false, $max_status = 0)
         $assign_to_date = $params['assign_to_date'];
         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
     } else if (!empty($params['up_to_date'])) {
-        $up_from_date = $params['up_from_date'];
-        $up_to_date = $params['up_to_date'];
-        $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+        // $up_from_date = $params['up_from_date'];
+        // $up_to_date = $params['up_to_date'];
+        // $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
     }/*else{
             $today = date("Y-m-d");
             $sql .= " AND n.dateadded LIKE '%" .$today."%'";
@@ -683,19 +686,18 @@ function leads_update_count($params = false, $max_status = 0)
 
 
     if (!empty($max_status) && $max_status == 1) {
-        $sql .= " group by l.id" . $grup_by . " order by total desc limit 1 ";
+        $sql .= " group by l.id " . $grup_by . " order by total desc limit 1 ";
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
     } else {
-        $sql .= " group by l.id" . $grup_by . " " . $sql_add . "  order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
+        $sql .= " group by l.id,uni_dates " . $grup_by . " " . $sql_add . "   ";
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
         $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
+        
     }
 
-    // echo $sql;
-    // die;
-
+    
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
@@ -705,6 +707,7 @@ function leads_update_count($params = false, $max_status = 0)
 
     return !empty($update_count) ? $update_count : 0;
 }
+
 
 function leads_update_count_id($id, $params = false)
 {
@@ -1276,36 +1279,6 @@ function calls_update_count($params = false, $max_status = 0)
         }
     }
 
-    // $CI = get_instance();
-    // $batchSize = 1000; // Choose an appropriate batch size based on your data and system's capacity
-
-    // // Prepare the database query
-    // $query = $CI->db->query("SELECT id, RIGHT(TRIM(phonenumber), 10) AS phonenumber, assigned AS staffid FROM tblleads");
-
-    // $totalRows = $query->num_rows();
-    // $update_count = 0;
-
-    // for ($offset = 0; $offset < $totalRows; $offset += $batchSize) {
-    //     $leads = array_slice($query->result_array(), $offset, $batchSize);
-
-    //     $update_count += processBatchLeads($leads);
-    // }
-
-    // return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
-
-    // $get_lead_ids = $CI->db->query("select id,RIGHT(TRIM(phonenumber), 10) phonenumber,assigned as staffid from tblleads")->result_array();
-    // $update_count = 0;
-    // foreach ($get_lead_ids as $leads) {
-
-    //     $result = call_duration($leads);
-    //     if (!empty($result[0]["duration"])) {
-    //         $update_count += $result[0]["duration"];
-    //     }
-    // }
-    // return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
-
-    // Assuming this code is written in PHP, and you are concatenating the SQL query into the $sql variable
-
     $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
     $sql .= "SELECT SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
     // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
@@ -1367,11 +1340,11 @@ function calls_update_count($params = false, $max_status = 0)
     }
 
     $sql_add = "";
-    if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-        $min = $params['update_count_min'];
-        $max = $params['update_count_max'];
-        $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
-    }
+    // if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+    //     $min = $params['update_count_min'];
+    //     $max = $params['update_count_max'];
+    //     $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+    // }
 
     $sql .= " GROUP BY calls.contact" . $grup_by . " " . $sql_add . ") AS subquery";
 
@@ -1381,7 +1354,6 @@ function calls_update_count($params = false, $max_status = 0)
 
     return !empty($update_count) ? convertToHMS($update_count) : convertToHMS(0);
 }
-
 
 
 function convertToHMS($seconds, $status = 0)
@@ -1415,4 +1387,19 @@ function call_duration($row_data, $post_data = "")
 
 
     return $CI->db->query($sql)->result_array();
+}
+
+function leads_call_update_count()
+{
+    $CI = &get_instance();
+    $query = $CI->db->query(" SELECT MAX(contact_count) max_count
+    FROM (
+        SELECT COUNT(1) AS contact_count
+        FROM  " . db_prefix() . "calls_activity_logs
+        GROUP BY contact
+    ) AS subquery;
+    ")->row();
+
+    $maxCount = $query->max_count;
+    return $maxCount;
 }
