@@ -3677,3 +3677,14 @@ $lang['no_admin_assign_tracker'] =  'No admin assigned.';
 $lang['applicant_name_table'] =  'Application Stage';
 $lang['applicant_status_table'] =  'Application Status';
 $lang['applicant_updated_table'] =  'Application Updated by';
+
+
+# Vendors
+$lang['vendors']                = 'Vendors';
+$lang['visa_vendors']                = 'Visa';
+$lang['accommodation_vendors']                = 'Accommodation';
+$lang['applicant_vendors']                = 'Applicant';
+$lang['new_vendor']                = 'New Vendor';
+$lang['vendor_name']                = 'Vendor Name';
+$lang['vendor']                = 'Vendor';
+$lang['edit_vendor']                = 'Edit Vendor';
