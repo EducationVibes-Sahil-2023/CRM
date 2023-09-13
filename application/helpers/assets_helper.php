@@ -116,20 +116,20 @@ function add_favicon_link_asset($group = 'admin')
     $favIcon = get_option('favicon');
     if ($favIcon != '') {
         get_instance()->app_css->add('favicon', [
-        'path'       => 'uploads/company/' . $favIcon,
-        'version'    => false,
-        'attributes' => [
-            'rel'  => 'shortcut icon',
-            'type' => false,
-        ],
+            'path'       => 'uploads/company/' . $favIcon,
+            'version'    => false,
+            'attributes' => [
+                'rel'  => 'shortcut icon',
+                'type' => false,
+            ],
         ], $group);
         get_instance()->app_css->add('favicon-apple-touch-icon', [
-        'path'       => 'uploads/company/' . $favIcon,
-        'version'    => false,
-        'attributes' => [
-            'rel'  => 'apple-touch-icon”',
-            'type' => false,
-        ],
+            'path'       => 'uploads/company/' . $favIcon,
+            'version'    => false,
+            'attributes' => [
+                'rel'  => 'apple-touch-icon”',
+                'type' => false,
+            ],
         ], $group);
     }
 }
@@ -218,4 +218,69 @@ function app_compile_css($group = 'admin')
 function app_compile_scripts($group = 'admin')
 {
     return get_instance()->app_scripts->compile($group);
+}
+
+function max_assects()
+{
+    $CI = &get_instance();
+    $max_assects = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets")->row()->count;
+
+    return "Asset_code-" . $max_assects;
+}
+
+function max_allocation()
+{
+    $CI = &get_instance();
+    $max_allocation = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_1")->row()->count;
+
+    return "Allocation_code-" . $max_allocation;
+}
+
+function max_revoke()
+{
+    $CI = &get_instance();
+    $max_revoke = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_1")->row()->count;
+
+    return "Revoke_code-" . $max_revoke;
+}
+
+function max_additional()
+{
+    $CI = &get_instance();
+    $max_additional = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+
+    return "Additional_code-" . $max_additional;
+}
+
+function max_lost()
+{
+    $CI = &get_instance();
+    $max_lost = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+
+    return "Report_lost_code-" . $max_lost;
+}
+
+function max_broken()
+{
+    $CI = &get_instance();
+    $max_broken = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+
+    return "Broken_code-" . $max_broken;
+}
+
+
+function max_liquidation()
+{
+    $CI = &get_instance();
+    $max_liquidation = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+
+    return "Liquidation_code-" . $max_liquidation;
+}
+
+function max_warranty()
+{
+    $CI = &get_instance();
+    $max_warranty = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+
+    return "Warranty_code-" . $max_warranty;
 }
