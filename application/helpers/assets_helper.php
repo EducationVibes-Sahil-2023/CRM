@@ -223,7 +223,7 @@ function app_compile_scripts($group = 'admin')
 function max_assects()
 {
     $CI = &get_instance();
-    $max_assects = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets")->row()->count;
+    $max_assects = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets")->row()->count;
 
     return "Asset_code-" . $max_assects;
 }
@@ -231,7 +231,7 @@ function max_assects()
 function max_allocation()
 {
     $CI = &get_instance();
-    $max_allocation = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_1")->row()->count;
+    $max_allocation = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_1")->row()->count;
 
     return "Allocation_code-" . $max_allocation;
 }
@@ -239,7 +239,7 @@ function max_allocation()
 function max_revoke()
 {
     $CI = &get_instance();
-    $max_revoke = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_1")->row()->count;
+    $max_revoke = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_1")->row()->count;
 
     return "Revoke_code-" . $max_revoke;
 }
@@ -247,7 +247,7 @@ function max_revoke()
 function max_additional()
 {
     $CI = &get_instance();
-    $max_additional = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+    $max_additional = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
 
     return "Additional_code-" . $max_additional;
 }
@@ -255,7 +255,7 @@ function max_additional()
 function max_lost()
 {
     $CI = &get_instance();
-    $max_lost = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+    $max_lost = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
 
     return "Report_lost_code-" . $max_lost;
 }
@@ -263,7 +263,7 @@ function max_lost()
 function max_broken()
 {
     $CI = &get_instance();
-    $max_broken = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+    $max_broken = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
 
     return "Broken_code-" . $max_broken;
 }
@@ -272,7 +272,7 @@ function max_broken()
 function max_liquidation()
 {
     $CI = &get_instance();
-    $max_liquidation = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+    $max_liquidation = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
 
     return "Liquidation_code-" . $max_liquidation;
 }
@@ -280,7 +280,7 @@ function max_liquidation()
 function max_warranty()
 {
     $CI = &get_instance();
-    $max_warranty = $CI->db->select("(max(id)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
+    $max_warranty = $CI->db->select("(ifnull(max(id),0)+1) count")->get(db_prefix() . "assets_acction_2")->row()->count;
 
     return "Warranty_code-" . $max_warranty;
 }
