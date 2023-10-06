@@ -1295,9 +1295,9 @@ function calls_update_count($params = false, $max_status = 0)
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
     }
 
-    if (!empty($params['assigned'])) {
-        $sql .= " AND calls.staffid IN (" . implode(",", $params['assigned']) . ") ";
-    }
+    // if (!empty($params['assigned'])) {
+    //     $sql .= " AND calls.staffid IN (" . implode(",", $params['assigned']) . ") ";
+    // }
     $sql .= " ) ";
     $sql .= " WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') ";
 
