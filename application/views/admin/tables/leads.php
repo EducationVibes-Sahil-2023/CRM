@@ -377,10 +377,10 @@ $update_count_query = "(SELECT COUNT(1)
     FROM " . db_prefix() . "calls_activity_logs AS calls
     WHERE calls.contact = " . db_prefix() . "leads.phonenumber";
 
-if (!empty($this->ci->input->post('assigned'))) {
-    $assignedValues = implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned')));
-    $update_count_query .= " AND calls.staffid IN ({$assignedValues})";
-}
+// if (!empty($this->ci->input->post('assigned'))) {
+//     $assignedValues = implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned')));
+//     $update_count_query .= " AND calls.staffid IN ({$assignedValues})";
+// }
 
 // if (!empty($this->ci->input->post('up_to_date'))) {
 //     $up_from_date = $this->ci->input->post('up_from_date');
