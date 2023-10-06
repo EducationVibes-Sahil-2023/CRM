@@ -389,10 +389,10 @@ $update_count_query = "(SELECT COUNT(1)
 //     $update_count_query .= " AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') BETWEEN '{$up_from_date}' AND '{$up_to_date}'";
 // }
 
-$update_count_query .= " LIMIT 1) AS update_count";
+$update_count_query .= " LIMIT 1) as update_count";
 
 if (!empty($this->ci->input->post('up_to_date'))) {
-    $update_count_query = " count(1) update_count";
+    $update_count_query = " count(1)  as update_count";
 }
 
 
@@ -422,7 +422,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     FROM " . db_prefix() . "calls_activity_logs AS calls 
     WHERE calls.contact = " . db_prefix() . "leads.phonenumber 
     ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC 
-    LIMIT 1) AS lastcontact"
+    LIMIT 1) as lastcontact"
 
 
 
@@ -456,7 +456,6 @@ $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
 
-die;
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
