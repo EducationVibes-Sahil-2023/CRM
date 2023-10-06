@@ -71,7 +71,7 @@ $aColumns = array_merge($aColumns, [
 
     db_prefix() . 'leads_sources.name as source_name',
 
-    'lastcontact',
+    // 'lastcontact',
 
     db_prefix() . 'leads.dateadded',
 
@@ -85,23 +85,42 @@ $aColumns = array_merge($aColumns, [
 
 $sIndexColumn = 'id';
 
-$sTable       = db_prefix() . 'leads';
 
+if(!empty($this->ci->input->post('up_to_date'))) {
 
+    $up_from_date = $this->ci->input->post('up_from_date');
+    $up_to_date = $this->ci->input->post('up_to_date');
 
-$join = [
+    $sTable       = db_prefix() . 'calls_activity_logs';
+    $join = [
+        "LEFT JOIN " . db_prefix() . "leads ON " . db_prefix() . "calls_activity_logs.contact = " . db_prefix() . "leads.phonenumber AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' ",
+        'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
+        'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
+        'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
+        'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+        //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
 
-    'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
+    ];
 
-    'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
+} else {
 
-    'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
+    $sTable       = db_prefix() . 'leads';
+    $join = [
 
-    'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+        'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
 
-    //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
+        'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
 
-];
+        'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
+
+        'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
+
+        //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
+
+    ];
+
+}
+
 
 
 
@@ -195,7 +214,7 @@ if (!$filter || ($filter && $filter != 'lost' && $filter != 'junk')) {
 
     array_push($where, 'AND lost = 0 AND junk = 0');
 }
-// $this->load->database();    
+// $this->load->database();
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 if ($role == 3) {
     // $this->load->database();
@@ -344,13 +363,39 @@ $call_query_having = "";
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
+
+    // $call_query_having = " update_count  ";
     // $call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) call_duration ";
-    $call_query_having = " (SELECT sum(id)  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) ";
+    // $call_query_having = " (SELECT sum(id)  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) ";
 
 
     // //     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
     // array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
 }
+
+$update_count_query = "(SELECT COUNT(1)
+    FROM " . db_prefix() . "calls_activity_logs AS calls
+    WHERE calls.contact = " . db_prefix() . "leads.phonenumber";
+
+if (!empty($this->ci->input->post('assigned'))) {
+    $assignedValues = implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned')));
+    $update_count_query .= " AND calls.staffid IN ({$assignedValues})";
+}
+
+// if (!empty($this->ci->input->post('up_to_date'))) {
+//     $up_from_date = $this->ci->input->post('up_from_date');
+//     $up_to_date = $this->ci->input->post('up_to_date');
+
+//     $update_count_query .= " AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') BETWEEN '{$up_from_date}' AND '{$up_to_date}'";
+// }
+
+$update_count_query .= " LIMIT 1) AS update_count";
+
+if (!empty($this->ci->input->post('up_to_date'))) {
+    $update_count_query = " count(1) update_count";
+}
+
+
 
 
 $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
@@ -372,24 +417,21 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
 
     ' zip',
-    '(SELECT count(1)
-    FROM '. db_prefix() .'calls_activity_logs AS calls
-    WHERE calls.contact = ' . db_prefix() . 'leads.phonenumber
-    LIMIT 1) AS  update_count '
+    $update_count_query,
+    "(SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') 
+    FROM " . db_prefix() . "calls_activity_logs AS calls 
+    WHERE calls.contact = " . db_prefix() . "leads.phonenumber 
+    ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC 
+    LIMIT 1) AS lastcontact"
+
+
 
 ]);
+
 // if (!empty($call_query)) {
 //     array_push($additionalColumns, $call_query);
 // }
 
-// echo"<pre>";
-// print_r($aColumns);
-// print_r($sIndexColumn);
-// print_r($sTable);
-// print_r($join);
-// print_r($additionalColumns);
-// die;
-//print_r(data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns));die;
 $having = "";
 if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
     $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
@@ -413,6 +455,7 @@ if ($call_query_having) {
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
+
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
@@ -456,24 +499,24 @@ foreach ($rResult as $aRow) {
     // $row[]    = convertToHMS($aRow["call_duration"], 1);
 
 
-       // $row[]    = 0;
-       $call_duration = 0;
-       $last_call_update = "";
-       // if (!empty($aRow['phonenumber'])) {
-       //     $call_data =  call_duration($aRow, $_POST);
-       //     if (!empty($call_data[0]["duration"])) {
-       //         $call_duration = $call_data[0]["duration"];
-       //     }
-       //     if (!empty($call_data[0]["last_contact_date"])) {
-       //         $last_call_update = $call_data[0]["last_contact_date"];
-       //     }
-       // }
-       // $row[]    =  !empty($call_duration) ? convertToHMS($call_duration, 1) : convertToHMS(0, 1);
-       // $row[]    =  $last_call_update;
-   
-       $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
-       $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? $call_data[$aRow['phonenumber']]["last_contact_date"] : $last_call_update;
-   
+    // $row[]    = 0;
+    $call_duration = 0;
+    $last_call_update = "";
+    // if (!empty($aRow['phonenumber'])) {
+    //     $call_data =  call_duration($aRow, $_POST);
+    //     if (!empty($call_data[0]["duration"])) {
+    //         $call_duration = $call_data[0]["duration"];
+    //     }
+    //     if (!empty($call_data[0]["last_contact_date"])) {
+    //         $last_call_update = $call_data[0]["last_contact_date"];
+    //     }
+    // }
+    // $row[]    =  !empty($call_duration) ? convertToHMS($call_duration, 1) : convertToHMS(0, 1);
+    // $row[]    =  $last_call_update;
+
+    $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
+    $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? $call_data[$aRow['phonenumber']]["last_contact_date"] : $last_call_update;
+
 
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 

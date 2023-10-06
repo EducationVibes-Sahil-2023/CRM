@@ -611,6 +611,15 @@ function leads_update_count($params = false, $max_status = 0)
 
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' AND staffid = l.assigned ";
     }
+
+
+    if (!empty($params['assigned'])) {
+        // $tids = " AND l.assigned = " . $params['assigned'];
+        $tids = " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
+
+        $sql .= $tids;
+    }
+
     $sql .= ' ) ';
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
         $sql .= ' join  ' . db_prefix() . 'customfieldsvalues ON  l.id= ' . db_prefix() . 'customfieldsvalues.relid ';
@@ -665,7 +674,7 @@ function leads_update_count($params = false, $max_status = 0)
         $assign_from_date = $params['assign_from_date'];
         $assign_to_date = $params['assign_to_date'];
         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
-    } else if (!empty($params['up_to_date'])) {
+    } elseif (!empty($params['up_to_date'])) {
         // $up_from_date = $params['up_from_date'];
         // $up_to_date = $params['up_to_date'];
         // $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
@@ -695,7 +704,6 @@ function leads_update_count($params = false, $max_status = 0)
         $sql = trim($sql);
         $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     }
-
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
@@ -1008,9 +1016,9 @@ function get_leads_summary_filter_excel($params)
         /*if (isset($params['course'])) {
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
         }
-		 
-		 
-		if (isset($params['degree'])) {
+
+
+        if (isset($params['degree'])) {
             $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
         }*/
 
@@ -1286,6 +1294,10 @@ function calls_update_count($params = false, $max_status = 0)
     if (!empty($params['assigned'])) {
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
     }
+
+    if (!empty($params['assigned'])) {
+        $sql .= " AND calls.staffid IN (" . implode(",", $params['assigned']) . ") ";
+    }
     $sql .= " ) ";
     $sql .= " WHERE LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') ";
 
@@ -1335,7 +1347,10 @@ function calls_update_count($params = false, $max_status = 0)
 
     $grup_by = "";
     if (!empty($params['neet_score'])) {
-        $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
+        $grup_by .= ',' . db_prefix() . 'customfieldsvalues.relid';
+    }
+    if (!empty($params['assigned'])) {
+        $grup_by .= ',calls.staffid,calls.call_start';
     }
 
     $sql_add = "";
