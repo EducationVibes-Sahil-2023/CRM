@@ -85,6 +85,10 @@ $aColumns = array_merge($aColumns, [
 
 $sIndexColumn = 'id';
 
+if(!empty($this->ci->input->post('up_to_date'))) {
+    $sIndexColumn = 'contact';
+
+}
 
 if(!empty($this->ci->input->post('up_to_date'))) {
 
@@ -93,7 +97,7 @@ if(!empty($this->ci->input->post('up_to_date'))) {
 
     $sTable       = db_prefix() . 'calls_activity_logs';
     $join = [
-        "LEFT JOIN " . db_prefix() . "leads ON " . db_prefix() . "calls_activity_logs.contact = " . db_prefix() . "leads.phonenumber AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' ",
+        "LEFT JOIN " . db_prefix() . "leads ON ( (RIGHT(TRIM(REPLACE(REPLACE(" . db_prefix() . "calls_activity_logs.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(" . db_prefix() . "leads.phonenumber, ' ', ''), ',', '')), 10)) AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' ) ",
         'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
         'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
         'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
@@ -392,7 +396,7 @@ $update_count_query = "(SELECT COUNT(1)
 $update_count_query .= " LIMIT 1) as update_count";
 
 if (!empty($this->ci->input->post('up_to_date'))) {
-    $update_count_query = " count(1)  as update_count";
+    $update_count_query = " count(1) as update_count";
 }
 
 
@@ -418,6 +422,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     ' zip',
     $update_count_query,
+
     "(SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') 
     FROM " . db_prefix() . "calls_activity_logs AS calls 
     WHERE calls.contact = " . db_prefix() . "leads.phonenumber 
