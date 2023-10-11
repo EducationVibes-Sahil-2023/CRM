@@ -11,7 +11,7 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <?php echo render_input('acction_code','recalled_code','') ?>
+                        <?php echo render_input('acction_code','recalled_code', max_revoke(), '', array("readonly" => true)) ?>
                         
                         <table class="table border table-striped nomargintop">
                             <tbody>

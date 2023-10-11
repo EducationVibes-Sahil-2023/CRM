@@ -221,7 +221,7 @@
                       <div class="panel-body">
                         <div class="row">
                           <div class="col-md-6">
-                          <?php echo render_input('assets_code','asset_code','') ?>
+                          <?php echo render_input('assets_code','asset_code', max_assects(), '', array("readonly" => true)) ?>
                           </div>
                           <div class="col-md-6">
                           <?php echo render_input('assets_name','asset_name','') ?>
