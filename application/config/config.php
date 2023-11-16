@@ -584,3 +584,4 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/followup_contact'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/call_update'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/call_activity_cron'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/linkedin_webhook'));

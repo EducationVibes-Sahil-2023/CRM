@@ -507,7 +507,7 @@ class Facebook_leads_integration extends ClientsController
                 $leadgen_id =  $lead_data['entry'][0]['changes'][0]['value']['leadgen_id'];
                 $form_name = "";
                 $form_id =  !empty($lead_data['entry'][0]['changes'][0]['value']['form_id']) ? $lead_data['entry'][0]['changes'][0]['value']['form_id'] : '';
-                
+
                 $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"), true);
                 if (!empty($form_id)) {
                     $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"), true);
@@ -532,7 +532,7 @@ class Facebook_leads_integration extends ClientsController
                             } else if ($field_data["name"] == "email") {
                                 $lead_data_array["email"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             } else if (strpos(strtolower($field_data["name"]), "intake") !== false) {
-                                $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                                $lead_data_array["form-cf-24"] = !empty($field_data["values"][0]) ? ucfirst(trim(str_replace("_", " ", $field_data["values"][0]))) : '';
                             } else if (strpos(strtolower($field_data["name"]), "country") !== false) {
                                 $lead_data_array["form-cf-32"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             } else if (strpos(strtolower($field_data["name"]), "course") !== false) {
@@ -583,11 +583,9 @@ class Facebook_leads_integration extends ClientsController
                     curl_close($ch);
                 }
             }
-        }
-        else
-        {
-            if(!empty($lead_data)){
-            $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true)));
+        } else {
+            if (!empty($lead_data)) {
+                $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true)));
             }
         }
     }
@@ -661,7 +659,7 @@ class Facebook_leads_integration extends ClientsController
             }
         }
     }
-    
+
     public function new_webhook_test()
 
     {
@@ -761,6 +759,25 @@ class Facebook_leads_integration extends ClientsController
                     echo $response;
                 }
             }
+        }
+    }
+
+    public function linkedin_webhook()
+    {
+        if (isset($_REQUEST['challengeCode'])) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'challengeCode' => $_REQUEST['challengeCode'],
+                'challengeResponse' => hash_hmac('sha256', $_REQUEST['challengeCode'], 'C4iZZxBuaSgeaei1'),
+            ]);
+        }
+        // $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => "test","form_id"=>"200"));
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $json = file_get_contents('php://input');
+            $lead_data = json_decode($json, true);
+
+            $this->db->insert(db_prefix() . 'facebook_webhook_data', array("data" => json_encode($lead_data, true),"form_id"=>"200"));
+
         }
     }
 }
