@@ -448,7 +448,7 @@
                                                 ?>
                                              </div>
                                              <?php
-                                             if (has_permission('leads', '', 'edit')) {
+                                             if (has_permission('leads', '', 'assign')) {
                                                 echo render_select('assign_to_leads_bulk', $staff, array('staffid', array('firstname', 'lastname')), 'leads_dt_assigned');
                                              }
                                              ?>
