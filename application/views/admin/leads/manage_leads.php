@@ -697,7 +697,7 @@
    function setMinMaxValues() {
       // Get the current values of the slider
       var currentValues = rangeSlider.noUiSlider.get();
-
+      max_count = 30;
       // Update the options with new min and max values
       rangeSlider.noUiSlider.updateOptions({
          range: {
@@ -709,7 +709,9 @@
    }
 
    function recreate_range_slider(max) {
+
       if (max != undefined && parseInt(max) != max_count) {
+         max_count = 30;
          rangeSlider.noUiSlider.destroy();
          max_count = parseInt(max) + 10;
          let min_ = document.getElementById("update_count_min").value;
@@ -723,6 +725,9 @@
       if (max == 0) {
          max = max_count;
       }
+      maxs = 30;
+      max_count = 30;
+
       noUiSlider.create(rangeSlider, {
          start: [min, max], // Initial values for min and max
          connect: true,
