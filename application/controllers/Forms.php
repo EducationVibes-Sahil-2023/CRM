@@ -235,7 +235,6 @@ class Forms extends ClientsController
 if (!empty($call_data)) {
                     $response_call = $this->curl_function($call_data);
                     $response_call = json_decode($response_call);
-
                     if (isset($response_call[0]->status) && $response_call[0]->status == 0) {
                         echo json_encode([
                             'success' => 0,
@@ -905,14 +904,13 @@ if (!empty($call_data)) {
         $data = array("call_data" => json_encode($post_data));
         try {
             $token = JWT_TOKEN;
-            header('Content-Type: application/json'); // Specify the type of data
+            // header('Content-Type: application/json'); // Specify the type of data
             $ch = curl_init(base_url("external/call_update")); // Initialise cURL
-            $authorization = "Authorization: Bearer " . $token; // Prepare the authorization token
+                $authorization = "Authorization: Bearer " . $token; // Prepare the authorization token
             curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // Set the posted fields
-
             // Disable SSL certificate validation for a local server
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
@@ -922,6 +920,7 @@ if (!empty($call_data)) {
             curl_close($ch); // Close the cURL connection
 
             $result = array(json_decode($result, true));
+
         } catch (Exception $e) {
             $result = array(array(
                 "status" => 0,
@@ -930,6 +929,7 @@ if (!empty($call_data)) {
         }
    
         return json_encode($result);
+
     }
 
       public function test_db_connection()
