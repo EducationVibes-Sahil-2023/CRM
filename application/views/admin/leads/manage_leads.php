@@ -22,6 +22,11 @@
       bottom: -35px !important;
       top: auto !important;
    }
+
+   .noUi-tooltip {
+      width: auto !important;
+      min-width: 30px !important;
+   }
 </style>
 <div id="wrapper">
    <div class="content">
@@ -443,7 +448,7 @@
                                                 ?>
                                              </div>
                                              <?php
-                                             if (has_permission('leads', '', 'edit')) {
+                                             if (has_permission('leads', '', 'assign')) {
                                                 echo render_select('assign_to_leads_bulk', $staff, array('staffid', array('firstname', 'lastname')), 'leads_dt_assigned');
                                              }
                                              ?>
@@ -713,7 +718,7 @@
       if (max != undefined && parseInt(max) != max_count) {
          max_count = 30;
          rangeSlider.noUiSlider.destroy();
-         max_count = parseInt(max) + 10;
+         max_count = parseInt(max);
          let min_ = document.getElementById("update_count_min").value;
          let max_ = document.getElementById("update_count_max").value;
          make_range_slider(min_, max_);
@@ -790,95 +795,7 @@
             $('#leads_bulk_mark_lost').prop('disabled', false);
          }
       });
-      /* Created date filter*/
-      // $('#to_date').on('change', function(){
-      //    // var from_date = document.getElementById("from_date").value;
-      //    // var to_date = document.getElementById("to_date").value;
-      //    // if(from_date != '' && to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-      // $('#from_date').on('change', function(){
-      //    // var from_date = document.getElementById("from_date").value;
-      //    // var to_date = document.getElementById("to_date").value;
-      //    // if(from_date != '' && to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-      // $('#up_to_date').on('change', function(){
-      //    // var up_from_date = document.getElementById("up_from_date").value;
-      //    // var up_to_date = document.getElementById("up_to_date").value;
-      //    // if(up_from_date != '' && up_to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-      // $('#up_from_date').on('change', function(){
-      //    // var up_from_date = document.getElementById("up_from_date").value;
-      //    // var up_to_date = document.getElementById("up_to_date").value;
-      //    // if(up_from_date != '' && up_to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // }) 
-
-      // $('#followup_to_date').on('change', function(){
-      //    // var followup_from_date = document.getElementById("followup_from_date").value;
-      //    // var followup_to_date = document.getElementById("followup_to_date").value;
-      //    // if(followup_from_date != '' && followup_to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-      // $('#followup_from_date').on('change', function(){
-      //    // var followup_from_date = document.getElementById("followup_from_date").value;
-      //    // var followup_to_date = document.getElementById("followup_to_date").value;
-      //    // if(followup_from_date != '' && followup_to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-
-
-      // $('#assign_to_date').on('change', function(){
-      //    // var assign_from_date = document.getElementById("assign_from_date").value;
-      //    // var assign_to_date = document.getElementById("assign_to_date").value;
-      //    // if(assign_from_date != '' && assign_to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-      // $('#assign_from_date').on('change', function(){
-      //    // var assign_from_date = document.getElementById("assign_from_date").value;
-      //    // var assign_to_date = document.getElementById("assign_to_date").value;
-      //    // if(assign_from_date != '' && assign_to_date != ''){
-      //    //    periodFilter();
-      //    //    summary();
-      //    // }
-      // })
-      // $('#lead_type').on('change', function(){
-      //    // console.log($(this).selectpicker('val'));
-      //    // table_leads.DataTable().ajax.reload(null, false);
-      //    // summary();
-      // })
-      // $('#view_assigned').on('change', function(){
-      //    // summary();
-      // })
-      // $('#view_status').on('change', function(){
-      //    // summary();
-      // })
-      // $('#view_source').on('change', function(){
-      //    // summary();
-      // })
-      // $('#view_course').on('change', function(){ 
-      //    // summary();
-      // })
-      // $('#view_degree').on('change', function(){
-      //    // summary();
-      // })
-
+   
 
       $('#apply_filter').on('click', function() {
 
@@ -1089,7 +1006,6 @@
       }
 
       summary();
-      /* End Created date filter*/
    });
 </script>
 <script>

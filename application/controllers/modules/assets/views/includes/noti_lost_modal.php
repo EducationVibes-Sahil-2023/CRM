@@ -11,7 +11,7 @@
     <div class="modal-body">
         <div class="row">
         <div class="col-md-12">
-            <?php echo render_input('acction_code','lost_code','') ?>
+            <?php echo render_input('acction_code','lost_code', max_lost(), '', array("readonly" => true)) ?>
             <table class="table border table-striped nomargintop">
                 <tbody>
                    <tr class="project-overview">

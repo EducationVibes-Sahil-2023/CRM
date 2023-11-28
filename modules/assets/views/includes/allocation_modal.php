@@ -11,7 +11,7 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <?php echo render_input('acction_code','allocation_code','') ?>
+                        <?php echo render_input('acction_code','allocation_code', max_allocation(),'',array("readonly"=>true)) ?>
                         
                         <table class="table border table-striped nomargintop">
                             <tbody>
@@ -39,7 +39,7 @@
                         <select name="acction_from" id="acction_from" class="selectpicker" data-live-search="true" data-width="100%" data-none-selected-text="<?php  echo htmlspecialchars(_l('ticket_settings_none_assigned')); ?>">
                             <option value=""></option>
                             <?php foreach($staffs as $s) { ?>
-                            <option value="<?php  echo htmlspecialchars($s['staffid']); ?>" <?php if($s['staffid'] == get_staff_user_id()){echo 'selected';} ?><?php  echo htmlspecialchars($s['firstname']).' '.htmlspecialchars($s['lastname']); ?></option>
+                            <option value="<?php  echo htmlspecialchars($s['staffid']); ?>" <?php if($s['staffid'] == get_staff_user_id()){echo 'selected';} ?>><?php  echo htmlspecialchars($s['firstname']).' '.htmlspecialchars($s['lastname']); ?></option>
                               <?php } ?>
                         </select>
                     </div>

@@ -80,8 +80,8 @@ class Authentication_model extends App_Model
                         'staff_user_id'   => $user->$_id,
                         'staff_logged_in' => true,
                         'staff_logged_in_new' => true,
+                        "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
                     ];
-                    $user_data = ["staff_department" => !empty($user->lead_type) ? $user->lead_type : ''];
                 } else {
                     $user_data = [];
                     if ($remember) {
@@ -139,6 +139,7 @@ class Authentication_model extends App_Model
             $this->session->unset_userdata('staff_user_id');
             $this->session->unset_userdata('staff_logged_in');
             $this->session->unset_userdata('staff_logged_in_new');
+            $this->session->unset_userdata('staff_department');
         }
 
         $this->session->sess_destroy();
@@ -202,6 +203,7 @@ class Authentication_model extends App_Model
                                 'staff_user_id'   => $user->id,
                                 'staff_logged_in' => true,
                                 'staff_logged_in_new' => true,
+                                "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
 
                             ];
                         } else {
@@ -545,7 +547,10 @@ class Authentication_model extends App_Model
                 'staff_user_id'   => $user->staffid,
                 'staff_logged_in' => true,
                 'staff_logged_in_new' => true,
+                "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
             ]
+
+
         );
 
         $remember = null;

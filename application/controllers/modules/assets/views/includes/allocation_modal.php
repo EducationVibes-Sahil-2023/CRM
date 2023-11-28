@@ -11,7 +11,7 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-md-12">
-                        <?php echo render_input('acction_code','allocation_code','') ?>
+                        <?php echo render_input('acction_code','allocation_code', max_allocation(), '', array("readonly" => true)) ?>
                         
                         <table class="table border table-striped nomargintop">
                             <tbody>
