@@ -21,7 +21,7 @@ RewriteOptions inherit
 #     RewriteCond %{REQUEST_FILENAME} !-d
 #     RewriteRule ^(.+)$ index.php?/$1 [L]
 
-php_value max_execution_time 300
+# php_value max_execution_time 300
 
 RewriteEngine on
 
