@@ -901,7 +901,6 @@ if (!empty($call_data)) {
 
     private function curl_function($post_data)
     {
-        
         $data = array("call_data" => json_encode($post_data));
         try {
             $token = JWT_TOKEN;
@@ -915,11 +914,13 @@ if (!empty($call_data)) {
             // Disable SSL certificate validation for a local server
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
+
+            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
             $result = curl_exec($ch); // Execute the cURL statement
             curl_close($ch); // Close the cURL connection
+
             $result = array(json_decode($result, true));
-           
+
         } catch (Exception $e) {
             $result = array(array(
                 "status" => 0,
@@ -928,7 +929,7 @@ if (!empty($call_data)) {
         }
    
         return json_encode($result);
-        
+
     }
 
       public function test_db_connection()
