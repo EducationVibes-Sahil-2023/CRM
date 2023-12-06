@@ -964,9 +964,14 @@ function get_leads_summary_filter_excel($params)
             $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            // $up_from_date_join = $params['up_from_date'];
+            // $up_to_date_join = $params['up_to_date'];
+            // $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+
+            $up_from_date = $params['up_from_date'];
+            $up_to_date = $params['up_to_date'];
+            $sql .= " join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+                . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "')";
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
@@ -1028,7 +1033,7 @@ function get_leads_summary_filter_excel($params)
             $up_from_date = $params['up_from_date'];
             $up_to_date = $params['up_to_date'];
             //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            // $sql .= ' AND DATE(n.dateaddesd) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
         }
         if (!empty($params['followup_to_date'])) {
             $followup_from_date = $params['followup_from_date'];
@@ -1137,9 +1142,14 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
             $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            // $up_from_date_join = $params['up_from_date'];
+            // $up_to_date_join = $params['up_to_date'];
+            // $sql .= ' left join ' . db_prefix() . 'notes n  ON  (l.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+
+            $up_from_date = $params['up_from_date'];
+            $up_to_date = $params['up_to_date'];
+            $sql .= " join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+                . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "')";
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
@@ -1198,10 +1208,10 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
             $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
         }
         if (!empty($params['up_to_date'])) {
-            $up_from_date = $params['up_from_date'];
-            $up_to_date = $params['up_to_date'];
-            //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            // $up_from_date = $params['up_from_date'];
+            // $up_to_date = $params['up_to_date'];
+            // //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
         }
         if (!empty($params['followup_to_date'])) {
             $followup_from_date = $params['followup_from_date'];
