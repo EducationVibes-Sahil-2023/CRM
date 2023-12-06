@@ -245,7 +245,7 @@ if (count($filter) > 0) {
 // }
 
 if (!has_permission('customers', '', 'view')) {
-    array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned = ' .get_staff_user_id(). ')');
+    array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned = ' . get_staff_user_id() . ')');
 }
 
 if ($this->ci->input->post('exclude_inactive')) {
@@ -308,8 +308,8 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     db_prefix() . 'contacts.id as contact_id',
     db_prefix() . 'clients.zip as zip',
     'registration_confirmed',
-    db_prefix() . 'applicant_tracker.name applicant_stage_name',
-    db_prefix() . 'applicant_tracker.id applicant_stage_id',
+    db_prefix() . 'applicant_tracker.name as applicant_stage_name',
+    db_prefix() . 'applicant_tracker.id as applicant_stage_id',
 ], 'GROUP BY ' . db_prefix() . 'clients.userid');
 
 $output  = $result['output'];

@@ -248,17 +248,22 @@ function get_leads_summary_filter($params)
         $sql .= ' FROM ' . db_prefix() . 'leads';
 
         if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score'])) {
-            $sql .= ' join tblcustomfieldsvalues ON  tblleads.id=tblcustomfieldsvalues.relid ';
+            $sql .= ' join ' . db_prefix() . 'customfieldsvalues ON  ' . db_prefix() . 'leads.id=' . db_prefix() . 'customfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
-            $up_from_date_join = $params['up_from_date'];
-            $up_to_date_join = $params['up_to_date'];
-            $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+            // $up_from_date_join = $params['up_from_date'];
+            // $up_to_date_join = $params['up_to_date'];
+            // $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
+
+            $up_from_date = $params['up_from_date'];
+            $up_to_date = $params['up_to_date'];
+            $sql .= " join " . db_prefix() . "calls_activity_logs as calls on ( " . db_prefix() . "leads.phonenumber = calls.contact AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+                . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "')";
         } else if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
             $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
         }
         if (!empty($params['followup_to_date'])) {
-            $sql .= ' join tblreminders  on  tblreminders.rel_id = tblleads.id ';
+            $sql .= ' join ' . db_prefix() . 'reminders  on  ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id ';
         }
 
         if (isset($status['lost'])) {
@@ -317,11 +322,11 @@ function get_leads_summary_filter($params)
             $sql .= ' AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
         }
         if (!empty($params['up_to_date'])) {
-            $up_from_date = $params['up_from_date'];
-            $up_to_date = $params['up_to_date'];
+            // $up_from_date = $params['up_from_date'];
+            // $up_to_date = $params['up_to_date'];
             //  $sql .= ' AND DATE(lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
             //             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
-            $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+            // $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
         }
         if (!empty($params['followup_to_date'])) {
             $followup_from_date = $params['followup_from_date'];
