@@ -1422,8 +1422,6 @@ function call_duration($row_data, $post_data = "")
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$calling_from_date}' AND '{$calling_to_date}' ";
     }
     $sql .= " LIMIT 1 ";
-
-
     return $CI->db->query($sql)->result_array();
 }
 
