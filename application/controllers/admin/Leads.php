@@ -2466,11 +2466,12 @@ class Leads extends AdminController
             $lost                  = $this->input->post('lost');
 
             $has_permission_delete = has_permission('leads', '', 'delete');
+            $has_permission_assign = has_permission('leads', '', 'assign');
             $notifiedUsers = [];
             $re_assign_array = [];
 
             if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                if ($has_permission_delete) {
+                if ($has_permission_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
                         $keysToRemove = array('id', 'dateadded', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
@@ -2538,7 +2539,7 @@ class Leads extends AdminController
                             }
                         }
                     } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                        if ($has_permission_delete) {
+                        if ($has_permission_assign) {
                             if ($this->leads_model->re_assign($id, $this->input->post())) {
                                 $total_assign++;
                             }
