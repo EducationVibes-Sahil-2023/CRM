@@ -125,7 +125,7 @@ function get_available_staff_permissions($data = [])
         'tasks' => [
             'name'         => _l('tasks'),
             'capabilities' => $withNotApplicableViewOwn,
-             'help'        => [
+            'help'        => [
                 'view'     => _l('help_tasks_permissions'),
                 'view_own' => _l('permission_tasks_based_on_assignee'),
             ],
@@ -153,6 +153,7 @@ function get_available_staff_permissions($data = [])
             'capabilities' => [
                 'view'   => $viewGlobalName,
                 'delete' => _l('permission_delete'),
+                'assign' => 'Mass Assignation',
             ],
             'help' => [
                 'view' => _l('help_leads_permission_view'),
@@ -198,9 +199,9 @@ function staff_profile_image_url($staff_id, $type = 'small')
     if ((string) $staff_id === (string) get_staff_user_id() && isset($GLOBALS['current_user'])) {
         $staff = $GLOBALS['current_user'];
     } else {
-        $CI = & get_instance();
+        $CI = &get_instance();
         $CI->db->select('profile_image')
-        ->where('staffid', $staff_id);
+            ->where('staffid', $staff_id);
 
         $staff = $CI->db->get(db_prefix() . 'staff')->row();
     }
@@ -241,7 +242,7 @@ function staff_profile_image($id, $classes = ['staff-profile-image'], $type = 's
     if ((string) $id === (string) get_staff_user_id() && isset($GLOBALS['current_user'])) {
         $result = $GLOBALS['current_user'];
     } else {
-        $CI     = & get_instance();
+        $CI     = &get_instance();
         $result = $CI->app_object_cache->get('staff-profile-image-data-' . $id);
 
         if (!$result) {
@@ -285,7 +286,7 @@ function get_staff_full_name($userid = '')
         $userid = $tmpStaffUserId;
     }
 
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $staff = $CI->app_object_cache->get('staff-full-name-data-' . $userid);
 
@@ -313,7 +314,7 @@ function get_staff_default_language($staffid = '')
 
         $staffid = get_staff_user_id();
     }
-    $CI = & get_instance();
+    $CI = &get_instance();
     $CI->db->select('default_language');
     $CI->db->from(db_prefix() . 'staff');
     $CI->db->where('staffid', $staffid);
@@ -360,7 +361,7 @@ function update_staff_recent_search_history($history, $staff_id = null)
  */
 function is_staff_member($staff_id = '')
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     if ($staff_id == '') {
         if (isset($GLOBALS['current_user'])) {
             return $GLOBALS['current_user']->is_not_staff === '0';
@@ -369,7 +370,7 @@ function is_staff_member($staff_id = '')
     }
 
     $CI->db->where('staffid', $staff_id)
-    ->where('is_not_staff', 0);
+        ->where('is_not_staff', 0);
 
     return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
 }
