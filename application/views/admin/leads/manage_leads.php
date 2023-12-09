@@ -410,7 +410,7 @@
                                                 <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
                                              </div>
                                           <?php } ?>
-                                          <?php if (has_permission('leads', '', 'delete')) { ?>
+                                          <?php if (has_permission('leads', '', 'assign')) { ?>
                                              <div class="checkbox checkbox-danger">
                                                 <input type="checkbox" name="mass_re-assignation" id="mass_re-assignation">
                                                 <label for="mass_re-assignation"><?php echo _l('mass_re-assignation'); ?></label>
