@@ -67,11 +67,11 @@ class Leads extends AdminController
 
             $data['consent_purposes'] = $this->gdpr_model->get_consent_purposes();
         }
- 
+
         // $data['summary']  = get_leads_summary();
         // $data['updateCount'] = leads_update_count();
         // $data['call_count'] = calls_update_count();
-    
+
         $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
@@ -97,7 +97,7 @@ class Leads extends AdminController
         $updateCount = leads_update_count($_POST);
         $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
-            
+
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -2470,7 +2470,7 @@ class Leads extends AdminController
             $notifiedUsers = [];
             $re_assign_array = [];
 
-            if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
+            if ($this->input->post('mass_assign') && !empty($this->input->post('mass_assigned')) && !empty($ids)) {
                 if ($has_permission_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
@@ -2480,8 +2480,8 @@ class Leads extends AdminController
                             foreach ($keysToRemove as $k) {
                                 if (isset($lead_data[$key][$k])) {
                                     unset($lead_data[$key][$k]);
-                                    if (!empty($this->input->post('assigned'))) {
-                                        $lead_data[$key]["assigned"] = $this->input->post('assigned');
+                                    if (!empty($this->input->post('mass_assigned'))) {
+                                        $lead_data[$key]["assigned"] = $this->input->post('mass_assigned');
                                     }
                                     if (!empty($this->input->post('status'))) {
                                         $lead_data[$key]["status"] = $this->input->post('status');
@@ -2502,7 +2502,7 @@ class Leads extends AdminController
                             );
                         }
                     }
-
+                  
                     if (!empty($re_assign_array)) {
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
@@ -2516,11 +2516,6 @@ class Leads extends AdminController
                     }
 
                     die;
-                    // if ($this->leads_model->re_assign($id,$this->input->post())) {
-                    //     $total_assign++;
-
-                    // }
-
                 }
             }
 

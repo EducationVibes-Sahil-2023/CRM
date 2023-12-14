@@ -153,7 +153,8 @@ function get_available_staff_permissions($data = [])
             'capabilities' => [
                 'view'   => $viewGlobalName,
                 'delete' => _l('permission_delete'),
-                'assign' => 'Mass Assignation',
+                'assign' => 'Bulk Assignation',
+                'mass_assign' => 'Mass Assignation',
             ],
             'help' => [
                 'view' => _l('help_leads_permission_view'),
