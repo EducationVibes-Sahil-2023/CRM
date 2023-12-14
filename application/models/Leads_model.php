@@ -387,7 +387,7 @@ class Leads_model extends App_Model
             $email = $this->db->get(db_prefix() . 'staff')->row()->email;
 
 
-            if ($skip == true || $skip == 1) {
+            if ($skip != true || $skip != 1) {
                 send_mail_template('lead_assigned', $lead_id, $email);
             }
 
