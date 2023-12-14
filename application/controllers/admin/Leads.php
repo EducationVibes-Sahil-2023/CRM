@@ -2502,7 +2502,7 @@ class Leads extends AdminController
                             );
                         }
                     }
-                  
+
                     if (!empty($re_assign_array)) {
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
@@ -2856,7 +2856,9 @@ class Leads extends AdminController
 
     public function re_assign_leads()
     {
-        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1 limit 30")->result_array();
+        $limit = RE_ASSIGN_LEADS;
+       
+        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
         if (!empty($data_leads)) {
             foreach ($data_leads as $leads) {
                 if (!empty($leads["data"])) {

@@ -708,23 +708,21 @@
       } else {
 
          if ($('input[name="mass_re-assignation"]').prop('checked') === true) {
-            $("#bulk_change").hide();
-            $("#re-assignation_div").show();
+            $("#bulk_change").show();
+            // $("#re-assignation_div").show();
             $("#re-assignation_div").find('select').selectpicker('val', '');
 
 
          } else {
             $("#bulk_change").show();
             $("#bulk_change").find('select').selectpicker('val', '');
-            $("#re-assignation_div").hide();
+            // $("#re-assignation_div").hide();
          }
 
       }
    });
 
-   $('input[name="mass_re-assignation"]').click(function() {
 
-   });
 
    $('input[name="mass_re-assignation"]').click(function() {
       var $bulkChange = $('#bulk_change');
@@ -739,7 +737,7 @@
          // $bulkChange.show();
       }
 
-      $('.mass_delete_separator').toggleClass('hide');
+      // $('.mass_delete_separator').toggleClass('hide');
    });
 
    function show_update_count_range(obj) {
