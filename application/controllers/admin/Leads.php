@@ -2467,11 +2467,12 @@ class Leads extends AdminController
 
             $has_permission_delete = has_permission('leads', '', 'delete');
             $has_permission_assign = has_permission('leads', '', 'assign');
+            $has_permission_mass_assign = has_permission('leads', '', 'mass_assign');
             $notifiedUsers = [];
             $re_assign_array = [];
 
-            if ($this->input->post('mass_assign') && !empty($this->input->post('mass_assigned')) && !empty($ids)) {
-                if ($has_permission_assign) {
+            if (!empty($this->input->post('mass_assign')) && !empty($this->input->post('assigned')) && !empty($ids)) {
+                if ($has_permission_mass_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
                         $keysToRemove = array('id', 'dateadded', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
@@ -2480,8 +2481,8 @@ class Leads extends AdminController
                             foreach ($keysToRemove as $k) {
                                 if (isset($lead_data[$key][$k])) {
                                     unset($lead_data[$key][$k]);
-                                    if (!empty($this->input->post('mass_assigned'))) {
-                                        $lead_data[$key]["assigned"] = $this->input->post('mass_assigned');
+                                    if (!empty($this->input->post('assigned'))) {
+                                        $lead_data[$key]["assigned"] = $this->input->post('assigned');
                                     }
                                     if (!empty($this->input->post('status'))) {
                                         $lead_data[$key]["status"] = $this->input->post('status');
@@ -2514,6 +2515,7 @@ class Leads extends AdminController
                     } else {
                         set_alert('danger', "Something bad happen.");
                     }
+                    echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
 
                     die;
                 }
@@ -2534,7 +2536,7 @@ class Leads extends AdminController
                             }
                         }
                     } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                        if ($has_permission_assign) {
+                        if ($has_permission_mass_assign) {
                             if ($this->leads_model->re_assign($id, $this->input->post())) {
                                 $total_assign++;
                             }
@@ -2857,7 +2859,7 @@ class Leads extends AdminController
     public function re_assign_leads()
     {
         $limit = RE_ASSIGN_LEADS;
-       
+
         $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
         if (!empty($data_leads)) {
             foreach ($data_leads as $leads) {
