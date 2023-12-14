@@ -2873,7 +2873,7 @@ class Leads extends AdminController
                     HAVING COUNT(*) > 0 ")->row();
 
                     if (empty($check_exist)) {
-                        if ($this->leads_model->add($temp_lead_data)) {
+                        if ($this->leads_model->add($temp_lead_data,1)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
                         }
