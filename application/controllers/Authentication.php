@@ -39,7 +39,7 @@ class Authentication extends ClientsController
             $success = $this->Authentication_model->login(
                 $this->input->post('email'),
                 $this->input->post('password', false),
-                $this->input->post('remember'), 
+                $this->input->post('remember'),
                 false
             );
 
@@ -86,14 +86,14 @@ class Authentication extends ClientsController
                 'accept_terms_and_conditions',
                 _l('terms_and_conditions'),
                 'required',
-                    ['required' => _l('terms_and_conditions_validation')]
+                ['required' => _l('terms_and_conditions_validation')]
             );
         }
 
         $this->form_validation->set_rules('firstname', _l('client_firstname'), 'required|alpha|min_length[3]');
         $this->form_validation->set_rules('lastname', _l('client_lastname'), 'required|alpha|min_length[2]');
-        $this->form_validation->set_rules('contact_phonenumber', _l('clients_phone'), 'required|numeric|min_length[10]|max_length[10]|is_unique[' . db_prefix() . 'contacts.phonenumber]',array('is_unique' => 'Your Mobile Number is already registered with us. Login with your email to proceed further with your application.'));
-        $this->form_validation->set_rules('email', _l('client_email'), 'trim|required|is_unique[' . db_prefix() . 'contacts.email]|valid_email',array('is_unique' => 'Your Email id is already registered with us. Login with your email to proceed further with your application.'));
+        $this->form_validation->set_rules('contact_phonenumber', _l('clients_phone'), 'required|numeric|min_length[10]|max_length[10]|is_unique[' . db_prefix() . 'contacts.phonenumber]', array('is_unique' => 'Your Mobile Number is already registered with us. Login with your email to proceed further with your application.'));
+        $this->form_validation->set_rules('email', _l('client_email'), 'trim|required|is_unique[' . db_prefix() . 'contacts.email]|valid_email', array('is_unique' => 'Your Email id is already registered with us. Login with your email to proceed further with your application.'));
         $this->form_validation->set_rules('password', _l('clients_register_password'), 'required|min_length[7]|callback_valid_password');
         $this->form_validation->set_rules('passwordr', _l('clients_register_password_repeat'), 'required|matches[password]');
 
@@ -134,33 +134,33 @@ class Authentication extends ClientsController
                 $ip = $_SERVER['REMOTE_ADDR'];
                 $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
 
-                $ipcity      = ($data['city'] !='') ? $data['city']: $ipdetails->city;
-                $ipstate      = ($data['state'] != '') ? $data['state']: $ipdetails->region;
-                $ipcountry     = ($ipdetails->country == 'IN') ? '102':0;
-                $ipzip       = ($data['zip'] !="")? $data['zip'] : $ipdetails->postal;
+                $ipcity      = ($data['city'] != '') ? $data['city'] : $ipdetails->city;
+                $ipstate      = ($data['state'] != '') ? $data['state'] : $ipdetails->region;
+                $ipcountry     = ($ipdetails->country == 'IN') ? '102' : 0;
+                $ipzip       = ($data['zip'] != "") ? $data['zip'] : $ipdetails->postal;
 
                 $clientid = $this->clients_model->add([
-                      'billing_street'      => $data['address'],
-                      'billing_city'        => $data['city'],
-                      'billing_state'       => $data['state'],
-                      'billing_zip'         => $data['zip'],
-                      'billing_country'     => is_numeric($data['country']) ? $data['country'] : 0,
-                      'firstname'           => $data['firstname'],
-                      'lastname'            => $data['lastname'],
-                      'email'               => $data['email'],
-                      'contact_phonenumber' => $data['contact_phonenumber'] ,
-                      'website'             => $data['website'],
-                      'title'               => $data['title'],
-                      'password'            => $data['passwordr'],
-                      'company'             => $data['company'],
-                      'vat'                 => isset($data['vat']) ? $data['vat'] : '',
-                      'phonenumber'         => $data['phonenumber'],
-                      'country'             => $data['country'],
-                      'city'                => $ipcity,//$data['city'],
-                      'address'             => $data['address'],
-                      'zip'                 => $ipzip,//$data['zip'],
-                      'state'               => $ipstate,//$data['state'],
-                      'custom_fields'       => isset($data['custom_fields']) && is_array($data['custom_fields']) ? $data['custom_fields'] : [],
+                    'billing_street'      => $data['address'],
+                    'billing_city'        => $data['city'],
+                    'billing_state'       => $data['state'],
+                    'billing_zip'         => $data['zip'],
+                    'billing_country'     => is_numeric($data['country']) ? $data['country'] : 0,
+                    'firstname'           => $data['firstname'],
+                    'lastname'            => $data['lastname'],
+                    'email'               => $data['email'],
+                    'contact_phonenumber' => $data['contact_phonenumber'],
+                    'website'             => $data['website'],
+                    'title'               => $data['title'],
+                    'password'            => $data['passwordr'],
+                    'company'             => $data['company'],
+                    'vat'                 => isset($data['vat']) ? $data['vat'] : '',
+                    'phonenumber'         => $data['phonenumber'],
+                    'country'             => $data['country'],
+                    'city'                => $ipcity, //$data['city'],
+                    'address'             => $data['address'],
+                    'zip'                 => $ipzip, //$data['zip'],
+                    'state'               => $ipstate, //$data['state'],
+                    'custom_fields'       => isset($data['custom_fields']) && is_array($data['custom_fields']) ? $data['custom_fields'] : [],
                 ], true);
 
                 if ($clientid) {
@@ -256,10 +256,10 @@ class Authentication extends ClientsController
                     'userid' => $userid,
                 ]);
                 $success = $this->Authentication_model->reset_password(
-                        0,
-                        $userid,
-                        $new_pass_key,
-                        $this->input->post('passwordr', false)
+                    0,
+                    $userid,
+                    $new_pass_key,
+                    $this->input->post('passwordr', false)
                 );
                 if (is_array($success) && $success['expired'] == true) {
                     set_alert('danger', _l('password_reset_key_expired'));
@@ -314,41 +314,66 @@ class Authentication extends ClientsController
         $regex_uppercase = '/[A-Z]/';
         $regex_number = '/[0-9]/';
         $regex_special = '/[!@#$%^&*()\-_=+{};:,<.>§~]/';
-        if (empty($password))
-        {
+        if (empty($password)) {
             $this->form_validation->set_message('valid_password', 'The {field} field is required.');
             return FALSE;
         }
-        if (preg_match_all($regex_lowercase, $password) < 1)
-        {
+        if (preg_match_all($regex_lowercase, $password) < 1) {
             $this->form_validation->set_message('valid_password', 'The {field} field must be at least one lowercase letter.');
             return FALSE;
         }
-        if (preg_match_all($regex_uppercase, $password) < 1)
-        {
+        if (preg_match_all($regex_uppercase, $password) < 1) {
             $this->form_validation->set_message('valid_password', 'The {field} field must be at least one uppercase letter.');
             return FALSE;
         }
-        if (preg_match_all($regex_number, $password) < 1)
-        {
+        if (preg_match_all($regex_number, $password) < 1) {
             $this->form_validation->set_message('valid_password', 'The {field} field must have at least one number.');
             return FALSE;
         }
-        if (preg_match_all($regex_special, $password) < 1)
-        {
+        if (preg_match_all($regex_special, $password) < 1) {
             $this->form_validation->set_message('valid_password', 'The {field} field must have at least one special character.' . ' ' . htmlentities('!@#$%^&*()\-_=+{};:,<.>§~'));
             return FALSE;
         }
-        if (strlen($password) < 7)
-        {
+        if (strlen($password) < 7) {
             $this->form_validation->set_message('valid_password', 'The {field} field must be at least 7 characters in length.');
             return FALSE;
         }
-        if (strlen($password) > 32)
-        {
+        if (strlen($password) > 32) {
             $this->form_validation->set_message('valid_password', 'The {field} field cannot exceed 32 characters in length.');
             return FALSE;
         }
         return TRUE;
+    }
+
+    public function re_assign_cron()
+    {
+        $limit = RE_ASSIGN_LEADS;
+        $this->load->model("Leads_model");
+        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
+       
+        if (!empty($data_leads)) {
+            foreach ($data_leads as $leads) {
+                if (!empty($leads["data"])) {
+                    $temp_lead_data = json_decode($leads["data"], true);
+                    $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
+                    $phonenumber = substr($phonenumber, -10);
+                    $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
+                    FROM " . db_prefix() . "leads where phonenumber like '%{$phonenumber}%'
+                    GROUP BY RIGHT(phonenumber, 10)
+                    HAVING COUNT(*) > 0 ")->row();
+
+                    if (empty($check_exist)) {
+                        if ($this->Leads_model->add($temp_lead_data, 1)) {
+                            $this->db->where('id', $leads["id"]);
+                            $this->db->delete(db_prefix() . 'lead_temp');
+                        }
+                    } else {
+                        $this->db->where('id', $leads["id"]);
+                        $this->db->update(db_prefix() . 'lead_temp', ["status" => 2]);
+                    }
+                }
+            }
+            echo json_encode(array("status" => 1, "message" => "Lead reassign successfully."));
+        }
     }
 }

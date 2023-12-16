@@ -184,7 +184,7 @@ class Leads_model extends App_Model
 
      */
 
-    public function add($data)
+    public function add($data, $status = 0)
 
     {
 
@@ -312,7 +312,7 @@ class Leads_model extends App_Model
 
 
 
-            $this->lead_assigned_member_notification($insert_id, $data['assigned']);
+            $this->lead_assigned_member_notification($insert_id, $data['assigned'], '', 1);
 
             hooks()->do_action('lead_created', $insert_id);
 
@@ -328,7 +328,7 @@ class Leads_model extends App_Model
 
 
 
-    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false)
+    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false, $skip = false)
 
     {
 
@@ -387,8 +387,9 @@ class Leads_model extends App_Model
             $email = $this->db->get(db_prefix() . 'staff')->row()->email;
 
 
-
-            send_mail_template('lead_assigned', $lead_id, $email);
+            if ($skip != true || $skip != 1) {
+                send_mail_template('lead_assigned', $lead_id, $email);
+            }
 
 
 
