@@ -430,7 +430,7 @@ if (!empty($call_data)) {
                         $regular_fields['country']       = ($ipdetails->country == 'IN') ? '102' : 0;
                         $regular_fields['zip']       = $ipdetails->postal;
                     }
-                    if ($key == 'de34ba611f3853dc13f2596a4ba992ac') {
+                    if ($key == 'de34ba611f3853dc13f2596a4ba992ac' || $key == 'b3ac9c60479c54b9ab83dc3a85b71bde') {
 
                         $regular_fields['city']       = $post_data['city'];
                         $regular_fields['state']       = $post_data['state'];
