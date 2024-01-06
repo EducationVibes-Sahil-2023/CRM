@@ -2322,6 +2322,10 @@ class Leads_model extends App_Model
         if (!empty($data['auto_assign'])) {
             $data['auto_assign'] = implode(",", $data['auto_assign']);
         }
+        else
+        {
+            $data['auto_assign'] = '';
+        }
 
 
         $this->db->where('id', $id);
