@@ -458,7 +458,7 @@ class Forms extends ClientsController
                         $regular_fields['country']       = ($ipdetails->country == 'IN') ? '102' : 0;
                         $regular_fields['zip']       = $ipdetails->postal;
                     }
-                    if ($key == 'de34ba611f3853dc13f2596a4ba992ac' || $key == 'b3ac9c60479c54b9ab83dc3a85b71bde') {
+                    if ($key == 'de34ba611f3853dc13f2596a4ba992ac' || $key == 'b3ac9c60479c54b9ab83dc3a85b71bde' ||  (!empty($form->allow_state_location) && $form->allow_state_location == 1)) {
 
                         $regular_fields['city']       = $post_data['city'];
                         $regular_fields['state']       = $post_data['state'];
@@ -578,53 +578,55 @@ class Forms extends ClientsController
                         'lead_id' => $lead_id,
                         'form_id' => $form->id,
                         'task_id' => $task_id,
-                        'redirect_url' => 'https://www.affinityeducation.in/RussiaMBBSFees.pdf',
+                        'redirect_url' => '',
                     ]);
                 }
-                if ($key == 'de5f4e08f2c0a817663204d26456673e') {
-                    $redirect_url = 'https://www.affinityeducation.in/RussiaMBBSFees.pdf';
-                }
-
-                // if ($key=='4f4b15c43f022e3dc84abea5e294ecae') {
-                //     $redirect_url = 'https://www.affinityeducation.in/tank-you/';
+                // if ($key == 'de5f4e08f2c0a817663204d26456673e') {
+                //     $redirect_url = '';
                 // }
-                else if ($key == 'da7820bb0e381bb3270ec82e2529f41c' or $key == 'bcf660b7e492ecee806e758aeed193ae') {
-                    $redirect_url = 'https://www.getadmissioninfo.com/thank-you/';
-                } else if ($key == '61fa7a52bd7bc82f5372c92f81b37619') {
-                    $redirect_url = 'https://www.getadmissioninfo.com/btech/thankyou.html';
-                } else if ($key == '18ff6be6a5a40b33fa37e1dfae9a602f') {
-                    $redirect_url = 'https://www.crfu.in/thank-you/';
-                } else if ($key == '88b27fc010871251f07cd6a6874a2d9b') {
-                    $redirect_url = 'https://www.chuvsu.in/thank-you/';
-                } else if ($key == 'e9ae7aa962ce4f41b5124034a06ff5c4') {
-                    $redirect_url = 'https://www.knmu.in/thank-you/';
-                } else if ($key == 'f03e0563eb497c3730bcade0a2112911') {
-                    $redirect_url = 'https://www.perpetualdalta.in/thank-you/';
-                } else if ($key == 'cab5e3e36baae573612c6713fcd1c14f') {
-                    $redirect_url = 'https://www.skmakazakhstan.in/thank-you/';
-                } else if ($key == 'c3836d043422092406ae79dd06d6ffca') {
-                    $redirect_url = 'https://www.tversmu.in/thank-you/';
-                } else if ($key == 'c665263e4c5115eea24c75b2fe6a3933') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/MBBSAbroadBrochure.pdf';
-                } else if ($key == '5b260174df04229b5c4ecf2524aa8399') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/RussiaMBBSFees.pdf';
-                } else if ($key == '967e3629d1cc69115f302ee770b5ec95') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/UkraineMBBSFees.pdf';
-                } else if ($key == '9c49df00bcbe750cfb82591e7d1c06a2') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/PhilippinesMBBSFees.pdf';
-                } else if ($key == '64452629d91a41573059d7412abcd083') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/NepalMBBSFees.pdf';
-                } else if ($key == '3d9ec1f140fb9e1895445c9ab2f3cb6e') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/KyrgyzstanMBBSFees.pdf';
-                } else if ($key == 'e23a55ecf17ce313df3ca177156a7bcc') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/KazakhstanMBBSFees.pdf';
-                } else if ($key == '68a4f8db553b9c5806b5f93b60ad8616') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/GeorgiaMBBSFees.pdf';
-                } else if ($key == '87a2c974fae4454e54d369ee88064f7d') {
-                    $redirect_url = false;
-                } else {
-                    $redirect_url = false;
-                }
+
+                // // if ($key=='4f4b15c43f022e3dc84abea5e294ecae') {
+                // //     $redirect_url = 'https://www.affinityeducation.in/tank-you/';
+                // // }
+                // else if ($key == 'da7820bb0e381bb3270ec82e2529f41c' or $key == 'bcf660b7e492ecee806e758aeed193ae') {
+                //     $redirect_url = 'https://www.getadmissioninfo.com/thank-you/';
+                // } else if ($key == '61fa7a52bd7bc82f5372c92f81b37619') {
+                //     $redirect_url = 'https://www.getadmissioninfo.com/btech/thankyou.html';
+                // } else if ($key == '18ff6be6a5a40b33fa37e1dfae9a602f') {
+                //     $redirect_url = 'https://www.crfu.in/thank-you/';
+                // } else if ($key == '88b27fc010871251f07cd6a6874a2d9b') {
+                //     $redirect_url = 'https://www.chuvsu.in/thank-you/';
+                // } else if ($key == 'e9ae7aa962ce4f41b5124034a06ff5c4') {
+                //     $redirect_url = 'https://www.knmu.in/thank-you/';
+                // } else if ($key == 'f03e0563eb497c3730bcade0a2112911') {
+                //     $redirect_url = 'https://www.perpetualdalta.in/thank-you/';
+                // } else if ($key == 'cab5e3e36baae573612c6713fcd1c14f') {
+                //     $redirect_url = 'https://www.skmakazakhstan.in/thank-you/';
+                // } else if ($key == 'c3836d043422092406ae79dd06d6ffca') {
+                //     $redirect_url = 'https://www.tversmu.in/thank-you/';
+                // } else if ($key == 'c665263e4c5115eea24c75b2fe6a3933') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/MBBSAbroadBrochure.pdf';
+                // } else if ($key == '5b260174df04229b5c4ecf2524aa8399') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/RussiaMBBSFees.pdf';
+                // } else if ($key == '967e3629d1cc69115f302ee770b5ec95') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/UkraineMBBSFees.pdf';
+                // } else if ($key == '9c49df00bcbe750cfb82591e7d1c06a2') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/PhilippinesMBBSFees.pdf';
+                // } else if ($key == '64452629d91a41573059d7412abcd083') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/NepalMBBSFees.pdf';
+                // } else if ($key == '3d9ec1f140fb9e1895445c9ab2f3cb6e') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/KyrgyzstanMBBSFees.pdf';
+                // } else if ($key == 'e23a55ecf17ce313df3ca177156a7bcc') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/KazakhstanMBBSFees.pdf';
+                // } else if ($key == '68a4f8db553b9c5806b5f93b60ad8616') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/GeorgiaMBBSFees.pdf';
+                // } else if ($key == '87a2c974fae4454e54d369ee88064f7d') {
+                //     $redirect_url = false;
+                // }
+                //  else {
+                //     $redirect_url = false;
+                // }
+                $redirect_url = false;
                 echo json_encode([
                     'success' => $success,
                     'message' => $form->success_submit_msg,
