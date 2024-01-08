@@ -2247,6 +2247,8 @@ class Leads_model extends App_Model
         $data['create_task_on_duplicate'] = (int) isset($data['create_task_on_duplicate']);
 
         $data['mark_public']              = (int) isset($data['mark_public']);
+        $data['allow_state_location']              = (int) isset($data['allow_state_location']);
+        $data['state_wise']              = (int) isset($data['state_wise']);
 
 
 
@@ -2303,7 +2305,10 @@ class Leads_model extends App_Model
 
         $data['mark_public']              = (int) isset($data['mark_public']);
 
+        $data['allow_state_location']              = (int) isset($data['allow_state_location']);
+        $data['state_wise']              = (int) isset($data['state_wise']);
 
+        
 
         if (isset($data['allow_duplicate'])) {
 
@@ -2321,9 +2326,7 @@ class Leads_model extends App_Model
 
         if (!empty($data['auto_assign'])) {
             $data['auto_assign'] = implode(",", $data['auto_assign']);
-        }
-        else
-        {
+        } else {
             $data['auto_assign'] = '';
         }
 
