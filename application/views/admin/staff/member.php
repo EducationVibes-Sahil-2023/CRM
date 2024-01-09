@@ -186,7 +186,7 @@
                         <div class="form-group">
                            <?php
                            $select_source_array = explode(',', $member->google_source);
-                           echo render_select('google_source[]', $sources, array('id', 'name'), 'Google Sources', $select_source_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Google Source', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "google_source");
+                           echo render_select('google_source[]', $sources, array('id', 'name'), 'WTL Sources', $select_source_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Google Source', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "google_source");
 
                            ?>
                         </div>
