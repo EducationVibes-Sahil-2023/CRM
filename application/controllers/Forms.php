@@ -170,21 +170,19 @@ class Forms extends ClientsController
                         $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
                         $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
                     }
-                    // $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
+                    $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
 
 
                     if (!empty($state_name)) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, "", '', '', '', $google_source);
-
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
                         }
-                        // else if (!empty($lead_type)) {
-                        //     $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
-                        //     if (!empty($assign_staff_id[0]["staffid"])) {
-                        //         $form->responsible = $assign_staff_id[0]["staffid"];
-                        //     }
-                        // }
+                    } else if (!empty($lead_type)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                        }
                     }
                 }
 
