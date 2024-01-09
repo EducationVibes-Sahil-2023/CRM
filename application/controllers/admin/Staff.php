@@ -44,6 +44,7 @@ class Staff extends AdminController
             $data['department_head'] = !empty($this->input->post('department_head')) ? $this->input->post('department_head') : '';
             $data['post_sales'] = !empty($this->input->post('post_sales')) ? $this->input->post('post_sales') : '';
             $data['facebook_lead_name'] = !empty($this->input->post('facebook_lead_name')) ? $this->input->post('facebook_lead_name') : '';
+            $data['google_source'] = !empty($this->input->post('google_source')) ? $this->input->post('google_source') : '';
 
 
             if ($id == '') {
@@ -52,6 +53,9 @@ class Staff extends AdminController
                 }
                 if (!empty($data["facebook_lead_name"])) {
                     $data["facebook_lead_name"] = implode(",", $data["facebook_lead_name"]);
+                }
+                if (!empty($data["google_source"])) {
+                    $data["google_source"] = implode(",", $data["google_source"]);
                 }
                 $id = $this->staff_model->add($data);
                 if ($id) {
@@ -62,6 +66,9 @@ class Staff extends AdminController
             } else {
                 if (!empty($data["facebook_lead_name"])) {
                     $data["facebook_lead_name"] = implode(",", $data["facebook_lead_name"]);
+                }
+                if (!empty($data["google_source"])) {
+                    $data["google_source"] = implode(",", $data["google_source"]);
                 }
                 if (!has_permission('staff', '', 'edit')) {
                     access_denied('staff');
@@ -108,6 +115,7 @@ class Staff extends AdminController
         }
         $this->load->model('currencies_model');
         $this->load->model('Leads_model');
+
         $data['base_currency'] = $this->currencies_model->get_base_currency();
         $data['roles']         = $this->roles_model->get();
         $data['user_notes']    = $this->misc_model->get_notes($id, 'staff');
@@ -116,6 +124,7 @@ class Staff extends AdminController
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['state_list'] = $this->staff_model->state_list();
         $data['lead_type']  = $this->staff_model->get_type();
+        $data['sources']  = $this->Leads_model->get_source();
         $data['facebook_form_names']  = $this->staff_model->get_facebook_names();
         $this->load->view('admin/staff/member', $data);
     }

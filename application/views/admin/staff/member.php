@@ -168,11 +168,11 @@
                               } ?>
                            </select>
                         </div>
-                        
+
                         <div class="checkbox checkbox-primary">
                            <input type="checkbox" value="1" name="post_sales" id="post_sales" <?php if (isset($member->post_sales) && $member->post_sales == 1) {
-                                                                                                                                                echo ' checked';
-                                                                                                                                             } ?>>
+                                                                                                   echo ' checked';
+                                                                                                } ?>>
                            <label for="post_sales"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Post Sales"></i>
                               Post Sales</label>
                         </div>
@@ -183,7 +183,13 @@
                            <label for="department_head"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Department head"></i>
                               Department head</label>
                         </div>
+                        <div class="form-group">
+                           <?php
+                           $select_source_array = explode(',', $member->google_source);
+                           echo render_select('google_source[]', $sources, array('id', 'name'), 'Google Sources', $select_source_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Google Source', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "google_source");
 
+                           ?>
+                        </div>
                         <div class="form-group select-placeholder assign_state_div" style="display:<?= !empty($member->department_head) ? 'none' : '' ?>">
                            <label for="assign_state" class="control-label">Select State</label>
                            <!-- <select name="assign_state[]" data-live-search="true" multiple id="assign_state" class="form-control selectpicker" data-none-selected-text="Select State">
@@ -212,9 +218,10 @@
                            ?>
                         </div>
 
- <?php $value = (!empty($member->facebook_lead_name) ? $member->facebook_lead_name : ''); ?>
+                        <?php $value = (!empty($member->facebook_lead_name) ? $member->facebook_lead_name : ''); ?>
                         <?php $attrs = ""; ?>
-                        <?php //echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); ?>
+                        <?php //echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); 
+                        ?>
 
                         <?php //$selected_value =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
                         ?>
@@ -224,14 +231,14 @@
                               ?> -->
 
 
-
-                        <?php
-                        $select_fb_array =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
-                        echo '<div id="leads-filter-source">';
-                        echo render_select('facebook_lead_name[]', $facebook_form_names, array('id', 'name'), '', $select_fb_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Facebook Form', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "facebook_lead_name");
-                        echo '</div>';
-                        ?>
-
+                        <div class="form-group">
+                           <?php
+                           $select_fb_array =  (!empty($member->facebook_lead_name) ? explode(",", $member->facebook_lead_name) : '');
+                           echo '<div id="leads-filter-source">';
+                           echo render_select('facebook_lead_name[]', $facebook_form_names, array('id', 'name'), 'Facebook Forms', $select_fb_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select Facebook Form', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "facebook_lead_name");
+                           echo '</div>';
+                           ?>
+                        </div>
 
                         <div class="form-group">
                            <label for="facebook" class="control-label"><i class="fa fa-facebook"></i> <?php echo _l('staff_add_edit_facebook'); ?></label>
