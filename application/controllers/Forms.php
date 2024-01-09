@@ -171,6 +171,10 @@ class Forms extends ClientsController
                         $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
                     }
                     $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
+                    if (empty($lead_type)) {
+                        $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
+                    }
+
 
 
                     if (!empty($state_name)) {
