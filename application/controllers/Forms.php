@@ -47,7 +47,7 @@ class Forms extends ClientsController
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
-
+                $google_source =  !empty($form->lead_source) ? $form->lead_source : '';
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
                 $call_data = array();
@@ -170,20 +170,19 @@ class Forms extends ClientsController
                         $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
                         $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
                     }
-                    // $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
+                    $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
 
 
-                    if (!empty($state_name) && !empty($lead_type)) {
-                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type);
+                    if (!empty($state_name)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
                         }
-                        // else if (!empty($lead_type)) {
-                        //     $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
-                        //     if (!empty($assign_staff_id[0]["staffid"])) {
-                        //         $form->responsible = $assign_staff_id[0]["staffid"];
-                        //     }
-                        // }
+                    } else if (!empty($lead_type)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                        }
                     }
                 }
 
