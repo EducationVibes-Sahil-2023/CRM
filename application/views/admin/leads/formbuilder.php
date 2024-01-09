@@ -101,10 +101,10 @@
                               </div>
                               <div class="checkbox checkbox-primary">
                                  <input type="checkbox" name="allow_state_location" id="allow_state_location" <?php if (isset($form) && $form->allow_state_location == 1) {
-                                                                                                echo 'checked';
-                                                                                             } ?>>
+                                                                                                                  echo 'checked';
+                                                                                                               } ?>>
                                  <label for="allow_state_location">
-                                    <?php echo _l('Allow form filed locations(State,City)'); ?></label>
+                                    <?php echo _l('Allow form location fileds(State,City)'); ?></label>
                               </div>
                               <div class="checkbox checkbox-primary">
                                  <input type="checkbox" name="allow_duplicate" id="allow_duplicate" <?php if (isset($form) && $form->allow_duplicate == 1 || !isset($form)) {
@@ -193,12 +193,12 @@
 
                               <div class="clearfix"></div>
                               <div class="checkbox checkbox-primary ">
-                                    <input type="checkbox" name="state_wise" id="state_wise" <?php if (isset($form) && $form->state_wise == 1 ) {
-                                                                                                echo 'checked';
-                                                                                             } ?>>
-                                    <label for="state_wise"><?php echo _l('State Wise'); ?></label>
-                               
-                         
+                                 <input type="checkbox" name="state_wise" id="state_wise" <?php if (isset($form) && $form->state_wise == 1) {
+                                                                                             echo 'checked';
+                                                                                          } ?>>
+                                 <label for="state_wise"><?php echo _l('State Wise'); ?></label>
+
+
                               </div>
                               <div class="checkbox checkbox-primary">
 
