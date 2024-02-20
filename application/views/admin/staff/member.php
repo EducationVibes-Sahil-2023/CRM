@@ -218,6 +218,34 @@
                            ?>
                         </div>
 
+                        <div class="form-group select-placeholder assign_state_div" style="display:<?= !empty($member->department_head) ? 'none' : '' ?>">
+                           <label for="assign_city" class="control-label">Select City</label>
+                           <!-- <select name="assign_city[]" data-live-search="true" multiple id="assign_city" class="form-control selectpicker" data-none-selected-text="Select State">
+                              <option value="">Select State</option>
+                              <?php
+                              if (!empty($city_list)) {
+                                 $select_state_array = explode(',', $member->assign_city);
+                                 foreach ($city_list as $s_list) {
+                                    $selected = '';
+                                    if (isset($select_state_array)) {
+                                       if (in_array($s_list['id'], $select_state_array)) {
+                                          $selected = 'selected';
+                                       }
+                                    }
+                              ?>
+                                    <option value="<?php echo $s_list['id']; ?>" <?php echo $selected; ?>><?php echo $s_list['name'] ?></option>
+                              <?php }
+                              } ?>
+                           </select> -->
+
+                           <?php
+                           $select_city_array = explode(',', $member->assign_city);
+                           echo '<div id="leads-filter-source">';
+                           echo render_select('assign_city[]', $city_list, array('id', 'name'), '', $select_city_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select State', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "assign_city");
+                           echo '</div>';
+                           ?>
+                        </div>
+
                         <?php $value = (!empty($member->facebook_lead_name) ? $member->facebook_lead_name : ''); ?>
                         <?php $attrs = ""; ?>
                         <?php //echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); 
