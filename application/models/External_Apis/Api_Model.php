@@ -322,7 +322,7 @@ class Api_Model extends CI_Model
     {
         $response = [];
         try {
-            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 1000);
+            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 10000);
             $delete_ids = [];
             if (!empty($get_all_activity_temp["data"])) {
                 foreach ($get_all_activity_temp["data"] as $key => $call_data) {
