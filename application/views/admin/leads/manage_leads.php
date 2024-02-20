@@ -410,7 +410,7 @@
                                                 <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
                                              </div>
                                           <?php } ?>
-                                          <?php if (has_permission('leads', '', 'delete')) { ?>
+                                          <?php if (has_permission('leads', '', 'mass_assign')) { ?>
                                              <div class="checkbox checkbox-danger">
                                                 <input type="checkbox" name="mass_re-assignation" id="mass_re-assignation">
                                                 <label for="mass_re-assignation"><?php echo _l('mass_re-assignation'); ?></label>
@@ -689,6 +689,57 @@
 <script>
    var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
 
+
+   $('#leads_bulk_actions').on('shown.bs.modal', function(e) {
+      $("#re-assignation_div").hide();
+      $("#bulk_change").show();
+   })
+
+
+   // Global on change for mass delete to hide all other elements for bulk actions
+   $('.bulk_actions').on('change', 'input[name="mass_delete"]', function() {
+      var $bulkChange = $('#bulk_change');
+
+      if ($(this).prop('checked') === true) {
+         $bulkChange.find('select').selectpicker('val', '');
+         $("#re-assignation_div").hide();
+         $("#bulk_change").hide();
+
+      } else {
+
+         if ($('input[name="mass_re-assignation"]').prop('checked') === true) {
+            $("#bulk_change").show();
+            // $("#re-assignation_div").show();
+            $("#re-assignation_div").find('select').selectpicker('val', '');
+
+
+         } else {
+            $("#bulk_change").show();
+            $("#bulk_change").find('select').selectpicker('val', '');
+            // $("#re-assignation_div").hide();
+         }
+
+      }
+   });
+
+
+
+   $('input[name="mass_re-assignation"]').click(function() {
+      var $bulkChange = $('#bulk_change');
+      if ($(this).prop('checked') === true) {
+         $('#input[name="mass_delete"]').prop("checked", false);
+         $bulkChange.find('select').selectpicker('val', '');
+         // $bulkChange.hide();
+         // $("#re-assignation_div").show();
+      } else {
+         $("#re-assignation_div").find('select').selectpicker('val', '');
+         // $("#re-assignation_div").hide();
+         // $bulkChange.show();
+      }
+
+      // $('.mass_delete_separator').toggleClass('hide');
+   });
+
    function show_update_count_range(obj) {
       if ($(obj).is(":checked")) {
          $("#rangeSlider").show();
@@ -795,7 +846,7 @@
             $('#leads_bulk_mark_lost').prop('disabled', false);
          }
       });
-   
+
 
       $('#apply_filter').on('click', function() {
 

@@ -67,11 +67,11 @@ class Leads extends AdminController
 
             $data['consent_purposes'] = $this->gdpr_model->get_consent_purposes();
         }
- 
+
         // $data['summary']  = get_leads_summary();
         // $data['updateCount'] = leads_update_count();
         // $data['call_count'] = calls_update_count();
-    
+
         $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
@@ -97,7 +97,7 @@ class Leads extends AdminController
         $updateCount = leads_update_count($_POST);
         $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
-            
+
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -2466,11 +2466,13 @@ class Leads extends AdminController
             $lost                  = $this->input->post('lost');
 
             $has_permission_delete = has_permission('leads', '', 'delete');
+            $has_permission_assign = has_permission('leads', '', 'assign');
+            $has_permission_mass_assign = has_permission('leads', '', 'mass_assign');
             $notifiedUsers = [];
             $re_assign_array = [];
 
-            if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                if ($has_permission_delete) {
+            if (!empty($this->input->post('mass_assign')) && !empty($this->input->post('assigned')) && !empty($ids)) {
+                if ($has_permission_mass_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
                         $keysToRemove = array('id', 'dateadded', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
@@ -2513,13 +2515,9 @@ class Leads extends AdminController
                     } else {
                         set_alert('danger', "Something bad happen.");
                     }
+                    echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
 
                     die;
-                    // if ($this->leads_model->re_assign($id,$this->input->post())) {
-                    //     $total_assign++;
-
-                    // }
-
                 }
             }
 
@@ -2538,7 +2536,7 @@ class Leads extends AdminController
                             }
                         }
                     } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                        if ($has_permission_delete) {
+                        if ($has_permission_mass_assign) {
                             if ($this->leads_model->re_assign($id, $this->input->post())) {
                                 $total_assign++;
                             }
@@ -2860,7 +2858,9 @@ class Leads extends AdminController
 
     public function re_assign_leads()
     {
-        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1 limit 30")->result_array();
+        $limit = RE_ASSIGN_LEADS;
+
+        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
         if (!empty($data_leads)) {
             foreach ($data_leads as $leads) {
                 if (!empty($leads["data"])) {
@@ -2873,7 +2873,7 @@ class Leads extends AdminController
                     HAVING COUNT(*) > 0 ")->row();
 
                     if (empty($check_exist)) {
-                        if ($this->leads_model->add($temp_lead_data)) {
+                        if ($this->leads_model->add($temp_lead_data,1)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
                         }

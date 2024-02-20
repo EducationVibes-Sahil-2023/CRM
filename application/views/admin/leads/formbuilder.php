@@ -100,6 +100,13 @@
                                     <?php echo _l('auto_mark_as_public'); ?></label>
                               </div>
                               <div class="checkbox checkbox-primary">
+                                 <input type="checkbox" name="allow_state_location" id="allow_state_location" <?php if (isset($form) && $form->allow_state_location == 1) {
+                                                                                                                  echo 'checked';
+                                                                                                               } ?>>
+                                 <label for="allow_state_location">
+                                    <?php echo _l('Allow form location fileds(State,City)'); ?></label>
+                              </div>
+                              <div class="checkbox checkbox-primary">
                                  <input type="checkbox" name="allow_duplicate" id="allow_duplicate" <?php if (isset($form) && $form->allow_duplicate == 1 || !isset($form)) {
                                                                                                          echo 'checked';
                                                                                                       } ?>>
@@ -182,13 +189,34 @@
                               <?php echo render_select('auto_assign[]', $members, array('staffid', array('firstname', 'lastname')), 'Auto Assignee (Staff)', $selected_staff, array('multiple' => true));
                               ?>
                               <hr />
+                              <label for="" class="control-label"><?php echo _l('Auto Assignation'); ?></label>
+
+                              <div class="clearfix"></div>
+                              <div class="checkbox checkbox-primary ">
+                                 <input type="checkbox" name="state_wise" id="state_wise" <?php if (isset($form) && $form->state_wise == 1) {
+                                                                                             echo 'checked';
+                                                                                          } ?>>
+                                 <label for="state_wise"><?php echo _l('State Wise'); ?></label>
+
+
+                              </div>
+                              <div class="checkbox checkbox-primary">
+
+
+                              </div>
+                              <hr />
+
                               <label for="" class="control-label"><?php echo _l('notification_settings'); ?></label>
+
+
                               <div class="clearfix"></div>
                               <div class="checkbox checkbox-primary">
                                  <input type="checkbox" name="notify_lead_imported" id="notify_lead_imported" <?php if (isset($form) && $form->notify_lead_imported == 1 || !isset($form)) {
                                                                                                                   echo 'checked';
                                                                                                                } ?>>
                                  <label for="notify_lead_imported"><?php echo _l('leads_email_integration_notify_when_lead_imported'); ?></label>
+
+
                               </div>
                               <div class="select-notification-settings<?php if (isset($form) && $form->notify_lead_imported == '0') {
                                                                            echo ' hide';
@@ -322,20 +350,20 @@
          success_submit_msg: 'required',
          submit_btn_name: 'required',
          responsible: {
-            required: {
-               depends: function(element) {
-                  var isRequiredByNotifyType = ($('input[name="notify_type"]:checked').val() == 'assigned') ? true : false;
-                  var isRequiredByAssignTask = ($create_task_on_duplicate.is(':checked')) ? true : false;
-                  var isRequired = isRequiredByNotifyType || isRequiredByAssignTask;
-                  if (isRequired) {
-                     $('[for="responsible"]').find('.req').removeClass('hide');
-                  } else {
-                     $(element).next('p.text-danger').remove();
-                     $('[for="responsible"]').find('.req').addClass('hide');
-                  }
-                  return isRequired;
-               }
-            }
+            // required: {
+            //    depends: function(element) {
+            //       var isRequiredByNotifyType = ($('input[name="notify_type"]:checked').val() == 'assigned') ? true : false;
+            //       var isRequiredByAssignTask = ($create_task_on_duplicate.is(':checked')) ? true : false;
+            //       var isRequired = isRequiredByNotifyType || isRequiredByAssignTask;
+            //       if (isRequired) {
+            //          $('[for="responsible"]').find('.req').removeClass('hide');
+            //       } else {
+            //          $(element).next('p.text-danger').remove();
+            //          $('[for="responsible"]').find('.req').addClass('hide');
+            //       }
+            //       return isRequired;
+            //    }
+            // }
          }
       });
 

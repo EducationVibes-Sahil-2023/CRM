@@ -47,6 +47,7 @@ class Forms extends ClientsController
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
+                $google_source =  !empty($form->lead_source) ? $form->lead_source : '';
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
                 $call_data = array();
@@ -159,6 +160,36 @@ class Forms extends ClientsController
                     }
                 }
 
+
+                if (!empty($form->state_wise)  && $form->state_wise == 1) {
+                    $form->responsible = 1;
+                    if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
+                        $state_name = !empty($post_data['state']) ? trim($post_data['state']) : '';
+                    } else {
+                        $ip = $_SERVER['REMOTE_ADDR'];
+                        $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
+                        $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+                    }
+                    $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
+                    if (empty($lead_type)) {
+                        $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
+                    }
+
+
+
+                    if (!empty($state_name)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                        }
+                    } else if (!empty($lead_type)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                        }
+                    }
+                }
+
                 if (is_gdpr() && get_option('gdpr_enable_terms_and_conditions_lead_form') == 1) {
                     $required[] = 'accept_terms_and_conditions';
                 }
@@ -232,7 +263,7 @@ class Forms extends ClientsController
                 //     $this->curl_function($call_data);
                 // }
 
-if (!empty($call_data)) {
+                if (!empty($call_data)) {
                     $response_call = $this->curl_function($call_data);
                     $response_call = json_decode($response_call);
                     if (isset($response_call[0]->status) && $response_call[0]->status == 0) {
@@ -430,7 +461,7 @@ if (!empty($call_data)) {
                         $regular_fields['country']       = ($ipdetails->country == 'IN') ? '102' : 0;
                         $regular_fields['zip']       = $ipdetails->postal;
                     }
-                    if ($key == 'de34ba611f3853dc13f2596a4ba992ac') {
+                    if ($key == 'de34ba611f3853dc13f2596a4ba992ac' || $key == 'b3ac9c60479c54b9ab83dc3a85b71bde' ||  (!empty($form->allow_state_location) && $form->allow_state_location == 1)) {
 
                         $regular_fields['city']       = $post_data['city'];
                         $regular_fields['state']       = $post_data['state'];
@@ -550,53 +581,55 @@ if (!empty($call_data)) {
                         'lead_id' => $lead_id,
                         'form_id' => $form->id,
                         'task_id' => $task_id,
-                        'redirect_url' => 'https://www.affinityeducation.in/RussiaMBBSFees.pdf',
+                        'redirect_url' => '',
                     ]);
                 }
-                if ($key == 'de5f4e08f2c0a817663204d26456673e') {
-                    $redirect_url = 'https://www.affinityeducation.in/RussiaMBBSFees.pdf';
-                }
-
-                // if ($key=='4f4b15c43f022e3dc84abea5e294ecae') {
-                //     $redirect_url = 'https://www.affinityeducation.in/tank-you/';
+                // if ($key == 'de5f4e08f2c0a817663204d26456673e') {
+                //     $redirect_url = '';
                 // }
-                else if ($key == 'da7820bb0e381bb3270ec82e2529f41c' or $key == 'bcf660b7e492ecee806e758aeed193ae') {
-                    $redirect_url = 'https://www.getadmissioninfo.com/thank-you/';
-                } else if ($key == '61fa7a52bd7bc82f5372c92f81b37619') {
-                    $redirect_url = 'https://www.getadmissioninfo.com/btech/thankyou.html';
-                } else if ($key == '18ff6be6a5a40b33fa37e1dfae9a602f') {
-                    $redirect_url = 'https://www.crfu.in/thank-you/';
-                } else if ($key == '88b27fc010871251f07cd6a6874a2d9b') {
-                    $redirect_url = 'https://www.chuvsu.in/thank-you/';
-                } else if ($key == 'e9ae7aa962ce4f41b5124034a06ff5c4') {
-                    $redirect_url = 'https://www.knmu.in/thank-you/';
-                } else if ($key == 'f03e0563eb497c3730bcade0a2112911') {
-                    $redirect_url = 'https://www.perpetualdalta.in/thank-you/';
-                } else if ($key == 'cab5e3e36baae573612c6713fcd1c14f') {
-                    $redirect_url = 'https://www.skmakazakhstan.in/thank-you/';
-                } else if ($key == 'c3836d043422092406ae79dd06d6ffca') {
-                    $redirect_url = 'https://www.tversmu.in/thank-you/';
-                } else if ($key == 'c665263e4c5115eea24c75b2fe6a3933') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/MBBSAbroadBrochure.pdf';
-                } else if ($key == '5b260174df04229b5c4ecf2524aa8399') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/RussiaMBBSFees.pdf';
-                } else if ($key == '967e3629d1cc69115f302ee770b5ec95') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/UkraineMBBSFees.pdf';
-                } else if ($key == '9c49df00bcbe750cfb82591e7d1c06a2') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/PhilippinesMBBSFees.pdf';
-                } else if ($key == '64452629d91a41573059d7412abcd083') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/NepalMBBSFees.pdf';
-                } else if ($key == '3d9ec1f140fb9e1895445c9ab2f3cb6e') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/KyrgyzstanMBBSFees.pdf';
-                } else if ($key == 'e23a55ecf17ce313df3ca177156a7bcc') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/KazakhstanMBBSFees.pdf';
-                } else if ($key == '68a4f8db553b9c5806b5f93b60ad8616') {
-                    $redirect_url = 'https://www.mbbsadmissionabroad.in/GeorgiaMBBSFees.pdf';
-                } else if ($key == '87a2c974fae4454e54d369ee88064f7d') {
-                    $redirect_url = false;
-                } else {
-                    $redirect_url = false;
-                }
+
+                // // if ($key=='4f4b15c43f022e3dc84abea5e294ecae') {
+                // //     $redirect_url = 'https://www.affinityeducation.in/tank-you/';
+                // // }
+                // else if ($key == 'da7820bb0e381bb3270ec82e2529f41c' or $key == 'bcf660b7e492ecee806e758aeed193ae') {
+                //     $redirect_url = 'https://www.getadmissioninfo.com/thank-you/';
+                // } else if ($key == '61fa7a52bd7bc82f5372c92f81b37619') {
+                //     $redirect_url = 'https://www.getadmissioninfo.com/btech/thankyou.html';
+                // } else if ($key == '18ff6be6a5a40b33fa37e1dfae9a602f') {
+                //     $redirect_url = 'https://www.crfu.in/thank-you/';
+                // } else if ($key == '88b27fc010871251f07cd6a6874a2d9b') {
+                //     $redirect_url = 'https://www.chuvsu.in/thank-you/';
+                // } else if ($key == 'e9ae7aa962ce4f41b5124034a06ff5c4') {
+                //     $redirect_url = 'https://www.knmu.in/thank-you/';
+                // } else if ($key == 'f03e0563eb497c3730bcade0a2112911') {
+                //     $redirect_url = 'https://www.perpetualdalta.in/thank-you/';
+                // } else if ($key == 'cab5e3e36baae573612c6713fcd1c14f') {
+                //     $redirect_url = 'https://www.skmakazakhstan.in/thank-you/';
+                // } else if ($key == 'c3836d043422092406ae79dd06d6ffca') {
+                //     $redirect_url = 'https://www.tversmu.in/thank-you/';
+                // } else if ($key == 'c665263e4c5115eea24c75b2fe6a3933') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/MBBSAbroadBrochure.pdf';
+                // } else if ($key == '5b260174df04229b5c4ecf2524aa8399') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/RussiaMBBSFees.pdf';
+                // } else if ($key == '967e3629d1cc69115f302ee770b5ec95') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/UkraineMBBSFees.pdf';
+                // } else if ($key == '9c49df00bcbe750cfb82591e7d1c06a2') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/PhilippinesMBBSFees.pdf';
+                // } else if ($key == '64452629d91a41573059d7412abcd083') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/NepalMBBSFees.pdf';
+                // } else if ($key == '3d9ec1f140fb9e1895445c9ab2f3cb6e') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/KyrgyzstanMBBSFees.pdf';
+                // } else if ($key == 'e23a55ecf17ce313df3ca177156a7bcc') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/KazakhstanMBBSFees.pdf';
+                // } else if ($key == '68a4f8db553b9c5806b5f93b60ad8616') {
+                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/GeorgiaMBBSFees.pdf';
+                // } else if ($key == '87a2c974fae4454e54d369ee88064f7d') {
+                //     $redirect_url = false;
+                // }
+                //  else {
+                //     $redirect_url = false;
+                // }
+                $redirect_url = false;
                 echo json_encode([
                     'success' => $success,
                     'message' => $form->success_submit_msg,
@@ -852,51 +885,51 @@ if (!empty($call_data)) {
     //     }
     // }
 
-//     private function curl_function($post_data)
-// {
-//     $data = array("call_data" => json_encode($post_data));
-    
-//     try {
-//         $token = JWT_TOKEN;
-//         $url = base_url("external/call_update");
-        
-//         $ch = curl_init($url);
-        
-//         if ($ch === false) {
-//             throw new Exception('Failed to initialize cURL');
-//         }
+    //     private function curl_function($post_data)
+    // {
+    //     $data = array("call_data" => json_encode($post_data));
 
-//         $authorization = "Authorization: Bearer " . $token;
-//         $headers = array('Content-Type: application/json', $authorization);
-        
-//         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-//         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//         curl_setopt($ch, CURLOPT_POST, true);
-//         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+    //     try {
+    //         $token = JWT_TOKEN;
+    //         $url = base_url("external/call_update");
 
-//         $result = curl_exec($ch);
+    //         $ch = curl_init($url);
 
-//         if ($result === false) {
-//             throw new Exception('cURL error: ' . curl_error($ch));
-//         }
+    //         if ($ch === false) {
+    //             throw new Exception('Failed to initialize cURL');
+    //         }
 
-//         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        
-//         if ($http_code !== 200) {
-//             throw new Exception('HTTP error: ' . $http_code);
-//         }
+    //         $authorization = "Authorization: Bearer " . $token;
+    //         $headers = array('Content-Type: application/json', $authorization);
 
-//         curl_close($ch);
-        
-//         // Return the result or handle it as needed.
-//         return $result;
-//     } catch (Exception $e) {
-//         // Handle the error here, e.g., log the error message or take appropriate action.
-//         // You can also echo or return the error message for debugging purposes.
-//         echo "Error: " . $e->getMessage();
-//         return false;
-//     }
-// }
+    //         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    //         curl_setopt($ch, CURLOPT_POST, true);
+    //         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
+
+    //         $result = curl_exec($ch);
+
+    //         if ($result === false) {
+    //             throw new Exception('cURL error: ' . curl_error($ch));
+    //         }
+
+    //         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+    //         if ($http_code !== 200) {
+    //             throw new Exception('HTTP error: ' . $http_code);
+    //         }
+
+    //         curl_close($ch);
+
+    //         // Return the result or handle it as needed.
+    //         return $result;
+    //     } catch (Exception $e) {
+    //         // Handle the error here, e.g., log the error message or take appropriate action.
+    //         // You can also echo or return the error message for debugging purposes.
+    //         echo "Error: " . $e->getMessage();
+    //         return false;
+    //     }
+    // }
 
 
     private function curl_function($post_data)
@@ -906,7 +939,7 @@ if (!empty($call_data)) {
             $token = JWT_TOKEN;
             // header('Content-Type: application/json'); // Specify the type of data
             $ch = curl_init(base_url("external/call_update")); // Initialise cURL
-                $authorization = "Authorization: Bearer " . $token; // Prepare the authorization token
+            $authorization = "Authorization: Bearer " . $token; // Prepare the authorization token
             curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
@@ -920,25 +953,23 @@ if (!empty($call_data)) {
             curl_close($ch); // Close the cURL connection
 
             $result = array(json_decode($result, true));
-
         } catch (Exception $e) {
             $result = array(array(
                 "status" => 0,
                 "message" => "something bad happen"
             ));
         }
-   
-        return json_encode($result);
 
+        return json_encode($result);
     }
 
-      public function test_db_connection()
+    public function test_db_connection()
     {
         error_reporting(E_ALL);
         ini_set('display_errors', 1);
         $response = $this->db->select("*")->from(db_prefix() . "leads")->limit(500)->get()->result_array();
         echo $this->db->last_query();
-        echo json_encode($response,true);
+        echo json_encode($response, true);
         error_reporting(E_ALL & ~E_NOTICE); // Or the appropriate level
         ini_set('display_errors', 0); // Set to 0 for production
     }
@@ -946,5 +977,4 @@ if (!empty($call_data)) {
     {
         echo json_encode(array("success" => 1, "message" => "Run Successfully"));
     }
-
 }

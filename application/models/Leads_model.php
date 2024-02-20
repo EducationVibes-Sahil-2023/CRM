@@ -184,7 +184,7 @@ class Leads_model extends App_Model
 
      */
 
-    public function add($data)
+    public function add($data, $status = 0)
 
     {
 
@@ -312,7 +312,7 @@ class Leads_model extends App_Model
 
 
 
-            $this->lead_assigned_member_notification($insert_id, $data['assigned']);
+            $this->lead_assigned_member_notification($insert_id, $data['assigned'], '', 1);
 
             hooks()->do_action('lead_created', $insert_id);
 
@@ -328,7 +328,7 @@ class Leads_model extends App_Model
 
 
 
-    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false)
+    public function lead_assigned_member_notification($lead_id, $assigned, $integration = false, $skip = false)
 
     {
 
@@ -387,8 +387,9 @@ class Leads_model extends App_Model
             $email = $this->db->get(db_prefix() . 'staff')->row()->email;
 
 
-
-            send_mail_template('lead_assigned', $lead_id, $email);
+            if ($skip != true || $skip != 1) {
+                send_mail_template('lead_assigned', $lead_id, $email);
+            }
 
 
 
@@ -2246,6 +2247,8 @@ class Leads_model extends App_Model
         $data['create_task_on_duplicate'] = (int) isset($data['create_task_on_duplicate']);
 
         $data['mark_public']              = (int) isset($data['mark_public']);
+        $data['allow_state_location']              = (int) isset($data['allow_state_location']);
+        $data['state_wise']              = (int) isset($data['state_wise']);
 
 
 
@@ -2302,6 +2305,9 @@ class Leads_model extends App_Model
 
         $data['mark_public']              = (int) isset($data['mark_public']);
 
+        $data['allow_state_location']              = (int) isset($data['allow_state_location']);
+        $data['state_wise']              = (int) isset($data['state_wise']);
+
 
 
         if (isset($data['allow_duplicate'])) {
@@ -2320,6 +2326,8 @@ class Leads_model extends App_Model
 
         if (!empty($data['auto_assign'])) {
             $data['auto_assign'] = implode(",", $data['auto_assign']);
+        } else {
+            $data['auto_assign'] = '';
         }
 
 
@@ -2449,7 +2457,7 @@ class Leads_model extends App_Model
         return $data;
     }
 
-    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array())
+    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
     {
 
         //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
@@ -2497,6 +2505,9 @@ class Leads_model extends App_Model
         if (!empty($facebook_lead)) {
             $sql .= " and st.facebook_lead_name != '' ";
         }
+        if (!empty($google_source)) {
+            $sql .= " and (st.google_source != '' AND FIND_IN_SET({$google_source},st.google_source)) ";
+        }
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
@@ -2508,7 +2519,8 @@ class Leads_model extends App_Model
         } else {
             $sql .= " limit 1 ";
         }
-
+        // echo $sql;
+        // die;
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
     }
