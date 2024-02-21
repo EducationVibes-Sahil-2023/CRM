@@ -911,7 +911,7 @@ class Staff_model extends App_Model
     }
     function city_list()
     {
-        return $this->db->select("city as name,id")->order_by("name ASC")->get(db_prefix() . 'cities')->result_array();
+        return $this->db->order_by("name ASC")->get(db_prefix() . 'cities')->result_array();
     }
 
     public function get_type($id = '', $where = [])

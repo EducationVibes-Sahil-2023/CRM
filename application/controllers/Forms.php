@@ -170,6 +170,7 @@ class Forms extends ClientsController
 
                 if (!empty($form->state_wise)  && $form->state_wise == 1) {
                     $form->responsible = 1;
+                
                     if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
                         $state_name = !empty($post_data['state']) ? trim($post_data['state']) : '';
                         $city_name = !empty($post_data['city']) ? trim($post_data['city']) : '';
@@ -192,6 +193,7 @@ class Forms extends ClientsController
                             $status_assign = true;
                         }
                     }
+
                     if (!empty($state_name)  && $status_assign == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
                         if (!empty($assign_staff_id[0]["staffid"])) {
@@ -204,6 +206,8 @@ class Forms extends ClientsController
                             $form->responsible = $assign_staff_id[0]["staffid"];
                         }
                     }
+
+                    
                 }
 
                 if (is_gdpr() && get_option('gdpr_enable_terms_and_conditions_lead_form') == 1) {

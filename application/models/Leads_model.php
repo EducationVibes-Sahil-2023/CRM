@@ -2528,35 +2528,7 @@ class Leads_model extends App_Model
     function automatic_assign_staff_city($city_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
     {
 
-        //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
-        // if (!empty($lead_type)) {
-        //     $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
-        // }
-        // $sql .= " ) where 1=1 ";
-
-        // if (!empty($state_name)) {
-        //     $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
-        // }
-        // if (!empty($deprtment_head_status)) {
-        //     $sql .= " and st.department_head = '1' ";
-        // }
-        // if (!empty($facebook_lead)) {
-        //     $sql .= " and st.facebook_lead_name != '' ";
-        // }
-        // if (!empty($lead_type)) {
-        //     $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
-        // }
-        // if (!empty($staff_ids)) {
-        //     $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
-        // }
-
-        // $sql .= "  group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc  ";
-        // if (!empty($facebook_lead)) {
-        // } else {
-        //     $sql .= " limit 1 ";
-        // }
-
-        $sql = "Select s.city as name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "cities s ON (FIND_IN_SET(s.id,st.assign_city)";
+        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "cities s ON (FIND_IN_SET(s.id,st.assign_city)";
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
@@ -2564,7 +2536,7 @@ class Leads_model extends App_Model
         $sql .= " LEFT JOIN " . db_prefix() . "facebook_name f ON (FIND_IN_SET(f.id,st.facebook_lead_name) ) ";
         $sql .= " where 1=1 ";
         if (!empty($city_name)) {
-            $sql .= " AND LOWER(TRIM(s.city)) = '" . strtolower(trim($city_name)) . "' ";
+            $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($city_name)) . "' ";
         }
 
         if (!empty($deprtment_head_status)) {

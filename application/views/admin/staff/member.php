@@ -220,28 +220,12 @@
 
                         <div class="form-group select-placeholder assign_state_div" style="display:<?= !empty($member->department_head) ? 'none' : '' ?>">
                            <label for="assign_city" class="control-label">Select City</label>
-                           <!-- <select name="assign_city[]" data-live-search="true" multiple id="assign_city" class="form-control selectpicker" data-none-selected-text="Select State">
-                              <option value="">Select State</option>
-                              <?php
-                              if (!empty($city_list)) {
-                                 $select_state_array = explode(',', $member->assign_city);
-                                 foreach ($city_list as $s_list) {
-                                    $selected = '';
-                                    if (isset($select_state_array)) {
-                                       if (in_array($s_list['id'], $select_state_array)) {
-                                          $selected = 'selected';
-                                       }
-                                    }
-                              ?>
-                                    <option value="<?php echo $s_list['id']; ?>" <?php echo $selected; ?>><?php echo $s_list['name'] ?></option>
-                              <?php }
-                              } ?>
-                           </select> -->
+
 
                            <?php
                            $select_city_array = explode(',', $member->assign_city);
                            echo '<div id="leads-filter-source">';
-                           echo render_select('assign_city[]', $city_list, array('id', 'name'), '', $select_city_array, array('data-width' => '100%', 'data-none-selected-text' => 'Select State', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "assign_city");
+                           echo render_select('assign_city[]', [], [], '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select City', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "assign_city");
                            echo '</div>';
                            ?>
                         </div>
@@ -651,6 +635,51 @@
    </div>
    <?php init_tail(); ?>
    <script>
+      var cities = <?= json_encode($city_list) ?>;
+      console.log(cities);
+      var select_city = [];
+      <?php
+      if (!empty($member->assign_city)) {
+         $select_city = explode(',', $member->assign_city);
+      ?>
+         select_city = <?= json_encode($select_city) ?>;
+      <?php
+      }
+      ?>
+      if (select_city.length > 0) {
+         set_cities(select_city)
+      }
+
+      $("#assign_state").change(function() {
+         set_cities()
+      })
+
+      function set_cities(select_city = []) {
+         let selected_state = $("#assign_state").val();
+         if (select_city.length > 0) {
+            var selected_citys = select_city
+
+         } else {
+            var selected_citys = $('#assign_city').val();
+
+         }
+         var selectpicker = $('#assign_city');
+         selectpicker.empty();
+         if (selected_state.length > 0) {
+            selected_state.forEach(stateId => {
+               var citiesInState = cities.filter(city => city.state_id === stateId);
+
+               citiesInState.forEach(city => {
+                  let selected = selected_citys.includes(city.id) ? "selected" : "";
+                  selectpicker.append('<option ' + selected + ' value="' + city.id + '">' + city.name + '</option>');
+               });
+            });
+         }
+
+         selectpicker.selectpicker('refresh');
+         console.log("Cities set successfully");
+      }
+
       $(function() {
 
          $('select[name="role"]').on('change', function() {
