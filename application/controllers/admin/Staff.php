@@ -40,6 +40,7 @@ class Staff extends AdminController
 
             $data['password'] = $this->input->post('password', false);
             $data['assign_state'] = !empty($this->input->post('assign_state')) ? implode(',', $this->input->post('assign_state')) : '';
+            $data['assign_city'] = !empty($this->input->post('assign_city')) ? implode(',', $this->input->post('assign_city')) : '';
             $data['lead_type'] = !empty($this->input->post('lead_type')) ? $this->input->post('lead_type') : '';
             $data['department_head'] = !empty($this->input->post('department_head')) ? $this->input->post('department_head') : '';
             $data['post_sales'] = !empty($this->input->post('post_sales')) ? $this->input->post('post_sales') : '';
@@ -123,6 +124,7 @@ class Staff extends AdminController
         $data['title']         = $title;
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['state_list'] = $this->staff_model->state_list();
+        $data['city_list'] = $this->staff_model->city_list();
         $data['lead_type']  = $this->staff_model->get_type();
         $data['sources']  = $this->Leads_model->get_source();
         $data['facebook_form_names']  = $this->staff_model->get_facebook_names();

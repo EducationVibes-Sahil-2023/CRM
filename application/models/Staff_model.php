@@ -909,6 +909,10 @@ class Staff_model extends App_Model
     {
         return $this->db->order_by("name ASC")->get(db_prefix() . 'states')->result_array();
     }
+    function city_list()
+    {
+        return $this->db->order_by("name ASC")->get(db_prefix() . 'cities')->result_array();
+    }
 
     public function get_type($id = '', $where = [])
 

@@ -218,6 +218,18 @@
                            ?>
                         </div>
 
+                        <div class="form-group select-placeholder assign_state_div" style="display:<?= !empty($member->department_head) ? 'none' : '' ?>">
+                           <label for="assign_city" class="control-label">Select City</label>
+
+
+                           <?php
+                           $select_city_array = explode(',', $member->assign_city);
+                           echo '<div id="leads-filter-source">';
+                           echo render_select('assign_city[]', [], [], '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select City', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "assign_city");
+                           echo '</div>';
+                           ?>
+                        </div>
+
                         <?php $value = (!empty($member->facebook_lead_name) ? $member->facebook_lead_name : ''); ?>
                         <?php $attrs = ""; ?>
                         <?php //echo render_input('facebook_lead_name', 'Facebook lead name', $value, 'text', $attrs); 
@@ -623,6 +635,51 @@
    </div>
    <?php init_tail(); ?>
    <script>
+      var cities = <?= json_encode($city_list) ?>;
+      console.log(cities);
+      var select_city = [];
+      <?php
+      if (!empty($member->assign_city)) {
+         $select_city = explode(',', $member->assign_city);
+      ?>
+         select_city = <?= json_encode($select_city) ?>;
+      <?php
+      }
+      ?>
+      if (select_city.length > 0) {
+         set_cities(select_city)
+      }
+
+      $("#assign_state").change(function() {
+         set_cities()
+      })
+
+      function set_cities(select_city = []) {
+         let selected_state = $("#assign_state").val();
+         if (select_city.length > 0) {
+            var selected_citys = select_city
+
+         } else {
+            var selected_citys = $('#assign_city').val();
+
+         }
+         var selectpicker = $('#assign_city');
+         selectpicker.empty();
+         if (selected_state.length > 0) {
+            selected_state.forEach(stateId => {
+               var citiesInState = cities.filter(city => city.state_id === stateId);
+
+               citiesInState.forEach(city => {
+                  let selected = selected_citys.includes(city.id) ? "selected" : "";
+                  selectpicker.append('<option ' + selected + ' value="' + city.id + '">' + city.name + '</option>');
+               });
+            });
+         }
+
+         selectpicker.selectpicker('refresh');
+         console.log("Cities set successfully");
+      }
+
       $(function() {
 
          $('select[name="role"]').on('change', function() {

@@ -74,9 +74,16 @@ class Forms extends ClientsController
                     $ip = $_SERVER['REMOTE_ADDR'];
                     $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
                     $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+                    $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
                     $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
-
-                    if (!empty($state_name) && !empty($lead_type)) {
+                    $fb_status_check = false;
+                    if (!empty($city_name) && !empty($lead_type)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                            $fb_status_check = true;
+                        }
+                    } else if (!empty($state_name) && !empty($lead_type) &&  $fb_status_check == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
@@ -163,31 +170,44 @@ class Forms extends ClientsController
 
                 if (!empty($form->state_wise)  && $form->state_wise == 1) {
                     $form->responsible = 1;
+                
                     if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
                         $state_name = !empty($post_data['state']) ? trim($post_data['state']) : '';
+                        $city_name = !empty($post_data['city']) ? trim($post_data['city']) : '';
                     } else {
                         $ip = $_SERVER['REMOTE_ADDR'];
                         $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
                         $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+                        $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
                     }
                     $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
                     if (empty($lead_type)) {
                         $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
                     }
+                    $status_assign = false;
 
+                    if (!empty($city_name) && $status_assign == false) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                            $status_assign = true;
+                        }
+                    }
 
-
-                    if (!empty($state_name)) {
+                    if (!empty($state_name)  && $status_assign == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
+                            $status_assign = true;
                         }
-                    } else if (!empty($lead_type)) {
+                    } else if (!empty($lead_type)  && $status_assign == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
                         }
                     }
+
+                    
                 }
 
                 if (is_gdpr() && get_option('gdpr_enable_terms_and_conditions_lead_form') == 1) {
