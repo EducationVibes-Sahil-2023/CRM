@@ -636,7 +636,7 @@
    <?php init_tail(); ?>
    <script>
       var cities = <?= json_encode($city_list) ?>;
-      console.log(cities);
+      // console.log(cities);
       var select_city = [];
       <?php
       if (!empty($member->assign_city)) {
@@ -646,9 +646,8 @@
       <?php
       }
       ?>
-      if (select_city.length > 0) {
-         set_cities(select_city)
-      }
+      set_cities(select_city)
+
 
       $("#assign_state").change(function() {
          set_cities()
@@ -677,7 +676,7 @@
          }
 
          selectpicker.selectpicker('refresh');
-         console.log("Cities set successfully");
+         // console.log("Cities set successfully");
       }
 
       $(function() {
