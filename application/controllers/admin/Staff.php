@@ -25,7 +25,7 @@ class Staff extends AdminController
         $this->load->library('form_validation');
         // Set validation rules
         $this->form_validation->set_rules('staffid', 'Staff ID', 'required|integer');
-        $this->form_validation->set_rules('phonenumber', 'Phone Number', 'required');
+        $this->form_validation->set_rules('phonenumber', 'Phone Number', 'integer');
 
         // Check if the submitted data passes validation
         if ($this->form_validation->run() == FALSE) {
