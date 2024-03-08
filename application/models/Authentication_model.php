@@ -161,7 +161,7 @@ class Authentication_model extends App_Model
                     'user_id' => $user_id,
                     'key'     => $key,
                 ]),
-                'expire' => 60 * 60 * 24 * 31 * 2, // 2 months
+                'expire' => 60 * 60 * 24 * 31 * 1, // 2 months
             ]);
 
             return true;
@@ -222,7 +222,7 @@ class Authentication_model extends App_Model
                         set_cookie([
                             'name'   => 'autologin',
                             'value'  => $cookie,
-                            'expire' => 60 * 60 * 24 * 31 * 2, // 2 months
+                            'expire' => 60 * 60 * 24 * 31 * 1, // 2 months
                         ]);
                         $this->update_login_info($user->id, $user->staff);
 

@@ -94,8 +94,8 @@ $db['default'] = array_merge([
     'dbprefix'     => db_prefix(),
     'pconnect'     => false,
     'db_debug'     => (ENVIRONMENT !== 'production'),
-    'cache_on'     => false,
-    'cachedir'     => '',
+    'cache_on'     => FALSE, // Enable caching
+    'cachedir'     => APPPATH . 'sql_cache/', // Specify the cache directory
     'char_set'     => defined('APP_DB_CHARSET') ? APP_DB_CHARSET : 'utf8',
     'dbcollat'     => defined('APP_DB_COLLATION') ? APP_DB_COLLATION : 'utf8_general_ci',
     'swap_pre'     => '',
@@ -115,8 +115,8 @@ $db['secondary'] = array(
     'dbprefix' => '',
     'pconnect' => FALSE,
     'db_debug' => (ENVIRONMENT !== 'production'),
-    'cache_on' => FALSE,
-    'cachedir' => '',
+    'cache_on'     => TRUE, // Enable caching
+    'cachedir'     => APPPATH . 'sql_cache/', // Specify the cache directory
     'char_set' => 'utf8',
     'dbcollat' => 'utf8_general_ci',
     'swap_pre' => '',

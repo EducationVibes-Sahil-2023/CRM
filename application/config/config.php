@@ -311,6 +311,7 @@ $config['error_views_path'] = '';
 |
 */
 $config['cache_path'] = '';
+// $config['cache_path'] = 'application/cache';
 
 /*
 |--------------------------------------------------------------------------
