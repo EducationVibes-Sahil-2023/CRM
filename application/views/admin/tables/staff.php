@@ -92,7 +92,9 @@ foreach ($rResult as $aRow) {
         } elseif ($aColumns[$i] == 'phonenumber') {
             $_data = ' <a href="javascript:void(0)" onclick="edit_staff_phone_number(' . $aRow['staffid'] . ',' . $aRow['phonenumber'] . ')" >' . $aRow['phonenumber'] . '</a>';
             $_data .= '<div class="row-options">';
-            $_data .= '<a href="javascript:void(0)" onclick="edit_staff_phone_number(' . $aRow['staffid'] . ',' . $aRow['phonenumber'] . ')" >' . _l('edit') . '</a>';
+            if (is_admin()) {
+                $_data .= '<a href="javascript:void(0)" onclick="edit_staff_phone_number(' . $aRow['staffid'] . ',' . $aRow['phonenumber'] . ')" >' . _l('edit') . '</a>';
+            }
             $_data .= '</div>';
         } else {
             if (strpos($aColumns[$i], 'date_picker_') !== false) {
