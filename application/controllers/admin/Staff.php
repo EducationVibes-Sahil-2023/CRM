@@ -18,6 +18,46 @@ class Staff extends AdminController
         $this->load->view('admin/staff/manage', $data);
     }
 
+    public function edit_phonenumber()
+    {
+        // Assuming this code is part of a method/function in your controller   
+        // Load CodeIgniter's form validation library if not already loaded
+        $this->load->library('form_validation');
+        // Set validation rules
+        $this->form_validation->set_rules('staffid', 'Staff ID', 'required|integer');
+        $this->form_validation->set_rules('phonenumber', 'Phone Number', 'required');
+
+        // Check if the submitted data passes validation
+        if ($this->form_validation->run() == FALSE) {
+            // Validation failed
+            $response = array(
+                'status' => '0',
+                'message' => validation_errors() // Return validation errors
+            );
+        } else {
+            // Validation passed, proceed with updating the database
+            $staffid = $this->input->post("staffid");
+            $phonenumber = $this->input->post("phonenumber");
+
+            $this->db->where('staffid', $staffid);
+            $this->db->update(db_prefix() . 'staff', ['phonenumber' => $phonenumber]);
+            // Check if the update was successful
+            if ($this->db->affected_rows() > 0) {
+                $response = array(
+                    'status' => '1',
+                    'message' => 'Phone number updated successfully'
+                );
+            } else {
+                // $response = array(
+                //     'status' => '0',
+                //     'message' => 'Failed to update phone number. Staff ID may not exist.'
+                // );
+            }
+        }
+
+        // Convert response array to JSON and return it
+        echo json_encode($response);
+    }
     /* Add new staff member or edit existing */
     public function member($id = '')
     {
