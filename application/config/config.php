@@ -311,6 +311,7 @@ $config['error_views_path'] = '';
 |
 */
 $config['cache_path'] = '';
+// $config['cache_path'] = 'application/cache';
 
 /*
 |--------------------------------------------------------------------------
@@ -328,7 +329,7 @@ $config['cache_path'] = '';
 |                of query parameters.
 |
 */
-$config['cache_query_string'] = false;
+$config['cache_query_string'] = true;
 
 /*
 |--------------------------------------------------------------------------

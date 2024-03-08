@@ -3,3 +3,4 @@
 /uploads/clients/
 /uploads/clients_documents/
 /uploads/attendance/*
+/application/sql_cache/*
