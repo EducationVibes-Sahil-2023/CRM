@@ -1313,6 +1313,9 @@ function calls_update_count($params = false, $max_status = 0)
     $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
     $sql .= "SELECT SUM(calls.duration) AS call_duration FROM " . db_prefix() . "leads l ";
     // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
+    if (!empty($params['followup_to_date'])) {
+        $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
+    }
     $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.phonenumber = calls.contact ";
 
     if (!empty($params['assigned'])) {
