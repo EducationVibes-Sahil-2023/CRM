@@ -475,6 +475,7 @@ class Leads extends AdminController
 
 
         $response = $this->leads_model->delete($id);
+        $this->leads_model->delete_notes(array($id));
 
         if (is_array($response) && isset($response['referenced'])) {
 
@@ -2511,6 +2512,8 @@ class Leads extends AdminController
                         $this->db->where_in('id', $ids);
                         $this->db->delete(db_prefix() . 'leads');
 
+                        $this->leads_model->delete_notes($ids);
+
                         set_alert('success', "Re-assign lead successfully.");
                     } else {
                         set_alert('danger', "Something bad happen.");
@@ -2873,9 +2876,10 @@ class Leads extends AdminController
                     HAVING COUNT(*) > 0 ")->row();
 
                     if (empty($check_exist)) {
-                        if ($this->leads_model->add($temp_lead_data,1)) {
+                        if ($this->leads_model->add($temp_lead_data, 1)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
+                            $this->leads_model->delete_call_list($phonenumber);
                         }
                     } else {
                         $this->db->where('id', $leads["id"]);

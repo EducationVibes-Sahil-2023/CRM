@@ -350,7 +350,7 @@ class Authentication extends ClientsController
         $limit = RE_ASSIGN_LEADS;
         $this->load->model("Leads_model");
         $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
-       
+
         if (!empty($data_leads)) {
             foreach ($data_leads as $leads) {
                 if (!empty($leads["data"])) {
@@ -366,6 +366,11 @@ class Authentication extends ClientsController
                         if ($this->Leads_model->add($temp_lead_data, 1)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
+
+                            // $this->db->where('contact', $phonenumber);
+                            // $this->db->delete(db_prefix() . 'calls_activity_logs');
+
+                            $this->leads_model->delete_call_list($phonenumber);
                         }
                     } else {
                         $this->db->where('id', $leads["id"]);
@@ -375,5 +380,7 @@ class Authentication extends ClientsController
             }
             echo json_encode(array("status" => 1, "message" => "Lead reassign successfully."));
         }
+
+        echo json_encode(array("status" => 1, "message" => "No Lead reassign successfully."));
     }
 }
