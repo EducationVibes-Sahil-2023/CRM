@@ -2703,4 +2703,17 @@ class Leads_model extends App_Model
 
         return $type;
     }
+
+    public function delete_call_list($phonenumber)
+    {
+        $this->db->like('contact', $phonenumber);
+        $this->db->delete(db_prefix() . 'calls_activity_logs');
+    }
+
+    public function delete_notes($ids)
+    {
+        $this->db->where_in('rel_id', $ids);
+        $this->db->where('rel_type', "lead");
+        $this->db->delete(db_prefix() . 'notes');
+    }
 }
