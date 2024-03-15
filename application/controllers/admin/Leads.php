@@ -2534,7 +2534,7 @@ class Leads extends AdminController
                         if ($has_permission_delete) {
 
                             if ($this->leads_model->delete($id)) {
-
+                                $this->leads_model->delete_notes($ids);
                                 $total_deleted++;
                             }
                         }

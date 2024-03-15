@@ -370,7 +370,7 @@ class Authentication extends ClientsController
                             // $this->db->where('contact', $phonenumber);
                             // $this->db->delete(db_prefix() . 'calls_activity_logs');
 
-                            $this->leads_model->delete_call_list($phonenumber);
+                            $this->Leads_model->delete_call_list($phonenumber);
                         }
                     } else {
                         $this->db->where('id', $leads["id"]);
@@ -379,8 +379,10 @@ class Authentication extends ClientsController
                 }
             }
             echo json_encode(array("status" => 1, "message" => "Lead reassign successfully."));
+            die;
         }
 
         echo json_encode(array("status" => 1, "message" => "No Lead reassign successfully."));
+        die;
     }
 }

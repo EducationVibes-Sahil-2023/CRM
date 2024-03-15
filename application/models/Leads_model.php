@@ -2706,7 +2706,7 @@ class Leads_model extends App_Model
 
     public function delete_call_list($phonenumber)
     {
-        $this->db->where('contact', $phonenumber);
+        $this->db->like('contact', $phonenumber);
         $this->db->delete(db_prefix() . 'calls_activity_logs');
     }
 
