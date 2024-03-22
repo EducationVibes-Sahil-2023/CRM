@@ -469,12 +469,6 @@ $call_data =  data_call_data();
 
 $call_data = array_column($call_data, null, 'contact');
 
-
-$call_data =  data_call_data();
-
-$call_data = array_column($call_data, null, 'contact');
-
-
 foreach ($rResult as $aRow) {
 
     $row = [];
