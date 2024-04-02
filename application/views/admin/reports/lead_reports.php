@@ -267,8 +267,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
         var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
         var excel_data_array = [];
-        var max_count = 1;
-        var max = 1;
+        var max_count = 30;
+        var max = 30;
         // const workbook = new ExcelJS.Workbook();
 
         var xhr = null;
@@ -302,7 +302,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         function recreate_range_slider(max) {
 
             if (max != undefined && parseInt(max) != max_count) {
-                // max_count = 30;
+                max_count = 30;
                 rangeSlider.noUiSlider.destroy();
                 max_count = parseInt(max);
                 let min_ = document.getElementById("update_count_min").value;
@@ -316,8 +316,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             if (max == 0) {
                 max = max_count;
             }
-            // max = 30;
-            // max_count = 30;
+            max = 30;
+            max_count = 30;
 
             noUiSlider.create(rangeSlider, {
                 start: [min, max], // Initial values for min and max
@@ -462,7 +462,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             }
             $("#generate_pdf").hide();
             $(".hide-btn-response").hide();
-            $(".leadSum").html('');
+            // $(".leadSum").html('');
             $('#apply_filter').attr("disabled", true);
             show_loader("apply_filter");
             xhr = $.ajax({
@@ -488,12 +488,15 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 dataType: "JSON",
                 cache: false,
                 success: function(data) {
+                    console.log(data);
+                     console.log(data.status);
                     $('#apply_filter').attr("disabled", false);
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
                     if (data.status != undefined) {
-                        $(".leadSum").html('');
-                        $(".leadSum").innerHTML = data.status;
+                        // $(".leadSum").html('');
+                        // $(".leadSum").innerHTML = data.status;
+                        $(".leadSum").html(data.status);
                     }
                     // $("#updationCounter").html(data.update_count);
                     slider_data = false;
@@ -507,7 +510,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
                     if (data.update_count_label != undefined) {
 
-                        max_count = data.max_count;
+                        max_count = 30;
 
                         if (max_count != undefined && parseInt(max_count) > 0) {
                             recreate_range_slider(data.max_count);
