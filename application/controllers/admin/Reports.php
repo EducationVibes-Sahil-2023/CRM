@@ -218,7 +218,7 @@ class Reports extends AdminController
                     $update_count_array_max[] = intval($updateCount);
                 }
 
-                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max]);
+                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max)]);
 
                 die;
             }
@@ -243,7 +243,7 @@ class Reports extends AdminController
                 $marketing_type =  $this->leads_model->get_marketing_type();
                 $conversion_type = $this->leads_model->get_conversion_type();
                 $conversion_type = array_column($conversion_type, null, "id");
-                
+
                 $updateCount = leads_update_count($update_count_data);
                 $staff_name =  get_staff_full_name($assigned);
                 $update_count_array_label[] = trim($staff_name);
@@ -796,7 +796,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max,"max_count"=>max($update_count_array_max)]);
     }
 
 
