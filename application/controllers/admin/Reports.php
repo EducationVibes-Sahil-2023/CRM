@@ -207,7 +207,6 @@ class Reports extends AdminController
                 foreach ($_POST["assigned"] as $assigned) {
                     $update_count_data_min = $update_count_data = $post_data = $_POST;
                     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
-                    $update_count_data_min["assigned"] = $update_count_data["assigned"] = $assigned;
                     $updateCount = leads_update_count($update_count_data);
                     $staff_name =  get_staff_full_name($assigned);
                     $update_count_array_label[] = trim($staff_name);
@@ -227,7 +226,6 @@ class Reports extends AdminController
             foreach ($_POST["assigned"] as $assigned) {
                 $update_count_data = $post_data = $_POST;
                 $update_count_data["status"][] = 20;
-                $update_count_data["assigned"] = $assigned;
 
                 unset($post_data["assigned"]);
                 $post_data["assigned"][] = $assigned;
