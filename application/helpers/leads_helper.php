@@ -708,7 +708,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
         }
         if (!empty($params['assigned'])) {
             // $tids = " AND l.assigned = " . $params['assigned'];
-            $sql = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
+            $sql .= " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
         }
     }
 
