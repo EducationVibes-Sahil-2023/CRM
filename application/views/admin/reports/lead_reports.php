@@ -509,7 +509,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
                     if (data.update_count_label != undefined) {
 
-                        max_count = Math.max(data.update_count_max);
+                        max_count = data.max_count;
 
                         if (max_count != undefined && parseInt(max_count) > 0) {
                             recreate_range_slider(data.max_count);
