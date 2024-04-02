@@ -202,19 +202,21 @@ class Reports extends AdminController
             $update_count_array_label = [];
             $update_count_array_min = [];
             $update_count_array_max = [];
-            if (isset($_POST["min_range"]) && $_POST["min_range"] == '') {
+            if (isset($_POST["update_count_min"]) && $_POST["update_count_max"] == '') {
 
                 foreach ($_POST["assigned"] as $assigned) {
                     $update_count_data_min = $update_count_data = $post_data = $_POST;
-                    $update_count_data_min["assigned"] = $update_count_data["status"][] = 20;
-                    $update_count_data_min["assigned"][] = $update_count_data_min[] = $update_count_data["assigned"] = [];
-                    $update_count_data_min["assigned"][] = $update_count_data["assigned"][] = $assigned;
+                    $update_count_data_min["status"][] = $update_count_data["sstatus"][] = 20;
+                    $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
+                    $update_count_data["assigned"][] = $assigned;
+                    $update_count_data_min["assigned"][] =  $assigned;
                     $updateCount = leads_update_count($update_count_data);
                     $staff_name =  get_staff_full_name($assigned);
                     $update_count_array_label[] = trim($staff_name);
-                    $update_count_data_min['update_count_min'] = $_POST["min_range"];
-                    $update_count_data_min['update_count_max'] = $_POST["max_range"];
+                    $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
+                    $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
                     $update_count_array_min[] = leads_update_count($update_count_data_min);
+
                     $update_count_array_max[] = intval($updateCount);
                 }
 
@@ -796,7 +798,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max,"max_count"=>max($update_count_array_max)]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => 1]);
     }
 
 
