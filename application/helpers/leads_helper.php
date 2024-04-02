@@ -222,7 +222,6 @@ function get_leads_summary_filter($params)
         } else {
             $tids = ' AND assigned in (' . $sid . ')';
         }
-
     }
 
     foreach ($statuses as $status) {
@@ -533,7 +532,7 @@ function get_status_summary_filter($params)
     return $sources;
 }
 
-function leads_update_count($params = false, $max_status = 0,$leads_count=0)
+function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
 {
 
     $CI = &get_instance();
@@ -577,14 +576,17 @@ function leads_update_count($params = false, $max_status = 0,$leads_count=0)
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " SELECT count(DISTINCT(calls.id)) as total ";
-    }else if(!empty($leads_count) && $leads_count == 1)
-    {
+    } else if (!empty($leads_count) && $leads_count == 1) {
         $sql .= " SELECT count(DISTINCT(l.id)) as total ";
-    } 
-    else {
+    } else {
         $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     }
-    $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
+
+    if (!empty($lead_count) && $lead_count == 1) {
+        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
+    } else {
+        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
+    }
 
     if (!empty($params['up_to_date'])) {
         $up_from_date = $params['up_from_date'];
@@ -637,6 +639,10 @@ function leads_update_count($params = false, $max_status = 0,$leads_count=0)
         // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
     }
 
+
+
+
+
     if (!empty($params['neet_score'])) {
         $neet_range = explode("-", $params['neet_score']);
         $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
@@ -676,19 +682,32 @@ function leads_update_count($params = false, $max_status = 0,$leads_count=0)
     }
 
 
+    if (!empty($leads_count) && $leads_count == 1) {
+        $sql .= " where 1=1 ";
+        if (!empty($params['status'])) {
+            // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
+            $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
+        }
+        if (!empty($params['source'])) {
+            // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
+            $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+        }
+        if (!empty($params['lead_type'])) {
+            $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        }
+    }
+
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " group by l.id " . $grup_by . " order by total desc limit 1 ";
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
-    } 
-    else if(!empty($lead_count) && $lead_count == 1)
-    {
+    } else if (!empty($lead_count) && $lead_count == 1) {
         $sql .= " group by l.id  order by total desc limit 1 ";
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
-    }
-    else {
-        $sql .= " group by l.id,uni_dates " . $grup_by . " " . $sql_add . "   ";
+    } else {
+        $sql .= " group by l.id " . $grup_by . " " . $sql_add . "   ";
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
         $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
