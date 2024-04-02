@@ -202,7 +202,7 @@ class Reports extends AdminController
             $update_count_array_label = [];
             $update_count_array_min = [];
             $update_count_array_max = [];
-            if (isset($_POST["update_count_min"]) && $_POST["update_count_max"] == '') {
+            if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
 
                 foreach ($_POST["assigned"] as $assigned) {
                     $update_count_data_min = $update_count_data = $post_data = $_POST;
