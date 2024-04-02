@@ -229,8 +229,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                             <div class="col-md-3 leads-filter-column">
                                                 <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
                                                 <div id="rangeSlider" style="display:none;"></div>
-                                                <input type="hidden" id="update_count_min" name="update_count_min">
-                                                <input type="hidden" id="update_count_max" name="update_count_max">
+                                                <input type="hidden" id="update_count_min" onchange="set_slider()" name="update_count_min">
+                                                <input type="hidden" id="update_count_max" onchange="set_slider()" name="update_count_max">
                                             </div>
                                             <canvas id="canvas"></canvas>
                                         </div>
@@ -390,6 +390,24 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             window.myLine.resetZoom();
         }
 
+        var slider_data = false;
+
+        function set_slider() {
+            slider_data = false;
+            var update_count_min = '';
+            var update_count_max = '';
+            if ($("#show_update_counts").is(":checked")) {
+                update_count_min = document.getElementById("update_count_min").value;
+                update_count_max = document.getElementById("update_count_max").value;
+            }
+            slider_data = true;
+            setTimeout(() => {
+                if (slider_data) {
+                    $('#apply_filter').trigger("click");
+                }
+            }, 3000);
+        }
+
         $('#apply_filter').on('click', function() {
             var element_view_assign = document.getElementById("view_assigned");
             var element_view_source = document.getElementById("view_source");
@@ -402,10 +420,13 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             var view_status_options = "";
             var update_count_min = '';
             var update_count_max = '';
-            if ($("#show_update_counts").is(":checked")) {
-                update_count_min = document.getElementById("update_count_min").value;
-                update_count_max = document.getElementById("update_count_max").value;
+            if (slider_data) {
+                if ($("#show_update_counts").is(":checked")) {
+                    update_count_min = document.getElementById("update_count_min").value;
+                    update_count_max = document.getElementById("update_count_max").value;
+                }
             }
+
             if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
                 view_source_options = document.getElementById('view_source').selectedOptions;
                 view_source_options = Array.from(view_source_options).map(({
@@ -476,10 +497,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
                     $(".leadSum").html('');
-                    $(".leadSum").html(data.status);
-                    $(".leadSum").innerHTML = data.status;
                     // $("#updationCounter").html(data.update_count);
-
+                    slider_data = false;
                     if (data.status != "") {
                         $("#generate_pdf").show();
                         $(".hide-btn-response").show();
