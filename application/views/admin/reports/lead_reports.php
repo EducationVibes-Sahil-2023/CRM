@@ -1,7 +1,11 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php init_head(); ?>
+<?php init_head();
+$filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
+?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@3.4.0/dist/exceljs.min.js"></script>
+<link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
+<script src="<?= base_url("assets/js/uislider.js") ?>"></script>
 <style>
     .report-data {
         /* padding: 10px !important; */
@@ -30,6 +34,12 @@
 
     .leadSum {
         font-size: 14px;
+    }
+
+    canvas {
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
     }
 
     .panel_s {
@@ -204,18 +214,42 @@
                             </div>
                         </div>
                         <!-- </form> -->
+                        <?php if ($filter == 1) { ?>
+                            <div class="">
+
+                                <div class="col-md-12">
+                                    <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
+                                    <div class="clearfix"></div>
+                                    <div class="row hide leads-overview">
+                                        <hr class="hr-panel-heading" />
+                                        <div class="col-md-12">
+                                            <h4 class="no-margin">Report Summary</h4>
+                                        </div>
+                                        <div id="leadSum">
+                                            <div class="col-md-3 leads-filter-column">
+                                                <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
+                                                <div id="rangeSlider" style="display:none;"></div>
+                                                <input type="hidden" id="update_count_min" name="update_count_min">
+                                                <input type="hidden" id="update_count_max" name="update_count_max">
+                                            </div>
+                                            <canvas id="canvas"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php } ?>
                     </div>
-                </div>
-                <!-- <div class="col-md-12">
+                    <!-- <div class="col-md-12">
 
                 </div> -->
-            </div>
-            <div class="col-md-12">
-                <div class="panel_s">
-                    <div class="panel-body" id="pdf_generate">
-                        <h3>Report Generate</h3>
-                        <div>
-                            <div class="leadSum">
+                </div>
+                <div class="col-md-12">
+                    <div class="panel_s">
+                        <div class="panel-body" id="pdf_generate">
+                            <h3>Report Generate</h3>
+                            <div>
+                                <div class="leadSum">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -223,494 +257,712 @@
             </div>
         </div>
     </div>
-</div>
 
-<?php init_tail(); ?>
+    <?php init_tail(); ?>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.2/chart.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script> -->
+    <script>
+        var source_name = <?= !empty($sources) ? json_encode($sources, true) : '' ?>;
+        var status_name = <?= !empty($status) ? json_encode($status, true) : '' ?>;
+        var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
+        var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
+        var excel_data_array = [];
+        var max_count = 1;
+        var max = 1;
+        // const workbook = new ExcelJS.Workbook();
 
-<script>
-    var source_name = <?= !empty($sources) ? json_encode($sources, true) : '' ?>;
-    var status_name = <?= !empty($status) ? json_encode($status, true) : '' ?>;
-    var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
-    var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
-    var excel_data_array = [];
-    // const workbook = new ExcelJS.Workbook();
+        var xhr = null;
 
-    var xhr = null;
-    $('#apply_filter').on('click', function() {
-        var element_view_assign = document.getElementById("view_assigned");
-        var element_view_source = document.getElementById("view_source");
-        var element_view_status = document.getElementById("view_status");
-        var up_from_date = document.getElementById("up_from_date").value;
-        var up_to_date = document.getElementById("up_to_date").value;
-        var lead_type = $("#lead_type").val();
-        var view_assigned_options = "";
-        var view_source_options = "";
-        var view_status_options = "";
-        if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
-            view_source_options = document.getElementById('view_source').selectedOptions;
-            view_source_options = Array.from(view_source_options).map(({
-                value
-            }) => value);
-        }
-        if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
-            view_status_options = document.getElementById('view_status').selectedOptions;
-            view_status_options = Array.from(view_status_options).map(({
-                value
-            }) => value);
-        }
-        if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
-            view_assigned_options = document.getElementById('view_assigned').selectedOptions;
-            view_assigned_options = Array.from(view_assigned_options).map(({
-                value
-            }) => value);
-        }
-        var from_date = document.getElementById("from_date").value;
-        var to_date = document.getElementById("to_date").value;
 
-        if (to_date != '') {
-            if (from_date == '') {
-                $("#from_date").focus();
-                return false;
+        function show_update_count_range(obj) {
+            if ($(obj).is(":checked")) {
+                $("#rangeSlider").show();
+                setMinMaxValues();
+            } else {
+                $("#rangeSlider").hide();
+
             }
         }
 
-        if (from_date != '') {
-            if (to_date == '') {
-                $("#to_date").focus();
-                return false;
-            }
-        }
+        function setMinMaxValues() {
+            // Get the current values of the slider
+            var currentValues = rangeSlider.noUiSlider.get();
 
-        if (xhr != null) {
-            xhr.abort();
-        }
-        $("#generate_pdf").hide();
-        $(".hide-btn-response").hide();
-        $(".leadSum").html('');
-        $('#apply_filter').attr("disabled", true);
-        show_loader("apply_filter");
-        xhr = $.ajax({
-            type: "POST",
-            url: admin_url + "reports/lead_summary_filter",
-            data: {
-                assigned: view_assigned_options,
-                source: view_source_options,
-                status: view_status_options,
-                from_date: from_date,
-                to_date: to_date,
-                up_from_date: up_from_date,
-                up_to_date: up_to_date,
-                lead_type: lead_type
-                // followup_from_date: followup_from_date,
-                // followup_to_date: followup_to_date,
-                // assign_from_date: assign_from_date,
-                // assign_to_date: assign_to_date,
-
-            },
-            dataType: "JSON",
-            cache: false,
-            success: function(data) {
-                $('#apply_filter').attr("disabled", false);
-                hide_loader("apply_filter");
-                //alert(data);  //as a debugging message.
-                $(".leadSum").html('');
-                $(".leadSum").html(data.status);
-                $(".leadSum").innerHTML = data.status;
-                // $("#updationCounter").html(data.update_count);
-
-                if (data.status != "") {
-                    $("#generate_pdf").show();
-                    $(".hide-btn-response").show();
-                }
-                if (data.excel_data != undefined) {
-                    excel_data_array = data.excel_data;
-                }
-            }
-        }); // you have missed this bracket
-        return false;
-    });
-
-    async function generatePDF() {
-        // Choose the element that your content will be rendered to.
-        // const element = document.getElementById('pdf_generate');
-        // // Choose the element and save the PDF for your user.
-        // html2pdf().from(element).save();
-        const element = document.getElementById('pdf_generate');
-        const options = {
-            filename: 'Report.pdf',
-            margin: [10, 0, 10, 0],
-            image: {
-                type: 'jpeg',
-                quality: 1
-            },
-            html2canvas: {
-                dpi: 192,
-                scale: 2,
-                letterRendering: true,
-                useCORS: true,
-            },
-            pagebreak: {
-                mode: 'avoid-all',
-                after: '.break-page'
-            },
-            jsPDF: {
-                unit: 'mm',
-                format: 'a3',
-                orientation: 'landscape'
-            }
-        };
-        await html2pdf().set(options).from(element).save();
-        // await html2pdf().from(element).set(options).toPdf().output('datauristring').then(function(res) {
-        //     console.log(res);
-        // });
-        // this.blobString = res;
-        // await html2pdf().set(options).from(element).save();
-        // console.log("sjkcbns");
-        // var objWindow = window.open(location.href, "_self");
-        // objWindow.close();
-    }
-
-    // Create a new workbook and worksheet
-    // / create a new workbook and worksheet
-
-    const numberFormat = '#,##0.00'; // Number format pattern
-    function RunExcelJSExport() {
-        var workbook = new ExcelJS.Workbook();
-        Object.keys(excel_data_array).forEach(function(key) {
-            let worksheet = workbook.addWorksheet(key);
-            let excel_data = excel_data_array[key];
-            // set up some data
-            worksheet.getCell("A1").value = "Leads/Source";
-            worksheet.getCell("A1").font = {
-                bold: true,
-            };
-            for (j = 1; j <= 1; j++) {
-                let index = 0;
-                for (let i = 66; i < (66 + source_name.length); i++) {
-                    if (source_name[index].name != undefined) {
-                        worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
-                        worksheet.getCell(String.fromCharCode(i) + j).font = {
-                            bold: true,
-                            color: {
-                                argb: (source_name[index].color_name).replace("#", ""),
-                                size: 16
-                            }
-                        };
-
-                    }
-                    index++;
-                }
-            }
-            var index_type = 0;
-            for (j = 2; j <= (status_name.length + 1); j++) {
-                if (source_name[index_type].name != undefined) {
-                    worksheet.getCell("A" + j).value = status_name[index_type].name;
-                    worksheet.getCell("A" + j).font = {
-                        bold: true,
-                        color: {
-                            argb: (status_name[index_type].color).replace("#", ""),
-                            size: 16
-                        }
-                    };
-
-                }
-                index_type++;
-            }
-
-            let index_upper = 0;
-            for (j = 2; j <= (status_name.length + 1); j++) {
-                let index = 0;
-                for (let i = 66; i < (66 + source_name.length); i++) {
-                    if (source_name[index].name != undefined && status_name[index_upper].name != undefined) {
-                        // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
-                        let index_name = status_name[index_upper].name + "-" + source_name[index].name;
-                        if (excel_data[index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data[index_name].total);
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-                                horizontal: 'right',
-                                color: {
-                                    argb: "FF0000"
-                                }
-                            };
-                        } else {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-                                horizontal: 'right',
-                                color: {
-                                    argb: "FF0000"
-                                }
-                            };
-
-
-
-
-                        }
-                    }
-                    index++;
-                }
-                index_upper++;
-            }
-
-            var con_index = (status_name.length + 5);
-            worksheet.getCell("A" + con_index).value = "Conversion/Source";
-            worksheet.getCell("A" + con_index).font = {
-                bold: true,
-            };
-            for (j = con_index; j <= con_index; j++) {
-                let index = 0;
-                for (let i = 66; i < (66 + source_name.length); i++) {
-                    if (source_name[index].name != undefined) {
-                        worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
-                        worksheet.getCell(String.fromCharCode(i) + j).font = {
-                            bold: true,
-                            color: {
-                                argb: (source_name[index].color_name).replace("#", ""),
-                                size: 16
-                            }
-                        };
-
-                    }
-                    index++;
-                }
-            }
-            var index_type = 0;
-
-            for (j = (con_index + 1); j < ((con_index + 1) + conversion_type.length); j++) {
-
-                if (conversion_type[index_type].name != undefined) {
-                    worksheet.getCell("A" + j).value = conversion_type[index_type].name;
-                    worksheet.getCell("A" + j).font = {
-                        bold: true,
-                        color: {
-                            argb: (conversion_type[index_type].color).replace("#", ""),
-                            size: 16
-                        }
-                    };
-
-                }
-                index_type++;
-            }
-
-            let con_index_upper = 0;
-            for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
-                let index = 0;
-                for (let i = 66; i < (66 + source_name.length); i++) {
-                    if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
-                        let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
-                        if (excel_data["conversion_data"][index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["conversion_data"][index_name]);
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-                                horizontal: 'right',
-                                color: {
-                                    argb: "FF0000"
-                                }
-                            };
-                        } else {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-                                horizontal: 'right',
-                                color: {
-                                    argb: "FF0000"
-                                }
-                            };
-
-
-
-
-                        }
-                    }
-                    index++;
-                }
-                con_index_upper++;
-            }
-
-
-            var con_index = ((con_index + 1) + conversion_type.length + 3);
-            worksheet.getCell("A" + con_index).value = "Marketing/Source";
-            worksheet.getCell("A" + con_index).font = {
-                bold: true,
-            };
-            for (j = con_index; j <= con_index; j++) {
-                let index = 0;
-                for (let i = 66; i < (66 + conversion_type.length); i++) {
-                    if (conversion_type[index].name != undefined) {
-                        worksheet.getCell(String.fromCharCode(i) + j).value = conversion_type[index].name;
-                        worksheet.getCell(String.fromCharCode(i) + j).font = {
-                            bold: true,
-                            color: {
-                                argb: (conversion_type[index].color).replace("#", ""),
-                                size: 16
-                            }
-                        };
-
-                    }
-                    index++;
-                }
-            }
-            var index_type = 0;
-
-            for (j = (con_index + 1); j < ((con_index + 1) + marketing_type.length); j++) {
-
-                if (marketing_type[index_type].name != undefined) {
-                    worksheet.getCell("A" + j).value = marketing_type[index_type].name;
-                    worksheet.getCell("A" + j).font = {
-                        bold: true,
-                        color: {
-                            argb: (marketing_type[index_type].color).replace("#", ""),
-                            size: 16
-                        }
-                    };
-
-                }
-                index_type++;
-            }
-
-            let con_index_mar = 0;
-            for (j = (con_index + 1); j < ((con_index + 1) + (marketing_type.length)); j++) {
-                let index = 0;
-                for (let i = 66; i < (66 + conversion_type.length); i++) {
-                    if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
-                        let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
-                        if (excel_data["performance_data"][index_name] != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["performance_data"][index_name]);
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-                                horizontal: 'right',
-                                color: {
-                                    argb: "FF0000"
-                                }
-                            };
-                        } else {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                            worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                            worksheet.getCell(String.fromCharCode(i) + j).alignment = {
-                                horizontal: 'right',
-                                color: {
-                                    argb: "FF0000"
-                                }
-                            };
-
-
-
-
-                        }
-                    }
-                    index++;
-                }
-                con_index_mar++;
-            }
-
-
-        });
-
-
-        // console.log(letters);
-        // console.log(letters);
-        // // print the values in cells A1 through D1
-        // worksheet.getCell('A1').value = 'Value in A1';
-        // worksheet.getCell('B1').value = 'Value in B1';
-        // worksheet.getCell('C1').value = 'Value in C1';
-        // worksheet.getCell('D1').value = 'Value in D1';
-
-
-        // Save the workbook as an xlsx file
-        workbook.xlsx.writeBuffer().then(function(buffer) {
-            // return;
-            //   saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'example.xlsx');
-
-            // Save the workbook
-            workbook.xlsx.writeBuffer().then(function(buffer) {
-                // Create a blob from the buffer
-                var blob = new Blob([buffer], {
-                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                });
-
-                // Create a URL for the blob
-                var url = window.URL.createObjectURL(blob);
-
-                // Create a link to download the file
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'Leads_Report.xlsx';
-                document.body.appendChild(a);
-
-                // Click the link to download the file
-                a.click();
-
-                // Remove the link
-                document.body.removeChild(a);
+            // Update the options with new min and max values
+            rangeSlider.noUiSlider.updateOptions({
+                range: {
+                    'min': 0,
+                    'max': max_count
+                },
+                start: [0, max_count] // Preserve the current slider values
             });
+        }
+
+        function recreate_range_slider(max) {
+
+            if (max != undefined && parseInt(max) != max_count) {
+                // max_count = 30;
+                rangeSlider.noUiSlider.destroy();
+                max_count = parseInt(max);
+                let min_ = document.getElementById("update_count_min").value;
+                let max_ = document.getElementById("update_count_max").value;
+                make_range_slider(min_, max_);
+            }
+        }
+        // Initialize the range slider
+        function make_range_slider(min = 0, max = 0) {
+            var rangeSlider = document.getElementById('rangeSlider');
+            if (max == 0) {
+                max = max_count;
+            }
+            // max = 30;
+            // max_count = 30;
+
+            noUiSlider.create(rangeSlider, {
+                start: [min, max], // Initial values for min and max
+                connect: true,
+                tooltips: [true, true],
+                format: {
+                    to: function(value) {
+                        return Math.round(value); // Round the tooltip values
+                    },
+                    from: function(value) {
+                        return parseFloat(value); // Convert tooltip values to numbers
+                    }
+                },
+                step: 1,
+                range: {
+                    'min': 0,
+                    'max': max_count
+                }
+            });
+
+            // Get handles for min and max sliders
+            var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+            var minSliderHandle = sliderHandles[0];
+            var maxSliderHandle = sliderHandles[1];
+
+            // Set event listeners for slider change
+            rangeSlider.noUiSlider.on('update', function(values, handle) {
+                var minValue = parseFloat(values[0]);
+                var maxValue = parseFloat(values[1]);
+
+                // Update the hidden input values
+                document.getElementById('update_count_min').value = minValue;
+                document.getElementById('update_count_max').value = maxValue;
+            });
+
+            // Set event listeners for slider handle drag
+            minSliderHandle.addEventListener('drag', function() {
+                var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+                rangeSlider.noUiSlider.set([minValue, null]);
+            });
+
+            maxSliderHandle.addEventListener('drag', function() {
+                var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+                rangeSlider.noUiSlider.set([null, maxValue]);
+            });
+        }
+        make_range_slider("", "");
+
+        function randomScalingFactor() {
+            return Math.round(Math.random() * 100 * (Math.random() > 0.5 ? -1 : 1));
+        }
+
+        function newDate(days) {
+            return moment()
+                .add(days, "d");
+        }
+
+        function newDateString(days) {
+            return moment()
+                .add(days, "d")
+                .format(timeFormat);
+        }
+
+        function newTimestamp(days) {
+            return moment()
+                .add(days, "d")
+                .unix();
+        }
+
+        function resetZoom() {
+            window.myLine.resetZoom();
+        }
+
+        $('#apply_filter').on('click', function() {
+            var element_view_assign = document.getElementById("view_assigned");
+            var element_view_source = document.getElementById("view_source");
+            var element_view_status = document.getElementById("view_status");
+            var up_from_date = document.getElementById("up_from_date").value;
+            var up_to_date = document.getElementById("up_to_date").value;
+            var lead_type = $("#lead_type").val();
+            var view_assigned_options = "";
+            var view_source_options = "";
+            var view_status_options = "";
+            var update_count_min = '';
+            var update_count_max = '';
+            if ($("#show_update_counts").is(":checked")) {
+                update_count_min = document.getElementById("update_count_min").value;
+                update_count_max = document.getElementById("update_count_max").value;
+            }
+            if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
+                view_source_options = document.getElementById('view_source').selectedOptions;
+                view_source_options = Array.from(view_source_options).map(({
+                    value
+                }) => value);
+            }
+            if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
+                view_status_options = document.getElementById('view_status').selectedOptions;
+                view_status_options = Array.from(view_status_options).map(({
+                    value
+                }) => value);
+            }
+            if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
+                view_assigned_options = document.getElementById('view_assigned').selectedOptions;
+                view_assigned_options = Array.from(view_assigned_options).map(({
+                    value
+                }) => value);
+            }
+            var from_date = document.getElementById("from_date").value;
+            var to_date = document.getElementById("to_date").value;
+
+            if (to_date != '') {
+                if (from_date == '') {
+                    $("#from_date").focus();
+                    return false;
+                }
+            }
+
+            if (from_date != '') {
+                if (to_date == '') {
+                    $("#to_date").focus();
+                    return false;
+                }
+            }
+
+            if (xhr != null) {
+                xhr.abort();
+            }
+            $("#generate_pdf").hide();
+            $(".hide-btn-response").hide();
+            $(".leadSum").html('');
+            $('#apply_filter').attr("disabled", true);
+            show_loader("apply_filter");
+            xhr = $.ajax({
+                type: "POST",
+                url: admin_url + "reports/lead_summary_filter",
+                data: {
+                    assigned: view_assigned_options,
+                    source: view_source_options,
+                    status: view_status_options,
+                    from_date: from_date,
+                    to_date: to_date,
+                    up_from_date: up_from_date,
+                    up_to_date: up_to_date,
+                    lead_type: lead_type,
+                    update_count_min: update_count_min,
+                    update_count_max: update_count_max
+                    // followup_from_date: followup_from_date,
+                    // followup_to_date: followup_to_date,
+                    // assign_from_date: assign_from_date,
+                    // assign_to_date: assign_to_date,
+
+                },
+                dataType: "JSON",
+                cache: false,
+                success: function(data) {
+                    $('#apply_filter').attr("disabled", false);
+                    hide_loader("apply_filter");
+                    //alert(data);  //as a debugging message.
+                    $(".leadSum").html('');
+                    $(".leadSum").html(data.status);
+                    $(".leadSum").innerHTML = data.status;
+                    // $("#updationCounter").html(data.update_count);
+
+                    if (data.status != "") {
+                        $("#generate_pdf").show();
+                        $(".hide-btn-response").show();
+                    }
+                    if (data.excel_data != undefined) {
+                        excel_data_array = data.excel_data;
+                    }
+
+                    if (data.update_count_label != undefined) {
+
+                        max_count = Math.max(data.update_count_max);
+
+                        if (max_count != undefined && parseInt(max_count) > 0) {
+                            recreate_range_slider(data.max_count);
+                        }
+
+                        var config = {
+                            type: "bar",
+                            data: {
+                                labels: data.update_count_label, // Date Objects
+                                datasets: [{
+                                        label: "min",
+                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                        borderColor: "rgba(140, 140, 140, 1.0)",
+                                        borderWidth: 0,
+                                        data: data.update_count_min,
+                                        fill: false,
+                                        radius: 0,
+                                    },
+                                    {
+                                        label: "max",
+                                        backgroundColor: "rgba(121, 200, 121, 0.8)",
+                                        borderColor: "rgba(140, 140, 140, 0.0)",
+                                        borderWidth: 0,
+                                        data: data.update_count_max,
+                                        fill: "-1",
+                                        line: false,
+                                        radius: 0,
+                                    },
+                                ]
+                            },
+                            options: {
+                                tooltips: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    displayColors: false,
+                                },
+                                responsive: true,
+                                title: {
+                                    display: true,
+                                    text: "Chart.js stackable with Min/Max"
+                                },
+                                scales: {
+                                    x: {
+                                        stacked: true,
+                                        format: "HH mm",
+                                    },
+                                    y: {
+                                        stacked: true,
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: "value"
+                                        }
+                                    }
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: "x",
+                                    speed: 10,
+                                    threshold: 10
+                                },
+                                zoom: {
+                                    enabled: true,
+                                    drag: false,
+                                    mode: "xy",
+                                    limits: {
+                                        max: 10,
+                                        min: 0.5
+                                    }
+                                }
+                            }
+                        };
+
+
+
+                        var ctx = document.getElementById("canvas").getContext("2d");
+                        window.myLine = new Chart(ctx, config);
+                    }
+                }
+            }); // you have missed this bracket
+            return false;
         });
 
-    }
+        async function generatePDF() {
+            // Choose the element that your content will be rendered to.
+            // const element = document.getElementById('pdf_generate');
+            // // Choose the element and save the PDF for your user.
+            // html2pdf().from(element).save();
+            const element = document.getElementById('pdf_generate');
+            const options = {
+                filename: 'Report.pdf',
+                margin: [10, 0, 10, 0],
+                image: {
+                    type: 'jpeg',
+                    quality: 1
+                },
+                html2canvas: {
+                    dpi: 192,
+                    scale: 2,
+                    letterRendering: true,
+                    useCORS: true,
+                },
+                pagebreak: {
+                    mode: 'avoid-all',
+                    after: '.break-page'
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a3',
+                    orientation: 'landscape'
+                }
+            };
+            await html2pdf().set(options).from(element).save();
+            // await html2pdf().from(element).set(options).toPdf().output('datauristring').then(function(res) {
+            //     console.log(res);
+            // });
+            // this.blobString = res;
+            // await html2pdf().set(options).from(element).save();
+            // console.log("sjkcbns");
+            // var objWindow = window.open(location.href, "_self");
+            // objWindow.close();
+        }
+
+        // Create a new workbook and worksheet
+        // / create a new workbook and worksheet
+
+        const numberFormat = '#,##0.00'; // Number format pattern
+        function RunExcelJSExport() {
+            var workbook = new ExcelJS.Workbook();
+            Object.keys(excel_data_array).forEach(function(key) {
+                let worksheet = workbook.addWorksheet(key);
+                let excel_data = excel_data_array[key];
+                // set up some data
+                worksheet.getCell("A1").value = "Leads/Source";
+                worksheet.getCell("A1").font = {
+                    bold: true,
+                };
+                for (j = 1; j <= 1; j++) {
+                    let index = 0;
+                    for (let i = 66; i < (66 + source_name.length); i++) {
+                        if (source_name[index].name != undefined) {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
+                            worksheet.getCell(String.fromCharCode(i) + j).font = {
+                                bold: true,
+                                color: {
+                                    argb: (source_name[index].color_name).replace("#", ""),
+                                    size: 16
+                                }
+                            };
+
+                        }
+                        index++;
+                    }
+                }
+                var index_type = 0;
+                for (j = 2; j <= (status_name.length + 1); j++) {
+                    if (source_name[index_type].name != undefined) {
+                        worksheet.getCell("A" + j).value = status_name[index_type].name;
+                        worksheet.getCell("A" + j).font = {
+                            bold: true,
+                            color: {
+                                argb: (status_name[index_type].color).replace("#", ""),
+                                size: 16
+                            }
+                        };
+
+                    }
+                    index_type++;
+                }
+
+                let index_upper = 0;
+                for (j = 2; j <= (status_name.length + 1); j++) {
+                    let index = 0;
+                    for (let i = 66; i < (66 + source_name.length); i++) {
+                        if (source_name[index].name != undefined && status_name[index_upper].name != undefined) {
+                            // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
+                            let index_name = status_name[index_upper].name + "-" + source_name[index].name;
+                            if (excel_data[index_name] != undefined) {
+                                worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data[index_name].total);
+                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+                            } else {
+                                worksheet.getCell(String.fromCharCode(i) + j).value = 0;
+                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
 
 
-    // // Create a new workbook
-    // var workbook = new ExcelJS.Workbook();
 
-    // // Add a worksheet to the workbook
-    // var worksheet = workbook.addWorksheet('My Sheet');
 
-    // // Add some data to the worksheet
-    // worksheet.columns = [{
-    //         header: 'Name',
-    //         key: 'name'
-    //     },
-    //     {
-    //         header: 'Age',
-    //         key: 'age'
-    //     },
-    //     {
-    //         header: 'Gender',
-    //         key: 'gender'
-    //     }
-    // ];
+                            }
+                        }
+                        index++;
+                    }
+                    index_upper++;
+                }
 
-    // worksheet.addRow({
-    //     name: 'John',
-    //     age: 30,
-    //     gender: 'Male'
-    // });
-    // worksheet.addRow({
-    //     name: 'Jane',
-    //     age: 25,
-    //     gender: 'Female'
-    // });
-    // worksheet.addRow({
-    //     name: 'Bob',
-    //     age: 40,
-    //     gender: 'Male'
-    // });
+                var con_index = (status_name.length + 5);
+                worksheet.getCell("A" + con_index).value = "Conversion/Source";
+                worksheet.getCell("A" + con_index).font = {
+                    bold: true,
+                };
+                for (j = con_index; j <= con_index; j++) {
+                    let index = 0;
+                    for (let i = 66; i < (66 + source_name.length); i++) {
+                        if (source_name[index].name != undefined) {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
+                            worksheet.getCell(String.fromCharCode(i) + j).font = {
+                                bold: true,
+                                color: {
+                                    argb: (source_name[index].color_name).replace("#", ""),
+                                    size: 16
+                                }
+                            };
 
-    // // Save the workbook
-    // workbook.xlsx.writeBuffer().then(function(buffer) {
-    //     // Create a blob from the buffer
-    //     var blob = new Blob([buffer], {
-    //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    //     });
+                        }
+                        index++;
+                    }
+                }
+                var index_type = 0;
 
-    //     // Create a URL for the blob
-    //     var url = window.URL.createObjectURL(blob);
+                for (j = (con_index + 1); j < ((con_index + 1) + conversion_type.length); j++) {
 
-    //     // Create a link to download the file
-    //     var a = document.createElement('a');
-    //     a.href = url;
-    //     a.download = 'my-workbook.xlsx';
-    //     document.body.appendChild(a);
+                    if (conversion_type[index_type].name != undefined) {
+                        worksheet.getCell("A" + j).value = conversion_type[index_type].name;
+                        worksheet.getCell("A" + j).font = {
+                            bold: true,
+                            color: {
+                                argb: (conversion_type[index_type].color).replace("#", ""),
+                                size: 16
+                            }
+                        };
 
-    //     // Click the link to download the file
-    //     a.click();
+                    }
+                    index_type++;
+                }
 
-    //     // Remove the link
-    //     document.body.removeChild(a);
-    // });
+                let con_index_upper = 0;
+                for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
+                    let index = 0;
+                    for (let i = 66; i < (66 + source_name.length); i++) {
+                        if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
+                            let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
+                            if (excel_data["conversion_data"][index_name] != undefined) {
+                                worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["conversion_data"][index_name]);
+                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+                            } else {
+                                worksheet.getCell(String.fromCharCode(i) + j).value = 0;
+                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
 
-    $(document).on('click', '.btn-switch-toggle', function() {
-        var parentDiv = $(this).closest(".parrent-div");
-        parentDiv.find(".panel-body").toggle();
-    });
-</script>
+
+
+
+                            }
+                        }
+                        index++;
+                    }
+                    con_index_upper++;
+                }
+
+
+                var con_index = ((con_index + 1) + conversion_type.length + 3);
+                worksheet.getCell("A" + con_index).value = "Marketing/Source";
+                worksheet.getCell("A" + con_index).font = {
+                    bold: true,
+                };
+                for (j = con_index; j <= con_index; j++) {
+                    let index = 0;
+                    for (let i = 66; i < (66 + conversion_type.length); i++) {
+                        if (conversion_type[index].name != undefined) {
+                            worksheet.getCell(String.fromCharCode(i) + j).value = conversion_type[index].name;
+                            worksheet.getCell(String.fromCharCode(i) + j).font = {
+                                bold: true,
+                                color: {
+                                    argb: (conversion_type[index].color).replace("#", ""),
+                                    size: 16
+                                }
+                            };
+
+                        }
+                        index++;
+                    }
+                }
+                var index_type = 0;
+
+                for (j = (con_index + 1); j < ((con_index + 1) + marketing_type.length); j++) {
+
+                    if (marketing_type[index_type].name != undefined) {
+                        worksheet.getCell("A" + j).value = marketing_type[index_type].name;
+                        worksheet.getCell("A" + j).font = {
+                            bold: true,
+                            color: {
+                                argb: (marketing_type[index_type].color).replace("#", ""),
+                                size: 16
+                            }
+                        };
+
+                    }
+                    index_type++;
+                }
+
+                let con_index_mar = 0;
+                for (j = (con_index + 1); j < ((con_index + 1) + (marketing_type.length)); j++) {
+                    let index = 0;
+                    for (let i = 66; i < (66 + conversion_type.length); i++) {
+                        if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
+                            let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
+                            if (excel_data["performance_data"][index_name] != undefined) {
+                                worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["performance_data"][index_name]);
+                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+                            } else {
+                                worksheet.getCell(String.fromCharCode(i) + j).value = 0;
+                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
+                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+
+
+
+
+                            }
+                        }
+                        index++;
+                    }
+                    con_index_mar++;
+                }
+
+
+            });
+
+
+            // console.log(letters);
+            // console.log(letters);
+            // // print the values in cells A1 through D1
+            // worksheet.getCell('A1').value = 'Value in A1';
+            // worksheet.getCell('B1').value = 'Value in B1';
+            // worksheet.getCell('C1').value = 'Value in C1';
+            // worksheet.getCell('D1').value = 'Value in D1';
+
+
+            // Save the workbook as an xlsx file
+            workbook.xlsx.writeBuffer().then(function(buffer) {
+                // return;
+                //   saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'example.xlsx');
+
+                // Save the workbook
+                workbook.xlsx.writeBuffer().then(function(buffer) {
+                    // Create a blob from the buffer
+                    var blob = new Blob([buffer], {
+                        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    });
+
+                    // Create a URL for the blob
+                    var url = window.URL.createObjectURL(blob);
+
+                    // Create a link to download the file
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'Leads_Report.xlsx';
+                    document.body.appendChild(a);
+
+                    // Click the link to download the file
+                    a.click();
+
+                    // Remove the link
+                    document.body.removeChild(a);
+                });
+            });
+
+        }
+
+
+        // // Create a new workbook
+        // var workbook = new ExcelJS.Workbook();
+
+        // // Add a worksheet to the workbook
+        // var worksheet = workbook.addWorksheet('My Sheet');
+
+        // // Add some data to the worksheet
+        // worksheet.columns = [{
+        //         header: 'Name',
+        //         key: 'name'
+        //     },
+        //     {
+        //         header: 'Age',
+        //         key: 'age'
+        //     },
+        //     {
+        //         header: 'Gender',
+        //         key: 'gender'
+        //     }
+        // ];
+
+        // worksheet.addRow({
+        //     name: 'John',
+        //     age: 30,
+        //     gender: 'Male'
+        // });
+        // worksheet.addRow({
+        //     name: 'Jane',
+        //     age: 25,
+        //     gender: 'Female'
+        // });
+        // worksheet.addRow({
+        //     name: 'Bob',
+        //     age: 40,
+        //     gender: 'Male'
+        // });
+
+        // // Save the workbook
+        // workbook.xlsx.writeBuffer().then(function(buffer) {
+        //     // Create a blob from the buffer
+        //     var blob = new Blob([buffer], {
+        //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        //     });
+
+        //     // Create a URL for the blob
+        //     var url = window.URL.createObjectURL(blob);
+
+        //     // Create a link to download the file
+        //     var a = document.createElement('a');
+        //     a.href = url;
+        //     a.download = 'my-workbook.xlsx';
+        //     document.body.appendChild(a);
+
+        //     // Click the link to download the file
+        //     a.click();
+
+        //     // Remove the link
+        //     document.body.removeChild(a);
+        // });
+
+        $(document).on('click', '.btn-switch-toggle', function() {
+            var parentDiv = $(this).closest(".parrent-div");
+            parentDiv.find(".panel-body").toggle();
+        });
+
+        //based on:
+        //https://github.com/chartjs/chartjs-plugin-zoom/blob/master/samples/zoom-time.html
+
+
+        // window.onload = function() {
+        //     var ctx = document.getElementById("canvas").getContext("2d");
+        //     window.myLine = new Chart(ctx, config);
+        // };
+    </script>
