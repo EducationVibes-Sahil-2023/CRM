@@ -208,6 +208,8 @@ class Reports extends AdminController
                     $update_count_data_min = $update_count_data = $post_data = $_POST;
                     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
                     $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
+                    $update_count_data['update_count_min'] = "";
+                    $update_count_data['update_count_max'] = "";
                     $update_count_data["assigned"][] = $assigned;
                     $update_count_data_min["assigned"][] =  $assigned;
                     $updateCount = leads_update_count($update_count_data,0,1);
