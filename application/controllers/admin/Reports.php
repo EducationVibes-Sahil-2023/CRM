@@ -212,14 +212,14 @@ class Reports extends AdminController
                     $update_count_data['update_count_max'] = "";
                     $update_count_data["assigned"][] = $assigned;
                     $update_count_data_min["assigned"][] =  $assigned;
-                    $updateCount = leads_update_count($update_count_data,0,1);
+                    $updateCount = leads_update_count($update_count_data, 0, 1);
+                    $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
                     $staff_name =  get_staff_full_name($assigned);
                     $update_count_array_label[] = trim($staff_name);
                     $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
                     $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
-                    $update_count_array_min[] = leads_update_count($update_count_data_min,0,1);
-
-                    $update_count_array_max[] = intval($updateCount);
+                    $update_count_array_min[] = intval($updateCount_min);
+                    $update_count_array_max[] = (intval($updateCount) - intval($updateCount_min));
                 }
 
                 echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max)]);
@@ -247,7 +247,7 @@ class Reports extends AdminController
                 $marketing_type =  $this->leads_model->get_marketing_type();
                 $conversion_type = $this->leads_model->get_conversion_type();
                 $conversion_type = array_column($conversion_type, null, "id");
-                $updateCount = leads_update_count($update_count_data,0,1);
+                $updateCount = leads_update_count($update_count_data, 0, 1);
                 $staff_name =  get_staff_full_name($assigned);
                 $update_count_array_label[] = trim($staff_name);
                 $update_count_array_min[] = intval(0);
