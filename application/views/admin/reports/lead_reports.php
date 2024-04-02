@@ -491,9 +491,10 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     $('#apply_filter').attr("disabled", false);
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
-                    $(".leadSum").html('');
-                    $(".leadSum").html(data.status);
-                    $(".leadSum").innerHTML = data.status;
+                    if (data.status != undefined) {
+                        $(".leadSum").html('');
+                        $(".leadSum").innerHTML = data.status;
+                    }
                     // $("#updationCounter").html(data.update_count);
                     slider_data = false;
                     if (data.status != "") {
