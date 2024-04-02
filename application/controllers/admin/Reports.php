@@ -245,7 +245,6 @@ class Reports extends AdminController
                 $marketing_type =  $this->leads_model->get_marketing_type();
                 $conversion_type = $this->leads_model->get_conversion_type();
                 $conversion_type = array_column($conversion_type, null, "id");
-
                 $updateCount = leads_update_count($update_count_data,0,1);
                 $staff_name =  get_staff_full_name($assigned);
                 $update_count_array_label[] = trim($staff_name);
