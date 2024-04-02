@@ -203,13 +203,6 @@ function get_leads_summary_filter($params)
     $sql                   = '';
     $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
 
-    // $statuses[] = [
-    //     'lost'  => true,
-    //     'name'  => _l('lost_leads'),
-    //     'color' => '#f0f0f0',
-    // ];
-
-
     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
     if ($role == 3) {
         // $this->load->database();
@@ -224,22 +217,12 @@ function get_leads_summary_filter($params)
         $sids = implode(",", $idsarr);
         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
 
-        // $query = [];
-        // $query_sql = $CI->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-        // $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-        // if (!empty($staff_ids)) {
-        //     $query = $CI->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-        // }
-        // $idsarr = array_column($query, 'staffid');
-        // $sids = implode(",", $idsarr);
         if (!empty($sids)) {
             $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
         } else {
             $tids = ' AND assigned in (' . $sid . ')';
         }
 
-        //         $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
     }
 
     foreach ($statuses as $status) {
@@ -251,16 +234,11 @@ function get_leads_summary_filter($params)
             $sql .= ' join ' . db_prefix() . 'customfieldsvalues ON  ' . db_prefix() . 'leads.id=' . db_prefix() . 'customfieldsvalues.relid ';
         }
         if (!empty($params['up_to_date'])) {
-            // $up_from_date_join = $params['up_from_date'];
-            // $up_to_date_join = $params['up_to_date'];
-            // $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date_join) . '" AND "' . $CI->db->escape_str($up_to_date_join) . '")';
 
             $up_from_date = $params['up_from_date'];
             $up_to_date = $params['up_to_date'];
             $sql .= " join " . db_prefix() . "calls_activity_logs as calls on ( " . db_prefix() . "leads.phonenumber = calls.contact )";
         } else if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-            // $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
-
             $sql .= " left join " . db_prefix() . "calls_activity_logs as calls on ( " . db_prefix() . "leads.phonenumber = calls.contact )";
         }
         if (!empty($params['followup_to_date'])) {
@@ -278,7 +256,6 @@ function get_leads_summary_filter($params)
             $sql .= ' AND ' . $whereNoViewPermission;
         }
         if (!empty($params['assigned'])) {
-            // $tids = " AND assigned = " . $params['assigned'];
             $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
             $sql .= $tids;
         } else {
@@ -293,29 +270,12 @@ function get_leads_summary_filter($params)
 
         if (!empty($params['neet_score'])) {
             $neet_range = explode("-", $params['neet_score']);
-            // $sql .= ' AND  ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN "' . $CI->db->escape_str(trim($neet_range[0])) . '" AND "' . $CI->db->escape_str(trim($neet_range[1])) . '" order by id desc limit 1';
 
             $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
         }
         if (!empty($params['lead_type'])) {
             $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
-            // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
-
-
-        // if (!empty($params['source'])) {
-        //     $sql .= ' AND source =' . $CI->db->escape_str($params['source']);
-        // }
-
-        /*if (isset($params['course'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['course'];
-        }
-		 
-		 
-		if (isset($params['degree'])) {
-            $sql .= 'AND tblcustomfieldsvalues.value ='.$params['degree'];
-        }*/
-
 
         if (!empty($params['to_date'])) {
             $from_date = $params['from_date'];
@@ -573,7 +533,7 @@ function get_status_summary_filter($params)
     return $sources;
 }
 
-function leads_update_count($params = false, $max_status = 0)
+function leads_update_count($params = false, $max_status = 0,$leads_count=0)
 {
 
     $CI = &get_instance();
@@ -617,7 +577,11 @@ function leads_update_count($params = false, $max_status = 0)
     // $sql .= ' SELECT count(distinct(CAST(n.dateadded AS date))) as total';
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " SELECT count(DISTINCT(calls.id)) as total ";
-    } else {
+    }else if(!empty($leads_count) && $leads_count == 1)
+    {
+        $sql .= " SELECT count(DISTINCT(l.id)) as total ";
+    } 
+    else {
         $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     }
     $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
@@ -716,7 +680,14 @@ function leads_update_count($params = false, $max_status = 0)
         $sql .= " group by l.id " . $grup_by . " order by total desc limit 1 ";
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
-    } else {
+    } 
+    else if(!empty($lead_count) && $lead_count == 1)
+    {
+        $sql .= " group by l.id  order by total desc limit 1 ";
+        $sql = trim($sql);
+        $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
+    }
+    else {
         $sql .= " group by l.id,uni_dates " . $grup_by . " " . $sql_add . "   ";
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
         $sql = trim($sql);
