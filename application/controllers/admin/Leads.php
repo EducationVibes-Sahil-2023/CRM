@@ -72,7 +72,7 @@ class Leads extends AdminController
         // $data['updateCount'] = leads_update_count();
         // $data['call_count'] = calls_update_count();
 
-        $data['updateCount_max'] = leads_update_count("", 1);
+        // $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
 
@@ -95,8 +95,9 @@ class Leads extends AdminController
     {
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
-        $max_count = leads_update_count("", 1);
+        // $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
+        $max_count = '';
 
         $ret = "";
         $ret1 = '';

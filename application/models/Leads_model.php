@@ -2716,4 +2716,10 @@ class Leads_model extends App_Model
         $this->db->where('rel_type', "lead");
         $this->db->delete(db_prefix() . 'notes');
     }
+
+    public function get_staff_list()
+    {
+        $this->db->select('firstname,lastname,staffid');
+        return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
+    }
 }

@@ -194,12 +194,38 @@ class Reports extends AdminController
         $this->load->model('leads_model');
         $ret = "";
         $updateCount = 0;
+
         if (!empty($_POST["assigned"]) && empty($return_status)) {
+
             $excel_array = [];
             $excel_performance_array = [];
+            $update_count_array_label = [];
+            $update_count_array_min = [];
+            $update_count_array_max = [];
+            if (isset($_POST["min_range"]) && $_POST["min_range"] == '') {
+
+                foreach ($_POST["assigned"] as $assigned) {
+                    $update_count_data_min = $update_count_data = $post_data = $_POST;
+                    $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
+                    $updateCount = leads_update_count($update_count_data);
+                    $staff_name =  get_staff_full_name($assigned);
+                    $update_count_array_label[] = trim($staff_name);
+                    $update_count_data_min['update_count_min'] = $_POST["min_range"];
+                    $update_count_data_min['update_count_max'] = $_POST["max_range"];
+                    $update_count_array_min[] = leads_update_count($update_count_data_min);
+                    $update_count_array_max[] = number_format($updateCount);
+                }
+
+                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max]);
+
+                die;
+            }
+
+
             $index = 0;
             foreach ($_POST["assigned"] as $assigned) {
-                $post_data = $_POST;
+                $update_count_data = $post_data = $_POST;
+                $update_count_data["status"][] = 20;
                 unset($post_data["assigned"]);
                 $post_data["assigned"][] = $assigned;
                 $summary = get_leads_summary_filter($post_data);
@@ -212,8 +238,12 @@ class Reports extends AdminController
                 $marketing_type =  $this->leads_model->get_marketing_type();
                 $conversion_type = $this->leads_model->get_conversion_type();
                 $conversion_type = array_column($conversion_type, null, "id");
-                $updateCount = leads_update_count($post_data);
+
+                $updateCount = leads_update_count($update_count_data);
                 $staff_name =  get_staff_full_name($assigned);
+                $update_count_array_label[] = trim($staff_name);
+                $update_count_array_min[] = number_format(0);
+                $update_count_array_max[] = number_format($updateCount);
 
 
                 if (!empty($excel_data)) {
@@ -486,6 +516,9 @@ class Reports extends AdminController
             if (!empty($return_status)) {
             } else {
                 $excel_array = [];
+                $update_count_array_label = [];
+                $update_count_array_min = [];
+                $update_count_array_max = [];
             }
 
             $summary = get_leads_summary_filter($_POST);
@@ -758,7 +791,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max]);
     }
 
 

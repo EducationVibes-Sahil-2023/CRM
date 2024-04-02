@@ -1,13 +1,7 @@
-
 <?php
-
-
-
 defined('BASEPATH') or exit('No direct script access allowed');
 
 // $this->load->model('leads_model');
-
-
 
 $this->ci->load->model('gdpr_model');
 
@@ -22,13 +16,15 @@ $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 $statuses              = $this->ci->leads_model->get_status();
 
 $type              = $this->ci->leads_model->get_type();
+$source              = $this->ci->leads_model->get_source();
+$staff_list              = $this->ci->leads_model->get_staff_list();
+
+$statuses = array_column($statuses, null, "id");
+$type = array_column($type, null, "id");
+$source = array_column($source, null, "id");
+$staff_list = array_column($staff_list, null, "staffid");
 $up_from_date = "";
 $up_to_date = "";
-
-// echo "<pre>";
-// print_r($_POST);die;
-//echo "<pre>";print_r($type);die;
-
 
 $aColumns = [
 
@@ -56,76 +52,34 @@ $aColumns = array_merge($aColumns, [
     'lead_value', 'city', 'state', 'website', 'type', 'dateassigned',
 
     '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
-    'firstname as assigned_firstname',
-    // 'firstname as assigned_firstname',
-    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 24) as intake',
-    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 32) as destination',
-    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 8 order by id desc limit 1) as neet_score',
-    // '(select value from ' . db_prefix() . 'customfieldsvalues where relid=tblleads.id and fieldid = 16 order by id desc limit 1) as course_name',
-
-    db_prefix() . 'leads_status.name as status_name',
-
-    db_prefix() . 'leads_type.name as type_name',
-
-    // db_prefix() . 'leads_type.tpcolor as type_color',
-
-    db_prefix() . 'leads_sources.name as source_name',
-
-    // 'lastcontact',
-
     db_prefix() . 'leads.dateadded',
-
-    // '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
-
     '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup',
-
 ]);
 
 
 
 $sIndexColumn = 'id';
-
-if(!empty($this->ci->input->post('up_to_date'))) {
+if (!empty($this->ci->input->post('up_to_date'))) {
     $sIndexColumn = 'contact';
-
 }
-
-if(!empty($this->ci->input->post('up_to_date'))) {
+if (!empty($this->ci->input->post('up_to_date'))) {
 
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
 
     $sTable       = db_prefix() . 'calls_activity_logs';
     $join = [
-        "LEFT JOIN " . db_prefix() . "leads ON ( (RIGHT(TRIM(REPLACE(REPLACE(" . db_prefix() . "calls_activity_logs.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(" . db_prefix() . "leads.phonenumber, ' ', ''), ',', '')), 10)) AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' ) ",
-        'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
-        'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
-        'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
-        'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
-        //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
-
+        " LEFT JOIN " . db_prefix() . "leads ON (
+           " . db_prefix() . "calls_activity_logs.contact = " . db_prefix() . "leads.phonenumber 
+            AND (call_start >= UNIX_TIMESTAMP('{$up_from_date}') - (5 * 3600 + 30 * 60)) 
+            AND (call_start < UNIX_TIMESTAMP('{$up_to_date}') - (5 * 3600 + 30 * 60))
+        ) "
     ];
-
 } else {
 
     $sTable       = db_prefix() . 'leads';
-    $join = [
-
-        'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'leads.assigned',
-
-        'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
-
-        'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
-
-        'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
-
-        //'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id',
-
-    ];
-
+    $join = [];
 }
-
-
 
 
 foreach ($custom_fields as $key => $field) {
@@ -137,52 +91,21 @@ foreach ($custom_fields as $key => $field) {
     array_push($aColumns, 'ctable_' . $key . '.value as ' . trim(str_replace(' ', '_', strtolower($field["name"]))));
 
     array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
-    // print_r($join);
-    // die;
 }
 
-// $fields_ids = array_column($custom_fields, 'id');
 
-// if (!empty($fields_ids)) {
-//     $keyy = 0;
-//     $join_query_prefix = '';
-//     $join_query_surfix = '';
-//     $join_query = 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $keyy . ' ON ' . db_prefix() . 'leads.id = ctable_' . $keyy . '.relid AND ctable_' . $keyy . '.fieldto="' . $custom_fields[$keyy]['fieldto'] . '"';
-//     $join_query_joins = '';
-//     foreach ($fields_ids as $key => $field_id) {
-//         if (!empty($field_id)) {
-//             $join_query_prefix = ' AND (';
-//             $join_query_surfix = ')';
-//             if ($key == 0) {
-//                 $join_query_joins .= '  ctable_' . $keyy . '.fieldid = "' . $field_id . '" ';
-//             } else {
-//                 $join_query_joins .= ' AND  ctable_' . $keyy . '.fieldid = "' . $field_id . '"';
-//             }
-//         }
-//         array_push($aColumns, 'ctable_' . $field_id . '.value as ' . $custom_fields[$key]["name"]);
-//     }
-
-//     array_push($join, $join_query . $join_query_prefix . $join_query_joins . $join_query_surfix);
-// }
 
 $lead_date_query = '';
 
 if (!empty($this->ci->input->post('up_to_date'))) {
     $from_date = $this->ci->input->post('up_from_date');
     $to_date = $this->ci->input->post('up_to_date');
-    // $lead_date_query = ' AND DATE(n.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"';
 }
 
-// $lead_count_join = 'LEFT JOIN ' . db_prefix() . 'notes as n on  (' . db_prefix() . 'leads.id = n.rel_id and n.rel_type="lead" ' . $lead_date_query . ') ';
-
 array_push($join, $lead_count_join);
-// array_push($aColumns, ' count(n.id) as update_count ');
-
 $where  = [];
 
 $filter = false;
-
-
 
 if ($this->ci->input->post('custom_view')) {
 
@@ -218,11 +141,9 @@ if (!$filter || ($filter && $filter != 'lost' && $filter != 'junk')) {
 
     array_push($where, 'AND lost = 0 AND junk = 0');
 }
-// $this->load->database();
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 if ($role == 3) {
-    // $this->load->database();
-    $sid = get_staff_user_id(); //48;//get_staff_user_id();
+    $sid = get_staff_user_id();
 
     $teamids = $this->ci->db->query("select staffid
 			from    (select * from " . db_prefix() . "staff
@@ -230,34 +151,18 @@ if ($role == 3) {
 					(select @pv := $sid) initialisation
 			where   find_in_set(reporting_person, @pv)
 			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-    // return $query;
-    // array_push($teamids,get_staff_user_id());
-    // foreach ($teamids as $t) {
-    # code...
-    // }
     $idsarr = array_column($teamids, 'staffid');
 
-    // echo "<pre>";print_r($idsarr);
     $sids = implode(",", $idsarr);
-    // echo "<pre>";print_r($sids);
     if (!empty($sids)) {
         array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
     } else {
         array_push($where, 'AND assigned in (' . $sid . ')');
     }
-    //     array_push($where, 'AND assigned in (' . $sid . ',' . $sids . ')');
-    // print_r($where);die;
 }
-
-// if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
-
-//     array_push($where, 'AND assigned =' . $this->ci->db->escape_str($this->ci->input->post('assigned')));
-// }
 
 
 if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
-
-    // array_push($where, 'AND assigned =' . $this->ci->db->escape_str($this->ci->input->post('assigned')));
     array_push($where, 'AND assigned IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ')');
 }
 
@@ -290,18 +195,12 @@ if ($this->ci->input->post('course') && count($this->ci->input->post('course')) 
 }
 
 if ($this->ci->input->post('source')) {
-
-    // array_push($where, 'AND source =' . $this->ci->db->escape_str($this->ci->input->post('source')));
     array_push($where, 'AND ' . db_prefix() . 'leads.source IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ')');
 }
 
 
 if ($this->ci->input->post('lead_type')) {
-
     array_push($where, 'AND type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')');
-
-    // array_push($where, 'AND type =' . $this->ci->db->escape_str($this->ci->input->post('lead_type')));
-    // print_r($where);
 }
 
 if (!empty($this->ci->input->post('neet_score'))) {
@@ -313,32 +212,28 @@ if (!empty($this->ci->input->post('neet_score'))) {
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date = $this->ci->input->post('to_date');
-    // echo "<pre>";print_r($from_date.'to'.$to_date);
-    array_push($where, 'AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
-    // echo "<pre>";print_r($from_date.'to'.$to_date.'--');
-    // print_r($where);
-
+    // array_push($where, 'AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+    array_push($where, 'AND (' . db_prefix() . 'leads.dateadded >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'leads.dateadded <= "' . $this->ci->db->escape_str($to_date) . '")');
 }
 
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
-    //     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
-    // array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
 }
 
 if ($this->ci->input->post('followup_to_date')) {
     $followup_from_date = $this->ci->input->post('followup_from_date');
     $followup_to_date = $this->ci->input->post('followup_to_date');
-    //$date2 = date("Y-m-d",strtotime('followup'));
     array_push($join, 'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id');
-    array_push($where, 'AND DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $this->ci->db->escape_str($followup_from_date) . '" AND "' . $this->ci->db->escape_str($followup_to_date) . '"');
+    // array_push($where, 'AND DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $this->ci->db->escape_str($followup_from_date) . '" AND "' . $this->ci->db->escape_str($followup_to_date) . '"');
+    array_push($where, 'AND (' . db_prefix() . 'reminders.date >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'reminders.date <= "' . $this->ci->db->escape_str($to_date) . '")');
 }
-// WHERE DATE(dateadded) BETWEEN '" . $this->db->escape_str($from_date) . "' AND '" . $this->db->escape_str($to_date) . "'dateassigned
 if ($this->ci->input->post('assign_to_date')) {
     $assign_from_date = $this->ci->input->post('assign_from_date');
     $assign_to_date = $this->ci->input->post('assign_to_date');
-    array_push($where, 'AND DATE(dateassigned) BETWEEN "' . $this->ci->db->escape_str($assign_from_date) . '" AND "' . $this->ci->db->escape_str($assign_to_date) . '"');
+    // array_push($where, 'AND DATE(dateassigned) BETWEEN "' . $this->ci->db->escape_str($assign_from_date) . '" AND "' . $this->ci->db->escape_str($assign_to_date) . '"');
+
+    array_push($where, 'AND ( DATE(dateassigned) >= "' . $this->ci->db->escape_str($from_date) . '" AND  DATE(dateassigned) <= "' . $this->ci->db->escape_str($to_date) . '")');
 }
 
 
@@ -362,36 +257,16 @@ if (count($custom_fields) > 4) {
 }
 
 // $call_query = "";
-$call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9)  AND staffid = " . db_prefix() . "leads.assigned  LIMIT 1) last_call_date ";
+$call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE contact = " . db_prefix() . "leads.phonenumber  AND staffid = " . db_prefix() . "leads.assigned  LIMIT 1) last_call_date ";
 $call_query_having = "";
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
-
-    // $call_query_having = " update_count  ";
-    // $call_query = " (SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') AND staffid = " . db_prefix() . "leads.assigned  AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) call_duration ";
-    // $call_query_having = " (SELECT sum(id)  FROM " . db_prefix() . "calls_activity_logs WHERE SUBSTRING(TRIM(contact), LENGTH(TRIM(contact)) - 9) = SUBSTRING(TRIM(" . db_prefix() . "leads.phonenumber), LENGTH(TRIM(" . db_prefix() . "leads.phonenumber)) - 9) AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')  between '{$up_from_date}' AND '{$up_to_date}' LIMIT 1) ";
-
-
-    // //     array_push($where, 'AND DATE(lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
-    // array_push($where, 'AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $this->ci->db->escape_str($up_from_date) . '" AND "' . $this->ci->db->escape_str($up_to_date) . '"');
 }
 
 $update_count_query = "(SELECT COUNT(1)
     FROM " . db_prefix() . "calls_activity_logs AS calls
     WHERE calls.contact = " . db_prefix() . "leads.phonenumber";
-
-// if (!empty($this->ci->input->post('assigned'))) {
-//     $assignedValues = implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned')));
-//     $update_count_query .= " AND calls.staffid IN ({$assignedValues})";
-// }
-
-// if (!empty($this->ci->input->post('up_to_date'))) {
-//     $up_from_date = $this->ci->input->post('up_from_date');
-//     $up_to_date = $this->ci->input->post('up_to_date');
-
-//     $update_count_query .= " AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') BETWEEN '{$up_from_date}' AND '{$up_to_date}'";
-// }
 
 $update_count_query .= " LIMIT 1) as update_count";
 
@@ -408,13 +283,9 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
     'lost',
 
-    'color',
-
     db_prefix() . 'leads.status',
 
     'assigned',
-
-    'lastname as assigned_lastname',
 
     db_prefix() . 'leads.addedfrom as addedfrom',
 
@@ -433,9 +304,6 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 
 ]);
 
-// if (!empty($call_query)) {
-//     array_push($additionalColumns, $call_query);
-// }
 
 $having = "";
 if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
@@ -473,7 +341,12 @@ foreach ($rResult as $aRow) {
 
     $row = [];
 
-
+    $aRow['status_name'] = isset($statuses[$aRow['status']]["name"]) ? $statuses[$aRow['status']]["name"] : '';
+    $aRow['color'] = isset($statuses[$aRow['status']]["color"]) ? $statuses[$aRow['status']]["color"] : '';
+    $aRow['type_name'] = isset($type[$aRow['type']]["name"]) ? $type[$aRow['type']]["name"] : '';
+    $aRow['source_name'] = isset($source[$aRow['source']]["name"]) ? $source[$aRow['source']]["name"] : '';
+    $aRow['assigned_firstname'] = isset($staff_list[$aRow['assigned']]["firstname"]) ? $staff_list[$aRow['assigned']]["firstname"] : '';
+    $aRow['assigned_lastname'] = isset($staff_list[$aRow['assigned']]["lastname"]) ? $staff_list[$aRow['assigned']]["lastname"] : '';
 
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['id'] . '"><label></label></div>';
     $curdate = date("Y-m-d");

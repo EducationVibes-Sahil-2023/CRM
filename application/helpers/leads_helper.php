@@ -261,7 +261,7 @@ function get_leads_summary_filter($params)
         } else if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
             // $sql .= ' left join ' . db_prefix() . 'notes n  ON  (' . db_prefix() . 'leads.id = n.rel_id ) ';
 
-            $sql .= "left join " . db_prefix() . "calls_activity_logs as calls on ( " . db_prefix() . "leads.phonenumber = calls.contact )";
+            $sql .= " left join " . db_prefix() . "calls_activity_logs as calls on ( " . db_prefix() . "leads.phonenumber = calls.contact )";
         }
         if (!empty($params['followup_to_date'])) {
             $sql .= ' join ' . db_prefix() . 'reminders  on  ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id ';
@@ -329,8 +329,11 @@ function get_leads_summary_filter($params)
             //             $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
             // $sql .= ' AND DATE(' . db_prefix() . 'leads.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
 
-            $sql .= " AND  (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
-                . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "') ";
+            // $sql .= " AND  (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+            //     . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "') ";
+
+            $sql .= " AND calls.call_start >= UNIX_TIMESTAMP('" . $CI->db->escape_str($up_from_date) . "') - (5 * 3600 + 30 * 60) ";
+            $sql .= " AND calls.call_start <= UNIX_TIMESTAMP('" . $CI->db->escape_str($up_to_date) . "') - (5 * 3600 + 30 * 60) ";
         }
         if (!empty($params['followup_to_date'])) {
             $followup_from_date = $params['followup_from_date'];
@@ -366,6 +369,7 @@ function get_leads_summary_filter($params)
     $sql    = substr($sql, 0, -10);
 
     $result = $CI->db->query($sql)->result();
+
 
     // if (!$has_permission_view) {
     //     $CI->db->where($whereNoViewPermission);
@@ -718,6 +722,8 @@ function leads_update_count($params = false, $max_status = 0)
         $sql = trim($sql);
         $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     }
+
+
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
