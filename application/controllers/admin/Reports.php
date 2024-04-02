@@ -206,14 +206,16 @@ class Reports extends AdminController
 
                 foreach ($_POST["assigned"] as $assigned) {
                     $update_count_data_min = $update_count_data = $post_data = $_POST;
-                    $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
+                    $update_count_data_min["assigned"] = $update_count_data["status"][] = 20;
+                    $update_count_data_min["assigned"][] = $update_count_data_min[] = $update_count_data["assigned"] = [];
+                    $update_count_data_min["assigned"][] = $update_count_data["assigned"][] = $assigned;
                     $updateCount = leads_update_count($update_count_data);
                     $staff_name =  get_staff_full_name($assigned);
                     $update_count_array_label[] = trim($staff_name);
                     $update_count_data_min['update_count_min'] = $_POST["min_range"];
                     $update_count_data_min['update_count_max'] = $_POST["max_range"];
                     $update_count_array_min[] = leads_update_count($update_count_data_min);
-                    $update_count_array_max[] = number_format($updateCount);
+                    $update_count_array_max[] = intval($updateCount);
                 }
 
                 echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max]);
@@ -226,6 +228,8 @@ class Reports extends AdminController
             foreach ($_POST["assigned"] as $assigned) {
                 $update_count_data = $post_data = $_POST;
                 $update_count_data["status"][] = 20;
+                $update_count_data["assigned"] = [];
+                $update_count_data["assigned"][] = $assigned;
 
                 unset($post_data["assigned"]);
                 $post_data["assigned"][] = $assigned;
@@ -239,12 +243,12 @@ class Reports extends AdminController
                 $marketing_type =  $this->leads_model->get_marketing_type();
                 $conversion_type = $this->leads_model->get_conversion_type();
                 $conversion_type = array_column($conversion_type, null, "id");
-
+                
                 $updateCount = leads_update_count($update_count_data);
                 $staff_name =  get_staff_full_name($assigned);
                 $update_count_array_label[] = trim($staff_name);
-                $update_count_array_min[] = number_format(0);
-                $update_count_array_max[] = number_format($updateCount);
+                $update_count_array_min[] = intval(0);
+                $update_count_array_max[] = intval($updateCount);
 
 
                 if (!empty($excel_data)) {
