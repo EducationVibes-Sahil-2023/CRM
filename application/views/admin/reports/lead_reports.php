@@ -272,6 +272,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         // const workbook = new ExcelJS.Workbook();
 
         var xhr = null;
+        var slider_data = false;
 
 
         function show_update_count_range(obj) {
@@ -346,10 +347,20 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             rangeSlider.noUiSlider.on('update', function(values, handle) {
                 var minValue = parseFloat(values[0]);
                 var maxValue = parseFloat(values[1]);
-
                 // Update the hidden input values
                 document.getElementById('update_count_min').value = minValue;
                 document.getElementById('update_count_max').value = maxValue;
+
+            });
+
+            rangeSlider.noUiSlider.on('change', function(values, handle) {
+                slider_data = false;
+                slider_data = true;
+                setTimeout(() => {
+                    if (slider_data) {
+                        $('#apply_filter').trigger("click");
+                    }
+                }, 3000);
             });
 
             // Set event listeners for slider handle drag
@@ -390,23 +401,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             window.myLine.resetZoom();
         }
 
-        var slider_data = false;
 
-        function set_slider() {
-            slider_data = false;
-            var update_count_min = '';
-            var update_count_max = '';
-            if ($("#show_update_counts").is(":checked")) {
-                update_count_min = document.getElementById("update_count_min").value;
-                update_count_max = document.getElementById("update_count_max").value;
-            }
-            slider_data = true;
-            setTimeout(() => {
-                if (slider_data) {
-                    $('#apply_filter').trigger("click");
-                }
-            }, 3000);
-        }
 
         $('#apply_filter').on('click', function() {
             var element_view_assign = document.getElementById("view_assigned");
@@ -496,7 +491,10 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     $('#apply_filter').attr("disabled", false);
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
-                    $(".leadSum").html('');
+                    if (data.status != undefined) {
+                        $(".leadSum").html('');
+                        $(".leadSum").innerHTML = data.status;
+                    }
                     // $("#updationCounter").html(data.update_count);
                     slider_data = false;
                     if (data.status != "") {
