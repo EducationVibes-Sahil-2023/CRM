@@ -582,7 +582,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
         $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     }
 
-    if (!empty($lead_count) && $lead_count == 1) {
+    if (!empty($leads_count) && $leads_count == 1) {
         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
     } else {
         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
@@ -695,6 +695,20 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
         if (!empty($params['lead_type'])) {
             $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
             // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
+        }
+        if (!empty($params['to_date'])) {
+            $from_date = $params['from_date'];
+            $to_date = $params['to_date'];
+            $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+        }
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+        }
+        if (!empty($params['assigned'])) {
+            // $tids = " AND l.assigned = " . $params['assigned'];
+            $sql = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
         }
     }
 
