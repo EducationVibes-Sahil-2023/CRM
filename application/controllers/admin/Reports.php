@@ -235,11 +235,10 @@ class Reports extends AdminController
                     $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
                     $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
                     $update_count_array_min[] = intval($updateCount_min);
-                    $update_count_array_max[] = (intval($updateCount) - intval($updateCount_min));
+                    $update_count_array_max[] = (intval($updateCount));
                 }
 
                 echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max)]);
-
                 die;
             }
 

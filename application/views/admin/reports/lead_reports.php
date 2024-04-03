@@ -327,7 +327,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             function recreate_range_slider(max) {
 
                 if (max != undefined && parseInt(max) != max_count) {
-                    max_count = 30;
+                    // max_count = 30;
                     rangeSlider.noUiSlider.destroy();
                     max_count = parseInt(max);
                     let min_ = document.getElementById("update_count_min").value;
@@ -341,8 +341,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 if (max == 0) {
                     max = max_count;
                 }
-                max = 30;
-                max_count = 30;
+                // max = 30;
+                // max_count = 30;
 
                 noUiSlider.create(rangeSlider, {
                     start: [min, max], // Initial values for min and max
@@ -555,7 +555,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
                     if (data.update_count_label != undefined) {
 
-                        max_count = 30;
+                        max_count = data.max_count;
 
                         if (max_count != undefined && parseInt(max_count) > 0) {
                             recreate_range_slider(data.max_count);
