@@ -579,7 +579,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     } else if (!empty($leads_count) && $leads_count == 1) {
         $sql .= " SELECT count(DISTINCT(l.id)) as total ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
-        $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
+        $sql .= " SELECT  count(DISTINCT(l.id)) as total ";
     } else {
         $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     }
