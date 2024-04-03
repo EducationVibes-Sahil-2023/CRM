@@ -196,13 +196,11 @@ class Reports extends AdminController
         $this->load->model('leads_model');
         $ret = "";
         $updateCount = 0;
-
         if (!empty($_POST["daily_update_count"])) {
             try {
                 // Assuming leads_update_count is a function defined elsewhere
-                $_POST["assigned"] = $_POST["daily_update_count"];
+                $_POST["assigned"][] = $_POST["daily_update_count"];
                 $updateCount_day = leads_update_count($_POST, 0, 0, 1);
-
                 if ($updateCount_day === false) {
                     throw new Exception('Error occurred while fetching update counts.');
                 }
@@ -213,9 +211,6 @@ class Reports extends AdminController
                 echo json_encode(["update_count_daily_data" => $updateCount_day]);
             } catch (Exception $e) {
                 echo json_encode(["error" => $e->getMessage()]);
-            } finally {
-                // Any cleanup tasks or finalization can go here
-                die; // Make sure to terminate script execution after handling errors
             }
         }
 
