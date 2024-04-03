@@ -212,9 +212,9 @@ if (!empty($this->ci->input->post('neet_score'))) {
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date = $this->ci->input->post('to_date');
-    // array_push($where, 'AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
-    array_push($where, 'AND (' . db_prefix() . 'leads.dateadded >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'leads.dateadded <= "' . $this->ci->db->escape_str($to_date) . '")');
-}
+    array_push($where, 'AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+//     array_push($where, 'AND (' . db_prefix() . 'leads.dateadded >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'leads.dateadded <= "' . $this->ci->db->escape_str($to_date) . '")');
+// }
 
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
@@ -225,18 +225,18 @@ if ($this->ci->input->post('followup_to_date')) {
     $followup_from_date = $this->ci->input->post('followup_from_date');
     $followup_to_date = $this->ci->input->post('followup_to_date');
     array_push($join, 'LEFT JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id');
-    // array_push($where, 'AND DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $this->ci->db->escape_str($followup_from_date) . '" AND "' . $this->ci->db->escape_str($followup_to_date) . '"');
+    array_push($where, ' AND DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $this->ci->db->escape_str($followup_from_date) . '" AND "' . $this->ci->db->escape_str($followup_to_date) . '"');
     // array_push($where, 'AND (' . db_prefix() . 'reminders.date >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'reminders.date <= "' . $this->ci->db->escape_str($to_date) . '")');
 
-    array_push($where, ' AND (' . db_prefix() . 'reminders.date >= "' . $this->ci->db->escape_str($followup_from_date) . '" AND ' . db_prefix() . 'reminders.date <= "' . $this->ci->db->escape_str($followup_to_date) . '")');
+    // array_push($where, ' AND (' . db_prefix() . 'reminders.date >= "' . $this->ci->db->escape_str($followup_from_date) . '" AND ' . db_prefix() . 'reminders.date <= "' . $this->ci->db->escape_str($followup_to_date) . '")');
 
 }
 if ($this->ci->input->post('assign_to_date')) {
     $assign_from_date = $this->ci->input->post('assign_from_date');
     $assign_to_date = $this->ci->input->post('assign_to_date');
-    // array_push($where, 'AND DATE(dateassigned) BETWEEN "' . $this->ci->db->escape_str($assign_from_date) . '" AND "' . $this->ci->db->escape_str($assign_to_date) . '"');
+    array_push($where, ' AND DATE(dateassigned) BETWEEN "' . $this->ci->db->escape_str($assign_from_date) . '" AND "' . $this->ci->db->escape_str($assign_to_date) . '"');
 
-    array_push($where, ' AND ( DATE(dateassigned) >= "' . $this->ci->db->escape_str($assign_from_date) . '" AND  DATE(dateassigned) <= "' . $this->ci->db->escape_str($assign_to_date) . '")');
+    // array_push($where, ' AND ( DATE(dateassigned) >= "' . $this->ci->db->escape_str($assign_from_date) . '" AND  DATE(dateassigned) <= "' . $this->ci->db->escape_str($assign_to_date) . '")');
 }
 
 
