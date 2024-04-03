@@ -196,8 +196,6 @@ class Reports extends AdminController
         $ret = "";
         $updateCount = 0;
 
-        $_POST["assigned"] = [];
-
         if (!empty($_POST["location"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
             foreach ($locationStaff as $staff) {
