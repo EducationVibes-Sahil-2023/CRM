@@ -209,8 +209,10 @@ class Reports extends AdminController
 
 
                 echo json_encode(["update_count_daily_data" => $updateCount_day]);
+                die;
             } catch (Exception $e) {
                 echo json_encode(["error" => $e->getMessage()]);
+                die;
             }
         }
 
