@@ -61,10 +61,11 @@ class Reports extends AdminController
 
     public function leads()
     {
-
         $this->load->model('leads_model');
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['status'] = $this->leads_model->get_status();
+        $data['department'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "staff_department")->result_array();
+        $data['location'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "office_location")->result_array();
         $data['sources']  = $this->leads_model->get_source();
         $data['type']  = $this->leads_model->get_type();
         $data['conversion_type']  = $this->leads_model->get_conversion_type();
@@ -194,6 +195,23 @@ class Reports extends AdminController
         $this->load->model('leads_model');
         $ret = "";
         $updateCount = 0;
+
+        $_POST["assigned"] = [];
+
+        if (!empty($_POST["location"])) {
+            $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
+            foreach ($locationStaff as $staff) {
+                $_POST["assigned"][] = $staff['staffid'];
+            }
+        }
+        
+        if (!empty($_POST["department"])) {
+            $departmentStaff = $this->db->select("staffid")->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
+            foreach ($departmentStaff as $staff) {
+                $_POST["assigned"][] = $staff['staffid'];
+            }
+        }
+        
 
         if (!empty($_POST["assigned"]) && empty($return_status)) {
 
