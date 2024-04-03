@@ -729,7 +729,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
-        $sql .= " group by date(uni_dates) order by total desc ";
+        $sql .= " group by date(uni_dates) order by date(uni_dates) asc ";
         return $update_count = $CI->db->query($sql)->result_array();
         die;
     } else {
