@@ -267,7 +267,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
                 </div> -->
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-12 row">
                     <div class="panel_s">
                         <div class="panel-body" id="pdf_generate">
                             <h3>Report Generate</h3>
@@ -298,107 +298,111 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         var xhr = null;
         var slider_data = false;
 
+        <?php if ($filter == 1) { ?>
 
-        function show_update_count_range(obj) {
-            if ($(obj).is(":checked")) {
-                $("#rangeSlider").show();
-                setMinMaxValues();
-            } else {
-                $("#rangeSlider").hide();
+            function show_update_count_range(obj) {
+                if ($(obj).is(":checked")) {
+                    $("#rangeSlider").show();
+                    setMinMaxValues();
+                } else {
+                    $("#rangeSlider").hide();
 
-            }
-        }
-
-        function setMinMaxValues() {
-            // Get the current values of the slider
-            var currentValues = rangeSlider.noUiSlider.get();
-
-            // Update the options with new min and max values
-            rangeSlider.noUiSlider.updateOptions({
-                range: {
-                    'min': 0,
-                    'max': max_count
-                },
-                start: [0, max_count] // Preserve the current slider values
-            });
-        }
-
-        function recreate_range_slider(max) {
-
-            if (max != undefined && parseInt(max) != max_count) {
-                max_count = 30;
-                rangeSlider.noUiSlider.destroy();
-                max_count = parseInt(max);
-                let min_ = document.getElementById("update_count_min").value;
-                let max_ = document.getElementById("update_count_max").value;
-                make_range_slider(min_, max_);
-            }
-        }
-        // Initialize the range slider
-        function make_range_slider(min = 0, max = 0) {
-            var rangeSlider = document.getElementById('rangeSlider');
-            if (max == 0) {
-                max = max_count;
-            }
-            max = 30;
-            max_count = 30;
-
-            noUiSlider.create(rangeSlider, {
-                start: [min, max], // Initial values for min and max
-                connect: true,
-                tooltips: [true, true],
-                format: {
-                    to: function(value) {
-                        return Math.round(value); // Round the tooltip values
-                    },
-                    from: function(value) {
-                        return parseFloat(value); // Convert tooltip values to numbers
-                    }
-                },
-                step: 1,
-                range: {
-                    'min': 0,
-                    'max': max_count
                 }
-            });
+            }
 
-            // Get handles for min and max sliders
-            var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
-            var minSliderHandle = sliderHandles[0];
-            var maxSliderHandle = sliderHandles[1];
+            function setMinMaxValues() {
+                // Get the current values of the slider
+                var currentValues = rangeSlider.noUiSlider.get();
 
-            // Set event listeners for slider change
-            rangeSlider.noUiSlider.on('update', function(values, handle) {
-                var minValue = parseFloat(values[0]);
-                var maxValue = parseFloat(values[1]);
-                // Update the hidden input values
-                document.getElementById('update_count_min').value = minValue;
-                document.getElementById('update_count_max').value = maxValue;
+                // Update the options with new min and max values
+                rangeSlider.noUiSlider.updateOptions({
+                    range: {
+                        'min': 0,
+                        'max': max_count
+                    },
+                    start: [0, max_count] // Preserve the current slider values
+                });
+            }
 
-            });
+            function recreate_range_slider(max) {
 
-            rangeSlider.noUiSlider.on('change', function(values, handle) {
-                slider_data = false;
-                slider_data = true;
-                setTimeout(() => {
-                    if (slider_data) {
-                        $('#apply_filter').trigger("click");
+                if (max != undefined && parseInt(max) != max_count) {
+                    max_count = 30;
+                    rangeSlider.noUiSlider.destroy();
+                    max_count = parseInt(max);
+                    let min_ = document.getElementById("update_count_min").value;
+                    let max_ = document.getElementById("update_count_max").value;
+                    make_range_slider(min_, max_);
+                }
+            }
+            // Initialize the range slider
+            function make_range_slider(min = 0, max = 0) {
+                var rangeSlider = document.getElementById('rangeSlider');
+                if (max == 0) {
+                    max = max_count;
+                }
+                max = 30;
+                max_count = 30;
+
+                noUiSlider.create(rangeSlider, {
+                    start: [min, max], // Initial values for min and max
+                    connect: true,
+                    tooltips: [true, true],
+                    format: {
+                        to: function(value) {
+                            return Math.round(value); // Round the tooltip values
+                        },
+                        from: function(value) {
+                            return parseFloat(value); // Convert tooltip values to numbers
+                        }
+                    },
+                    step: 1,
+                    range: {
+                        'min': 0,
+                        'max': max_count
                     }
-                }, 3000);
-            });
+                });
 
-            // Set event listeners for slider handle drag
-            minSliderHandle.addEventListener('drag', function() {
-                var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
-                rangeSlider.noUiSlider.set([minValue, null]);
-            });
 
-            maxSliderHandle.addEventListener('drag', function() {
-                var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
-                rangeSlider.noUiSlider.set([null, maxValue]);
-            });
-        }
-        make_range_slider("", "");
+                // Get handles for min and max sliders
+                var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+                var minSliderHandle = sliderHandles[0];
+                var maxSliderHandle = sliderHandles[1];
+
+                // Set event listeners for slider change
+                rangeSlider.noUiSlider.on('update', function(values, handle) {
+                    var minValue = parseFloat(values[0]);
+                    var maxValue = parseFloat(values[1]);
+                    // Update the hidden input values
+                    document.getElementById('update_count_min').value = minValue;
+                    document.getElementById('update_count_max').value = maxValue;
+
+                });
+
+                rangeSlider.noUiSlider.on('change', function(values, handle) {
+                    slider_data = false;
+                    slider_data = true;
+                    setTimeout(() => {
+                        if (slider_data) {
+                            $('#apply_filter').trigger("click");
+                        }
+                    }, 3000);
+                });
+
+                // Set event listeners for slider handle drag
+                minSliderHandle.addEventListener('drag', function() {
+                    var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+                    rangeSlider.noUiSlider.set([minValue, null]);
+                });
+
+                maxSliderHandle.addEventListener('drag', function() {
+                    var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+                    rangeSlider.noUiSlider.set([null, maxValue]);
+                });
+            }
+            make_range_slider("", "");
+
+        <?php } ?>
 
         function randomScalingFactor() {
             return Math.round(Math.random() * 100 * (Math.random() > 0.5 ? -1 : 1));
@@ -1037,11 +1041,11 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             // Get the selected value of the changed select element
             var selectedValue = $(this).val();
             // Disable or enable selectpicker for other select elements within the same container (.filter_reset)
-            $(".filter_reset select").not(this).attr('disabled',true)
+            $(".filter_reset select").not(this).attr('disabled', true)
 
             // If the selected value is empty, enable selectpicker for all other select elements
             if (selectedValue.length == 0) {
-                $(".filter_reset select").attr('disabled',false)
+                $(".filter_reset select").attr('disabled', false)
             }
         });
     </script>
