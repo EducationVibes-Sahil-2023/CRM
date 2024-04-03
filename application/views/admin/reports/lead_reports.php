@@ -159,6 +159,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         line-height: 10px;
         border-radius: 10px;
         box-shadow: 0px 1px 6px lightgrey;
+        margin: 5px;
     }
 </style>
 

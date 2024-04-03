@@ -210,6 +210,8 @@ class Reports extends AdminController
                 $updateCount_day = array_column($updateCount_day, null, "uni_dates");
                 asort($updateCount_day);
                 $updateCount_day = array_values($updateCount_day);
+
+
                 echo json_encode(["update_count_daily_data" => $updateCount_day]);
             } catch (Exception $e) {
                 echo json_encode(["error" => $e->getMessage()]);
