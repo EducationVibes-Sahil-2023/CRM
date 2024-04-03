@@ -213,8 +213,8 @@ if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date = $this->ci->input->post('to_date');
     array_push($where, 'AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
-//     array_push($where, 'AND (' . db_prefix() . 'leads.dateadded >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'leads.dateadded <= "' . $this->ci->db->escape_str($to_date) . '")');
-// }
+    //     array_push($where, 'AND (' . db_prefix() . 'leads.dateadded >= "' . $this->ci->db->escape_str($from_date) . '" AND ' . db_prefix() . 'leads.dateadded <= "' . $this->ci->db->escape_str($to_date) . '")');
+}
 
 if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
