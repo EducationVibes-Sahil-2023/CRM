@@ -266,6 +266,7 @@ class Reports extends AdminController
 
 
             $index = 0;
+            $max_count = [];
             foreach ($_POST["assigned"] as $assigned) {
                 $update_count_data = $post_data = $_POST;
                 $update_count_data["status"][] = 20;
@@ -289,7 +290,7 @@ class Reports extends AdminController
                 $update_count_array_label[] = trim($staff_name);
                 $update_count_array_min[] = intval(0);
                 $update_count_array_max[] = intval($updateCount);
-
+                $max_count[] = intval($updateCount);
 
                 if (!empty($excel_data)) {
                     $excel_array[$staff_name] = $excel_data;
@@ -844,7 +845,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => 1]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($max_count)]);
     }
 
 
