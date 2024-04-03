@@ -43,6 +43,7 @@ if (is_gdpr() && $consentLeads == '1') {
 
 $aColumns = array_merge($aColumns, [
     'company',
+    'source',
     db_prefix() . 'leads.assigned as staffid',
 
     db_prefix() . 'leads.email as email',
