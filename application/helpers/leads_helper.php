@@ -532,7 +532,7 @@ function get_status_summary_filter($params)
     return $sources;
 }
 
-function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
+function leads_update_count($params = false, $max_status = 0, $leads_count = 0, $day_update_count = 0)
 {
 
     $CI = &get_instance();
@@ -578,12 +578,20 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
         $sql .= " SELECT count(DISTINCT(calls.id)) as total ";
     } else if (!empty($leads_count) && $leads_count == 1) {
         $sql .= " SELECT count(DISTINCT(l.id)) as total ";
+    } else if (!empty($day_update_count) && $day_update_count == 1) {
+        $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     } else {
         $sql .= " SELECT  count(DISTINCT(calls.id)) as total ";
     }
 
     if (!empty($leads_count) && $leads_count == 1) {
         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
+    } else if (!empty($day_update_count) && $day_update_count == 1) {
+        if (!empty($params["up_to_date"])) {
+            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact";
+        } else if (!empty($params["to_date"])) {
+            $sql .= ",date(l.dateadded) as uni_dates  FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
+        }
     } else {
         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
     }
@@ -720,6 +728,10 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0)
         $sql .= " group by l.id  order by total desc limit 1 ";
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
+    } else if (!empty($day_update_count) && $day_update_count == 1) {
+        $sql .= " group by date(uni_dates) order by total desc ";
+        return $update_count = $CI->db->query($sql)->result_array();
+        die;
     } else {
         $sql .= " group by l.id " . $grup_by . " " . $sql_add . "   ";
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";

@@ -146,6 +146,20 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         border-top: 1px solid #8c8c8c;
 
     }
+
+    .scroll-div {
+        margin: 10px 0px;
+        display: -webkit-inline-box;
+        width: 100%;
+        overflow: scroll;
+    }
+
+    .show-daily-update {
+        padding: 20px;
+        line-height: 10px;
+        border-radius: 10px;
+        box-shadow: 0px 1px 6px lightgrey;
+    }
 </style>
 
 <div id="wrapper">
@@ -446,11 +460,15 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             var view_department = "";
             var update_count_min = '';
             var update_count_max = '';
+            var update_staff_id = "";
             if (slider_data) {
                 if ($("#show_update_counts").is(":checked")) {
                     update_count_min = document.getElementById("update_count_min").value;
                     update_count_max = document.getElementById("update_count_max").value;
                 }
+            }
+            if (update_daily_staff_id != 0) {
+                update_staff_id = update_daily_staff_id;
             }
 
             if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
@@ -527,14 +545,13 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     update_count_min: update_count_min,
                     update_count_max: update_count_max,
                     location: view_location,
-                    department: view_department
+                    department: view_department,
+                    daily_update_count: update_staff_id
 
                 },
                 dataType: "JSON",
                 cache: false,
                 success: function(data) {
-                    console.log(data);
-                    console.log(data.status);
                     $('#apply_filter').attr("disabled", false);
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
@@ -552,6 +569,19 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     if (data.excel_data != undefined) {
                         excel_data_array = data.excel_data;
                     }
+                    if (data.update_count_daily_data != undefined) {
+                        let html_update = "<div class='row scroll-div col-12'>";
+                        console.log((data.update_count_daily_data));
+                        console.log((data.update_count_daily_data).length);
+                        for (i = 0; i < (data.update_count_daily_data).length; i++) {
+                            html_update += "<div class='col-md-2 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p></div>";
+
+                        }
+                        html_update += "<div class='row scroll-div'>";
+                        console.log(html_update);
+                        $(".leads-overview-" + update_daily_staff_id).html(html_update);
+                        $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
+                    }
 
                     if (data.update_count_label != undefined) {
 
@@ -560,6 +590,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                         if (max_count != undefined && parseInt(max_count) > 0) {
                             recreate_range_slider(data.max_count);
                         }
+
 
                         var config = {
                             type: "bar",
@@ -1048,4 +1079,12 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 $(".filter_reset select").attr('disabled', false)
             }
         });
+        var update_daily_staff_id = 0;
+
+        function daily_update_count(id, staffid) {
+            update_daily_staff_id = staffid;
+            $(id).show();
+            $("#leads-overview-" + staffid).html('');
+            $('#apply_filter').trigger("click");
+        }
     </script>

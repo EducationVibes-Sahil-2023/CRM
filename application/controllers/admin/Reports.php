@@ -192,9 +192,34 @@ class Reports extends AdminController
 
     public function lead_summary_filter($return_status = '')
     {
+
         $this->load->model('leads_model');
         $ret = "";
         $updateCount = 0;
+
+        if (!empty($_POST["daily_update_count"])) {
+            try {
+                // Assuming leads_update_count is a function defined elsewhere
+                $_POST["assigned"] = $_POST["assigned_staff_id"];
+                $updateCount_day = leads_update_count($_POST, 0, 0, 1);
+
+                if ($updateCount_day === false) {
+                    throw new Exception('Error occurred while fetching update counts.');
+                }
+
+                $updateCount_day = array_column($updateCount_day, null, "uni_dates");
+                asort($updateCount_day);
+                $updateCount_day = array_values($updateCount_day);
+                echo json_encode(["update_count_daily_data" => $updateCount_day]);
+            } catch (Exception $e) {
+                echo json_encode(["error" => $e->getMessage()]);
+            } finally {
+                // Any cleanup tasks or finalization can go here
+                die; // Make sure to terminate script execution after handling errors
+            }
+        }
+
+
 
         if (!empty($_POST["location"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
@@ -202,14 +227,14 @@ class Reports extends AdminController
                 $_POST["assigned"][] = $staff['staffid'];
             }
         }
-        
+
         if (!empty($_POST["department"])) {
             $departmentStaff = $this->db->select("staffid")->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
             foreach ($departmentStaff as $staff) {
                 $_POST["assigned"][] = $staff['staffid'];
             }
         }
-        
+
 
         if (!empty($_POST["assigned"]) && empty($return_status)) {
 
@@ -380,7 +405,15 @@ class Reports extends AdminController
                     $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
                 }
                 $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
-                $ret .= '<h4><b>' . ucwords($staff_name) . '</b></h4><hr>';
+                $ret .= '<h4><b>' . ucwords($staff_name) . '</b></h4> <a href="#" class="btn hide btn-default btn-with-tooltip daily-update-count" data-staffid="' . $assigned . '" data-toggle="tooltip" data-title="' . _l('Update Count') . '" data-placement="bottom" onclick="daily_update_count(\'.leads-overview-' . $assigned . '\',' . $assigned . '); return false;"><i class="fa fa-bar-chart"></i></a>
+                <div class="row hide leads-overview-' . $assigned . '">
+                <hr class="hr-panel-heading" />
+                <div class="col-md-12">
+                    <h4 class="no-margin">Update Count Summary</h4>
+                </div>
+                </div>
+                <hr>';
+
                 $ret .= '<div class="col-md-6">';
                 $ret .= '<div class="col-12 panel-body">';
                 $ret .= '<h4><b>Leads Types</b></h4><hr>';
