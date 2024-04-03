@@ -19,6 +19,10 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
     }
 
+    .leads-filter-column {
+        margin-bottom: 5px;
+    }
+
     /* .leadSum .panel_s .panel-body {
         min-height: 400px;
     } */
@@ -153,64 +157,84 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     <div class="panel-body">
                         <!-- <form action="<?= base_url("admin/reports/leads_reports_generate") ?>" method="POST"> -->
                         <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
-                        <?php if (has_permission('leads', '', 'view')) { ?>
+                        <div class="row ">
+                            <?php if (has_permission('leads', '', 'view')) { ?>
+                                <div class="col-md-2 leads-filter-column filter_reset">
+                                    <?php //echo render_select('view_assigned',$staff,array('staffid',array('firstname','lastname')),'','',array('data-width'=>'100%','data-none-selected-text'=>_l('leads_dt_assigned')),array(),'no-mbot'); 
+                                    ?>
+                                    <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
+                                </div>
+                            <?php } ?>
                             <div class="col-md-2 leads-filter-column">
-                                <?php //echo render_select('view_assigned',$staff,array('staffid',array('firstname','lastname')),'','',array('data-width'=>'100%','data-none-selected-text'=>_l('leads_dt_assigned')),array(),'no-mbot'); 
+                                <?php
+                                $selected = array();
+                                echo '<div id="leads-filter-status">';
+                                echo render_select('view_status[]', $status, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('leads_all'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status');
+                                echo '</div>';
                                 ?>
-                                <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                             </div>
-                        <?php } ?>
-                        <div class="col-md-2 leads-filter-column">
-                            <?php
-                            $selected = array();
-                            echo '<div id="leads-filter-status">';
-                            echo render_select('view_status[]', $status, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('leads_all'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status');
-                            echo '</div>';
-                            ?>
-                        </div>
 
-                        <div class="col-md-2 leads-filter-column">
-                            <?php
-                            echo '<div id="leads-filter-source">';
-                            echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
-                            echo '</div>';
-                            ?>
-                        </div>
+                            <div class="col-md-2 leads-filter-column">
+                                <?php
+                                echo '<div id="leads-filter-source">';
+                                echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
+                                echo '</div>';
+                                ?>
+                            </div>
+                            <?php if ($filter == 1) { ?>
+                                <div class="col-md-2 leads-filter-column filter_reset">
+                                    <?php
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('department[]', $department, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Department'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "department");
+                                    echo '</div>';
+                                    ?>
+                                </div>
 
-                        <div class="col-md-2 leads-filter-column">
-                            <?php
-                            echo '<div id="leads-filter-source">';
-                            echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
-                            echo '</div>';
-                            ?>
-                        </div>
-                        <div class="col-md-2 leads-filter-column">
-                            <div class="form-group">
-                                <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Created Date" autocomplete="off">
+                                <div class="col-md-2 leads-filter-column filter_reset">
+                                    <?php
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('location[]', $location, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Location'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "location");
+                                    echo '</div>';
+                                    ?>
+                                </div>
+                            <?php } ?>
+
+                            <div class="col-md-2 leads-filter-column">
+                                <?php
+                                echo '<div id="leads-filter-source">';
+                                echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                                echo '</div>';
+                                ?>
                             </div>
-                        </div>
-                        <div class="col-md-2 leads-filter-column">
-                            <div class="form-group">
-                                <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Created Date" autocomplete="off">
+
+                            <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Created Date" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-2 leads-filter-column">
-                            <div class="form-group">
-                                <input type="text" class="form-control datepicker" name="up_from_date" id="up_from_date" placeholder="From Update Date" autocomplete="off">
+                            <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Created Date" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-2 leads-filter-column">
-                            <div class="form-group">
-                                <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
+                            <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="up_from_date" id="up_from_date" placeholder="From Update Date" autocomplete="off">
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6 leads-filter-column">
-                            <div class="form-group">
-                                <button type="button" class="btn btn-primary" id="apply_filter" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Processing ">Apply Filter</button>
-                                <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
-                                <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
-                                <!-- <button class="btn btn-xs btn-danger hide-btn-response" onclick="generatePDF()" id="generate_pdf" style="display:none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Generate Pdf</button> -->
-                                <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
+                            <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-6 leads-filter-column">
+                                <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="apply_filter" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Processing ">Apply Filter</button>
+                                    <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
+                                    <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
+                                    <!-- <button class="btn btn-xs btn-danger hide-btn-response" onclick="generatePDF()" id="generate_pdf" style="display:none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Generate Pdf</button> -->
+                                    <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
+                                </div>
                             </div>
                         </div>
                         <!-- </form> -->
@@ -226,7 +250,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                             <h4 class="no-margin">Report Summary</h4>
                                         </div>
                                         <div id="leadSum">
-                                            <div class="col-md-3 leads-filter-column">
+                                            <div class="col-md-12 leads-filter-column">
                                                 <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
                                                 <div id="rangeSlider" style="display:none;"></div>
                                                 <input type="hidden" id="update_count_min" onchange="set_slider()" name="update_count_min">
@@ -259,7 +283,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
     </div>
 
     <?php init_tail(); ?>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.2/chart.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.2/chart.min.js"></script> -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script> -->
     <script>
         var source_name = <?= !empty($sources) ? json_encode($sources, true) : '' ?>;
@@ -402,17 +426,20 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         }
 
 
-
         $('#apply_filter').on('click', function() {
             var element_view_assign = document.getElementById("view_assigned");
             var element_view_source = document.getElementById("view_source");
             var element_view_status = document.getElementById("view_status");
+            var location = document.getElementById("location");
+            var department = document.getElementById("department");
             var up_from_date = document.getElementById("up_from_date").value;
             var up_to_date = document.getElementById("up_to_date").value;
             var lead_type = $("#lead_type").val();
             var view_assigned_options = "";
             var view_source_options = "";
             var view_status_options = "";
+            var view_location = "";
+            var view_department = "";
             var update_count_min = '';
             var update_count_max = '';
             if (slider_data) {
@@ -440,6 +467,22 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     value
                 }) => value);
             }
+
+            if (typeof(location) != 'undefined' && location != null) {
+                view_location = document.getElementById('location').selectedOptions;
+                view_location = Array.from(view_location).map(({
+                    value
+                }) => value);
+            }
+
+            if (typeof(department) != 'undefined' && department != null) {
+                view_department = document.getElementById('department').selectedOptions;
+                view_department = Array.from(view_department).map(({
+                    value
+                }) => value);
+            }
+
+
             var from_date = document.getElementById("from_date").value;
             var to_date = document.getElementById("to_date").value;
 
@@ -478,18 +521,16 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     up_to_date: up_to_date,
                     lead_type: lead_type,
                     update_count_min: update_count_min,
-                    update_count_max: update_count_max
-                    // followup_from_date: followup_from_date,
-                    // followup_to_date: followup_to_date,
-                    // assign_from_date: assign_from_date,
-                    // assign_to_date: assign_to_date,
+                    update_count_max: update_count_max,
+                    location: view_location,
+                    department: view_department
 
                 },
                 dataType: "JSON",
                 cache: false,
                 success: function(data) {
                     console.log(data);
-                     console.log(data.status);
+                    console.log(data.status);
                     $('#apply_filter').attr("disabled", false);
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
@@ -584,15 +625,15 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                         };
 
                         // Get the canvas context
-                        var ctx = document.getElementById("canvas").getContext("2d");
+                        // var ctx = document.getElementById("canvas").getContext("2d");
 
-                        // Destroy the existing chart (if it exists)
-                        if (window.myLine) {
-                            window.myLine.destroy();
-                        }
+                        // // Destroy the existing chart (if it exists)
+                        // if (window.myLine) {
+                        //     window.myLine.destroy();
+                        // }
 
-                        // Create a new chart with the updated configuration
-                        window.myLine = new Chart(ctx, config);
+                        // // Create a new chart with the updated configuration
+                        // window.myLine = new Chart(ctx, config);
 
                     }
                 }
@@ -992,4 +1033,15 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         //     var ctx = document.getElementById("canvas").getContext("2d");
         //     window.myLine = new Chart(ctx, config);
         // };
+        $(".filter_reset select").change(function() {
+            // Get the selected value of the changed select element
+            var selectedValue = $(this).val();
+            // Disable or enable selectpicker for other select elements within the same container (.filter_reset)
+            $(".filter_reset select").not(this).attr('disabled',true)
+
+            // If the selected value is empty, enable selectpicker for all other select elements
+            if (selectedValue.length == 0) {
+                $(".filter_reset select").attr('disabled',false)
+            }
+        });
     </script>
