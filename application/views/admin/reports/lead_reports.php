@@ -554,6 +554,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 cache: false,
                 success: function(data) {
                     $('#apply_filter').attr("disabled", false);
+
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
                     if (data.status != undefined) {
@@ -582,7 +583,10 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                         console.log(html_update);
                         $(".leads-overview-" + update_daily_staff_id).html(html_update);
                         $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
+                        update_daily_staff_id = 0;
                     }
+
+                    update_daily_staff_id = 0;
 
                     if (data.update_count_label != undefined) {
 
