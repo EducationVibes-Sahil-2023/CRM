@@ -629,15 +629,15 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                         };
 
                         // Get the canvas context
-                        // var ctx = document.getElementById("canvas").getContext("2d");
+                        var ctx = document.getElementById("canvas").getContext("2d");
 
-                        // // Destroy the existing chart (if it exists)
-                        // if (window.myLine) {
-                        //     window.myLine.destroy();
-                        // }
+                        // Destroy the existing chart (if it exists)
+                        if (window.myLine) {
+                            window.myLine.destroy();
+                        }
 
-                        // // Create a new chart with the updated configuration
-                        // window.myLine = new Chart(ctx, config);
+                        // Create a new chart with the updated configuration
+                        window.myLine = new Chart(ctx, config);
 
                     }
                 }
