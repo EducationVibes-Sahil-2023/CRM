@@ -155,7 +155,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
     }
 
     .show-daily-update {
-        padding: 20px;
+        padding: 15px 10px;
         line-height: 10px;
         border-radius: 10px;
         box-shadow: 0px 1px 6px lightgrey;
