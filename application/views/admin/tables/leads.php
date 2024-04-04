@@ -69,16 +69,12 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     $up_to_date = $this->ci->input->post('up_to_date');
 
     $sTable       = db_prefix() . 'calls_activity_logs';
-    // Calculate Unix timestamps for the dates
-    $from_timestamp = strtotime($up_from_date) - (5 * 3600 + 30 * 60);
-    $to_timestamp = strtotime($up_to_date) - (5 * 3600 + 30 * 60);
-
     // Construct the JOIN clause with BETWEEN condition
     $join = [
         " LEFT JOIN " . db_prefix() . "leads ON (
-       " . db_prefix() . "calls_activity_logs.contact = " . db_prefix() . "leads.phonenumber 
-        AND call_start BETWEEN {$from_timestamp} AND {$to_timestamp}
-    ) "
+            " . db_prefix() . "calls_activity_logs.contact = " . db_prefix() . "leads.phonenumber 
+            AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') BETWEEN '{$up_from_date}' AND '{$up_to_date}'
+        ) "
     ];
 } else {
 
