@@ -1080,10 +1080,19 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         var update_daily_staff_id = 0;
 
         function convertToHMS(seconds) {
+            if (seconds === "") {
+                seconds = 0;
+            }
             var hours = Math.floor(seconds / 3600);
             var minutes = Math.floor((seconds % 3600) / 60);
-            var remainingSeconds = seconds % 60;
-            return hours + "Hours :" + minutes + "Mins :" + remainingSeconds + "Sec";
+            seconds = seconds % 60;
+
+            if (status === 1) {
+                return hours + ":" + minutes + ":" + seconds;
+            } else {
+                return hours + " Hours : " + minutes + " Mins : " + seconds + " Sec";
+            }
+
         }
 
         function daily_update_count(id, staffid) {
