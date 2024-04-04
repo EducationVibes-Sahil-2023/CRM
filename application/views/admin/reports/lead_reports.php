@@ -599,7 +599,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                             data: {
                                 labels: data.update_count_label, // Date Objects
                                 datasets: [{
-                                        label: "min",
+                                        label: "filter",
                                         backgroundColor: "rgba(240, 140, 121, 0.8)",
                                         borderColor: "rgba(140, 140, 140, 1.0)",
                                         borderWidth: 0,
@@ -628,7 +628,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                 responsive: true,
                                 title: {
                                     display: true,
-                                    text: "Not Reachable Leads chat - Min/Max "
+                                    text: "Not Reachable Leads chat - Filter/Max "
                                 },
                                 scales: {
                                     x: {
@@ -1071,12 +1071,12 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         //     window.myLine = new Chart(ctx, config);
         // };
         $(".filter_reset select").change(function() {
-            // Get the selected value of the changed select element
             var selectedValue = $(this).val();
-            // Disable or enable selectpicker for other select elements within the same container (.filter_reset)
-            $(".filter_reset select").not(this).attr('disabled', true)
-
-            // If the selected value is empty, enable selectpicker for all other select elements
+            if ($(this).attr("id") == "view_assigned") {
+                $(".filter_reset select").not(this).attr('disabled', true)
+            } else {
+                $("#view_assigned").attr('disabled', true)
+            }
             if (selectedValue.length == 0) {
                 $(".filter_reset select").attr('disabled', false)
             }
@@ -1085,8 +1085,10 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
         function daily_update_count(id, staffid) {
             update_daily_staff_id = staffid;
-            $(id).show();
+            $(id).toggle();
             $("#leads-overview-" + staffid).html('');
-            $('#apply_filter').trigger("click");
+            if ($(id).is(":visible")) { // Corrected the if statement
+                $('#apply_filter').trigger("click");
+            }
         }
     </script>

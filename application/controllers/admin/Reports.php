@@ -217,15 +217,17 @@ class Reports extends AdminController
         }
 
 
-
-        if (!empty($_POST["location"])) {
+        if (!empty($_POST["location"]) && !empty($_POST["department"])) {
+            $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
+            foreach ($locationStaff as $staff) {
+                $_POST["assigned"][] = $staff['staffid'];
+            }
+        } else if (!empty($_POST["location"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
             foreach ($locationStaff as $staff) {
                 $_POST["assigned"][] = $staff['staffid'];
             }
-        }
-
-        if (!empty($_POST["department"])) {
+        } else if (!empty($_POST["department"])) {
             $departmentStaff = $this->db->select("staffid")->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
             foreach ($departmentStaff as $staff) {
                 $_POST["assigned"][] = $staff['staffid'];
