@@ -575,8 +575,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     if (data.update_count_daily_data != undefined) {
                         let html_update = "<div class='row scroll-div col-12'>";
                         for (i = 0; i < (data.update_count_daily_data).length; i++) {
-                            html_update += "<div class='col-md-2 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p></div>";
-
+                            html_update += "<div class='col-md-2 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].total) + "</p></div>";
                         }
                         html_update += "<div class='row scroll-div'>";
                         $(".leads-overview-" + update_daily_staff_id).html(html_update);
@@ -1079,6 +1078,13 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         });
 
         var update_daily_staff_id = 0;
+
+        function convertToHMS(seconds) {
+            var hours = Math.floor(seconds / 3600);
+            var minutes = Math.floor((seconds % 3600) / 60);
+            var remainingSeconds = seconds % 60;
+            return hours + "Hours :" + minutes + "Mins :" + remainingSeconds + "Sec";
+        }
 
         function daily_update_count(id, staffid) {
             update_daily_staff_id = staffid;

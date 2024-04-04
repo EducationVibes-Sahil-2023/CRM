@@ -590,9 +590,9 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         if (!empty($params["up_to_date"])) {
             $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM(DISTINCT calls.duration) AS call_duration FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.assigned = calls.staffid AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') AND l.phonenumber = calls.contact";
         } else if (!empty($params["to_date"])) {
-            $sql .= ",date(l.dateadded) as uni_dates  FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.assigned = calls.staffid AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') AND l.phonenumber = calls.contact  ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM(DISTINCT calls.duration) AS call_duration  FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.assigned = calls.staffid AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') AND l.phonenumber = calls.contact  ";
         } else {
-            $sql .= ",date(l.dateadded) as uni_dates  FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.assigned = calls.staffid AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') AND l.phonenumber = calls.contact  ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM(DISTINCT calls.duration) AS call_duration  FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.assigned = calls.staffid AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') AND l.phonenumber = calls.contact  ";
         }
     } else {
         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
