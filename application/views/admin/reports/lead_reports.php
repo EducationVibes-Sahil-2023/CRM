@@ -160,6 +160,9 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         border-radius: 10px;
         box-shadow: 0px 1px 6px lightgrey;
         margin: 5px;
+        margin-bottom: 25px;
+        background: lightgray;
+        font-weight: 500;
     }
 </style>
 
@@ -439,8 +442,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
+            console.log(slider_data);
             $('#apply_filter').trigger("click");
-            $('#apply_filter_update_count').attr("disabled", false);
         })
         $('#apply_filter').on('click', function() {
             var element_view_assign = document.getElementById("view_assigned");
@@ -460,10 +463,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             var update_count_max = '';
             var update_staff_id = "";
             if (slider_data) {
-                if ($("#show_update_counts").is(":checked")) {
-                    update_count_min = document.getElementById("update_count_min").value;
-                    update_count_max = document.getElementById("update_count_max").value;
-                }
+                update_count_min = document.getElementById("update_count_min").value;
+                update_count_max = document.getElementById("update_count_max").value;
             }
             if (update_daily_staff_id != 0) {
                 update_staff_id = update_daily_staff_id;
@@ -553,8 +554,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 success: function(data) {
                     $('#apply_filter').attr("disabled", false);
                     $('#apply_filter_update_count').attr("disabled", false);
-
                     hide_loader("apply_filter");
+                    hide_loader("apply_filter_update_count");
                     //alert(data);  //as a debugging message.
                     if (data.status != undefined) {
                         // $(".leadSum").html('');
@@ -626,7 +627,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                 responsive: true,
                                 title: {
                                     display: true,
-                                    text: "Chart.js stackable with Min/Max"
+                                    text: "Not Reachable Leads chat - Min/Max "
                                 },
                                 scales: {
                                     x: {
