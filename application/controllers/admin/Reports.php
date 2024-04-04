@@ -201,6 +201,8 @@ class Reports extends AdminController
                 // Assuming leads_update_count is a function defined elsewhere
                 $_POST["assigned"][] = $_POST["daily_update_count"];
                 $updateCount_day = leads_update_count($_POST, 0, 0, 1);
+                echo $this->db->last_query();
+                die;
                 if ($updateCount_day === false) {
                     throw new Exception('Error occurred while fetching update counts.');
                 }
