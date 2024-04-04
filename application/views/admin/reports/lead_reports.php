@@ -577,7 +577,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                         for (i = 0; i < (data.update_count_daily_data).length; i++) {
                             html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
                         }
-                        html_update += "<div class='row scroll-div'>";
+                        html_update += "</div>";
                         $(".leads-overview-" + update_daily_staff_id).html(html_update);
                         $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
                         update_daily_staff_id = 0;
