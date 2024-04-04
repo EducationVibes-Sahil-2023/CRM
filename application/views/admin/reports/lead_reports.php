@@ -257,7 +257,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                             <div class="">
 
                                 <div class="col-md-12">
-                                    <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
                                     <div class="clearfix"></div>
                                     <div class="row hide leads-overview">
                                         <hr class="hr-panel-heading" />
@@ -265,11 +265,14 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                             <h4 class="no-margin">Report Summary</h4>
                                         </div>
                                         <div id="leadSum">
-                                            <div class="col-md-12 leads-filter-column">
-                                                <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
-                                                <div id="rangeSlider" style="display:none;"></div>
+                                            <div class="col-md-9 leads-filter-column">
+                                                <label>Update Count Range <input type="checkbox" value="checked" style="display:none;" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
+                                                <div id="rangeSlider"></div>
                                                 <input type="hidden" id="update_count_min" onchange="set_slider()" name="update_count_min">
                                                 <input type="hidden" id="update_count_max" onchange="set_slider()" name="update_count_max">
+                                            </div>
+                                            <div class="col-md-3 leads-filter-column">
+                                                <button type="button" class="btn btn-primary" id="apply_filter_update_count" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Processing ">Apply Filter</button>
                                             </div>
                                             <canvas id="canvas"></canvas>
                                         </div>
@@ -306,8 +309,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
         var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
         var excel_data_array = [];
-        var max_count = 30;
-        var max = 30;
+        const max_count = 30;
+        const max = 30;
         // const workbook = new ExcelJS.Workbook();
 
         var xhr = null;
@@ -328,7 +331,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             function setMinMaxValues() {
                 // Get the current values of the slider
                 var currentValues = rangeSlider.noUiSlider.get();
-
+                // max_count = 30;
                 // Update the options with new min and max values
                 rangeSlider.noUiSlider.updateOptions({
                     range: {
@@ -342,9 +345,9 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             function recreate_range_slider(max) {
 
                 if (max != undefined && parseInt(max) != max_count) {
-                    // max_count = 30;
+                    // max_count =30;
                     rangeSlider.noUiSlider.destroy();
-                    max_count = parseInt(max);
+                    // max_count = parseInt(max);
                     let min_ = document.getElementById("update_count_min").value;
                     let max_ = document.getElementById("update_count_max").value;
                     make_range_slider(min_, max_);
@@ -353,11 +356,6 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             // Initialize the range slider
             function make_range_slider(min = 0, max = 0) {
                 var rangeSlider = document.getElementById('rangeSlider');
-                if (max == 0) {
-                    max = max_count;
-                }
-                // max = 30;
-                // max_count = 30;
 
                 noUiSlider.create(rangeSlider, {
                     start: [min, max], // Initial values for min and max
@@ -395,13 +393,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 });
 
                 rangeSlider.noUiSlider.on('change', function(values, handle) {
-                    slider_data = false;
-                    slider_data = true;
-                    setTimeout(() => {
-                        if (slider_data) {
-                            $('#apply_filter').trigger("click");
-                        }
-                    }, 3000);
+
+
                 });
 
                 // Set event listeners for slider handle drag
@@ -415,7 +408,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     rangeSlider.noUiSlider.set([null, maxValue]);
                 });
             }
-            make_range_slider("", "");
+            make_range_slider(0, max_count);
 
         <?php } ?>
 
@@ -444,7 +437,11 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             window.myLine.resetZoom();
         }
 
-
+        $("#apply_filter_update_count").click(function() {
+            slider_data = true;
+            $('#apply_filter').trigger("click");
+            $('#apply_filter_update_count').attr("disabled", false);
+        })
         $('#apply_filter').on('click', function() {
             var element_view_assign = document.getElementById("view_assigned");
             var element_view_source = document.getElementById("view_source");
@@ -528,6 +525,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             }
             $("#generate_pdf").hide();
             $(".hide-btn-response").hide();
+            $(".hide-graph").addClass("hide");
             // $(".leadSum").html('');
             $('#apply_filter').attr("disabled", true);
             show_loader("apply_filter");
@@ -554,6 +552,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 cache: false,
                 success: function(data) {
                     $('#apply_filter').attr("disabled", false);
+                    $('#apply_filter_update_count').attr("disabled", false);
 
                     hide_loader("apply_filter");
                     //alert(data);  //as a debugging message.
@@ -567,6 +566,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     if (data.status != "") {
                         $("#generate_pdf").show();
                         $(".hide-btn-response").show();
+                        $(".hide-graph").removeClass("hide");
                     }
                     if (data.excel_data != undefined) {
                         excel_data_array = data.excel_data;
@@ -590,11 +590,6 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
                     if (data.update_count_label != undefined) {
 
-                        max_count = data.max_count;
-
-                        if (max_count != undefined && parseInt(max_count) > 0) {
-                            recreate_range_slider(data.max_count);
-                        }
 
 
                         var config = {
