@@ -199,6 +199,7 @@ class Reports extends AdminController
         if (!empty($_POST["daily_update_count"])) {
             try {
                 // Assuming leads_update_count is a function defined elsewhere
+                $_POST["assigned"] = [];
                 $_POST["assigned"][] = $_POST["daily_update_count"];
                 $updateCount_day = leads_update_count($_POST, 0, 0, 1);
                 if ($updateCount_day === false) {
