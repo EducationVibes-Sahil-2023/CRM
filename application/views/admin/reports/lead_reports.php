@@ -439,8 +439,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
+            console.log(slider_data);
             $('#apply_filter').trigger("click");
-            $('#apply_filter_update_count').attr("disabled", false);
         })
         $('#apply_filter').on('click', function() {
             var element_view_assign = document.getElementById("view_assigned");
@@ -553,8 +553,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                 success: function(data) {
                     $('#apply_filter').attr("disabled", false);
                     $('#apply_filter_update_count').attr("disabled", false);
-
                     hide_loader("apply_filter");
+                    hide_loader("apply_filter_update_count");
                     //alert(data);  //as a debugging message.
                     if (data.status != undefined) {
                         // $(".leadSum").html('');
