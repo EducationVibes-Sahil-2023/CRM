@@ -442,7 +442,6 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
-            console.log(slider_data);
             $('#apply_filter').trigger("click");
         })
         $('#apply_filter').on('click', function() {
@@ -575,14 +574,11 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                     }
                     if (data.update_count_daily_data != undefined) {
                         let html_update = "<div class='row scroll-div col-12'>";
-                        console.log((data.update_count_daily_data));
-                        console.log((data.update_count_daily_data).length);
                         for (i = 0; i < (data.update_count_daily_data).length; i++) {
                             html_update += "<div class='col-md-2 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p></div>";
 
                         }
                         html_update += "<div class='row scroll-div'>";
-                        console.log(html_update);
                         $(".leads-overview-" + update_daily_staff_id).html(html_update);
                         $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
                         update_daily_staff_id = 0;
@@ -1073,14 +1069,15 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         $(".filter_reset select").change(function() {
             var selectedValue = $(this).val();
             if ($(this).attr("id") == "view_assigned") {
-                $(".filter_reset select").not(this).attr('disabled', true)
+                $(".filter_reset select").not(this).prop('disabled', true);
             } else {
-                $("#view_assigned").attr('disabled', true)
+                $("#view_assigned").prop('disabled', true);
             }
             if (selectedValue.length == 0) {
-                $(".filter_reset select").attr('disabled', false)
+                $(".filter_reset select").prop('disabled', false);
             }
         });
+
         var update_daily_staff_id = 0;
 
         function daily_update_count(id, staffid) {
