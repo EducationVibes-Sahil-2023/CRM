@@ -561,7 +561,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                         // $(".leadSum").html('');
                         // $(".leadSum").innerHTML = data.status;
                         $(".leadSum").html(data.status);
-                        $(".hide-filter").removeClass("hide");
+                        $(".filter-hide").removeClass("hide");
                     }
                     // $("#updationCounter").html(data.update_count);
                     slider_data = false;
