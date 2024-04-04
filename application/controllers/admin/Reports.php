@@ -406,7 +406,7 @@ class Reports extends AdminController
                 }
                 $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
                 $ret .= '<h4><b>' . ucwords($staff_name) . '</b> <a href="#" class="btn hide filter-hide btn-default btn-with-tooltip daily-update-count" data-staffid="' . $assigned . '" data-toggle="tooltip" data-title="' . _l('Update Count') . '" data-placement="bottom" onclick="daily_update_count(\'.leads-overview-' . $assigned . '\',' . $assigned . '); return false;"><i class="fa fa-bar-chart"></i></a></h4> 
-                <div class="row hide leads-overview-' . $assigned . '">
+                <div class="row leads-overview-' . $assigned . '" style="display:none;">
                 <hr class="hr-panel-heading" />
                 <div class="col-md-12">
                     <h4 class="no-margin">Update Count Summary</h4>
