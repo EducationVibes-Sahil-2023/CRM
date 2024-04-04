@@ -160,6 +160,9 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
         border-radius: 10px;
         box-shadow: 0px 1px 6px lightgrey;
         margin: 5px;
+        margin-bottom: 25px;
+        background: lightgray;
+        font-weight: 500;
     }
 </style>
 
@@ -460,10 +463,8 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
             var update_count_max = '';
             var update_staff_id = "";
             if (slider_data) {
-                if ($("#show_update_counts").is(":checked")) {
-                    update_count_min = document.getElementById("update_count_min").value;
-                    update_count_max = document.getElementById("update_count_max").value;
-                }
+                update_count_min = document.getElementById("update_count_min").value;
+                update_count_max = document.getElementById("update_count_max").value;
             }
             if (update_daily_staff_id != 0) {
                 update_staff_id = update_daily_staff_id;
@@ -626,7 +627,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                 responsive: true,
                                 title: {
                                     display: true,
-                                    text: "Chart.js stackable with Min/Max"
+                                    text: "Not Reachable Leads chat - Min/Max "
                                 },
                                 scales: {
                                     x: {

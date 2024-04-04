@@ -403,8 +403,8 @@ class Reports extends AdminController
                     $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
                 }
                 $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
-                $ret .= '<h4><b>' . ucwords($staff_name) . '</b></h4> <a href="#" class="btn hide btn-default btn-with-tooltip daily-update-count" data-staffid="' . $assigned . '" data-toggle="tooltip" data-title="' . _l('Update Count') . '" data-placement="bottom" onclick="daily_update_count(\'.leads-overview-' . $assigned . '\',' . $assigned . '); return false;"><i class="fa fa-bar-chart"></i></a>
-                <div class="row hide leads-overview-' . $assigned . '">
+                $ret .= '<div class="d-flex"><h4><b>' . ucwords($staff_name) . '</b></h4> <a href="#" class="btn hide btn-default btn-with-tooltip daily-update-count" data-staffid="' . $assigned . '" data-toggle="tooltip" data-title="' . _l('Update Count') . '" data-placement="bottom" onclick="daily_update_count(\'.leads-overview-' . $assigned . '\',' . $assigned . '); return false;"><i class="fa fa-bar-chart"></i></a>
+                <div class="row hide leads-overview-' . $assigned . '"></div>
                 <hr class="hr-panel-heading" />
                 <div class="col-md-12">
                     <h4 class="no-margin">Update Count Summary</h4>
@@ -578,13 +578,13 @@ class Reports extends AdminController
             $summary = get_leads_summary_filter($_POST);
             $excel_data = get_leads_summary_filter_excel($_POST);
             $status_summary = get_status_summary_filter($_POST);
-            
+
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
             $status_summary_performance = get_status_summary_filter_performance($_POST);
             $marketing_type =  $this->leads_model->get_marketing_type();
             $conversion_type = $this->leads_model->get_conversion_type();
             $conversion_type = array_column($conversion_type, null, "id");
-            
+
             $source_type = $this->leads_model->get_source();
             if (!empty($excel_data)) {
                 $excel_array["Total Details"] = $excel_data;
