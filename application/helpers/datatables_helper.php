@@ -267,7 +267,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 
     $join = implode(' ', $join);
 
-   echo $sQuery = '
+    $sQuery = '
     SELECT SQL_CALC_FOUND_ROWS ' . str_replace(' , ', ' ', implode(', ', $_aColumns)) . ' ' . $_additionalSelect . "
     FROM $sTable
     " . $join . "
