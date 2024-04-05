@@ -549,8 +549,10 @@
                               //       array_push($_table_data, $field['name']);
                               //    }
                               // }
-                              foreach ($custom_fields as $key => $field) {
-                                 array_push($_table_data, $field['name']);
+                              if (is_admin()) {
+                                 foreach ($custom_fields as $key => $field) {
+                                    array_push($_table_data, $field['name']);
+                                 }
                               }
                               //   foreach($custom_fields as $field){
                               //          if($field['name'] == 'Course'){
