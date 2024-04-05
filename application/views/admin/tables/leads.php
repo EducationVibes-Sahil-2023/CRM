@@ -82,19 +82,18 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     $join = [];
 }
 
+if (is_admin()) {
+    foreach ($custom_fields as $key => $field) {
 
-foreach ($custom_fields as $key => $field) {
+        $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
 
-    $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
+        array_push($customFieldsColumns, $selectAs);
 
-    array_push($customFieldsColumns, $selectAs);
+        array_push($aColumns, 'ctable_' . $key . '.value as ' . trim(str_replace(' ', '_', strtolower($field["name"]))));
 
-    array_push($aColumns, 'ctable_' . $key . '.value as ' . trim(str_replace(' ', '_', strtolower($field["name"]))));
-
-    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+        array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+    }
 }
-
-
 
 $lead_date_query = '';
 
