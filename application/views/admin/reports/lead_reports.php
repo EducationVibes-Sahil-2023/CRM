@@ -594,7 +594,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                             data: {
                                 labels: data.update_count_label, // Date Objects
                                 datasets: [{
-                                        label: "filter",
+                                        label: "Filtered",
                                         backgroundColor: "rgba(240, 140, 121, 0.8)",
                                         borderColor: "rgba(140, 140, 140, 1.0)",
                                         borderWidth: 0,
@@ -603,7 +603,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                         radius: 0,
                                     },
                                     {
-                                        label: "max",
+                                        label: "Max",
                                         backgroundColor: "rgba(121, 200, 121, 0.8)",
                                         borderColor: "rgba(140, 140, 140, 0.0)",
                                         borderWidth: 0,
@@ -623,7 +623,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                 responsive: true,
                                 title: {
                                     display: true,
-                                    text: "Not Reachable Leads chat - Filter/Max "
+                                    text: "Not Reachable Leads chat - Filtered/Max "
                                 },
                                 scales: {
                                     x: {
