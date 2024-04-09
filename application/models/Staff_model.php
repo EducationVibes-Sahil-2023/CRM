@@ -328,6 +328,11 @@ class Staff_model extends App_Model
         if ($role == 3) {
             $sid = get_staff_user_id(); //48;//get_staff_user_id();
 
+            // $query = $this->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            // // Close the cursor
+            // $this->db->close();
+            // return $query;
+
             $query = $this->db->query("select  *
 			from    (select * from tblstaff
 			where active = '1' order by reporting_person, staffid) products_sorted,
@@ -964,6 +969,6 @@ class Staff_model extends App_Model
 
     public function post_sale_get()
     {
-        return $this->db->where(["post_sales" => 1,"active"=>1])->get(db_prefix() . 'staff')->result_array();
+        return $this->db->where(["post_sales" => 1, "active" => 1])->get(db_prefix() . 'staff')->result_array();
     }
 }
