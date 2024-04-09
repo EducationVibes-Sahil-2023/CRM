@@ -257,36 +257,43 @@
                            <div class="activity-feed">
                               <?php
 
-
                               if (!empty($web_activity_log_data)) {
                                  foreach ($web_activity_log_data as $web_data) {
                                     $web_activity_log = json_decode($web_data["value"], true);
-                                    $log_count = count($web_activity_log);
-                                    foreach ($web_activity_log as $key => $log) {
-                              ?>
-                                       <div class="feed-item">
-                                          <div class="date">
-                                             <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['datetime']); ?>">
-                                                <?php echo time_ago($log['datetime']); ?>
-                                             </span>
-                                          </div>
-                                          <div class="text">
-                                             <a target="_blank" href="<?= $log["url"] ?>"><?= $log["url"] ?></a>
-                                          </div>
-                                          <?php
-                                          if ($key === ($log_count - 1)) {
 
-                                             echo "<div class='text'><p>New Lead Imported from Web to Lead Form</div>";
-                                          }
-                                          ?>
-                                       </div>
+                                    // Check if JSON decoding was successful
+                                    if ($web_activity_log !== null) {
+                                       $log_count = count($web_activity_log);
+                                       foreach ($web_activity_log as $key => $log) {
+                              ?>
+                                          <div class="feed-item">
+                                             <div class="date">
+                                                <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['datetime']); ?>">
+                                                   <?php echo time_ago($log['datetime']); ?>
+                                                </span>
+                                             </div>
+                                             <div class="text">
+                                                <a target="_blank" href="<?= $log["url"] ?>"><?= $log["url"] ?></a>
+                                             </div>
+                                             <?php
+                                             if ($key === ($log_count - 1)) {
+                                                echo "<div class='text'><p>New Lead Imported from Web to Lead Form</div>";
+                                             }
+                                             ?>
+                                          </div>
                               <?php
+                                       }
+                                    } else {
+                                       // JSON decoding failed, display "No Web History"
+                                       echo "<h3 class='text-center'>No Web History</h3>";
                                     }
                                  }
                               } else {
-                                 echo "<h3 class='text-center' >No Web History</h3>";
+                                 // No web activity log data available, display "No Web History"
+                                 echo "<h3 class='text-center'>No Web History</h3>";
                               }
                               ?>
+
 
 
                            </div>
