@@ -347,11 +347,13 @@
 
                                        if (strtolower(trim($call["call_status"])) == "busy") {
                                           $color = "warning";
+                                          $show_time  = true;
                                        } else if (strtolower(trim($call["call_status"])) == "answered") {
                                           $color = "success";
                                           $show_time  = true;
                                        } else if ((strtolower(trim($call["call_status"])) == "missed" || str_contains(strtolower(trim($call["call_status"])), 'disconnected'))) {
                                           $color = "danger";
+                                          $show_time  = true;
                                        }
                                     ?>
                                        <a href="javascript:void(0);">
