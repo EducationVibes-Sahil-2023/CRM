@@ -342,7 +342,7 @@
                                     </a>
                                     <?php
                                     $color = "primary";
-                                    $show_time  = false;
+                                    $show_time  = true;
                                     if (!empty($call["call_status"])) {
 
                                        if (strtolower(trim($call["call_status"])) == "busy") {
