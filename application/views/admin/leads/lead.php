@@ -256,36 +256,44 @@
                         <div class="activity-feed">
                            <div class="activity-feed">
                               <?php
-
+                              $status_no_history = true;
                               if (!empty($web_activity_log_data)) {
                                  foreach ($web_activity_log_data as $web_data) {
-                                    $web_activity_log = json_decode($web_data["value"], true);
+                                    $web_history_ = str_replace("],[", "]+/+[", $web_data["value"]);
+                                    $web_history_ = explode("+/+", $web_history_);
 
-                                    // Check if JSON decoding was successful
-                                    if ($web_activity_log !== null) {
-                                       $log_count = count($web_activity_log);
-                                       foreach ($web_activity_log as $key => $log) {
+                                    foreach ($web_history_ as $web_h) {
+                                       $web_activity_log = json_decode($web_h, true);
+                                       // Check if JSON decoding was successful
+                                       if ($web_activity_log !== null) {
+                                          $log_count = count($web_activity_log);
+                                          foreach ($web_activity_log as $key => $log) {
+                                             $status_no_history = false;
+
                               ?>
-                                          <div class="feed-item">
-                                             <div class="date">
-                                                <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['datetime']); ?>">
-                                                   <?php echo time_ago($log['datetime']); ?>
-                                                </span>
+
+                                             <div class="feed-item">
+                                                <div class="date">
+                                                   <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['datetime']); ?>">
+                                                      <?php echo time_ago($log['datetime']); ?>
+                                                   </span>
+                                                </div>
+                                                <div class="text">
+                                                   <a target="_blank" href="<?= $log["url"] ?>"><?= $log["url"] ?></a>
+                                                </div>
+                                                <?php
+                                                if ($key === ($log_count - 1)) {
+                                                   echo "<div class='text'><p>New Lead Imported from Web to Lead Form</div>";
+                                                }
+                                                ?>
                                              </div>
-                                             <div class="text">
-                                                <a target="_blank" href="<?= $log["url"] ?>"><?= $log["url"] ?></a>
-                                             </div>
-                                             <?php
-                                             if ($key === ($log_count - 1)) {
-                                                echo "<div class='text'><p>New Lead Imported from Web to Lead Form</div>";
-                                             }
-                                             ?>
-                                          </div>
                               <?php
+                                          }
+                                       } else {
+                                          if ($status_no_history) {
+                                             echo "<h3 class='text-center'>No Web History</h3>";
+                                          }
                                        }
-                                    } else {
-                                       // JSON decoding failed, display "No Web History"
-                                       echo "<h3 class='text-center'>No Web History</h3>";
                                     }
                                  }
                               } else {

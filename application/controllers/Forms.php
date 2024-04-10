@@ -170,7 +170,7 @@ class Forms extends ClientsController
 
                 if (!empty($form->state_wise)  && $form->state_wise == 1) {
                     $form->responsible = 1;
-                
+
                     if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
                         $state_name = !empty($post_data['state']) ? trim($post_data['state']) : '';
                         $city_name = !empty($post_data['city']) ? trim($post_data['city']) : '';
@@ -206,8 +206,6 @@ class Forms extends ClientsController
                             $form->responsible = $assign_staff_id[0]["staffid"];
                         }
                     }
-
-                    
                 }
 
                 if (is_gdpr() && get_option('gdpr_enable_terms_and_conditions_lead_form') == 1) {
@@ -335,6 +333,24 @@ class Forms extends ClientsController
                                 'lastcontact' => date("Y-m-d h:i:s"),
                                 'dateassigned' => date("Y-m-d")
                             ];
+
+                            // update web history json 
+                            if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
+                                $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
+
+                                $custom_fields_build['leads'] = [];
+
+                                if (empty($web_activity_log_data)) {
+                                    $custom_fields_build['leads'][WEB_HISTORY_ID] = !empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "";
+                                } else {
+                                    $custom_fields_build['leads'][WEB_HISTORY_ID] = $web_activity_log_data["value"] . "," . (!empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "");
+                                }
+                    
+                                if (!empty($custom_fields_build['leads'])) {
+                                    handle_custom_fields_post($duplicateLead->id, $custom_fields_build);
+                                }
+                            }
+
 
                             if (!empty($form->lead_source)) {
                                 $updateStatus['source'] = $form->lead_source;
