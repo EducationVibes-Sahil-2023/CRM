@@ -8,8 +8,10 @@ $this->ci->load->model('gdpr_model');
 $lockAfterConvert      = get_option('lead_lock_after_convert_to_customer');
 
 $has_permission_delete = has_permission('leads', '', 'delete');
-
-$custom_fields         = get_table_custom_fields('leads');
+$custom_fields = [];
+if (is_admin()) {
+    $custom_fields         = get_table_custom_fields('leads');
+}
 
 $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 
