@@ -382,7 +382,7 @@ function get_status_summary_filter($params)
     $totalSource         = count($sources);
     $has_permission_view   = has_permission('leads', '', 'view');
     $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+    $whereNoViewPermission = '( l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
 
     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
     if ($role == 3) {
@@ -962,7 +962,7 @@ function get_leads_summary_filter_excel($params)
     $totalStatuses         = count($statuses);
     $has_permission_view   = has_permission('leads', '', 'view');
     $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+    $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
 
     // $statuses[] = [
     //     'lost'  => true,
@@ -1142,7 +1142,7 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     $totalStatuses         = count($statuses);
     $has_permission_view   = has_permission('leads', '', 'view');
     $sql                   = '';
-    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+    $whereNoViewPermission = '( l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
 
     // $statuses[] = [
     //     'lost'  => true,
