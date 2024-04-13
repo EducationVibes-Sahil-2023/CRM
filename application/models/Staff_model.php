@@ -328,30 +328,19 @@ class Staff_model extends App_Model
         if ($role == 3) {
             $sid = get_staff_user_id(); //48;//get_staff_user_id();
 
-            // $query = $this->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
-            // // Close the cursor
-            // $this->db->close();
-            // return $query;
-
-            $query = $this->db->query("select  *
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-            $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result_array();
-            array_push($query, $selfDet[0]);
-
-            //$query = [];
-            //         $query_sql = $this->db->query("select staffid from " . db_prefix() . "staff where reporting_person = {$sid} and active = '1' ")->result_array();
-            //       $staff_ids = implode(",", array_column($query_sql, 'staffid'));
-
-            //     if (!empty($staff_ids)) {
-            //       $query = $this->db->query("select * from " . db_prefix() . "staff where reporting_person in ({$staff_ids}) or staffid in ({$staff_ids}) or staffid='{$sid}' and active = '1' order by reporting_person, staffid")->result_array();
-            // }
-            // return $query;
-
+            $query = $this->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            $this->db->close();
             return $query;
+
+            // $query = $this->db->query("select  *
+            // from    (select * from tblstaff
+            // where active = '1' order by reporting_person, staffid) products_sorted,
+            // 		(select @pv := $sid) initialisation
+            // where   find_in_set(reporting_person, @pv)
+            // and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+            // $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result_array();
+            // array_push($query, $selfDet[0]);
+            // return $query;
         }
         $this->db->order_by('firstname', 'desc');
 
@@ -384,16 +373,20 @@ class Staff_model extends App_Model
         $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
         if ($role == 3) {
             $sid = get_staff_user_id(); //48;//get_staff_user_id();
-            // $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result();
-            $query = $this->db->query("select  *
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-            $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result_array();
-            array_push($query, $selfDet[0]);
+
+            $query = $this->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            $this->db->close();
             return $query;
+
+            // $query = $this->db->query("select  *
+			// from    (select * from tblstaff
+			// where active = '1' order by reporting_person, staffid) products_sorted,
+			// 		(select @pv := $sid) initialisation
+			// where   find_in_set(reporting_person, @pv)
+			// and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+            // $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result_array();
+            // array_push($query, $selfDet[0]);
+            // return $query;
         }
         $this->db->order_by('firstname', 'desc');
 

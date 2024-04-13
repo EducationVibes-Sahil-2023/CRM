@@ -210,26 +210,18 @@ if ($role == 3) {
     // $this->load->database();
     $sid = get_staff_user_id(); //48;//get_staff_user_id();
 
-    $teamids = $this->ci->db->query("select staffid
-			from    (select * from tblstaff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
-    // return $query;
-    // array_push($teamids,get_staff_user_id());
-    // foreach ($teamids as $t) {
-    # code...
-    // }
+    $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+    $this->ci->db->close();
+    $this->ci->db->initialize();
+    // $teamids = $this->ci->db->query("select staffid
+    // 		from    (select * from tblstaff
+    // 		where active = '1' order by reporting_person, staffid) products_sorted,
+    // 				(select @pv := $sid) initialisation
+    // 		where   find_in_set(reporting_person, @pv)
+    // 		and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+
     $idsarr = array_column($teamids, 'staffid');
-
-    // echo "<pre>";print_r($idsarr);
     $sids = implode(",", $idsarr);
-    // echo "<pre>";print_r($sids);
-
-    // array_push($where, 'AND assigned in (' .$sid. ','. $sids. ')');
-    // array_push($where, 'AND '.db_prefix().'clients.userid IN (SELECT customer_id FROM '.db_prefix().'customer_admins WHERE staff_id IN (' . $sid. ','. $sids.')');
-    // print_r($where);die;
 }
 
 if ($this->ci->input->post('requires_registration_confirmation')) {
