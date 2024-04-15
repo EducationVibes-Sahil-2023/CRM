@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head();
-$filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
+$role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@3.4.0/dist/exceljs.min.js"></script>
@@ -199,7 +200,7 @@ $filter = !empty($_GET["filter"]) ? $_GET["filter"] : 0;
                                 echo '</div>';
                                 ?>
                             </div>
-                            <?php if ($filter == 1) { ?>
+                            <?php if ($role == 3 || is_admin()) { ?>
                                 <div class="col-md-2 leads-filter-column filter_reset">
                                     <?php
                                     echo '<div id="leads-filter-source">';
