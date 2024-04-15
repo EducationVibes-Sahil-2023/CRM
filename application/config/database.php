@@ -90,7 +90,7 @@ $db['default'] = array_merge([
     'username'     => APP_DB_USERNAME,
     'password'     => APP_DB_PASSWORD,
     'database'     => APP_DB_NAME,
-    'dbdriver'     => defined('APP_DB_DRIVER') ? 'mysqli' : 'mysqli',
+    'dbdriver'     => defined('APP_DB_DRIVER') ? APP_DB_DRIVER : 'mysqli',
     'dbprefix'     => db_prefix(),
     'pconnect'     => false,
     'db_debug'     => (ENVIRONMENT !== 'production'),
