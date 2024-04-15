@@ -146,13 +146,15 @@ if (!$filter || ($filter && $filter != 'lost' && $filter != 'junk')) {
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 if ($role == 3) {
     $sid = get_staff_user_id();
-
-    $teamids = $this->ci->db->query("select staffid
-			from    (select * from " . db_prefix() . "staff
-			where active = '1' order by reporting_person, staffid) products_sorted,
-					(select @pv := $sid) initialisation
-			where   find_in_set(reporting_person, @pv)
-			and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+    $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+    $this->ci->db->close();
+    $this->ci->db->initialize();
+    // $teamids = $this->ci->db->query("select staffid
+    // 		from    (select * from " . db_prefix() . "staff
+    // 		where active = '1' order by reporting_person, staffid) products_sorted,
+    // 				(select @pv := $sid) initialisation
+    // 		where   find_in_set(reporting_person, @pv)
+    // 		and     length(@pv := concat(@pv, ',', staffid))")->result_array();
     $idsarr = array_column($teamids, 'staffid');
 
     $sids = implode(",", $idsarr);
