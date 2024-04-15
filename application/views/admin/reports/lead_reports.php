@@ -1,6 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head();
-$role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+$staff_details = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
+// $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+$role = $staff_details->role;
+$staff_department = $staff_details->department;
 
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -200,7 +203,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                 echo '</div>';
                                 ?>
                             </div>
-                            <?php if ($role == 3 || is_admin()) { ?>
+                            <?php if (is_admin()) { ?>
                                 <div class="col-md-2 leads-filter-column filter_reset">
                                     <?php
                                     echo '<div id="leads-filter-source">';
@@ -208,6 +211,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     echo '</div>';
                                     ?>
                                 </div>
+                            <?php } ?>
+                            <?php if ($role == 3 || is_admin()) { ?>
+
 
                                 <div class="col-md-2 leads-filter-column filter_reset">
                                     <?php
@@ -450,7 +456,12 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             var element_view_source = document.getElementById("view_source");
             var element_view_status = document.getElementById("view_status");
             var location = document.getElementById("location");
-            var department = document.getElementById("department");
+            <?php if (is_admin()) { ?>
+                var department = document.getElementById("department");
+            <?php } else if ($role == 3 && $staff_department != "") { ?>
+                var department = "<?= $staff_department ?>";
+            <?php } ?>
+
             var up_from_date = document.getElementById("up_from_date").value;
             var up_to_date = document.getElementById("up_to_date").value;
             var lead_type = $("#lead_type").val();
@@ -489,6 +500,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                 }) => value);
             }
 
+
             if (typeof(location) != 'undefined' && location != null) {
                 view_location = document.getElementById('location').selectedOptions;
                 view_location = Array.from(view_location).map(({
@@ -496,12 +508,17 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                 }) => value);
             }
 
-            if (typeof(department) != 'undefined' && department != null) {
-                view_department = document.getElementById('department').selectedOptions;
-                view_department = Array.from(view_department).map(({
-                    value
-                }) => value);
-            }
+            <?php if (is_admin()) { ?>
+                if (typeof(department) != 'undefined' && department != null) {
+                    view_department = document.getElementById('department').selectedOptions;
+                    view_department = Array.from(view_department).map(({
+                        value
+                    }) => value);
+                }
+            <?php } else if ($role == 3 && $staff_department != "") { ?>
+                view_department = "<?= $staff_department ?>";
+            <?php } ?>
+
 
 
             var from_date = document.getElementById("from_date").value;
