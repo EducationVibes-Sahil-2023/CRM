@@ -821,4 +821,3 @@ function data_call_data()
         contact
 ")->result_array();
 }
-

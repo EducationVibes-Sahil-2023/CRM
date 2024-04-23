@@ -1812,6 +1812,7 @@ $lang['not_assigned_lead_to_you']                                 = 'assigned le
 $lang['not_lead_activity_assigned_to']                            = '%s assigned to %s';
 $lang['not_lead_activity_attachment_deleted']                     = 'Deleted Attachment';
 $lang['not_lead_activity_status_updated']                         = '%s updated lead status from %s to %s';
+$lang['not_lead_activity_source_updated']                         = '%s updated lead source from %s to %s';
 $lang['not_lead_activity_contacted']                              = '%s contacted this lead on %s';
 $lang['not_lead_activity_created']                                = '%s created lead';
 $lang['not_lead_activity_marked_lost']                            = 'Marked as lost';

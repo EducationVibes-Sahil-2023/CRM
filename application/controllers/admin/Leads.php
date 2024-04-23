@@ -97,9 +97,8 @@ class Leads extends AdminController
         $updateCount = leads_update_count($_POST);
         // $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
-        
-        $max_count = '';
 
+        $max_count = '';
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -2625,9 +2624,11 @@ class Leads extends AdminController
                                 // ]);
                             }
 
+
                             if ($source) {
 
                                 $update['source'] = $source;
+                                $this->leads_model->update_lead_source($source, $id);
                             }
 
                             if ($lead_type) {

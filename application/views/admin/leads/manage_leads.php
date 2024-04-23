@@ -246,7 +246,7 @@
                                     $min_range = $max_range;
                                  }
                                  ?>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <select name="neet_score" id="neet_score" class="selectpicker" data-width="100%">
                                        <option value="">Select Neet Score</option>
                                        <?php foreach ($neet_score_range as $r_val) {
@@ -256,9 +256,8 @@
                                        <?php } ?>
                                     </select>
                                     <?php
-                                    // echo render_leads_type_select($type, ($this->input->post('type') ? $this->input->post('type') : 'Select Lead Type'),'lead_import_type','type', [], true);
                                     ?>
-                                 </div>
+                                 </div> -->
 
 
 
@@ -366,16 +365,23 @@
                                        <input type="text" class="form-control datepicker" name="followup_to_date" id="followup_to_date" placeholder="To Followup Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-3 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="assign_from_date" id="assign_from_date" placeholder="From Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-3 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
+                                 <?php if (is_admin()) { ?>
+                                    <div class="col-md-2 leads-filter-column">
+                                       <div class="form-group">
+                                          <input type="text" class="form-control datepicker" name="last_contact_date" id="last_contact_date" placeholder="Last Contact Date" autocomplete="off">
+                                       </div>
+                                    </div>
+                                 <?php } ?>
                                  <div class="col-md-3 leads-filter-column">
                                     <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
                                     <div id="rangeSlider" style="display:none;"></div>
@@ -862,7 +868,7 @@
          var up_to_date = document.getElementById("up_to_date").value;
          var up_from_date_call = document.getElementById("up_from_date_call").value;
          var up_to_date_call = document.getElementById("up_to_date_call").value;
-
+         var last_contact_date = document.getElementById("last_contact_date").value;
          if (to_date != '') {
             if (from_date == '') {
                $("#from_date").focus();
@@ -1006,6 +1012,7 @@
          var update_count_min, update_count_max = '';
          var up_from_date_call = document.getElementById("up_from_date_call").value;
          var up_to_date_call = document.getElementById("up_to_date_call").value;
+         var last_contact_date = document.getElementById("last_contact_date").value;
          if ($("#show_update_counts").is(":checked")) {
             update_count_min = document.getElementById("update_count_min").value;
             update_count_max = document.getElementById("update_count_max").value;
@@ -1038,6 +1045,7 @@
                neet_score: $("#neet_score").val(),
                up_from_date_call: up_from_date_call,
                up_to_date_call: up_to_date_call,
+               last_contact_date: last_contact_date
 
 
             },

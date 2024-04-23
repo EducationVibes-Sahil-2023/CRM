@@ -585,7 +585,7 @@ class Leads_model extends App_Model
 
         $data['email'] = trim($data['email']);
 
-
+        $this->update_lead_source($data['source'], $id);
 
         $this->db->where('id', $id);
 
@@ -594,6 +594,8 @@ class Leads_model extends App_Model
         if ($this->db->affected_rows() > 0) {
 
             $affectedRows++;
+
+
 
             if (isset($data['status']) && $current_status_id != $data['status']) {
 
@@ -604,6 +606,7 @@ class Leads_model extends App_Model
                     'last_status_change' => date('Y-m-d H:i:s'),
 
                 ]);
+
 
                 $new_status_name = $this->get_status($data['status'])->name;
 
@@ -683,6 +686,45 @@ class Leads_model extends App_Model
      * @return boolean
 
      */
+
+
+    public function update_lead_source($sourceid, $leadid)
+    {
+        $current_lead_data = $this->get($leadid);
+
+        if (!$current_lead_data) {
+            // Handle the case where lead data is not found
+            return false;
+        }
+
+        $old_source_data = $this->get_source($current_lead_data->source);
+        $new_source_data = $this->get_source($sourceid);
+
+        if (!$old_source_data || !$new_source_data) {
+            // Handle the case where source data is not found
+            return false;
+        }
+
+        if (!empty($current_lead_data->source) && !empty($sourceid) && ($current_lead_data->source != $sourceid)) {
+            log_activity('Leads Source Updated [SourceID: ' . $old_source_data->id . ', Name: ' . $new_source_data->id . ']');
+            $this->log_lead_activity($leadid, 'not_lead_activity_source_updated', false, serialize([
+                get_staff_full_name(),
+                $old_source_data->name,
+                $new_source_data->name,
+            ]));
+        } else {
+            log_activity('Leads Source Updated [SourceID: ' . $old_source_data->id . ', Name: ' . $new_source_data->id . ']');
+            $this->log_lead_activity($leadid, 'not_lead_activity_source_updated', false, serialize([
+                get_staff_full_name(),
+                $old_source_data->name,
+                $new_source_data->name,
+            ]));
+        }
+
+        return true;
+    }
+
+
 
     public function delete($id)
 
@@ -2719,7 +2761,7 @@ class Leads_model extends App_Model
 
     public function get_staff_list()
     {
-        $this->db->select('firstname,lastname,staffid');
+        $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name');
         return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
     }
 }

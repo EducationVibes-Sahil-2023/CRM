@@ -5,12 +5,22 @@ $staff_details = $this->db->where('staffid', get_staff_user_id())->get(db_prefix
 $role = $staff_details->role;
 $staff_department = $staff_details->department;
 
+$fb_query = $this->db->select('DISTINCT(website) as fb_name')->where("website!=", "")->get('leads');
+$facebook_names = $fb_query->result_array();
+
+$source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtube"), array("name" => "Meta"), array("name" => "Organic"), array("name" => "Direct"));
+
+
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@3.4.0/dist/exceljs.min.js"></script>
 <link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
 <script src="<?= base_url("assets/js/uislider.js") ?>"></script>
 <style>
+    .mb-3 {
+        margin-bottom: 5px;
+    }
+
     .report-data {
         /* padding: 10px !important; */
         /* box-shadow: 0px 0px 10px lightgray; */
@@ -32,7 +42,7 @@ $staff_department = $staff_details->department;
     } */
 
     .leadSum .panel_s .panel-body {
-        min-height: 360px;
+        /* min-height: 360px; */
         padding: 10px !important;
     }
 
@@ -152,11 +162,15 @@ $staff_department = $staff_details->department;
     }
 
     .scroll-div {
-        margin: 10px 0px;
+        padding: 0px 50px;
         display: -webkit-inline-box;
-        width: 100%;
-        overflow: scroll;
+        margin: 10px 10px;
+        width: 98%;
+        overflow-x: auto;
+        overflow-y: auto;
+        white-space: nowrap;
     }
+
 
     .show-daily-update {
         padding: 15px 10px;
@@ -167,6 +181,96 @@ $staff_department = $staff_details->department;
         margin-bottom: 25px;
         background: lightgray;
         font-weight: 500;
+    }
+
+    .border-right h3,
+    h4,
+    .border-right span {
+        font-size: 16px !important;
+    }
+
+    .leadSum .panel_s .panel-body,
+    .leadSum .panel_s,
+    .leadSum .report-data {
+        border: unset !important;
+        border-radius: unset !important;
+        /* box-shadow: unset !important; */
+        padding: 10px !important;
+    }
+
+    .leadSum .border-right {
+        background: #fff;
+        border: 1px solid #dce1ef;
+        border-radius: 4px;
+        padding: 5px 10px;
+        position: relative;
+        margin: 3px;
+        width: 19%;
+        box-shadow: 1px 1px 3px lightgray;
+
+    }
+
+    .leadSum .col-md-6 {
+        padding: 0px !important;
+        width: 100%;
+        /* border-right: 1px solid black; */
+    }
+
+    .col-md-12.parrent-div {
+        padding: 0px !important;
+    }
+
+    .assignation-total h4 {
+        margin: 5px 0px;
+
+    }
+
+    .leadSum .col-md-6 {
+        width: 100% !important;
+        padding: 0px;
+        margin-bottom: 10px;
+
+    }
+
+    .assignation-total .panel-body {
+        padding: 5px 10px;
+    }
+
+    .leadSum .parrent-div .col-md-12 {
+        padding: 0px !important;
+    }
+
+    .leadSum .col-md-12.border-right {
+        width: 100%;
+
+    }
+
+    span.show-persentage {
+        float: right;
+    }
+
+    [class^="leads-overview-"]::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE and Edge */
+    [class^="leads-overview-"] {
+        -ms-overflow-style: none;
+    }
+
+    /* Hide scrollbar for Firefox */
+    [class^="leads-overview-"] {
+        scrollbar-width: none;
+    }
+
+    div#show_hide_staff_list {
+
+        margin-top: 20px;
+    }
+
+    div#show_hide_staff_list .leadSum {
+        padding: 0px;
+        border: none;
     }
 </style>
 
@@ -200,6 +304,23 @@ $staff_department = $staff_details->department;
                                 <?php
                                 echo '<div id="leads-filter-source">';
                                 echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
+                                echo '</div>';
+                                ?>
+                            </div>
+                            <div class="col-md-2 leads-filter-column hide_show_35 hide">
+                                <?php
+                                $selected = array();
+                                echo '<div id="leads-filter-status">';
+                                echo render_select('view_facebook_names[]', $facebook_names, array('fb_name', 'fb_name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('Facebook Names'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_facebook_names');
+                                echo '</div>';
+                                ?>
+                            </div>
+
+                            <div class="col-md-2 leads-filter-column hide_show_39 hide">
+                                <?php
+                                $selected = array();
+                                echo '<div id="leads-filter-status">';
+                                echo render_select('view_source_marketing[]', $source_marketing, array('name', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('Source Marketing'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_source_marketing');
                                 echo '</div>';
                                 ?>
                             </div>
@@ -263,17 +384,30 @@ $staff_department = $staff_details->department;
                             </div>
                         </div>
                         <!-- </form> -->
-                        <?php if ($filter == 1) { ?>
-                            <div class="">
+                        <div class="">
 
-                                <div class="col-md-12">
-                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
+                        </div>
+                    </div>
+                    <!-- <div class="col-md-12">
+
+                </div> -->
+                </div>
+                <div class="col-md-12 row">
+                    <div class="panel_s">
+                        <div class="" id="pdf_generate">
+                            <div class="panel-body">
+                                <h3>Report Generate</h3>
+
+                                <div class="col-md-12 row">
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls'); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
                                     <div class="clearfix"></div>
-                                    <div class="row hide leads-overview">
+                                    <div class="row hide col-md-12 leads-overview-calls">
                                         <hr class="hr-panel-heading" />
                                         <div class="col-md-12">
                                             <h4 class="no-margin">Report Summary</h4>
                                         </div>
+                                        <br>
+                                        <br>
                                         <div id="leadSum">
                                             <div class="col-md-9 leads-filter-column">
                                                 <label>Update Count Range <input type="checkbox" value="checked" style="display:none;" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
@@ -285,20 +419,26 @@ $staff_department = $staff_details->department;
                                                 <button type="button" class="btn btn-primary" id="apply_filter_update_count" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Processing ">Apply Filter</button>
                                             </div>
                                             <canvas id="canvas"></canvas>
+
+
                                         </div>
+                                    </div>
+                                    <div id="show_hide_staff_list" class="hide">
+                                        <h4 class="bold">Staff List</h4>
+                                        <hr>
+                                        <div id="total_staff_list" class="col-12 panel-body leadSum mt-3">
+                                        </div>
+                                    </div>
+                                    <hr>
+
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-leads hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-data'); return false;">Show Leads Chart <i class="fa fa-bar-chart"></i></a>
+                                    <div class="row col-md-12 hide leads-overview-data">
+                                        <h4>Total leads summary</h4>
+                                        <hr>
+                                        <canvas id="canvas_"></canvas>
                                     </div>
                                 </div>
                             </div>
-                        <?php } ?>
-                    </div>
-                    <!-- <div class="col-md-12">
-
-                </div> -->
-                </div>
-                <div class="col-md-12 row">
-                    <div class="panel_s">
-                        <div class="panel-body" id="pdf_generate">
-                            <h3>Report Generate</h3>
                             <div>
                                 <div class="leadSum">
                                 </div>
@@ -326,126 +466,99 @@ $staff_department = $staff_details->department;
         var xhr = null;
         var slider_data = false;
 
-        <?php if ($filter == 1) { ?>
+        function show_update_count_range(obj) {
+            if ($(obj).is(":checked")) {
+                $("#rangeSlider").show();
+                setMinMaxValues();
+            } else {
+                $("#rangeSlider").hide();
 
-            function show_update_count_range(obj) {
-                if ($(obj).is(":checked")) {
-                    $("#rangeSlider").show();
-                    setMinMaxValues();
-                } else {
-                    $("#rangeSlider").hide();
-
-                }
             }
+        }
 
-            function setMinMaxValues() {
-                // Get the current values of the slider
-                var currentValues = rangeSlider.noUiSlider.get();
-                // max_count = 30;
-                // Update the options with new min and max values
-                rangeSlider.noUiSlider.updateOptions({
-                    range: {
-                        'min': 0,
-                        'max': max_count
+        function setMinMaxValues() {
+            // Get the current values of the slider
+            var currentValues = rangeSlider.noUiSlider.get();
+            // max_count = 30;
+            // Update the options with new min and max values
+            rangeSlider.noUiSlider.updateOptions({
+                range: {
+                    'min': 0,
+                    'max': max_count
+                },
+                start: [0, max_count] // Preserve the current slider values
+            });
+        }
+
+        function recreate_range_slider(max) {
+
+            if (max != undefined && parseInt(max) != max_count) {
+                // max_count =30;
+                rangeSlider.noUiSlider.destroy();
+                // max_count = parseInt(max);
+                let min_ = document.getElementById("update_count_min").value;
+                let max_ = document.getElementById("update_count_max").value;
+                make_range_slider(min_, max_);
+            }
+        }
+        // Initialize the range slider
+        function make_range_slider(min = 0, max = 0) {
+            var rangeSlider = document.getElementById('rangeSlider');
+
+            noUiSlider.create(rangeSlider, {
+                start: [min, max], // Initial values for min and max
+                connect: true,
+                tooltips: [true, true],
+                format: {
+                    to: function(value) {
+                        return Math.round(value); // Round the tooltip values
                     },
-                    start: [0, max_count] // Preserve the current slider values
-                });
-            }
-
-            function recreate_range_slider(max) {
-
-                if (max != undefined && parseInt(max) != max_count) {
-                    // max_count =30;
-                    rangeSlider.noUiSlider.destroy();
-                    // max_count = parseInt(max);
-                    let min_ = document.getElementById("update_count_min").value;
-                    let max_ = document.getElementById("update_count_max").value;
-                    make_range_slider(min_, max_);
-                }
-            }
-            // Initialize the range slider
-            function make_range_slider(min = 0, max = 0) {
-                var rangeSlider = document.getElementById('rangeSlider');
-
-                noUiSlider.create(rangeSlider, {
-                    start: [min, max], // Initial values for min and max
-                    connect: true,
-                    tooltips: [true, true],
-                    format: {
-                        to: function(value) {
-                            return Math.round(value); // Round the tooltip values
-                        },
-                        from: function(value) {
-                            return parseFloat(value); // Convert tooltip values to numbers
-                        }
-                    },
-                    step: 1,
-                    range: {
-                        'min': 0,
-                        'max': max_count
+                    from: function(value) {
+                        return parseFloat(value); // Convert tooltip values to numbers
                     }
-                });
+                },
+                step: 1,
+                range: {
+                    'min': 0,
+                    'max': max_count
+                }
+            });
 
 
-                // Get handles for min and max sliders
-                var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
-                var minSliderHandle = sliderHandles[0];
-                var maxSliderHandle = sliderHandles[1];
+            // Get handles for min and max sliders
+            var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+            var minSliderHandle = sliderHandles[0];
+            var maxSliderHandle = sliderHandles[1];
 
-                // Set event listeners for slider change
-                rangeSlider.noUiSlider.on('update', function(values, handle) {
-                    var minValue = parseFloat(values[0]);
-                    var maxValue = parseFloat(values[1]);
-                    // Update the hidden input values
-                    document.getElementById('update_count_min').value = minValue;
-                    document.getElementById('update_count_max').value = maxValue;
+            // Set event listeners for slider change
+            rangeSlider.noUiSlider.on('update', function(values, handle) {
+                var minValue = parseFloat(values[0]);
+                var maxValue = parseFloat(values[1]);
+                // Update the hidden input values
+                document.getElementById('update_count_min').value = minValue;
+                document.getElementById('update_count_max').value = maxValue;
 
-                });
+            });
 
-                rangeSlider.noUiSlider.on('change', function(values, handle) {
+            rangeSlider.noUiSlider.on('change', function(values, handle) {
 
 
-                });
+            });
 
-                // Set event listeners for slider handle drag
-                minSliderHandle.addEventListener('drag', function() {
-                    var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
-                    rangeSlider.noUiSlider.set([minValue, null]);
-                });
+            // Set event listeners for slider handle drag
+            minSliderHandle.addEventListener('drag', function() {
+                var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+                rangeSlider.noUiSlider.set([minValue, null]);
+            });
 
-                maxSliderHandle.addEventListener('drag', function() {
-                    var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
-                    rangeSlider.noUiSlider.set([null, maxValue]);
-                });
-            }
-            make_range_slider(0, max_count);
-
-        <?php } ?>
-
-        function randomScalingFactor() {
-            return Math.round(Math.random() * 100 * (Math.random() > 0.5 ? -1 : 1));
+            maxSliderHandle.addEventListener('drag', function() {
+                var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+                rangeSlider.noUiSlider.set([null, maxValue]);
+            });
         }
+        make_range_slider(0, max_count);
 
-        function newDate(days) {
-            return moment()
-                .add(days, "d");
-        }
 
-        function newDateString(days) {
-            return moment()
-                .add(days, "d")
-                .format(timeFormat);
-        }
-
-        function newTimestamp(days) {
-            return moment()
-                .add(days, "d")
-                .unix();
-        }
-
-        function resetZoom() {
-            window.myLine.resetZoom();
-        }
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
@@ -455,6 +568,8 @@ $staff_department = $staff_details->department;
             var element_view_assign = document.getElementById("view_assigned");
             var element_view_source = document.getElementById("view_source");
             var element_view_status = document.getElementById("view_status");
+            var element_view_fb_name = document.getElementById("view_facebook_names");
+            var element_view_google_type = document.getElementById("view_source_marketing");
             var location = document.getElementById("location");
             <?php if (is_admin()) { ?>
                 var department = document.getElementById("department");
@@ -468,6 +583,8 @@ $staff_department = $staff_details->department;
             var view_assigned_options = "";
             var view_source_options = "";
             var view_status_options = "";
+            var view_fb_options = "";
+            var view_google_options = "";
             var view_location = "";
             var view_department = "";
             var update_count_min = '';
@@ -490,6 +607,20 @@ $staff_department = $staff_details->department;
             if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
                 view_status_options = document.getElementById('view_status').selectedOptions;
                 view_status_options = Array.from(view_status_options).map(({
+                    value
+                }) => value);
+            }
+
+            if (typeof(element_view_fb_name) != 'undefined' && element_view_fb_name != null) {
+                view_fb_options = document.getElementById('view_facebook_names').selectedOptions;
+                view_fb_options = Array.from(view_fb_options).map(({
+                    value
+                }) => value);
+            }
+
+            if (typeof(element_view_google_type) != 'undefined' && element_view_google_type != null) {
+                view_google_options = document.getElementById('view_source_marketing').selectedOptions;
+                view_google_options = Array.from(view_google_options).map(({
                     value
                 }) => value);
             }
@@ -544,6 +675,8 @@ $staff_department = $staff_details->department;
             $("#generate_pdf").hide();
             $(".hide-btn-response").hide();
             $(".hide-graph").addClass("hide");
+            $("#show_hide_staff_list").addClass("hide");
+
             // $(".leadSum").html('');
             $('#apply_filter').attr("disabled", true);
             show_loader("apply_filter");
@@ -563,7 +696,9 @@ $staff_department = $staff_details->department;
                     update_count_max: update_count_max,
                     location: view_location,
                     department: view_department,
-                    daily_update_count: update_staff_id
+                    daily_update_count: update_staff_id,
+                    google_source: view_google_options,
+                    fb_source: view_fb_options
 
                 },
                 dataType: "JSON",
@@ -585,7 +720,6 @@ $staff_department = $staff_details->department;
                     if (data.status != "") {
                         $("#generate_pdf").show();
                         $(".hide-btn-response").show();
-                        $(".hide-graph").removeClass("hide");
                     }
                     if (data.excel_data != undefined) {
                         excel_data_array = data.excel_data;
@@ -603,11 +737,13 @@ $staff_department = $staff_details->department;
 
                     update_daily_staff_id = 0;
 
-                    if (data.update_count_label != undefined) {
 
+                    if (data.update_count_label != undefined && data.update_count_label.length > 0) {
+                        $("#show_hide_staff_list").removeClass("hide");
+                        $("#total_staff_list").html(data.total_staff_html);
+                        $(".hide-graph-calls").removeClass("hide");
 
-
-                        var config = {
+                        var configCalls = {
                             type: "bar",
                             data: {
                                 labels: data.update_count_label, // Date Objects
@@ -630,6 +766,15 @@ $staff_department = $staff_details->department;
                                         line: false,
                                         radius: 0,
                                     },
+                                    {
+                                        label: "Total leads",
+                                        backgroundColor: "rgba(0, o, 238, 0.8)",
+                                        borderColor: "rgba(140, 140, 140, 1.0)",
+                                        borderWidth: 0,
+                                        data: data.total_leads,
+                                        fill: false,
+                                        radius: 0,
+                                    }
                                 ]
                             },
                             options: {
@@ -675,17 +820,91 @@ $staff_department = $staff_details->department;
                         };
 
                         // Get the canvas context
-                        var ctx = document.getElementById("canvas").getContext("2d");
+                        var ctxCalls = document.getElementById("canvas").getContext("2d");
 
                         // Destroy the existing chart (if it exists)
-                        if (window.myLine) {
-                            window.myLine.destroy();
+                        if (window.myCallsChart) {
+                            window.myCallsChart.destroy();
                         }
 
-                        // Create a new chart with the updated configuration
-                        window.myLine = new Chart(ctx, config);
+                        // Create a new chart with the updated configCallsuration
+                        window.myCallsChart = new Chart(ctxCalls, configCalls);
 
                     }
+
+                    // if (data.total_leads_staff != undefined) {
+
+
+                    //     $(".hide-graph-leads").removeClass("hide");
+
+                    //     var config = {
+                    //         type: "bar",
+                    //         data: {
+                    //             labels: data.total_leads_staff, // Date Objects
+                    //             datasets: [{
+                    //                 label: "Total leads",
+                    //                 backgroundColor: "rgba(240, 140, 121, 0.8)",
+                    //                 borderColor: "rgba(140, 140, 140, 1.0)",
+                    //                 borderWidth: 0,
+                    //                 data: data.total_leads,
+                    //                 fill: false,
+                    //                 radius: 0,
+                    //             }]
+                    //         },
+                    //         options: {
+                    //             tooltips: {
+                    //                 mode: 'index',
+                    //                 intersect: false,
+                    //                 displayColors: false,
+                    //             },
+                    //             responsive: true,
+                    //             title: {
+                    //                 display: true,
+                    //                 text: "Total Leads chat"
+                    //             },
+                    //             scales: {
+                    //                 x: {
+                    //                     stacked: true,
+                    //                     format: "HH mm",
+                    //                 },
+                    //                 y: {
+                    //                     stacked: true,
+                    //                     scaleLabel: {
+                    //                         display: true,
+                    //                         labelString: "value"
+                    //                     }
+                    //                 }
+                    //             },
+                    //             pan: {
+                    //                 enabled: true,
+                    //                 mode: "x",
+                    //                 speed: 10,
+                    //                 threshold: 10
+                    //             },
+                    //             zoom: {
+                    //                 enabled: true,
+                    //                 drag: false,
+                    //                 mode: "xy",
+                    //                 limits: {
+                    //                     max: 10,
+                    //                     min: 0.5
+                    //                 }
+                    //             }
+                    //         }
+                    //     };
+
+                    //     // Get the canvas context
+                    //     var ctx = document.getElementById("canvas_").getContext("2d");
+
+                    //     // Destroy the existing chart (if it exists)
+                    //     if (window.myLine) {
+                    //         window.myLine.destroy();
+                    //     }
+
+                    //     // Create a new chart with the updated configuration
+                    //     window.myLine = new Chart(ctx, config);
+
+                    // }
                 }
             }); // you have missed this bracket
             return false;
@@ -1121,4 +1340,29 @@ $staff_department = $staff_details->department;
                 $('#apply_filter').trigger("click");
             }
         }
+
+        $("#view_source").change(function() {
+            $("[class*='hide_show_']").filter(function() {
+                // Check if any of the classes start with "hide_show_"
+                return $(this).attr("class").split(" ").some(function(className) {
+                    return className.startsWith("hide_show_");
+                });
+            }).addClass("hide");
+            $("[class*='hide_show_'] select").val('').selectpicker('refresh');
+
+            var selectedValues = $(this).val();
+            if (selectedValues.length > 1) {
+
+
+            } else if (selectedValues.length === 1) {
+                selectedValues.forEach(function(selectedValue) {
+                    console.log(selectedValue);
+                    var elementID = ".hide_show_" + selectedValue;
+                    console.log($(elementID).length);
+                    if ($(elementID).length > 0) {
+                        $(elementID).removeClass("hide");
+                    }
+                });
+            }
+        });
     </script>
