@@ -334,6 +334,10 @@ class Forms extends ClientsController
                                 'dateassigned' => date("Y-m-d")
                             ];
 
+                            if (!empty($post_data["website"])) {
+                                $updateStatus['website'] = $post_data["website"];
+                            }
+
                             // update web history json 
                             if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
                                 $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
@@ -345,7 +349,7 @@ class Forms extends ClientsController
                                 } else {
                                     $custom_fields_build['leads'][WEB_HISTORY_ID] = $web_activity_log_data["value"] . "," . (!empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "");
                                 }
-                    
+
                                 if (!empty($custom_fields_build['leads'])) {
                                     handle_custom_fields_post($duplicateLead->id, $custom_fields_build);
                                 }
@@ -353,9 +357,16 @@ class Forms extends ClientsController
 
 
                             if (!empty($form->lead_source)) {
-                                $updateStatus['source'] = $form->lead_source;
+                                $source_data_get = $this->leads_model->get_source($duplicateLead->source);
+                                if (!empty($source_data_get->fixed_source) && $source_data_get->fixed_source == 1) {
+                                } else {
+                                    $updateStatus['source'] = $form->lead_source;
+                                }
                             }
 
+                            if (!empty($updateStatus['source'])) {
+                                $this->leads_model->update_lead_source($updateStatus['source'], $duplicateLead->id);
+                            }
 
                             if ($post_data['callassignee'] != null) {
                                 $updateStatus["assigned"] = $form->responsible;
