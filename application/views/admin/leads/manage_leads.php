@@ -375,13 +375,12 @@
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <?php if (is_admin()) { ?>
-                                    <div class="col-md-2 leads-filter-column">
-                                       <div class="form-group">
-                                          <input type="text" class="form-control datepicker" name="last_contact_date" id="last_contact_date" placeholder="Last Contact Date" autocomplete="off">
-                                       </div>
+
+                                 <div class="col-md-2 leads-filter-column">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="last_contact_date" id="last_contact_date" placeholder="Last Contact Date" autocomplete="off">
                                     </div>
-                                 <?php } ?>
+                                 </div>
                                  <div class="col-md-3 leads-filter-column">
                                     <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
                                     <div id="rangeSlider" style="display:none;"></div>
