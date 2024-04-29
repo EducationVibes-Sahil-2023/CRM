@@ -273,11 +273,15 @@ class Reports extends AdminController
 
         $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
         $role_staffs = [];
-        if ($role == 3) {
+        if ($role == 3 || $role == 1) {
             $role_staffs = $this->db->query('CALL GetReportingPersons(?)', array(get_staff_user_id()))->result_array();
             $this->db->close();
             $this->db->initialize();
             $role_staffs = array_column($role_staffs, null, "staffid");
+        }
+        if ($role == 1) {
+            $_POST["assigned"] = [];
+            $_POST["assigned"][] = get_staff_user_id();
         }
         $source_type = $this->leads_model->get_source();
         $marketing_type =  $this->leads_model->get_marketing_type();
