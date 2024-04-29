@@ -676,7 +676,7 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
             }
             $("#generate_pdf").hide();
             $(".hide-btn-response").hide();
-            $(".hide-graph").addClass("hide");
+            $(".report-data .hide-graph").addClass("hide");
             $("#show_hide_staff_list").addClass("hide");
 
             // $(".leadSum").html('');
