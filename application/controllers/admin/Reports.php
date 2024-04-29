@@ -79,6 +79,9 @@ class Reports extends AdminController
         $updateCount = 0;
         $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 
+        if ($role == 1) {
+            $_POST["view_assigned"][] = get_staff_user_id();
+        }
         $role_staffs = [];
         if ($role == 3) {
             $role_staffs = $this->db->query('CALL GetReportingPersons(?)', array(get_staff_user_id()))->result_array();
@@ -279,7 +282,7 @@ class Reports extends AdminController
         $source_type = $this->leads_model->get_source();
         $marketing_type =  $this->leads_model->get_marketing_type();
         $conversion_type = $this->leads_model->get_conversion_type();
-        $conversion_type = array_column($conversion_type, null, "id");
+        $conversion_type_new = $conversion_type = array_column($conversion_type, null, "id");
         $staff_list     = $this->leads_model->get_staff_list();
         $staff_list = array_column($staff_list, 'staff_name', "staffid");
 
@@ -393,6 +396,10 @@ class Reports extends AdminController
                 $update_count_array_min[] = intval($updateCount);
                 $update_count_array_max[] = intval($updateCount);
                 $max_count[] = intval($updateCount);
+
+                $marketing_type =  $this->leads_model->get_marketing_type();
+                $conversion_type = $this->leads_model->get_conversion_type();
+                $conversion_type = array_column($conversion_type, null, "id");
 
                 array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
                 array_push($source_html_staff_json, $staff_name);
@@ -518,7 +525,6 @@ class Reports extends AdminController
                 $ret .= '<div class="col-md-6">';
                 $ret .= '<div class="col-12 panel-body">';
                 $ret .= '<h4><b>Leads Types</b></h4><hr>';
-
                 foreach ($summary as $status) {
                     if (isset($conversion_type[$status['conversion_type']])) {
                         $conversion_type[$status['conversion_type']]["total"] += !empty($status['total']) ?  $status['total'] : 0;
@@ -729,9 +735,9 @@ class Reports extends AdminController
 
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
             $status_summary_performance = get_status_summary_filter_performance($_POST);
-            // $marketing_type =  $this->leads_model->get_marketing_type();
-            // $conversion_type = $this->leads_model->get_conversion_type();
-            // $conversion_type = array_column($conversion_type, null, "id");
+            $marketing_type =  $this->leads_model->get_marketing_type();
+            $conversion_type = $this->leads_model->get_conversion_type();
+            $conversion_type = array_column($conversion_type, null, "id");
 
 
             // $source_type = $this->leads_model->get_source();
