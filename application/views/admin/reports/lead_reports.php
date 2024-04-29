@@ -379,7 +379,9 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
                                     <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                     <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                     <!-- <button class="btn btn-xs btn-danger hide-btn-response" onclick="generatePDF()" id="generate_pdf" style="display:none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Generate Pdf</button> -->
-                                    <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
+                                    <?php if (is_admin()) { ?>
+                                        <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
+                                    <?php } ?>
                                 </div>
                             </div>
                         </div>
@@ -766,15 +768,15 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
                                         line: false,
                                         radius: 0,
                                     },
-                                    {
-                                        label: "Total leads",
-                                        backgroundColor: "rgba(0, o, 238, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 1.0)",
-                                        borderWidth: 0,
-                                        data: data.total_leads,
-                                        fill: false,
-                                        radius: 0,
-                                    }
+                                    // {
+                                    //     label: "Total leads",
+                                    //     backgroundColor: "rgba(0, o, 238, 0.8)",
+                                    //     borderColor: "rgba(140, 140, 140, 1.0)",
+                                    //     borderWidth: 0,
+                                    //     data: data.total_leads,
+                                    //     fill: false,
+                                    //     radius: 0,
+                                    // }
                                 ]
                             },
                             options: {
