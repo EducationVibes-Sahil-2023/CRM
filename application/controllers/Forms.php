@@ -208,6 +208,21 @@ class Forms extends ClientsController
                     }
                 }
 
+
+                if (!empty($post_data['tag_assign'])  && $post_data['tag_assign'] > 0) {
+                    $form->responsible = 1; // Default responsible staff ID
+
+                    // Check if the staff is active and exists
+                    $check_staff = $this->db->select("staffid")->where('active', 1)
+                        ->where('staffid', $post_data['tag_assign'])
+                        ->get(db_prefix() . 'staff')->row();
+
+                    // If staff exists and is active, update the responsible staff ID
+                    if (!empty($check_staff)) {
+                        $form->responsible = $check_staff->staffid;
+                    }
+                }
+
                 if (is_gdpr() && get_option('gdpr_enable_terms_and_conditions_lead_form') == 1) {
                     $required[] = 'accept_terms_and_conditions';
                 }
@@ -338,23 +353,47 @@ class Forms extends ClientsController
                                 $updateStatus['website'] = $post_data["website"];
                             }
 
-                            // update web history json 
-                            if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
-                                $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
 
-                                $custom_fields_build['leads'] = [];
-
-                                if (empty($web_activity_log_data)) {
-                                    $custom_fields_build['leads'][WEB_HISTORY_ID] = !empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "";
-                                } else {
-                                    $custom_fields_build['leads'][WEB_HISTORY_ID] = $web_activity_log_data["value"] . "," . (!empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "");
+                            $regular_fields = [];
+                            $custom_fields  = [];
+                            foreach ($post_data as $name => $val) {
+                                if (strpos($name, 'form-cf-') !== false) {
+                                    array_push($custom_fields, [
+                                        'name'  => $name,
+                                        'value' => $val,
+                                    ]);
                                 }
 
-                                if (!empty($custom_fields_build['leads'])) {
-                                    handle_custom_fields_post($duplicateLead->id, $custom_fields_build);
+                                $custom_fields_build['leads'] = [];
+                                foreach ($post_data as $name => $val) {
+                                    if (!empty($_POST['form-cf-' . MARKETING_SOURCE_ID])) {
+                                        $custom_fields_build['leads'][MARKETING_SOURCE_ID] = !empty($_POST['form-cf-' . MARKETING_SOURCE_ID]) ? $_POST['form-cf-' . MARKETING_SOURCE_ID] : "";
+                                    }
+
+                                    if (!empty($_POST['form-cf-' . CALL_TYPE_ID])) {
+                                        $custom_fields_build['leads'][CALL_TYPE_ID] = !empty($_POST['form-cf-' . CALL_TYPE_ID]) ? $_POST['form-cf-' . CALL_TYPE_ID] : "";
+                                    }
+                                    // update web history json 
+                                    if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
+                                        $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
+
+
+
+                                        if (empty($web_activity_log_data)) {
+                                            $custom_fields_build['leads'][WEB_HISTORY_ID] = !empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "";
+                                        } else {
+                                            $custom_fields_build['leads'][WEB_HISTORY_ID] = $web_activity_log_data["value"] . "," . (!empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "");
+                                        }
+                                    }
                                 }
                             }
 
+
+
+
+                            if (!empty($custom_fields_build['leads'])) {
+                                handle_custom_fields_post($duplicateLead->id, $custom_fields_build);
+                            }
 
                             if (!empty($form->lead_source)) {
                                 $source_data_get = $this->leads_model->get_source($duplicateLead->source);

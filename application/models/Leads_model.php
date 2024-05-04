@@ -839,6 +839,11 @@ class Leads_model extends App_Model
 
 
 
+            $phonenumber = str_replace("+91", "", $lead->phonenumber);
+            $phonenumber = substr($phonenumber, -10);
+            if (!empty($phonenumber)) {
+                $this->delete_call_list($phonenumber);
+            }
             if (is_gdpr()) {
 
                 $this->db->where('(description LIKE "%' . $lead->email . '%" OR description LIKE "%' . $lead->name . '%" OR description LIKE "%' . $lead->phonenumber . '%")');

@@ -656,6 +656,7 @@ class Reports extends AdminController
                     $ret .= '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
                     $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
                     $percentage = 0;
+                    $per_percentage = 0;
                     foreach ($conversion_type as $kkey => $conversion) {
 
                         $percentage = 0;
@@ -667,7 +668,7 @@ class Reports extends AdminController
                             }
                         }
 
-                        $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                        $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
                         // Is regular status
                         if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
                             if (!empty($percentage) && $percentage > 0) {
@@ -694,7 +695,9 @@ class Reports extends AdminController
 
                             if (!empty($percentage) && $percentage > 0) {
                                 if ($total_sum != 0) {
+                                    $per_percentage += $percentage;
                                     $percentage = ($percentage / $total_sum) * 100;
+
                                     $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
                                 } else {
                                     // Handle division by zero case
@@ -707,6 +710,14 @@ class Reports extends AdminController
                         $ret .= '</h3>';
                         $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
                     }
+                    $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">' . $per_percentage;
+                    if (!empty($per_percentage) && $per_percentage > 0) {
+                        $ret .= '<span class="show-persentage">' . number_format((float)(($per_percentage / $total_sum) * 100), 2, '.', '') . '% </span>';
+                    } else {
+                        $ret .= "<span class='show-persentage'>0.00% </span>";
+                    }
+                    $ret .= '</h3><span >Total</span></div>';
+
                     $ret .= '<br><hr class="hr-3" style="width: 100%;
                     margin-top: 20px!important;
                     display: inline-block;">';
@@ -984,6 +995,7 @@ class Reports extends AdminController
                 $ret .= '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
                 $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
                 $percentage = 0;
+                $per_percentage = 0;
                 foreach ($conversion_type as $kkey => $conversion) {
                     $percentage = 0;
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
@@ -994,7 +1006,7 @@ class Reports extends AdminController
                         }
                     }
 
-                    $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                    $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
 
                     // Is regular status
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
@@ -1023,6 +1035,7 @@ class Reports extends AdminController
 
                         if (!empty($percentage) && $percentage > 0) {
                             if ($total_sum != 0) {
+                                $per_percentage += $percentage;
                                 $percentage = ($percentage / $total_sum) * 100;
                                 $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
                             } else {
@@ -1036,6 +1049,15 @@ class Reports extends AdminController
                     $ret .= '</h3>';
                     $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
                 }
+
+                $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">' . $per_percentage;
+                if (!empty($per_percentage) && $per_percentage > 0) {
+                    $ret .= '<span class="show-persentage">' . number_format((float)(($per_percentage / $total_sum) * 100), 2, '.', '') . '% </span>';
+                } else {
+                    $ret .= "<span class='show-persentage'>0.00% </span>";
+                }
+                $ret .= '</h3><span >Total</span></div>';
+
                 $ret .= '<br><hr class="hr-3" style="width: 100%;
                     margin-top: 20px!important;
                     display: inline-block;">';

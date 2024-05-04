@@ -472,11 +472,12 @@ class Leads extends AdminController
 
             access_denied('Delte Lead');
         }
-
-
+        $lead_data = $this->leads_model->get($id);
+        $phonenumber = substr(trim($lead_data->phonenumber), -10);
 
         $response = $this->leads_model->delete($id);
         $this->leads_model->delete_notes(array($id));
+        $this->leads_model->delete_call_list($phonenumber);
 
         if (is_array($response) && isset($response['referenced'])) {
 
@@ -2510,8 +2511,12 @@ class Leads extends AdminController
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
 
-                        $this->db->where_in('id', $ids);
-                        $this->db->delete(db_prefix() . 'leads');
+                        foreach ($ids as $lead_id_delete) {
+                            $this->leads_model->delete($lead_id_delete);
+                        }
+
+                        // $this->db->where_in('id', $ids);
+                        // $this->db->delete(db_prefix() . 'leads');
 
                         $this->leads_model->delete_notes($ids);
 

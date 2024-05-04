@@ -272,6 +272,10 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
         padding: 0px;
         border: none;
     }
+
+    .marketing-type {
+        width: 16% !important;
+    }
 </style>
 
 <div id="wrapper">

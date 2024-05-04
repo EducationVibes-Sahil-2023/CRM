@@ -1,5 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php init_head(); ?>
+<?php init_head();
+$role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+?>
 <link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
 <script src="<?= base_url("assets/js/uislider.js") ?>"></script>
 <style>
@@ -378,7 +380,13 @@
 
                                  <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
-                                       <input type="text" class="form-control datepicker" name="last_contact_date" id="last_contact_date" placeholder="Last Contact Date" autocomplete="off">
+                                       <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Call Connected Date" autocomplete="off">
+                                    </div>
+                                 </div>
+
+                                 <div class="col-md-2 leads-filter-column">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Call Updated Date" autocomplete="off">
                                     </div>
                                  </div>
                                  <div class="col-md-3 leads-filter-column">
@@ -494,29 +502,53 @@
                               <!-- /.modal -->
                               <?php
                               $table_data = array();
-                              $_table_data = array(
-                                 '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
-                                 array(
-                                    'name' => _l('Reminder Flag'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('Update Count'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('Call Durations'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('Last-Call-Date'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('leads_dt_name'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
-                                 ),
-                              );
+                              if ($role != 1) {
+                                 $_table_data = array(
+                                    '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
+                                    array(
+                                       'name' => _l('Reminder Flag'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('Update Count'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('Call Durations'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('Last Connected Date'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('leads_dt_name'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
+                                    ),
+                                 );
+                              } else {
+                                 $_table_data = array(
+                                    '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
+
+                                    array(
+                                       'name' => _l('Update Count'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('Call Durations'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('Last Connected Date'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('leads_dt_name'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
+                                    ),
+                                 );
+                              }
+
                               if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
                                  $_table_data[] = array(
                                     'name' => _l('gdpr_consent') . ' (' . _l('gdpr_short') . ')',
@@ -584,27 +616,28 @@
                                  'name' => _l('leads_dt_datecreated'),
                                  'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
                               );
+                              if ($role != 1) {
+                                 $_table_data[] = array(
+                                    'name' => _l('Last Updated Date'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                                 );
 
-                              $_table_data[] = array(
-                                 'name' => _l('Last Updated'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
-                              );
+                                 $_table_data[] =   array(
+                                    'name' => _l('leads_dt_email'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-email')
+                                 );
 
-                              $_table_data[] =   array(
-                                 'name' => _l('leads_dt_email'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-email')
-                              );
+                                 // foreach ($custom_fields as $field) {
+                                 //    if ($field['name'] == 'Call Type') {
+                                 //       array_push($_table_data, $field['name']);
+                                 //    }
+                                 // }
 
-                              // foreach ($custom_fields as $field) {
-                              //    if ($field['name'] == 'Call Type') {
-                              //       array_push($_table_data, $field['name']);
-                              //    }
-                              // }
-
-                              $_table_data[] = array(
-                                 'name' => _l('leads_dt_assigned'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-assigned')
-                              );
+                                 $_table_data[] = array(
+                                    'name' => _l('leads_dt_assigned'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-assigned')
+                                 );
+                              }
 
                               $_table_data[] = array(
                                  'name' => _l('Assigned Date'),
@@ -657,12 +690,13 @@
 
 
 
+                              if ($role != 1) {
 
-
-                              $_table_data[] = array(
-                                 'name' => _l('Followup Date'),
-                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
-                              );
+                                 $_table_data[] = array(
+                                    'name' => _l('Followup Date'),
+                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
+                                 );
+                              }
                               foreach ($_table_data as $_t) {
                                  array_push($table_data, $_t);
                               }
@@ -695,6 +729,20 @@
 <?php init_tail(); ?>
 <script>
    var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
+
+   function set_disabled_date(value) {
+      $(".set_disabled_date").removeAttr("disabled");
+      if (value != "") {
+         $(".set_disabled_date").each(function() {
+            if ($(this).val() != "") {
+               $(this).removeAttr("disabled");
+            } else {
+               $(this).attr("disabled", "disabled");
+            }
+
+         });
+      }
+   }
 
 
    $('#leads_bulk_actions').on('shown.bs.modal', function(e) {
@@ -868,6 +916,7 @@
          var up_from_date_call = document.getElementById("up_from_date_call").value;
          var up_to_date_call = document.getElementById("up_to_date_call").value;
          var last_contact_date = document.getElementById("last_contact_date").value;
+         var last_update_date = document.getElementById("last_update_date").value;
          if (to_date != '') {
             if (from_date == '') {
                $("#from_date").focus();
@@ -1012,6 +1061,7 @@
          var up_from_date_call = document.getElementById("up_from_date_call").value;
          var up_to_date_call = document.getElementById("up_to_date_call").value;
          var last_contact_date = document.getElementById("last_contact_date").value;
+         var last_update_date = document.getElementById("last_update_date").value;
          if ($("#show_update_counts").is(":checked")) {
             update_count_min = document.getElementById("update_count_min").value;
             update_count_max = document.getElementById("update_count_max").value;
@@ -1044,7 +1094,8 @@
                neet_score: $("#neet_score").val(),
                up_from_date_call: up_from_date_call,
                up_to_date_call: up_to_date_call,
-               last_contact_date: last_contact_date
+               last_contact_date: last_contact_date,
+               last_update_date: last_update_date
 
 
             },

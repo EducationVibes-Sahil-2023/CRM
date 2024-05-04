@@ -182,23 +182,45 @@ if ($this->ci->input->post('up_to_date')) {
     $up_from_date = $this->ci->input->post('up_from_date');
     $up_to_date = $this->ci->input->post('up_to_date');
 }
-$last_call_query = "(SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') 
+$last_update_query = "(SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') 
 FROM " . db_prefix() . "calls_activity_logs AS calls 
 WHERE calls.contact = " . db_prefix() . "leads.phonenumber 
 ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC 
-LIMIT 1) as lastcontact";
+LIMIT 1) as lastupdate_date";
+
+$last_contact_date_q = "(SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') 
+FROM " . db_prefix() . "calls_activity_logs AS calls 
+WHERE calls.contact = " . db_prefix() . "leads.phonenumber and LOWER(TRIM(call_status)) IN ('answered', 'status_unknow')
+ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC 
+LIMIT 1) as lastcontact_date";
 
 $having_ = "";
 
 if ($this->ci->input->post('last_contact_date')) {
 
     $last_contact_date = $this->ci->input->post('last_contact_date');
-    $having_ = 'lastcontact <= "' . $this->ci->db->escape_str($last_contact_date) . '"  or lastcontact is NULL ';
-
-    // $last_contact_date = $this->ci->input->post('last_contact_date');
-    // array_push($join, 'LEFT JOIN ' . db_prefix() . 'calls_activity_logs ON (' . db_prefix() . 'calls_activity_logs.contact = ' . db_prefix() . 'leads.phonenumber )');
-    // array_push($where, ' AND DATE_FORMAT(DATE_ADD("1970-01-01", INTERVAL (call_start+(5 * 3600 + 30 * 60)) SECOND), "%Y-%m-%d") <= "' . $this->ci->db->escape_str($last_contact_date) . '"');
+    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+        $having_ = ' lastcontact_date <= "' . $this->ci->db->escape_str($last_contact_date) . '" ';
+    } else {
+        $having_ = ' lastcontact_date <= "' . $this->ci->db->escape_str($last_contact_date) . '"  or lastcontact_date is NULL ';
+    }
 }
+
+if ($this->ci->input->post('last_update_date')) {
+
+    $last_contact_date = $this->ci->input->post('last_update_date');
+    if (!empty($having_)) {
+        $having_ .= " AND ";
+    }
+
+
+    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+        $having_ = ' lastupdate_date <= "' . $this->ci->db->escape_str($last_contact_date) . '" ';
+    } else {
+        $having_ .= ' lastupdate_date <= "' . $this->ci->db->escape_str($last_contact_date) . '"  or lastupdate_date is NULL ';
+    }
+}
+
 
 if ($this->ci->input->post('followup_to_date')) {
     $followup_from_date = $this->ci->input->post('followup_from_date');
@@ -251,26 +273,44 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     $update_count_query = " count(1) as update_count";
 }
 
+if ($role != 1) {
+    $aColumns = [
 
-$aColumns = [
+        db_prefix() . 'leads.id as id',
+        db_prefix() . 'leads.id as leadsid',
+    ];
+} else {
+    $aColumns = [
 
-    db_prefix() . 'leads.id as id',
-    db_prefix() . 'leads.id as leadsid',
-];
+        db_prefix() . 'leads.id as id',
+        // db_prefix() . 'leads.id as leadsid',
+    ];
+}
 
 if (is_gdpr() && $consentLeads == '1') {
 
     $aColumns[] = '1';
 }
+if ($role != 1) {
+    $aColumns = array_merge($aColumns, [
+        $update_count_query,
+        '1',
+        $last_contact_date_q,
+        db_prefix() . 'leads.name as name',
+        db_prefix() . 'leads.phonenumber as phonenumber',
+        db_prefix() . 'leads.status as status'
+    ]);
+} else {
 
-$aColumns = array_merge($aColumns, [
-    $update_count_query,
-    '1',
-    $last_call_query,
-    db_prefix() . 'leads.name as name',
-    db_prefix() . 'leads.phonenumber as phonenumber',
-    db_prefix() . 'leads.status as status'
-]);
+    $aColumns = array_merge($aColumns, [
+        $update_count_query,
+        '1',
+        $last_contact_date_q,
+        db_prefix() . 'leads.name as name',
+        db_prefix() . 'leads.phonenumber as phonenumber',
+        db_prefix() . 'leads.status as status'
+    ]);
+}
 
 if (is_admin()) {
     foreach ($custom_fields as $key => $field) {
@@ -285,28 +325,48 @@ if (is_admin()) {
     }
 }
 
-$aColumns = array_merge($aColumns, [
-    'type',
-    'website',
-    'source',
-    db_prefix() . 'leads.dateadded as dateadded',
-    '1',
-    db_prefix() . 'leads.email as email',
-    db_prefix() . 'leads.assigned as staffid',
-    'dateassigned',
-    'city',
-    'state',
-    '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
-    '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup',
-    'lead_value',
-    'company',
-]);
+if ($role != 1) {
+    $aColumns = array_merge($aColumns, [
+        'type',
+        'website',
+        'source',
+        db_prefix() . 'leads.dateadded as dateadded',
+        $last_update_query,
+        db_prefix() . 'leads.email as email',
+        db_prefix() . 'leads.assigned as staffid',
+        'dateassigned',
+        'city',
+        'state',
+        '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
+        '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup',
+        'lead_value',
+        'company',
+    ]);
+} else {
+    $aColumns = array_merge($aColumns, [
+        'type',
+        'website',
+        'source',
+        db_prefix() . 'leads.dateadded as dateadded',
+        // '1',
+        // db_prefix() . 'leads.email as email',
+        // db_prefix() . 'leads.assigned as staffsid',
+        'dateassigned',
+        'city',
+        'state',
+        '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags',
+        // '(SELECT date FROM ' . db_prefix() . 'reminders  WHERE rel_id = ' . db_prefix() . 'leads.id and rel_type="lead" ORDER by id DESC LIMIT 1) as followup',
+
+    ]);
+}
 
 
 $aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
 
 
 $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
+    'lead_value',
+    'company',
     'junk',
     'lost',
     'assigned',
@@ -327,6 +387,7 @@ if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show
     LIMIT 1) between {$min} AND {$max} ";
     // $having .= " Having count(n.id) between {$min} AND {$max} ";
 }
+
 
 if ($call_query_having) {
 
@@ -352,6 +413,7 @@ $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
 
 
+
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
@@ -372,21 +434,24 @@ foreach ($rResult as $aRow) {
     $aRow['assigned_lastname'] = isset($staff_list[$aRow['assigned']]["lastname"]) ? $staff_list[$aRow['assigned']]["lastname"] : '';
 
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['id'] . '"><label></label></div>';
-    $curdate = date("Y-m-d");
-    $date1 = date("Y-m-d", strtotime($aRow['notesdate']));
-    $date2 = date("Y-m-d", strtotime($aRow['followup']));
-    if ($date1 >= $date2) {
-        $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
-    } else {
-        $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
+    if ($role != 1) {
+        $curdate = date("Y-m-d");
+        $date1 = date("Y-m-d", strtotime($aRow['notesdate']));
+        $date2 = date("Y-m-d", strtotime($aRow['followup']));
+        if ($date1 >= $date2) {
+            $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
+        } else {
+            $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
+        }
+        $row[]    = $col;
     }
-    $row[]    = $col;
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
     $call_duration = 0;
     $last_call_update = "";
     $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
-    $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? date("Y-m-d", strtotime($call_data[$aRow['phonenumber']]["last_contact_date"])) : $last_call_update;
+    // $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? date("Y-m-d", strtotime($call_data[$aRow['phonenumber']]["last_contact_date"])) : $last_call_update;
+    $row[] =  !empty($aRow["lastcontact_date"]) ? date("Y-m-d", strtotime($aRow["lastcontact_date"])) : '';
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
     $nameRow = '<a ' . $hrefAttr . '>' . $aRow['name'] . '</a>';
     $nameRow .= '<div class="row-options">';
@@ -544,41 +609,46 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['website'];
 
     $row[] = $aRow['source_name'];
-
-    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
-
-    $row[] = ($aRow['lastcontact'] == '0000-00-00 00:00:00' || !is_date($aRow['lastcontact']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastcontact']) . '" class="text-has-action is-date">' . $aRow['lastcontact'] . '</span>');
-
-    $row[] = ($aRow['email'] != '' ? '<a href="mailto:' . $aRow['email'] . '">' . $aRow['email'] . '</a>' : '');
-
-    // $row[] = $row1[1];
-
-    $assignedOutput = '';
-
-    if ($aRow['assigned'] != 0) {
-
-        $full_name = $aRow['assigned_firstname'] . ' ' . $aRow['assigned_lastname'];
-
-
-
-        $assignedOutput = '<a data-toggle="tooltip" data-title="' . $full_name . '" href="' . admin_url('profile/' . $aRow['assigned']) . '">' . staff_profile_image($aRow['assigned'], [
-
-            'staff-profile-image-small',
-
-        ]) . '</a>';
-
-
-
-        // For exporting
-
-        $assignedOutput .= '<span class="hide">' . $full_name . '</span>';
-
-        $assignedOutput = $full_name;
+    if ($role != 1) {
+        $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     }
 
+    $row[] = ($aRow['lastupdate_date'] == '0000-00-00 00:00:00' || !is_date($aRow['lastupdate_date']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
+
+    if ($role != 1) {
+        $row[] = ($aRow['email'] != '' ? '<a href="mailto:' . $aRow['email'] . '">' . $aRow['email'] . '</a>' : '');
+    }
+
+    // $row[] = $row1[1];
+    if ($role != 1) {
+
+        $assignedOutput = '';
+
+        if ($aRow['assigned'] != 0) {
+
+            $full_name = $aRow['assigned_firstname'] . ' ' . $aRow['assigned_lastname'];
 
 
-    $row[] = $assignedOutput;
+
+            $assignedOutput = '<a data-toggle="tooltip" data-title="' . $full_name . '" href="' . admin_url('profile/' . $aRow['assigned']) . '">' . staff_profile_image($aRow['assigned'], [
+
+                'staff-profile-image-small',
+
+            ]) . '</a>';
+
+
+
+            // For exporting
+
+            $assignedOutput .= '<span class="hide">' . $full_name . '</span>';
+
+            $assignedOutput = $full_name;
+        }
+
+
+
+        $row[] = $assignedOutput;
+    }
 
     //$row[] = $aRow['dateassigned'];
     $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' . $aRow['dateassigned'] . '</span>');
@@ -626,12 +696,15 @@ foreach ($rResult as $aRow) {
 
 
     // $row[] = date("Y-m",strtotime($aRow['dateadded']));
-    $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
+    if ($role != 1) {
+        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
+    }
 
 
     //time_ago($aRow['lastcontact'])
 
     // Custom fields add values
+
 
 
 
