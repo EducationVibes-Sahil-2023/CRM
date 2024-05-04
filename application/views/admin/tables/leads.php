@@ -363,17 +363,32 @@ if ($role != 1) {
 
 $aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
 
+if ($role != 1) {
+    $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
+        'lead_value',
+        'company',
+        'junk',
+        'lost',
+        'assigned',
+        db_prefix() . 'leads.addedfrom as addedfrom',
+        '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
+        ' zip',
+        $last_update_query
+    ]);
+} else {
 
-$additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
-    'lead_value',
-    'company',
-    'junk',
-    'lost',
-    'assigned',
-    db_prefix() . 'leads.addedfrom as addedfrom',
-    '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
-    ' zip'
-]);
+    $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
+        'lead_value',
+        'company',
+        'junk',
+        'lost',
+        'assigned',
+        db_prefix() . 'leads.addedfrom as addedfrom',
+        '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
+        ' zip'
+    ]);
+}
+
 
 
 $having = "";
