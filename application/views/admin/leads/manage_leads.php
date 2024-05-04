@@ -380,13 +380,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
                                  <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
-                                       <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Call Connected Date" autocomplete="off">
+                                       <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
                                     </div>
                                  </div>
 
                                  <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
-                                       <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Call Updated Date" autocomplete="off">
+                                       <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
                                     </div>
                                  </div>
                                  <div class="col-md-3 leads-filter-column">

@@ -366,13 +366,13 @@ class Forms extends ClientsController
 
                                 $custom_fields_build['leads'] = [];
                                 foreach ($post_data as $name => $val) {
-                                    if (!empty($_POST['form-cf-' . MARKETING_SOURCE_ID])) {
-                                        $custom_fields_build['leads'][MARKETING_SOURCE_ID] = !empty($_POST['form-cf-' . MARKETING_SOURCE_ID]) ? $_POST['form-cf-' . MARKETING_SOURCE_ID] : "";
-                                    }
+                                    // if (!empty($_POST['form-cf-' . MARKETING_SOURCE_ID])) {
+                                    //     $custom_fields_build['leads'][MARKETING_SOURCE_ID] = !empty($_POST['form-cf-' . MARKETING_SOURCE_ID]) ? $_POST['form-cf-' . MARKETING_SOURCE_ID] : "";
+                                    // }
 
-                                    if (!empty($_POST['form-cf-' . CALL_TYPE_ID])) {
-                                        $custom_fields_build['leads'][CALL_TYPE_ID] = !empty($_POST['form-cf-' . CALL_TYPE_ID]) ? $_POST['form-cf-' . CALL_TYPE_ID] : "";
-                                    }
+                                    // if (!empty($_POST['form-cf-' . CALL_TYPE_ID])) {
+                                    //     $custom_fields_build['leads'][CALL_TYPE_ID] = !empty($_POST['form-cf-' . CALL_TYPE_ID]) ? $_POST['form-cf-' . CALL_TYPE_ID] : "";
+                                    // }
                                     // update web history json 
                                     if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
                                         $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
