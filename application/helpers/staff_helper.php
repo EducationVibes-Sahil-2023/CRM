@@ -100,7 +100,8 @@ function get_available_staff_permissions($data = [])
         'reports' => [
             'name'         => _l('reports'),
             'capabilities' => [
-                'view' => $viewGlobalName,
+                // 'view_own' => _l('permission_view_own'),
+                'view'     => _l('permission_view_own'),
             ],
         ],
         'roles' => [
