@@ -372,8 +372,7 @@ if ($role != 1) {
         'assigned',
         db_prefix() . 'leads.addedfrom as addedfrom',
         '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
-        ' zip',
-        $last_update_query
+        ' zip'
     ]);
 } else {
 
@@ -385,7 +384,8 @@ if ($role != 1) {
         'assigned',
         db_prefix() . 'leads.addedfrom as addedfrom',
         '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
-        ' zip'
+        ' zip',
+        $last_update_query
     ]);
 }
 
