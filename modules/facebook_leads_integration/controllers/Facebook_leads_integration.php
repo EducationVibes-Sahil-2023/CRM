@@ -730,6 +730,105 @@ class Facebook_leads_integration extends ClientsController
         }
     }
 
+    public function webhook_shikshalogy_google_form($key="")
+    {
+        
+   
+        if (empty($key)) {
+            $key = SHIKSHALOGY_FORM_KEY_MBBS_INDIA;
+        }
+        
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            // Get the JSON data from the POST request
+            $json = file_get_contents('php://input');
+            $lead_data = json_decode($json, true);
+   
+        
+            // Insert the JSON data into the database
+            $this->db->insert(db_prefix() . 'facebook_leads_logs', array(
+                "lead_details" => json_encode($lead_data, true),
+                "lead_data" => json_encode($lead_data, true),
+                "ledgen_id" => "",
+                "form_name" => "Sikshalogy_google_MBBS_India",
+                "form_id" => "",
+                "datetime" => date("Y-m-d h:i:s")
+            ));
+        
+            $csrf_token_name = uniqid('csrf_');
+            $type = 6;
+        
+   
+            // Retrieve form data from the decoded JSON data
+            if (!empty($lead_data['user_column_data'])) {
+                foreach ($lead_data['user_column_data'] as $lead) {
+                    switch ($lead['column_id']) {
+                        case 'FULL_NAME':
+                            $name = !empty($lead['string_value']) ? $lead['string_value'] : '';
+                            break;
+                        case 'PHONE_NUMBER':
+                            $phonenumber = !empty($lead['string_value']) ? $lead['string_value'] : '';
+                            break;
+                        case 'EMAIL':
+                            $email = !empty($lead['string_value']) ? $lead['string_value'] : '';
+                            break;
+                        case 'CITY':
+                            $city = !empty($lead['string_value']) ? $lead['string_value'] : '';
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                return true;
+                die;
+            }
+        
+            // Your form data to be sent
+           echo $dataString = 'name=' . urlencode($name) . '&email=' . urlencode($email) . '&phonenumber=' . urlencode($phonenumber) . '&csrf_token_name=' . urlencode($csrf_token_name) . '&key=' . urlencode($key) . '&type=' . urlencode($type) . '&city=' . urlencode($city) . '&auto_assign=1&form-cf-8=' . urlencode('');
+        
+
+            // The URL to send the POST request to
+            $url = base_url("forms/wtl/" . $key);
+        
+            // Initialize cURL session
+            $ch = curl_init($url);
+        
+            // Set cURL options
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $dataString);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        
+            // Execute the cURL session
+            $response = curl_exec($ch);
+        
+            // Check for cURL errors
+            if (curl_errno($ch)) {
+                echo 'cURL Error: ' . curl_error($ch);
+            }
+        
+            // Close cURL session
+            curl_close($ch);
+        
+            // Handle the response (if needed)
+            // For example, you can check the response and hide/show elements accordingly
+            if ($response === false) {
+                echo 'Error: cURL request failed';
+            } else {
+                // Process the response
+                // For example, you can decode JSON response and perform specific actions
+                $responseData = json_decode($response, true);
+                if ($responseData['status'] === 'success') {
+                    // Success handling
+                    echo 'Form submitted successfully';
+                } else {
+                    // Error handling
+                    echo 'Form submission failed: ' . $responseData['message'];
+                }
+            }
+        }
+        
+    }
+
     public function new_webhook_test()
 
     {
