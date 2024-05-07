@@ -588,3 +588,4 @@ $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/call_activity_cron'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('external/re_assign_cron'));
 $config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/linkedin_webhook'));
+$config['csrf_exclude_uris'] = array_merge($config['csrf_exclude_uris'], array('facebook_leads_integration/webhook_shikshalogy_google_form'));
