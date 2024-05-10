@@ -76,7 +76,7 @@ function get_available_staff_permissions($data = [])
         ],
         'knowledge_base' => [
             'name'         => _l('knowledge_base'),
-            'capabilities' => $withoutViewOwnPermissionsArray,
+            'capabilities' => $withNotApplicableViewOwn,
         ],
         'payments' => [
             'name'         => _l('payments'),

@@ -206,3 +206,6 @@ define('APPLICANT_UPLOAD_DOCUMENT', FCPATH . 'uploads/clients_documents' . '/');
 define('APPLICANT_UPLOAD_DOCUMENT_PATH', 'uploads/clients_documents' . '/');
 define('APPLICANT_UPLOAD_SOP_DOCUMENT', FCPATH . 'uploads/client_sop' . '/');
 define('APPLICANT_UPLOAD_SOP_DOCUMENT_PATH', 'uploads/client_sop' . '/');
+
+define('KNOWLEDGE_MEDIA_PATH', 'uploads/knowledge' . '/');
+define('KNOWLEDGE_BASE_MEDIA_PATH', 'uploads/knowledge_base' . '/');
