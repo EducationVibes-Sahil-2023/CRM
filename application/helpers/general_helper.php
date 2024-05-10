@@ -982,8 +982,7 @@ function staff_has_assigned_knowledge_base($staff_id = false)
     $staff_id = $staff_id ? $staff_id : get_staff_user_id();
 
     if (!has_permission('knowledge_base', $staff_id, 'view_own')) {
-        access_denied('knowledge_base');
-        die;
+        return true;
     }
 
     $CI->db->select(db_prefix() . 'knowledge.id');
