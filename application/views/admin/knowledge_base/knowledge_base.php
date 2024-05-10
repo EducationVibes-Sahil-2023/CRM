@@ -112,8 +112,8 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                             <?php } ?>
                             <?php if ($has_permission_create) { ?>
                                 <a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-info mright5"><?php echo _l('kb_knowledge_group'); ?></a>
-                                <a href="javascript:void(0)" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
-                                <a href="javascript:void(0)" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>
+                                <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
+                                <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>
                             <?php } ?>
 
 
@@ -182,15 +182,15 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                         <label for="folderName"><span class="text-danger">*</span> Folder Name</label>
                         <br>
                         <span>Knowledge_base/</span><span class='current_dir'></span>
-                        <input type="text" id="folderName" required pattern="[0-9a-zA-Z_.-]*" name="folderName" required class="form-control" placeholder="Folder Name">
+                        <input type="text" id="folderName" required name="folderName" required class="form-control" placeholder="Folder Name">
                         <br>
                         <button type="button" id="createFolderBtn" class="btn btn-primary">Create Folder</button>
                     </div>
                 </div>
                 <div class="modal-form modal-form-upload">
-                    <input type="file" id="upload_file" multiple class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.mp4,.avi,.mov,.doc,.docx,.xls,.xlsx">
+                    <input type="file" id="upload_file" required multiple class="form-control" accept=".jpg,.jpeg,.png,.gif,.pdf,.mp4,.avi,.mov,.doc,.docx,.xls,.xlsx">
                     <br>
-                    <button type="button" id="uploadFolderBtn" class="btn btn-primary pull-right">Upload</button>
+                    <button type="button" id="uploadFolderBtn" class="btn btn-primary ">Upload</button>
                 </div>
 
 
@@ -373,19 +373,25 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                 success: function(response) {
                     $(".close-modal").trigger("click");
                     let data = JSON.parse(response);
-
-                    if (data.folder.length > 0) {
-                        set_folder(data.folder);
-                    } else {
-                        hide_loader();
-                        $("#main-folders").html('');
+                    if (data.folder != undefined) {
+                        if (data.folder.length > 0) {
+                            set_folder(data.folder);
+                            hide_loader();
+                        } else {
+                            hide_loader();
+                            $("#main-folders").html('');
+                        }
                     }
 
-                    if (data.files.length > 0) {
-                        set_files(data.files);
-                    } else {
-                        hide_loader();
-                        $("#main-files").html('');
+                    if (data.files != undefined) {
+
+                        if (data.files.length > 0) {
+                            set_files(data.files);
+                            hide_loader();
+                        } else {
+                            hide_loader();
+                            $("#main-files").html('');
+                        }
                     }
                     hide_loader();
                 },
@@ -402,22 +408,17 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
             var current_dir = $('.current_dir').text();
             let index = $('#foldersGroup .breadcrumb li.breadcrumb-item.active').attr("data-id");
 
-            if (!folderName || !group_id) {
-                if (!folderName) {
-                    $('#folderName').focus();
-                } else {
-                    $('#group_id').focus();
-                }
-
-                if (data.files.length > 0) {
-                    set_files(data.files);
-                } else {
-                    hide_loader();
-                    $("#main-files").html('');
-                }
+            if (!folderName) {
+                $('#folderName').focus();
                 hide_loader();
-                return;
+                return false;
             }
+            if (group_id.length <= 0) {
+                $('#group_id').focus();
+                hide_loader();
+                return false;
+            }
+
 
             $.ajax({
                 url: '<?php echo admin_url("Knowledge_base/create_folder"); ?>',
@@ -436,11 +437,14 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                     } else if (data.success == 1) {
                         alert_float('success', "Folder create successfully");
                     }
-                    if (data.folder.length > 0) {
-                        set_folder(data.folder);
-                    } else {
-                        hide_loader();
-                        $("#main-folders").html('');
+                    if (data.folder != undefined) {
+
+                        if (data.folder.length > 0) {
+                            set_folder(data.folder);
+                        } else {
+                            hide_loader();
+                            $("#main-folders").html('');
+                        }
                     }
                     hide_loader();
                 },
