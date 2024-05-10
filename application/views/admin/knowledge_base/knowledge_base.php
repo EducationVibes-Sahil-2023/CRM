@@ -249,8 +249,9 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                         </button>
                     </div>`;
             }
-            hide_loader();
             $("#main-folders").html(html); // Use html() instead of appendTo()
+            hide_loader();
+
             // set_functionality();
         }
     }
@@ -274,9 +275,10 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                                             </a>
                                         </div>`;
             }
-            hide_loader();
+
             $("#main-files").html(html); // Use html() instead of appendTo()
             // set_functionality();
+            hide_loader();
         }
     }
 
@@ -310,7 +312,7 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                 }
                 $(".close-modal").trigger("click");
                 save_and_show_folder(1, index);
-
+                hide_loader();
             }
         });
     }
@@ -500,6 +502,7 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
 
         // Call the function to show folders with the specified index
         save_and_show_folder(1, index);
+        hide_loader();
     }
 
 
