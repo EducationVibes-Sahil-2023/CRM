@@ -294,7 +294,7 @@ class Knowledge_base extends AdminController
             }
 
             // Fetch inserted folders
-            $folders =  $this->knowledge_base_group_model->get_folders();
+            $folders =  $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
             // $files = $this->db->select("*")->where(array("status" => 1, "folder_id" => $parent_id))->get(db_prefix() . "knowledge_base_files")->result_array();
             $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
 
