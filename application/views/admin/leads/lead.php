@@ -11,9 +11,13 @@
             $name = _l('lead');
          }
          echo '#' . $lead->id . ' - ' .  $name;
+         $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $lead->id))->get(db_prefix() . "customfieldsvalues")->result_array();
       } else {
          echo _l('add_new', _l('lead_lowercase'));
+         $web_activity_log_data = [];
       }
+
+
       ?>
    </h4>
 </div>
@@ -120,6 +124,13 @@
                               <?php echo _l('lead_add_edit_call_activity'); ?>
                            </a>
                         </li>
+                        <?php if (!empty($web_activity_log_data)) { ?>
+                           <li role="presentation">
+                              <a href="#lead_web_activity" aria-controls="lead_web_activity" role="tab" data-toggle="tab">
+                                 <?php echo _l('Web History'); ?>
+                              </a>
+                           </li>
+                        <?php } ?>
                         <?php if (is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1')) { ?>
                            <li role="presentation">
                               <a href="#gdpr" aria-controls="gdpr" role="tab" data-toggle="tab">
@@ -239,7 +250,66 @@
                      <div class="clearfix"></div>
                   </div>
                </div>
+               <?php if (!empty($web_activity_log_data)) { ?>
+                  <div role="tabpanel" class="tab-pane" id="lead_web_activity">
+                     <div class="panel_s no-shadow">
+                        <div class="activity-feed">
+                           <div class="activity-feed">
+                              <?php
+                              $status_no_history = true;
+                              if (!empty($web_activity_log_data)) {
+                                 foreach ($web_activity_log_data as $web_data) {
+                                    $web_history_ = str_replace("],[", "]+/+[", $web_data["value"]);
+                                    $web_history_ = explode("+/+", $web_history_);
 
+                                    foreach ($web_history_ as $web_h) {
+                                       $web_activity_log = json_decode($web_h, true);
+                                       // Check if JSON decoding was successful
+                                       if ($web_activity_log !== null) {
+                                          $log_count = count($web_activity_log);
+                                          foreach ($web_activity_log as $key => $log) {
+                                             $status_no_history = false;
+
+                              ?>
+
+                                             <div class="feed-item">
+                                                <div class="date">
+                                                   <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['datetime']); ?>">
+                                                      <?php echo time_ago($log['datetime']); ?>
+                                                   </span>
+                                                </div>
+                                                <div class="text">
+                                                   <a target="_blank" href="<?= $log["url"] ?>"><?= $log["url"] ?></a>
+                                                </div>
+                                                <?php
+                                                if ($key === ($log_count - 1)) {
+                                                   echo "<div class='text'><p>New Lead Imported from Web to Lead Form</div>";
+                                                }
+                                                ?>
+                                             </div>
+                              <?php
+                                          }
+                                       } else {
+                                          if ($status_no_history) {
+                                             echo "<h3 class='text-center'>No Web History</h3>";
+                                          }
+                                       }
+                                    }
+                                 }
+                              } else {
+                                 // No web activity log data available, display "No Web History"
+                                 echo "<h3 class='text-center'>No Web History</h3>";
+                              }
+                              ?>
+
+
+
+                           </div>
+                        </div>
+                        <!-- <div class="clearfix"></div> -->
+                     </div>
+                  </div>
+               <?php } ?>
                <div role="tabpanel" class="tab-pane" id="lead_call_activity">
                   <div class="panel_s no-shadow">
                      <div class="activity-feed">
@@ -272,16 +342,18 @@
                                     </a>
                                     <?php
                                     $color = "primary";
-                                    $show_time  = false;
+                                    $show_time  = true;
                                     if (!empty($call["call_status"])) {
 
                                        if (strtolower(trim($call["call_status"])) == "busy") {
                                           $color = "warning";
+                                          $show_time  = true;
                                        } else if (strtolower(trim($call["call_status"])) == "answered") {
                                           $color = "success";
                                           $show_time  = true;
                                        } else if ((strtolower(trim($call["call_status"])) == "missed" || str_contains(strtolower(trim($call["call_status"])), 'disconnected'))) {
                                           $color = "danger";
+                                          $show_time  = true;
                                        }
                                     ?>
                                        <a href="javascript:void(0);">

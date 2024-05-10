@@ -585,7 +585,7 @@ class Leads_model extends App_Model
 
         $data['email'] = trim($data['email']);
 
-
+        $this->update_lead_source($data['source'], $id);
 
         $this->db->where('id', $id);
 
@@ -594,6 +594,8 @@ class Leads_model extends App_Model
         if ($this->db->affected_rows() > 0) {
 
             $affectedRows++;
+
+
 
             if (isset($data['status']) && $current_status_id != $data['status']) {
 
@@ -604,6 +606,7 @@ class Leads_model extends App_Model
                     'last_status_change' => date('Y-m-d H:i:s'),
 
                 ]);
+
 
                 $new_status_name = $this->get_status($data['status'])->name;
 
@@ -683,6 +686,45 @@ class Leads_model extends App_Model
      * @return boolean
 
      */
+
+
+    public function update_lead_source($sourceid, $leadid)
+    {
+        $current_lead_data = $this->get($leadid);
+
+        if (!$current_lead_data) {
+            // Handle the case where lead data is not found
+            return false;
+        }
+
+        $old_source_data = $this->get_source($current_lead_data->source);
+        $new_source_data = $this->get_source($sourceid);
+
+        if (!$old_source_data || !$new_source_data) {
+            // Handle the case where source data is not found
+            return false;
+        }
+
+        if (!empty($current_lead_data->source) && !empty($sourceid) && ($current_lead_data->source != $sourceid)) {
+            log_activity('Leads Source Updated [SourceID: ' . $old_source_data->id . ', Name: ' . $new_source_data->id . ']');
+            $this->log_lead_activity($leadid, 'not_lead_activity_source_updated', false, serialize([
+                get_staff_full_name(),
+                $old_source_data->name,
+                $new_source_data->name,
+            ]));
+        } else {
+            log_activity('Leads Source Updated [SourceID: ' . $old_source_data->id . ', Name: ' . $new_source_data->id . ']');
+            $this->log_lead_activity($leadid, 'not_lead_activity_source_updated', false, serialize([
+                get_staff_full_name(),
+                $old_source_data->name,
+                $new_source_data->name,
+            ]));
+        }
+
+        return true;
+    }
+
+
 
     public function delete($id)
 
@@ -797,6 +839,11 @@ class Leads_model extends App_Model
 
 
 
+            $phonenumber = str_replace("+91", "", $lead->phonenumber);
+            $phonenumber = substr($phonenumber, -10);
+            if (!empty($phonenumber)) {
+                $this->delete_call_list($phonenumber);
+            }
             if (is_gdpr()) {
 
                 $this->db->where('(description LIKE "%' . $lead->email . '%" OR description LIKE "%' . $lead->name . '%" OR description LIKE "%' . $lead->phonenumber . '%")');
@@ -2524,6 +2571,46 @@ class Leads_model extends App_Model
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
     }
+
+    function automatic_assign_staff_city($city_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
+    {
+
+        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "cities s ON (FIND_IN_SET(s.id,st.assign_city)";
+        if (!empty($lead_type)) {
+            $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        }
+        $sql .= " ) ";
+        $sql .= " LEFT JOIN " . db_prefix() . "facebook_name f ON (FIND_IN_SET(f.id,st.facebook_lead_name) ) ";
+        $sql .= " where 1=1 ";
+        if (!empty($city_name)) {
+            $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($city_name)) . "' ";
+        }
+
+        if (!empty($deprtment_head_status)) {
+            $sql .= " and st.department_head = '1' ";
+        }
+        if (!empty($facebook_lead)) {
+            $sql .= " and st.facebook_lead_name != '' ";
+        }
+        if (!empty($google_source)) {
+            $sql .= " and (st.google_source != '' AND FIND_IN_SET({$google_source},st.google_source)) ";
+        }
+        if (!empty($lead_type)) {
+            $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+        }
+        if (!empty($staff_ids)) {
+            $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
+        }
+        $sql .= " group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
+        if (!empty($facebook_lead)) {
+        } else {
+            $sql .= " limit 1 ";
+        }
+        // echo $sql;
+        // die;
+        // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
+        return $this->db->query($sql)->result_array();
+    }
     public function get_marketing_type()
     {
         if (is_numeric($id)) {
@@ -2662,5 +2749,24 @@ class Leads_model extends App_Model
 
 
         return $type;
+    }
+
+    public function delete_call_list($phonenumber)
+    {
+        $this->db->like('contact', $phonenumber);
+        $this->db->delete(db_prefix() . 'calls_activity_logs');
+    }
+
+    public function delete_notes($ids)
+    {
+        $this->db->where_in('rel_id', $ids);
+        $this->db->where('rel_type', "lead");
+        $this->db->delete(db_prefix() . 'notes');
+    }
+
+    public function get_staff_list()
+    {
+        $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name');
+        return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
     }
 }

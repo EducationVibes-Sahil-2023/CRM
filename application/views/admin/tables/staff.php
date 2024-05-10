@@ -6,17 +6,18 @@ $has_permission_delete = has_permission('staff', '', 'delete');
 
 $custom_fields = get_custom_fields('staff', [
     'show_on_table' => 1,
-    ]);
+]);
 $aColumns = [
     'firstname',
     'email',
-    db_prefix().'roles.name',
+    'phonenumber',
+    db_prefix() . 'roles.name',
     'last_login',
     'active',
-    ];
+];
 $sIndexColumn = 'staffid';
-$sTable       = db_prefix().'staff';
-$join         = ['LEFT JOIN '.db_prefix().'roles ON '.db_prefix().'roles.roleid = '.db_prefix().'staff.role'];
+$sTable       = db_prefix() . 'staff';
+$join         = ['LEFT JOIN ' . db_prefix() . 'roles ON ' . db_prefix() . 'roles.roleid = ' . db_prefix() . 'staff.role'];
 $i            = 0;
 foreach ($custom_fields as $field) {
     $select_as = 'cvalue_' . $i;
@@ -24,10 +25,10 @@ foreach ($custom_fields as $field) {
         $select_as = 'date_picker_cvalue_' . $i;
     }
     array_push($aColumns, 'ctable_' . $i . '.value as ' . $select_as);
-    array_push($join, 'LEFT JOIN '.db_prefix().'customfieldsvalues as ctable_' . $i . ' ON '.db_prefix().'staff.staffid = ctable_' . $i . '.relid AND ctable_' . $i . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $i . '.fieldid=' . $field['id']);
+    array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $i . ' ON ' . db_prefix() . 'staff.staffid = ctable_' . $i . '.relid AND ctable_' . $i . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $i . '.fieldid=' . $field['id']);
     $i++;
 }
-            // Fix for big queries. Some hosting have max_join_limit
+// Fix for big queries. Some hosting have max_join_limit
 if (count($custom_fields) > 4) {
     @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
 }
@@ -38,7 +39,7 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [
     'profile_image',
     'lastname',
     'staffid',
-    ]);
+]);
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
@@ -73,7 +74,7 @@ foreach ($rResult as $aRow) {
         } elseif ($aColumns[$i] == 'firstname') {
             $_data = '<a href="' . admin_url('staff/profile/' . $aRow['staffid']) . '">' . staff_profile_image($aRow['staffid'], [
                 'staff-profile-image-small',
-                ]) . '</a>';
+            ]) . '</a>';
             $_data .= ' <a href="' . admin_url('staff/member/' . $aRow['staffid']) . '">' . $aRow['firstname'] . ' ' . $aRow['lastname'] . '</a>';
 
             $_data .= '<div class="row-options">';
@@ -88,6 +89,13 @@ foreach ($rResult as $aRow) {
             $_data .= '</div>';
         } elseif ($aColumns[$i] == 'email') {
             $_data = '<a href="mailto:' . $_data . '">' . $_data . '</a>';
+        } elseif ($aColumns[$i] == 'phonenumber') {
+            $_data = ' <a href="javascript:void(0)" onclick="edit_staff_phone_number(' . $aRow['staffid'] . ',' . $aRow['phonenumber'] . ')" >' . $aRow['phonenumber'] . '</a>';
+            $_data .= '<div class="row-options">';
+            if (is_admin()) {
+                $_data .= '<a href="javascript:void(0)" onclick="edit_staff_phone_number(' . $aRow['staffid'] . ',' . $aRow['phonenumber'] . ')" >' . _l('edit') . '</a>';
+            }
+            $_data .= '</div>';
         } else {
             if (strpos($aColumns[$i], 'date_picker_') !== false) {
                 $_data = (strpos($_data, ' ') !== false ? _dt($_data) : _d($_data));

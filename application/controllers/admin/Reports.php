@@ -61,10 +61,11 @@ class Reports extends AdminController
 
     public function leads()
     {
-
         $this->load->model('leads_model');
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['status'] = $this->leads_model->get_status();
+        $data['department'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "staff_department")->result_array();
+        $data['location'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "office_location")->result_array();
         $data['sources']  = $this->leads_model->get_source();
         $data['type']  = $this->leads_model->get_type();
         $data['conversion_type']  = $this->leads_model->get_conversion_type();
@@ -76,10 +77,61 @@ class Reports extends AdminController
     {
         $ret = "";
         $updateCount = 0;
+        $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+
+        if ($role == 1) {
+            $_POST["view_assigned"][] = get_staff_user_id();
+        }
+        $role_staffs = [];
+        if ($role == 3) {
+            $role_staffs = $this->db->query('CALL GetReportingPersons(?)', array(get_staff_user_id()))->result_array();
+            $role_staffs = array_column($role_staffs, 'staff_name', "staffid");
+        }
+
+        if (!empty($_POST["location"]) && !empty($_POST["department"])) {
+            $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
+            foreach ($locationStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff])) {
+                        $_POST["view_assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["view_assigned"][] = $staff['staffid'];
+                }
+            }
+        } else if (!empty($_POST["location"])) {
+            $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
+            foreach ($locationStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff])) {
+                        $_POST["view_assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["view_assigned"][] = $staff['staffid'];
+                }
+            }
+        } else if (!empty($_POST["department"])) {
+            $departmentStaff = $this->db->select("staffid")->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
+            foreach ($departmentStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff])) {
+                        $_POST["view_assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["view_assigned"][] = $staff['staffid'];
+                }
+            }
+        }
 
         if (!empty($_POST["view_assigned"])) {
             $index = 0;
             foreach ($_POST["view_assigned"] as $assigned) {
+
+                if ($role == 3) {
+                    if (empty($role_staffs[$assigned])) {
+                        continue;
+                    }
+                }
                 $post_data = $_POST;
                 unset($post_data["view_assigned"]);
                 $post_data["assigned"][] = $assigned;
@@ -91,7 +143,7 @@ class Reports extends AdminController
                 if (!empty($index) && $index % 2 == 0) {
                     $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
                 }
-                $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
+                $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
 
                 $ret .= '<h4><b>' . ucwords($staff_name) . '</b></h4><hr>';
 
@@ -142,7 +194,7 @@ class Reports extends AdminController
 
             $updateCount = leads_update_count($_POST);
 
-            $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
+            $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
 
             $ret .= '<div class="col-md-6">';
             $ret .= '<div class="col-12 panel-body">';
@@ -191,15 +243,149 @@ class Reports extends AdminController
 
     public function lead_summary_filter($return_status = '')
     {
+
         $this->load->model('leads_model');
         $ret = "";
+        $source_html_json = [];
+        $source_html_staff_json = [];
         $updateCount = 0;
+
+        if (!empty($_POST["daily_update_count"])) {
+            try {
+                $_POST["assigned"] = [];
+                $_POST["assigned"][] = $_POST["daily_update_count"];
+                $updateCount_day = leads_update_count($_POST, 0, 0, 1);
+
+                if ($updateCount_day === false) {
+                    throw new Exception('Error occurred while fetching update counts.');
+                }
+
+                $updateCount_day = array_values($updateCount_day);
+
+
+                echo json_encode(["update_count_daily_data" => $updateCount_day]);
+                die;
+            } catch (Exception $e) {
+                echo json_encode(["error" => $e->getMessage()]);
+                die;
+            }
+        }
+
+        $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+        $role_staffs = [];
+        if ($role == 3 || $role == 1) {
+            $role_staffs = $this->db->query('CALL GetReportingPersons(?)', array(get_staff_user_id()))->result_array();
+            $this->db->close();
+            $this->db->initialize();
+            $role_staffs = array_column($role_staffs, null, "staffid");
+        }
+        if ($role == 1) {
+            $_POST["assigned"] = [];
+            $_POST["assigned"][] = get_staff_user_id();
+        }
+        $source_type = $this->leads_model->get_source();
+        $marketing_type =  $this->leads_model->get_marketing_type();
+        $conversion_type = $this->leads_model->get_conversion_type();
+        $conversion_type_new = $conversion_type = array_column($conversion_type, null, "id");
+        $staff_list     = $this->leads_model->get_staff_list();
+        $staff_list = array_column($staff_list, 'staff_name', "staffid");
+
+
+        if (!empty($_POST["location"]) && !empty($_POST["department"])) {
+            $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
+            foreach ($locationStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff['staffid']])) {
+                        $_POST["assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["assigned"][] = $staff['staffid'];
+                }
+            }
+        } else if (!empty($_POST["location"])) {
+            $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
+            foreach ($locationStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff['staffid']])) {
+                        $_POST["assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["assigned"][] = $staff['staffid'];
+                }
+            }
+        } else if (!empty($_POST["department"])) {
+            $departmentStaff = $this->db->select("staffid")->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
+            foreach ($departmentStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff['staffid']])) {
+                        $_POST["assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["assigned"][] = $staff['staffid'];
+                }
+            }
+        }
+
+
+
+
         if (!empty($_POST["assigned"]) && empty($return_status)) {
+
+
             $excel_array = [];
             $excel_performance_array = [];
+            $update_count_array_label = [];
+            $update_count_array_min = [];
+            $update_count_array_max = [];
+            if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
+                // echo "<pre>";
+                // print_r($_POST);
+                // die;
+                foreach ($_POST["assigned"] as $assigned) {
+                    $update_count_data_min = $update_count_data = $post_data = $_POST;
+                    unset($post_data["assigned"]);
+                    unset($post_data["update_count_min"]);
+                    unset($post_data["update_count_max"]);
+                    $post_data["assigned"][] = $assigned;
+                    $summary = get_leads_summary_filter($post_data);
+                    $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
+                    $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
+                    $update_count_data['update_count_min'] = "";
+                    $update_count_data['update_count_max'] = "";
+                    $update_count_data["assigned"][] = $assigned;
+                    $update_count_data_min["assigned"][] =  $assigned;
+                    $updateCount = leads_update_count($update_count_data, 0, 1);
+                    $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
+                    $staff_name =  get_staff_full_name($assigned);
+                    $update_count_array_label[] = trim($staff_name);
+                    $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
+                    $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
+                    $update_count_array_min[] = intval($updateCount_min);
+                    $update_count_array_max[] = (intval($updateCount));
+                    array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
+                }
+
+                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max), "total_leads" => $source_html_json]);
+                die;
+            }
+
+
             $index = 0;
+            $max_count = [];
+            $staff_html = '';
             foreach ($_POST["assigned"] as $assigned) {
-                $post_data = $_POST;
+
+                if ($role == 3) {
+                    if (empty($role_staffs[$assigned])) {
+                        continue;
+                    }
+                }
+
+                $update_count_data = $post_data = $_POST;
+                $update_count_data["status"][] = 20;
+                $update_count_data["assigned"] = [];
+                $update_count_data["assigned"][] = $assigned;
+
                 unset($post_data["assigned"]);
                 $post_data["assigned"][] = $assigned;
                 $summary = get_leads_summary_filter($post_data);
@@ -207,14 +393,21 @@ class Reports extends AdminController
                 $status_summary = get_status_summary_filter($post_data);
                 $status_summary_performance = get_status_summary_filter_performance($post_data);
                 $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
-                $source_type = $this->leads_model->get_source();
+
+                $updateCount = leads_update_count($update_count_data, 0, 1);
+                $staff_name =  $staff_list[$assigned];
+                $update_count_array_label[] = trim($staff_name);
+                $update_count_array_min[] = intval($updateCount);
+                $update_count_array_max[] = intval($updateCount);
+                $max_count[] = intval($updateCount);
 
                 $marketing_type =  $this->leads_model->get_marketing_type();
                 $conversion_type = $this->leads_model->get_conversion_type();
                 $conversion_type = array_column($conversion_type, null, "id");
-                $updateCount = leads_update_count($post_data);
-                $staff_name =  get_staff_full_name($assigned);
 
+                array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
+                array_push($source_html_staff_json, $staff_name);
+                $staff_html .= '<div class="col-md-3 col-xs-6 border-right" ><h3 class="bold">' . $summary[(count($summary) - 1)]["total"] . '</h3><span>' . $staff_name . '</span></div>';
 
                 if (!empty($excel_data)) {
                     $excel_array[$staff_name] = $excel_data;
@@ -230,6 +423,7 @@ class Reports extends AdminController
                         }
                         $status_summary_conversion_excel[$key]["total"] += $item['total'];
                     }
+
 
                     // $status_summary_conversion_excel =  array_column($status_summary_conversion, null, "index_conversion_name");
 
@@ -264,7 +458,7 @@ class Reports extends AdminController
                                 $total +=  $excel_array[$staff_name]["conversion_data"][$key];
                             }
                             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                                if (!empty($percentage)) {
+                                if (!empty($percentage) && $percentage > 0) {
 
                                     $percentage_cal = ($percentage / $total) * 100;
                                     $excel_array[$staff_name]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
@@ -312,7 +506,7 @@ class Reports extends AdminController
                                 $total +=  $excel_array[$staff_name]["performance_data"][$key];
                             }
                             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                                if (!empty($percentage)) {
+                                if (!empty($percentage) && $percentage > 0) {
                                     $percentage_cal = ($percentage / $total) * 100;
                                     $excel_array[$staff_name]["performance_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
                                 } else {
@@ -326,12 +520,15 @@ class Reports extends AdminController
                 if (!empty($index) && $index % 2 == 0) {
                     $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
                 }
-                $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
-                $ret .= '<h4><b>' . ucwords($staff_name) . '</b></h4><hr>';
+                $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
+                $ret .= '<h4><b>' . ucwords($staff_name) . '</b> <a href="#" class="btn hide filter-hide btn-default btn-with-tooltip daily-update-count" data-staffid="' . $assigned . '" data-toggle="tooltip" data-title="' . _l('Update Count') . '" data-placement="bottom" onclick="daily_update_count(\'.leads-overview-' . $assigned . '\',' . $assigned . '); return false;"><i class="fa fa-bar-chart"></i></a></h4> 
+                <div class="row leads-overview-' . $assigned . '" style="display:none;">
+                </div>
+                <hr>';
+
                 $ret .= '<div class="col-md-6">';
                 $ret .= '<div class="col-12 panel-body">';
                 $ret .= '<h4><b>Leads Types</b></h4><hr>';
-
                 foreach ($summary as $status) {
                     if (isset($conversion_type[$status['conversion_type']])) {
                         $conversion_type[$status['conversion_type']]["total"] += !empty($status['total']) ?  $status['total'] : 0;
@@ -389,18 +586,19 @@ class Reports extends AdminController
                 foreach ($conversion_type as $conversion) {
                     $percentage = 0;
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
+                        continue;
                         $ids = explode(",", $conversion["parent_id"]);
                         foreach ($ids as $c_id) {
                             $percentage += $conversion_type[$c_id]['total'];
                         }
                     }
-                    $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                    $ret .= '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
                     if (isset($conversion['percent'])) {
                         $ret .= '<span data-toggle="tooltip" data-title="' . $conversion['total'] . '">' . $conversion['percent'] . '%</span>';
                     } else {
                         // Is regular status
                         if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                            if (!empty($percentage)) {
+                            if (!empty($percentage) && $percentage > 0) {
                                 $percentage = ($percentage / $total_sum) * 100;
 
                                 $ret .= number_format((float)$percentage, 2, '.', '');
@@ -410,6 +608,26 @@ class Reports extends AdminController
                         } else {
 
                             $ret .= !empty($conversion['total']) ? $conversion['total'] : 0;
+
+
+                            $percentage = 0;
+                            if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
+                                $ids = explode(",", $conversion["parent_ids"]);
+                                foreach ($ids as $c_id) {
+                                    $percentage += $conversion_type[$c_id]['total'];
+                                }
+                            }
+                            if (!empty($percentage) && $percentage > 0) {
+                                if ($total_sum != 0) {
+                                    $percentage = ($percentage / $total_sum) * 100;
+                                    $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
+                                } else {
+                                    // Handle division by zero case
+                                    $ret .= "<span class='show-persentage'>0.00% </span>";
+                                }
+                            } else {
+                                $ret .= "<span class='show-persentage'>0.00% </span>";
+                            }
                         }
                     }
                     $ret .=  '</h3>';
@@ -435,23 +653,25 @@ class Reports extends AdminController
                 $performance_array = array_column($marketing_type, null, 'id');
 
                 foreach ($performance_array as $key => $per) {
-                    $ret .= '<div class="col-md-12 col-xs-12 border-right"><h3 class="bold">';
+                    $ret .= '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
                     $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
                     $percentage = 0;
+                    $per_percentage = 0;
                     foreach ($conversion_type as $kkey => $conversion) {
 
                         $percentage = 0;
                         if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
+                            continue;
                             $ids = explode(",", $conversion["parent_id"]);
                             foreach ($ids as $c_id) {
                                 $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
                             }
                         }
 
-                        $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                        $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
                         // Is regular status
                         if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                            if (!empty($percentage)) {
+                            if (!empty($percentage) && $percentage > 0) {
                                 if (!empty($total_sum)) {
                                     $percentage = ($percentage / $total_sum) * 100;
                                     $ret .= number_format((float)$percentage, 2, '.', '');
@@ -463,10 +683,41 @@ class Reports extends AdminController
                             }
                         } else {
                             $ret .= !empty($sum[$key . "_" . $kkey]) ? $sum[$key . "_" . $kkey] : 0;
+
+
+                            $percentage = 0;
+                            if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
+                                $ids = explode(",", $conversion["parent_ids"]);
+                                foreach ($ids as $c_id) {
+                                    $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
+                                }
+                            }
+
+                            if (!empty($percentage) && $percentage > 0) {
+                                if ($total_sum != 0) {
+                                    $per_percentage += $percentage;
+                                    $percentage = ($percentage / $total_sum) * 100;
+
+                                    $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
+                                } else {
+                                    // Handle division by zero case
+                                    $ret .= "<span class='show-persentage'>0.00% </span>";
+                                }
+                            } else {
+                                $ret .= "<span class='show-persentage'>0.00% </span>";
+                            }
                         }
                         $ret .= '</h3>';
                         $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
                     }
+                    $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">' . $per_percentage;
+                    if (!empty($per_percentage) && $per_percentage > 0) {
+                        $ret .= '<span class="show-persentage">' . number_format((float)(($per_percentage / $total_sum) * 100), 2, '.', '') . '% </span>';
+                    } else {
+                        $ret .= "<span class='show-persentage'>0.00% </span>";
+                    }
+                    $ret .= '</h3><span >Total</span></div>';
+
                     $ret .= '<br><hr class="hr-3" style="width: 100%;
                     margin-top: 20px!important;
                     display: inline-block;">';
@@ -481,22 +732,30 @@ class Reports extends AdminController
                 $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
             }
 
-            $ret .= $this->lead_summary_filter(1);
+            $html_ret = $this->lead_summary_filter(1);
+
+            $ret =   $html_ret . " " . $ret;
         } else {
             if (!empty($return_status)) {
             } else {
                 $excel_array = [];
+                $update_count_array_label = [];
+                $update_count_array_min = [];
+                $update_count_array_max = [];
             }
 
             $summary = get_leads_summary_filter($_POST);
             $excel_data = get_leads_summary_filter_excel($_POST);
             $status_summary = get_status_summary_filter($_POST);
+
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
             $status_summary_performance = get_status_summary_filter_performance($_POST);
             $marketing_type =  $this->leads_model->get_marketing_type();
             $conversion_type = $this->leads_model->get_conversion_type();
             $conversion_type = array_column($conversion_type, null, "id");
-            $source_type = $this->leads_model->get_source();
+
+
+            // $source_type = $this->leads_model->get_source();
             if (!empty($excel_data)) {
                 $excel_array["Total Details"] = $excel_data;
 
@@ -545,7 +804,7 @@ class Reports extends AdminController
                             $total +=  $excel_array["Total Details"]["conversion_data"][$key];
                         }
                         if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                            if (!empty($percentage)) {
+                            if (!empty($percentage) && $percentage > 0) {
 
                                 $percentage_cal = ($percentage / $total) * 100;
                                 $excel_array["Total Details"]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
@@ -593,7 +852,7 @@ class Reports extends AdminController
                             $total +=  $excel_array["Total Details"]["performance_data"][$key];
                         }
                         if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                            if (!empty($percentage)) {
+                            if (!empty($percentage) && $percentage > 0) {
                                 $percentage_cal = ($percentage / $total) * 100;
                                 $excel_array["Total Details"]["performance_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
                             } else {
@@ -604,9 +863,9 @@ class Reports extends AdminController
                 }
             }
 
-            $updateCount = leads_update_count($_POST);
+            // $updateCount = leads_update_count($_POST);
 
-            $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
+            $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
             if (!empty($return_status)) {
                 $ret .= '<h4><b>' . ucwords("Total") . '</b></h4><hr>';
             }
@@ -667,18 +926,19 @@ class Reports extends AdminController
             foreach ($conversion_type as $conversion) {
                 $percentage = 0;
                 if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
+                    continue;
                     $ids = explode(",", $conversion["parent_id"]);
                     foreach ($ids as $c_id) {
                         $percentage += $conversion_type[$c_id]['total'];
                     }
                 }
-                $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                $ret .= '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
                 if (isset($conversion['percent'])) {
                     $ret .= '<span data-toggle="tooltip" data-title="' . $conversion['total'] . '">' . $conversion['percent'] . '%</span>';
                 } else {
                     // Is regular status
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                        if (!empty($percentage)) {
+                        if (!empty($percentage) && $percentage > 0) {
                             $percentage = ($percentage / $total_sum) * 100;
 
                             $ret .= number_format((float)$percentage, 2, '.', '');
@@ -688,6 +948,26 @@ class Reports extends AdminController
                     } else {
 
                         $ret .= !empty($conversion['total']) ? $conversion['total'] : 0;
+
+                        $percentage = 0;
+                        if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
+                            $ids = explode(",", $conversion["parent_ids"]);
+                            foreach ($ids as $c_id) {
+                                $percentage += $conversion_type[$c_id]['total'];
+                            }
+                        }
+
+                        if (!empty($percentage) && $percentage > 0) {
+                            if ($total_sum != 0) {
+                                $percentage = ($percentage / $total_sum) * 100;
+                                $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
+                            } else {
+                                // Handle division by zero case
+                                $ret .= "<span class='show-persentage'>0.00% </span>";
+                            }
+                        } else {
+                            $ret .= "<span class='show-persentage'>0.00% </span>";
+                        }
                     }
                 }
                 $ret .=  '</h3>';
@@ -712,23 +992,25 @@ class Reports extends AdminController
             }
             $performance_array = array_column($marketing_type, null, 'id');
             foreach ($performance_array as $key => $per) {
-                $ret .= '<div class="col-md-12 col-xs-12 border-right"><h3 class="bold">';
+                $ret .= '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
                 $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
                 $percentage = 0;
+                $per_percentage = 0;
                 foreach ($conversion_type as $kkey => $conversion) {
                     $percentage = 0;
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
+                        continue;
                         $ids = explode(",", $conversion["parent_id"]);
                         foreach ($ids as $c_id) {
                             $percentage += $sum[$key . "_" . $c_id];
                         }
                     }
 
-                    $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                    $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
 
                     // Is regular status
                     if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                        if (!empty($percentage)) {
+                        if (!empty($percentage) && $percentage > 0) {
                             if (!empty($total_sum)) {
                                 $percentage = ($percentage / $total_sum) * 100;
 
@@ -741,10 +1023,41 @@ class Reports extends AdminController
                         }
                     } else {
                         $ret .= !empty($sum[$key . "_" . $kkey]) ? $sum[$key . "_" . $kkey] : 0;
+
+
+                        $percentage = 0;
+                        if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
+                            $ids = explode(",", $conversion["parent_ids"]);
+                            foreach ($ids as $c_id) {
+                                $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
+                            }
+                        }
+
+                        if (!empty($percentage) && $percentage > 0) {
+                            if ($total_sum != 0) {
+                                $per_percentage += $percentage;
+                                $percentage = ($percentage / $total_sum) * 100;
+                                $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
+                            } else {
+                                // Handle division by zero case
+                                $ret .= "<span class='show-persentage'>0.00% </span>";
+                            }
+                        } else {
+                            $ret .= "<span class='show-persentage'>0.00% </span>";
+                        }
                     }
                     $ret .= '</h3>';
                     $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
                 }
+
+                $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">' . $per_percentage;
+                if (!empty($per_percentage) && $per_percentage > 0) {
+                    $ret .= '<span class="show-persentage">' . number_format((float)(($per_percentage / $total_sum) * 100), 2, '.', '') . '% </span>';
+                } else {
+                    $ret .= "<span class='show-persentage'>0.00% </span>";
+                }
+                $ret .= '</h3><span >Total</span></div>';
+
                 $ret .= '<br><hr class="hr-3" style="width: 100%;
                     margin-top: 20px!important;
                     display: inline-block;">';
@@ -758,7 +1071,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "total_staff_html" => $staff_html]);
     }
 
 
@@ -815,7 +1128,7 @@ class Reports extends AdminController
 
     //     //         $updateCount = leads_update_count($post_data);
     //     //         $staff_name =  get_staff_full_name($assigned);
-    //     //         // $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex">';
+    //     //         // $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
     //     //         // $ret .= '<h4><b>' . ucwords($staff_name) . '</b></h4><hr>';
 
     //     //         // $ret .= '<div class="col-md-6 border-table">';

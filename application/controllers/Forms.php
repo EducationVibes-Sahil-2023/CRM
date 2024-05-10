@@ -74,9 +74,16 @@ class Forms extends ClientsController
                     $ip = $_SERVER['REMOTE_ADDR'];
                     $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
                     $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+                    $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
                     $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
-
-                    if (!empty($state_name) && !empty($lead_type)) {
+                    $fb_status_check = false;
+                    if (!empty($city_name) && !empty($lead_type)) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                            $fb_status_check = true;
+                        }
+                    } else if (!empty($state_name) && !empty($lead_type) &&  $fb_status_check == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
@@ -163,30 +170,56 @@ class Forms extends ClientsController
 
                 if (!empty($form->state_wise)  && $form->state_wise == 1) {
                     $form->responsible = 1;
+
                     if (!empty($form->allow_state_location) && $form->allow_state_location == 1) {
                         $state_name = !empty($post_data['state']) ? trim($post_data['state']) : '';
+                        $city_name = !empty($post_data['city']) ? trim($post_data['city']) : '';
                     } else {
                         $ip = $_SERVER['REMOTE_ADDR'];
                         $ipdetails = json_decode(file_get_contents("http://ipinfo.io/{$ip}/json"));
                         $state_name = !empty($ipdetails->region) ? trim($ipdetails->region) : '';
+                        $city_name = !empty($ipdetails->city) ? trim($ipdetails->city) : '';
                     }
                     $lead_type = !empty($post_data["type"]) ? trim($post_data["type"]) : '';
                     if (empty($lead_type)) {
                         $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
                     }
+                    $status_assign = false;
 
+                    if (!empty($city_name) && $status_assign == false) {
+                        $assign_staff_id = $this->leads_model->automatic_assign_staff_city($city_name, $lead_type, '', '', '', $google_source);
+                        if (!empty($assign_staff_id[0]["staffid"])) {
+                            $form->responsible = $assign_staff_id[0]["staffid"];
+                            $status_assign = true;
+                        }
+                    }
 
-
-                    if (!empty($state_name)) {
+                    if (!empty($state_name)  && $status_assign == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type, '', '', '', $google_source);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
+                            $status_assign = true;
                         }
-                    } else if (!empty($lead_type)) {
+                    } else if (!empty($lead_type)  && $status_assign == false) {
                         $assign_staff_id = $this->leads_model->automatic_assign_staff('', $lead_type, 1);
                         if (!empty($assign_staff_id[0]["staffid"])) {
                             $form->responsible = $assign_staff_id[0]["staffid"];
                         }
+                    }
+                }
+
+
+                if (!empty($post_data['tag_assign'])  && $post_data['tag_assign'] > 0) {
+                    $form->responsible = 1; // Default responsible staff ID
+
+                    // Check if the staff is active and exists
+                    $check_staff = $this->db->select("staffid")->where('active', 1)
+                        ->where('staffid', $post_data['tag_assign'])
+                        ->get(db_prefix() . 'staff')->row();
+
+                    // If staff exists and is active, update the responsible staff ID
+                    if (!empty($check_staff)) {
+                        $form->responsible = $check_staff->staffid;
                     }
                 }
 
@@ -316,10 +349,63 @@ class Forms extends ClientsController
                                 'dateassigned' => date("Y-m-d")
                             ];
 
-                            if (!empty($form->lead_source)) {
-                                $updateStatus['source'] = $form->lead_source;
+                            if (!empty($post_data["website"])) {
+                                $updateStatus['website'] = $post_data["website"];
                             }
 
+
+                            $regular_fields = [];
+                            $custom_fields  = [];
+                            foreach ($post_data as $name => $val) {
+                                if (strpos($name, 'form-cf-') !== false) {
+                                    array_push($custom_fields, [
+                                        'name'  => $name,
+                                        'value' => $val,
+                                    ]);
+                                }
+
+                                $custom_fields_build['leads'] = [];
+                                foreach ($post_data as $name => $val) {
+                                    // if (!empty($_POST['form-cf-' . MARKETING_SOURCE_ID])) {
+                                    //     $custom_fields_build['leads'][MARKETING_SOURCE_ID] = !empty($_POST['form-cf-' . MARKETING_SOURCE_ID]) ? $_POST['form-cf-' . MARKETING_SOURCE_ID] : "";
+                                    // }
+
+                                    // if (!empty($_POST['form-cf-' . CALL_TYPE_ID])) {
+                                    //     $custom_fields_build['leads'][CALL_TYPE_ID] = !empty($_POST['form-cf-' . CALL_TYPE_ID]) ? $_POST['form-cf-' . CALL_TYPE_ID] : "";
+                                    // }
+                                    // update web history json 
+                                    if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
+                                        $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
+
+
+
+                                        if (empty($web_activity_log_data)) {
+                                            $custom_fields_build['leads'][WEB_HISTORY_ID] = !empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "";
+                                        } else {
+                                            $custom_fields_build['leads'][WEB_HISTORY_ID] = $web_activity_log_data["value"] . "," . (!empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "");
+                                        }
+                                    }
+                                }
+                            }
+
+
+
+
+                            if (!empty($custom_fields_build['leads'])) {
+                                handle_custom_fields_post($duplicateLead->id, $custom_fields_build);
+                            }
+
+                            if (!empty($form->lead_source)) {
+                                $source_data_get = $this->leads_model->get_source($duplicateLead->source);
+                                if (!empty($source_data_get->fixed_source) && $source_data_get->fixed_source == 1) {
+                                } else {
+                                    $updateStatus['source'] = $form->lead_source;
+                                }
+                            }
+
+                            if (!empty($updateStatus['source'])) {
+                                $this->leads_model->update_lead_source($updateStatus['source'], $duplicateLead->id);
+                            }
 
                             if ($post_data['callassignee'] != null) {
                                 $updateStatus["assigned"] = $form->responsible;

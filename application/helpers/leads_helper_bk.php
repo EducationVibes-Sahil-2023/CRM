@@ -1041,6 +1041,11 @@ function get_leads_summary_filter_excel($params)
             $assign_to_date = $params['assign_to_date'];
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
+
+        if (!empty($params['fb_source'])) {
+            $facebook_source_name = $params['fb_source'];
+            $sql .= ' AND l.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\')';
+        }
         $sql .= '  GROUP BY l.source,l.status ';
         $sql .= ' UNION ALL ';
         $sql = trim($sql);

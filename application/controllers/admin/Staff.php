@@ -18,6 +18,46 @@ class Staff extends AdminController
         $this->load->view('admin/staff/manage', $data);
     }
 
+    public function edit_phonenumber()
+    {
+        // Assuming this code is part of a method/function in your controller   
+        // Load CodeIgniter's form validation library if not already loaded
+        $this->load->library('form_validation');
+        // Set validation rules
+        $this->form_validation->set_rules('staffid', 'Staff ID', 'required|integer');
+        $this->form_validation->set_rules('phonenumber', 'Phone Number', 'integer');
+
+        // Check if the submitted data passes validation
+        if ($this->form_validation->run() == FALSE) {
+            // Validation failed
+            $response = array(
+                'status' => '0',
+                'message' => validation_errors() // Return validation errors
+            );
+        } else {
+            // Validation passed, proceed with updating the database
+            $staffid = $this->input->post("staffid");
+            $phonenumber = $this->input->post("phonenumber");
+
+            $this->db->where('staffid', $staffid);
+            $this->db->update(db_prefix() . 'staff', ['phonenumber' => $phonenumber]);
+            // Check if the update was successful
+            if ($this->db->affected_rows() > 0) {
+                $response = array(
+                    'status' => '1',
+                    'message' => 'Phone number updated successfully'
+                );
+            } else {
+                // $response = array(
+                //     'status' => '0',
+                //     'message' => 'Failed to update phone number. Staff ID may not exist.'
+                // );
+            }
+        }
+
+        // Convert response array to JSON and return it
+        echo json_encode($response);
+    }
     /* Add new staff member or edit existing */
     public function member($id = '')
     {
@@ -40,6 +80,7 @@ class Staff extends AdminController
 
             $data['password'] = $this->input->post('password', false);
             $data['assign_state'] = !empty($this->input->post('assign_state')) ? implode(',', $this->input->post('assign_state')) : '';
+            $data['assign_city'] = !empty($this->input->post('assign_city')) ? implode(',', $this->input->post('assign_city')) : '';
             $data['lead_type'] = !empty($this->input->post('lead_type')) ? $this->input->post('lead_type') : '';
             $data['department_head'] = !empty($this->input->post('department_head')) ? $this->input->post('department_head') : '';
             $data['post_sales'] = !empty($this->input->post('post_sales')) ? $this->input->post('post_sales') : '';
@@ -123,6 +164,7 @@ class Staff extends AdminController
         $data['title']         = $title;
         $data['staff'] = $this->staff_model->get('', ['active' => 1]);
         $data['state_list'] = $this->staff_model->state_list();
+        $data['city_list'] = $this->staff_model->city_list();
         $data['lead_type']  = $this->staff_model->get_type();
         $data['sources']  = $this->Leads_model->get_source();
         $data['facebook_form_names']  = $this->staff_model->get_facebook_names();

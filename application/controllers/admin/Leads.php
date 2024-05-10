@@ -72,7 +72,7 @@ class Leads extends AdminController
         // $data['updateCount'] = leads_update_count();
         // $data['call_count'] = calls_update_count();
 
-        $data['updateCount_max'] = leads_update_count("", 1);
+        // $data['updateCount_max'] = leads_update_count("", 1);
 
         $data['statuses'] = $this->leads_model->get_status();
 
@@ -95,9 +95,10 @@ class Leads extends AdminController
     {
         $summary = get_leads_summary_filter($_POST);
         $updateCount = leads_update_count($_POST);
-        $max_count = leads_update_count("", 1);
+        // $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
 
+        $max_count = '';
         $ret = "";
         $ret1 = '';
         foreach ($summary as $status) {
@@ -471,10 +472,12 @@ class Leads extends AdminController
 
             access_denied('Delte Lead');
         }
-
-
+        $lead_data = $this->leads_model->get($id);
+        $phonenumber = substr(trim($lead_data->phonenumber), -10);
 
         $response = $this->leads_model->delete($id);
+        $this->leads_model->delete_notes(array($id));
+        $this->leads_model->delete_call_list($phonenumber);
 
         if (is_array($response) && isset($response['referenced'])) {
 
@@ -2508,8 +2511,14 @@ class Leads extends AdminController
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
 
-                        $this->db->where_in('id', $ids);
-                        $this->db->delete(db_prefix() . 'leads');
+                        foreach ($ids as $lead_id_delete) {
+                            $this->leads_model->delete($lead_id_delete);
+                        }
+
+                        // $this->db->where_in('id', $ids);
+                        // $this->db->delete(db_prefix() . 'leads');
+
+                        $this->leads_model->delete_notes($ids);
 
                         set_alert('success', "Re-assign lead successfully.");
                     } else {
@@ -2531,7 +2540,7 @@ class Leads extends AdminController
                         if ($has_permission_delete) {
 
                             if ($this->leads_model->delete($id)) {
-
+                                $this->leads_model->delete_notes($ids);
                                 $total_deleted++;
                             }
                         }
@@ -2620,9 +2629,11 @@ class Leads extends AdminController
                                 // ]);
                             }
 
+
                             if ($source) {
 
                                 $update['source'] = $source;
+                                $this->leads_model->update_lead_source($source, $id);
                             }
 
                             if ($lead_type) {
@@ -2873,9 +2884,10 @@ class Leads extends AdminController
                     HAVING COUNT(*) > 0 ")->row();
 
                     if (empty($check_exist)) {
-                        if ($this->leads_model->add($temp_lead_data,1)) {
+                        if ($this->leads_model->add($temp_lead_data, 1)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
+                            $this->leads_model->delete_call_list($phonenumber);
                         }
                     } else {
                         $this->db->where('id', $leads["id"]);

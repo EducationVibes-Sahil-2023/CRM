@@ -43,7 +43,6 @@ class Authentication_model extends App_Model
                     return false;
                 }
             } else {
-
                 hooks()->do_action('non_existent_user_login_attempt', [
                     'email'           => $email,
                     'is_staff_member' => $staff,
@@ -79,7 +78,7 @@ class Authentication_model extends App_Model
                     $user_data = [
                         'staff_user_id'   => $user->$_id,
                         'staff_logged_in' => true,
-                        'staff_logged_in_new' => true,
+                        'staff_logged_new' => true,
                         "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
                     ];
                 } else {
@@ -138,7 +137,7 @@ class Authentication_model extends App_Model
 
             $this->session->unset_userdata('staff_user_id');
             $this->session->unset_userdata('staff_logged_in');
-            $this->session->unset_userdata('staff_logged_in_new');
+            $this->session->unset_userdata('staff_logged_new');
             $this->session->unset_userdata('staff_department');
         }
 
@@ -162,7 +161,7 @@ class Authentication_model extends App_Model
                     'user_id' => $user_id,
                     'key'     => $key,
                 ]),
-                'expire' => 60 * 60 * 24 * 31 * 2, // 2 months
+                'expire' => 60 * 60 * 24 * 31 * 1, // 2 months
             ]);
 
             return true;
@@ -202,7 +201,7 @@ class Authentication_model extends App_Model
                             $user_data = [
                                 'staff_user_id'   => $user->id,
                                 'staff_logged_in' => true,
-                                'staff_logged_in_new' => true,
+                                'staff_logged_new' => true,
                                 "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
 
                             ];
@@ -223,7 +222,7 @@ class Authentication_model extends App_Model
                         set_cookie([
                             'name'   => 'autologin',
                             'value'  => $cookie,
-                            'expire' => 60 * 60 * 24 * 31 * 2, // 2 months
+                            'expire' => 60 * 60 * 24 * 31 * 1, // 2 months
                         ]);
                         $this->update_login_info($user->id, $user->staff);
 
@@ -546,7 +545,7 @@ class Authentication_model extends App_Model
             [
                 'staff_user_id'   => $user->staffid,
                 'staff_logged_in' => true,
-                'staff_logged_in_new' => true,
+                'staff_logged_new' => true,
                 "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
             ]
 
