@@ -235,8 +235,9 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
             for (i = 0; i < folder_data.length; i++) {
                 let html_edit = ``;
                 <?php if ($has_permission_edit) { ?>
-                    html_edit = "<i class='fa fa-edit edit_folder_data' data-toggle='modal' data-target='#create_dir' onclick=\"edit_folder('" + folder_data[i].id + "','" + folder_data[i].folder_name + "','" + folder_data[i].group_ids + "')\"></i>";
-
+                    if (folder_data[i].edit == 1) {
+                        html_edit = "<i class='fa fa-edit edit_folder_data' data-toggle='modal' data-target='#create_dir' onclick=\"edit_folder('" + folder_data[i].id + "','" + folder_data[i].folder_name + "','" + folder_data[i].group_ids + "')\"></i>";
+                    }
                 <?php } ?>
                 html += `<div class="d-inline-flex">
                 ` + html_edit + `
