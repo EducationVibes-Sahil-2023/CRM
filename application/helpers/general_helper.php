@@ -952,3 +952,51 @@ function get_user_lead_type($id)
     $CI->db->where("staffid", $id);
     return $CI->db->get(db_prefix() . 'staff')->row();
 }
+
+function get_user_lead_type_name()
+{
+    $CI = &get_instance();
+    $staff_role_name = '';
+    $staff_role =  $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    if (!empty($staff_role)) {
+        $staff_role_name = $CI->db->where('roleid', $staff_role)->get(db_prefix() . 'roles')->row()->name;
+    }
+
+    return $staff_role_name;
+}
+
+function get_staff_user_department()
+{
+    $CI = &get_instance();
+
+    $CI->db->select('department')
+        ->where('staffid', get_staff_user_id());
+    $query = $CI->db->get(db_prefix() . 'staff');
+    return $query->row()->department;
+}
+
+function staff_has_assigned_knowledge_base($staff_id = false)
+{
+    $CI = &get_instance();
+
+    $staff_id = $staff_id ? $staff_id : get_staff_user_id();
+
+    if (!has_permission('knowledge_base', $staff_id, 'view_own')) {
+        access_denied('knowledge_base');
+        die;
+    }
+
+    $CI->db->select(db_prefix() . 'knowledge.id');
+    $CI->db->from(db_prefix() . 'knowledge');
+    $CI->db->join(db_prefix() . 'knowledge_group', db_prefix() . 'knowledge_group.id = ' . db_prefix() . 'knowledge.group_id', 'left');
+    $CI->db->join(db_prefix() . 'staff', db_prefix() . 'staff.department = ' . db_prefix() . 'knowledge_group.department', 'left');
+    $CI->db->where(db_prefix() . 'staff.staffid', $staff_id);
+    $CI->db->where(db_prefix() . 'knowledge.status', 1);
+    $CI->db->where(db_prefix() . 'knowledge_group.status', 1);
+    $CI->db->or_where('FIND_IN_SET(' . $staff_id . ',' . db_prefix() . 'knowledge_group.staff_ids)');
+    $knowledge_base = $CI->db->get()->row();
+
+    if (!empty($knowledge_base->id)) {
+        return true;
+    }
+}

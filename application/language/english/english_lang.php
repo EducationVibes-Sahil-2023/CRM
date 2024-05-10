@@ -3689,3 +3689,27 @@ $lang['new_vendor']                = 'New Vendor';
 $lang['vendor_name']                = 'Vendor Name';
 $lang['vendor']                = 'Vendor';
 $lang['edit_vendor']                = 'Edit Vendor';
+
+
+$lang['kb_new_knowledge']            = 'New Knowledge Base';
+$lang['kb_knowledge_group']            = 'Create Knowledge Group';
+$lang['kb_total_members']            = 'Total Members';
+$lang['kb_group_status']            = 'Status';
+$lang['kb_group_name']            = 'Name';
+$lang['knowledge_member']            = 'Staff Members';
+$lang['knowledge_group']            = 'Knowledge Group';
+$lang['kb_table_knowledge_name']            = 'Title';
+$lang['kb_table_knowledge_description']            = 'Description';
+$lang['kb_table_members']            = 'Total Members';
+$lang['kb_table_group_name']            = 'Group Name';
+$lang['kb_table_status']            = 'Status';
+$lang['kb_table_action']            = 'Action';
+$lang['permission_knowledge_based_on_admins']               = 'Based on knowledge admins';
+$lang['create_new_dir']                        = 'Create New Folder';
+$lang['staff_date_of_joining']                = 'Date Of Joining';
+$lang['staff_date_of_leaving']                = 'Date Of Leaving';
+$lang['staff_assets']                = 'Asset';
+
+$lang['staff_designation']                = 'Staff Designation';
+$lang['create_dir']                = 'Create Folder';
+$lang['upload_dir_files']                = 'Upload Files';

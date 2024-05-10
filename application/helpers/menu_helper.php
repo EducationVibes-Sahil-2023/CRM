@@ -155,7 +155,7 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
-        if (has_permission('knowledge_base', '', 'view')) {
+        if (has_permission('knowledge_base', '', 'view') || has_permission('knowledge_base', '', 'view_own') || !staff_has_assigned_knowledge_base()) {
                 $CI->app_menu->add_sidebar_menu_item('knowledge-base', [
                         'name'     => _l('als_kb'),
                         'href'     => admin_url('knowledge_base'),
