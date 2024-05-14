@@ -2,6 +2,7 @@
 <?php init_head();
 $has_permission_edit = has_permission('knowledge_base', '', 'edit');
 $has_permission_create = has_permission('knowledge_base', '', 'create');
+$has_permission_delete = has_permission('knowledge_base', '', 'delete');
 ?>
 
 <style>
@@ -26,10 +27,10 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
 
     .folder-container {
         text-align: center;
-        margin-left: 1rem;
+        /* margin-left: 1rem;
         margin-right: 1rem;
-        margin-bottom: 1.5rem;
-        width: 100px;
+        margin-bottom: 1.5rem; */
+        width: 100%;
         padding: 0;
         align-self: start;
         background: none;
@@ -92,13 +93,21 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
         text-shadow: 1px 2px -5px black;
     }
 
-    .edit_folder_data {
+    /* .edit_folder_data {
         position: relative;
         left: 100%;
         bottom: 25%;
         font-size: large;
         cursor: pointer;
     }
+
+    .delete_folder_data {
+        position: relative;
+        left: 0%;
+        bottom: 0%;
+        font-size: large;
+        cursor: pointer;
+    } */
 </style>
 <div id="wrapper">
     <div class="content">
@@ -106,6 +115,12 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
             <div class="col-md-12">
                 <div class="panel_s mtop5">
                     <div class="panel-body">
+
+                        <div class="dx-viewport demo-container">
+                            <div id="file-manager"></div>
+                        </div>
+
+
                         <div class="_buttons">
                             <?php if ($has_permission_create) { ?>
                                 <!-- <a href="<?php echo admin_url('knowledge_base/create_knowledge_base'); ?>" class="btn btn-info mright5"><?php echo _l('kb_new_knowledge'); ?></a> -->
@@ -125,10 +140,10 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                             <div class="card card-folders">
                                 <div class="card-header">
                                     <div class="row align-items-center">
-                                        <div class="col mr-auto">
+                                        <div class="col col-md-6 mr-auto">
                                             <h4 class="card-title m-0">Folders</h4>
                                         </div>
-                                        <div class="col col-auto pr-2 hide">
+                                        <div class="col col-md-6 text-right col-auto pr-2 ">
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-outline-secondary" id="btn-list"><i class="fa fa-th-list fa-lg"></i></button>
                                                 <button class="btn btn-sm btn-outline-secondary outline-none active" id="btn-grid"><i class="fa fa-th-large fa-lg"></i></button>
@@ -162,6 +177,8 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
 </div>
 
 
+
+
 <div class="modal fade" id="create_dir" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <?php echo form_open('Knowledge_base/create_folder', array('id' => 'createFolderForm')); ?>
@@ -184,7 +201,7 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                         <span>Knowledge_base/</span><span class='current_dir'></span>
                         <input type="text" id="folderName" required name="folderName" required class="form-control" placeholder="Folder Name">
                         <br>
-                        <button type="button" id="createFolderBtn" class="btn btn-primary">Create Folder</button>
+                        <button type="button" id="createFolderBtn" class="btn btn-primary">Create</button>
                     </div>
                 </div>
                 <div class="modal-form modal-form-upload">
@@ -204,10 +221,20 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
     </div><!-- /.modal-dialog -->
 </div>
 <?php init_tail(); ?>
+<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.common.css">
+<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.light.css">
+<script src="https://cdn3.devexpress.com/jslib/19.2.7/js/dx.all.js"></script>
+
+
 <script>
+    var current_user = "<?= get_staff_user_id() ?>";
+    var is_admin = "<?= is_admin() ?>";
+
     function set_modal(target) {
         // Hide all modal forms
         $(".modal-form").hide();
+        $("#createFolderBtn").text("Create");
+
 
         // Clear input fields in the modal body
         $(".modal-body input").val('');
@@ -226,6 +253,7 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
         $("#folder_id").val(id);
         $("#folderName").val(name);
         $('#group_id').selectpicker('val', group_id);
+        $("#createFolderBtn").text("Update");
     }
 
     function set_folder(folder_data) {
@@ -234,9 +262,19 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
             let html = "";
             for (i = 0; i < folder_data.length; i++) {
                 let html_edit = ``;
-                <?php if ($has_permission_edit) { ?>
-                    if (folder_data[i].edit == 1) {
+                <?php if ($has_permission_edit || is_admin()) {
+
+                ?>
+                    if ((folder_data[i].edit == 1 || is_admin == 1) && (is_admin == 1 || current_user == [i].created_by)) {
                         html_edit = "<i class='fa fa-edit edit_folder_data' data-toggle='modal' data-target='#create_dir' onclick=\"edit_folder('" + folder_data[i].id + "','" + folder_data[i].folder_name + "','" + folder_data[i].group_ids + "')\"></i>";
+                    }
+                <?php } ?>
+
+                <?php if ($has_permission_delete || is_admin()) {
+
+                ?>
+                    if (folder_data[i].created_by == current_user || is_admin == 1) {
+                        html_edit += "<i class='fa text-danger fa-trash delete_folder_data'  onclick=\"delete_folder('" + folder_data[i].id + "')\"></i>";
                     }
                 <?php } ?>
                 html += `<div class="d-inline-flex">
@@ -269,6 +307,7 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
                                             <button class="folder-container">
                                                 <div class="folder-icon">
                                                     <i class="fa fa-file file-icon-color"></i>
+                                                    <i class="fa hide fa-filetype-` + (files[i].type).toLowerCase() + `"></i>
                                                 </div>
                                                 <div class="folder-name">` + files[i].file_name + `</div>
                                             </button>
@@ -535,6 +574,56 @@ $has_permission_create = has_permission('knowledge_base', '', 'create');
 
         $(".current_dir").text(textAfterFirstOccurrence);
     }
+
+
+    $(function() {
+        // Function to retrieve data from your own API
+        function fetchDataFromAPI(pathInfo) {
+            return $.ajax({
+                url: '<?php echo admin_url("Knowledge_base/create_folder"); ?>', // Replace 'YOUR_API_ENDPOINT' with your actual API URL
+                type: 'POST',
+                data: {
+                    show_folder: 1,
+                    index: 0
+                }, // If needed, send any additional data required by your API
+            });
+        }
+
+        var customProvider = new DevExpress.fileProviders.Custom({
+            hasSubDirectoriesExpr: "hasSubDirs",
+            getItems: function(pathInfo) {
+                // Use your API function to get items
+                let data = fetchDataFromAPI(pathInfo);
+                console.log("data"+data);
+
+                return data;
+            },
+            deleteItem: function(item) {
+                // Handle delete operation here, if needed
+                console.log("delete - hasSubDirs");
+                console.log(item.hasSubDirs);
+                // You may want to implement delete operation using your API
+                // return $.ajax(...);
+            }
+        });
+
+        console.log(customProvider);
+
+        $("#file-manager").dxFileManager({
+            name: "fileManager",
+            fileProvider: customProvider,
+            permissions: {
+                download: true,
+                create: true,
+                copy: true,
+                move: true,
+                remove: true,
+                rename: true,
+                upload: true
+            },
+            // allowedFileExtensions: [".js", ".json", ".css"]
+        });
+    });
 </script>
 
 

@@ -98,7 +98,7 @@ class knowledge_base_group_model extends App_Model
     {
         // If the user is an admin, no need for additional checks
         if (is_admin()) {
-            $query = $this->db->select("f.*")
+            $query = $this->db->select("f.folder_name key,f.folder_name as data,'true' as isDirectory,'true' hasSubDirectories, updated_date dateModified,0 size,f.id,f.created_by")
                 ->from(db_prefix() . 'knowledge_base_folder f')
                 ->where($where)
                 ->get();
