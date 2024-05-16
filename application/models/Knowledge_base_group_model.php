@@ -96,9 +96,10 @@ class knowledge_base_group_model extends App_Model
 
     public function get_folders($where = [])
     {
+
         // If the user is an admin, no need for additional checks
         if (is_admin()) {
-            $query = $this->db->select("f.folder_name key,f.folder_name as data,'true' as isDirectory,'true' hasSubDirectories, updated_date dateModified,0 size,f.id,f.created_by")
+            $query = $query = $this->db->select("f.folder_name key,f.folder_name as name,'true' as isDirectory,'true' hasSubDirectories,updated_date as  modify_date,0 as size,f.id,f.created_by as created_name,f.parent_id,'directory' as type,'' modify_name,created_date")
                 ->from(db_prefix() . 'knowledge_base_folder f')
                 ->where($where)
                 ->get();
@@ -178,5 +179,39 @@ class knowledge_base_group_model extends App_Model
         // Get the result array
         $result = $query->result_array();
         return $result;
+    }
+
+    public function get_knowledge_base_dir($where_folder = [], $where_file = [], $return = 0)
+    {
+        $folder_data = $this->db->select("
+        f.id as key,
+        f.folder_name as name,
+        'true' as isDirectory,
+        IF((SELECT COUNT(1) FROM " . db_prefix() . "knowledge_base_folder WHERE parent_id = f.id) > 0, 'true', 'false') AS hasSubDirectories,
+        updated_date as modify_date,
+        0 as size,
+        f.created_by as created_name,
+        f.parent_id,
+        'directory' as type,
+        '' as modify_name,
+        created_date")
+            ->from(db_prefix() . "knowledge_base_folder f")
+            ->where($where_folder)
+            ->get()
+            ->result_array();
+
+        $file_data = $this->db->select("
+        concat(fs.file_name,'.',type) as name,
+        'false' as isDirectory,
+        'false' as hasSubDirectories,
+        updated_date as modify_date,
+        10 as size,
+        type")
+            ->from(db_prefix() . "knowledge_base_files fs")
+            ->where($where_file)
+            ->get()
+            ->result_array();
+
+        return array_merge($folder_data, $file_data);
     }
 }

@@ -224,6 +224,9 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.common.css">
 <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.light.css">
 <script src="https://cdn3.devexpress.com/jslib/19.2.7/js/dx.all.js"></script>
+<!-- <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/21.2.5/css/dx.common.css">
+<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/21.2.5/css/dx.light.css">
+<script src="https://cdn3.devexpress.com/jslib/21.2.5/js/dx.all.js"></script> -->
 
 
 <script>
@@ -412,6 +415,72 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 success: function(response) {
                     $(".close-modal").trigger("click");
                     let data = JSON.parse(response);
+
+                    // if (data.result != undefined && data.result.length > 0) {
+                    //     var fileManagerItems = [{
+                    //             "id": 1,
+                    //             "name": "Folder 1",
+                    //             "isDirectory": true,
+                    //             "parentId": "",
+                    //             "size": 0,
+                    //             "file_type": "Folder",
+                    //             "modify_date": "2024-05-20",
+                    //             "permissions": "read_write",
+                    //             "owner": "John Doe"
+                    //         },
+                    //         {
+                    //             "id": 2,
+                    //             "name": "File 1",
+                    //             "isDirectory": false,
+                    //             "parentId": "1",
+                    //             "size": 1024,
+                    //             "file_type": "Text File",
+                    //             "modify_date": "2024-05-21",
+                    //             "permissions": "read_only",
+                    //             "owner": "Jane Smith"
+                    //         },
+                    //         {
+                    //             "id": 3,
+                    //             "name": "File 2",
+                    //             "isDirectory": false,
+                    //             "parentId": "1",
+                    //             "size": 2048,
+                    //             "file_type": "Image File",
+                    //             "modify_date": "2024-05-22",
+                    //             "permissions": "read_write",
+                    //             "owner": "John Doe"
+                    //         }
+                    //     ];
+
+                    //     $("#file-manager").dxFileManager({
+                    //         name: "fileManager",
+                    //         // fileProvider: customProvider,
+                    //         fileSystemProvider: {
+                    //             type: "custom",
+                    //             getItems: function(parentDir) {
+                    //                 return $.Deferred().resolve(fileManagerItems).promise();
+                    //             },
+                    //             createDirectory: function(parentDir, name) {
+                    //                 // Implement logic to create a directory
+                    //             },
+                    //             uploadFileChunk: function(fileData, chunksInfo, destinationDir) {
+                    //                 // Implement logic to upload file chunks
+                    //             },
+                    //             permissions: {
+                    //                 // Set permissions for various operations
+                    //                 download: true, // Enable download
+                    //                 create: true, // Enable create (to show the create button)
+                    //                 copy: true, // Enable copy (to show the copy/paste buttons)
+                    //                 move: true, // Enable move (to show the move button)
+                    //                 remove: true, // Enable remove (to show the delete button)
+                    //                 rename: true, // Enable rename
+                    //                 upload: true // Enable upload (to show the upload button)
+                    //             }
+                    //         }
+                    //     });
+                    // }
+
+
                     if (data.folder != undefined) {
                         if (data.folder.length > 0) {
                             set_folder(data.folder);
@@ -508,7 +577,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     });
 
-    save_and_show_folder(1, 0);
+    // save_and_show_folder(1, 0);
 
     $('#btn-list').on('click', function() {
         $('#main-folders').addClass('flex-column');
@@ -575,55 +644,151 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         $(".current_dir").text(textAfterFirstOccurrence);
     }
 
+    // Function to fetch data from the API
+    // function fetchDataFromAPI(index = 0) {
+    //     // Return a Promise to handle the asynchronous nature of the AJAX request
+    //     return new Promise(function(resolve, reject) {
+    //         $.ajax({
+    //             url: '<?php echo admin_url("Knowledge_base/create_folder"); ?>',
+    //             type: 'POST',
+    //             data: {
+    //                 show_folder: 1,
+    //                 index: 0
+    //             },
+    //             success: function(response) {
+    //                 let jsonData = JSON.parse(response);
+    //                 if (jsonData.result.length > 0) {
+    //                     resolve(jsonData.result);
+    //                 } else {
+    //                     resolve([]); // Resolve the Promise with an empty array if there's no data
+    //                 }
+    //             },
+    //             error: function(xhr, status, error) {
+    //                 reject(error); // Reject the Promise if there's an error
+    //             }
+    //         });
+    //     });
+    // }
 
-    $(function() {
-        // Function to retrieve data from your own API
-        function fetchDataFromAPI(pathInfo) {
-            return $.ajax({
-                url: '<?php echo admin_url("Knowledge_base/create_folder"); ?>', // Replace 'YOUR_API_ENDPOINT' with your actual API URL
-                type: 'POST',
-                data: {
-                    show_folder: 1,
-                    index: 0
-                }, // If needed, send any additional data required by your API
+    // Initialize the DevExpress FileManager widget
+
+    // Define an asynchronous function to initialize the DevExpress FileManager
+    async function initializeFileManager(index = 0) {
+        try {
+            // Fetch data from the API using await
+            // const data = await fetchDataFromAPI(index);
+            // Initialize the DevExpress FileManager widget after fetching data
+
+            var remoteProvider = new DevExpress.fileProviders.Remote({
+                endpointUrl: '<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>',
             });
+            console.log(remoteProvider);
+            var customProvider = new DevExpress.fileProviders.Custom({
+                getItems: pathInfo => remoteProvider.getItems(pathInfo)
+                // createDirectory: (parentDir, name) => remoteProvider.createFolder(parentDir, name),
+                // renameItem: (item, name) => remoteProvider.renameItem(item, name),
+                // deleteItem: item => remoteProvider.deleteItems([item]),
+                // copyItem: (item, destDir) => remoteProvider.copyItems([item], destDir),
+                // moveItem: (item, destDir) => remoteProvider.moveItems([item], destDir),
+                // uploadFileChunk: (fileData, uploadInfo, destDirectory) => {
+                //     return remoteProvider.uploadFileChunk(fileData, uploadInfo, destDirectory);
+                // },
+                // downloadItems: items => remoteProvider.downloadItems(items),
+                // uploadChunkSize: 100000000000
+            });
+            $("#file-manager").dxFileManager({
+                name: "fileManager",
+                fileProvider: customProvider,
+                // fileProvider: {
+                //     type: "array",
+                //     data: directoryStructure
+                // },
+                // customizeDetailColumns: function(columns) {
+                //     // Define custom detail columns
+                //     return [{
+                //             dataField: "name",
+                //             caption: "Name",
+                //             width: 100, // Set width for the Name column
+                //             cellTemplate: function(container, options) {
+                //                 var $icon = $("<div>").addClass("file-icon");
+                //                 var $name = $("<span>").text(options.value);
+                //                 var $actionDots = $("<span>").addClass("action-dots");
+
+                //                 if (options.data.type === "directory") {
+                //                     $icon.addClass("folder-icon");
+                //                 } else {
+                //                     // Add file icons based on file extensions or other criteria
+                //                     $icon.addClass("file-icon"); // Add appropriate file icon class
+                //                 }
+
+                //                 container.append($icon).append($name).append($actionDots);
+                //             }
+                //         },
+                //         {
+                //             dataField: "type",
+                //             caption: "Type",
+                //             width: 100 // Set width for the Type column
+                //         },
+                //         {
+                //             dataField: "created_date",
+                //             caption: "Created Date",
+                //             width: 150 // Set width for the Created Date column
+                //         },
+                //         {
+                //             dataField: "created_name",
+                //             caption: "Created By",
+                //             width: 150 // Set width for the Created By column
+                //         },
+                //         {
+                //             dataField: "modify_date",
+                //             caption: "Modify Date",
+                //             width: 150 // Set width for the Modify Date column
+                //         },
+                //         {
+                //             dataField: "modify_name",
+                //             caption: "Modified By",
+                //             width: 150 // Set width for the Modified By column
+                //         },
+                //         {
+                //             dataField: "size",
+                //             caption: "Size",
+                //             width: 50 // Set width for the Size column
+                //         }
+                //     ];
+                // },
+                permissions: {
+                    create: true,
+                    copy: true,
+                    move: true,
+                    delete: true,
+                    rename: true,
+                    upload: true,
+                    download: true
+                }
+            });
+        } catch (error) {
+            console.error("Error initializing FileManager:", error);
         }
+    }
 
-        var customProvider = new DevExpress.fileProviders.Custom({
-            hasSubDirectoriesExpr: "hasSubDirs",
-            getItems: function(pathInfo) {
-                // Use your API function to get items
-                let data = fetchDataFromAPI(pathInfo);
-                console.log("data"+data);
+    // Call the async function to initialize the DevExpress FileManager
+    initializeFileManager();
 
-                return data;
-            },
-            deleteItem: function(item) {
-                // Handle delete operation here, if needed
-                console.log("delete - hasSubDirs");
-                console.log(item.hasSubDirs);
-                // You may want to implement delete operation using your API
-                // return $.ajax(...);
-            }
-        });
 
-        console.log(customProvider);
 
-        $("#file-manager").dxFileManager({
-            name: "fileManager",
-            fileProvider: customProvider,
-            permissions: {
-                download: true,
-                create: true,
-                copy: true,
-                move: true,
-                remove: true,
-                rename: true,
-                upload: true
-            },
-            // allowedFileExtensions: [".js", ".json", ".css"]
-        });
-    });
+    // $("#file-manager").dxFileManager({
+    //     fileProvider: customProvider,
+    //     permissions: {
+    //         download: true,
+    //         create: true,
+    //         copy: true,
+    //         move: true,
+    //         remove: true,
+    //         rename: true,
+    //         upload: true
+    //     },
+    //     allowedFileExtensions: []
+    // });
 </script>
 
 

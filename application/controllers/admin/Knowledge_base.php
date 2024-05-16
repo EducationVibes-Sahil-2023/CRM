@@ -215,9 +215,9 @@ class Knowledge_base extends AdminController
                 "folder" => $folders,
                 "files" => $files,
                 "message" => "Folders list",
-                "errorText"=>"",
-                "errorCode"=>"",
-                "result"=>$folders
+                "errorText" => "",
+                "errorCode" => "",
+                "result" => $folders
             );
             echo json_encode($response);
             die;
@@ -676,5 +676,49 @@ class Knowledge_base extends AdminController
         if ($this->input->is_ajax_request()) {
             echo json_encode($this->knowledge_base_model->get($id));
         }
+    }
+
+
+    public function get_knowledge_base_dir()
+    {
+        if ($_REQUEST["command"] == "GetDirContents") {
+            $parameters = json_decode($_REQUEST["arguments"], true);
+
+            $where_folder = [];
+            $where_files = [];
+
+
+            foreach ($parameters["pathInfo"] as  $data) {
+                if (!empty($data["key"])) {
+                    $where_folder["f.parent_id"] = $data["key"];
+                    $where_folder["f.status"] = 1;
+
+                    $where_files["fs.folder_id"] = $data["key"];
+                    $where_files["fs.status"] = 1;
+                }
+                // $where_folder[$key] = $data;
+            }
+
+            if (empty($where_folder)) {
+                $where_folder["f.parent_id"] = 0;
+                $where_folder["f.status"] = 1;
+                $where_files["fs.folder_id"] = 0;
+                $where_files["fs.status"] = 1;
+            }
+
+            $response["result"] =  $this->knowledge_base_group_model->get_knowledge_base_dir($where_folder, $where_files);
+            $response["success"] = true;
+            $response["errorText"] = "";
+            $response["errorCode"] = "";
+        } else {
+
+
+            $response["result"] =  $this->knowledge_base_group_model->get_knowledge_base_dir($where);
+            $response["success"] = true;
+            $response["errorText"] = "";
+            $response["errorCode"] = "";
+        }
+
+        echo json_encode($response, true);
     }
 }
