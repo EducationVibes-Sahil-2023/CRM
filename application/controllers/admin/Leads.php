@@ -328,6 +328,7 @@ class Leads extends AdminController
 
             $data['activity_log']  = $this->leads_model->get_lead_activity_log($id);
             $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
+            $data['lead_transfer_request']  = $this->leads_model->get_lead_transfer_request($id);
 
 
             if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {

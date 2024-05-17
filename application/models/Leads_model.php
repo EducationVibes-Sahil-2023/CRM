@@ -1967,6 +1967,12 @@ class Leads_model extends App_Model
         return $this->db->query($sql)->result_array();
     }
 
+    public function get_lead_transfer_request()
+    {
+        $sql = "SELECT lt.name as lead_name, concat(ts.firstname,' ',ts.lastname) as staff_name,if(status=1,'Approved',if(status=2,'reject',if(status=3,'pending','Not defined'))) as status_name,if(status=1,'success',if(status=2,'danger',if(status=3,'warning',''))) as status_color FROM  " . db_prefix() . "lead_transfer_request tr join  " . db_prefix() . "leads_type lt on lt.id=tr.lead_type join  " . db_prefix() . "staff  ts on ts.staffid = tr.assign where lt.created_by=" . get_staff_user_id() . "  ";
+        return $this->db->query($sql)->result_array();
+    }
+
 
 
     public function staff_can_access_lead($id, $staff_id = '')
