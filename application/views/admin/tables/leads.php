@@ -666,7 +666,7 @@ foreach ($rResult as $aRow) {
     }
 
     //$row[] = $aRow['dateassigned'];
-    $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' . $aRow['dateassigned'] . '</span>');
+    $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned'])) . '</span>');
 
     // $row[] = $row1[0];
     // $row[] = $aRow["destination"];
