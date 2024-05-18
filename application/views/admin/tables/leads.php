@@ -624,11 +624,13 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['website'];
 
     $row[] = $aRow['source_name'];
+    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+
     if ($role != 1) {
-        $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+        $row[] = ($aRow['lastupdate_date'] == '0000-00-00 00:00:00' || !is_date($aRow['lastupdate_date']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
     }
 
-    $row[] = ($aRow['lastupdate_date'] == '0000-00-00 00:00:00' || !is_date($aRow['lastupdate_date']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
+ 
 
     if ($role != 1) {
         $row[] = ($aRow['email'] != '' ? '<a href="mailto:' . $aRow['email'] . '">' . $aRow['email'] . '</a>' : '');
