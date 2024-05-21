@@ -474,6 +474,7 @@ $lang['lead_add_edit_alternative_phonenumber']         = 'Alternative Contact';
 $lang['lead_exam_name']         = 'Exam Name';
 $lang['lead_exam_score']         = 'Exam Score';
 $lang['lead_add_edit_call_activity']         = 'Call Activity';
+$lang['lead_add_edit_lead_transfer_request']         = 'Lead Transfer Request';
 # Misc
 $lang['access_denied'] = 'Access denied';
 $lang['prev']          = 'Prev';

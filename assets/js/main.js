@@ -1471,7 +1471,7 @@ $(function () {
         }, 500);
     });
 
-   
+
 
     // Fix for bigger items descriptions, the select is going out of the container
     $('body').on('change loaded.bs.select', '#item_select', function () {
@@ -7107,3 +7107,5 @@ function init_currency_symbol() {
     console.warn('"init_currency_symbol" is deprecated, use "init_currency" instead')
     init_currency();
 }
+
+

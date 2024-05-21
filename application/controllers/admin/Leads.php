@@ -370,6 +370,62 @@ class Leads extends AdminController
         ];
     }
 
+    public function add_lead_transfer_request()
+    {
+        if (!is_staff_member() || !$this->leads_model->staff_can_access_lead($id)) {
+            ajax_access_denied();
+        }
+
+        if (!has_permission('leads', '', 'edit')) {
+            access_denied('Lead');
+        }
+
+        $lead_id = $this->input->post('lead_id');
+        $type = $this->input->post('type');
+        $assigned = $this->input->post('assigned');
+        $reason = $this->input->post('reason');
+
+        $check_lead_transfer_request = $this->leads_model->get_lead_transfer_request_exist($lead_id);
+
+        if (!$check_lead_transfer_request) {
+            $data = array(
+                "leadid" => $lead_id,
+                "lead_type" => $type,
+                "assign" => $assigned,
+                "reason" => $reason,
+                "status" => 3,
+                "created_by" => get_staff_user_id(),
+                "created_at" => date('Y-m-d H:i:s')
+            );
+
+            $insert_ = $this->db->insert(db_prefix() . 'lead_transfer_request', $data);
+
+            if ($insert_) {
+                $message = "Lead transfer request submitted successfully.";
+                $success = true;
+            } else {
+                $message = "Failed to submit lead transfer request.";
+                $success = false;
+            }
+        } else {
+            $message = "Your lead transfer request is already in status: " . $check_lead_transfer_request->status_text;
+            $success = false;
+        }
+
+        echo json_encode([
+            'success' => $success,
+            'message' => $message
+        ]);
+    }
+
+
+    public function table_lead_transfer($rel_id, $rel_type)
+    {
+        $this->app->get_table_data('lead_transfer', [
+            'rel_id'   => $rel_id,
+            'rel_type' => $rel_type,
+        ]);
+    }
 
 
     public function leads_kanban_load_more()
@@ -2905,5 +2961,87 @@ class Leads extends AdminController
 
         $url = base_url("admin/leads/re_assign_leads");
         $pid = $this->process->do_in_background($url, "", "POST");
+    }
+
+    public function update_lead_transfer_request()
+    {
+        // Check if the user is a staff member and has access to the lead
+        if (!is_staff_member() || !$this->leads_model->staff_can_access_lead($this->input->post('lead_id'))) {
+            ajax_access_denied();
+        }
+
+        // Check if the user has permission to approve leads
+        if (!has_permission('leads', '', 'lead_approve')) {
+            access_denied('Lead');
+        }
+
+        // Check if the request method is POST
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            // Get the POST data and validate
+            $lead_id = $this->input->post('leadid');
+            $id = $this->input->post('id');
+            $status = $this->input->post('status');
+            $lead_type = $this->input->post('type');
+            $assigned = $this->input->post('assigned');
+
+            // Validate required fields
+            if (empty($lead_id) || empty($id) || empty($status) || empty($lead_type)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'All fields are required.',
+                ]);
+                return;
+            }
+
+            if ((empty($status) && $status == 1) && empty($assigned)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'All fields are required.',
+                ]);
+                return;
+            }
+
+
+
+            // Update the lead transfer request status
+            $update_transfer = $this->db->update(
+                db_prefix() . 'lead_transfer_request',
+                [
+                    'status' => $status,
+                    'approved_by' => get_staff_user_id(),
+                    'approved_date' => date('Y-m-d H:i:s'),
+                ],
+                ['id' => $id]
+            );
+
+            // Prepare the update array for the lead
+            $update_array = [
+                'source' => $lead_type,
+                'assigned' => $assigned,
+            ];
+
+            // Update the lead
+            $success = $this->leads_model->update($update_array, $lead_id);
+
+            // Check if the update was successful and send a JSON response
+            if ($success) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Lead transfer request taken action successfully.',
+                    'id' => $lead_id,
+                    'leadView' => $this->_get_lead_data($lead_id),
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to take action on the lead transfer request.',
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid request method.',
+            ]);
+        }
     }
 }
