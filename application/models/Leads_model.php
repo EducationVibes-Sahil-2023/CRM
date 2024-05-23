@@ -584,10 +584,10 @@ class Leads_model extends App_Model
 
 
         $data['email'] = trim($data['email']);
-        if (!empty($data['source'])) {
+        if (!empty($data['source'])  && $current_lead_data->source != $data['source']) {
             $this->update_lead_source($data['source'], $id);
         }
-        if (!empty($data['type'])) {
+        if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
             $this->update_lead_type(array("type" => $data['type'], "leadid" => $id));
         }
         $this->db->where('id', $id);
