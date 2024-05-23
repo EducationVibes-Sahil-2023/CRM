@@ -584,9 +584,12 @@ class Leads_model extends App_Model
 
 
         $data['email'] = trim($data['email']);
-
-        $this->update_lead_source($data['source'], $id);
-
+        if (!empty($data['source'])  && $current_lead_data->source != $data['source']) {
+            $this->update_lead_source($data['source'], $id);
+        }
+        if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
+            $this->update_lead_type(array("type" => $data['type'], "leadid" => $id));
+        }
         $this->db->where('id', $id);
 
         $this->db->update(db_prefix() . 'leads', $data);
@@ -1967,11 +1970,6 @@ class Leads_model extends App_Model
         return $this->db->query($sql)->result_array();
     }
 
-    public function get_lead_transfer_request()
-    {
-        $sql = "SELECT lt.name as lead_name, concat(ts.firstname,' ',ts.lastname) as staff_name,if(status=1,'Approved',if(status=2,'reject',if(status=3,'pending','Not defined'))) as status_name,if(status=1,'success',if(status=2,'danger',if(status=3,'warning',''))) as status_color FROM  " . db_prefix() . "lead_transfer_request tr join  " . db_prefix() . "leads_type lt on lt.id=tr.lead_type join  " . db_prefix() . "staff  ts on ts.staffid = tr.assign where lt.created_by=" . get_staff_user_id() . "  ";
-        return $this->db->query($sql)->result_array();
-    }
 
 
 
@@ -2774,5 +2772,23 @@ class Leads_model extends App_Model
     {
         $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name');
         return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
+    }
+
+
+    public function get_lead_transfer_request()
+    {
+        $sql = "SELECT lt.name as lead_name, concat(ts.firstname,' ',ts.lastname) as staff_name,if(status=1,'Approved',if(status=2,'reject',if(status=3,'pending','Not defined'))) as status_name,if(status=1,'success',if(status=2,'danger',if(status=3,'warning',''))) as status_color FROM  " . db_prefix() . "lead_transfer_request tr join  " . db_prefix() . "leads_type lt on lt.id=tr.lead_type join  " . db_prefix() . "staff  ts on ts.staffid = tr.assign where tr.created_by=" . get_staff_user_id() . " ";
+        return $this->db->query($sql)->result_array();
+    }
+
+
+    public function get_lead_transfer_request_exist($lead_id)
+    {
+        $this->db->select('id');
+        $this->db->select('if(status=1,"Approved",if(status=3,"Pending","Not Found")) as status_text');
+        $this->db->where_in("status", [3]);
+        $this->db->where(array("leadid" => $lead_id));
+        $staff = $this->db->get(db_prefix() . 'lead_transfer_request')->row();
+        return $staff;
     }
 }

@@ -1,4 +1,12 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+$staff_members     = get_all_staff();
+array_unshift($staff_members, array());
+array_unshift($type, array());
+$last_lead_request = last_lead_request($lead->id);
+
+
+?>
 <div class="modal-header">
    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
    <h4 class="modal-title">
@@ -124,10 +132,18 @@
                               <?php echo _l('lead_add_edit_call_activity'); ?>
                            </a>
                         </li>
+
                         <?php if (!empty($web_activity_log_data)) { ?>
                            <li role="presentation">
                               <a href="#lead_web_activity" aria-controls="lead_web_activity" role="tab" data-toggle="tab">
                                  <?php echo _l('Web History'); ?>
+                              </a>
+                           </li>
+                        <?php } ?>
+                        <?php if (has_permission('leads', '', 'view')) { ?>
+                           <li role="presentation">
+                              <a href="#lead_transfer_lead_request" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
+                                 <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
                               </a>
                            </li>
                         <?php } ?>
@@ -484,6 +500,51 @@
                </div>
                <!-- end sms -->
 
+               <?php if (has_permission('leads', '', 'view')) { ?>
+                  <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
+                     <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
+                     <input type="hidden" id="transfer_lead_id" name="transfer_lead_id" value="<?= !empty($last_lead_request->id) ? $last_lead_request->id : '' ?>">
+                     <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
+                     <div class='row'>
+                        <div class="form-group col-md-3">
+                           <?php
+                           echo render_select('transfer_lead_type', $type, array('id', 'name'), 'lead_add_edit_type', [$last_lead_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'transfer_lead_type');
+                           ?>
+                        </div>
+                        <div class="form-group col-md-3">
+                           <?php
+                           $assigned_attrs = array();
+                           $selected = [];
+                           echo render_select('transfer_lead_assign', $staff_members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', [$last_lead_request->assign], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                           ?>
+                        </div>
+
+                        <div class="form-group col-md-4">
+                           <label>Reason</label>
+                           <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $last_lead_request->reason ?></textarea>
+                        </div>
+
+                        <div class="form-group col-md-2">
+                           <label> &nbsp;</label> <?php
+                                                   $button_text = !empty($last_lead_request->id)
+                                                      ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
+                                                      : _l('Request NOW');
+                                                   ?> <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
+
+                        </div>
+
+                     </div>
+                     <?php echo form_close(); ?>
+
+                     <?php echo form_close(); ?>
+                     <div class="clearfix"></div>
+                     <hr />
+                     <?php
+                     render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('Created By'), _l('Created Date'), _l('Reason'), _l('Status'), _l("Approval Date"), _l("Approval By"), _l("Action")), 'lead-transfer');
+                     ?>
+
+                  </div>
+               <?php } ?>
 
                <div role="tabpanel" class="tab-pane" id="tab_proposals_leads">
                   <?php if (has_permission('proposals', '', 'create')) { ?>

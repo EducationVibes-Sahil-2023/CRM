@@ -1914,3 +1914,28 @@ function leads_call_update_count()
     $maxCount = $query->max_count;
     return $maxCount;
 }
+
+function get_all_staff()
+{
+    $CI = &get_instance();
+    return $CI->staff_model->get('', ['is_not_staff' => 0, 'active' => 1], 1);
+}
+function get_type()
+{
+    $CI = &get_instance();
+    return $CI->leads_model->get_type();
+}
+
+
+function last_lead_request($lead_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->select('IF(status = 1, "Approved", IF(status = 3, "Pending", "Not Found")) as status_text', false);
+    $CI->db->where("status",3);
+    $CI->db->where("leadid", $lead_id);
+    $CI->db->order_by("id", "desc");
+    $CI->db->limit(1);
+    $lead_request = $CI->db->get(db_prefix() . 'lead_transfer_request')->row();
+    return $lead_request;
+}
