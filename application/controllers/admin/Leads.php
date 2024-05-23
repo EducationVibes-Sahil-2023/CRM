@@ -440,6 +440,8 @@ class Leads extends AdminController
                         $update_transfer = $this->db->update(db_prefix() . 'lead_transfer_request', $data, "id = " . $transfer_lead_id);
 
                         if (!empty($type) && !empty($assigned)) {
+
+                            $this->leads_model->update_lead_type(array("leadid" => $lead_id, "type" => $type));
                             $update_array = [
                                 'type' => $type,
                                 'assigned' => $assigned,
@@ -3118,8 +3120,10 @@ class Leads extends AdminController
                 ],
                 ['id' => $id]
             );
-            if (!empty($type) && !empty($assigned)) {
+            if (!empty($lead_type) && !empty($assigned)) {
                 // Prepare the update array for the lead
+                $this->leads_model->update_lead_type(array("leadid" => $lead_id, "type" => $lead_type));
+
                 $update_array = [
                     'type' => $lead_type,
                     'assigned' => $assigned,
@@ -3131,9 +3135,7 @@ class Leads extends AdminController
                 // Check if the update was successful and send a JSON response
                 if ($success) {
 
-                    if ($status == 1) {
-                        $this->leads_model->update_lead_type(array("lead_id" => $lead_id, "type" => $lead_type));
-                    }
+
                     echo json_encode([
                         'success' => true,
                         'message' => 'Lead transfer request taken action successfully.',
