@@ -440,10 +440,8 @@ class Leads extends AdminController
                         $update_transfer = $this->db->update(db_prefix() . 'lead_transfer_request', $data, "id = " . $transfer_lead_id);
 
                         if (!empty($type) && !empty($assigned)) {
-
-                            $this->leads_model->update_lead_type(array("leadid" => $lead_id, "type" => $type));
                             $update_array = [
-                                'type' => $type,
+                                'leadtype' => $type,
                                 'assigned' => $assigned,
                             ];
                             $success = $this->leads_model->update($update_array, $lead_id);
@@ -3122,10 +3120,8 @@ class Leads extends AdminController
             );
             if (!empty($lead_type) && !empty($assigned)) {
                 // Prepare the update array for the lead
-                $this->leads_model->update_lead_type(array("leadid" => $lead_id, "type" => $lead_type));
-
                 $update_array = [
-                    'type' => $lead_type,
+                    'leadtype' => $lead_type,
                     'assigned' => $assigned,
                 ];
 
