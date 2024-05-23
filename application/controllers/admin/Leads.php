@@ -441,7 +441,7 @@ class Leads extends AdminController
 
                         if (!empty($type) && !empty($assigned)) {
                             $update_array = [
-                                'leadtype' => $type,
+                                'type' => $type,
                                 'assigned' => $assigned,
                             ];
                             $success = $this->leads_model->update($update_array, $lead_id);
@@ -3121,7 +3121,7 @@ class Leads extends AdminController
             if (!empty($lead_type) && !empty($assigned)) {
                 // Prepare the update array for the lead
                 $update_array = [
-                    'leadtype' => $lead_type,
+                    'type' => $lead_type,
                     'assigned' => $assigned,
                 ];
 
