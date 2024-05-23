@@ -584,9 +584,9 @@ class Leads_model extends App_Model
 
 
         $data['email'] = trim($data['email']);
-
-        $this->update_lead_source($data['source'], $id);
-
+        if (!empty($$data['source'])) {
+            $this->update_lead_source($data['source'], $id);
+        }
         $this->db->where('id', $id);
 
         $this->db->update(db_prefix() . 'leads', $data);
