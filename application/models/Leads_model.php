@@ -451,8 +451,6 @@ class Leads_model extends App_Model
     {
 
         $current_lead_data = $this->get($id);
-        print_r($current_lead_data);
-        die;
 
         $current_status    = $this->get_status($current_lead_data->status);
         $data["exam_details"]  =  "";
@@ -586,7 +584,7 @@ class Leads_model extends App_Model
 
 
         $data['email'] = trim($data['email']);
-        if (!empty($data['source']) && $current_lead_data->source != $data['source']) {
+        if (!empty($data['source'])  && $current_lead_data->source != $data['source']) {
             $this->update_lead_source($data['source'], $id);
         }
         if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
