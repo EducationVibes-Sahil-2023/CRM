@@ -469,7 +469,7 @@
                   <?php } ?>
                   <div class="checkbox-inline checkbox checkbox-primary<?php if (isset($lead)) {
                                                                            echo ' hide';
-                                                                        } ?><?php if (isset($lead) && (is_lead_creator($lead->id) || has_permission('leads', '', 'edit'))) {
+                                                                        } ?><?php if (isset($lead) && (is_lead_creator($lead->id) || has_permission('leads', '', 'view'))) {
                                                                                  echo ' lead-edit';
                                                                               } ?>">
                      <input type="checkbox" name="is_public" <?php if (isset($lead)) {

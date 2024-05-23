@@ -204,7 +204,7 @@
                   <div class="clearfix"></div>
                   <?php if (has_permission('customers', '', 'view') || have_assigned_customers()) {
                      $where_summary = '';
-                     if (!has_permission('customers', '', 'view')) {
+                     if (has_permission('customers', '', 'view')) {
                         $where_summary = ' AND userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')';
                      }
                   ?>

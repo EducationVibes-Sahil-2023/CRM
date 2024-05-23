@@ -1,4 +1,12 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed');
+
+$staff_members     = get_all_staff();
+array_unshift($staff_members, array());
+array_unshift($type, array());
+$last_lead_request = last_lead_request($lead->id);
+
+
+?>
 <div class="modal-header">
    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
    <h4 class="modal-title">
@@ -132,12 +140,13 @@
                               </a>
                            </li>
                         <?php } ?>
-
-                        <li role="presentation">
-                           <a href="#lead_transfer_lead_request" onclick="initDataTable('.table-lead-transfer', admin_url + 'leads/table_lead_transfer/' + <?php echo $lead->id; ?>+'/lead','undefined', 'undefined','undefined',[0,'desc']);" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
-                              <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
-                           </a>
-                        </li>
+                        <?php if (has_permission('leads', '', 'view')) { ?>
+                           <li role="presentation">
+                              <a href="#lead_transfer_lead_request" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
+                                 <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
+                              </a>
+                           </li>
+                        <?php } ?>
                         <?php if (is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1')) { ?>
                            <li role="presentation">
                               <a href="#gdpr" aria-controls="gdpr" role="tab" data-toggle="tab">
@@ -491,58 +500,51 @@
                </div>
                <!-- end sms -->
 
+               <?php if (has_permission('leads', '', 'view')) { ?>
+                  <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
+                     <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
+                     <input type="hidden" id="transfer_lead_id" name="transfer_lead_id" value="<?= !empty($last_lead_request->id) ? $last_lead_request->id : '' ?>">
+                     <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
+                     <div class='row'>
+                        <div class="form-group col-md-3">
+                           <?php
+                           echo render_select('transfer_lead_type', $type, array('id', 'name'), 'lead_add_edit_type', [$last_lead_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'transfer_lead_type');
+                           ?>
+                        </div>
+                        <div class="form-group col-md-3">
+                           <?php
+                           $assigned_attrs = array();
+                           $selected = [];
+                           echo render_select('transfer_lead_assign', $staff_members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', [$last_lead_request->assign], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                           ?>
+                        </div>
 
-               <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
-                  <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
-                  <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
-                  <div class='row'>
-                     <div class="form-group col-md-3">
-                        <?php
-                        $selected = (isset($lead) ? $lead->type : '');
-                        echo render_leads_type_select($type, $selected, 'lead_add_edit_type');
-                        ?>
-                     </div>
-                     <div class="form-group col-md-3">
-                        <?php
-                        $assigned_attrs = array();
-                        $selected = [];
-                        if (
-                           isset($lead)
-                           && $lead->assigned == get_staff_user_id()
-                           && $lead->addedfrom != get_staff_user_id()
-                           && !is_admin($lead->assigned)
-                           && !has_permission('leads', '', 'view')
-                        ) {
-                           $assigned_attrs['disabled'] = true;
-                        }
-                        echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs);
-                        ?>
-                     </div>
+                        <div class="form-group col-md-4">
+                           <label>Reason</label>
+                           <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $last_lead_request->reason ?></textarea>
+                        </div>
 
-                     <div class="form-group col-md-4">
-                        <label>Reason</label>
-                        <textarea name="reason" class='form-control'></textarea>
-                     </div>
+                        <div class="form-group col-md-2">
+                           <label> &nbsp;</label> <?php
+                                                   $button_text = !empty($last_lead_request->id)
+                                                      ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
+                                                      : _l('Request NOW');
+                                                   ?> <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
 
-                     <div class="form-group col-md-2">
-                        <label> </label>
-                        <button type="submit" class="btn btn-info pull-right"><?php echo _l('Request NOW'); ?></button>
+                        </div>
+
                      </div>
+                     <?php echo form_close(); ?>
+
+                     <?php echo form_close(); ?>
+                     <div class="clearfix"></div>
+                     <hr />
+                     <?php
+                     render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('Created By'), _l('Created Date'), _l('Reason'), _l('Status'), _l("Approval Date"), _l("Approval By"), _l("Action")), 'lead-transfer');
+                     ?>
 
                   </div>
-
-
-                  <?php echo form_close(); ?>
-                  <div class="clearfix"></div>
-                  <hr />
-                  <?php
-                  if (is_admin()) {
-                     render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('Created Date'), _l('Reason'), _l('Status'), _l("Approval Date"), _l("Approval By"), _l("Action")), 'lead-transfer');
-                  } else {
-                     render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('Status')), 'lead-transfer');
-                  } ?>
-
-               </div>
+               <?php } ?>
 
                <div role="tabpanel" class="tab-pane" id="tab_proposals_leads">
                   <?php if (has_permission('proposals', '', 'create')) { ?>
@@ -745,39 +747,4 @@
          x.value = '';
       }
    })
-
-   $('body').on('submit', '#lead-transfer', function() {
-
-      var data = $(this).serialize();
-      $.post($(this).attr('action'), data).done(function(response) {
-         response = JSON.parse(response);
-         init_lead_modal_data(response.lead_id);
-      });
-      return false;
-   });
-   var xhr = null;
-
-   function update_lead_transfer(leadid, type, id, assigned = "", status) {
-      if (xhr != null) {
-         xhr.abort();
-      }
-      xhr = $.ajax({
-         type: "POST",
-         url: "leads/update_lead_transfer_request",
-         data: {
-            leadid: leadid,
-            type: type,
-            assigned: assigned,
-            id: id,
-            status: status,
-         },
-         dataType: "JSON",
-         cache: false,
-         success: function(response) {
-            response = JSON.parse(response);
-            init_lead_modal_data(response.lead_id);
-         }
-      }); // you have missed this bracket
-      return false;
-   }
 </script>
