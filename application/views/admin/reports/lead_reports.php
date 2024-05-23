@@ -10,6 +10,8 @@ $facebook_names = $fb_query->result_array();
 
 $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtube"), array("name" => "Meta"), array("name" => "Organic"), array("name" => "Direct"));
 
+$date_type = array(array("name" => "Daily"), array("name" => "Week"), array("name" => "Month"), array("name" => "Year"));
+
 
 ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -377,6 +379,17 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
                                     <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                 </div>
                             </div>
+
+                            <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                    <?php
+                                    echo '<div id="leads-daily-filter">';
+                                    echo render_select('date_type', $date_type, array('name', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Date Type')), array(), 'no-mbot', '', false, "date_type");
+                                    echo '</div>';
+                                    ?>
+                                </div>
+                            </div>
+
                             <div class="col-md-6 leads-filter-column">
                                 <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter" data-loading-text="<i class='fa fa-spinner fa-spin '></i> Processing ">Apply Filter</button>
@@ -429,6 +442,21 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
 
                                         </div>
                                     </div>
+                                    <br>
+                                    <br>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
+
+                                    <div class="row hide col-md-12 leads-overview-calls-daily">
+                                        <hr class="hr-panel-heading" />
+                                        <div class="col-md-12">
+                                            <h4 class="no-margin">Daily wise Report Summary</h4>
+                                        </div>
+                                        <br>
+                                        <br>
+                                        <div id="leadSum_daily">
+                                            <canvas id="canvas_daily"></canvas>
+                                        </div>
+                                    </div>
                                     <div id="show_hide_staff_list" class="hide">
                                         <h4 class="bold">Staff List</h4>
                                         <hr>
@@ -448,7 +476,10 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
                             <div>
                                 <div class="leadSum">
                                 </div>
+
+
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -577,6 +608,7 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
             var element_view_fb_name = document.getElementById("view_facebook_names");
             var element_view_google_type = document.getElementById("view_source_marketing");
             var location = document.getElementById("location");
+            var date_type = document.getElementById("date_type").value;
             <?php if (is_admin()) { ?>
                 var department = document.getElementById("department");
             <?php } else if ($role == 3 && $staff_department != "") { ?>
@@ -704,7 +736,8 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
                     department: view_department,
                     daily_update_count: update_staff_id,
                     google_source: view_google_options,
-                    fb_source: view_fb_options
+                    fb_source: view_fb_options,
+                    date_type: date_type
 
                 },
                 dataType: "JSON",
@@ -835,6 +868,80 @@ $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtub
 
                         // Create a new chart with the updated configCallsuration
                         window.myCallsChart = new Chart(ctxCalls, configCalls);
+
+                    }
+
+
+                    if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                        $(".hide-graph-daily").removeClass("hide");
+                        var lable_content = data.summary_daily_.dateaddes;
+                        var lable_value = data.summary_daily_.count;
+                        var configCalls = {
+                            type: "bar",
+                            data: {
+                                labels: lable_content, // Date Objects
+                                datasets: [{
+                                    label: "Filtered",
+                                    backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                    borderColor: "rgba(140, 140, 140, 1.0)",
+                                    borderWidth: 0,
+                                    data: data.update_count_min,
+                                    fill: false,
+                                    radius: 0,
+                                }, ]
+                            },
+                            options: {
+                                tooltips: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    displayColors: false,
+                                },
+                                responsive: true,
+                                title: {
+                                    display: true,
+                                    text: "Not Reachable Leads chat - Filtered/Max "
+                                },
+                                scales: {
+                                    x: {
+                                        stacked: true,
+                                        format: "HH mm",
+                                    },
+                                    y: {
+                                        stacked: true,
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: "value"
+                                        }
+                                    }
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: "x",
+                                    speed: 10,
+                                    threshold: 10
+                                },
+                                zoom: {
+                                    enabled: true,
+                                    drag: false,
+                                    mode: "xy",
+                                    limits: {
+                                        max: 10,
+                                        min: 0.5
+                                    }
+                                }
+                            }
+                        };
+
+                        // Get the canvas context
+                        var ctxCalls = document.getElementById("canvas_daily").getContext("2d");
+
+                        // Destroy the existing chart (if it exists)
+                        if (window.canvas_daily) {
+                            window.canvas_daily.destroy();
+                        }
+
+                        // Create a new chart with the updated configCallsuration
+                        window.canvas_daily = new Chart(ctxCalls, configCalls);
 
                     }
 
