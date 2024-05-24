@@ -445,7 +445,7 @@ class Leads extends AdminController
                                 'assigned' => $assigned,
                                 "type" => $type
                             ];
-                            $success = $this->leads_model->update($update_array, $lead_id);
+                            $success = $this->leads_model->update_leads($update_array, $lead_id);
                             if ($success) {
                                 echo json_encode([
                                     'success' => true,
@@ -3126,8 +3126,7 @@ class Leads extends AdminController
                 ];
 
                 // Update the lead
-                $success = $this->leads_model->update($update_array, $lead_id);
-
+                $success = $this->leads_model->update_leads($update_array, $lead_id);
 
                 // Check if the update was successful and send a JSON response
                 if ($success) {

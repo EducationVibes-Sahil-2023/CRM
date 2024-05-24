@@ -678,7 +678,30 @@ class Leads_model extends App_Model
         return false;
     }
 
+    public function update_leads($data, $id)
 
+    {
+        $current_lead_data = $this->get($id);
+
+
+        if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
+            $this->update_lead_type(array("type" => $data['type'], "leadid" => $id));
+        }
+        if (isset($data['assigned'])) {
+            if ($current_lead_data->assigned != $data['assigned'] && (!empty($data['assigned']) && $data['assigned'] != 0)) {
+                $this->lead_assigned_member_notification($id, $data['assigned']);
+            }
+        }
+
+        $this->db->where('id', $id);
+        $this->db->update(db_prefix() . 'leads', $data);
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Lead Updated [ID: ' . $id . ']');
+            return true;
+        }
+        return false;
+    }
 
     /**
 
