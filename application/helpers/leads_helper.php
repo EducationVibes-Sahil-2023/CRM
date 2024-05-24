@@ -411,11 +411,11 @@ function get_leads_report_($params)
         if (!empty($params['date_type'])) {
             if ($params['date_type'] == "daily") {
                 $sql .= "DATE(l.dateadded) as dateadded, ";
-            } elseif ($params['date_type'] == "weekly") {
+            } elseif ($params['date_type'] == "week") {
                 $sql .= "YEARWEEK(l.dateadded, 1) as dateadded, ";
-            } elseif ($params['date_type'] == "monthly") {
-                $sql .= "DATE_FORMAT(l.dateadded, '%Y-%m') as dateadded, ";
-            } elseif ($params['date_type'] == "yearly") {
+            } elseif ($params['date_type'] == "month") {
+                $sql .= "DATE_FORMAT(l.dateadded, '%Y - %M') as dateadded, ";
+            } elseif ($params['date_type'] == "year") {
                 $sql .= "YEAR(l.dateadded) as dateadded, ";
             }
         }
@@ -480,12 +480,12 @@ function get_leads_report_($params)
         if (!empty($params['date_type'])) {
             if ($params['date_type'] == "daily") {
                 $sql .= "GROUP BY DATE(l.dateadded) ";
-            } elseif ($params['date_type'] == "weekly") {
+            } elseif ($params['date_type'] == "week") {
                 $sql .= "GROUP BY YEARWEEK(l.dateadded, 1) ";
-            } elseif ($params['date_type'] == "monthly") {
-                $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y-%m') ";
-            } elseif ($params['date_type'] == "yearly") {
-                $sql .= "GROUP BY YEAR(l.dateadded) ";
+            } elseif ($params['date_type'] == "month") {
+                $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M') ";
+            } elseif ($params['date_type'] == "year") {
+                $sql .= "GROUP BY YEAR(l.dateadded) ORDER BY dateadded ASC";
             }
         }
 
@@ -509,11 +509,11 @@ function get_leads_report_conversion($params)
     if (!empty($params['date_type'])) {
         if ($params['date_type'] == "daily") {
             $sql .= "DATE(l.dateadded) as dateadded, c.name as conversion_type_name, COUNT(DISTINCT l.id) as conversion_count ";
-        } elseif ($params['date_type'] == "weekly") {
+        } elseif ($params['date_type'] == "week") {
             $sql .= "YEARWEEK(l.dateadded, 1) as dateadded, c.name as conversion_type_name, COUNT(DISTINCT l.id) as conversion_count ";
-        } elseif ($params['date_type'] == "monthly") {
-            $sql .= "DATE_FORMAT(l.dateadded, '%Y-%m') as dateadded, c.name as conversion_type_name, COUNT(DISTINCT l.id) as conversion_count ";
-        } elseif ($params['date_type'] == "yearly") {
+        } elseif ($params['date_type'] == "month") {
+            $sql .= "DATE_FORMAT(l.dateadded, '%Y - %M') as dateadded, c.name as conversion_type_name, COUNT(DISTINCT l.id) as conversion_count ";
+        } elseif ($params['date_type'] == "year") {
             $sql .= "YEAR(l.dateadded) as dateadded, c.name as conversion_type_name, COUNT(DISTINCT l.id) as conversion_count ";
         }
 
@@ -580,16 +580,18 @@ function get_leads_report_conversion($params)
         }
 
         if ($params['date_type'] == "daily") {
-            $sql .= "GROUP BY DATE(l.dateadded), c.name ";
-        } elseif ($params['date_type'] == "weekly") {
-            $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), c.name ";
-        } elseif ($params['date_type'] == "monthly") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y-%m'), c.name ";
-        } elseif ($params['date_type'] == "yearly") {
-            $sql .= "GROUP BY YEAR(l.dateadded), c.name ";
+            $sql .= "GROUP BY DATE(l.dateadded), c.name ORDER BY DATE(l.dateadded) ASC";
+        } elseif ($params['date_type'] == "week") {
+            $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), c.name ORDER BY YEARWEEK(l.dateadded, 1) ASC";
+        } elseif ($params['date_type'] == "month") {
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), c.name ORDER BY DATE_FORMAT(l.dateadded, '%Y - %M') ASC";
+        } elseif ($params['date_type'] == "year") {
+            $sql .= "GROUP BY YEAR(l.dateadded), c.name ORDER BY YEAR(l.dateadded) ASC";
         }
 
-        $sql .= ") as conversion_counts_subquery GROUP BY dateadded";
+        // Close the subquery and group by the final dateadded column
+        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ORDER BY dateadded ASC";
+
         return $result = $CI->db->query($sql)->result();
     } else {
         return [];
@@ -610,11 +612,11 @@ function get_leads_report_marketing($params)
     if (!empty($params['date_type'])) {
         if ($params['date_type'] == "daily") {
             $sql .= "DATE(l.dateadded) as dateadded, m.name as marketing_type_name, COUNT(DISTINCT l.id) as marketing_count ";
-        } elseif ($params['date_type'] == "weekly") {
+        } elseif ($params['date_type'] == "week") {
             $sql .= "YEARWEEK(l.dateadded, 1) as dateadded, m.name as marketing_type_name, COUNT(DISTINCT l.id) as marketing_count ";
-        } elseif ($params['date_type'] == "monthly") {
-            $sql .= "DATE_FORMAT(l.dateadded, '%Y-%m') as dateadded, m.name as marketing_type_name, COUNT(DISTINCT l.id) as marketing_count ";
-        } elseif ($params['date_type'] == "yearly") {
+        } elseif ($params['date_type'] == "month") {
+            $sql .= "DATE_FORMAT(l.dateadded, '%Y - %M') as dateadded, m.name as marketing_type_name, COUNT(DISTINCT l.id) as marketing_count ";
+        } elseif ($params['date_type'] == "year") {
             $sql .= "YEAR(l.dateadded) as dateadded, m.name as marketing_type_name, COUNT(DISTINCT l.id) as marketing_count ";
         }
 
@@ -682,15 +684,15 @@ function get_leads_report_marketing($params)
 
         if ($params['date_type'] == "daily") {
             $sql .= "GROUP BY DATE(l.dateadded), m.name ";
-        } elseif ($params['date_type'] == "weekly") {
+        } elseif ($params['date_type'] == "week") {
             $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), m.name ";
-        } elseif ($params['date_type'] == "monthly") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y-%m'), m.name ";
-        } elseif ($params['date_type'] == "yearly") {
+        } elseif ($params['date_type'] == "month") {
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), m.name ";
+        } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), m.name ";
         }
 
-        $sql .= ") as conversion_counts_subquery GROUP BY dateadded";
+        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ORDER BY dateadded ASC";
         return $result = $CI->db->query($sql)->result();
     } else {
         return [];
@@ -1932,7 +1934,7 @@ function last_lead_request($lead_id)
     $CI = &get_instance();
     $CI->db->select('*');
     $CI->db->select('IF(status = 1, "Approved", IF(status = 3, "Pending", "Not Found")) as status_text', false);
-    $CI->db->where("status",3);
+    $CI->db->where("status", 3);
     $CI->db->where("leadid", $lead_id);
     $CI->db->order_by("id", "desc");
     $CI->db->limit(1);
