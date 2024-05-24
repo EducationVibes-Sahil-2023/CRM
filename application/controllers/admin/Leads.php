@@ -3122,7 +3122,7 @@ class Leads extends AdminController
                 // Prepare the update array for the lead
                 $update_array = [
                     'assigned' => $assigned,
-                    "type" => $type
+                    "type" => $lead_type
                 ];
 
                 // Update the lead

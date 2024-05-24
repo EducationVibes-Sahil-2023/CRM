@@ -519,7 +519,7 @@ $last_lead_request = last_lead_request($lead->id);
                            ?>
                         </div>
 
-                        <div class="form-group col-md-4">
+                        <div class="form-group col-md-3">
                            <label>Reason</label>
                            <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $last_lead_request->reason ?></textarea>
                         </div>
@@ -535,14 +535,8 @@ $last_lead_request = last_lead_request($lead->id);
 
                      </div>
                      <?php echo form_close(); ?>
-
-                     <?php echo form_close(); ?>
                      <div class="clearfix"></div>
                      <hr />
-                     <?php
-                     render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('Created By'), _l('Created Date'), _l('Reason'), _l('Status'), _l("Approval Date"), _l("Approval By"), _l("Action")), 'lead-transfer');
-                     ?>
-
                   </div>
                <?php } ?>
 

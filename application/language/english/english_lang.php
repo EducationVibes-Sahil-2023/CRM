@@ -476,7 +476,7 @@ $lang['lead_exam_score']         = 'Exam Score';
 $lang['lead_add_edit_call_activity']         = 'Call Activity';
 $lang['lead_add_edit_lead_transfer_request']         = 'Lead Transfer Request';
 $lang['lead_transfer_request_successfully_create']         = 'Lead Transfer Request genrated by %s';
-$lang['lead_transfer_request_successfully_create']         = 'Lead Transfer Request updated by %s';
+$lang['lead_transfer_request_successfully_update']         = 'Lead Transfer Request updated by %s';
 
 # Misc
 $lang['access_denied'] = 'Access denied';
