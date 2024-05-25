@@ -379,9 +379,6 @@ class Leads extends AdminController
             $reason = $this->input->post('reason');
             $transfer_lead_id = $this->input->post('transfer_lead_id');
 
-            if (!has_permission('leads', '', 'view')) {
-                throw new Exception('Access denied.');
-            }
 
             if (empty($lead_id)) {
                 throw new Exception('Lead ID is required.');
