@@ -140,11 +140,11 @@ $last_lead_request = last_lead_request($lead->id);
                               </a>
                            </li>
                         <?php } ?>
-                           <li role="presentation">
-                              <a href="#lead_transfer_lead_request" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
-                                 <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
-                              </a>
-                           </li>
+                        <li role="presentation">
+                           <a href="#lead_transfer_lead_request" id="show_transfer_lead_div" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
+                              <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
+                           </a>
+                        </li>
                         <?php if (is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1')) { ?>
                            <li role="presentation">
                               <a href="#gdpr" aria-controls="gdpr" role="tab" data-toggle="tab">
@@ -498,43 +498,43 @@ $last_lead_request = last_lead_request($lead->id);
                </div>
                <!-- end sms -->
 
-                  <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
-                     <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
-                     <input type="hidden" id="transfer_lead_id" name="transfer_lead_id" value="<?= !empty($last_lead_request->id) ? $last_lead_request->id : '' ?>">
-                     <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
-                     <div class='row'>
-                        <div class="form-group col-md-3">
-                           <?php
-                           echo render_select('transfer_lead_type', $type, array('id', 'name'), 'lead_add_edit_type', [$last_lead_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'transfer_lead_type');
-                           ?>
-                        </div>
-                        <div class="form-group col-md-3">
-                           <?php
-                           $assigned_attrs = array();
-                           $selected = [];
-                           echo render_select('transfer_lead_assign', $staff_members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', [$last_lead_request->assign], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
-                           ?>
-                        </div>
+               <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
+                  <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
+                  <input type="hidden" id="transfer_lead_id" name="transfer_lead_id" value="<?= !empty($last_lead_request->id) ? $last_lead_request->id : '' ?>">
+                  <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
+                  <div class='row'>
+                     <div class="form-group col-md-3">
+                        <?php
+                        echo render_select('transfer_lead_type', $type, array('id', 'name'), 'Lead Type <span class="text-danger">*</span>', [$last_lead_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'transfer_lead_type');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+                        $assigned_attrs = array();
+                        $selected = [];
+                        echo render_select('transfer_lead_assign', [], array('staffid', array('firstname', 'lastname')), 'Assigned <span class="text-danger">*</span>', [$last_lead_request->assign], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                        ?>
+                     </div>
 
-                        <div class="form-group col-md-3">
-                           <label>Reason</label>
-                           <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $last_lead_request->reason ?></textarea>
-                        </div>
+                     <div class="form-group col-md-3">
+                        <label>Reason <span class='text-danger'>*</span></label>
+                        <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $last_lead_request->reason ?></textarea>
+                     </div>
 
-                        <div class="form-group col-md-2">
-                           <label> &nbsp;</label> <?php
-                                                   $button_text = !empty($last_lead_request->id)
-                                                      ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
-                                                      : _l('Request NOW');
-                                                   ?> <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
-
-                        </div>
+                     <div class="form-group col-md-2">
+                        <label> &nbsp;</label> <?php
+                                                $button_text = !empty($last_lead_request->id)
+                                                   ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
+                                                   : _l('Request NOW');
+                                                ?> <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
 
                      </div>
-                     <?php echo form_close(); ?>
-                     <div class="clearfix"></div>
-                     <hr />
+
                   </div>
+                  <?php echo form_close(); ?>
+                  <div class="clearfix"></div>
+                  <hr />
+               </div>
 
                <div role="tabpanel" class="tab-pane" id="tab_proposals_leads">
                   <?php if (has_permission('proposals', '', 'create')) { ?>
@@ -729,6 +729,46 @@ $last_lead_request = last_lead_request($lead->id);
 </div>
 <?php hooks()->do_action('lead_modal_profile_bottom', (isset($lead) ? $lead->id : '')); ?>
 <script>
+   var staff_members = <?= json_encode($staff_members, true) ?>;
+   var last_lead_request_assign = "<?= !empty($last_lead_request->assign) ? $last_lead_request->assign : '' ?>";
+   console.log(staff_members);
+
+   function set_staff_dropdown() {
+      let lead_type = $("#transfer_lead_type").val();
+      let transfer_lead_assign = $("#transfer_lead_assign");
+
+      // First option should be blank
+      transfer_lead_assign.html('<option value=""></option>');
+
+      if (lead_type === "") {
+         transfer_lead_assign.selectpicker('refresh');
+      } else {
+         let new_staff_list = staff_members.filter(function(staff_member) {
+            return staff_member.lead_type === lead_type;
+         });
+
+         let options = new_staff_list.map(function(staff_member) {
+            if (staff_member.full_name != "") {
+               return `<option value="${staff_member.staffid}">${staff_member.full_name}</option>`;
+            }
+         }).join('');
+
+         // Append the new options
+         transfer_lead_assign.append(options).selectpicker('refresh');
+
+         // Set last_lead_request_assign if not null
+         if (last_lead_request_assign !== '') {
+            transfer_lead_assign.val(last_lead_request_assign).selectpicker('refresh');
+         }
+      }
+   }
+   $("#transfer_lead_type").change(function() {
+      set_staff_dropdown();
+   });
+
+   set_staff_dropdown();
+
+
    $('#smsTemplate').on('change', function() {
       var x = document.getElementById('lead_sms_description');
       if (this.value != '') {

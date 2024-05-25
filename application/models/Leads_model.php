@@ -683,6 +683,28 @@ class Leads_model extends App_Model
     {
         $current_lead_data = $this->get($id);
 
+        $current_status    = $this->get_status($current_lead_data->status);
+        if ($current_status) {
+
+            $current_status_id = $current_status->id;
+
+            $current_status    = $current_status->name;
+        } else {
+
+            if ($current_lead_data->junk == 1) {
+
+                $current_status = _l('lead_junk');
+            } elseif ($current_lead_data->lost == 1) {
+
+                $current_status = _l('lead_lost');
+            } else {
+
+                $current_status = '';
+            }
+
+            $current_status_id = 0;
+        }
+
 
         if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
             $this->update_lead_type(array("type" => $data['type'], "leadid" => $id));
@@ -691,6 +713,42 @@ class Leads_model extends App_Model
             if ($current_lead_data->assigned != $data['assigned'] && (!empty($data['assigned']) && $data['assigned'] != 0)) {
                 $this->lead_assigned_member_notification($id, $data['assigned']);
             }
+        }
+
+        if (isset($data['status']) && $current_status_id != $data['status']) {
+
+            $this->db->where('id', $id);
+
+            $this->db->update(db_prefix() . 'leads', [
+
+                'last_status_change' => date('Y-m-d H:i:s'),
+
+            ]);
+
+
+            $new_status_name = $this->get_status($data['status'])->name;
+
+            $this->log_lead_activity($id, 'not_lead_activity_status_updated', false, serialize([
+
+                get_staff_full_name(),
+
+                $current_status,
+
+                $new_status_name,
+
+            ]));
+
+
+
+            hooks()->do_action('lead_status_changed', [
+
+                'lead_id'    => $id,
+
+                'old_status' => $current_status_id,
+
+                'new_status' => $data['status'],
+
+            ]);
         }
 
         $this->db->where('id', $id);

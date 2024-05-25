@@ -101,97 +101,95 @@ if (!empty($params["type"]) && $params["type"] == "counsellor") {
         $leadid = !empty($aRow['leadid']) ? $aRow['leadid'] : '';
 
         $edit_btn = "<i class='fa fa-edit btn btn-default' onclick=' edit_lead_request(" . $leadid . ")'></i>";
-        $outputLeadType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . (empty($lead_data[$aRow["lead_type"]]['color']) ? 'default' : '') . '" style="color:' . $lead_data[$aRow["lead_type"]]["color"] . ';border:1px solid ' . $aRow['color'] . '">' . $lead_data[$aRow["lead_type"]]["name"];
+        // $outputLeadType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . (empty($lead_data[$aRow["lead_type"]]['color']) ? 'default' : '') . '" style="color:' . $lead_data[$aRow["lead_type"]]["color"] . ';border:1px solid ' . $aRow['color'] . '">' . $lead_data[$aRow["lead_type"]]["name"];
 
-        if ($aRow["status"] == 3) {
+        // if ($aRow["status"] == 3) {
 
-            $outputLeadType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+        //     $outputLeadType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
 
-            $outputLeadType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+        //     $outputLeadType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
 
-            $outputLeadType .= '<span data-toggle="tooltip" title="' . _l('Change Lead Type') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
+        //     $outputLeadType .= '<span data-toggle="tooltip" title="' . _l('Change Lead Type') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
 
-            $outputLeadType .= '</a>';
-
-
-
-            $outputLeadType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsType-' . $aRow['lead_transfer_id'] . '">';
-
-            foreach ($lead_data as $leadChangeType) {
-
-                if ($aRow['type'] != $leadChangeType['id']) {
-
-                    $outputLeadType .= '<li>
-    
-                      <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',' . $leadChangeType['id'] . '); return false;">
-    
-                         ' . $leadChangeType['name'] . '
-    
-                      </a>
-    
-                   </li>';
-                }
-            }
-
-            $outputLeadType .= '</ul>';
-
-            $outputLeadType .= '</div>';
-        }
-
-        $outputLeadType .= '</span>';
+        //     $outputLeadType .= '</a>';
 
 
 
+        //     $outputLeadType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsType-' . $aRow['lead_transfer_id'] . '">';
+
+        //     foreach ($lead_data as $leadChangeType) {
+
+        //         if ($aRow['type'] != $leadChangeType['id']) {
+
+        //             $outputLeadType .= '<li>
+
+        //               <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',' . $leadChangeType['id'] . '); return false;">
+
+        //                  ' . $leadChangeType['name'] . '
+
+        //               </a>
+
+        //            </li>';
+        //         }
+        //     }
+
+        //     $outputLeadType .= '</ul>';
+
+        //     $outputLeadType .= '</div>';
+        // }
+
+        // $outputLeadType .= '</span>';
 
 
-        $row[] = $outputLeadType;
+
+        $row[] = $lead_data[$aRow["lead_type"]]["name"];
         // $row[] = !empty($lead_data[$aRow["lead_type"]]["name"]) ? $lead_data[$aRow["lead_type"]]["name"] : '';
         // $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : '';
 
-        $outputStaffType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . ((1 == 0) ? 'default' : '') . '" style=" border:1px solid black; color:black;">' . $staff_data[$aRow["assign"]]["full_name"];
+        // $outputStaffType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . ((1 == 0) ? 'default' : '') . '" style=" border:1px solid black; color:black;">' . $staff_data[$aRow["assign"]]["full_name"];
 
-        if ($aRow["status"] == 3) {
+        // if ($aRow["status"] == 3) {
 
-            $outputStaffType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+        //     $outputStaffType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
 
-            $outputStaffType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableStaffType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+        //     // $outputStaffType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableStaffType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
 
-            $outputStaffType .= '<span data-toggle="tooltip" title="' . _l('Change Assign') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
+        //     $outputStaffType .= '<span data-toggle="tooltip" title="' . _l('Change Assign') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
 
-            $outputStaffType .= '</a>';
-
-
-
-            $outputStaffType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tabStaffType-' . $aRow['lead_transfer_id'] . '">';
-
-            foreach ($staff_data as $staff_d) {
-
-                if ($aRow['assign'] != $staff_d['staffid']) {
-
-                    $outputStaffType .= '<li>
-    
-                      <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',``,' . $staff_d['staffid'] . '); return false;">
-    
-                         ' . $staff_d['full_name'] . '
-    
-                      </a>
-    
-                   </li>';
-                }
-            }
-
-            $outputStaffType .= '</ul>';
-
-            $outputStaffType .= '</div>';
-        }
-
-        $outputStaffType .= '</span>';
+        //     // $outputStaffType .= '</a>';
 
 
 
+        //     // $outputStaffType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tabStaffType-' . $aRow['lead_transfer_id'] . '">';
+
+        //     // foreach ($staff_data as $staff_d) {
+
+        //     //     if ($aRow['assign'] != $staff_d['staffid']) {
+
+        //     //         $outputStaffType .= '<li>
+
+        //     //           <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',``,' . $staff_d['staffid'] . '); return false;">
+
+        //     //              ' . $staff_d['full_name'] . '
+
+        //     //           </a>
+
+        //     //        </li>';
+        //     //     }
+        //     // }
+
+        //     // $outputStaffType .= '</ul>';
+
+        //     $outputStaffType .= '</div>';
+        // }
+
+        // $outputStaffType .= '</span>';
 
 
-        $row[] = $outputStaffType;
+
+
+
+        $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : "";
         $row[] = !empty($aRow['phonenumber']) ? ($aRow['phonenumber']) : '';
         $row[] = !empty($aRow['reason']) ? ($aRow['reason']) : '';
         $row[] = !empty($aRow['status_name']) ? '<span class="text-' . $aRow['status_color'] . '">' . $aRow['status_name'] . '</span>' : 'Not defined';
@@ -200,7 +198,7 @@ if (!empty($params["type"]) && $params["type"] == "counsellor") {
         if (is_admin() || has_permission('leads', '', 'approval')) {
             if ($aRow['status'] == '3') {
 
-                $edit_btn = "<i class='fa fa-edit btn btn-default' onclick='init_lead(" . $aRow['leadid'] . ", true)'></i>";
+                $edit_btn = "<i class='fa fa-edit btn btn-default' onclick='edit_lead_request(" . $aRow['leadid'] . ")'></i>";
 
                 $row[] = $edit_btn . '&nbsp;<button class="btn btn-success" onclick="update_lead_transfer(' . $aRow['leadid'] . ', ' . $aRow['lead_type'] . ', ' . $aRow['lead_transfer_id'] . ', ' . $aRow['assign'] . ', 1)">Approved</button>';
             } else {
@@ -247,95 +245,92 @@ if (!empty($params["type"]) && $params["type"] == "counsellor") {
         // $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : '';
         $row[] = !empty($lead_data[$aRow["old_lead_type"]]["name"]) ? $lead_data[$aRow["old_lead_type"]]["name"] : '';
 
-        $outputStaffType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . ((1 == 0) ? 'default' : 'black') . '" style=" border:1px solid black; color:black;">' . $staff_data[$aRow["assign"]]["full_name"];
+        // $outputStaffType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . ((1 == 0) ? 'default' : 'black') . '" style=" border:1px solid black; color:black;">' . $staff_data[$aRow["assign"]]["full_name"];
+        // if ($aRow["status"] == 3) {
 
-        if ($aRow["status"] == 3) {
+        //     $outputStaffType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
 
-            $outputStaffType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+        //     // $outputStaffType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableStaffType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
 
-            $outputStaffType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableStaffType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+        //     $outputStaffType .= '<span data-toggle="tooltip" title="' . _l('Change Assign') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
 
-            $outputStaffType .= '<span data-toggle="tooltip" title="' . _l('Change Assign') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
-
-            $outputStaffType .= '</a>';
-
-
-
-            $outputStaffType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tabStaffType-' . $aRow['lead_transfer_id'] . '">';
-
-            foreach ($staff_data as $staff_d) {
-
-                if ($aRow['assign'] != $staff_d['staffid']) {
-
-                    $outputStaffType .= '<li>
-    
-                      <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',``,' . $staff_d['staffid'] . '); return false;">
-    
-                         ' . $staff_d['full_name'] . '
-    
-                      </a>
-    
-                   </li>';
-                }
-            }
-
-            $outputStaffType .= '</ul>';
-
-            $outputStaffType .= '</div>';
-        }
-
-        $outputStaffType .= '</span>';
+        //     // $outputStaffType .= '</a>';
 
 
 
+        //     // $outputStaffType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tabStaffType-' . $aRow['lead_transfer_id'] . '">';
+
+        //     // foreach ($staff_data as $staff_d) {
+
+        //     //     if ($aRow['assign'] != $staff_d['staffid']) {
+
+        //     //         $outputStaffType .= '<li>
+
+        //     //           <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',``,' . $staff_d['staffid'] . '); return false;">
+
+        //     //              ' . $staff_d['full_name'] . '
+
+        //     //           </a>
+
+        //     //        </li>';
+        //     //     }
+        //     // }
+
+        //     // $outputStaffType .= '</ul>';
+
+        //     $outputStaffType .= '</div>';
+        // }
+        // $outputStaffType .= '</span>';
 
 
-        $row[] = $outputStaffType;
+        // $row[] = $outputStaffType;
+        $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : "";
+
         $row[] = !empty($aRow['phonenumber']) ? ($aRow['phonenumber']) : '';
-        $outputLeadType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . (empty($lead_data[$aRow["lead_type"]]['color']) ? 'default' : '') . '" style="color:' . $lead_data[$aRow["lead_type"]]["color"] . ';border:1px solid ' . $aRow['color'] . '">' . $lead_data[$aRow["lead_type"]]["name"];
+        // $outputLeadType = '<span class="inline-block lead-type-' . $aRow['lead_type'] . ' label label-' . (empty($lead_data[$aRow["lead_type"]]['color']) ? 'default' : '') . '" style="color:' . $lead_data[$aRow["lead_type"]]["color"] . ';border:1px solid ' . $aRow['color'] . '">' . $lead_data[$aRow["lead_type"]]["name"];
 
-        if ($aRow["status"] == 3) {
+        // if ($aRow["status"] == 3) {
 
-            $outputLeadType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+        //     $outputLeadType .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
 
-            $outputLeadType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+        //     $outputLeadType .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsType-' . $aRow['lead_transfer_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
 
-            $outputLeadType .= '<span data-toggle="tooltip" title="' . _l('Change Lead Type') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
+        //     $outputLeadType .= '<span data-toggle="tooltip" title="' . _l('Change Lead Type') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
 
-            $outputLeadType .= '</a>';
-
-
-
-            $outputLeadType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsType-' . $aRow['lead_transfer_id'] . '">';
-
-            foreach ($lead_data as $leadChangeType) {
-
-                if ($aRow['type'] != $leadChangeType['id']) {
-
-                    $outputLeadType .= '<li>
-    
-                      <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',' . $leadChangeType['id'] . '); return false;">
-    
-                         ' . $leadChangeType['name'] . '
-    
-                      </a>
-    
-                   </li>';
-                }
-            }
-
-            $outputLeadType .= '</ul>';
-
-            $outputLeadType .= '</div>';
-        }
-
-        $outputLeadType .= '</span>';
+        //     $outputLeadType .= '</a>';
 
 
 
+        //     $outputLeadType .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsType-' . $aRow['lead_transfer_id'] . '">';
+
+        //     foreach ($lead_data as $leadChangeType) {
+
+        //         if ($aRow['type'] != $leadChangeType['id']) {
+
+        //             $outputLeadType .= '<li>
+
+        //               <a href="#" onclick="change_transfer_lead_staff(' . $aRow['leadid'] . ',' . $aRow['lead_transfer_id'] . ',' . $leadChangeType['id'] . '); return false;">
+
+        //                  ' . $leadChangeType['name'] . '
+
+        //               </a>
+
+        //            </li>';
+        //         }
+        //     }
+
+        //     $outputLeadType .= '</ul>';
+
+        //     $outputLeadType .= '</div>';
+        // }
+
+        // $outputLeadType .= '</span>';
 
 
-        $row[] = $outputLeadType;
+
+
+
+        $row[] = $lead_data[$aRow["lead_type"]]["name"];
         $row[] = !empty($aRow['reason']) ? ($aRow['reason']) : '';
         $row[] = !empty($aRow['status_name']) ? '<span class="text-' . $aRow['status_color'] . '">' . $aRow['status_name'] . '</span>' : 'Not defined';
         $row[] = !empty($aRow['created_date']) ? _d($aRow['created_date']) : '';
