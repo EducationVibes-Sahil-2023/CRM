@@ -440,7 +440,8 @@ class Leads extends AdminController
 
                             $update_array = [
                                 'assigned' => $assigned,
-                                "type" => $type
+                                "type" => $type,
+                                "status" => 2
                             ];
                             $success = $this->leads_model->update_leads($update_array, $lead_id);
                             if ($success) {
@@ -3119,7 +3120,8 @@ class Leads extends AdminController
                 // Prepare the update array for the lead
                 $update_array = [
                     'assigned' => $assigned,
-                    "type" => $lead_type
+                    "type" => $lead_type,
+                    "status" => 2
                 ];
 
                 // Update the lead
