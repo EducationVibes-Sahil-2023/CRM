@@ -207,7 +207,7 @@ if (!empty($params["type"]) && $params["type"] == "counsellor") {
                 $row[] = "";
             }
         } else {
-            if ($aRow['status'] == '3' && has_permission('leads', '', 'view')) {
+            if ($aRow['status'] == '3') {
 
                 // Construct the HTML with proper concatenation and encoding
                 $row[] = $edit_btn;
@@ -349,7 +349,7 @@ if (!empty($params["type"]) && $params["type"] == "counsellor") {
                 $row[] = "";
             }
         } else {
-            if ($aRow['status'] == '3' && has_permission('leads', '', 'view')) {
+            if ($aRow['status'] == '3') {
 
                 // Construct the HTML with proper concatenation and encoding
                 $row[] = $edit_btn;

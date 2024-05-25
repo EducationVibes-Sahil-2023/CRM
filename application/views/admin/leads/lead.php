@@ -140,13 +140,11 @@ $last_lead_request = last_lead_request($lead->id);
                               </a>
                            </li>
                         <?php } ?>
-                        <?php if (has_permission('leads', '', 'view')) { ?>
                            <li role="presentation">
                               <a href="#lead_transfer_lead_request" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
                                  <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
                               </a>
                            </li>
-                        <?php } ?>
                         <?php if (is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1')) { ?>
                            <li role="presentation">
                               <a href="#gdpr" aria-controls="gdpr" role="tab" data-toggle="tab">
@@ -500,7 +498,6 @@ $last_lead_request = last_lead_request($lead->id);
                </div>
                <!-- end sms -->
 
-               <?php if (has_permission('leads', '', 'view')) { ?>
                   <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
                      <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
                      <input type="hidden" id="transfer_lead_id" name="transfer_lead_id" value="<?= !empty($last_lead_request->id) ? $last_lead_request->id : '' ?>">
@@ -538,7 +535,6 @@ $last_lead_request = last_lead_request($lead->id);
                      <div class="clearfix"></div>
                      <hr />
                   </div>
-               <?php } ?>
 
                <div role="tabpanel" class="tab-pane" id="tab_proposals_leads">
                   <?php if (has_permission('proposals', '', 'create')) { ?>
