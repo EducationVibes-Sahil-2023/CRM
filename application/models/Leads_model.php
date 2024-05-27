@@ -584,9 +584,12 @@ class Leads_model extends App_Model
 
 
         $data['email'] = trim($data['email']);
-
-        $this->update_lead_source($data['source'], $id);
-
+        if (!empty($data['source'])  && $current_lead_data->source != $data['source']) {
+            $this->update_lead_source($data['source'], $id);
+        }
+        if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
+            $this->update_lead_type(array("type" => $data['type'], "leadid" => $id));
+        }
         $this->db->where('id', $id);
 
         $this->db->update(db_prefix() . 'leads', $data);
@@ -675,7 +678,88 @@ class Leads_model extends App_Model
         return false;
     }
 
+    public function update_leads($data, $id)
 
+    {
+        $current_lead_data = $this->get($id);
+
+        $current_status    = $this->get_status($current_lead_data->status);
+        if ($current_status) {
+
+            $current_status_id = $current_status->id;
+
+            $current_status    = $current_status->name;
+        } else {
+
+            if ($current_lead_data->junk == 1) {
+
+                $current_status = _l('lead_junk');
+            } elseif ($current_lead_data->lost == 1) {
+
+                $current_status = _l('lead_lost');
+            } else {
+
+                $current_status = '';
+            }
+
+            $current_status_id = 0;
+        }
+
+
+        if (!empty($data['type']) && $current_lead_data->type != $data['type']) {
+            $this->update_lead_type(array("type" => $data['type'], "leadid" => $id));
+        }
+        if (isset($data['assigned'])) {
+            if ($current_lead_data->assigned != $data['assigned'] && (!empty($data['assigned']) && $data['assigned'] != 0)) {
+                $this->lead_assigned_member_notification($id, $data['assigned']);
+            }
+        }
+
+        if (isset($data['status']) && $current_status_id != $data['status']) {
+
+            $this->db->where('id', $id);
+
+            $this->db->update(db_prefix() . 'leads', [
+
+                'last_status_change' => date('Y-m-d H:i:s'),
+
+            ]);
+
+
+            $new_status_name = $this->get_status($data['status'])->name;
+
+            $this->log_lead_activity($id, 'not_lead_activity_status_updated', false, serialize([
+
+                get_staff_full_name(),
+
+                $current_status,
+
+                $new_status_name,
+
+            ]));
+
+
+
+            hooks()->do_action('lead_status_changed', [
+
+                'lead_id'    => $id,
+
+                'old_status' => $current_status_id,
+
+                'new_status' => $data['status'],
+
+            ]);
+        }
+
+        $this->db->where('id', $id);
+        $this->db->update(db_prefix() . 'leads', $data);
+        if ($this->db->affected_rows() > 0) {
+
+            log_activity('Lead Updated [ID: ' . $id . ']');
+            return true;
+        }
+        return false;
+    }
 
     /**
 
@@ -1969,6 +2053,7 @@ class Leads_model extends App_Model
 
 
 
+
     public function staff_can_access_lead($id, $staff_id = '')
 
     {
@@ -2768,5 +2853,23 @@ class Leads_model extends App_Model
     {
         $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name');
         return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
+    }
+
+
+    public function get_lead_transfer_request()
+    {
+        $sql = "SELECT lt.name as lead_name, concat(ts.firstname,' ',ts.lastname) as staff_name,if(status=1,'Approved',if(status=2,'reject',if(status=3,'pending','Not defined'))) as status_name,if(status=1,'success',if(status=2,'danger',if(status=3,'warning',''))) as status_color FROM  " . db_prefix() . "lead_transfer_request tr join  " . db_prefix() . "leads_type lt on lt.id=tr.lead_type join  " . db_prefix() . "staff  ts on ts.staffid = tr.assign where tr.created_by=" . get_staff_user_id() . " ";
+        return $this->db->query($sql)->result_array();
+    }
+
+
+    public function get_lead_transfer_request_exist($lead_id)
+    {
+        $this->db->select('id');
+        $this->db->select('if(status=1,"Approved",if(status=3,"Pending","Not Found")) as status_text');
+        $this->db->where_in("status", [3]);
+        $this->db->where(array("leadid" => $lead_id));
+        $staff = $this->db->get(db_prefix() . 'lead_transfer_request')->row();
+        return $staff;
     }
 }

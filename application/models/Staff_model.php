@@ -302,7 +302,7 @@ class Staff_model extends App_Model
      * @param  mixed $where where in query
      * @return mixed if id is passed return object else array
      */
-    public function get($id = '', $where = [])
+    public function get($id = '', $where = [], $all = 0)
     {
         $select_str = '*,CONCAT(firstname,\' \',lastname) as full_name';
 
@@ -314,6 +314,11 @@ class Staff_model extends App_Model
         $this->db->select($select_str);
         $this->db->where($where);
 
+        if ($all == 1) {
+            $this->db->order_by('firstname', 'desc');
+            return $this->db->get(db_prefix() . 'staff')->result_array();
+            die;
+        }
         if (is_numeric($id)) {
             $this->db->where('staffid', $id);
             $staff = $this->db->get(db_prefix() . 'staff')->row();
@@ -379,11 +384,11 @@ class Staff_model extends App_Model
             return $query;
 
             // $query = $this->db->query("select  *
-			// from    (select * from tblstaff
-			// where active = '1' order by reporting_person, staffid) products_sorted,
-			// 		(select @pv := $sid) initialisation
-			// where   find_in_set(reporting_person, @pv)
-			// and     length(@pv := concat(@pv, ',', staffid))")->result_array();
+            // from    (select * from tblstaff
+            // where active = '1' order by reporting_person, staffid) products_sorted,
+            // 		(select @pv := $sid) initialisation
+            // where   find_in_set(reporting_person, @pv)
+            // and     length(@pv := concat(@pv, ',', staffid))")->result_array();
             // $selfDet = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->result_array();
             // array_push($query, $selfDet[0]);
             // return $query;

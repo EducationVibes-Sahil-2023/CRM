@@ -19,6 +19,16 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       top: -7px;
    }
 
+   .lead-transfer-table .table-responsive {
+      overflow: unset !important;
+      overflow-x: unset !important;
+   }
+
+   .dropup .dropdown-menu {
+      height: 200px;
+      overflow: auto;
+   }
+
    .noUi-tooltip {
       width: 30px !important;
       bottom: -35px !important;
@@ -312,7 +322,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                       -->
                                           <option value="contacted_today"><?php echo _l('lead_add_edit_contacted_today'); ?></option>
                                           <option value="created_today"><?php echo _l('created_today'); ?></option>
-                                          <?php if (has_permission('leads', '', 'edit')) { ?>
+                                          <?php if (!has_permission('leads', '', 'view')) { ?>
                                              <option value="not_assigned"><?php echo _l('leads_not_assigned'); ?></option>
                                           <?php } ?>
                                           <?php if (isset($consent_purposes)) { ?>
@@ -406,7 +416,29 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               </div>
                            </div>
                            <div class="clearfix"></div>
-                           <hr class="hr-panel-heading" />
+                              <div class="col-md-12">
+                                 <div>
+                                    <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Transfer Request'); ?>" onclick="show_lead_request()" data-placement="bottom">Lead Transfer Request</button>
+                                 </div>
+                                 <hr>
+
+                                 <div class="lead-transfer-table hide">
+                                    <br>
+                                    <br>
+                                    <?php
+                                    if (is_admin()) {
+                                       render_datatable(array(_l('Raised by'), _l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                    } else {
+                                       render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                    }
+                                    ?>
+                                    <hr class="hr-panel-heading" />
+
+                                 </div>
+                                 <br>
+                                 <br>
+                              </div>
+
                            <div class="col-md-12">
                               <a href="#" data-toggle="modal" data-table=".table-leads" data-target="#leads_bulk_actions" class="hide bulk-actions-btn table-btn"><?php echo _l('bulk_actions'); ?></a>
                               <div class="modal fade bulk_actions" id="leads_bulk_actions" tabindex="-1" role="dialog">
@@ -1127,6 +1159,30 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       // $("#filterArea").toggle();
    });
    // });
+
+   function show_lead_request() {
+
+      slideToggle('.lead-transfer-table');
+      setTimeout(() => {
+         if ($(".lead-transfer-table").length > 0 && $(".lead-transfer-table").is(':visible')) {
+            if ($.fn.DataTable.isDataTable('.table-lead-transfer-table')) {
+               $('.table-lead-transfer-table').DataTable().destroy();
+            }
+            initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+            return false;
+         }
+      }, 1000);
+
+
+   }
+
+   function change_lead_request_table() {
+      if ($.fn.DataTable.isDataTable('.table-lead-transfer-table')) {
+         $('.table-lead-transfer-table').DataTable().destroy();
+      }
+      initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+      return false;
+   }
 </script>
 
 </body>

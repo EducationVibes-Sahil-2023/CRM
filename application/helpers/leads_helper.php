@@ -223,16 +223,16 @@ function get_leads_summary_filter($params)
         $sql .= ' SELECT SUM(subquery.total) AS total FROM ( ';
         $sql .= '  SELECT COUNT(DISTINCT(' . db_prefix() . 'leads.id)) as total,(
             SELECT DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') 
-            FROM '.db_prefix().'calls_activity_logs AS calls 
-            WHERE calls.contact = '.db_prefix().'leads.phonenumber 
+            FROM ' . db_prefix() . 'calls_activity_logs AS calls 
+            WHERE calls.contact = ' . db_prefix() . 'leads.phonenumber 
             AND LOWER(TRIM(call_status)) IN (\'answered\', \'status_unknow\') 
             ORDER BY DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') DESC 
             LIMIT 1
         ) as lastcontact,
         (
             SELECT DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') 
-            FROM '.db_prefix().'calls_activity_logs AS calls 
-            WHERE calls.contact = '.db_prefix().'leads.phonenumber 
+            FROM ' . db_prefix() . 'calls_activity_logs AS calls 
+            WHERE calls.contact = ' . db_prefix() . 'leads.phonenumber 
             ORDER BY DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') DESC 
             LIMIT 1
         ) as lastupdatecontact ';
@@ -333,23 +333,22 @@ function get_leads_summary_filter($params)
 
             if (!empty($params['last_contact_date'])) {
                 $last_contact_date = $params["last_contact_date"];
-                 if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-                       $sql .= "(lastcontact <= '" . $last_contact_date . "')";
-                 }
-                 else{
-                $sql .= "(lastcontact <= '" . $last_contact_date . "' OR lastcontact IS NULL)";
-                 }
+                if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                    $sql .= "(lastcontact <= '" . $last_contact_date . "')";
+                } else {
+                    $sql .= "(lastcontact <= '" . $last_contact_date . "' OR lastcontact IS NULL)";
+                }
 
                 if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
                     $sql .= ' AND ';
                 }
             } else if (!empty($params['last_update_date'])) {
                 $last_contact_date = $params["last_update_date"];
-                 if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
-                      $sql .= "(lastupdatecontact <= '" . $last_contact_date . "')";
-                 }else{
-                $sql .= "(lastupdatecontact <= '" . $last_contact_date . "' OR lastupdatecontact IS NULL)";
-                 }
+                if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                    $sql .= "(lastupdatecontact <= '" . $last_contact_date . "')";
+                } else {
+                    $sql .= "(lastupdatecontact <= '" . $last_contact_date . "' OR lastupdatecontact IS NULL)";
+                }
 
                 if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
                     $sql .= ' AND ';
@@ -367,8 +366,7 @@ function get_leads_summary_filter($params)
         $sql .= " ) AS subquery ";
 
         $sql .= ' UNION ALL ';
-         $sql = trim($sql);
-    
+        $sql = trim($sql);
     }
     $result = [];
 
@@ -840,7 +838,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     }
 
 
- 
+
     $update_count = $CI->db->query($sql)->row()->total_sum;
 
     // $result = $CI->db->query($sql)->result_array();
@@ -1618,4 +1616,29 @@ function leads_call_update_count()
 
     $maxCount = $query->max_count;
     return $maxCount;
+}
+
+function get_all_staff()
+{
+    $CI = &get_instance();
+    return $CI->staff_model->get('', ['is_not_staff' => 0, 'active' => 1], 1);
+}
+function get_type()
+{
+    $CI = &get_instance();
+    return $CI->leads_model->get_type();
+}
+
+
+function last_lead_request($lead_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->select('IF(status = 1, "Approved", IF(status = 3, "Pending", "Not Found")) as status_text', false);
+    $CI->db->where("status",3);
+    $CI->db->where("leadid", $lead_id);
+    $CI->db->order_by("id", "desc");
+    $CI->db->limit(1);
+    $lead_request = $CI->db->get(db_prefix() . 'lead_transfer_request')->row();
+    return $lead_request;
 }

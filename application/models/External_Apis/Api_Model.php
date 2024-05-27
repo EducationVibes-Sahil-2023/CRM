@@ -299,6 +299,7 @@ class Api_Model extends CI_Model
         try {
 
             $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+            $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
 
             if ($call_activity_temp["status"] == 1) {
                 $response = array(
@@ -323,6 +324,7 @@ class Api_Model extends CI_Model
         $response = [];
         try {
             $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
+            $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
             $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 10000);
             $delete_ids = [];
             if (!empty($get_all_activity_temp["data"])) {
