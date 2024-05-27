@@ -717,7 +717,85 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 return remoteProvider.getItems(pathInfo)
                     .then(function(result) {
                         pathInfo_info = pathInfo;
-                        return result; // Make sure to return the result to continue the promise chain
+                        console.log(result);
+                        return fileSystem = [{
+                                name: 'Documents',
+                                isDirectory: true,
+                                items: [{
+                                        name: 'Projects',
+                                        isDirectory: true,
+                                        items: [{
+                                                name: 'About.rtf',
+                                                isDirectory: false,
+                                                size: 1024,
+                                            },
+                                            {
+                                                name: 'Passwords.rtf',
+                                                isDirectory: false,
+                                                size: 2048,
+                                            },
+                                        ],
+                                    },
+                                    {
+                                        name: 'About.xml',
+                                        isDirectory: false,
+                                        size: 1024,
+                                    },
+                                    {
+                                        name: 'Managers.rtf',
+                                        isDirectory: false,
+                                        size: 2048,
+                                    },
+                                    {
+                                        name: 'ToDo.txt',
+                                        isDirectory: false,
+                                        size: 3072,
+                                    },
+                                ],
+                            },
+                            {
+                                name: 'Images',
+                                isDirectory: true,
+                                items: [{
+                                        name: 'logo.png',
+                                        isDirectory: false,
+                                        size: 20480,
+                                    },
+                                    {
+                                        name: 'banner.gif',
+                                        isDirectory: false,
+                                        size: 10240,
+                                    },
+                                ],
+                            },
+                            {
+                                name: 'System',
+                                isDirectory: true,
+                                items: [{
+                                        name: 'Employees.txt',
+                                        isDirectory: false,
+                                        size: 3072,
+                                    },
+                                    {
+                                        name: 'PasswordList.txt',
+                                        isDirectory: false,
+                                        size: 5120,
+                                    },
+                                ],
+                            },
+                            {
+                                name: 'Description.rtf',
+                                isDirectory: false,
+                                size: 1024,
+                            },
+                            {
+                                name: 'Description.txt',
+                                isDirectory: false,
+                                size: 2048,
+                            },
+                        ];
+
+                        // return result; // Make sure to return the result to continue the promise chain
                     })
                     .catch(function(error) {
                         console.error('Error fetching items:', error);
@@ -803,10 +881,10 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             },
             permissions: {
                 create: false,
-                copy: true,
-                move: true,
-                delete: true,
-                rename: true,
+                copy: false,
+                move: false,
+                delete: false,
+                rename: false,
                 upload: false,
                 download: true
             },
