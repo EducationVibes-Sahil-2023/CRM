@@ -444,7 +444,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     </div>
                                     <br>
                                     <br>
-                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-daily hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
 
                                     <div class="row hide col-md-12 leads-overview-calls-daily">
                                         <hr class="hr-panel-heading" />

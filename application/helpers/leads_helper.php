@@ -489,6 +489,7 @@ function get_leads_report_($params)
             }
         }
 
+        $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
         return [];
@@ -591,7 +592,7 @@ function get_leads_report_conversion($params)
 
         // Close the subquery and group by the final dateadded column
         $sql .= ") as conversion_counts_subquery GROUP BY dateadded ORDER BY dateadded ASC";
-
+        $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
         return [];
@@ -693,6 +694,7 @@ function get_leads_report_marketing($params)
         }
 
         $sql .= ") as conversion_counts_subquery GROUP BY dateadded ORDER BY dateadded ASC";
+        $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
         return [];
