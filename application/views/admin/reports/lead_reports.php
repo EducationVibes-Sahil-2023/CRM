@@ -397,7 +397,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     <button class="btn btn-primary" onclick="window.location.reload();">Reset</button>
                                     <!-- <button class="btn btn-xs btn-danger hide-btn-response" onclick="generatePDF()" id="generate_pdf" style="display:none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Generate Pdf</button> -->
                                     <?php if (is_admin()) { ?>
-                                        <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
+                                        <!-- <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button> -->
                                     <?php } ?>
                                 </div>
                             </div>
@@ -454,17 +454,17 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                         <br>
                                         <br>
                                         <div id="leadSum_daily">
-                                            <!-- <canvas id="canvas_daily"></canvas> -->
+                                            <canvas id="canvas_daily"></canvas>
                                         </div>
                                         <br>
                                         <br>
                                         <div id="leadSum_conversion">
-                                            <!-- <canvas id="canvas_conversion"></canvas> -->
+                                            <canvas id="canvas_conversion"></canvas>
                                         </div>
                                         <br>
                                         <br>
                                         <div id="leadSum_marketing">
-                                            <!-- <canvas id="canvas_marketing"></canvas> -->
+                                            <canvas id="canvas_marketing"></canvas>
                                         </div>
                                         <br>
                                         <br>
