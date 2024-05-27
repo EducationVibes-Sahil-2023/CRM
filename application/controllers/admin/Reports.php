@@ -327,7 +327,9 @@ class Reports extends AdminController
         }
 
 
-
+        $summary_daily_ = get_leads_report_($_POST);
+        $summary_daily_conversion = get_leads_report_conversion($_POST);
+        $summary_daily_marketing = get_leads_report_marketing($_POST);
 
         if (!empty($_POST["assigned"]) && empty($return_status)) {
 
@@ -348,6 +350,7 @@ class Reports extends AdminController
                     unset($post_data["update_count_max"]);
                     $post_data["assigned"][] = $assigned;
                     $summary = get_leads_summary_filter($post_data);
+
                     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
                     $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
                     $update_count_data['update_count_min'] = "";
@@ -1071,7 +1074,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "total_staff_html" => $staff_html]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "summary_daily_" => $summary_daily_, "summary_daily_conversion" => $summary_daily_conversion, "summary_daily_marketing" => $summary_daily_marketing, "total_staff_html" => $staff_html]);
     }
 
 
