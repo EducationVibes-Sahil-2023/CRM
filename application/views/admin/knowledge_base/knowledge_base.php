@@ -18,6 +18,10 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         -webkit-box-orient: vertical;
     }
 
+    .dx-theme-generic-typography a {
+        color: unset !important;
+    }
+
     .card-folders .card-body>.breadcrumb {
         margin-left: -1.25em;
         margin-right: -1.25em;
@@ -108,6 +112,10 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         font-size: large;
         cursor: pointer;
     } */
+
+    .dx-filemanager .dx-filemanager-files-view.dx-filemanager-details .dx-filemanager-details-item-thumbnail {
+        float: right;
+    }
 </style>
 <div id="wrapper">
     <div class="content">
@@ -126,16 +134,16 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                                 <!-- <a href="<?php echo admin_url('knowledge_base/create_knowledge_base'); ?>" class="btn btn-info mright5"><?php echo _l('kb_new_knowledge'); ?></a> -->
                             <?php } ?>
                             <?php if ($has_permission_create) { ?>
-                                <a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-info mright5"><?php echo _l('kb_knowledge_group'); ?></a>
+                                <!-- <a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-info mright5"><?php echo _l('kb_knowledge_group'); ?></a>
                                 <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
-                                <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>
+                                <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-info mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a> -->
                             <?php } ?>
 
 
                         </div>
                         <hr class="hr-panel-heading" />
 
-                        <div class="container">
+                        <!-- <div class="container">
 
                             <div class="card card-folders">
                                 <div class="card-header">
@@ -167,7 +175,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                                 </div>
                             </div>
 
-                        </div>
+                        </div> -->
 
                     </div>
                 </div>
@@ -232,6 +240,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 <script>
     var current_user = "<?= get_staff_user_id() ?>";
     var is_admin = "<?= is_admin() ?>";
+    var pathInfo_info = [];
 
     function set_modal(target) {
         // Hide all modal forms
@@ -250,79 +259,81 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     }
 
-    function edit_folder(id, name, group_ids) {
-        set_modal("folder");
-        let group_id = group_ids.split(",");
-        $("#folder_id").val(id);
-        $("#folderName").val(name);
-        $('#group_id').selectpicker('val', group_id);
-        $("#createFolderBtn").text("Update");
-    }
+    // function edit_folder(id, name, group_ids) {
+    //     set_modal("folder");
+    //     let group_id = group_ids.split(",");
+    //     $("#folder_id").val(id);
+    //     $("#folderName").val(name);
+    //     $('#group_id').selectpicker('val', group_id);
+    //     $("#createFolderBtn").text("Update");
+    // }
 
-    function set_folder(folder_data) {
+    // function set_folder(folder_data) {
 
-        if (folder_data.length > 0) {
-            let html = "";
-            for (i = 0; i < folder_data.length; i++) {
-                let html_edit = ``;
-                <?php if ($has_permission_edit || is_admin()) {
+    //     if (folder_data.length > 0) {
+    //         let html = "";
+    //         for (i = 0; i < folder_data.length; i++) {
+    //             let html_edit = ``;
+    //             <?php if ($has_permission_edit || is_admin()) {
 
-                ?>
-                    if ((folder_data[i].edit == 1 || is_admin == 1) && (is_admin == 1 || current_user == [i].created_by)) {
-                        html_edit = "<i class='fa fa-edit edit_folder_data' data-toggle='modal' data-target='#create_dir' onclick=\"edit_folder('" + folder_data[i].id + "','" + folder_data[i].folder_name + "','" + folder_data[i].group_ids + "')\"></i>";
-                    }
-                <?php } ?>
+                        //             
+                    ?>
+    //                 if ((folder_data[i].edit == 1 || is_admin == 1) && (is_admin == 1 || current_user == [i].created_by)) {
+    //                     html_edit = "<i class='fa fa-edit edit_folder_data' data-toggle='modal' data-target='#create_dir' onclick=\"edit_folder('" + folder_data[i].id + "','" + folder_data[i].folder_name + "','" + folder_data[i].group_ids + "')\"></i>";
+    //                 }
+    //             <?php } ?>
 
-                <?php if ($has_permission_delete || is_admin()) {
+    //             <?php if ($has_permission_delete || is_admin()) {
 
-                ?>
-                    if (folder_data[i].created_by == current_user || is_admin == 1) {
-                        html_edit += "<i class='fa text-danger fa-trash delete_folder_data'  onclick=\"delete_folder('" + folder_data[i].id + "')\"></i>";
-                    }
-                <?php } ?>
-                html += `<div class="d-inline-flex">
-                ` + html_edit + `
-                        <button class="folder-container" onclick="folder_click(this)" data-id="` + folder_data[i].id + `" >
-                            <div class="folder-icon">
-                                <i class="fa fa-folder folder-icon-color"></i>
-                            </div>
-                            <div class="folder-name">` + folder_data[i].folder_name + `</div>
-                        </button>
-                    </div>`;
-            }
-            $("#main-folders").html(html); // Use html() instead of appendTo()
-            hide_loader();
+                        //             
+                    ?>
+    //                 if (folder_data[i].created_by == current_user || is_admin == 1) {
+    //                     html_edit += "<i class='fa text-danger fa-trash delete_folder_data'  onclick=\"delete_folder('" + folder_data[i].id + "')\"></i>";
+    //                 }
+    //             <?php } ?>
+    //             html += `<div class="d-inline-flex">
+    //             ` + html_edit + `
+    //                     <button class="folder-container" onclick="folder_click(this)" data-id="` + folder_data[i].id + `" >
+    //                         <div class="folder-icon">
+    //                             <i class="fa fa-folder folder-icon-color"></i>
+    //                         </div>
+    //                         <div class="folder-name">` + folder_data[i].folder_name + `</div>
+    //                     </button>
+    //                 </div>`;
+    //         }
+    //         $("#main-folders").html(html); // Use html() instead of appendTo()
+    //         hide_loader();
 
-            // set_functionality();
-        }
-    }
+    //         // set_functionality();
+    //     }
+    // }
 
-    function set_files(files) {
+    // function set_files(files) {
 
-        if (files.length > 0) {
-            let html = "";
-            for (i = 0; i < files.length; i++) {
-                let html_edit = ``;
+    //     if (files.length > 0) {
+    //         let html = "";
+    //         for (i = 0; i < files.length; i++) {
+    //             let html_edit = ``;
 
-                html += `<div class="d-inline-flex">
-                ` + html_edit + `
-                <a href='` + files[i].path + `' target='_blank'>
-                                            <button class="folder-container">
-                                                <div class="folder-icon">
-                                                    <i class="fa fa-file file-icon-color"></i>
-                                                    <i class="fa hide fa-filetype-` + (files[i].type).toLowerCase() + `"></i>
-                                                </div>
-                                                <div class="folder-name">` + files[i].file_name + `</div>
-                                            </button>
-                                            </a>
-                                        </div>`;
-            }
+    //             html += `<div class="d-inline-flex">
+    //             ` + html_edit + `
+    //             <a href='` + files[i].path + `' target='_blank'>
+    //                                         <button class="folder-container">
+    //                                             <div class="folder-icon">
+    //                                                 <i class="fa fa-file file-icon-color"></i>
+    //                                                 <i class="fa hide fa-filetype-` + (files[i].type).toLowerCase() + `"></i>
+    //                                             </div>
+    //                                             <div class="folder-name">` + files[i].file_name + `</div>
+    //                                         </button>
+    //                                         </a>
+    //                                     </div>`;
+    //         }
 
-            $("#main-files").html(html); // Use html() instead of appendTo()
-            // set_functionality();
-            hide_loader();
-        }
-    }
+    //         $("#main-files").html(html); // Use html() instead of appendTo()
+    //         // set_functionality();
+    //         hide_loader();
+    //     }
+    // }
 
     function save_and_show_files() {
         show_loader();
@@ -510,11 +521,32 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 }
             });
         } else {
+
+            var elements = $(".dx-menu-item-text").map(function() {
+                return $(this).text();
+            }).get();
+
+            // Remove the first element
+            var valuesAfterFirst = elements.slice(1);
+
+            // Join the remaining elements with "/"
+            var joinedValues = valuesAfterFirst.join("/");
+
+            // Remove trailing "/" if it exists
+            if (joinedValues.length > 0 && joinedValues.slice(-1) === "/") {
+                joinedValues = joinedValues.slice(0, -1);
+            }
+
+            var current_dir = joinedValues;
+            var folder_name = valuesAfterFirst.pop();
+            var index = pathInfo_info.length > 0 ? pathInfo_info[pathInfo_info.length - 1].key : 0;
+
+            console.log(current_dir);
+
             var folderName = $('#folderName').val();
-            var folder_id = $('#folder_id').val();
+            var folder_id = "";
             var group_id = $('#group_id').val();
-            var current_dir = $('.current_dir').text();
-            let index = $('#foldersGroup .breadcrumb li.breadcrumb-item.active').attr("data-id");
+
 
             if (!folderName) {
                 $('#folderName').focus();
@@ -532,7 +564,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 url: '<?php echo admin_url("Knowledge_base/create_folder"); ?>',
                 type: 'POST',
                 data: {
-                    folder_names: current_dir + folderName,
+                    folder_names: current_dir + "/" + folderName,
                     group_id: group_id,
                     index: index,
                     folder_id: folder_id
@@ -547,12 +579,14 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     }
                     if (data.folder != undefined) {
 
-                        if (data.folder.length > 0) {
-                            set_folder(data.folder);
-                        } else {
-                            hide_loader();
-                            $("#main-folders").html('');
-                        }
+                        // if (data.folder.length > 0) {
+                        //     set_folder(data.folder);
+                        // } else {
+                        //     hide_loader();
+                        //     $("#main-folders").html('');
+                        // }
+
+                        $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("click");
                     }
                     hide_loader();
                 },
@@ -579,70 +613,70 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     // save_and_show_folder(1, 0);
 
-    $('#btn-list').on('click', function() {
-        $('#main-folders').addClass('flex-column');
-        $('#btn-grid').removeClass('active')
-        $(this).addClass('active')
-    });
-    $('#btn-grid').on('click', function() {
-        $('#main-folders').removeClass('flex-column');
-        $('#btn-list').removeClass('active')
-        $(this).addClass('active')
-    });
-    $('#btn-list').on('click', function() {
-        $('#main-files').addClass('flex-column');
-        $('#btn-grid').removeClass('active')
-        $(this).addClass('active')
-    });
-    $('#btn-grid').on('click', function() {
-        $('#main-files').removeClass('flex-column');
-        $('#btn-list').removeClass('active')
-        $(this).addClass('active')
-    });
+    // $('#btn-list').on('click', function() {
+    //     $('#main-folders').addClass('flex-column');
+    //     $('#btn-grid').removeClass('active')
+    //     $(this).addClass('active')
+    // });
+    // $('#btn-grid').on('click', function() {
+    //     $('#main-folders').removeClass('flex-column');
+    //     $('#btn-list').removeClass('active')
+    //     $(this).addClass('active')
+    // });
+    // $('#btn-list').on('click', function() {
+    //     $('#main-files').addClass('flex-column');
+    //     $('#btn-grid').removeClass('active')
+    //     $(this).addClass('active')
+    // });
+    // $('#btn-grid').on('click', function() {
+    //     $('#main-files').removeClass('flex-column');
+    //     $('#btn-list').removeClass('active')
+    //     $(this).addClass('active')
+    // });
 
-    function breadcrumb_click(obj) {
-        let index = $(obj).attr("data-id");
-        let activeIndex = $('#foldersGroup .breadcrumb li.breadcrumb-item.active').index();
+    // function breadcrumb_click(obj) {
+    //     let index = $(obj).attr("data-id");
+    //     let activeIndex = $('#foldersGroup .breadcrumb li.breadcrumb-item.active').index();
 
-        // Check if the clicked item is already active
-        if (activeIndex === index) {
-            return; // Do nothing if already active
-        }
+    //     // Check if the clicked item is already active
+    //     if (activeIndex === index) {
+    //         return; // Do nothing if already active
+    //     }
 
-        // Remove all items after the clicked item
-        $(obj).nextAll().remove();
+    //     // Remove all items after the clicked item
+    //     $(obj).nextAll().remove();
 
-        // Call the function to show folders with the specified index
-        save_and_show_folder(1, index);
-        hide_loader();
-    }
+    //     // Call the function to show folders with the specified index
+    //     save_and_show_folder(1, index);
+    //     hide_loader();
+    // }
 
 
     // Open folder and see files
-    function folder_click(obj) {
-        let folderName = $(obj).find(".folder-name").text();
-        let index = $(obj).attr("data-id");
+    // function folder_click(obj) {
+    //     let folderName = $(obj).find(".folder-name").text();
+    //     let index = $(obj).attr("data-id");
 
 
 
-        $(".breadcrumb-item").removeClass("active");
-        let breadcrumbItem = $('<li onclick="breadcrumb_click(this)" class="breadcrumb-item active" data-id="' + index + '"></li>').text(folderName);
-        $('#foldersGroup .breadcrumb').append(breadcrumbItem);
-        save_and_show_folder(1, index);
-        var textAfterFirstOccurrence = "";
+    //     $(".breadcrumb-item").removeClass("active");
+    //     let breadcrumbItem = $('<li onclick="breadcrumb_click(this)" class="breadcrumb-item active" data-id="' + index + '"></li>').text(folderName);
+    //     $('#foldersGroup .breadcrumb').append(breadcrumbItem);
+    //     save_and_show_folder(1, index);
+    //     var textAfterFirstOccurrence = "";
 
-        $("ol li").slice(1).each(function() {
-            var text = $(this).text().trim();
-            console.log(text);
-            if (text != undefined && text != "") {
-                textAfterFirstOccurrence += text + "/";
-            }
-        });
+    //     $("ol li").slice(1).each(function() {
+    //         var text = $(this).text().trim();
+    //         console.log(text);
+    //         if (text != undefined && text != "") {
+    //             textAfterFirstOccurrence += text + "/";
+    //         }
+    //     });
 
-        console.log(textAfterFirstOccurrence);
+    //     console.log(textAfterFirstOccurrence);
 
-        $(".current_dir").text(textAfterFirstOccurrence);
-    }
+    //     $(".current_dir").text(textAfterFirstOccurrence);
+    // }
 
     // Function to fetch data from the API
     // function fetchDataFromAPI(index = 0) {
@@ -674,106 +708,125 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     // Define an asynchronous function to initialize the DevExpress FileManager
     async function initializeFileManager(index = 0) {
-        try {
-            // Fetch data from the API using await
-            // const data = await fetchDataFromAPI(index);
-            // Initialize the DevExpress FileManager widget after fetching data
+        var remoteProvider = new DevExpress.fileProviders.Remote({
+            endpointUrl: '<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>',
+        });
 
-            var remoteProvider = new DevExpress.fileProviders.Remote({
-                endpointUrl: '<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>',
-            });
-            console.log(remoteProvider);
-            var customProvider = new DevExpress.fileProviders.Custom({
-                getItems: pathInfo => remoteProvider.getItems(pathInfo)
-                // createDirectory: (parentDir, name) => remoteProvider.createFolder(parentDir, name),
-                // renameItem: (item, name) => remoteProvider.renameItem(item, name),
-                // deleteItem: item => remoteProvider.deleteItems([item]),
-                // copyItem: (item, destDir) => remoteProvider.copyItems([item], destDir),
-                // moveItem: (item, destDir) => remoteProvider.moveItems([item], destDir),
-                // uploadFileChunk: (fileData, uploadInfo, destDirectory) => {
-                //     return remoteProvider.uploadFileChunk(fileData, uploadInfo, destDirectory);
-                // },
-                // downloadItems: items => remoteProvider.downloadItems(items),
-                // uploadChunkSize: 100000000000
-            });
-            $("#file-manager").dxFileManager({
-                name: "fileManager",
-                fileProvider: customProvider,
-                // fileProvider: {
-                //     type: "array",
-                //     data: directoryStructure
-                // },
-                // customizeDetailColumns: function(columns) {
-                //     // Define custom detail columns
-                //     return [{
-                //             dataField: "name",
-                //             caption: "Name",
-                //             width: 100, // Set width for the Name column
-                //             cellTemplate: function(container, options) {
-                //                 var $icon = $("<div>").addClass("file-icon");
-                //                 var $name = $("<span>").text(options.value);
-                //                 var $actionDots = $("<span>").addClass("action-dots");
+        var customProvider = new DevExpress.fileProviders.Custom({
+            getItems: pathInfo => {
+                return remoteProvider.getItems(pathInfo)
+                    .then(function(result) {
+                        pathInfo_info = pathInfo;
+                        return result; // Make sure to return the result to continue the promise chain
+                    })
+                    .catch(function(error) {
+                        console.error('Error fetching items:', error);
+                        throw error; // Rethrow the error to propagate it to the caller
+                    });
+            },
+            deleteItem: item => {
+                // Check if the item is a directory or a file
+                const isDirectory = item.type === 'directory';
+                return remoteProvider.deleteItem(item, isDirectory)
+                    .then(() => {
+                        console.log("Item deleted successfully");
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting item:", error);
+                        throw error; // Rethrow the error to propagate it to the caller
+                    });
+            },
+            copyItem: (item, destDir) => remoteProvider.copyItems([item], destDir),
+            moveItem: (item, destDir) => remoteProvider.moveItems([item], destDir),
+            downloadItems: items => remoteProvider.downloadItems(items),
+        });
 
-                //                 if (options.data.type === "directory") {
-                //                     $icon.addClass("folder-icon");
-                //                 } else {
-                //                     // Add file icons based on file extensions or other criteria
-                //                     $icon.addClass("file-icon"); // Add appropriate file icon class
-                //                 }
-
-                //                 container.append($icon).append($name).append($actionDots);
-                //             }
-                //         },
-                //         {
-                //             dataField: "type",
-                //             caption: "Type",
-                //             width: 100 // Set width for the Type column
-                //         },
-                //         {
-                //             dataField: "created_date",
-                //             caption: "Created Date",
-                //             width: 150 // Set width for the Created Date column
-                //         },
-                //         {
-                //             dataField: "created_name",
-                //             caption: "Created By",
-                //             width: 150 // Set width for the Created By column
-                //         },
-                //         {
-                //             dataField: "modify_date",
-                //             caption: "Modify Date",
-                //             width: 150 // Set width for the Modify Date column
-                //         },
-                //         {
-                //             dataField: "modify_name",
-                //             caption: "Modified By",
-                //             width: 150 // Set width for the Modified By column
-                //         },
-                //         {
-                //             dataField: "size",
-                //             caption: "Size",
-                //             width: 50 // Set width for the Size column
-                //         }
-                //     ];
-                // },
-                permissions: {
-                    create: true,
-                    copy: true,
-                    move: true,
-                    delete: true,
-                    rename: true,
-                    upload: true,
-                    download: true
+        $("#file-manager").dxFileManager({
+            name: "fileManager",
+            fileProvider: customProvider,
+            // customizeDetailColumns: function(columns) {
+            //     // Define custom detail columns
+            //     return [{
+            //             dataField: "name",
+            //             caption: "Name",
+            //             width: 100, // Set width for the Name column
+            //         },
+            //         {
+            //             dataField: "name",
+            //             caption: "Type",
+            //             width: 100 // Set width for the Type column
+            //         },
+            //         {
+            //             dataField: "created_date",
+            //             caption: "Created Date",
+            //             width: 150 // Set width for the Created Date column
+            //         },
+            //         {
+            //             dataField: "created_name",
+            //             caption: "Created By",
+            //             width: 150 // Set width for the Created By column
+            //         },
+            //         {
+            //             dataField: "modify_date",
+            //             caption: "Modify Date",
+            //             width: 150 // Set width for the Modify Date column
+            //         },
+            //         {
+            //             dataField: "modify_name",
+            //             caption: "Modified By",
+            //             width: 150 // Set width for the Modified By column
+            //         },
+            //         {
+            //             dataField: "size",
+            //             caption: "Size",
+            //             width: 50 // Set width for the Size column
+            //         }
+            //     ];
+            // },
+            customizeThumbnail(customProvider) {
+                console.log(customProvider);
+                if (customProvider.isDirectory) {
+                    return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/folder.svg';
                 }
-            });
-        } catch (error) {
-            console.error("Error initializing FileManager:", error);
-        }
+
+                const fileExtension = customProvider.getFileExtension();
+                switch (fileExtension) {
+                    case '.txt':
+                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-txt.svg';
+                    case '.rtf':
+                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-rtf.svg';
+                    case '.xml':
+                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-xml.svg';
+                    default:
+                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-txt.svg';
+                }
+            },
+            permissions: {
+                create: false,
+                copy: true,
+                move: true,
+                delete: true,
+                rename: true,
+                upload: false,
+                download: true
+            },
+            allowedFileExtensions: [],
+            height: 1000,
+
+        });
+
+
     }
 
     // Call the async function to initialize the DevExpress FileManager
     initializeFileManager();
 
+    setTimeout(() => {
+        console.log("okkk");
+        $(".dx-filemanager-toolbar > .dx-toolbar > .dx-toolbar-items-container > .dx-toolbar-before").append(`<a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-default mright5"><?php echo _l('kb_knowledge_group'); ?></a>
+                                <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
+                                <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>`);
+    }, 2000);
 
 
     // $("#file-manager").dxFileManager({

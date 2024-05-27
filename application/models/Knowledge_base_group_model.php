@@ -99,7 +99,7 @@ class knowledge_base_group_model extends App_Model
 
         // If the user is an admin, no need for additional checks
         if (is_admin()) {
-            $query = $query = $this->db->select("f.folder_name key,f.folder_name as name,'true' as isDirectory,'true' hasSubDirectories,updated_date as  modify_date,0 as size,f.id,f.created_by as created_name,f.parent_id,'directory' as type,'' modify_name,created_date")
+            $query = $query = $this->db->select("f.name key,f.name as name,'true' as isDirectory,'true' hasSubDirectories,updated_date as  modify_date,0 as size,f.id,f.created_by as created_name,f.parent_id,'directory' as type,'' modify_name,created_date")
                 ->from(db_prefix() . 'knowledge_base_folder f')
                 ->where($where)
                 ->get();
@@ -183,12 +183,49 @@ class knowledge_base_group_model extends App_Model
 
     public function get_knowledge_base_dir($where_folder = [], $where_file = [], $return = 0)
     {
+        // $folder_data = $this->db->select("
+        // f.id as key,
+        // f.name as name,
+        // f.name as _name,
+        // 'true' as isDirectory,
+        // IF((SELECT COUNT(1) FROM " . db_prefix() . "knowledge_base_folder WHERE parent_id = f.id) > 0, 'true', 'false') AS hasSubDirectories,
+        // updated_date as modify_date,
+        // 0 as size,
+        // f.created_by as created_name,
+        // f.parent_id,
+        // 'directory' as type,
+        // '' as modify_name,
+        // created_date")
+        //     ->from(db_prefix() . "knowledge_base_folder f")
+        //     ->where($where_folder)
+        //     ->get()
+        //     ->result_array();
+
+        // $file_data = $this->db->select("
+        // fs.id as key,
+        // CONCAT(fs.name,'.',type) as _name,
+        // fs.name as name,
+        // 'false' as isDirectory,
+        // 'false' as hasSubDirectories,
+        // updated_date as modify_date,
+        // '2.5MB' as size,
+        // 'file' as type")
+        //     ->from(db_prefix() . "knowledge_base_files fs")
+        //     ->where($where_file)
+        //     ->get()
+        //     ->result_array();
+
+        // return array_merge($folder_data, $file_data);
+
+
         $folder_data = $this->db->select("
         f.id as key,
-        f.folder_name as name,
+        f.name as name,
+        f.name as _name,
         'true' as isDirectory,
         IF((SELECT COUNT(1) FROM " . db_prefix() . "knowledge_base_folder WHERE parent_id = f.id) > 0, 'true', 'false') AS hasSubDirectories,
-        updated_date as modify_date,
+        updated_date as lastModifiedDate,
+        created_date as creationDate,
         0 as size,
         f.created_by as created_name,
         f.parent_id,
@@ -201,12 +238,15 @@ class knowledge_base_group_model extends App_Model
             ->result_array();
 
         $file_data = $this->db->select("
-        concat(fs.file_name,'.',type) as name,
+        fs.id as key,
+        CONCAT(fs.name,'.',type) as name,
+        fs.name as _name,
         'false' as isDirectory,
         'false' as hasSubDirectories,
-        updated_date as modify_date,
-        10 as size,
-        type")
+        updated_date as lastModifiedDate,
+        created_date as creationDate,
+        '2.5MB' as size,
+        'file' as type")
             ->from(db_prefix() . "knowledge_base_files fs")
             ->where($where_file)
             ->get()

@@ -260,12 +260,12 @@ class Knowledge_base extends AdminController
             // Validate each folder name
             if (!empty($folder_name)) {
                 // Check if the folder already exists
-                $existingFolder = $this->db->get_where(db_prefix() . "knowledge_base_folder", ['folder_name' => $folder_name])->row_array();
+                $existingFolder = $this->db->get_where(db_prefix() . "knowledge_base_folder", ['name' => $folder_name])->row_array();
 
                 if (!$existingFolder) {
                     // Prepare data for insertion
                     $data[] = array(
-                        'folder_name' => $folder_name,
+                        'name' => $folder_name,
                         'status' => 1,
                         'created_by' => get_staff_user_id(),
                         'created_date' => date('Y-m-d H:i:s'),
@@ -284,7 +284,7 @@ class Knowledge_base extends AdminController
                         if ($folder_id ==  $existingFolder["id"]) {
                             $data[] = array(
                                 'id' => $folder_id,
-                                'folder_name' => $folder_name,
+                                'name' => $folder_name,
                                 'status' => 1,
                                 'parent_id' => $parent_id,
                                 'updated_by' => get_staff_user_id(),
@@ -293,7 +293,7 @@ class Knowledge_base extends AdminController
                             );
                         }
                     }
-                    $this->db->update(db_prefix() . "knowledge_base_folder", array("id" => $existingFolder["id"], "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')), 'id');
+                    $this->db->update(db_prefix() . "knowledge_base_folder", array("updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')), array("id" => $existingFolder["id"]));
                 }
             }
         }
@@ -375,15 +375,15 @@ class Knowledge_base extends AdminController
                     $destination = KNOWLEDGE_BASE_MEDIA_PATH . '/' . $filename;
                     if (move_uploaded_file($tmp_name, $destination)) {
                         $media_url = base_url() . $destination;
-                        $data[] = array("path" => $media_url, "type" => $file_type, "file_name" => $basename, "folder_id" => $folder_id, "status" => 1, "created_by" => get_staff_user_id(), 'created_date' => date('Y-m-d H:i:s'));
+                        $data[] = array("path" => $media_url, "type" => $file_type, "name" => $basename, "folder_id" => $folder_id, "status" => 1, "created_by" => get_staff_user_id(), 'created_date' => date('Y-m-d H:i:s'));
                     }
                 }
             }
         }
 
         if (!empty($folder_id)) {
-            $folder_data[] = array("id" => $folder_id, "updated_by" => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'));
-            $this->db->update(db_prefix() . "knowledge_base_folder", $folder_data, "id");
+            $folder_data[] = array("updated_by" => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s'));
+            $this->db->update(db_prefix() . "knowledge_base_folder", $folder_data, array("id" => $folder_id));
         }
 
 
@@ -683,7 +683,6 @@ class Knowledge_base extends AdminController
     {
         if ($_REQUEST["command"] == "GetDirContents") {
             $parameters = json_decode($_REQUEST["arguments"], true);
-
             $where_folder = [];
             $where_files = [];
 
@@ -710,10 +709,168 @@ class Knowledge_base extends AdminController
             $response["success"] = true;
             $response["errorText"] = "";
             $response["errorCode"] = "";
+        } else if ($_REQUEST["command"] == "Rename") {
+            $parameters = json_decode($_REQUEST["arguments"], true);
+
+            if (!isset($parameters["name"]) || empty($parameters["name"])) {
+                $response["success"] = false;
+                $response["errorText"] = "Name parameter is missing or empty.";
+                $response["errorCode"] = "MISSING_NAME";
+            } elseif (!isset($parameters["pathInfo"]) || empty($parameters["pathInfo"])) {
+                $response["success"] = false;
+                $response["errorText"] = "Path information parameter is missing or empty.";
+                $response["errorCode"] = "MISSING_PATHINFO";
+            } else {
+                $rename = $parameters["name"];
+                $lastArray = end($parameters["pathInfo"]);
+                $name = isset($lastArray["name"]) ? $lastArray["name"] : '';
+                $id = isset($lastArray["key"]) ? $lastArray["key"] : '';
+
+                if (empty($name) || empty($id)) {
+                    $response["success"] = false;
+                    $response["errorText"] = "Invalid path information.";
+                    $response["errorCode"] = "INVALID_PATHINFO";
+                } else {
+                    $data = $this->knowledge_base_group_model->get_knowledge_base_dir(array("id" => $id, "name" => $name), array("id" => $id, "name" => $name));
+
+                    $update_data = array(
+                        "name" => $rename,
+                        "updated_by" => get_staff_user_id(),
+                        "updated_date" => date('Y-m-d H:i:s')
+                    );
+
+                    if (!empty($data)) {
+                        $table_name = $data["isDirectory"] ? db_prefix() . "knowledge_base_folder" : db_prefix() . "knowledge_base_files";
+
+                        $this->db->update($table_name, $update_data, array("id" => $id));
+
+                        $response["success"] = true;
+                        $response["errorText"] = "";
+                        $response["errorCode"] = "";
+                    } else {
+                        $response["success"] = false;
+                        $response["errorText"] = "Data not found.";
+                        $response["errorCode"] = "DATA_NOT_FOUND";
+                    }
+                }
+            }
+
+            $response["result"] = [];
+        } else if ($_REQUEST["command"] == "Copy") {
+            $parameters = json_decode($_REQUEST["arguments"], true);
+
+            if (!isset($parameters["sourcePathInfo"]) || !isset($parameters["destinationPathInfo"])) {
+                $response["success"] = false;
+                $response["errorText"] = "Source or destination path information is missing.";
+                $response["errorCode"] = "MISSING_PATHINFO";
+            } else {
+                $lastArray_source = end($parameters["sourcePathInfo"]);
+                $source_name = isset($lastArray_source["name"]) ? $lastArray_source["name"] : '';
+                $source_id = isset($lastArray_source["key"]) ? $lastArray_source["key"] : '';
+
+                $lastArray_destination = end($parameters["destinationPathInfo"]);
+                $des_name = isset($lastArray_destination["name"]) ? $lastArray_destination["name"] : '';
+                $des_id = isset($lastArray_destination["key"]) ? $lastArray_destination["key"] : '';
+
+                $source_data = $this->knowledge_base_group_model->get_knowledge_base_dir(array("id" => $source_id, "name" => $source_name), array("id" => $source_id, "name" => $source_name));
+                $destination_data = $this->knowledge_base_group_model->get_knowledge_base_dir(array("id" => $des_id, "name" => $des_name), array("id" => $des_id, "name" => $des_name));
+
+                if (empty($source_data) || empty($destination_data)) {
+                    $response["success"] = false;
+                    $response["errorText"] = "Source or destination data not found.";
+                    $response["errorCode"] = "DATA_NOT_FOUND";
+                } else {
+                    $table_name = $destination_data["isDirectory"] ? db_prefix() . "knowledge_base_folder" : db_prefix() . "knowledge_base_files";
+                    $type = $destination_data["isDirectory"] ? "folder" : "file";
+
+                    if ($type == "file") {
+                        $get_data = $this->db->where(array("id" => $source_id, "name" => $source_name))->get(db_prefix() . "knowledge_base_files")->row_array();
+                        unset($get_data['id']);
+                        unset($get_data['updated_by']);
+                        unset($get_data['updated_date']);
+                        $get_data['folder_id'] = $des_id;
+                    } else if ($type == "folder") {
+                        $get_data = $this->db->where(array("id" => $source_id, "name" => $source_name))->get(db_prefix() . "knowledge_base_folder")->row_array();
+                        unset($get_data['id']);
+                        unset($get_data['updated_by']);
+                        unset($get_data['updated_date']);
+                        $get_data['parent_id'] = $des_id;
+                    }
+
+                    // Add/update common fields
+                    $get_data["created_by"] = get_staff_user_id();
+                    $get_data["created_date"] = date('Y-m-d H:i:s');
+
+                    // Insert data into the destination table
+                    $insert = $this->db->insert($table_name, $get_data);
+
+                    if ($insert) {
+                        $response["success"] = true;
+                        $response["errorText"] = "";
+                        $response["errorCode"] = "";
+                    } else {
+                        $response["success"] = false;
+                        $response["errorText"] = "Failed to copy data.";
+                        $response["errorCode"] = "COPY_FAILED";
+                    }
+                }
+            }
+        } else if ($_REQUEST["command"] == "Move") {
+            $parameters = json_decode($_REQUEST["arguments"], true);
+
+            if (!isset($parameters["sourcePathInfo"]) || !isset($parameters["destinationPathInfo"])) {
+                $response["success"] = false;
+                $response["errorText"] = "Source or destination path information is missing.";
+                $response["errorCode"] = "MISSING_PATHINFO";
+            } else {
+                $lastArray_source = end($parameters["sourcePathInfo"]);
+                $source_name = isset($lastArray_source["name"]) ? $lastArray_source["name"] : '';
+                $source_id = isset($lastArray_source["key"]) ? $lastArray_source["key"] : '';
+
+                $lastArray_destination = end($parameters["destinationPathInfo"]);
+                $des_name = isset($lastArray_destination["name"]) ? $lastArray_destination["name"] : '';
+                $des_id = isset($lastArray_destination["key"]) ? $lastArray_destination["key"] : '';
+
+                $source_data = $this->knowledge_base_group_model->get_knowledge_base_dir(array("id" => $source_id, "name" => $source_name), array("id" => $source_id, "name" => $source_name));
+                $destination_data = $this->knowledge_base_group_model->get_knowledge_base_dir(array("id" => $des_id, "name" => $des_name), array("id" => $des_id, "name" => $des_name));
+
+                if (empty($source_data) || empty($destination_data)) {
+                    $response["success"] = false;
+                    $response["errorText"] = "Source or destination data not found.";
+                    $response["errorCode"] = "DATA_NOT_FOUND";
+                } else {
+                    $table_name = $destination_data["isDirectory"] ? db_prefix() . "knowledge_base_folder" : db_prefix() . "knowledge_base_files";
+                    $type = $destination_data["isDirectory"] ? "folder" : "file";
+                    $update_data = [];
+
+                    if ($type == "file") {
+                        $update_data["folder_id"] = $des_id;
+                    } else if ($type == "folder") {
+                        $update_data["parent_id"] = $des_id;
+                    }
+
+                    // Add/update common fields
+                    $update_data["updated_by"] = get_staff_user_id();
+                    $update_data["updated_date"] = date('Y-m-d H:i:s');
+
+                    // Update data in the source table
+                    $update = $this->db->update($table_name, $update_data, array("id" => $source_id));
+
+                    if ($update) {
+                        $response["success"] = true;
+                        $response["errorText"] = "";
+                        $response["errorCode"] = "";
+                    } else {
+                        $response["success"] = false;
+                        $response["errorText"] = "Failed to move data.";
+                        $response["errorCode"] = "MOVE_FAILED";
+                    }
+                }
+            }
         } else {
 
 
-            $response["result"] =  $this->knowledge_base_group_model->get_knowledge_base_dir($where);
+            $response["result"] =  $this->knowledge_base_group_model->get_knowledge_base_dir([]);
             $response["success"] = true;
             $response["errorText"] = "";
             $response["errorCode"] = "";
