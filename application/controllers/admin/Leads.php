@@ -379,9 +379,6 @@ class Leads extends AdminController
             $reason = $this->input->post('reason');
             $transfer_lead_id = $this->input->post('transfer_lead_id');
 
-            if (!has_permission('leads', '', 'view')) {
-                throw new Exception('Access denied.');
-            }
 
             if (empty($lead_id)) {
                 throw new Exception('Lead ID is required.');
@@ -443,9 +440,10 @@ class Leads extends AdminController
 
                             $update_array = [
                                 'assigned' => $assigned,
-                                "type" => $type
+                                "type" => $type,
+                                "status" => 2
                             ];
-                            $success = $this->leads_model->update($update_array, $lead_id);
+                            $success = $this->leads_model->update_leads($update_array, $lead_id);
                             if ($success) {
                                 echo json_encode([
                                     'success' => true,
@@ -3122,12 +3120,12 @@ class Leads extends AdminController
                 // Prepare the update array for the lead
                 $update_array = [
                     'assigned' => $assigned,
-                    "type" => $type
+                    "type" => $lead_type,
+                    "status" => 2
                 ];
 
                 // Update the lead
-                $success = $this->leads_model->update($update_array, $lead_id);
-
+                $success = $this->leads_model->update_leads($update_array, $lead_id);
 
                 // Check if the update was successful and send a JSON response
                 if ($success) {
