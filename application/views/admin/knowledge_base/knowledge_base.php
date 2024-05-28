@@ -113,6 +113,23 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         cursor: pointer;
     } */
 
+    i.images-list {
+        cursor: pointer;
+        font-size: 20px !important;
+    }
+
+    .hover-show-edit:hover>.fa-edit.show-hover {
+        cursor: pointer;
+        display: block !important;
+    }
+
+    .dx-datagrid-content .dx-datagrid-table .dx-row>td,
+    .dx-datagrid-content .dx-datagrid-table .dx-row>tr>td {
+        overflow: hidden !important;
+        width: -webkit-fill-available;
+
+    }
+
     .dx-filemanager .dx-filemanager-files-view.dx-filemanager-details .dx-filemanager-details-item-thumbnail {
         float: right;
     }
@@ -244,6 +261,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     function set_modal(target) {
         // Hide all modal forms
+        $("#folder_id").val("");
         $(".modal-form").hide();
         $("#createFolderBtn").text("Create");
 
@@ -259,14 +277,15 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     }
 
-    // function edit_folder(id, name, group_ids) {
-    //     set_modal("folder");
-    //     let group_id = group_ids.split(",");
-    //     $("#folder_id").val(id);
-    //     $("#folderName").val(name);
-    //     $('#group_id').selectpicker('val', group_id);
-    //     $("#createFolderBtn").text("Update");
-    // }
+    function edit_folder(id = "", name = "", group_ids = "") {
+        console.log("edit-folder");
+        set_modal("folder");
+        let group_id = group_ids.split(",");
+        $("#folder_id").val(id);
+        $("#folderName").val(name);
+        $('#group_id').selectpicker('val', group_id);
+        $("#createFolderBtn").text("Update");
+    }
 
     // function set_folder(folder_data) {
 
@@ -337,7 +356,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     function save_and_show_files() {
         show_loader();
-        let index = $('#foldersGroup .breadcrumb li.breadcrumb-item.active').attr("data-id");
+        let index = pathInfo_info.length > 0 ? pathInfo_info[pathInfo_info.length - 1].key : 0;
         // Get the file input element
         var input = $('#upload_file')[0];
         var current_dir = $('.current_dir').text();
@@ -364,7 +383,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     alert_float('success', data.message);
                 }
                 $(".close-modal").trigger("click");
-                save_and_show_folder(1, index);
+                // save_and_show_folder(1, index);
                 hide_loader();
             }
         });
@@ -490,17 +509,18 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     //         }
                     //     });
                     // }
+                    hide_loader();
+                    $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("dxclick");
 
-
-                    if (data.folder != undefined) {
-                        if (data.folder.length > 0) {
-                            set_folder(data.folder);
-                            hide_loader();
-                        } else {
-                            hide_loader();
-                            $("#main-folders").html('');
-                        }
-                    }
+                    // if (data.folder != undefined) {
+                    //     if (data.folder.length > 0) {
+                    //         set_folder(data.folder);
+                    //         hide_loader();
+                    //     } else {
+                    //         hide_loader();
+                    //         $("#main-folders").html('');
+                    //     }
+                    // }
 
                     if (data.files != undefined) {
 
@@ -544,7 +564,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             console.log(current_dir);
 
             var folderName = $('#folderName').val();
-            var folder_id = "";
+            var folder_id = $("#folder_id").val();
             var group_id = $('#group_id').val();
 
 
@@ -586,7 +606,8 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                         //     $("#main-folders").html('');
                         // }
 
-                        $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("click");
+                        $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("dxclick");
+
                     }
                     hide_loader();
                 },
@@ -707,6 +728,8 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     // Initialize the DevExpress FileManager widget
 
     // Define an asynchronous function to initialize the DevExpress FileManager
+
+    const fileManager = "";
     async function initializeFileManager(index = 0) {
         var remoteProvider = new DevExpress.fileProviders.Remote({
             endpointUrl: '<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>',
@@ -716,181 +739,149 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             getItems: pathInfo => {
                 return remoteProvider.getItems(pathInfo)
                     .then(function(result) {
+                        console.log('Path Info:', pathInfo);
                         pathInfo_info = pathInfo;
-                        console.log(result);
-                        return fileSystem = [{
-                                name: 'Documents',
-                                isDirectory: true,
-                                items: [{
-                                        name: 'Projects',
-                                        isDirectory: true,
-                                        items: [{
-                                                name: 'About.rtf',
-                                                isDirectory: false,
-                                                size: 1024,
-                                            },
-                                            {
-                                                name: 'Passwords.rtf',
-                                                isDirectory: false,
-                                                size: 2048,
-                                            },
-                                        ],
-                                    },
-                                    {
-                                        name: 'About.xml',
-                                        isDirectory: false,
-                                        size: 1024,
-                                    },
-                                    {
-                                        name: 'Managers.rtf',
-                                        isDirectory: false,
-                                        size: 2048,
-                                    },
-                                    {
-                                        name: 'ToDo.txt',
-                                        isDirectory: false,
-                                        size: 3072,
-                                    },
-                                ],
-                            },
-                            {
-                                name: 'Images',
-                                isDirectory: true,
-                                items: [{
-                                        name: 'logo.png',
-                                        isDirectory: false,
-                                        size: 20480,
-                                    },
-                                    {
-                                        name: 'banner.gif',
-                                        isDirectory: false,
-                                        size: 10240,
-                                    },
-                                ],
-                            },
-                            {
-                                name: 'System',
-                                isDirectory: true,
-                                items: [{
-                                        name: 'Employees.txt',
-                                        isDirectory: false,
-                                        size: 3072,
-                                    },
-                                    {
-                                        name: 'PasswordList.txt',
-                                        isDirectory: false,
-                                        size: 5120,
-                                    },
-                                ],
-                            },
-                            {
-                                name: 'Description.rtf',
-                                isDirectory: false,
-                                size: 1024,
-                            },
-                            {
-                                name: 'Description.txt',
-                                isDirectory: false,
-                                size: 2048,
-                            },
-                        ];
-
-                        // return result; // Make sure to return the result to continue the promise chain
+                        let new_array = [];
+                        result.forEach(function(item) {
+                            new_array.push(item.dataItem); // Push the current item into the new array
+                        });
+                        console.log(new_array);
+                        // Handle the result as needed
+                        return new_array; // Make sure to return the result to continue the promise chain
                     })
                     .catch(function(error) {
                         console.error('Error fetching items:', error);
                         throw error; // Rethrow the error to propagate it to the caller
                     });
             },
-            deleteItem: item => {
-                // Check if the item is a directory or a file
-                const isDirectory = item.type === 'directory';
-                return remoteProvider.deleteItem(item, isDirectory)
-                    .then(() => {
-                        console.log("Item deleted successfully");
-                    })
-                    .catch((error) => {
-                        console.error("Error deleting item:", error);
-                        throw error; // Rethrow the error to propagate it to the caller
-                    });
-            },
+
+            // createDirectory: (parentDir, name) => remoteProvider.createFolder(parentDir, name),
+            renameItem: (item, name) => remoteProvider.renameItem(item, name),
+            deleteItem: item => remoteProvider.deleteItems([item]),
             copyItem: (item, destDir) => remoteProvider.copyItems([item], destDir),
             moveItem: (item, destDir) => remoteProvider.moveItems([item], destDir),
+            uploadFileChunk: (fileData, uploadInfo, destDirectory) => {
+                return remoteProvider.uploadFileChunk(fileData, uploadInfo, destDirectory);
+            },
             downloadItems: items => remoteProvider.downloadItems(items),
+            uploadChunkSize: 100000000000
         });
 
         $("#file-manager").dxFileManager({
             name: "fileManager",
             fileProvider: customProvider,
-            // customizeDetailColumns: function(columns) {
-            //     // Define custom detail columns
-            //     return [{
-            //             dataField: "name",
-            //             caption: "Name",
-            //             width: 100, // Set width for the Name column
-            //         },
-            //         {
-            //             dataField: "name",
-            //             caption: "Type",
-            //             width: 100 // Set width for the Type column
-            //         },
-            //         {
-            //             dataField: "created_date",
-            //             caption: "Created Date",
-            //             width: 150 // Set width for the Created Date column
-            //         },
-            //         {
-            //             dataField: "created_name",
-            //             caption: "Created By",
-            //             width: 150 // Set width for the Created By column
-            //         },
-            //         {
-            //             dataField: "modify_date",
-            //             caption: "Modify Date",
-            //             width: 150 // Set width for the Modify Date column
-            //         },
-            //         {
-            //             dataField: "modify_name",
-            //             caption: "Modified By",
-            //             width: 150 // Set width for the Modified By column
-            //         },
-            //         {
-            //             dataField: "size",
-            //             caption: "Size",
-            //             width: 50 // Set width for the Size column
-            //         }
-            //     ];
-            // },
-            customizeThumbnail(customProvider) {
-                console.log(customProvider);
-                if (customProvider.isDirectory) {
-                    return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/folder.svg';
-                }
+            customizeDetailColumns: function(columns) {
+                columns.splice(0, columns.length);
 
-                const fileExtension = customProvider.getFileExtension();
-                switch (fileExtension) {
-                    case '.txt':
-                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-txt.svg';
-                    case '.rtf':
-                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-rtf.svg';
-                    case '.xml':
-                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-xml.svg';
-                    default:
-                        return 'https://js.devexpress.com/jQuery/Demos/WidgetsGallery/JSDemos/images/thumbnails/doc-txt.svg';
-                }
+                // Add new custom columns
+                columns.push({
+                        dataField: 'show_name',
+                        wordWrapEnabled: true,
+                        caption: "Name",
+                        width: "250px",
+                        cellTemplate: function(container, options) {
+                            let iconClass = "";
+                            let fileName = options.data.fileItem.dataItem.name;
+                            let fileType = options.data.fileItem.dataItem._type;
+                            let id = options.data.fileItem.dataItem.key;
+                            let group_id = options.data.fileItem.dataItem.group_ids;
+                            let file_path = options.data.fileItem.dataItem.file_path;
+                            let editHtml = "";
+
+                            // Generate edit HTML if user is admin
+                            <?php
+                            if (is_admin()) {
+                            ?>
+                                if (fileType == "folder") {
+                                    editHtml = `<i class='fa fa-edit hide show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
+                                }
+                            <?php
+                            }
+                            ?>
+
+                            // Determine the icon class based on the file type
+                            switch (fileType) {
+                                case "folder":
+                                case "null":
+                                    iconClass = "folder";
+                                    break;
+                                case "pdf":
+                                    iconClass = "pdffile";
+                                    break;
+                                case "png":
+                                case "jpg":
+                                case "jpeg":
+                                case "webp":
+                                case "gif":
+                                case "svg":
+                                    iconClass = "image";
+                                    break;
+                                case "docx":
+                                case "doc":
+                                    iconClass = "docfile";
+                                    break;
+                                case "xlsx":
+                                case "xls":
+                                    iconClass = "xlsfile";
+                                    break;
+                                case "txt":
+                                    iconClass = "txtfile";
+                                    break;
+                                default:
+                                    // Handle other file types
+                                    iconClass = fileType + "file";
+                                    break;
+                            }
+
+                            // Append icon, edit button, and name elements to the container
+                            container.append(`<div class='hover-show-edit'><i class="images-list dx-icon-${iconClass}"></i> ${fileName} &nbsp; ${editHtml}</div>`);
+                        }
+
+
+                    }, {
+                        dataField: 'creationBy',
+                        wordWrapEnabled: true,
+                        caption: "Created By",
+                        width: "200px"
+                    }, {
+                        dataField: 'creationDate',
+                        wordWrapEnabled: true,
+                        caption: "Created Date",
+                        width: "150px"
+                    }, {
+                        dataField: '',
+                        wordWrapEnabled: true,
+                        caption: "Download",
+                        width: "150px",
+                        cellTemplate: function(container, options) {
+                            let fileName = options.data.fileItem.dataItem.name;
+                            let file_path = options.data.fileItem.dataItem.file_path;
+                            if (file_path != "") {
+                                container.append(`<div class=''><i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
+                            }
+                        }
+                    }, {
+                        dataField: 'size',
+                        wordWrapEnabled: true,
+                        caption: "Size",
+                        width: "150px"
+                    }
+
+                );
+                return columns;
             },
+
             permissions: {
                 create: false,
-                copy: false,
-                move: false,
-                delete: false,
-                rename: false,
+                copy: true,
+                move: true,
+                delete: true,
+                rename: true,
                 upload: false,
-                download: true
+                download: false
             },
             allowedFileExtensions: [],
-            height: 1000,
-
+            height: 500,
         });
 
 
@@ -899,27 +890,47 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     // Call the async function to initialize the DevExpress FileManager
     initializeFileManager();
 
+
+    function download_file(url, fileName) {
+        // Fetch the file from the provided URL
+        fetch(url)
+            .then(response => {
+                // Check if the response is successful
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob(); // Return the response body as a blob
+            })
+            .then(blob => {
+                // Create a URL for the blob data
+                const blobUrl = window.URL.createObjectURL(blob);
+
+                // Create a temporary anchor element
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = fileName; // Set the download attribute to the file name
+                document.body.appendChild(a);
+
+                // Programmatically trigger a click event on the anchor element to start the download
+                a.click();
+
+                // Cleanup: remove the temporary anchor element and revoke the blob URL
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            })
+            .catch(error => {
+                // Handle any errors that occur during the fetch process
+                console.error('Error downloading file:', error);
+            });
+    }
+
+
     setTimeout(() => {
-        console.log("okkk");
         $(".dx-filemanager-toolbar > .dx-toolbar > .dx-toolbar-items-container > .dx-toolbar-before").append(`<a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-default mright5"><?php echo _l('kb_knowledge_group'); ?></a>
                                 <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
                                 <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>`);
+
     }, 2000);
-
-
-    // $("#file-manager").dxFileManager({
-    //     fileProvider: customProvider,
-    //     permissions: {
-    //         download: true,
-    //         create: true,
-    //         copy: true,
-    //         move: true,
-    //         remove: true,
-    //         rename: true,
-    //         upload: true
-    //     },
-    //     allowedFileExtensions: []
-    // });
 </script>
 
 

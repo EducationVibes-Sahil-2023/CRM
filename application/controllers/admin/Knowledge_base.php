@@ -368,14 +368,14 @@ class Knowledge_base extends AdminController
                 $upload_data["type"] = $_FILES["files"]["type"][$key];
                 $upload_data["tmp_name"] = $tmp_name;
                 $upload_data["error"] = $error;
-                $upload_data["size"] = $_FILES["files"]["size"][$key];
+                $size = $upload_data["size"] = $_FILES["files"]["size"][$key];
 
                 if ($error === UPLOAD_ERR_OK) {
                     // Move the uploaded file to the desired directory
                     $destination = KNOWLEDGE_BASE_MEDIA_PATH . '/' . $filename;
                     if (move_uploaded_file($tmp_name, $destination)) {
                         $media_url = base_url() . $destination;
-                        $data[] = array("path" => $media_url, "type" => $file_type, "name" => $basename, "folder_id" => $folder_id, "status" => 1, "created_by" => get_staff_user_id(), 'created_date' => date('Y-m-d H:i:s'));
+                        $data[] = array("path" => $media_url, "size" => $size, "type" => $file_type, "name" => $basename, "folder_id" => $folder_id, "status" => 1, "created_by" => get_staff_user_id(), 'created_date' => date('Y-m-d H:i:s'));
                     }
                 }
             }
@@ -739,11 +739,9 @@ class Knowledge_base extends AdminController
                         "updated_date" => date('Y-m-d H:i:s')
                     );
 
-                    if (!empty($data)) {
-                        $table_name = $data["isDirectory"] ? db_prefix() . "knowledge_base_folder" : db_prefix() . "knowledge_base_files";
-
+                    if (!empty($data[0])) {
+                        $table_name = (!empty($data[0]["isDirectory"]) && $data[0]["isDirectory"] == 1) ? db_prefix() . "knowledge_base_folder" : db_prefix() . "knowledge_base_files";
                         $this->db->update($table_name, $update_data, array("id" => $id));
-
                         $response["success"] = true;
                         $response["errorText"] = "";
                         $response["errorCode"] = "";

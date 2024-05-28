@@ -183,6 +183,9 @@ class knowledge_base_group_model extends App_Model
 
     public function get_knowledge_base_dir($where_folder = [], $where_file = [], $return = 0)
     {
+
+        $staff_members     = get_all_staff();
+        $staff_members = array_column($staff_members, null, 'staffid');
         // $folder_data = $this->db->select("
         // f.id as key,
         // f.name as name,
@@ -221,14 +224,17 @@ class knowledge_base_group_model extends App_Model
         $folder_data = $this->db->select("
         f.id as key,
         f.name as name,
-        f.name as _name,
+        f.name as show_name,
         'true' as isDirectory,
         IF((SELECT COUNT(1) FROM " . db_prefix() . "knowledge_base_folder WHERE parent_id = f.id) > 0, 'true', 'false') AS hasSubDirectories,
         updated_date as lastModifiedDate,
         created_date as creationDate,
+        'folder' as _type,
         0 as size,
-        f.created_by as created_name,
+        f.created_by,
+        f.updated_by,
         f.parent_id,
+        f.group_ids,
         'directory' as type,
         '' as modify_name,
         created_date")
@@ -239,19 +245,63 @@ class knowledge_base_group_model extends App_Model
 
         $file_data = $this->db->select("
         fs.id as key,
-        CONCAT(fs.name,'.',type) as name,
-        fs.name as _name,
+        fs.name as name,
+        CONCAT(fs.name,'.',type) as show_name,
+        type as _type,
         'false' as isDirectory,
         'false' as hasSubDirectories,
         updated_date as lastModifiedDate,
         created_date as creationDate,
-        '2.5MB' as size,
+        size as size,
+        path as file_path,
+        fs.created_by,
+        fs.updated_by,
         'file' as type")
             ->from(db_prefix() . "knowledge_base_files fs")
             ->where($where_file)
             ->get()
             ->result_array();
 
-        return array_merge($folder_data, $file_data);
+        $data =  array_merge($folder_data, $file_data);
+        $data_array = [];
+
+        foreach ($data as $new_data) {
+            $data_item = [
+                "name" => $new_data["name"],
+                "show_name" => $new_data["show_name"],
+                "key" => $new_data["key"],
+                "size" => $new_data["type"] == "file" ? (!empty($new_data["size"]) ? $this->formatFileSize($new_data["size"]) : 0) : 0,
+                "type" => $new_data["type"],
+                "_type" => $new_data["_type"],
+                "group_ids" => !empty($new_data["group_ids"]) ? $new_data["group_ids"] : '',
+                "file_path" => !empty($new_data["file_path"]) ? $new_data["file_path"] : '',
+                "creationDate" => $new_data["creationDate"],
+                "creationBy" => !empty($staff_members[$new_data["created_by"]]["full_name"]) ? $staff_members[$new_data["created_by"]]["full_name"] : 'Admin',
+                "updatedBy" => !empty($staff_members[$new_data["updated_by"]]["full_name"]) ? $staff_members[$new_data["updated_by"]]["full_name"] : '',
+                "dateModified" => empty($new_data["lastModifiedDate"]) ? $new_data["creationDate"] : $new_data["lastModifiedDate"],
+                "isDirectory" => $new_data["type"] == "directory",
+                "hasSubDirectories" => $new_data["type"] == "directory" ? ($new_data["hasSubDirectories"] == "true") : false
+            ];
+
+            $data_array[] = $data_item;
+        }
+
+        return $data_array;
+    }
+
+    function formatFileSize($sizeInBytes)
+    {
+        // Define the size units and their respective labels
+        $units = array('B', 'KB', 'MB', 'GB', 'TB');
+
+        // Determine the appropriate unit based on the size
+        $unitIndex = 0;
+        while ($sizeInBytes >= 1024 && $unitIndex < count($units) - 1) {
+            $sizeInBytes /= 1024;
+            $unitIndex++;
+        }
+
+        // Format the size to two decimal places
+        return round($sizeInBytes, 2) . ' ' . $units[$unitIndex];
     }
 }
