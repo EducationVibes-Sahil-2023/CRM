@@ -184,9 +184,10 @@ class Leads_model extends App_Model
 
      */
 
-    public function add($data, $status = 0)
+    public function add($data, $status = 0, $delete_created = 0)
 
     {
+
 
         if (isset($data['custom_contact_date']) || isset($data['custom_contact_date'])) {
 
@@ -232,7 +233,10 @@ class Leads_model extends App_Model
 
         $data['description'] = nl2br($data['description']);
 
-        $data['dateadded']   = date('Y-m-d H:i:s');
+
+
+        $data['dateadded']   = !empty($data['dateadded']) ? $data['dateadded'] : date('Y-m-d H:i:s');
+
 
         $data['addedfrom']   = get_staff_user_id();
         $data['exam_details']   = [];
