@@ -246,9 +246,9 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     </div><!-- /.modal-dialog -->
 </div>
 <?php init_tail(); ?>
-<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.common.css">
-<link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/19.2.7/css/dx.light.css">
-<script src="https://cdn3.devexpress.com/jslib/19.2.7/js/dx.all.js"></script>
+<link rel="stylesheet" href="<?= base_url() ?>assets/css/dx.common.css">
+<link rel="stylesheet" href="<?= base_url() ?>assets/css/dx.light.css">
+<script src="<?= base_url() ?>assets/js/dx.all.js"></script>
 <!-- <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/21.2.5/css/dx.common.css">
 <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/21.2.5/css/dx.light.css">
 <script src="https://cdn3.devexpress.com/jslib/21.2.5/js/dx.all.js"></script> -->
