@@ -258,7 +258,7 @@ class knowledge_base_group_model extends App_Model
         path as file_path,
         fs.created_by,
         fs.updated_by,
-        'file' as type
+        'file' as type,
         'file' as file_type
         "
 
