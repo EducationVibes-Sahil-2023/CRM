@@ -235,7 +235,7 @@ class knowledge_base_group_model extends App_Model
         f.updated_by,
         f.parent_id,
         f.group_ids,
-        'directory' as type,
+        'folder' as type,
         '' as modify_name,
         created_date")
             ->from(db_prefix() . "knowledge_base_folder f")

@@ -877,7 +877,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                             if (fileType === "folder") {
                                 editHtml = `<i class='fa fa-edit  show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
                             }
-                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${fileType}')"></i>`;
+                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${type}')"></i>`;
                         <?php } ?>
 
                         // Determine the icon class based on the file type
