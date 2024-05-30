@@ -867,6 +867,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                         let fileItem = options.data.fileItem.dataItem;
                         let fileName = fileItem.name;
                         let fileType = fileItem._type;
+                        let file_type = fileItem.file_type;
                         let id = fileItem.key;
                         let group_id = fileItem.group_ids;
                         let file_path = fileItem.file_path;
@@ -877,7 +878,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                             if (fileType === "folder") {
                                 editHtml = `<i class='fa fa-edit  show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
                             }
-                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${type}')"></i>`;
+                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
                         <?php } ?>
 
                         // Determine the icon class based on the file type
