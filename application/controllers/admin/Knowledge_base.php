@@ -188,43 +188,10 @@ class Knowledge_base extends AdminController
 
 
     public function create_folder()
-    {
-        // Check permission
-
-
-        if (!empty($_POST["show_folder"]) && $_POST["show_folder"] == 1) {
-            if (!has_permission('knowledge_base', '', 'view' && !has_permission('knowledge_base', '', 'view_own')) && !staff_has_assigned_knowledge_base()) {
-                access_denied('knowledge_base');
-                $response = array(
-                    "success" => 0,
-                    "message" => "Access denied"
-                );
-                echo json_encode($response);
-                die;
-            }
-
-            $parent_id = !empty($_POST["index"]) ? $_POST["index"] : 0;
-            // $folders = $this->db->select("*")->where(array("status" => 1, "parent_id" => $parent_id))->get(db_prefix() . "knowledge_base_folder")->result_array();
-            $folders = $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
-            // $files = $this->db->select("*")->where(array("status" => 1, "folder_id" => $parent_id))->get(db_prefix() . "knowledge_base_files")->result_array();
-            $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
-
-            // Prepare response
-            $response = array(
-                "success" => true,
-                "folder" => $folders,
-                "files" => $files,
-                "message" => "Folders list",
-                "errorText" => "",
-                "errorCode" => "",
-                "result" => $folders
-            );
-            echo json_encode($response);
-            die;
-        }
-
-
-        if (!has_permission('knowledge_base', '', 'create')) {
+{
+    // Check permission for viewing folders
+    if (!empty($_POST["show_folder"]) && $_POST["show_folder"] == 1) {
+        if (!has_permission('knowledge_base', '', 'view') && !has_permission('knowledge_base', '', 'view_own') && !staff_has_assigned_knowledge_base()) {
             access_denied('knowledge_base');
             $response = array(
                 "success" => 0,
@@ -234,108 +201,284 @@ class Knowledge_base extends AdminController
             die;
         }
 
-        // Validate folder name and group IDs
-        if (empty($_POST["folder_names"]) || empty($_POST["group_id"])) {
-            $response = array(
-                "success" => 0,
-                "message" => "Error: No valid folder names provided"
-            );
-            echo json_encode($response);
-            die;
-        }
-
-
-        // Get folder name and group IDs from POST data
-        $folder_names =  str_replace("//", "/", explode("/", trim($_POST["folder_names"])));
-        $group_id = $_POST["group_id"];
         $parent_id = !empty($_POST["index"]) ? $_POST["index"] : 0;
-        $folder_id = !empty($_POST["folder_id"]) ? $_POST["folder_id"] : 0;
+        $folders = $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
+        $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
 
+        // Prepare response
+        $response = array(
+            "success" => true,
+            "folder" => $folders,
+            "files" => $files,
+            "message" => "Folders list",
+            "errorText" => "",
+            "errorCode" => "",
+            "result" => $folders
+        );
+        echo json_encode($response);
+        die;
+    }
 
-        // Initialize data array for batch insertion
-        $data = [];
+    // Check permission for creating folders
+    if (!has_permission('knowledge_base', '', 'create')) {
+        access_denied('knowledge_base');
+        $response = array(
+            "success" => 0,
+            "message" => "Access denied"
+        );
+        echo json_encode($response);
+        die;
+    }
 
-        // Iterate over folder names
-        foreach ($folder_names as $folder_name) {
-            // Validate each folder name
-            if (!empty($folder_name)) {
-                // Check if the folder already exists
-                $existingFolder = $this->db->get_where(db_prefix() . "knowledge_base_folder", ['name' => $folder_name])->row_array();
+    // Validate folder name and group IDs
+    if (empty($_POST["folder_names"]) || empty($_POST["group_id"])) {
+        $response = array(
+            "success" => 0,
+            "message" => "Error: No valid folder names provided"
+        );
+        echo json_encode($response);
+        die;
+    }
 
-                if (!$existingFolder) {
-                    // Prepare data for insertion
+    // Get folder name and group IDs from POST data
+    $folder_names = str_replace("//", "/", explode("/", trim($_POST["folder_names"])));
+    $group_id = $_POST["group_id"];
+    $parent_id = !empty($_POST["index"]) ? $_POST["index"] : 0;
+    $folder_id = !empty($_POST["folder_id"]) ? $_POST["folder_id"] : 0;
+
+    // Initialize data array for batch insertion
+    $data = [];
+    $existing_folders = [];
+
+    // Iterate over folder names
+    foreach ($folder_names as $folder_name) {
+        // Validate each folder name
+        if (!empty($folder_name)) {
+            // Check if the folder already exists
+            $existingFolder = $this->db->get_where(db_prefix() . "knowledge_base_folder", [
+                'name' => $folder_name,
+                'parent_id' => $parent_id
+            ])->row_array();
+
+            if (!$existingFolder) {
+                // Prepare data for insertion
+                $data[] = array(
+                    'name' => $folder_name,
+                    'status' => 1,
+                    'created_by' => get_staff_user_id(),
+                    'created_date' => date('Y-m-d H:i:s'),
+                    'parent_id' => $parent_id,
+                    'group_ids' => !empty($group_id) ? implode(",", $group_id) : '' // Assuming group_ids is an array
+                );
+
+                // Create directory if it doesn't exist
+                $dirPath = str_replace("//", "/", KNOWLEDGE_BASE_MEDIA_PATH . $folder_name);
+                if (!is_dir($dirPath)) {
+                    mkdir($dirPath, 0777, true);
+                }
+            } else {
+                $existing_folders[] = $folder_name;
+                if (!empty($folder_id) && $folder_id == $existingFolder["id"]) {
                     $data[] = array(
+                        'id' => $folder_id,
                         'name' => $folder_name,
                         'status' => 1,
-                        'created_by' => get_staff_user_id(),
-                        'created_date' => date('Y-m-d H:i:s'),
                         'parent_id' => $parent_id,
+                        'updated_by' => get_staff_user_id(),
+                        'updated_date' => date('Y-m-d H:i:s'),
                         'group_ids' => !empty($group_id) ? implode(",", $group_id) : '' // Assuming group_ids is an array
                     );
-
-                    // Create directory if it doesn't exist
-                    $dirPath = str_replace("//", "/", KNOWLEDGE_BASE_MEDIA_PATH . $folder_name);
-                    if (!is_dir($dirPath)) {
-                        mkdir($dirPath, 0777, true);
-                    }
                 } else {
-
-                    if (!empty($folder_id)) {
-                        if ($folder_id ==  $existingFolder["id"]) {
-                            $data[] = array(
-                                'id' => $folder_id,
-                                'name' => $folder_name,
-                                'status' => 1,
-                                'parent_id' => $parent_id,
-                                'updated_by' => get_staff_user_id(),
-                                'updated_date' => date('Y-m-d H:i:s'),
-                                'group_ids' => !empty($group_id) ? implode(",", $group_id) : '' // Assuming group_ids is an array
-                            );
-                        }
-                    }
                     $this->db->update(db_prefix() . "knowledge_base_folder", array("updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')), array("id" => $existingFolder["id"]));
                 }
             }
         }
+    }
 
-
-        // Check if there's any data to insert
-        if (!empty($data)) {
-            // Perform batch insertion
-            if (!empty($folder_id)) {
-                $this->db->update_batch(db_prefix() . "knowledge_base_folder", $data, 'id');
-            } else {
-                $this->db->insert_batch(db_prefix() . "knowledge_base_folder", $data);
-            }
-
-            // Fetch inserted folders
-            $folders =  $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
-            // $files = $this->db->select("*")->where(array("status" => 1, "folder_id" => $parent_id))->get(db_prefix() . "knowledge_base_files")->result_array();
-            $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
-
-            $message = "Folder create successfully";
-            if (!empty($folder_id)) {
-                $message = "Folder update successfully";
-            }
-            // Prepare response
-            $response = array(
-                "success" => 1,
-                "folder" => $folders,
-                "files" => $files,
-                "message" => $message
-            );
+    // Check if there's any data to insert or update
+    if (!empty($data)) {
+        // Perform batch insertion or update
+        if (!empty($folder_id)) {
+            $this->db->update_batch(db_prefix() . "knowledge_base_folder", $data, 'id');
+            $message = "Folder updated successfully";
         } else {
-            // No valid data to insert
-            // Handle this case
-            $response = array(
-                "success" => 0,
-                "message" => "Error: No valid folder names provided"
-            );
+            $this->db->insert_batch(db_prefix() . "knowledge_base_folder", $data);
+            $message = "Folder created successfully";
         }
 
-        // Send JSON response
-        echo json_encode($response);
+        // Fetch inserted folders
+        $folders = $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
+        $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
+
+        // Prepare response
+        $response = array(
+            "success" => 1,
+            "folder" => $folders,
+            "files" => $files,
+            "message" => $message
+        );
+    } else {
+        // No valid data to insert
+        $response = array(
+            "success" => 0,
+            "message" => "Error: No valid folder names provided" . (!empty($existing_folders) ? " (Folders already exist: " . implode(", ", $existing_folders) . ")" : "")
+        );
     }
+
+    // Send JSON response
+    echo json_encode($response);
+}
+
+
+    // public function create_folder()
+    // {
+    //     // Check permission
+
+
+    //     if (!empty($_POST["show_folder"]) && $_POST["show_folder"] == 1) {
+    //         if (!has_permission('knowledge_base', '', 'view' && !has_permission('knowledge_base', '', 'view_own')) && !staff_has_assigned_knowledge_base()) {
+    //             access_denied('knowledge_base');
+    //             $response = array(
+    //                 "success" => 0,
+    //                 "message" => "Access denied"
+    //             );
+    //             echo json_encode($response);
+    //             die;
+    //         }
+
+    //         $parent_id = !empty($_POST["index"]) ? $_POST["index"] : 0;
+    //         // $folders = $this->db->select("*")->where(array("status" => 1, "parent_id" => $parent_id))->get(db_prefix() . "knowledge_base_folder")->result_array();
+    //         $folders = $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
+    //         // $files = $this->db->select("*")->where(array("status" => 1, "folder_id" => $parent_id))->get(db_prefix() . "knowledge_base_files")->result_array();
+    //         $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
+
+    //         // Prepare response
+    //         $response = array(
+    //             "success" => true,
+    //             "folder" => $folders,
+    //             "files" => $files,
+    //             "message" => "Folders list",
+    //             "errorText" => "",
+    //             "errorCode" => "",
+    //             "result" => $folders
+    //         );
+    //         echo json_encode($response);
+    //         die;
+    //     }
+
+
+    //     if (!has_permission('knowledge_base', '', 'create')) {
+    //         access_denied('knowledge_base');
+    //         $response = array(
+    //             "success" => 0,
+    //             "message" => "Access denied"
+    //         );
+    //         echo json_encode($response);
+    //         die;
+    //     }
+
+    //     // Validate folder name and group IDs
+    //     if (empty($_POST["folder_names"]) || empty($_POST["group_id"])) {
+    //         $response = array(
+    //             "success" => 0,
+    //             "message" => "Error: No valid folder names provided"
+    //         );
+    //         echo json_encode($response);
+    //         die;
+    //     }
+
+
+    //     // Get folder name and group IDs from POST data
+    //     $folder_names =  str_replace("//", "/", explode("/", trim($_POST["folder_names"])));
+    //     $group_id = $_POST["group_id"];
+    //     $parent_id = !empty($_POST["index"]) ? $_POST["index"] : 0;
+    //     $folder_id = !empty($_POST["folder_id"]) ? $_POST["folder_id"] : 0;
+
+
+    //     // Initialize data array for batch insertion
+    //     $data = [];
+
+    //     // Iterate over folder names
+    //     foreach ($folder_names as $folder_name) {
+    //         // Validate each folder name
+    //         if (!empty($folder_name)) {
+    //             // Check if the folder already exists
+    //             $existingFolder = $this->db->get_where(db_prefix() . "knowledge_base_folder", ['name' => $folder_name])->row_array();
+
+    //             if (!$existingFolder) {
+    //                 // Prepare data for insertion
+    //                 $data[] = array(
+    //                     'name' => $folder_name,
+    //                     'status' => 1,
+    //                     'created_by' => get_staff_user_id(),
+    //                     'created_date' => date('Y-m-d H:i:s'),
+    //                     'parent_id' => $parent_id,
+    //                     'group_ids' => !empty($group_id) ? implode(",", $group_id) : '' // Assuming group_ids is an array
+    //                 );
+
+    //                 // Create directory if it doesn't exist
+    //                 $dirPath = str_replace("//", "/", KNOWLEDGE_BASE_MEDIA_PATH . $folder_name);
+    //                 if (!is_dir($dirPath)) {
+    //                     mkdir($dirPath, 0777, true);
+    //                 }
+    //             } else {
+
+    //                 if (!empty($folder_id)) {
+    //                     if ($folder_id ==  $existingFolder["id"]) {
+    //                         $data[] = array(
+    //                             'id' => $folder_id,
+    //                             'name' => $folder_name,
+    //                             'status' => 1,
+    //                             'parent_id' => $parent_id,
+    //                             'updated_by' => get_staff_user_id(),
+    //                             'updated_date' => date('Y-m-d H:i:s'),
+    //                             'group_ids' => !empty($group_id) ? implode(",", $group_id) : '' // Assuming group_ids is an array
+    //                         );
+    //                     }
+    //                 }
+    //                 $this->db->update(db_prefix() . "knowledge_base_folder", array("updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')), array("id" => $existingFolder["id"]));
+    //             }
+    //         }
+    //     }
+
+
+    //     // Check if there's any data to insert
+    //     if (!empty($data)) {
+    //         // Perform batch insertion
+    //         if (!empty($folder_id)) {
+    //             $this->db->update_batch(db_prefix() . "knowledge_base_folder", $data, 'id');
+    //         } else {
+    //             $this->db->insert_batch(db_prefix() . "knowledge_base_folder", $data);
+    //         }
+
+    //         // Fetch inserted folders
+    //         $folders =  $this->knowledge_base_group_model->get_folders(array("f.status" => 1, "f.parent_id" => $parent_id));
+    //         // $files = $this->db->select("*")->where(array("status" => 1, "folder_id" => $parent_id))->get(db_prefix() . "knowledge_base_files")->result_array();
+    //         $files = $this->knowledge_base_group_model->get_files(array("fs.status" => 1, "fs.folder_id" => $parent_id));
+
+    //         $message = "Folder create successfully";
+    //         if (!empty($folder_id)) {
+    //             $message = "Folder update successfully";
+    //         }
+    //         // Prepare response
+    //         $response = array(
+    //             "success" => 1,
+    //             "folder" => $folders,
+    //             "files" => $files,
+    //             "message" => $message
+    //         );
+    //     } else {
+    //         // No valid data to insert
+    //         // Handle this case
+    //         $response = array(
+    //             "success" => 0,
+    //             "message" => "Error: No valid folder names provided"
+    //         );
+    //     }
+
+    //     // Send JSON response
+    //     echo json_encode($response);
+    // }
 
     public function upload_dir_data()
     {
@@ -405,6 +548,61 @@ class Knowledge_base extends AdminController
         // Send JSON response
         echo json_encode($response);
     }
+
+    public function delete()
+    {
+        if (!has_permission('knowledge_base', '', 'delete')) {
+            access_denied('knowledge_base');
+            $response = array(
+                "success" => 0,
+                "message" => "Access denied"
+            );
+            echo json_encode($response);
+            die;
+        }
+
+        $id = isset($_POST["id"]) ? trim($_POST["id"]) : '';
+        $type = isset($_POST["type"]) ? trim($_POST["type"]) : '';
+
+        if ($id === '' || $type === '') {
+            $response = array(
+                "success" => 0,
+                "message" => "Invalid input data"
+            );
+            echo json_encode($response);
+            die;
+        }
+
+        $update_data = array(
+            "status" => 0,
+            "updated_by" => get_staff_user_id(),
+            "updated_date" => date('Y-m-d H:i:s')
+        );
+
+        if ($type === "folder") {
+            $this->db->where('id', $id);
+            $this->db->update(db_prefix() . "knowledge_base_folder", $update_data);
+            $response = array(
+                "success" => 1,
+                "message" => "Folder deleted successfully"
+            );
+        } elseif ($type === "file") {
+            $this->db->where('id', $id);
+            $this->db->update(db_prefix() . "knowledge_base_files", $update_data);
+            $response = array(
+                "success" => 1,
+                "message" => "File deleted successfully"
+            );
+        } else {
+            $response = array(
+                "success" => 0,
+                "message" => "Invalid type"
+            );
+        }
+
+        echo json_encode($response);
+    }
+
 
     public function knowledge_group()
     {

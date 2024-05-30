@@ -18,6 +18,14 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         -webkit-box-orient: vertical;
     }
 
+
+    .no-data {
+        text-align: center;
+        color: #888;
+        font-size: 16px;
+        padding: 20px;
+    }
+
     .dx-theme-generic-typography a {
         color: unset !important;
     }
@@ -118,20 +126,30 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         font-size: 20px !important;
     }
 
-    .hover-show-edit:hover>.fa-edit.show-hover {
+
+
+    /* .hover-show-edit:hover>i.fa {
         cursor: pointer;
         display: block !important;
+    } */
+
+    .hover-show-edit {
+        display: flow !important;
+        cursor: pointer;
     }
 
     .dx-datagrid-content .dx-datagrid-table .dx-row>td,
     .dx-datagrid-content .dx-datagrid-table .dx-row>tr>td {
         overflow: hidden !important;
         width: -webkit-fill-available;
-
     }
 
     .dx-filemanager .dx-filemanager-files-view.dx-filemanager-details .dx-filemanager-details-item-thumbnail {
         float: right;
+    }
+    .dx-freespace-row
+    {
+        display: none !important;
     }
 </style>
 <div id="wrapper">
@@ -287,6 +305,38 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         $("#createFolderBtn").text("Update");
     }
 
+    function delete_(id, type) {
+        if (confirm("Are you sure you want to delete this " + type + "?")) {
+            var formData = new FormData();
+            formData.append('id', id);
+            formData.append('type', type);
+            formData.append('csrf_token_name', $("input[name='csrf_token_name']").val());
+
+            $.ajax({
+                url: '<?php echo admin_url("Knowledge_base/delete"); ?>',
+                type: 'POST',
+                data: formData,
+                processData: false, // Prevent jQuery from processing the data
+                contentType: false, // Prevent jQuery from setting contentType
+                success: function(response) {
+                    let data = JSON.parse(response);
+                    if (data.status == 1) {
+                        alert_float('success', data.message);
+                    }
+                    // $(".close-modal").trigger("click");
+                    $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("dxclick");
+                    // save_and_show_folder(1, index);
+                    hide_loader();
+                },
+                error: function() {
+                    hide_loader();
+                    // Handle error case here, such as displaying an error message to the user
+                    alert_float('danger', 'An error occurred while processing your request.');
+                },
+            });
+        }
+    }
+
     // function set_folder(folder_data) {
 
     //     if (folder_data.length > 0) {
@@ -383,9 +433,16 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     alert_float('success', data.message);
                 }
                 $(".close-modal").trigger("click");
+                $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("dxclick");
+
                 // save_and_show_folder(1, index);
                 hide_loader();
-            }
+            },
+            error: function() {
+                hide_loader();
+                // Handle error case here, such as displaying an error message to the user
+                alert_float('danger', 'An error occurred while processing your request.');
+            },
         });
     }
 
@@ -419,13 +476,15 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     alert_float('success', "Files upload successfully");
                 }
                 $(".close-modal").trigger("click");
-                save_and_show_folder(1, index);
+                // save_and_show_folder(1, index);
+                $(".dx-toolbar-items-container .dx-filemanager-i-refresh").trigger("dxclick");
+
                 hide_loader();
             },
             error: function() {
                 hide_loader();
                 // Handle error case here, such as displaying an error message to the user
-                alert_float('error', 'An error occurred while processing your request.');
+                alert_float('danger', 'An error occurred while processing your request.');
             }
         });
     }
@@ -730,6 +789,28 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     // Define an asynchronous function to initialize the DevExpress FileManager
 
     const fileManager = "";
+    var permissions = {
+        create: false,
+        copy: false,
+        move: false,
+        delete: false,
+        rename: false,
+        upload: false,
+        download: false
+    };
+
+    <?php if (is_Admin()) { ?>
+        permissions = {
+            create: false,
+            copy: true,
+            move: true,
+            delete: true,
+            rename: true,
+            upload: false,
+            download: false
+        };
+    <?php } ?>
+
     async function initializeFileManager(index = 0) {
         var remoteProvider = new DevExpress.fileProviders.Remote({
             endpointUrl: '<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>',
@@ -746,6 +827,8 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                             new_array.push(item.dataItem); // Push the current item into the new array
                         });
                         console.log(new_array);
+                        checkEmptyDirectory();
+                        set_();
                         // Handle the result as needed
                         return new_array; // Make sure to return the result to continue the promise chain
                     })
@@ -767,7 +850,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             uploadChunkSize: 100000000000
         });
 
-        $("#file-manager").dxFileManager({
+        var fileManager_ = $("#file-manager").dxFileManager({
             name: "fileManager",
             fileProvider: customProvider,
             customizeDetailColumns: function(columns) {
@@ -775,120 +858,180 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
                 // Add new custom columns
                 columns.push({
-                        dataField: 'show_name',
-                        wordWrapEnabled: true,
-                        caption: "Name",
-                        width: "250px",
-                        cellTemplate: function(container, options) {
-                            let iconClass = "";
-                            let fileName = options.data.fileItem.dataItem.name;
-                            let fileType = options.data.fileItem.dataItem._type;
-                            let id = options.data.fileItem.dataItem.key;
-                            let group_id = options.data.fileItem.dataItem.group_ids;
-                            let file_path = options.data.fileItem.dataItem.file_path;
-                            let editHtml = "";
+                    dataField: 'show_name',
+                    wordWrapEnabled: true,
+                    caption: "Name",
+                    width: "250px",
+                    cellTemplate: function(container, options) {
+                        let iconClass = "";
+                        let fileItem = options.data.fileItem.dataItem;
+                        let fileName = fileItem.name;
+                        let fileType = fileItem._type;
+                        let id = fileItem.key;
+                        let group_id = fileItem.group_ids;
+                        let file_path = fileItem.file_path;
+                        let editHtml = "";
 
-                            // Generate edit HTML if user is admin
-                            <?php
-                            if (is_admin()) {
-                            ?>
-                                if (fileType == "folder") {
-                                    editHtml = `<i class='fa fa-edit hide show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
-                                }
-                            <?php
+                        // Generate edit HTML if user is admin
+                        <?php if (is_admin()) { ?>
+                            if (fileType === "folder") {
+                                editHtml = `<i class='fa fa-edit  show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
                             }
-                            ?>
+                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${fileType}')"></i>`;
+                        <?php } ?>
 
-                            // Determine the icon class based on the file type
-                            switch (fileType) {
-                                case "folder":
-                                case "null":
-                                    iconClass = "folder";
-                                    break;
-                                case "pdf":
-                                    iconClass = "pdffile";
-                                    break;
-                                case "png":
-                                case "jpg":
-                                case "jpeg":
-                                case "webp":
-                                case "gif":
-                                case "svg":
-                                    iconClass = "image";
-                                    break;
-                                case "docx":
-                                case "doc":
-                                    iconClass = "docfile";
-                                    break;
-                                case "xlsx":
-                                case "xls":
-                                    iconClass = "xlsfile";
-                                    break;
-                                case "txt":
-                                    iconClass = "txtfile";
-                                    break;
-                                default:
-                                    // Handle other file types
-                                    iconClass = fileType + "file";
-                                    break;
-                            }
-
-                            // Append icon, edit button, and name elements to the container
-                            container.append(`<div class='hover-show-edit'><i class="images-list dx-icon-${iconClass}"></i> ${fileName} &nbsp; ${editHtml}</div>`);
+                        // Determine the icon class based on the file type
+                        switch (fileType) {
+                            case "folder":
+                            case "null":
+                                iconClass = "folder";
+                                break;
+                            case "pdf":
+                                iconClass = "pdffile";
+                                break;
+                            case "png":
+                            case "jpg":
+                            case "jpeg":
+                            case "webp":
+                            case "gif":
+                            case "svg":
+                                iconClass = "image";
+                                break;
+                            case "docx":
+                            case "doc":
+                                iconClass = "docfile";
+                                break;
+                            case "xlsx":
+                            case "xls":
+                                iconClass = "xlsfile";
+                                break;
+                            case "txt":
+                                iconClass = "txtfile";
+                                break;
+                            default:
+                                // Handle other file types
+                                iconClass = fileType + "file";
+                                break;
                         }
 
-
-                    }, {
-                        dataField: 'creationBy',
-                        wordWrapEnabled: true,
-                        caption: "Created By",
-                        width: "200px"
-                    }, {
-                        dataField: 'creationDate',
-                        wordWrapEnabled: true,
-                        caption: "Created Date",
-                        width: "150px"
-                    }, {
-                        dataField: '',
-                        wordWrapEnabled: true,
-                        caption: "Download",
-                        width: "150px",
-                        cellTemplate: function(container, options) {
-                            let fileName = options.data.fileItem.dataItem.name;
-                            let file_path = options.data.fileItem.dataItem.file_path;
-                            if (file_path != "") {
-                                container.append(`<div class=''><i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
-                            }
-                        }
-                    }, {
-                        dataField: 'size',
-                        wordWrapEnabled: true,
-                        caption: "Size",
-                        width: "150px"
+                        // Append icon, edit button, and name elements to the container
+                        container.append(`<div class='hover-show-edit'>${editHtml} &nbsp; <i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
                     }
+                }, {
+                    dataField: 'creationBy',
+                    wordWrapEnabled: true,
+                    caption: "Created By",
+                    width: "200px"
+                }, {
+                    dataField: 'creationDate',
+                    wordWrapEnabled: true,
+                    caption: "Created Date",
+                    width: "150px"
+                }, {
+                    dataField: '',
+                    wordWrapEnabled: true,
+                    caption: "Download",
+                    width: "150px",
+                    cellTemplate: function(container, options) {
+                        let fileName = options.data.fileItem.dataItem.name;
+                        let file_path = options.data.fileItem.dataItem.file_path;
+                        if (file_path != "") {
+                            container.append(`<div class=''><i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
+                        }
+                    }
+                }, {
+                    dataField: 'size',
+                    wordWrapEnabled: true,
+                    caption: "Size",
+                    width: "150px"
+                });
 
-                );
                 return columns;
-            },
-
-            permissions: {
-                create: false,
-                copy: true,
-                move: true,
-                delete: true,
-                rename: true,
-                upload: false,
-                download: false
             },
             allowedFileExtensions: [],
             height: 500,
-        });
+            permissions, // Integrate permissions here
+            onFocusedItemChanged: function(e) {
+                console.log("changed");
+                checkEmptyDirectory();
+            },
+            onDirectoryExpanded: function(e) {
+                console.log("expend");
+                checkEmptyDirectory();
+            },
+            onContentReady: function(e) {
+                console.log("start");
+                checkEmptyDirectory();
+            }
+
+        }).dxFileManager("instance");
+        // $("#file-manager").dxFileManager("instance").on("selectionChanged", function(e) {
+        //     // Custom function to run after selection changes
+        //     console.log("okkk");
+        //     set_();
+        //     checkEmptyDirectory();
+        // });
+
+        // fileManager_.option("onSelectionChanged", function(e) {
+        //     console.log("okkk");
+        //     set_();
+        //     checkEmptyDirectory(e.component);
+        // });
 
 
     }
 
+
+
+    function checkEmptyDirectory() {
+        console.log("okkk1");
+
+        setTimeout(() => {
+            console.log("okkk2");
+
+            var elements = $(".dx-menu-item-text").map(function() {
+                return $(this).text();
+            }).get();
+
+            // Remove the first element
+            var valuesAfterFirst = elements.slice(1);
+            var joinedValues = valuesAfterFirst.join("/");
+
+            // Remove trailing "/" if it exists
+            if (joinedValues.length > 0 && joinedValues.slice(-1) === "/") {
+                joinedValues = joinedValues.slice(0, -1);
+            }
+
+            console.log(joinedValues);
+            if (joinedValues == "") {
+
+            } else {
+                $(".dx-datagrid-table").find("tbody tr.dx-data-row").first().remove();
+            }
+            // var currentDir = fileManagerInstance.getCurrentDirectory();
+
+            if ($(".dx-datagrid-table").find("tbody tr.dx-data-row").length === 0) {
+                $(".dx-filemanager-files-view .dx-datagrid-rowsview .dx-scrollable-content").append('<div class="no-data">No Data</div>');
+            } else {
+                $(".no-data").remove();
+            }
+        }, 1000);
+
+    }
+
+    function set_() {
+        setTimeout(() => {
+            if ($(".external-block").length > 0) {} else {
+                $(".dx-filemanager-toolbar > .dx-toolbar > .dx-toolbar-items-container > .dx-toolbar-before").append(`<div  class='external-block'><a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-default mright5"><?php echo _l('kb_knowledge_group'); ?></a>
+                                <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
+                                <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a></div>`);
+            }
+        }, 1000);
+
+    }
     // Call the async function to initialize the DevExpress FileManager
     initializeFileManager();
+    set_();
 
 
     function download_file(url, fileName) {
@@ -925,12 +1068,12 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     }
 
 
-    setTimeout(() => {
-        $(".dx-filemanager-toolbar > .dx-toolbar > .dx-toolbar-items-container > .dx-toolbar-before").append(`<a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-default mright5"><?php echo _l('kb_knowledge_group'); ?></a>
-                                <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
-                                <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>`);
+    // setTimeout(() => {
+    //     $(".dx-filemanager-toolbar > .dx-toolbar > .dx-toolbar-items-container > .dx-toolbar-before").append(`<a href="<?php echo admin_url('knowledge_base/manage_knowledge_groups'); ?>" class="btn btn-default mright5"><?php echo _l('kb_knowledge_group'); ?></a>
+    //                             <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
+    //                             <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a>`);
 
-    }, 2000);
+    // }, 2000);
 </script>
 
 

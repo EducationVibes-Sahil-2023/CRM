@@ -156,6 +156,7 @@ function get_available_staff_permissions($data = [])
                 'delete' => _l('permission_delete'),
                 'assign' => 'Bulk Assignation',
                 'mass_assign' => 'Mass Assignation',
+                'import' => 'Leads Import',
                 'approval' => 'Transfer Leads Approval',
             ],
             'help' => [
