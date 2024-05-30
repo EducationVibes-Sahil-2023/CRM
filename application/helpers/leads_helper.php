@@ -448,7 +448,7 @@ function get_leads_report_($params)
         }
 
         if (!empty($params['lead_type'])) {
-            $sql .= 'AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            $sql .= 'AND l.type IN (' . implode(",", array_map(array($CI->db, 'escape_str'), $params['lead_type'])) . ') ';
         }
 
         if (!empty($params['up_to_date'])) {
@@ -551,7 +551,7 @@ function get_leads_report_conversion($params)
         }
 
         if (!empty($params['lead_type'])) {
-            $sql .= 'AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            $sql .= ' AND l.type IN (' . implode(",", array_map(array($CI->db, 'escape_str'), $params['lead_type'])) . ') ';
         }
 
         if (!empty($params['up_to_date'])) {
@@ -654,7 +654,7 @@ function get_leads_report_marketing($params)
         }
 
         if (!empty($params['lead_type'])) {
-            $sql .= 'AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+            $sql .= ' AND l.type IN (' . implode(",", array_map(array($CI->db, 'escape_str'), $params['lead_type'])) . ') ';
         }
 
         if (!empty($params['up_to_date'])) {

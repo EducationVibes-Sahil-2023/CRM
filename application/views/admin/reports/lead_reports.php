@@ -718,7 +718,8 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
             <?php if (is_admin()) { ?>
                 var department = document.getElementById("department");
             <?php } else if ($role == 3 && $staff_department != "") { ?>
-                var department = "<?= $staff_department ?>";
+                var department =[];
+                department.push("<?= $staff_department ?>");
             <?php } ?>
 
             var up_from_date = document.getElementById("up_from_date").value;
