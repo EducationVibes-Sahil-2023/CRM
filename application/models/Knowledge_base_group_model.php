@@ -235,7 +235,8 @@ class knowledge_base_group_model extends App_Model
         f.updated_by,
         f.parent_id,
         f.group_ids,
-        'folder' as type,
+        'directory' as type,
+        'folder' as file_type,
         '' as modify_name,
         created_date")
             ->from(db_prefix() . "knowledge_base_folder f")
@@ -243,7 +244,8 @@ class knowledge_base_group_model extends App_Model
             ->get()
             ->result_array();
 
-        $file_data = $this->db->select("
+        $file_data = $this->db->select(
+            "
         fs.id as key,
         fs.name as name,
         CONCAT(fs.name,'.',type) as show_name,
@@ -256,7 +258,11 @@ class knowledge_base_group_model extends App_Model
         path as file_path,
         fs.created_by,
         fs.updated_by,
-        'file' as type")
+        'file' as type
+        'file' as file_type
+        "
+
+        )
             ->from(db_prefix() . "knowledge_base_files fs")
             ->where($where_file)
             ->get()
@@ -273,6 +279,7 @@ class knowledge_base_group_model extends App_Model
                 "size" => $new_data["type"] == "file" ? (!empty($new_data["size"]) ? $this->formatFileSize($new_data["size"]) : 0) : 0,
                 "type" => $new_data["type"],
                 "_type" => $new_data["_type"],
+                "file_type" => $new_data["file_type"],
                 "group_ids" => !empty($new_data["group_ids"]) ? $new_data["group_ids"] : '',
                 "file_path" => !empty($new_data["file_path"]) ? $new_data["file_path"] : '',
                 "creationDate" => $new_data["creationDate"],
