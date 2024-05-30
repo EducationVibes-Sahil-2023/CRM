@@ -50,7 +50,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                      <a href="#" onclick="init_lead(); return false;" class="btn mright5 btn-info pull-left display-block">
                         <?php echo _l('new_lead'); ?>
                      </a>
-                     <?php if (is_admin() || get_option('allow_non_admin_members_to_import_leads') == '1') { ?>
+                     <?php if (is_admin() || get_option('allow_non_admin_members_to_import_leads') == '1' || has_permission('leads', '', 'import')) { ?>
                         <a href="<?php echo admin_url('leads/import'); ?>" class="btn btn-info pull-left display-block hidden-xs">
                            <?php echo _l('import_leads'); ?>
                         </a>
@@ -416,28 +416,28 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               </div>
                            </div>
                            <div class="clearfix"></div>
-                              <div class="col-md-12">
-                                 <div>
-                                    <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Transfer Request'); ?>" onclick="show_lead_request()" data-placement="bottom">Lead Transfer Request</button>
-                                 </div>
-                                 <hr>
-
-                                 <div class="lead-transfer-table hide">
-                                    <br>
-                                    <br>
-                                    <?php
-                                    if (is_admin()) {
-                                       render_datatable(array(_l('Raised by'), _l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
-                                    } else {
-                                       render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
-                                    }
-                                    ?>
-                                    <hr class="hr-panel-heading" />
-
-                                 </div>
-                                 <br>
-                                 <br>
+                           <div class="col-md-12">
+                              <div>
+                                 <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Transfer Request'); ?>" onclick="show_lead_request()" data-placement="bottom">Lead Transfer Request</button>
                               </div>
+                              <hr>
+
+                              <div class="lead-transfer-table hide">
+                                 <br>
+                                 <br>
+                                 <?php
+                                 if (is_admin()) {
+                                    render_datatable(array(_l('Raised by'), _l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                 } else {
+                                    render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                 }
+                                 ?>
+                                 <hr class="hr-panel-heading" />
+
+                              </div>
+                              <br>
+                              <br>
+                           </div>
 
                            <div class="col-md-12">
                               <a href="#" data-toggle="modal" data-table=".table-leads" data-target="#leads_bulk_actions" class="hide bulk-actions-btn table-btn"><?php echo _l('bulk_actions'); ?></a>
@@ -492,9 +492,20 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                                 echo render_datetime_input('leads_bulk_last_contact', 'leads_dt_last_contact');
                                                 ?>
                                              </div>
+
                                              <?php
                                              if (has_permission('leads', '', 'assign')) {
                                                 echo render_select('assign_to_leads_bulk', $staff, array('staffid', array('firstname', 'lastname')), 'leads_dt_assigned');
+                                             }
+                                             ?>
+                                             <?php
+                                             if (has_permission('leads', '', 'assign')) {
+                                             ?>
+                                                <div class="checkbox checkbox-danger delete_created_date hide">
+                                                   <input type="checkbox" name="delete_created_date" id="delete_created_date">
+                                                   <label for="delete_created_date"><?php echo _l('Remove Created Date'); ?></label>
+                                                </div>
+                                             <?php
                                              }
                                              ?>
                                              <div class="form-group">
@@ -791,6 +802,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
          $bulkChange.find('select').selectpicker('val', '');
          $("#re-assignation_div").hide();
          $("#bulk_change").hide();
+         $('#delete_created_date').prop("checked", false);
 
       } else {
 
@@ -816,10 +828,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       if ($(this).prop('checked') === true) {
          $('#input[name="mass_delete"]').prop("checked", false);
          $bulkChange.find('select').selectpicker('val', '');
+         $('#delete_created_date').prop("checked", true);
+         $('.delete_created_date').removeClass('hide');
          // $bulkChange.hide();
          // $("#re-assignation_div").show();
       } else {
          $("#re-assignation_div").find('select').selectpicker('val', '');
+         $('#delete_created_date').prop("checked", false);
+         $('.delete_created_date').addClass('hide');
          // $("#re-assignation_div").hide();
          // $bulkChange.show();
       }

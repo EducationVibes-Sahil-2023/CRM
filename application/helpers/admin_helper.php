@@ -249,7 +249,7 @@ function is_admin($staffid = '')
     $CI = & get_instance();
     $CI->db->select('1')
     ->where('admin', 1)
-    ->where('staffid', $staffid);
+    ->where('staffid', (int)$staffid);
 
     return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
 }

@@ -2447,7 +2447,7 @@ class Leads extends AdminController
 
     {
 
-        if (!is_admin() && get_option('allow_non_admin_members_to_import_leads') != '1') {
+        if (!is_admin() && get_option('allow_non_admin_members_to_import_leads') != '1' || !has_permission('leads', '', 'import')) {
 
             access_denied('Leads Import');
         }
@@ -2638,7 +2638,8 @@ class Leads extends AdminController
                 if ($has_permission_mass_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
-                        $keysToRemove = array('id', 'dateadded', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
+                        $keysToRemove = array('id', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
+                        (!empty($this->input->post('delete_created')) && $this->input->post('delete_created') == 1) ?  array_push($keysToRemove, 'dateadded') : "";
                         $re_assign_array = [];
                         foreach ($lead_data as $key => $lead_d) {
                             foreach ($keysToRemove as $k) {
@@ -2659,9 +2660,12 @@ class Leads extends AdminController
                                 }
                             }
 
+
+
                             $re_assign_array[] = array(
                                 "data" => json_encode($lead_data[$key], true),
                                 "status" => 1,
+                                "delete_created" => !empty($this->input->post('delete_created')) ? $this->input->post('delete_created') : 0,
                                 "date" => date('Y-m-d H:i:s')
                             );
                         }
@@ -3031,11 +3035,12 @@ class Leads extends AdminController
     {
         $limit = RE_ASSIGN_LEADS;
 
-        $data_leads = $this->db->query("Select id,data from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
+        $data_leads = $this->db->query("Select id,data,delete_created from " . db_prefix() . "lead_temp where status = 1  order by id DESC limit {$limit}")->result_array();
         if (!empty($data_leads)) {
             foreach ($data_leads as $leads) {
                 if (!empty($leads["data"])) {
                     $temp_lead_data = json_decode($leads["data"], true);
+                    $delete_created = !empty($leads["delete_created"]) ? $leads["delete_created"] : 0;
                     $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
                     $phonenumber = substr($phonenumber, -10);
                     $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
@@ -3044,7 +3049,7 @@ class Leads extends AdminController
                     HAVING COUNT(*) > 0 ")->row();
 
                     if (empty($check_exist)) {
-                        if ($this->leads_model->add($temp_lead_data, 1)) {
+                        if ($this->leads_model->add($temp_lead_data, 1, $delete_created)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
                             $this->leads_model->delete_call_list($phonenumber);
