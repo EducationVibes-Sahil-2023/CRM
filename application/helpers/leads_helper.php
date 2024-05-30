@@ -401,7 +401,7 @@ function get_leads_summary_filter($params)
 }
 
 
-function get_leads_report_($params)
+function get_leads_report_($params, $export = 0)
 {
     $params['date_type'] = !empty($params['date_type']) ? trim(strtolower($params['date_type'])) : '';
 
@@ -420,12 +420,19 @@ function get_leads_report_($params)
             }
         }
 
+        if (!empty($export) && $export == 1) {
+            $sql .= " CONCAT(staff.firstname,' ',staff.lastname) full_name,l.assigned,";
+        }
+
         $sql .= "COUNT(DISTINCT l.id) as count FROM " . db_prefix() . "leads l ";
 
         if (!empty($params['up_to_date'])) {
             $sql .= "JOIN " . db_prefix() . "calls_activity_logs as calls ON (l.phonenumber = calls.contact) ";
         }
         if (!empty($params['department']) || !empty($params['location'])) {
+            $sql .= "JOIN " . db_prefix() . "staff as staff ON (staff.staffid = l.assigned) ";
+        }else  if (!empty($export) && $export == 1) 
+        {
             $sql .= "JOIN " . db_prefix() . "staff as staff ON (staff.staffid = l.assigned) ";
         }
 
@@ -448,7 +455,7 @@ function get_leads_report_($params)
         }
 
         if (!empty($params['lead_type'])) {
-            $sql .= 'AND l.type IN (' . implode(",", array_map(array($CI->db, 'escape_str'), $params['lead_type'])) . ') ';
+            $sql .= 'AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
         }
 
         if (!empty($params['up_to_date'])) {
@@ -485,11 +492,19 @@ function get_leads_report_($params)
             } elseif ($params['date_type'] == "month") {
                 $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M') ";
             } elseif ($params['date_type'] == "year") {
-                $sql .= "GROUP BY YEAR(l.dateadded) ORDER BY dateadded ASC";
+                $sql .= "GROUP BY YEAR(l.dateadded) ";
+            }
+
+            if (!empty($export) && $export == 1) {
+                $sql .= ",l.assigned";
             }
         }
 
-        $sql .= " LIMIT 15 ";
+        if (!empty($export) && $export == 1) {
+        } else {
+            $sql .= " LIMIT 15 ";
+        }
+
         return $result = $CI->db->query($sql)->result();
     } else {
         return [];
@@ -551,7 +566,7 @@ function get_leads_report_conversion($params)
         }
 
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND l.type IN (' . implode(",", array_map(array($CI->db, 'escape_str'), $params['lead_type'])) . ') ';
+            $sql .= 'AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
         }
 
         if (!empty($params['up_to_date'])) {
@@ -654,7 +669,7 @@ function get_leads_report_marketing($params)
         }
 
         if (!empty($params['lead_type'])) {
-            $sql .= ' AND l.type IN (' . implode(",", array_map(array($CI->db, 'escape_str'), $params['lead_type'])) . ') ';
+            $sql .= 'AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
         }
 
         if (!empty($params['up_to_date'])) {

@@ -397,7 +397,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     <button class="btn btn-primary" onclick="window.location.reload();">Reset</button>
                                     <!-- <button class="btn btn-xs btn-danger hide-btn-response" onclick="generatePDF()" id="generate_pdf" style="display:none;"><i class="fa fa-file-pdf-o" aria-hidden="true"></i> Generate Pdf</button> -->
                                     <?php if (is_admin()) { ?>
-                                        <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button>
+                                        <!-- <button class="btn btn-xs btn-success hide-btn-response" onclick="RunExcelJSExport()" id="generate_excel" style="display:none;"><i class="fa fa-file-excel-o" aria-hidden="true"></i> Export to Excel</button> -->
                                     <?php } ?>
                                 </div>
                             </div>
@@ -527,6 +527,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
         var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
         var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
         var excel_data_array = [];
+        var summary_daily_excel = [];
         const max_count = 30;
         const max = 30;
 
@@ -701,7 +702,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
         }
         make_range_slider(0, max_count);
 
-
+        var date_type = "";
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
@@ -714,7 +715,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
             var element_view_fb_name = document.getElementById("view_facebook_names");
             var element_view_google_type = document.getElementById("view_source_marketing");
             var location = document.getElementById("location");
-            var date_type = document.getElementById("date_type").value;
+            date_type = document.getElementById("date_type").value;
             <?php if (is_admin()) { ?>
                 var department = document.getElementById("department");
             <?php } else if ($role == 3 && $staff_department != "") { ?>
@@ -792,736 +793,768 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                     }) => value);
                 }
             <?php } else if ($role == 3 && $staff_department != "") { ?>
-                view_department = ["<?= $staff_department ?>"]; <?php } ?>
+                view_department = ["<?= $staff_department ?>"];
+            <?php } ?>
 
 
 
-        var from_date = document.getElementById("from_date").value;
-        var to_date = document.getElementById("to_date").value;
+            var from_date = document.getElementById("from_date").value;
+            var to_date = document.getElementById("to_date").value;
 
-        if (to_date != '') {
-        if (from_date == '') {
-            $("#from_date").focus();
-            return false;
-        }
-        }
-
-        if (from_date != '') {
-        if (to_date == '') {
-            $("#to_date").focus();
-            return false;
-        }
-        }
-
-        if (xhr != null) {
-        xhr.abort();
-        }
-        $("#generate_pdf").hide(); $(".hide-btn-response").hide(); $(".report-data .hide-graph").addClass("hide"); $("#show_hide_staff_list").addClass("hide");
-
-        // $(".leadSum").html('');
-        $('#apply_filter').attr("disabled", true); show_loader("apply_filter"); xhr = $.ajax({
-        type: "POST",
-        url: admin_url + "reports/lead_summary_filter",
-        data: {
-            assigned: view_assigned_options,
-            source: view_source_options,
-            status: view_status_options,
-            from_date: from_date,
-            to_date: to_date,
-            up_from_date: up_from_date,
-            up_to_date: up_to_date,
-            lead_type: lead_type,
-            update_count_min: update_count_min,
-            update_count_max: update_count_max,
-            location: view_location,
-            department: view_department,
-            daily_update_count: update_staff_id,
-            google_source: view_google_options,
-            fb_source: view_fb_options,
-            date_type: date_type
-
-        },
-        dataType: "JSON",
-        cache: false,
-        success: function(data) {
-            $('#apply_filter').attr("disabled", false);
-            $('#apply_filter_update_count').attr("disabled", false);
-            hide_loader("apply_filter");
-            hide_loader("apply_filter_update_count");
-            //alert(data);  //as a debugging message.
-            if (data.status != undefined) {
-                // $(".leadSum").html('');
-                // $(".leadSum").innerHTML = data.status;
-                $(".leadSum").html(data.status);
-                $(".filter-hide").removeClass("hide");
-            }
-            // $("#updationCounter").html(data.update_count);
-            slider_data = false;
-            if (data.status != "") {
-                $("#generate_pdf").show();
-                $(".hide-btn-response").show();
-            }
-            if (data.excel_data != undefined) {
-                excel_data_array = data.excel_data;
-            }
-
-            if (data.update_count_daily_data != undefined) {
-                let html_update = "<div class='row scroll-div col-12'>";
-                for (i = 0; i < (data.update_count_daily_data).length; i++) {
-                    html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+            if (to_date != '') {
+                if (from_date == '') {
+                    $("#from_date").focus();
+                    return false;
                 }
-                html_update += "</div>";
-                $(".leads-overview-" + update_daily_staff_id).html(html_update);
-                $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
-                update_daily_staff_id = 0;
             }
 
-            update_daily_staff_id = 0;
+            if (from_date != '') {
+                if (to_date == '') {
+                    $("#to_date").focus();
+                    return false;
+                }
+            }
+
+            if (xhr != null) {
+                xhr.abort();
+            }
+            $("#generate_pdf").hide();
+            $(".hide-btn-response").hide();
+            $(".report-data .hide-graph").addClass("hide");
+            $("#show_hide_staff_list").addClass("hide");
+
+            // $(".leadSum").html('');
+            $('#apply_filter').attr("disabled", true);
+            show_loader("apply_filter");
+            xhr = $.ajax({
+                type: "POST",
+                url: admin_url + "reports/lead_summary_filter",
+                data: {
+                    assigned: view_assigned_options,
+                    source: view_source_options,
+                    status: view_status_options,
+                    from_date: from_date,
+                    to_date: to_date,
+                    up_from_date: up_from_date,
+                    up_to_date: up_to_date,
+                    lead_type: lead_type,
+                    update_count_min: update_count_min,
+                    update_count_max: update_count_max,
+                    location: view_location,
+                    department: view_department,
+                    daily_update_count: update_staff_id,
+                    google_source: view_google_options,
+                    fb_source: view_fb_options,
+                    date_type: date_type
+
+                },
+                dataType: "JSON",
+                cache: false,
+                success: function(data) {
+                    $('#apply_filter').attr("disabled", false);
+                    $('#apply_filter_update_count').attr("disabled", false);
+                    hide_loader("apply_filter");
+                    hide_loader("apply_filter_update_count");
+                    //alert(data);  //as a debugging message.
+                    if (data.status != undefined) {
+                        // $(".leadSum").html('');
+                        // $(".leadSum").innerHTML = data.status;
+                        $(".leadSum").html(data.status);
+                        $(".filter-hide").removeClass("hide");
+                    }
+                    // $("#updationCounter").html(data.update_count);
+                    slider_data = false;
+                    if (data.status != "") {
+                        $("#generate_pdf").show();
+                        $(".hide-btn-response").show();
+                    }
+                    if (data.excel_data != undefined) {
+                        excel_data_array = data.excel_data;
+                    }
+
+                    if (data.summary_daily_excel != undefined) {
+                        summary_daily_excel = data.summary_daily_excel;
+                    }
 
 
-            if (data.update_count_label != undefined && data.update_count_label.length > 0) {
-                $("#show_hide_staff_list").removeClass("hide");
-                $("#total_staff_list").html(data.total_staff_html);
-                $(".hide-graph-calls").removeClass("hide");
+                    if (data.update_count_daily_data != undefined) {
+                        let html_update = "<div class='row scroll-div col-12'>";
+                        for (i = 1; i < (data.update_count_daily_data).length; i++) {
+                            html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+                        }
+                        html_update += "</div>";
+                        $(".leads-overview-" + update_daily_staff_id).html(html_update);
+                        $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
+                        update_daily_staff_id = 0;
+                    }
 
-                var configCalls = {
-                    type: "bar",
-                    data: {
-                        labels: data.update_count_label, // Date Objects
-                        datasets: [{
-                                label: "Filtered",
-                                backgroundColor: "rgba(240, 140, 121, 0.8)",
-                                borderColor: "rgba(140, 140, 140, 1.0)",
-                                borderWidth: 0,
-                                data: data.update_count_min,
-                                fill: false,
-                                radius: 0,
+                    update_daily_staff_id = 0;
+
+
+                    if (data.update_count_label != undefined && data.update_count_label.length > 0) {
+                        $("#show_hide_staff_list").removeClass("hide");
+                        $("#total_staff_list").html(data.total_staff_html);
+                        $(".hide-graph-calls").removeClass("hide");
+
+                        var configCalls = {
+                            type: "bar",
+                            data: {
+                                labels: data.update_count_label, // Date Objects
+                                datasets: [{
+                                        label: "Filtered",
+                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                        borderColor: "rgba(140, 140, 140, 1.0)",
+                                        borderWidth: 0,
+                                        data: data.update_count_min,
+                                        fill: false,
+                                        radius: 0,
+                                    },
+                                    {
+                                        label: "Max",
+                                        backgroundColor: "rgba(121, 200, 121, 0.8)",
+                                        borderColor: "rgba(140, 140, 140, 0.0)",
+                                        borderWidth: 0,
+                                        data: data.update_count_max,
+                                        fill: "-1",
+                                        line: false,
+                                        radius: 0,
+                                    },
+                                    // {
+                                    //     label: "Total leads",
+                                    //     backgroundColor: "rgba(0, o, 238, 0.8)",
+                                    //     borderColor: "rgba(140, 140, 140, 1.0)",
+                                    //     borderWidth: 0,
+                                    //     data: data.total_leads,
+                                    //     fill: false,
+                                    //     radius: 0,
+                                    // }
+                                ]
                             },
-                            {
-                                label: "Max",
-                                backgroundColor: "rgba(121, 200, 121, 0.8)",
-                                borderColor: "rgba(140, 140, 140, 0.0)",
-                                borderWidth: 0,
-                                data: data.update_count_max,
-                                fill: "-1",
-                                line: false,
-                                radius: 0,
-                            },
-                            // {
-                            //     label: "Total leads",
-                            //     backgroundColor: "rgba(0, o, 238, 0.8)",
-                            //     borderColor: "rgba(140, 140, 140, 1.0)",
-                            //     borderWidth: 0,
-                            //     data: data.total_leads,
-                            //     fill: false,
-                            //     radius: 0,
-                            // }
-                        ]
-                    },
-                    options: {
-                        tooltips: {
-                            mode: 'index',
-                            intersect: false,
-                            displayColors: false,
-                        },
-                        responsive: true,
-                        title: {
-                            display: true,
-                            text: "Not Reachable Leads chat - Filtered/Max "
-                        },
-                        scales: {
-                            x: {
-                                stacked: true,
-                                format: "HH mm",
-                            },
-                            y: {
-                                stacked: true,
-                                scaleLabel: {
+                            options: {
+                                tooltips: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    displayColors: false,
+                                },
+                                responsive: true,
+                                title: {
                                     display: true,
-                                    labelString: "value"
-                                }
-                            }
-                        },
-                        pan: {
-                            enabled: true,
-                            mode: "x",
-                            speed: 10,
-                            threshold: 10
-                        },
-                        zoom: {
-                            enabled: true,
-                            drag: false,
-                            mode: "xy",
-                            limits: {
-                                max: 10,
-                                min: 0.5
-                            }
-                        }
-                    }
-                };
-
-                // Get the canvas context
-                var ctxCalls = document.getElementById("canvas").getContext("2d");
-
-                createOrUpdateChart("myCallsChart", ctxCalls, configCalls);
-
-            }
-
-
-            if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                $(".hide-graph-daily").removeClass("hide");
-
-                if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                    $(".hide-graph-daily").removeClass("hide");
-                    var labels = []
-                    if (date_type.toLowerCase() == "week") {
-                        labels = data.summary_daily_.map(item => getWeekRange(item.dateadded));
-                    } else {
-                        labels = data.summary_daily_.map(item => item.dateadded);
-                    }
-                    var lable_value = data.summary_daily_.map(item => item.count);
-
-                    var configDaily = {
-                        type: "bar",
-                        data: {
-                            labels: labels, // Date Objects
-                            datasets: [{
-                                label: "Leads",
-                                backgroundColor: "rgba(240, 140, 121, 0.8)",
-                                borderColor: "rgba(140, 140, 140, 1.0)",
-                                borderWidth: 0,
-                                data: lable_value,
-                                fill: false,
-                                radius: 0,
-                            }]
-                        },
-                        options: {
-                            tooltips: {
-                                mode: 'index',
-                                intersect: false,
-                                displayColors: false,
-                            },
-                            responsive: true,
-                            title: {
-                                display: true,
-                                text: "Date Wise Leads chat - Leads"
-                            },
-                            scales: {
-                                x: {
-                                    stacked: true,
-                                    format: "HH mm",
+                                    text: "Not Reachable Leads chat - Filtered/Max "
                                 },
-                                y: {
-                                    stacked: true,
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: "value"
+                                scales: {
+                                    x: {
+                                        stacked: true,
+                                        format: "HH mm",
+                                    },
+                                    y: {
+                                        stacked: true,
+                                        scaleLabel: {
+                                            display: true,
+                                            labelString: "value"
+                                        }
+                                    }
+                                },
+                                pan: {
+                                    enabled: true,
+                                    mode: "x",
+                                    speed: 10,
+                                    threshold: 10
+                                },
+                                zoom: {
+                                    enabled: true,
+                                    drag: false,
+                                    mode: "xy",
+                                    limits: {
+                                        max: 10,
+                                        min: 0.5
                                     }
                                 }
-                            },
-                            pan: {
-                                enabled: true,
-                                mode: "x",
-                                speed: 10,
-                                threshold: 10
-                            },
-                            zoom: {
-                                enabled: true,
-                                drag: false,
-                                mode: "xy",
-                                limits: {
-                                    max: 10,
-                                    min: 0.5
-                                }
                             }
-                        }
-                    };
+                        };
 
-                    // Get the canvas context
-                    var ctxDaily = document.getElementById("canvas_daily").getContext("2d");
+                        // Get the canvas context
+                        var ctxCalls = document.getElementById("canvas").getContext("2d");
 
-                    // Create a new chart with the updated configuration
-                    createOrUpdateChart("canvas_daily", ctxDaily, configDaily);
+                        createOrUpdateChart("myCallsChart", ctxCalls, configCalls);
 
-                }
-
-                // Assuming data.summary_daily_conversion is an array of objects
-                // if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
-                //     $(".hide-graph-daily").removeClass("hide");
-                //     var labels = []
-                //     if (date_type.toLowerCase() == "week") {
-                //         labels = data.summary_daily_conversion.map(item => getWeekRange(item.dateadded));
-                //     } else {
-                //         labels = data.summary_daily_conversion.map(item => item.dateadded);
-                //     }
-
-                //     // Collect unique conversion types and their data
-                //     const conversionData = {};
-                //     data.summary_daily_conversion.forEach(item => {
-                //         const parsedCounts = parseConversionCounts(item.conversion_counts);
-                //         Object.keys(parsedCounts).forEach(type => {
-                //             if (!conversionData[type]) {
-                //                 conversionData[type] = [];
-                //             }
-                //             conversionData[type].push(parsedCounts[type]);
-                //         });
-                //     });
-
-                //     // Prepare datasets
-                //     const datasets = Object.keys(conversionData).map(type => {
-                //         return {
-                //             label: type,
-                //             backgroundColor: randomColor(), // Function to generate random color
-                //             borderColor: randomColor(),
-                //             borderWidth: 1,
-                //             data: conversionData[type],
-                //             fill: false
-                //         };
-                //     });
-
-                //     // Create the chart
-                //     const configDaily = {
-                //         type: "bar",
-                //         data: {
-                //             labels: labels,
-                //             datasets: datasets
-                //         },
-                //         options: {
-                //             tooltips: {
-                //                 mode: 'index',
-                //                 intersect: false,
-                //                 displayColors: false,
-                //             },
-                //             responsive: true,
-                //             title: {
-                //                 display: true,
-                //                 text: "Date Wise Conversion Leads chat - Leads"
-                //             },
-                //             scales: {
-                //                 x: {
-                //                     stacked: true,
-                //                 },
-                //                 y: {
-                //                     stacked: true,
-                //                     scaleLabel: {
-                //                         display: true,
-                //                         labelString: "value"
-                //                     }
-                //                 }
-                //             },
-                //             pan: {
-                //                 enabled: true,
-                //                 mode: "x",
-                //                 speed: 10,
-                //                 threshold: 10
-                //             },
-                //             zoom: {
-                //                 enabled: true,
-                //                 drag: false,
-                //                 mode: "xy",
-                //                 limits: {
-                //                     max: 10,
-                //                     min: 0.5
-                //                 }
-                //             }
-                //         }
-                //     };
-
-                //     // Get the canvas context
-                //     var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
-                //     createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
-
-
-                // }
-
-
-                if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
-                    $(".hide-graph-daily").removeClass("hide");
-
-                    // Function to get all unique conversion types
-                    function getAllConversionTypes(data) {
-                        const types = new Set();
-                        data.forEach(item => {
-                            const parsedCounts = parseConversionCounts(item.conversion_counts);
-                            Object.keys(parsedCounts).forEach(type => types.add(type));
-                        });
-                        return Array.from(types);
                     }
 
-                    // Function to get all unique dates
-                    function getAllDates(data) {
-                        if (date_type.toLowerCase() == "week") {
-                            return data.map(item => getWeekRange(item.dateadded));
-                        } else {
-                            return data.map(item => item.dateadded);
-                        }
-                    }
 
-                    // Get all unique conversion types and dates
-                    const conversionTypes = getAllConversionTypes(data.summary_daily_conversion);
-                    const allDates = getAllDates(data.summary_daily_conversion);
+                    if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                        $(".hide-graph-daily").removeClass("hide");
 
-                    // Initialize conversion data structure
-                    const conversionData = {};
-                    conversionTypes.forEach(type => {
-                        conversionData[type] = allDates.map(date => ({
-                            date,
-                            count: 0
-                        }));
-                    });
-
-                    // Fill in actual data
-                    data.summary_daily_conversion.forEach(item => {
-                        const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
-                        const parsedCounts = parseConversionCounts(item.conversion_counts);
-                        Object.keys(parsedCounts).forEach(type => {
-                            const index = allDates.indexOf(date);
-                            if (index !== -1) {
-                                conversionData[type][index].count = parsedCounts[type];
+                        if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                            $(".hide-graph-daily").removeClass("hide");
+                            var labels = []
+                            if (date_type.toLowerCase() == "week") {
+                                labels = data.summary_daily_.map(item => getWeekRange(item.dateadded));
+                            } else {
+                                labels = data.summary_daily_.map(item => item.dateadded);
                             }
-                        });
-                    });
-                    // Prepare datasets
-                    const datasets = Object.keys(conversionData).map(type => ({
-                        label: type,
-                        backgroundColor: conversion_type_color[type], // Function to generate random color
-                        borderColor: conversion_type_color[type],
-                        borderWidth: 1,
-                        data: conversionData[type].map(item => item.count),
-                        fill: false
-                    }));
+                            var lable_value = data.summary_daily_.map(item => item.count);
 
-                    // Create the chart
-                    const configDaily = {
-                        type: "bar",
-                        data: {
-                            labels: allDates,
-                            datasets: datasets
-                        },
-                        options: {
-                            tooltips: {
-                                mode: 'index',
-                                intersect: false,
-                                displayColors: false,
-                            },
-                            responsive: true,
-                            title: {
-                                display: true,
-                                text: "Date Wise Conversion Leads chat - Leads"
-                            },
-                            scales: {
-                                x: {
-                                    stacked: true,
+                            var configDaily = {
+                                type: "bar",
+                                data: {
+                                    labels: labels, // Date Objects
+                                    datasets: [{
+                                        label: "Leads",
+                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                        borderColor: "rgba(140, 140, 140, 1.0)",
+                                        borderWidth: 0,
+                                        data: lable_value,
+                                        fill: false,
+                                        radius: 0,
+                                    }]
                                 },
-                                y: {
-                                    stacked: true,
-                                    scaleLabel: {
+                                options: {
+                                    tooltips: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        displayColors: false,
+                                    },
+                                    responsive: true,
+                                    title: {
                                         display: true,
-                                        labelString: "value"
+                                        text: "Date Wise Leads chat - Leads"
+                                    },
+                                    scales: {
+                                        x: {
+                                            stacked: true,
+                                            format: "HH mm",
+                                        },
+                                        y: {
+                                            stacked: true,
+                                            scaleLabel: {
+                                                display: true,
+                                                labelString: "value"
+                                            }
+                                        }
+                                    },
+                                    pan: {
+                                        enabled: true,
+                                        mode: "x",
+                                        speed: 10,
+                                        threshold: 10
+                                    },
+                                    zoom: {
+                                        enabled: true,
+                                        drag: false,
+                                        mode: "xy",
+                                        limits: {
+                                            max: 10,
+                                            min: 0.5
+                                        }
                                     }
                                 }
-                            },
-                            pan: {
-                                enabled: true,
-                                mode: "x",
-                                speed: 10,
-                                threshold: 10
-                            },
-                            zoom: {
-                                enabled: true,
-                                drag: false,
-                                mode: "xy",
-                                limits: {
-                                    max: 10,
-                                    min: 0.5
+                            };
+
+                            // Get the canvas context
+                            var ctxDaily = document.getElementById("canvas_daily").getContext("2d");
+
+                            // Create a new chart with the updated configuration
+                            createOrUpdateChart("canvas_daily", ctxDaily, configDaily);
+
+                        }
+
+                        // Assuming data.summary_daily_conversion is an array of objects
+                        // if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
+                        //     $(".hide-graph-daily").removeClass("hide");
+                        //     var labels = []
+                        //     if (date_type.toLowerCase() == "week") {
+                        //         labels = data.summary_daily_conversion.map(item => getWeekRange(item.dateadded));
+                        //     } else {
+                        //         labels = data.summary_daily_conversion.map(item => item.dateadded);
+                        //     }
+
+                        //     // Collect unique conversion types and their data
+                        //     const conversionData = {};
+                        //     data.summary_daily_conversion.forEach(item => {
+                        //         const parsedCounts = parseConversionCounts(item.conversion_counts);
+                        //         Object.keys(parsedCounts).forEach(type => {
+                        //             if (!conversionData[type]) {
+                        //                 conversionData[type] = [];
+                        //             }
+                        //             conversionData[type].push(parsedCounts[type]);
+                        //         });
+                        //     });
+
+                        //     // Prepare datasets
+                        //     const datasets = Object.keys(conversionData).map(type => {
+                        //         return {
+                        //             label: type,
+                        //             backgroundColor: randomColor(), // Function to generate random color
+                        //             borderColor: randomColor(),
+                        //             borderWidth: 1,
+                        //             data: conversionData[type],
+                        //             fill: false
+                        //         };
+                        //     });
+
+                        //     // Create the chart
+                        //     const configDaily = {
+                        //         type: "bar",
+                        //         data: {
+                        //             labels: labels,
+                        //             datasets: datasets
+                        //         },
+                        //         options: {
+                        //             tooltips: {
+                        //                 mode: 'index',
+                        //                 intersect: false,
+                        //                 displayColors: false,
+                        //             },
+                        //             responsive: true,
+                        //             title: {
+                        //                 display: true,
+                        //                 text: "Date Wise Conversion Leads chat - Leads"
+                        //             },
+                        //             scales: {
+                        //                 x: {
+                        //                     stacked: true,
+                        //                 },
+                        //                 y: {
+                        //                     stacked: true,
+                        //                     scaleLabel: {
+                        //                         display: true,
+                        //                         labelString: "value"
+                        //                     }
+                        //                 }
+                        //             },
+                        //             pan: {
+                        //                 enabled: true,
+                        //                 mode: "x",
+                        //                 speed: 10,
+                        //                 threshold: 10
+                        //             },
+                        //             zoom: {
+                        //                 enabled: true,
+                        //                 drag: false,
+                        //                 mode: "xy",
+                        //                 limits: {
+                        //                     max: 10,
+                        //                     min: 0.5
+                        //                 }
+                        //             }
+                        //         }
+                        //     };
+
+                        //     // Get the canvas context
+                        //     var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
+                        //     createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
+
+
+                        // }
+
+
+                        if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
+                            $(".hide-graph-daily").removeClass("hide");
+
+                            // Function to get all unique conversion types
+                            function getAllConversionTypes(data) {
+                                const types = new Set();
+                                data.forEach(item => {
+                                    const parsedCounts = parseConversionCounts(item.conversion_counts);
+                                    Object.keys(parsedCounts).forEach(type => types.add(type));
+                                });
+                                return Array.from(types);
+                            }
+
+                            // Function to get all unique dates
+                            function getAllDates(data) {
+                                if (date_type.toLowerCase() == "week") {
+                                    return data.map(item => getWeekRange(item.dateadded));
+                                } else {
+                                    return data.map(item => item.dateadded);
                                 }
                             }
-                        }
-                    };
 
-                    // Get the canvas context
-                    var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
-                    createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
-                }
+                            // Get all unique conversion types and dates
+                            const conversionTypes = getAllConversionTypes(data.summary_daily_conversion);
+                            const allDates = getAllDates(data.summary_daily_conversion);
 
-                // if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
-                //     $(".hide-graph-daily").removeClass("hide");
-                //     var labels = []
-                //     if (date_type.toLowerCase() == "week") {
-                //         labels = data.summary_daily_marketing.map(item => getWeekRange(item.dateadded));
-                //     } else {
-                //         labels = data.summary_daily_marketing.map(item => item.dateadded);
-                //     }
+                            // Initialize conversion data structure
+                            const conversionData = {};
+                            conversionTypes.forEach(type => {
+                                conversionData[type] = allDates.map(date => ({
+                                    date,
+                                    count: 0
+                                }));
+                            });
 
-                //     // Collect unique conversion types and their data
-                //     const marketingData = {};
-                //     data.summary_daily_marketing.forEach(item => {
-                //         const parsedCounts = parseConversionCounts(item.marketing_count);
-                //         console.log(parsedCounts);
-                //         Object.keys(parsedCounts).forEach(type => {
-                //             if (!marketingData[type]) {
-                //                 marketingData[type] = [];
-                //             }
-                //             marketingData[type].push(parsedCounts[type]);
-                //         });
-                //     });
-                //     console.log(marketingData);
-                //     // Prepare datasets
-                //     const datasets = Object.keys(marketingData).map(type => {
-                //         return {
-                //             label: labels,
-                //             backgroundColor: randomColor(), // Function to generate random color
-                //             borderColor: randomColor(),
-                //             borderWidth: 1,
-                //             data: marketingData[type],
-                //             fill: false
-                //         };
-                //     });
+                            // Fill in actual data
+                            data.summary_daily_conversion.forEach(item => {
+                                const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
+                                const parsedCounts = parseConversionCounts(item.conversion_counts);
+                                Object.keys(parsedCounts).forEach(type => {
+                                    const index = allDates.indexOf(date);
+                                    if (index !== -1) {
+                                        conversionData[type][index].count = parsedCounts[type];
+                                    }
+                                });
+                            });
+                            // Prepare datasets
+                            const datasets = Object.keys(conversionData).map(type => ({
+                                label: type,
+                                backgroundColor: conversion_type_color[type], // Function to generate random color
+                                borderColor: conversion_type_color[type],
+                                borderWidth: 1,
+                                data: conversionData[type].map(item => item.count),
+                                fill: false
+                            }));
 
-                //     // Create the chart
-                //     const configDaily = {
-                //         type: "bar",
-                //         data: {
-                //             labels: labels,
-                //             datasets: datasets
-                //         },
-                //         options: {
-                //             tooltips: {
-                //                 mode: 'index',
-                //                 intersect: false,
-                //                 displayColors: false,
-                //             },
-                //             responsive: true,
-                //             title: {
-                //                 display: true,
-                //                 text: "Date Wise Marketing Leads chat - Leads"
-                //             },
-                //             scales: {
-                //                 x: {
-                //                     stacked: true,
-                //                 },
-                //                 y: {
-                //                     stacked: true,
-                //                     scaleLabel: {
-                //                         display: true,
-                //                         labelString: "value"
-                //                     }
-                //                 }
-                //             },
-                //             pan: {
-                //                 enabled: true,
-                //                 mode: "x",
-                //                 speed: 10,
-                //                 threshold: 10
-                //             },
-                //             zoom: {
-                //                 enabled: true,
-                //                 drag: false,
-                //                 mode: "xy",
-                //                 limits: {
-                //                     max: 10,
-                //                     min: 0.5
-                //                 }
-                //             }
-                //         }
-                //     };
-
-                //     // Get the canvas context
-                //     var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
-                //     createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
-
-
-                // }
-
-                if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
-                    $(".hide-graph-daily").removeClass("hide");
-
-                    // Function to get all unique marketing types
-                    function getAllMarketingTypes(data) {
-                        const types = new Set();
-                        data.forEach(item => {
-                            const parsedCounts = parseConversionCounts(item.marketing_count);
-                            Object.keys(parsedCounts).forEach(type => types.add(type));
-                        });
-                        return Array.from(types);
-                    }
-
-                    // Function to get all unique dates
-                    function getAllDates(data) {
-                        if (date_type.toLowerCase() == "week") {
-                            return data.map(item => getWeekRange(item.dateadded));
-                        } else {
-                            return data.map(item => item.dateadded);
-                        }
-                    }
-
-                    // Get all unique marketing types and dates
-                    const marketingTypes = getAllMarketingTypes(data.summary_daily_marketing);
-                    const allDates = getAllDates(data.summary_daily_marketing);
-
-                    // Initialize marketing data structure
-                    const marketingData = {};
-                    marketingTypes.forEach(type => {
-                        marketingData[type] = allDates.map(date => ({
-                            date,
-                            count: 0
-                        }));
-                    });
-
-                    // Fill in actual data
-                    data.summary_daily_marketing.forEach(item => {
-                        const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
-                        const parsedCounts = parseConversionCounts(item.marketing_count);
-                        Object.keys(parsedCounts).forEach(type => {
-                            const index = allDates.indexOf(date);
-                            if (index !== -1) {
-                                marketingData[type][index].count = parsedCounts[type];
-                            }
-                        });
-                    });
-
-                    // Prepare datasets
-                    const datasets = Object.keys(marketingData).map(type => ({
-                        label: type,
-                        backgroundColor: marketing_type_color[type], // Function to generate random color
-                        borderColor: marketing_type_color[type],
-                        borderWidth: 1,
-                        data: marketingData[type].map(item => item.count),
-                        fill: false
-                    }));
-
-                    // Create the chart
-                    const configDaily = {
-                        type: "bar",
-                        data: {
-                            labels: allDates,
-                            datasets: datasets
-                        },
-                        options: {
-                            tooltips: {
-                                mode: 'index',
-                                intersect: false,
-                                displayColors: false,
-                            },
-                            responsive: true,
-                            title: {
-                                display: true,
-                                text: "Date Wise Marketing Leads chat - Leads"
-                            },
-                            scales: {
-                                x: {
-                                    stacked: true,
+                            // Create the chart
+                            const configDaily = {
+                                type: "bar",
+                                data: {
+                                    labels: allDates,
+                                    datasets: datasets
                                 },
-                                y: {
-                                    stacked: true,
-                                    scaleLabel: {
+                                options: {
+                                    tooltips: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        displayColors: false,
+                                    },
+                                    responsive: true,
+                                    title: {
                                         display: true,
-                                        labelString: "value"
+                                        text: "Date Wise Conversion Leads chat - Leads"
+                                    },
+                                    scales: {
+                                        x: {
+                                            stacked: true,
+                                        },
+                                        y: {
+                                            stacked: true,
+                                            scaleLabel: {
+                                                display: true,
+                                                labelString: "value"
+                                            }
+                                        }
+                                    },
+                                    pan: {
+                                        enabled: true,
+                                        mode: "x",
+                                        speed: 10,
+                                        threshold: 10
+                                    },
+                                    zoom: {
+                                        enabled: true,
+                                        drag: false,
+                                        mode: "xy",
+                                        limits: {
+                                            max: 10,
+                                            min: 0.5
+                                        }
                                     }
                                 }
-                            },
-                            pan: {
-                                enabled: true,
-                                mode: "x",
-                                speed: 10,
-                                threshold: 10
-                            },
-                            zoom: {
-                                enabled: true,
-                                drag: false,
-                                mode: "xy",
-                                limits: {
-                                    max: 10,
-                                    min: 0.5
+                            };
+
+                            // Get the canvas context
+                            var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
+                            createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
+                        }
+
+                        // if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
+                        //     $(".hide-graph-daily").removeClass("hide");
+                        //     var labels = []
+                        //     if (date_type.toLowerCase() == "week") {
+                        //         labels = data.summary_daily_marketing.map(item => getWeekRange(item.dateadded));
+                        //     } else {
+                        //         labels = data.summary_daily_marketing.map(item => item.dateadded);
+                        //     }
+
+                        //     // Collect unique conversion types and their data
+                        //     const marketingData = {};
+                        //     data.summary_daily_marketing.forEach(item => {
+                        //         const parsedCounts = parseConversionCounts(item.marketing_count);
+                        //         console.log(parsedCounts);
+                        //         Object.keys(parsedCounts).forEach(type => {
+                        //             if (!marketingData[type]) {
+                        //                 marketingData[type] = [];
+                        //             }
+                        //             marketingData[type].push(parsedCounts[type]);
+                        //         });
+                        //     });
+                        //     console.log(marketingData);
+                        //     // Prepare datasets
+                        //     const datasets = Object.keys(marketingData).map(type => {
+                        //         return {
+                        //             label: labels,
+                        //             backgroundColor: randomColor(), // Function to generate random color
+                        //             borderColor: randomColor(),
+                        //             borderWidth: 1,
+                        //             data: marketingData[type],
+                        //             fill: false
+                        //         };
+                        //     });
+
+                        //     // Create the chart
+                        //     const configDaily = {
+                        //         type: "bar",
+                        //         data: {
+                        //             labels: labels,
+                        //             datasets: datasets
+                        //         },
+                        //         options: {
+                        //             tooltips: {
+                        //                 mode: 'index',
+                        //                 intersect: false,
+                        //                 displayColors: false,
+                        //             },
+                        //             responsive: true,
+                        //             title: {
+                        //                 display: true,
+                        //                 text: "Date Wise Marketing Leads chat - Leads"
+                        //             },
+                        //             scales: {
+                        //                 x: {
+                        //                     stacked: true,
+                        //                 },
+                        //                 y: {
+                        //                     stacked: true,
+                        //                     scaleLabel: {
+                        //                         display: true,
+                        //                         labelString: "value"
+                        //                     }
+                        //                 }
+                        //             },
+                        //             pan: {
+                        //                 enabled: true,
+                        //                 mode: "x",
+                        //                 speed: 10,
+                        //                 threshold: 10
+                        //             },
+                        //             zoom: {
+                        //                 enabled: true,
+                        //                 drag: false,
+                        //                 mode: "xy",
+                        //                 limits: {
+                        //                     max: 10,
+                        //                     min: 0.5
+                        //                 }
+                        //             }
+                        //         }
+                        //     };
+
+                        //     // Get the canvas context
+                        //     var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
+                        //     createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
+
+
+                        // }
+
+                        if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
+                            $(".hide-graph-daily").removeClass("hide");
+
+                            // Function to get all unique marketing types
+                            function getAllMarketingTypes(data) {
+                                const types = new Set();
+                                data.forEach(item => {
+                                    const parsedCounts = parseConversionCounts(item.marketing_count);
+                                    Object.keys(parsedCounts).forEach(type => types.add(type));
+                                });
+                                return Array.from(types);
+                            }
+
+                            // Function to get all unique dates
+                            function getAllDates(data) {
+                                if (date_type.toLowerCase() == "week") {
+                                    return data.map(item => getWeekRange(item.dateadded));
+                                } else {
+                                    return data.map(item => item.dateadded);
                                 }
                             }
+
+                            // Get all unique marketing types and dates
+                            const marketingTypes = getAllMarketingTypes(data.summary_daily_marketing);
+                            const allDates = getAllDates(data.summary_daily_marketing);
+
+                            // Initialize marketing data structure
+                            const marketingData = {};
+                            marketingTypes.forEach(type => {
+                                marketingData[type] = allDates.map(date => ({
+                                    date,
+                                    count: 0
+                                }));
+                            });
+
+                            // Fill in actual data
+                            data.summary_daily_marketing.forEach(item => {
+                                const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
+                                const parsedCounts = parseConversionCounts(item.marketing_count);
+                                Object.keys(parsedCounts).forEach(type => {
+                                    const index = allDates.indexOf(date);
+                                    if (index !== -1) {
+                                        marketingData[type][index].count = parsedCounts[type];
+                                    }
+                                });
+                            });
+
+                            // Prepare datasets
+                            const datasets = Object.keys(marketingData).map(type => ({
+                                label: type,
+                                backgroundColor: marketing_type_color[type], // Function to generate random color
+                                borderColor: marketing_type_color[type],
+                                borderWidth: 1,
+                                data: marketingData[type].map(item => item.count),
+                                fill: false
+                            }));
+
+                            // Create the chart
+                            const configDaily = {
+                                type: "bar",
+                                data: {
+                                    labels: allDates,
+                                    datasets: datasets
+                                },
+                                options: {
+                                    tooltips: {
+                                        mode: 'index',
+                                        intersect: false,
+                                        displayColors: false,
+                                    },
+                                    responsive: true,
+                                    title: {
+                                        display: true,
+                                        text: "Date Wise Marketing Leads chat - Leads"
+                                    },
+                                    scales: {
+                                        x: {
+                                            stacked: true,
+                                        },
+                                        y: {
+                                            stacked: true,
+                                            scaleLabel: {
+                                                display: true,
+                                                labelString: "value"
+                                            }
+                                        }
+                                    },
+                                    pan: {
+                                        enabled: true,
+                                        mode: "x",
+                                        speed: 10,
+                                        threshold: 10
+                                    },
+                                    zoom: {
+                                        enabled: true,
+                                        drag: false,
+                                        mode: "xy",
+                                        limits: {
+                                            max: 10,
+                                            min: 0.5
+                                        }
+                                    }
+                                }
+                            };
+
+                            // Get the canvas context
+                            var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
+                            createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
                         }
-                    };
 
-                    // Get the canvas context
-                    var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
-                    createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
+
+                        // if (data.total_leads_staff != undefined) {
+
+
+                        //     $(".hide-graph-leads").removeClass("hide");
+
+                        //     var config = {
+                        //         type: "bar",
+                        //         data: {
+                        //             labels: data.total_leads_staff, // Date Objects
+                        //             datasets: [{
+                        //                 label: "Total leads",
+                        //                 backgroundColor: "rgba(240, 140, 121, 0.8)",
+                        //                 borderColor: "rgba(140, 140, 140, 1.0)",
+                        //                 borderWidth: 0,
+                        //                 data: data.total_leads,
+                        //                 fill: false,
+                        //                 radius: 0,
+                        //             }]
+                        //         },
+                        //         options: {
+                        //             tooltips: {
+                        //                 mode: 'index',
+                        //                 intersect: false,
+                        //                 displayColors: false,
+                        //             },
+                        //             responsive: true,
+                        //             title: {
+                        //                 display: true,
+                        //                 text: "Total Leads chat"
+                        //             },
+                        //             scales: {
+                        //                 x: {
+                        //                     stacked: true,
+                        //                     format: "HH mm",
+                        //                 },
+                        //                 y: {
+                        //                     stacked: true,
+                        //                     scaleLabel: {
+                        //                         display: true,
+                        //                         labelString: "value"
+                        //                     }
+                        //                 }
+                        //             },
+                        //             pan: {
+                        //                 enabled: true,
+                        //                 mode: "x",
+                        //                 speed: 10,
+                        //                 threshold: 10
+                        //             },
+                        //             zoom: {
+                        //                 enabled: true,
+                        //                 drag: false,
+                        //                 mode: "xy",
+                        //                 limits: {
+                        //                     max: 10,
+                        //                     min: 0.5
+                        //                 }
+                        //             }
+                        //         }
+                        //     };
+
+                        //     // Get the canvas context
+                        //     var ctx = document.getElementById("canvas_").getContext("2d");
+
+                        //     // Destroy the existing chart (if it exists)
+                        //     if (window.myLine) {
+                        //         window.myLine.destroy();
+                        //     }
+
+                        //     // Create a new chart with the updated configuration
+                        //     window.myLine = new Chart(ctx, config);
+
+                        // }
+                    }
                 }
-
-
-                // if (data.total_leads_staff != undefined) {
-
-
-                //     $(".hide-graph-leads").removeClass("hide");
-
-                //     var config = {
-                //         type: "bar",
-                //         data: {
-                //             labels: data.total_leads_staff, // Date Objects
-                //             datasets: [{
-                //                 label: "Total leads",
-                //                 backgroundColor: "rgba(240, 140, 121, 0.8)",
-                //                 borderColor: "rgba(140, 140, 140, 1.0)",
-                //                 borderWidth: 0,
-                //                 data: data.total_leads,
-                //                 fill: false,
-                //                 radius: 0,
-                //             }]
-                //         },
-                //         options: {
-                //             tooltips: {
-                //                 mode: 'index',
-                //                 intersect: false,
-                //                 displayColors: false,
-                //             },
-                //             responsive: true,
-                //             title: {
-                //                 display: true,
-                //                 text: "Total Leads chat"
-                //             },
-                //             scales: {
-                //                 x: {
-                //                     stacked: true,
-                //                     format: "HH mm",
-                //                 },
-                //                 y: {
-                //                     stacked: true,
-                //                     scaleLabel: {
-                //                         display: true,
-                //                         labelString: "value"
-                //                     }
-                //                 }
-                //             },
-                //             pan: {
-                //                 enabled: true,
-                //                 mode: "x",
-                //                 speed: 10,
-                //                 threshold: 10
-                //             },
-                //             zoom: {
-                //                 enabled: true,
-                //                 drag: false,
-                //                 mode: "xy",
-                //                 limits: {
-                //                     max: 10,
-                //                     min: 0.5
-                //                 }
-                //             }
-                //         }
-                //     };
-
-                //     // Get the canvas context
-                //     var ctx = document.getElementById("canvas_").getContext("2d");
-
-                //     // Destroy the existing chart (if it exists)
-                //     if (window.myLine) {
-                //         window.myLine.destroy();
-                //     }
-
-                //     // Create a new chart with the updated configuration
-                //     window.myLine = new Chart(ctx, config);
-
-                // }
-            }
-        }
-        }); // you have missed this bracket
-        return false;
+            }); // you have missed this bracket
+            return false;
         });
+
+
+        function getColumnLetter(index) {
+            let columnLetter = '';
+            while (index >= 0) {
+                columnLetter = String.fromCharCode((index % 26) + 65) + columnLetter;
+                index = Math.floor(index / 26) - 1;
+            }
+            return columnLetter;
+        }
+
+        function generateColumnSeries(rowNumber, count) {
+            let series = [];
+            for (let i = 0; i < count; i++) {
+                let columnLetter = getColumnLetter(i);
+                series.push(columnLetter);
+            }
+            return series;
+        }
+
+        var _getColumnLetter = generateColumnSeries(1, 100);
 
         async function generatePDF() {
             // Choose the element that your content will be rendered to.
@@ -1567,7 +1600,14 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
         // / create a new workbook and worksheet
 
         const numberFormat = '#,##0.00'; // Number format pattern
+
+
         function RunExcelJSExport() {
+            RunExcelJSExport_()
+            RunExcelJSExport__();
+        }
+
+        function RunExcelJSExport_() {
             var workbook = new ExcelJS.Workbook();
             Object.keys(excel_data_array).forEach(function(key) {
                 let worksheet = workbook.addWorksheet(key);
@@ -1579,10 +1619,12 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 };
                 for (j = 1; j <= 1; j++) {
                     let index = 0;
-                    for (let i = 66; i < (66 + source_name.length); i++) {
+                    for (let i = 1; i < (source_name.length); i++) {
+                        console.log(source_name);
                         if (source_name[index].name != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
-                            worksheet.getCell(String.fromCharCode(i) + j).font = {
+                            console.log(_getColumnLetter[i] + j);
+                            worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
+                            worksheet.getCell(_getColumnLetter[i] + j).font = {
                                 bold: true,
                                 color: {
                                     argb: (source_name[index].color_name).replace("#", ""),
@@ -1613,23 +1655,23 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 let index_upper = 0;
                 for (j = 2; j <= (status_name.length + 1); j++) {
                     let index = 0;
-                    for (let i = 66; i < (66 + source_name.length); i++) {
+                    for (let i = 1; i < (source_name.length); i++) {
                         if (source_name[index].name != undefined && status_name[index_upper].name != undefined) {
-                            // worksheet.getCell(String.fromCharCode(i) + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
+                            // worksheet.getCell(_getColumnLetter[i] + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
                             let index_name = status_name[index_upper].name + "-" + source_name[index].name;
                             if (excel_data[index_name] != undefined) {
-                                worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data[index_name].total);
-                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data[index_name].total);
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
                                     }
                                 };
                             } else {
-                                worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
@@ -1653,10 +1695,10 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 };
                 for (j = con_index; j <= con_index; j++) {
                     let index = 0;
-                    for (let i = 66; i < (66 + source_name.length); i++) {
+                    for (let i = 1; i < (source_name.length); i++) {
                         if (source_name[index].name != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = source_name[index].name;
-                            worksheet.getCell(String.fromCharCode(i) + j).font = {
+                            worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
+                            worksheet.getCell(_getColumnLetter[i] + j).font = {
                                 bold: true,
                                 color: {
                                     argb: (source_name[index].color_name).replace("#", ""),
@@ -1689,22 +1731,22 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 let con_index_upper = 0;
                 for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
                     let index = 0;
-                    for (let i = 66; i < (66 + source_name.length); i++) {
+                    for (let i = 1; i < (source_name.length); i++) {
                         if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
                             let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
                             if (excel_data["conversion_data"][index_name] != undefined) {
-                                worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["conversion_data"][index_name]);
-                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["conversion_data"][index_name]);
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
                                     }
                                 };
                             } else {
-                                worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
@@ -1729,10 +1771,10 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 };
                 for (j = con_index; j <= con_index; j++) {
                     let index = 0;
-                    for (let i = 66; i < (66 + conversion_type.length); i++) {
+                    for (let i = 1; i < (conversion_type.length); i++) {
                         if (conversion_type[index].name != undefined) {
-                            worksheet.getCell(String.fromCharCode(i) + j).value = conversion_type[index].name;
-                            worksheet.getCell(String.fromCharCode(i) + j).font = {
+                            worksheet.getCell(_getColumnLetter[i] + j).value = conversion_type[index].name;
+                            worksheet.getCell(_getColumnLetter[i] + j).font = {
                                 bold: true,
                                 color: {
                                     argb: (conversion_type[index].color).replace("#", ""),
@@ -1765,22 +1807,22 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 let con_index_mar = 0;
                 for (j = (con_index + 1); j < ((con_index + 1) + (marketing_type.length)); j++) {
                     let index = 0;
-                    for (let i = 66; i < (66 + conversion_type.length); i++) {
+                    for (let i = 1; i < (conversion_type.length); i++) {
                         if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
                             let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
                             if (excel_data["performance_data"][index_name] != undefined) {
-                                worksheet.getCell(String.fromCharCode(i) + j).value = Number(excel_data["performance_data"][index_name]);
-                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["performance_data"][index_name]);
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
                                     }
                                 };
                             } else {
-                                worksheet.getCell(String.fromCharCode(i) + j).value = 0;
-                                worksheet.getCell(String.fromCharCode(i) + j).numFmt = numberFormat;
-                                worksheet.getCell(String.fromCharCode(i) + j).alignment = {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
@@ -1801,19 +1843,8 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
             });
 
 
-            // console.log(letters);
-            // console.log(letters);
-            // // print the values in cells A1 through D1
-            // worksheet.getCell('A1').value = 'Value in A1';
-            // worksheet.getCell('B1').value = 'Value in B1';
-            // worksheet.getCell('C1').value = 'Value in C1';
-            // worksheet.getCell('D1').value = 'Value in D1';
 
-
-            // Save the workbook as an xlsx file
             workbook.xlsx.writeBuffer().then(function(buffer) {
-                // return;
-                //   saveAs(new Blob([buffer], { type: 'application/octet-stream' }), 'example.xlsx');
 
                 // Save the workbook
                 workbook.xlsx.writeBuffer().then(function(buffer) {
@@ -1841,7 +1872,176 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
         }
 
+        function RunExcelJSExport__() {
+            var workbook = new ExcelJS.Workbook();
+            let worksheet = workbook.addWorksheet("Lead Reports");
+            var con_index = 0;
 
+            Object.keys(excel_data_array).forEach(function(key) {
+                let excel_data = excel_data_array[key];
+                // set up some data
+                let daily_report = [];
+                if (summary_daily_excel[key] != undefined) {
+                    daily_report = summary_daily_excel[key];
+                }
+                console.log(daily_report);
+                con_index = (con_index + 1);
+                worksheet.getCell("A" + con_index).value = key;
+                worksheet.getCell("A" + con_index).font = {
+                    bold: true,
+                };
+                con_index++;
+                worksheet.getCell("A" + con_index).value = "Conversion/Source";
+                worksheet.getCell("A" + con_index).font = {
+                    bold: true,
+                };
+                for (j = con_index; j <= con_index; j++) {
+                    let index = 0;
+                    for (let i = 1; i < (source_name.length); i++) {
+                        if (source_name[index].name != undefined) {
+                            worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
+                            worksheet.getCell(_getColumnLetter[i] + j).font = {
+                                bold: true,
+                                color: {
+                                    argb: (source_name[index].color_name).replace("#", ""),
+                                    size: 16
+                                }
+                            };
+
+                        }
+                        index++;
+                    }
+                }
+                var index_type = 0;
+
+                for (j = (con_index + 1); j < ((con_index + 1) + conversion_type.length); j++) {
+
+                    if (conversion_type[index_type].name != undefined) {
+                        worksheet.getCell("A" + j).value = conversion_type[index_type].name;
+                        worksheet.getCell("A" + j).font = {
+                            bold: true,
+                            color: {
+                                argb: (conversion_type[index_type].color).replace("#", ""),
+                                size: 16
+                            }
+                        };
+
+                    }
+                    index_type++;
+                }
+
+                let con_index_upper = 0;
+                for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
+                    let index = 0;
+                    for (let i = 1; i < (source_name.length); i++) {
+                        if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
+                            let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
+                            if (excel_data["conversion_data"][index_name] != undefined) {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["conversion_data"][index_name]);
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+                            } else {
+                                worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+
+
+
+
+                            }
+                        }
+                        index++;
+                    }
+
+
+                    con_index_upper++;
+                }
+
+                if (daily_report.length > 0) {
+                    // Set header values
+                    worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).value = "User Name";
+                    worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).font = {
+                        bold: true,
+                    };
+                    worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).value = "Date";
+                    worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).font = {
+                        bold: true,
+                    };
+                    worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).value = "Count";
+                    worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).font = {
+                        bold: true,
+                    };
+
+                    // Populate data
+                    let ii = 0;
+                    for (let j = con_index + 1; j < (con_index + 1) + daily_report.length; j++) {
+                        let date = daily_report[ii]["dateadded"];
+                        if (date_type.toLowerCase() == "week") {
+                            date = getWeekRange(item.dateadded);
+                        }
+                        worksheet.getCell(getColumnLetter(source_name.length + 5) + j).value = daily_report[ii]["full_name"];
+                        worksheet.getCell(getColumnLetter(source_name.length + 6) + j).value = date;
+                        worksheet.getCell(getColumnLetter(source_name.length + 7) + j).value = Number(daily_report[ii]["count"]);
+                        worksheet.getCell(getColumnLetter(source_name.length + 7) + j).numFmt = numberFormat;
+                        worksheet.getCell(getColumnLetter(source_name.length + 7) + j).alignment = {
+                            horizontal: 'right',
+                            color: {
+                                argb: "FF0000"
+                            }
+                        };
+
+                        ii++;
+                    }
+                }
+
+                if (daily_report.length > conversion_type.length) {
+                    con_index = con_index + daily_report.length + 1;
+                } else {
+                    con_index = con_index + conversion_type.length + 1;
+                }
+
+
+            });
+
+
+
+            workbook.xlsx.writeBuffer().then(function(buffer) {
+
+                // Save the workbook
+                workbook.xlsx.writeBuffer().then(function(buffer) {
+                    // Create a blob from the buffer
+                    var blob = new Blob([buffer], {
+                        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                    });
+
+                    // Create a URL for the blob
+                    var url = window.URL.createObjectURL(blob);
+
+                    // Create a link to download the file
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'Leads_Report_date_wise.xlsx';
+                    document.body.appendChild(a);
+
+                    // Click the link to download the file
+                    a.click();
+
+                    // Remove the link
+                    document.body.removeChild(a);
+                });
+            });
+
+        }
         // // Create a new workbook
         // var workbook = new ExcelJS.Workbook();
 
