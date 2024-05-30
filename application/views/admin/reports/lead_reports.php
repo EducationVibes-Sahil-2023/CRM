@@ -458,13 +458,13 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                         </div>
                                         <br>
                                         <br>
-                                        <div id="leadSum_conversion">
-                                            <canvas id="canvas_conversion"></canvas>
+                                        <div id="leadSum_marketing">
+                                            <canvas id="canvas_marketing"></canvas>
                                         </div>
                                         <br>
                                         <br>
-                                        <div id="leadSum_marketing">
-                                            <canvas id="canvas_marketing"></canvas>
+                                        <div id="leadSum_conversion">
+                                            <canvas id="canvas_conversion"></canvas>
                                         </div>
                                         <br>
                                         <br>
@@ -504,6 +504,24 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.0.2/chart.min.js"></script> -->
     <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script> -->
     <script>
+        <?php
+        $conversion_type_color = array_column($conversion_type, 'color', 'name');
+        $marketing_type_color = array_column($marketing_type, 'color', 'name');
+
+        ?>
+        var conversion_type_color = <?= !empty($conversion_type_color) ? json_encode($conversion_type_color, true) : '' ?>;
+        var marketing_type_color = <?= !empty($marketing_type_color) ? json_encode($marketing_type_color, true) : '' ?>;
+
+        // Convert all colors in conversion_type_color to rgba
+        // for (let name in conversion_type_color) {
+        //     if (conversion_type_color.hasOwnProperty(name)) {
+        //         conversion_type_color[name] = hexToRgba(conversion_type_color[name]);
+        //     }
+        // }
+
+        // console.log(conversion_type_color); // Output the converted colors
+
+
         var source_name = <?= !empty($sources) ? json_encode($sources, true) : '' ?>;
         var status_name = <?= !empty($status) ? json_encode($status, true) : '' ?>;
         var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
@@ -544,6 +562,21 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
             const b = Math.floor(Math.random() * 255);
             return `rgba(${r}, ${g}, ${b}, 0.5)`;
         }
+
+        function hexToRgba(hex, alpha = 1) {
+            // Remove the hash at the start if it's there
+            hex = hex.replace(/^#/, '');
+
+            // Parse the r, g, b values
+            let r = parseInt(hex.substring(0, 2), 16);
+            let g = parseInt(hex.substring(2, 4), 16);
+            let b = parseInt(hex.substring(4, 6), 16);
+
+            // Return the rgba string
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+
 
         function getWeekRange(yearWeek) {
             // Parse the year and week number from the input
@@ -1153,12 +1186,11 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     }
                                 });
                             });
-
                             // Prepare datasets
                             const datasets = Object.keys(conversionData).map(type => ({
                                 label: type,
-                                backgroundColor: randomColor(), // Function to generate random color
-                                borderColor: randomColor(),
+                                backgroundColor: conversion_type_color[type], // Function to generate random color
+                                borderColor: conversion_type_color[type],
                                 borderWidth: 1,
                                 data: conversionData[type].map(item => item.count),
                                 fill: false
@@ -1356,8 +1388,8 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                             // Prepare datasets
                             const datasets = Object.keys(marketingData).map(type => ({
                                 label: type,
-                                backgroundColor: randomColor(), // Function to generate random color
-                                borderColor: randomColor(),
+                                backgroundColor: marketing_type_color[type], // Function to generate random color
+                                borderColor: marketing_type_color[type],
                                 borderWidth: 1,
                                 data: marketingData[type].map(item => item.count),
                                 fill: false
