@@ -985,11 +985,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
 
     function checkEmptyDirectory() {
-        console.log("okkk1");
-
         setTimeout(() => {
-            console.log("okkk2");
-
             var elements = $(".dx-menu-item-text").map(function() {
                 return $(this).text();
             }).get();
