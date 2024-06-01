@@ -1987,7 +1987,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                     for (let j = con_index + 1; j < (con_index + 1) + daily_report.length; j++) {
                         let date = daily_report[ii]["dateadded"];
                         if (date_type.toLowerCase() == "week") {
-                            date = getWeekRange(item.dateadded);
+                            date = getWeekRange(daily_report[ii]["dateadded"]);
                         }
                         worksheet.getCell(getColumnLetter(source_name.length + 5) + j).value = daily_report[ii]["full_name"];
                         worksheet.getCell(getColumnLetter(source_name.length + 6) + j).value = date;
