@@ -1604,7 +1604,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
         function RunExcelJSExport() {
             RunExcelJSExport_()
-            // RunExcelJSExport__();
+            RunExcelJSExport__();
         }
 
         function RunExcelJSExport_() {
