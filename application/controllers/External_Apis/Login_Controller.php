@@ -65,6 +65,8 @@ class Login_Controller extends Api_Controller
 
     public function call_update()
     {
+        $staff_data =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
+
         $form_data = !empty($_POST["call_data"]) ? json_decode($_POST["call_data"], true) : '';
         $form_data_array = [];
         $form_data_array_temp = [];
@@ -91,7 +93,15 @@ class Login_Controller extends Api_Controller
         if (!empty($form_data["type"]) && $form_data["type"] == 2) {
             foreach ($form_data["formData"] as $form_d) {
                 $type =  2;
-                $callassignee =  !empty($form_d["callassignee"]) ? $form_d["callassignee"] : '';
+                // $callassignee =  !empty($form_d["callassignee"]) ? $form_d["callassignee"] : '';
+
+                $callassignee = !empty($staff_data["data"][0]["phonenumber"]) ?
+                    $staff_data["data"][0]["phonenumber"] : (!empty($form_d["callassignee"]) ?
+                        $form_d["callassignee"] :
+                        ''
+                    );
+
+
                 $phonenumber =  !empty($form_d["phonenumber"]) ? $form_d["phonenumber"] : '';
                 $call_status =  !empty($form_d["form-cf-13"]) ? $form_d["form-cf-13"] : 'Not Found';
                 $calls_type =  !empty($form_d["calls_type"]) ? $form_d["calls_type"] : '';
@@ -114,7 +124,12 @@ class Login_Controller extends Api_Controller
         } else {
 
             $staffid = "";
-            $callassignee =  !empty($form_data["formData"]["callassignee"]) ? $form_data["formData"]["callassignee"] : '';
+            // $callassignee =  !empty($form_data["formData"]["callassignee"]) ? $form_data["formData"]["callassignee"] : '';
+            $callassignee = !empty($staff_data["data"][0]["phonenumber"]) ?
+                $staff_data["data"][0]["phonenumber"] : (!empty($form_data["formData"]["callassignee"]) ?
+                    $form_data["formData"]["callassignee"] :
+                    ''
+                );
             $phonenumber =  !empty($form_data["formData"]["phonenumber"]) ? $form_data["formData"]["phonenumber"] : '';
             $call_start =  !empty($form_data["formData"]["startdate_time"]) ? strtotime($form_data["formData"]["startdate_time"]) : '';
             $call_end =  !empty($form_data["formData"]["enddate_time"]) ? strtotime($form_data["formData"]["enddate_time"]) : '';
