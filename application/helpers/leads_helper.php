@@ -490,7 +490,7 @@ function get_leads_report_($params, $export = 0)
             } elseif ($params['date_type'] == "week") {
                 $sql .= "GROUP BY YEARWEEK(l.dateadded, 1) ";
             } elseif ($params['date_type'] == "month") {
-                $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M') ";
+                $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %m') ";
             } elseif ($params['date_type'] == "year") {
                 $sql .= "GROUP BY YEAR(l.dateadded) ";
             }

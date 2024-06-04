@@ -1603,7 +1603,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
 
         function RunExcelJSExport() {
-            RunExcelJSExport_()
+            // RunExcelJSExport_()
             RunExcelJSExport__();
         }
 
@@ -1620,9 +1620,9 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 for (j = 1; j <= 1; j++) {
                     let index = 0;
                     for (let i = 1; i < (source_name.length); i++) {
-                        console.log(source_name);
+                        // console.log(source_name);
                         if (source_name[index].name != undefined) {
-                            console.log(_getColumnLetter[i] + j);
+                            // console.log(_getColumnLetter[i] + j);
                             worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
                             worksheet.getCell(_getColumnLetter[i] + j).font = {
                                 bold: true,
@@ -1874,143 +1874,448 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
         function RunExcelJSExport__() {
             var workbook = new ExcelJS.Workbook();
-            let worksheet = workbook.addWorksheet("Lead Reports");
-            var con_index = 0;
-
-            Object.keys(excel_data_array).forEach(function(key) {
-                let excel_data = excel_data_array[key];
-                // set up some data
-                let daily_report = [];
-                if (summary_daily_excel[key] != undefined) {
-                    daily_report = summary_daily_excel[key];
+            let excel_data_array_ = [{
+                    "key": 1,
+                    "name": "Lead Reports"
+                },
+                {
+                    "key": 2,
+                    "name": "Conversion Reports"
+                },
+                {
+                    "key": 3,
+                    "name": "Marketing Reports"
                 }
-                console.log(daily_report);
-                con_index = (con_index + 1);
-                worksheet.getCell("A" + con_index).value = key;
-                worksheet.getCell("A" + con_index).font = {
-                    bold: true,
-                };
-                con_index++;
-                worksheet.getCell("A" + con_index).value = "Conversion/Source";
-                worksheet.getCell("A" + con_index).font = {
-                    bold: true,
-                };
-                for (j = con_index; j <= con_index; j++) {
-                    let index = 0;
-                    for (let i = 1; i < (source_name.length); i++) {
-                        if (source_name[index].name != undefined) {
-                            worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
-                            worksheet.getCell(_getColumnLetter[i] + j).font = {
-                                bold: true,
-                                color: {
-                                    argb: (source_name[index].color_name).replace("#", ""),
-                                    size: 16
+            ];
+
+            excel_data_array_.forEach(function(item) {
+                if (item.key == 1) {
+                    let worksheet = workbook.addWorksheet(item.name);
+                    let con_index = 0;
+                    Object.keys(excel_data_array).forEach(function(key) {
+
+                        let excel_data = excel_data_array[key];
+                        // set up some data
+                        console.log(excel_data)
+                        let daily_report = [];
+                        if (summary_daily_excel[key] != undefined) {
+                            daily_report = summary_daily_excel[key];
+                        }
+                        con_index = (con_index + 1);
+                        worksheet.getCell("A" + con_index).value = key;
+                        worksheet.getCell("A" + con_index).font = {
+                            bold: true,
+                        };
+                        // con_index++;
+                        worksheet.getCell("B" + con_index).value = "Status/Source";
+                        worksheet.getCell("B" + con_index).font = {
+                            bold: true,
+                        };
+                        for (j = con_index; j <= (con_index); j++) {
+                            let index = 0;
+                            for (let i = 2; i < (source_name.length); i++) {
+
+                                if (source_name[index].name != undefined) {
+                                    // console.log(_getColumnLetter[i] + j);
+                                    worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
+                                    worksheet.getCell(_getColumnLetter[i] + j).font = {
+                                        bold: true,
+                                        color: {
+                                            argb: (source_name[index].color_name).replace("#", ""),
+                                            size: 16
+                                        }
+                                    };
+
                                 }
+                                index++;
+                            }
+                        }
+
+                        var index_type = 0;
+
+                        for (j = con_index + 1; j < ((con_index) + (status_name.length)); j++) {
+                            console.log(j);
+                            console.log((con_index) + (status_name.length));
+                            if (status_name[index_type].name !== undefined) {
+                                worksheet.getCell("B" + j).value = status_name[index_type].name;
+                                worksheet.getCell("B" + j).font = {
+                                    bold: true,
+                                    color: {
+                                        argb: (status_name[index_type].color).replace("#", ""),
+                                        size: 16
+                                    }
+                                };
+
+                            }
+                            index_type++;
+                        }
+
+                        let index_upper = 0;
+                        for (j = con_index + 1; j < ((con_index) + (status_name.length)); j++) {
+                            let index = 0;
+                            for (let i = 2; i < (source_name.length); i++) {
+                                if (source_name[index].name !== undefined && status_name[index_upper].name !== undefined) {
+                                    worksheet.getCell("A" + j).value = key;
+                                    worksheet.getCell("A" + j).font = {
+                                        bold: true,
+                                    };
+                                    // worksheet.getCell(_getColumnLetter[i] + j).value = excel_data[0][status_name[index_upper].name + "_" + source_name[index].name].total;
+                                    let index_name = status_name[index_upper].name + "-" + source_name[index].name;
+                                    if (excel_data[index_name] != undefined) {
+                                        worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data[index_name].total);
+                                        worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                        worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                            horizontal: 'right',
+                                            color: {
+                                                argb: "FF0000"
+                                            }
+                                        };
+                                    } else {
+                                        worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                        worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                        worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                            horizontal: 'right',
+                                            color: {
+                                                argb: "FF0000"
+                                            }
+                                        };
+
+
+
+
+                                    }
+                                }
+                                index++;
+                            }
+                            index_upper++;
+
+                        }
+                        if (daily_report.length > 0) {
+                            // Set header values
+                            worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).value = "User Name";
+                            worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).font = {
+                                bold: true,
+                            };
+                            worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).value = "Date";
+                            worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).font = {
+                                bold: true,
+                            };
+                            worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).value = "Count";
+                            worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).font = {
+                                bold: true,
                             };
 
+                            // Populate data
+                            let ii = 0;
+                            for (let j = con_index + 1; j < (con_index + 1) + daily_report.length; j++) {
+                                let date = daily_report[ii]["dateadded"];
+                                if (date_type.toLowerCase() == "week") {
+                                    date = getWeekRange(daily_report[ii]["dateadded"]);
+                                }
+                                worksheet.getCell(getColumnLetter(source_name.length + 5) + j).value = daily_report[ii]["full_name"];
+                                worksheet.getCell(getColumnLetter(source_name.length + 6) + j).value = date;
+                                worksheet.getCell(getColumnLetter(source_name.length + 7) + j).value = Number(daily_report[ii]["count"]);
+                                worksheet.getCell(getColumnLetter(source_name.length + 7) + j).numFmt = numberFormat;
+                                worksheet.getCell(getColumnLetter(source_name.length + 7) + j).alignment = {
+                                    horizontal: 'right',
+                                    color: {
+                                        argb: "FF0000"
+                                    }
+                                };
+
+                                ii++;
+                            }
                         }
-                        index++;
-                    }
+
+                        if (daily_report.length > status_name.length) {
+                            con_index = con_index + daily_report.length + 1;
+                        } else {
+                            con_index = con_index + status_name.length + 1;
+                        }
+                    });
+
                 }
-                var index_type = 0;
+                if (item.key == 2) {
+                    let worksheet = workbook.addWorksheet(item.name);
+                    let con_index = 0;
 
-                for (j = (con_index + 1); j < ((con_index + 1) + conversion_type.length); j++) {
+                    Object.keys(excel_data_array).forEach(function(key) {
+                        let excel_data = excel_data_array[key];
+                        // set up some data
+                        let daily_report = [];
+                        if (summary_daily_excel[key] != undefined) {
+                            daily_report = summary_daily_excel[key];
+                        }
 
-                    if (conversion_type[index_type].name != undefined) {
-                        worksheet.getCell("A" + j).value = conversion_type[index_type].name;
-                        worksheet.getCell("A" + j).font = {
+                        con_index = (con_index + 1);
+                        worksheet.getCell("A" + con_index).value = key;
+                        worksheet.getCell("A" + con_index).font = {
                             bold: true,
-                            color: {
-                                argb: (conversion_type[index_type].color).replace("#", ""),
-                                size: 16
-                            }
                         };
+                        // con_index++;
+                        worksheet.getCell("B" + con_index).value = "Conversion/Source";
+                        worksheet.getCell("B" + con_index).font = {
+                            bold: true,
+                        };
+                        for (j = con_index; j <= con_index; j++) {
+                            let index = 0;
+                            for (let i = 2; i < (source_name.length); i++) {
+                                if (source_name[index].name != undefined) {
+                                    worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
+                                    worksheet.getCell(_getColumnLetter[i] + j).font = {
+                                        bold: true,
+                                        color: {
+                                            argb: (source_name[index].color_name).replace("#", ""),
+                                            size: 16
+                                        }
+                                    };
 
-                    }
-                    index_type++;
-                }
+                                }
+                                index++;
+                            }
+                        }
+                        var index_type = 0;
+                        for (j = (con_index + 1); j < ((con_index + 1) + conversion_type.length); j++) {
 
-                let con_index_upper = 0;
-                for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
-                    let index = 0;
-                    for (let i = 1; i < (source_name.length); i++) {
-                        if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
-                            let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
-                            if (excel_data["conversion_data"][index_name] != undefined) {
-                                worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["conversion_data"][index_name]);
-                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
-                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                            if (conversion_type[index_type].name != undefined) {
+                                worksheet.getCell("A" + j).value = key;
+                                worksheet.getCell("A" + j).font = {
+                                    bold: true,
+                                };
+                                worksheet.getCell("B" + j).value = conversion_type[index_type].name;
+                                worksheet.getCell("B" + j).font = {
+                                    bold: true,
+                                    color: {
+                                        argb: (conversion_type[index_type].color).replace("#", ""),
+                                        size: 16
+                                    }
+                                };
+
+                            }
+                            index_type++;
+                        }
+
+                        let con_index_upper = 0;
+                        for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
+                            let index = 0;
+                            for (let i = 2; i < (source_name.length); i++) {
+                                if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
+                                    let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
+                                    if (excel_data["conversion_data"][index_name] != undefined) {
+                                        worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["conversion_data"][index_name]);
+                                        worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                        worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                            horizontal: 'right',
+                                            color: {
+                                                argb: "FF0000"
+                                            }
+                                        };
+                                    } else {
+                                        worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                        worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                        worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                            horizontal: 'right',
+                                            color: {
+                                                argb: "FF0000"
+                                            }
+                                        };
+
+
+
+
+                                    }
+                                }
+                                index++;
+                            }
+
+
+                            con_index_upper++;
+                        }
+
+                        if (daily_report.length > 0) {
+                            // Set header values
+                            worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).value = "User Name";
+                            worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).font = {
+                                bold: true,
+                            };
+                            worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).value = "Date";
+                            worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).font = {
+                                bold: true,
+                            };
+                            worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).value = "Count";
+                            worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).font = {
+                                bold: true,
+                            };
+
+                            // Populate data
+                            let ii = 0;
+                            for (let j = con_index + 1; j < (con_index + 1) + daily_report.length; j++) {
+                                let date = daily_report[ii]["dateadded"];
+                                if (date_type.toLowerCase() == "week") {
+                                    date = getWeekRange(daily_report[ii]["dateadded"]);
+                                }
+                                worksheet.getCell(getColumnLetter(source_name.length + 5) + j).value = daily_report[ii]["full_name"];
+                                worksheet.getCell(getColumnLetter(source_name.length + 6) + j).value = date;
+                                worksheet.getCell(getColumnLetter(source_name.length + 7) + j).value = Number(daily_report[ii]["count"]);
+                                worksheet.getCell(getColumnLetter(source_name.length + 7) + j).numFmt = numberFormat;
+                                worksheet.getCell(getColumnLetter(source_name.length + 7) + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
                                     }
                                 };
-                            } else {
-                                worksheet.getCell(_getColumnLetter[i] + j).value = 0;
-                                worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
-                                worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+
+                                ii++;
+                            }
+                        }
+
+                        if (daily_report.length > conversion_type.length) {
+                            con_index = con_index + daily_report.length + 1;
+                        } else {
+                            con_index = con_index + conversion_type.length + 1;
+                        }
+
+
+                    });
+                }
+                if (item.key == 3) {
+                    let worksheet = workbook.addWorksheet(item.name);
+                    let con_index = 0;
+                    Object.keys(excel_data_array).forEach(function(key) {
+                        let excel_data = excel_data_array[key];
+                        // set up some data
+                        let daily_report = [];
+                        if (summary_daily_excel[key] != undefined) {
+                            daily_report = summary_daily_excel[key];
+                        }
+                        con_index = (con_index + 1);
+                        worksheet.getCell("A" + con_index).value = key;
+                        worksheet.getCell("A" + con_index).font = {
+                            bold: true,
+                        };
+                        // con_index++;
+                        worksheet.getCell("B" + con_index).value = "Marketing/Conversion";
+                        worksheet.getCell("B" + con_index).font = {
+                            bold: true,
+                        };
+                        for (j = con_index; j <= con_index; j++) {
+                            let index = 0;
+                            for (let i = 2; i < (conversion_type.length); i++) {
+                                if (conversion_type[index].name != undefined) {
+                                    worksheet.getCell(_getColumnLetter[i] + j).value = conversion_type[index].name;
+                                    worksheet.getCell(_getColumnLetter[i] + j).font = {
+                                        bold: true,
+                                        color: {
+                                            argb: (conversion_type[index].color).replace("#", ""),
+                                            size: 16
+                                        }
+                                    };
+
+                                }
+                                index++;
+                            }
+                        }
+                        var index_type = 0;
+
+                        for (j = (con_index + 1); j < ((con_index + 1) + marketing_type.length); j++) {
+
+                            if (marketing_type[index_type].name != undefined) {
+                                worksheet.getCell("B" + j).value = marketing_type[index_type].name;
+                                worksheet.getCell("B" + j).font = {
+                                    bold: true,
+                                    color: {
+                                        argb: (marketing_type[index_type].color).replace("#", ""),
+                                        size: 16
+                                    }
+                                };
+
+                            }
+                            index_type++;
+                        }
+
+                        let con_index_mar = 0;
+                        for (j = (con_index + 1); j < ((con_index + 1) + (marketing_type.length)); j++) {
+                            let index = 0;
+                            for (let i = 2; i < (conversion_type.length); i++) {
+                                if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
+                                    worksheet.getCell("A" + j).value = key;
+                                    worksheet.getCell("A" + j).font = {
+                                        bold: true,
+                                    };
+                                    let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
+                                    if (excel_data["performance_data"][index_name] != undefined) {
+                                        worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["performance_data"][index_name]);
+                                        worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                        worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                            horizontal: 'right',
+                                            color: {
+                                                argb: "FF0000"
+                                            }
+                                        };
+                                    } else {
+                                        worksheet.getCell(_getColumnLetter[i] + j).value = 0;
+                                        worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
+                                        worksheet.getCell(_getColumnLetter[i] + j).alignment = {
+                                            horizontal: 'right',
+                                            color: {
+                                                argb: "FF0000"
+                                            }
+                                        };
+
+
+
+
+                                    }
+                                }
+                                index++;
+                            }
+                            con_index_mar++;
+                        }
+                        if (daily_report.length > 0) {
+                            // Set header values
+                            worksheet.getCell(getColumnLetter(conversion_type.length + 5) + con_index).value = "User Name";
+                            worksheet.getCell(getColumnLetter(conversion_type.length + 5) + con_index).font = {
+                                bold: true,
+                            };
+                            worksheet.getCell(getColumnLetter(conversion_type.length + 6) + con_index).value = "Date";
+                            worksheet.getCell(getColumnLetter(conversion_type.length + 6) + con_index).font = {
+                                bold: true,
+                            };
+                            worksheet.getCell(getColumnLetter(conversion_type.length + 7) + con_index).value = "Count";
+                            worksheet.getCell(getColumnLetter(conversion_type.length + 7) + con_index).font = {
+                                bold: true,
+                            };
+
+                            // Populate data
+                            let ii = 0;
+                            for (let j = con_index + 1; j < (con_index + 1) + daily_report.length; j++) {
+                                let date = daily_report[ii]["dateadded"];
+                                if (date_type.toLowerCase() == "week") {
+                                    date = getWeekRange(daily_report[ii]["dateadded"]);
+                                }
+                                worksheet.getCell(getColumnLetter(conversion_type.length + 5) + j).value = daily_report[ii]["full_name"];
+                                worksheet.getCell(getColumnLetter(conversion_type.length + 6) + j).value = date;
+                                worksheet.getCell(getColumnLetter(conversion_type.length + 7) + j).value = Number(daily_report[ii]["count"]);
+                                worksheet.getCell(getColumnLetter(conversion_type.length + 7) + j).numFmt = numberFormat;
+                                worksheet.getCell(getColumnLetter(conversion_type.length + 7) + j).alignment = {
                                     horizontal: 'right',
                                     color: {
                                         argb: "FF0000"
                                     }
                                 };
 
-
-
-
+                                ii++;
                             }
                         }
-                        index++;
-                    }
 
-
-                    con_index_upper++;
-                }
-
-                if (daily_report.length > 0) {
-                    // Set header values
-                    worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).value = "User Name";
-                    worksheet.getCell(getColumnLetter(source_name.length + 5) + con_index).font = {
-                        bold: true,
-                    };
-                    worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).value = "Date";
-                    worksheet.getCell(getColumnLetter(source_name.length + 6) + con_index).font = {
-                        bold: true,
-                    };
-                    worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).value = "Count";
-                    worksheet.getCell(getColumnLetter(source_name.length + 7) + con_index).font = {
-                        bold: true,
-                    };
-
-                    // Populate data
-                    let ii = 0;
-                    for (let j = con_index + 1; j < (con_index + 1) + daily_report.length; j++) {
-                        let date = daily_report[ii]["dateadded"];
-                        if (date_type.toLowerCase() == "week") {
-                            date = getWeekRange(daily_report[ii]["dateadded"]);
+                        if (daily_report.length > marketing_type.length) {
+                            con_index = con_index + daily_report.length + 1;
+                        } else {
+                            con_index = con_index + marketing_type.length + 1;
                         }
-                        worksheet.getCell(getColumnLetter(source_name.length + 5) + j).value = daily_report[ii]["full_name"];
-                        worksheet.getCell(getColumnLetter(source_name.length + 6) + j).value = date;
-                        worksheet.getCell(getColumnLetter(source_name.length + 7) + j).value = Number(daily_report[ii]["count"]);
-                        worksheet.getCell(getColumnLetter(source_name.length + 7) + j).numFmt = numberFormat;
-                        worksheet.getCell(getColumnLetter(source_name.length + 7) + j).alignment = {
-                            horizontal: 'right',
-                            color: {
-                                argb: "FF0000"
-                            }
-                        };
+                    });
 
-                        ii++;
-                    }
                 }
-
-                if (daily_report.length > conversion_type.length) {
-                    con_index = con_index + daily_report.length + 1;
-                } else {
-                    con_index = con_index + conversion_type.length + 1;
-                }
-
-
             });
 
 
@@ -2042,6 +2347,8 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
             });
 
         }
+
+
         // // Create a new workbook
         // var workbook = new ExcelJS.Workbook();
 
@@ -2169,9 +2476,9 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
             } else if (selectedValues.length === 1) {
                 selectedValues.forEach(function(selectedValue) {
-                    console.log(selectedValue);
+                    // console.log(selectedValue);
                     var elementID = ".hide_show_" + selectedValue;
-                    console.log($(elementID).length);
+                    // console.log($(elementID).length);
                     if ($(elementID).length > 0) {
                         $(elementID).removeClass("hide");
                     }
