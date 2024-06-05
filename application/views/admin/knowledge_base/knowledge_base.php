@@ -854,7 +854,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             name: "fileManager",
             fileProvider: customProvider,
             customizeDetailColumns: function(columns) {
-                // columns.splice(0, columns.length);
+                columns.splice(0, columns.length);
                 // Add new custom columns
                 columns.push({
                     dataField: 'show_name',
@@ -870,15 +870,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                         let id = fileItem.key;
                         let group_id = fileItem.group_ids;
                         let file_path = fileItem.file_path;
-                        let editHtml = "";
 
-                        // Generate edit HTML if user is admin
-                        <?php if (is_admin()) { ?>
-                            if (fileType === "folder") {
-                                editHtml = `<i class='fa fa-edit  show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
-                            }
-                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
-                        <?php } ?>
 
                         // Determine the icon class based on the file type
                         switch (fileType) {
@@ -915,7 +907,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                         }
 
                         // Append icon, edit button, and name elements to the container
-                        container.append(`<div class='hover-show-edit'>${editHtml} &nbsp; <i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
+                        container.append(`<div class='hover-show-edit'><i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
                     }
                 }, {
                     dataField: 'creationBy',
@@ -933,11 +925,28 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     caption: "Download",
                     width: "150px",
                     cellTemplate: function(container, options) {
-                        let fileName = options.data.fileItem.dataItem.name;
-                        let file_path = options.data.fileItem.dataItem.file_path;
-                        if (file_path != "") {
-                            container.append(`<div class=''><i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
-                        }
+                        let iconClass = "";
+                        let fileItem = options.data.fileItem.dataItem;
+                        let fileName = fileItem.name;
+                        let fileType = fileItem._type;
+                        let file_type = fileItem.file_type;
+                        let id = fileItem.key;
+                        let group_id = fileItem.group_ids;
+                        let file_path = fileItem.file_path;
+                        let editHtml = "";
+
+                        // Generate edit HTML if user is admin
+                        <?php if (is_admin()) { ?>
+                            if (fileType === "folder") {
+                                editHtml = `<i class='fa fa-edit  show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
+                            }
+                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
+                            container.append(`<div class=''>${editHtml} &nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
+                        <?php } else { ?>
+                            if (file_path != "") {
+                                container.append(`<div class=''><i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
+                            }
+                        <?php } ?>
                     }
                 }, {
                     dataField: 'size',
@@ -948,7 +957,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
                 return columns;
             },
-            allowedFileExtensions: [],
+            allowedFileExtensions: [".jpg", ".jpeg", ".png", ".gif", ".svg", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".mp4", ".avi", ".mov"],
             height: 500,
             permissions, // Integrate permissions here
             onFocusedItemChanged: function(e) {
