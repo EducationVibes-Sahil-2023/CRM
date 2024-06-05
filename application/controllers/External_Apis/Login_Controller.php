@@ -65,7 +65,7 @@ class Login_Controller extends Api_Controller
 
     public function call_update()
     {
-        $staff_data =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
+        $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
 
         $form_data = !empty($_POST["call_data"]) ? json_decode($_POST["call_data"], true) : '';
         $form_data_array = [];
@@ -95,8 +95,8 @@ class Login_Controller extends Api_Controller
                 $type =  2;
                 // $callassignee =  !empty($form_d["callassignee"]) ? $form_d["callassignee"] : '';
 
-                $callassignee = !empty($staff_data["data"][0]["phonenumber"]) ?
-                    $staff_data["data"][0]["phonenumber"] : (!empty($form_d["callassignee"]) ?
+                $callassignee = !empty($staff_data_["data"][0]["phonenumber"]) ?
+                    $staff_data_["data"][0]["phonenumber"] : (!empty($form_d["callassignee"]) ?
                         $form_d["callassignee"] :
                         ''
                     );
@@ -124,12 +124,25 @@ class Login_Controller extends Api_Controller
         } else {
 
             $staffid = "";
+            $callassignee =  !empty($form_data["formData"]["callassignee"]) ? $form_data["formData"]["callassignee"] : '';
+            $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("phonenumber" => $form_data["formData"]["callassignee"]));
+
+            if (!empty($staff_data_["data"][0]["phonenumber"])) {
+                $callassignee = !empty($staff_data_["data"][0]["phonenumber"]) ? $staff_data_["data"][0]["phonenumber"] : $form_data["formData"]["callassignee"];
+            } else {
+                $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("alternate_number" => $form_data["formData"]["callassignee"]));
+
+                if (!empty($staff_data_["data"][0]["phonenumber"])) {
+                    $callassignee = !empty($staff_data_["data"][0]["phonenumber"]) ? $staff_data_["data"][0]["phonenumber"] : $form_data["formData"]["callassignee"];
+                }
+            }
+
             // $callassignee =  !empty($form_data["formData"]["callassignee"]) ? $form_data["formData"]["callassignee"] : '';
-            $callassignee = !empty($staff_data["data"][0]["phonenumber"]) ?
-                $staff_data["data"][0]["phonenumber"] : (!empty($form_data["formData"]["callassignee"]) ?
-                    $form_data["formData"]["callassignee"] :
-                    ''
-                );
+            // $callassignee = !empty($staff_data["data"][0]["phonenumber"]) ?
+            //     $staff_data["data"][0]["phonenumber"] : (!empty($form_data["formData"]["callassignee"]) ?
+            //         $form_data["formData"]["callassignee"] :
+            //         ''
+            //     );
             $phonenumber =  !empty($form_data["formData"]["phonenumber"]) ? $form_data["formData"]["phonenumber"] : '';
             $call_start =  !empty($form_data["formData"]["startdate_time"]) ? strtotime($form_data["formData"]["startdate_time"]) : '';
             $call_end =  !empty($form_data["formData"]["enddate_time"]) ? strtotime($form_data["formData"]["enddate_time"]) : '';
@@ -137,11 +150,14 @@ class Login_Controller extends Api_Controller
             $type =  1;
             $calls_type =  1;
             $call_duration =  !empty($form_data["formData"]["call_duration"]) ? $form_data["formData"]["call_duration"] : '';
+
             if (!empty($callassignee)) {
                 // die;
-                $staff_data =  $this->Api_Model->getdata(db_prefix() . "staff", array("phonenumber" => $callassignee, "active" => 1), "staffid");
-                if (!empty($staff_data["status"]) && $staff_data["status"] == 1) {
-                    $staffid = !empty($staff_data["data"][0]["staffid"]) ? $staff_data["data"][0]["staffid"] : '';
+                // $staff_data =  $this->Api_Model->getdata(db_prefix() . "staff", array("phonenumber" => $callassignee, "active" => 1), "staffid");
+
+
+                if (!empty($staff_data_["data"][0]["staffid"])) {
+                    $staffid = !empty($staff_data_["data"][0]["staffid"]) ? $staff_data_["data"][0]["staffid"] : '';
                 }
             }
 
@@ -191,9 +207,8 @@ class Login_Controller extends Api_Controller
             );
         }
 
-
-
         $validate = $this->validate->validation($rules);
+
         if ($validate === true) {
             if (!empty($form_data["type"]) && $form_data["type"] == 1) {
                 $response = $this->Api_Model->update_call_data($form_data_array);
