@@ -327,9 +327,24 @@ class Reports extends AdminController
         }
 
 
+        // $summary_daily_ = get_leads_report_($_POST);
+        $summary_daily_excel_ = get_leads_report_($_POST, 1);
         $summary_daily_ = get_leads_report_($_POST);
         $summary_daily_conversion = get_leads_report_conversion($_POST);
         $summary_daily_marketing = get_leads_report_marketing($_POST);
+        $summary_daily_excel = [];
+        if (!empty($summary_daily_excel_)) {
+            // Initialize the resulting array
+
+            // Loop through each record in the source array
+            foreach ($summary_daily_excel_ as $summary_excel) {
+
+                // Use the 'full_name' as the key and group the records
+                if (!empty($summary_excel->full_name)) {
+                    $summary_daily_excel[$summary_excel->full_name][] = $summary_excel;
+                }
+            }
+        }
 
         if (!empty($_POST["assigned"]) && empty($return_status)) {
 
@@ -1074,7 +1089,7 @@ class Reports extends AdminController
             }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "summary_daily_" => $summary_daily_, "summary_daily_conversion" => $summary_daily_conversion, "summary_daily_marketing" => $summary_daily_marketing, "total_staff_html" => $staff_html]);
+        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "summary_daily_" => $summary_daily_, "summary_daily_conversion" => $summary_daily_conversion, "summary_daily_marketing" => $summary_daily_marketing, "total_staff_html" => $staff_html, "summary_daily_excel" => $summary_daily_excel]);
     }
 
 
