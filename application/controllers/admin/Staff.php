@@ -61,6 +61,7 @@ class Staff extends AdminController
     /* Add new staff member or edit existing */
     public function member($id = '')
     {
+      
         if (!has_permission('staff', '', 'view')) {
             access_denied('staff');
         }
@@ -86,8 +87,7 @@ class Staff extends AdminController
             $data['post_sales'] = !empty($this->input->post('post_sales')) ? $this->input->post('post_sales') : '';
             $data['facebook_lead_name'] = !empty($this->input->post('facebook_lead_name')) ? $this->input->post('facebook_lead_name') : '';
             $data['google_source'] = !empty($this->input->post('google_source')) ? $this->input->post('google_source') : '';
-            $data['phonenumber'] = !empty($this->input->post('phonenumber')) ? $this->input->post('phonenumber') : '';
-            
+
 
             if ($id == '') {
                 if (!has_permission('staff', '', 'create')) {
