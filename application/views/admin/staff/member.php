@@ -130,6 +130,9 @@
                         <?php $value = (isset($member) ? $member->phonenumber : ''); ?>
                         <?php echo render_input('phonenumber', 'staff_add_edit_phonenumber', $value); ?>
 
+                        <?php $value = (isset($member) ? $member->alternate_number : ''); ?>
+                        <?php echo render_input('alternate_number', 'Alternate Number', $value); ?>
+
                         <div class="form-group select-placeholder">
                            <label for="reporting_person" class="control-label">Select Reporting Person</label>
                            <select name="reporting_person" data-live-search="true" id="reporting_person" class="form-control selectpicker" data-none-selected-text="Select Reporting Person">

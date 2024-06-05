@@ -147,8 +147,8 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     .dx-filemanager .dx-filemanager-files-view.dx-filemanager-details .dx-filemanager-details-item-thumbnail {
         float: right;
     }
-    .dx-freespace-row
-    {
+
+    .dx-freespace-row {
         display: none !important;
     }
 </style>
@@ -854,8 +854,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             name: "fileManager",
             fileProvider: customProvider,
             customizeDetailColumns: function(columns) {
-                columns.splice(0, columns.length);
-
+                // columns.splice(0, columns.length);
                 // Add new custom columns
                 columns.push({
                     dataField: 'show_name',
@@ -966,57 +965,40 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             }
 
         }).dxFileManager("instance");
-        // $("#file-manager").dxFileManager("instance").on("selectionChanged", function(e) {
-        //     // Custom function to run after selection changes
-        //     console.log("okkk");
-        //     set_();
-        //     checkEmptyDirectory();
-        // });
-
-        // fileManager_.option("onSelectionChanged", function(e) {
-        //     console.log("okkk");
-        //     set_();
-        //     checkEmptyDirectory(e.component);
-        // });
-
 
     }
 
 
 
     function checkEmptyDirectory() {
-        console.log("okkk1");
+        // setTimeout(() => {
+        //     var elements = $(".dx-menu-item-text").map(function() {
+        //         return $(this).text();
+        //     }).get();
 
-        setTimeout(() => {
-            console.log("okkk2");
+        //     // Remove the first element
+        //     var valuesAfterFirst = elements.slice(1);
+        //     var joinedValues = valuesAfterFirst.join("/");
 
-            var elements = $(".dx-menu-item-text").map(function() {
-                return $(this).text();
-            }).get();
+        //     // Remove trailing "/" if it exists
+        //     if (joinedValues.length > 0 && joinedValues.slice(-1) === "/") {
+        //         joinedValues = joinedValues.slice(0, -1);
+        //     }
 
-            // Remove the first element
-            var valuesAfterFirst = elements.slice(1);
-            var joinedValues = valuesAfterFirst.join("/");
+        //     console.log(joinedValues);
+        //     if (joinedValues == "") {
 
-            // Remove trailing "/" if it exists
-            if (joinedValues.length > 0 && joinedValues.slice(-1) === "/") {
-                joinedValues = joinedValues.slice(0, -1);
-            }
+        //     } else {
+        //         $(".dx-datagrid-table").find("tbody tr.dx-data-row").first().remove();
+        //     }
+        //     // var currentDir = fileManagerInstance.getCurrentDirectory();
 
-            console.log(joinedValues);
-            if (joinedValues == "") {
-
-            } else {
-                $(".dx-datagrid-table").find("tbody tr.dx-data-row").first().remove();
-            }
-            // var currentDir = fileManagerInstance.getCurrentDirectory();
-
-            if ($(".dx-datagrid-table").find("tbody tr.dx-data-row").length === 0) {
-                $(".dx-filemanager-files-view .dx-datagrid-rowsview .dx-scrollable-content").append('<div class="no-data">No Data</div>');
-            } else {
-                $(".no-data").remove();
-            }
-        }, 1000);
+        //     if ($(".dx-datagrid-table").find("tbody tr.dx-data-row").length === 0) {
+        //         $(".dx-filemanager-files-view .dx-datagrid-rowsview .dx-scrollable-content").append('<div class="no-data">No Data</div>');
+        //     } else {
+        //         $(".no-data").remove();
+        //     }
+        // }, 500);
 
     }
 
@@ -1027,7 +1009,8 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                                 <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
                                 <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a></div>`);
             }
-        }, 1000);
+            // checkEmptyDirectory();
+        }, 500);
 
     }
     // Call the async function to initialize the DevExpress FileManager
