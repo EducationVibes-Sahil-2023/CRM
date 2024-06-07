@@ -2460,7 +2460,7 @@ class Leads_model extends App_Model
             $data['allow_duplicate'] = 0;
         }
 
-        if (isset($data['allow_duplicate'])) {
+        if (isset($data['assign_previous_lead_alert'])) {
             $data['assign_previous_lead_alert']  = 1;
         } else {
             $data['assign_previous_lead_alert']  = 0;
