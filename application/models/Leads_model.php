@@ -2460,6 +2460,11 @@ class Leads_model extends App_Model
             $data['allow_duplicate'] = 0;
         }
 
+        if (isset($data['allow_duplicate'])) {
+            $data['assign_previous_lead_alert']  = 1;
+        } else {
+            $data['assign_previous_lead_alert']  = 0;
+        }
         if (!empty($data['auto_assign'])) {
             $data['auto_assign'] = implode(",", $data['auto_assign']);
         } else {
