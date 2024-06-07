@@ -47,6 +47,7 @@ class Forms extends ClientsController
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();
+
                 $google_source =  !empty($form->lead_source) ? $form->lead_source : '';
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
@@ -407,10 +408,40 @@ class Forms extends ClientsController
                                 $this->leads_model->update_lead_source($updateStatus['source'], $duplicateLead->id);
                             }
 
+
+
                             if ($post_data['callassignee'] != null) {
                                 $updateStatus["assigned"] = $form->responsible;
                             }
 
+                            // $updateStatus["assigned"] = 1;
+
+
+                            if (!empty($form->assign_previous_lead_alert) && $form->assign_previous_lead_alert == 1) {
+                                if (!empty($updateStatus["assigned"]) && !empty($duplicateLead->assigned) && $duplicateLead->assigned != $updateStatus["assigned"]) {
+                                    $notifiedUsers = [];
+                                    $notified = add_notification([
+                                        'description'     => 'lead_assign_previous_lead',
+                                        'touserid'        => $duplicateLead->assigned,
+                                        'fromcompany'     => 1,
+                                        'fromuserid'      => null,
+                                        'additional_data' => serialize([
+                                            $duplicateLead->name,
+                                            !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
+                                            get_staff_full_name($updateStatus["assigned"])
+                                        ])
+                                    ]);
+                                    if ($notified) {
+                                        array_push($notifiedUsers, $duplicateLead->assigned);
+                                    }
+                                    pusher_trigger_notification($notifiedUsers);
+                                    $this->leads_model->log_lead_activity($duplicateLead->id, 'lead_assign_previous_lead', true, serialize([
+                                        $duplicateLead->name,
+                                        !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
+                                        get_staff_full_name($updateStatus["assigned"])
+                                    ]));
+                                }
+                            }
                             $this->db->where('id', $duplicateLead->id);
                             $this->db->update(db_prefix() . 'leads', $updateStatus);
 

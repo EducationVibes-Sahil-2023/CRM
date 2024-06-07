@@ -107,6 +107,13 @@
                                     <?php echo _l('Allow form location fileds(State,City)'); ?></label>
                               </div>
                               <div class="checkbox checkbox-primary">
+                                 <input type="checkbox" name="assign_previous_lead_alert" id="assign_previous_lead_alert" <?php if (isset($form) && $form->assign_previous_lead_alert == 1) {
+                                                                                                                  echo 'checked';
+                                                                                                               } ?>>
+                                 <label for="assign_previous_lead_alert">
+                                    <?php echo _l('Allow Notification when lead transferred'); ?></label>
+                              </div>
+                              <div class="checkbox checkbox-primary">
                                  <input type="checkbox" name="allow_duplicate" id="allow_duplicate" <?php if (isset($form) && $form->allow_duplicate == 1 || !isset($form)) {
                                                                                                          echo 'checked';
                                                                                                       } ?>>
