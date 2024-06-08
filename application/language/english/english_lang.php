@@ -2887,7 +2887,7 @@ $lang['form_success_submit_msg']                            = 'Message to show a
 $lang['total_submissions']                                  = 'Total Submissions';
 $lang['form_integration_code']                              = 'Integration Code';
 $lang['not_lead_imported_from_form']                        = 'New Lead Imported from Web to Lead Form - %s';
-$lang['lead_assign_previous_lead']                        =  'Your lead, %s of %s , has been assigned/transfer to %s due to reenquiry';
+$lang['lead_assign_previous_lead']                        =  'Your lead, %s , has been assigned/transfer to %s due to re enquiry';
 $lang['lead_transfer_request_approved']                   =  'Your lead transfer request of %s has been Approved successfully.';
 
 $lang['lead_imported_from_fb']                        = 'New Lead Imported from  - %s';
