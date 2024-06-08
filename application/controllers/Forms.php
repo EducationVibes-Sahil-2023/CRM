@@ -427,7 +427,7 @@ class Forms extends ClientsController
                                         'fromuserid'      => null,
                                         'additional_data' => serialize([
                                             $duplicateLead->name,
-                                            !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
+                                            // !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
                                             get_staff_full_name($updateStatus["assigned"])
                                         ])
                                     ]);
@@ -437,7 +437,7 @@ class Forms extends ClientsController
                                     pusher_trigger_notification($notifiedUsers);
                                     $this->leads_model->log_lead_activity($duplicateLead->id, 'lead_assign_previous_lead', true, serialize([
                                         $duplicateLead->name,
-                                        !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
+                                        // !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
                                         get_staff_full_name($updateStatus["assigned"])
                                     ]));
                                 }
