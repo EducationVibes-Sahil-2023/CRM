@@ -276,6 +276,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     var current_user = "<?= get_staff_user_id() ?>";
     var is_admin = "<?= is_admin() ?>";
     var pathInfo_info = [];
+    var pathInfo_info_ = [];
 
     function set_modal(target) {
         // Hide all modal forms
@@ -320,7 +321,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 contentType: false, // Prevent jQuery from setting contentType
                 success: function(response) {
                     let data = JSON.parse(response);
-                    if (data.status == 1) {
+                    if (data.success == 1) {
                         alert_float('success', data.message);
                     }
                     // $(".close-modal").trigger("click");
@@ -431,6 +432,9 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             // Append each file to the FormData object
             formData.append('files[]', input.files[i]);
         }
+        if (current_dir != "") {
+            current_dir = current_dir + "/";
+        }
         formData.append('index', index);
         formData.append('current_dir', current_dir);
         formData.append('csrf_token_name', $("input[name='csrf_token_name']").val());
@@ -443,7 +447,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             contentType: false, // Prevent jQuery from setting contentType
             success: function(response) {
                 let data = JSON.parse(response);
-                if (data.status == 1) {
+                if (data.success == 1) {
                     alert_float('success', data.message);
                 }
                 $(".close-modal").trigger("click");
@@ -487,6 +491,9 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         for (var i = 0; i < input.files.length; i++) {
             // Append each file to the FormData object
             formData.append('files[]', input.files[i]);
+        }
+        if (current_dir != "") {
+            current_dir = current_dir + "/";
         }
         formData.append('index', index);
         formData.append('current_dir', current_dir);
@@ -838,6 +845,13 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             download: false
         };
     <?php } ?>
+
+
+    function addUniqueValue(value) {
+        if (!pathInfo_info_.includes(value)) {
+            pathInfo_info_.push(value);
+        }
+    }
     var uniqueParam = new Date().getTime();
     async function initializeFileManager(index = 0) {
 
@@ -847,18 +861,21 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         var customProvider = new DevExpress.fileProviders.Custom({
 
             getItems: pathInfo => {
-                console.log(remoteProvider);
-                console.log(remoteProvider._endpointUrl);
-                remoteProvider._endpointUrl = `<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>?timestamp=${uniqueParam}`;
-                console.log(remoteProvider._endpointUrl);
                 return remoteProvider.getItems(pathInfo)
                     .then(function(result) {
                         pathInfo_info = pathInfo;
+                        console.log(pathInfo);
+                        if (pathInfo.length > 0) {
+                            for (i = 0; i < pathInfo.length; i++) {
+                                if (pathInfo[i].key != undefined && pathInfo[i].name != undefined) {
+                                    addUniqueValue(pathInfo[i].key + "_" + pathInfo[i].name);
+                                }
+                            }
+                        }
                         let new_array = [];
                         result.forEach(function(item) {
                             new_array.push(item.dataItem); // Push the current item into the new array
                         });
-                        console.log(new_array);
                         checkEmptyDirectory();
                         set_();
                         // Handle the result as needed
@@ -891,165 +908,197 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 columns.splice(0, columns.length);
 
                 columns.push({
-                        dataField: 'show_name',
-                        wordWrapEnabled: true,
-                        caption: "Name",
-                        width: "250px",
-                        cellTemplate: function(container, options) {
-                            let iconClass = "";
-                            let fileItem = options.data.fileItem.dataItem;
-                            let fileName = fileItem.name;
-                            let fileType = fileItem._type;
-                            let file_type = fileItem.file_type;
-                            let id = fileItem.key;
-                            let group_id = fileItem.group_ids;
-                            let file_path = fileItem.file_path;
-                            let editHtml = "";
+                    dataField: 'show_name',
+                    wordWrapEnabled: true,
+                    caption: "Name",
+                    width: "250px",
+                    cellTemplate: function(container, options) {
+                        console.log("hhhhhh");
+                        let iconClass = "";
+                        let fileItem = options.data.fileItem.dataItem;
+                        let fileName = fileItem.name;
+                        let fileType = fileItem._type;
+                        let file_type = fileItem.file_type;
+                        let id = fileItem.key;
+                        let group_id = fileItem.group_ids;
+                        let file_path = fileItem.file_path;
+                        let editHtml = "";
+                        let check_ = "";
+                        let elements = $(".dx-menu-item-text").map(function() {
+                            return $(this).text();
+                        }).get();
 
-                            // Generate edit HTML if user is admin
+                        // Remove the first element
+                        let valuesAfterFirst = elements.slice(1);
 
 
-                            // Determine the icon class based on the file type
-                            switch (fileType) {
-                                case "folder":
-                                case "null":
-                                    iconClass = "folder";
-                                    break;
-                                case "pdf":
-                                    iconClass = "pdffile";
-                                    break;
-                                case "png":
-                                case "jpg":
-                                case "jpeg":
-                                case "webp":
-                                case "gif":
-                                case "svg":
-                                    iconClass = "image";
-                                    break;
-                                case "docx":
-                                case "doc":
-                                    iconClass = "docfile";
-                                    break;
-                                case "xlsx":
-                                case "xls":
-                                    iconClass = "xlsfile";
-                                    break;
-                                case "txt":
-                                    iconClass = "txtfile";
-                                    break;
-                                default:
-                                    // Handle other file types
-                                    iconClass = fileType + "file";
-                                    break;
+                        // Join the remaining elements with "/"
+                        let joinedValues = valuesAfterFirst
+
+                        if (joinedValues.length > 0) {
+                            check_ = joinedValues[joinedValues.length - 1];
+                        }
+
+                        console.log(check_);
+
+                        // Generate edit HTML if user is admin
+
+
+                        // Determine the icon class based on the file type
+                        switch (fileType) {
+                            case "folder":
+                            case "null":
+                                iconClass = "folder";
+                                break;
+                            case "pdf":
+                                iconClass = "pdffile";
+                                break;
+                            case "png":
+                            case "jpg":
+                            case "jpeg":
+                            case "webp":
+                            case "gif":
+                            case "svg":
+                                iconClass = "image";
+                                break;
+                            case "docx":
+                            case "doc":
+                                iconClass = "docfile";
+                                break;
+                            case "xlsx":
+                            case "xls":
+                                iconClass = "xlsfile";
+                                break;
+                            case "txt":
+                                iconClass = "txtfile";
+                                break;
+                            default:
+                                // Handle other file types
+                                iconClass = fileType + "file";
+                                break;
+                        }
+                        let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+
+
+                        // Append icon, edit button, and name elements to the container
+                        if (pathInfo_info_.includes(id + "_" + fileName) && check_ == fileName) {
+                            container.append(`<div class='hide-tr'> <i class="images-list dx-icon-${iconClass}">...</div>`);
+
+                        } else {
+                            container.append(`<div class='hover-show-edit'> <i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
+                        }
+                    }
+                }, {
+                    dataField: 'creationBy',
+                    wordWrapEnabled: true,
+                    caption: "Created By",
+                    width: "200px",
+                    cellTemplate: function(container, options) {
+                        let fileItem = options.data.fileItem.dataItem;
+                        let id = fileItem.key;
+                        let fileName = fileItem.name;
+                        let creationBy = fileItem.creationBy;
+                        let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                        let elements = $(".dx-menu-item-text").map(function() {
+                            return $(this).text();
+                        }).get();
+
+                        // Remove the first element
+                        let valuesAfterFirst = elements.slice(1);
+
+                        // Join the remaining elements with "/"
+                        let joinedValues = valuesAfterFirst
+
+                        if (joinedValues.length > 0) {
+                            check_ = joinedValues[joinedValues.length - 1];
+                        }
+                        if (pathInfo_info_.includes(id + "_" + fileName) && check_ == fileName) {} else {
+                            container.append(`<div class='hover-show-edit'>${creationBy}</div>`);
+
+                        }
+                    }
+                }, {
+                    dataField: 'creationDate',
+                    wordWrapEnabled: true,
+                    caption: "Created Date",
+                    width: "200px",
+                    cellTemplate: function(container, options) {
+                        let fileItem = options.data.fileItem.dataItem;
+                        let id = fileItem.key;
+                        let fileName = fileItem.name;
+                        let date = fileItem.creationDate;
+                        let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                        let elements = $(".dx-menu-item-text").map(function() {
+                            return $(this).text();
+                        }).get();
+
+                        // Remove the first element
+                        let valuesAfterFirst = elements.slice(1);
+
+                        // Join the remaining elements with "/"
+                        let joinedValues = valuesAfterFirst
+
+                        if (joinedValues.length > 0) {
+                            check_ = joinedValues[joinedValues.length - 1];
+                        }
+                        if (pathInfo_info_.includes(id + "_" + fileName) && check_ == fileName) {} else {
+                            container.append(`<div class='hover-show-edit'>${date}</div>`);
+                        }
+                    }
+                }, {
+                    dataField: '',
+                    wordWrapEnabled: true,
+                    caption: "Action",
+                    width: "150px",
+                    cellTemplate: function(container, options) {
+                        let fileItem = options.data.fileItem.dataItem;
+                        let fileName = fileItem.name;
+                        let filePath = fileItem.file_path;
+                        let id = fileItem.key;
+                        let groupId = fileItem.group_ids;
+                        let fileType = fileItem._type;
+                        let file_type = fileItem.file_type;
+                        let editHtml = "";
+                        let elements = $(".dx-menu-item-text").map(function() {
+                            return $(this).text();
+                        }).get();
+
+                        // Remove the first element
+                        let valuesAfterFirst = elements.slice(1);
+
+                        // Join the remaining elements with "/"
+                        let joinedValues = valuesAfterFirst
+
+                        if (joinedValues.length > 0) {
+                            check_ = joinedValues[joinedValues.length - 1];
+                        }
+
+                        <?php if (is_admin()) { ?>
+                            if (fileType === "folder") {
+                                editHtml = `<i class='fa fa-edit show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${groupId}')"></i>`;
                             }
-                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                            editHtml += `&nbsp;<i class='fa fa-trash text-danger show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
+                        <?php } ?>
 
-
-                            // Append icon, edit button, and name elements to the container
-                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {
-                                container.append(`<div class='hide-tr'> <i class="images-list dx-icon-${iconClass}">...</div>`);
-
+                        let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                        if (pathInfo_info_.includes(id + "_" + fileName) && check_ == fileName) {} else {
+                            if (filePath && filePath !== "") {
+                                container.append(`<div class='hover-show-edit'>${editHtml} &nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${filePath}','${fileName}')"></i></div>`);
                             } else {
-                                container.append(`<div class='hover-show-edit'> <i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
+                                container.append(`<div class='hover-show-edit'>${editHtml}</div>`);
                             }
                         }
-                    }, {
-                        dataField: 'creationBy',
-                        wordWrapEnabled: true,
-                        caption: "Created By",
-                        width: "200px",
-                        cellTemplate: function(container, options) {
-                            let fileItem = options.data.fileItem.dataItem;
-                            let id = fileItem.key;
-                            let fileName = fileItem.name;
-                            let creationBy = fileItem.creationBy;
-                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
-                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {} else {
-                                container.append(`<div class='hover-show-edit'>${creationBy}</div>`);
-
-                            }
-                        }
-                    }, {
-                        dataField: 'creationDate',
-                        wordWrapEnabled: true,
-                        caption: "Created Date",
-                        width: "200px",
-                        cellTemplate: function(container, options) {
-                            let fileItem = options.data.fileItem.dataItem;
-                            let id = fileItem.key;
-                            let fileName = fileItem.name;
-                            let date = fileItem.creationDate;
-                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
-                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {} else {
-                                container.append(`<div class='hover-show-edit'>${date}</div>`);
-                            }
-                        }
-                    }, {
-                        dataField: '',
-                        wordWrapEnabled: true,
-                        caption: "Action",
-                        width: "150px",
-                        cellTemplate: function(container, options) {
-                            let fileItem = options.data.fileItem.dataItem;
-                            let fileName = fileItem.name;
-                            let filePath = fileItem.file_path;
-                            let id = fileItem.key;
-                            let groupId = fileItem.group_ids;
-                            let fileType = fileItem._type;
-                            let file_type = fileItem.file_type;
-                            let editHtml = "";
-
-                            // console.log(pathInfo_info);
-                            // console.log(id);
-                            // console.log(fileName);
-
-                            <?php if (is_admin()) { ?>
-                                if (fileType === "folder") {
-                                    editHtml = `<i class='fa fa-edit show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${groupId}')"></i>`;
-                                }
-                                editHtml += `&nbsp;<i class='fa fa-trash text-danger show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
-                            <?php } ?>
-
-                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
-                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {} else {
-                                if (filePath && filePath !== "") {
-                                    container.append(`<div class='hover-show-edit'>${editHtml} &nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${filePath}','${fileName}')"></i></div>`);
-                                } else {
-                                    container.append(`<div class='hover-show-edit'>${editHtml}</div>`);
-                                }
-                            }
-                        }
-
                     }
 
-                    // , {
-                    //     dataField: 'size',
-                    //     wordWrapEnabled: true,
-                    //     caption: "Size",
-                    //     width: "150px"
-                    // }
-                );
-                set_();
-
+                });
                 return columns;
             },
-            allowedFileExtensions: [],
-            height: 500,
-            permissions, // Integrate permissions here
-            onFocusedItemChanged: function(e) {
-                console.log("changed");
-                checkEmptyDirectory();
-            },
-            onDirectoryExpanded: function(e) {
-                console.log("expend");
-                checkEmptyDirectory();
-            },
-            onContentReady: function(e) {
-                console.log("start");
-                checkEmptyDirectory();
-            }
+            // allowedFileExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp4', 'avi', 'mov'],
 
-        }).dxFileManager("instance");
+            height: 500,
+            permissions
+
+        });
 
     }
 
@@ -1095,14 +1144,44 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                                 <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
                                 <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a></div>`);
             }
-            setTimeout(() => {
-                $(".dx-icon.dx-icon-arrowup").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
-                $(".hide-tr").parents("tr").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
-                $(".dx-menu-item-text").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
-            }, 200);
+
+            // setTimeout(() => {
+            //     // $('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');
+            //     var elements = $(".dx-menu-item-text").map(function() {
+            //         return $(this).text();
+            //     }).get();
+
+            //     // Remove the first element
+            //     var valuesAfterFirst = elements.slice(1);
+
+            //     // Join the remaining elements with "/"
+            //     var joinedValues = valuesAfterFirst;
+            //     console.log(pathInfo_info);
+
+            //     if (joinedValues.length > 0) {
+            //         pathInfo_info.slice(1)
+            //     } else {
+            //         pathInfo_info = [];
+            //     }
+            //     console.log(pathInfo_info);
+            //     $(".dx-icon.dx-icon-arrowup").attr("onclick", "refresh()");
+            //     $(".hide-tr").parents("tr").attr("onclick", "refresh()");
+            //     $(".dx-menu-item-text").attr("onclick", "refresh()");
+
+            // }, 300);
+
             // checkEmptyDirectory();
         }, 300);
 
+
+
+    }
+
+
+    function refresh() {
+        setTimeout(() => {
+            $('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');
+        }, 100);
     }
     // Call the async function to initialize the DevExpress FileManager
     initializeFileManager();
