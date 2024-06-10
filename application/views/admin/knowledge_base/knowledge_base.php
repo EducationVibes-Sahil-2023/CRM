@@ -321,7 +321,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 contentType: false, // Prevent jQuery from setting contentType
                 success: function(response) {
                     let data = JSON.parse(response);
-                    if (data.status == 1) {
+                    if (data.success == 1) {
                         alert_float('success', data.message);
                     }
                     // $(".close-modal").trigger("click");
@@ -432,6 +432,9 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             // Append each file to the FormData object
             formData.append('files[]', input.files[i]);
         }
+        if (current_dir != "") {
+            current_dir = current_dir + "/";
+        }
         formData.append('index', index);
         formData.append('current_dir', current_dir);
         formData.append('csrf_token_name', $("input[name='csrf_token_name']").val());
@@ -444,7 +447,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             contentType: false, // Prevent jQuery from setting contentType
             success: function(response) {
                 let data = JSON.parse(response);
-                if (data.status == 1) {
+                if (data.success == 1) {
                     alert_float('success', data.message);
                 }
                 $(".close-modal").trigger("click");
@@ -488,6 +491,9 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         for (var i = 0; i < input.files.length; i++) {
             // Append each file to the FormData object
             formData.append('files[]', input.files[i]);
+        }
+        if (current_dir != "") {
+            current_dir = current_dir + "/";
         }
         formData.append('index', index);
         formData.append('current_dir', current_dir);
@@ -1087,7 +1093,8 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                 });
                 return columns;
             },
-            allowedFileExtensions: [],
+            // allowedFileExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'mp4', 'avi', 'mov'],
+
             height: 500,
             permissions
 
