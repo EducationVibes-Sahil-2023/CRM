@@ -296,7 +296,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
     }
 
     function edit_folder(id = "", name = "", group_ids = "") {
-        console.log("edit-folder");
+        // console.log("edit-folder");
         set_modal("folder");
         let group_id = group_ids.split(",");
         $("#folder_id").val(id);
@@ -409,8 +409,22 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         let index = pathInfo_info.length > 0 ? pathInfo_info[pathInfo_info.length - 1].key : 0;
         // Get the file input element
         var input = $('#upload_file')[0];
-        var current_dir = $('.current_dir').text();
-        // Create a new FormData object
+        var elements = $(".dx-menu-item-text").map(function() {
+            return $(this).text();
+        }).get();
+
+        // Remove the first element
+        var valuesAfterFirst = elements.slice(1);
+
+        // Join the remaining elements with "/"
+        var joinedValues = valuesAfterFirst.join("/");
+
+        // Remove trailing "/" if it exists
+        if (joinedValues.length > 0 && joinedValues.slice(-1) === "/") {
+            joinedValues = joinedValues.slice(0, -1);
+        }
+        var current_dir = joinedValues;
+        // Create a new For mData object
         var formData = new FormData();
         // Loop through each file in the input element
         for (var i = 0; i < input.files.length; i++) {
@@ -452,7 +466,21 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         let index = $('#foldersGroup .breadcrumb li.breadcrumb-item.active').attr("data-id");
         // Get the file input element
         var input = $('#upload_file')[0];
-        var current_dir = $('.current_dir').text();
+        var elements = $(".dx-menu-item-text").map(function() {
+            return $(this).text();
+        }).get();
+
+        // Remove the first element
+        var valuesAfterFirst = elements.slice(1);
+
+        // Join the remaining elements with "/"
+        var joinedValues = valuesAfterFirst.join("/");
+
+        // Remove trailing "/" if it exists
+        if (joinedValues.length > 0 && joinedValues.slice(-1) === "/") {
+            joinedValues = joinedValues.slice(0, -1);
+        }
+        var current_dir = joinedValues;
         // Create a new FormData object
         var formData = new FormData();
         // Loop through each file in the input element
@@ -620,7 +648,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             var folder_name = valuesAfterFirst.pop();
             var index = pathInfo_info.length > 0 ? pathInfo_info[pathInfo_info.length - 1].key : 0;
 
-            console.log(current_dir);
+
 
             var folderName = $('#folderName').val();
             var folder_id = $("#folder_id").val();
@@ -747,13 +775,13 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
     //     $("ol li").slice(1).each(function() {
     //         var text = $(this).text().trim();
-    //         console.log(text);
+    // console.log(text);
     //         if (text != undefined && text != "") {
     //             textAfterFirstOccurrence += text + "/";
     //         }
     //     });
 
-    //     console.log(textAfterFirstOccurrence);
+    // console.log(textAfterFirstOccurrence);
 
     //     $(".current_dir").text(textAfterFirstOccurrence);
     // }
@@ -810,17 +838,21 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             download: false
         };
     <?php } ?>
-
+    var uniqueParam = new Date().getTime();
     async function initializeFileManager(index = 0) {
-        var remoteProvider = new DevExpress.fileProviders.Remote({
-            endpointUrl: '<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>',
-        });
 
+        var remoteProvider = new DevExpress.fileProviders.Remote({
+            endpointUrl: `<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>?timestamp=${uniqueParam}`,
+        });
         var customProvider = new DevExpress.fileProviders.Custom({
+
             getItems: pathInfo => {
+                console.log(remoteProvider);
+                console.log(remoteProvider._endpointUrl);
+                remoteProvider._endpointUrl = `<?php echo admin_url("Knowledge_base/get_knowledge_base_dir"); ?>?timestamp=${uniqueParam}`;
+                console.log(remoteProvider._endpointUrl);
                 return remoteProvider.getItems(pathInfo)
                     .then(function(result) {
-                        console.log('Path Info:', pathInfo);
                         pathInfo_info = pathInfo;
                         let new_array = [];
                         result.forEach(function(item) {
@@ -854,110 +886,153 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             name: "fileManager",
             fileProvider: customProvider,
             customizeDetailColumns: function(columns) {
+                uniqueParam = new Date().getTime();
                 columns.splice(0, columns.length);
+                // console.log(options);
                 // Add new custom columns
                 columns.push({
-                    dataField: 'show_name',
-                    wordWrapEnabled: true,
-                    caption: "Name",
-                    width: "250px",
-                    cellTemplate: function(container, options) {
-                        let iconClass = "";
-                        let fileItem = options.data.fileItem.dataItem;
-                        let fileName = fileItem.name;
-                        let fileType = fileItem._type;
-                        let file_type = fileItem.file_type;
-                        let id = fileItem.key;
-                        let group_id = fileItem.group_ids;
-                        let file_path = fileItem.file_path;
+                        dataField: 'show_name',
+                        wordWrapEnabled: true,
+                        caption: "Name",
+                        width: "250px",
+                        cellTemplate: function(container, options) {
+                            let iconClass = "";
+                            let fileItem = options.data.fileItem.dataItem;
+                            let fileName = fileItem.name;
+                            let fileType = fileItem._type;
+                            let file_type = fileItem.file_type;
+                            let id = fileItem.key;
+                            let group_id = fileItem.group_ids;
+                            let file_path = fileItem.file_path;
+                            let editHtml = "";
+
+                            // Generate edit HTML if user is admin
 
 
-                        // Determine the icon class based on the file type
-                        switch (fileType) {
-                            case "folder":
-                            case "null":
-                                iconClass = "folder";
-                                break;
-                            case "pdf":
-                                iconClass = "pdffile";
-                                break;
-                            case "png":
-                            case "jpg":
-                            case "jpeg":
-                            case "webp":
-                            case "gif":
-                            case "svg":
-                                iconClass = "image";
-                                break;
-                            case "docx":
-                            case "doc":
-                                iconClass = "docfile";
-                                break;
-                            case "xlsx":
-                            case "xls":
-                                iconClass = "xlsfile";
-                                break;
-                            case "txt":
-                                iconClass = "txtfile";
-                                break;
-                            default:
-                                // Handle other file types
-                                iconClass = fileType + "file";
-                                break;
+                            // Determine the icon class based on the file type
+                            switch (fileType) {
+                                case "folder":
+                                case "null":
+                                    iconClass = "folder";
+                                    break;
+                                case "pdf":
+                                    iconClass = "pdffile";
+                                    break;
+                                case "png":
+                                case "jpg":
+                                case "jpeg":
+                                case "webp":
+                                case "gif":
+                                case "svg":
+                                    iconClass = "image";
+                                    break;
+                                case "docx":
+                                case "doc":
+                                    iconClass = "docfile";
+                                    break;
+                                case "xlsx":
+                                case "xls":
+                                    iconClass = "xlsfile";
+                                    break;
+                                case "txt":
+                                    iconClass = "txtfile";
+                                    break;
+                                default:
+                                    // Handle other file types
+                                    iconClass = fileType + "file";
+                                    break;
+                            }
+                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+
+
+                            // Append icon, edit button, and name elements to the container
+                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {
+                                container.append(`<div class='hide-tr'> <i class="images-list dx-icon-${iconClass}">...</div>`);
+
+                            } else {
+                                container.append(`<div class='hover-show-edit'> <i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
+                            }
+                        }
+                    }, {
+                        dataField: 'creationBy',
+                        wordWrapEnabled: true,
+                        caption: "Created By",
+                        width: "200px",
+                        cellTemplate: function(container, options) {
+                            let fileItem = options.data.fileItem.dataItem;
+                            let id = fileItem.key;
+                            let fileName = fileItem.name;
+                            let creationBy = fileItem.creationBy;
+                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {} else {
+                                container.append(`<div class='hover-show-edit'>${creationBy}</div>`);
+
+                            }
+                        }
+                    }, {
+                        dataField: 'creationDate',
+                        wordWrapEnabled: true,
+                        caption: "Created Date",
+                        width: "200px",
+                        cellTemplate: function(container, options) {
+                            let fileItem = options.data.fileItem.dataItem;
+                            let id = fileItem.key;
+                            let fileName = fileItem.name;
+                            let date = fileItem.creationDate;
+                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {} else {
+                                container.append(`<div class='hover-show-edit'>${date}</div>`);
+                            }
+                        }
+                    }, {
+                        dataField: '',
+                        wordWrapEnabled: true,
+                        caption: "Action",
+                        width: "150px",
+                        cellTemplate: function(container, options) {
+                            let fileItem = options.data.fileItem.dataItem;
+                            let fileName = fileItem.name;
+                            let filePath = fileItem.file_path;
+                            let id = fileItem.key;
+                            let groupId = fileItem.group_ids;
+                            let fileType = fileItem._type;
+                            let file_type = fileItem.file_type;
+                            let editHtml = "";
+
+                            // console.log(pathInfo_info);
+                            // console.log(id);
+                            // console.log(fileName);
+
+                            <?php if (is_admin()) { ?>
+                                if (fileType === "folder") {
+                                    editHtml = `<i class='fa fa-edit show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${groupId}')"></i>`;
+                                }
+                                editHtml += `&nbsp;<i class='fa fa-trash text-danger show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
+                            <?php } ?>
+
+                            let check_dir = pathInfo_info ? pathInfo_info[pathInfo_info.length - 1] : [];
+                            if (check_dir != undefined && check_dir.key == id && check_dir.name == fileName) {} else {
+                                if (filePath && filePath !== "") {
+                                    container.append(`<div class='hover-show-edit'>${editHtml} &nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${filePath}','${fileName}')"></i></div>`);
+                                } else {
+                                    container.append(`<div class='hover-show-edit'>${editHtml}</div>`);
+                                }
+                            }
                         }
 
-                        // Append icon, edit button, and name elements to the container
-                        container.append(`<div class='hover-show-edit'><i class="images-list dx-icon-${iconClass}"></i> ${fileName}</div>`);
                     }
-                }, {
-                    dataField: 'creationBy',
-                    wordWrapEnabled: true,
-                    caption: "Created By",
-                    width: "200px"
-                }, {
-                    dataField: 'creationDate',
-                    wordWrapEnabled: true,
-                    caption: "Created Date",
-                    width: "150px"
-                }, {
-                    dataField: '',
-                    wordWrapEnabled: true,
-                    caption: "Download",
-                    width: "150px",
-                    cellTemplate: function(container, options) {
-                        let iconClass = "";
-                        let fileItem = options.data.fileItem.dataItem;
-                        let fileName = fileItem.name;
-                        let fileType = fileItem._type;
-                        let file_type = fileItem.file_type;
-                        let id = fileItem.key;
-                        let group_id = fileItem.group_ids;
-                        let file_path = fileItem.file_path;
-                        let editHtml = "";
 
-                        // Generate edit HTML if user is admin
-                        <?php if (is_admin()) { ?>
-                            if (fileType === "folder") {
-                                editHtml = `<i class='fa fa-edit  show-hover' data-toggle="modal" data-target="#create_dir" onclick="edit_folder(${id},'${fileName}','${group_id}')"></i>`;
-                            }
-                            editHtml += `&nbsp;<i class='fa fa-trash text-danger  show-hover' onclick="delete_(${id},'${file_type}')"></i>`;
-                            container.append(`<div class=''>${editHtml} &nbsp; <i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
-                        <?php } else { ?>
-                            if (file_path != "") {
-                                container.append(`<div class=''><i class="images-list dx-icon dx-icon-download" onclick="download_file('${file_path}','${fileName}')"></i></div>`);
-                            }
-                        <?php } ?>
-                    }
-                }, {
-                    dataField: 'size',
-                    wordWrapEnabled: true,
-                    caption: "Size",
-                    width: "150px"
-                });
+                    // , {
+                    //     dataField: 'size',
+                    //     wordWrapEnabled: true,
+                    //     caption: "Size",
+                    //     width: "150px"
+                    // }
+                );
 
                 return columns;
             },
-            allowedFileExtensions: [".jpg", ".jpeg", ".png", ".gif", ".svg", ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".mp4", ".avi", ".mov"],
+            allowedFileExtensions: [],
             height: 500,
             permissions, // Integrate permissions here
             onFocusedItemChanged: function(e) {
@@ -979,6 +1054,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
 
 
 
+
     function checkEmptyDirectory() {
         // setTimeout(() => {
         //     var elements = $(".dx-menu-item-text").map(function() {
@@ -994,7 +1070,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
         //         joinedValues = joinedValues.slice(0, -1);
         //     }
 
-        //     console.log(joinedValues);
+        // console.log(joinedValues);
         //     if (joinedValues == "") {
 
         //     } else {
@@ -1018,8 +1094,10 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                                 <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
                                 <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a></div>`);
             }
+            $(".dx-icon.dx-icon-arrowup").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
+            $(".hide-tr").parents("tr").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
             // checkEmptyDirectory();
-        }, 500);
+        }, 300);
 
     }
     // Call the async function to initialize the DevExpress FileManager
