@@ -3128,7 +3128,28 @@ class Leads extends AdminController
                     "type" => $lead_type,
                     "status" => 2
                 ];
+                $this->db->where(array("id" => $lead_id));
+                $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
+                if (!empty($assigned) && !empty($duplicateLead->assigned) && $duplicateLead->assigned != $assigned) {
 
+                    $notifiedUsers = [];
+                    $notified = add_notification([
+                        'description'     => 'lead_transfer_request_approved',
+                        'touserid'        => $duplicateLead->assigned,
+                        'fromcompany'     => 1,
+                        'fromuserid'      => null,
+                        'additional_data' => serialize([
+                            $duplicateLead->name
+                        ])
+                    ]);
+                    if ($notified) {
+                        array_push($notifiedUsers, $duplicateLead->assigned);
+                    }
+                    pusher_trigger_notification($notifiedUsers);
+                    // $this->leads_model->log_lead_activity($duplicateLead->id, 'lead_transfer_request_approved', true, serialize([
+                    //     $duplicateLead->name
+                    // ]));
+                }
                 // Update the lead
                 $success = $this->leads_model->update_leads($update_array, $lead_id);
 
