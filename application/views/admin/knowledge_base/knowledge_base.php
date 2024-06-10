@@ -886,10 +886,10 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
             name: "fileManager",
             fileProvider: customProvider,
             customizeDetailColumns: function(columns) {
-                uniqueParam = new Date().getTime();
-                columns.splice(0, columns.length);
                 // console.log(options);
                 // Add new custom columns
+                columns.splice(0, columns.length);
+
                 columns.push({
                         dataField: 'show_name',
                         wordWrapEnabled: true,
@@ -1029,6 +1029,7 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                     //     width: "150px"
                     // }
                 );
+                set_();
 
                 return columns;
             },
@@ -1094,8 +1095,11 @@ $has_permission_delete = has_permission('knowledge_base', '', 'delete');
                                 <a href="#" onclick="set_modal('folder')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-folder"></i> <?php echo _l('create_dir'); ?></a>
                                 <a href="#" onclick="set_modal('upload')" data-toggle="modal" data-target="#create_dir" class="btn btn-default mright5"><i class="fa fa-upload"></i> <?php echo _l('upload_dir_files'); ?></a></div>`);
             }
-            $(".dx-icon.dx-icon-arrowup").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
-            $(".hide-tr").parents("tr").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
+            setTimeout(() => {
+                $(".dx-icon.dx-icon-arrowup").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
+                $(".hide-tr").parents("tr").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
+                $(".dx-menu-item-text").attr("onclick", "$('.dx-toolbar-items-container .dx-filemanager-i-refresh').trigger('dxclick');");
+            }, 200);
             // checkEmptyDirectory();
         }, 300);
 
