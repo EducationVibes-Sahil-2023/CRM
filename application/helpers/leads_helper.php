@@ -359,7 +359,8 @@ function get_leads_summary_filter($params)
             if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
                 $min = $params['update_count_min'];
                 $max = $params['update_count_max'];
-                $sql .= 'COUNT(' . db_prefix() . 'leads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+                // $sql .= 'COUNT(' . db_prefix() . 'leads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+                $sql .= 'COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
             }
         }
 
@@ -371,10 +372,8 @@ function get_leads_summary_filter($params)
     $result = [];
 
     // Remove the last UNION ALL
-    $sql    = substr($sql, 0, -10);
-
-
-
+     $sql    = substr($sql, 0, -10);
+     
     $result = $CI->db->query($sql)->result();
 
     $totalLeads = 0;
