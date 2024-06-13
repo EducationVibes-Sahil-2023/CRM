@@ -135,6 +135,11 @@ ob_end_clean();
       </ul>
    </nav>
 </div>
+<div class="whatsapp_Chat">
+   <iframe id="whatsappFrame" src="http://localhost:9000/9871159668"></iframe>
+</div>
+
+
 <div id="mobile-search" class="<?php if (!is_mobile()) {
                                     echo 'hide';
                                  } ?>">
@@ -150,5 +155,29 @@ ob_end_clean();
       color: #8a6d3b;
       background-color: #fcf8e3;
       border-color: #faebcc;
+   }
+
+   .whatsapp_Chat {
+      position: fixed;
+      width: 400px;
+      /* Adjust width as needed */
+      height: 600px;
+      /* Adjust height as needed */
+      z-index: 99999;
+      right: 20px;
+      /* Position from the right edge of the viewport */
+      bottom: 20px;
+      /* Position from the bottom edge of the viewport */
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+      /* Optional: Add a shadow */
+      border-radius: 10px;
+      /* Optional: Add rounded corners */
+   }
+
+   #whatsappFrame {
+      border: none;
+      /* Remove default iframe border */
+      width: 100%;
+      height: 100%;
    }
 </style>

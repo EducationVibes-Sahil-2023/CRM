@@ -82,6 +82,12 @@ $last_lead_request = last_lead_request($lead->id);
                         <!--end sms-->
 
                         <li role="presentation">
+                           <a href="#tab_proposals_whatsapp" onclick="initDataTable('.table-proposals-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_whatsapp" role="tab" data-toggle="tab">
+                              <?php echo _l('Whatsaap'); ?>
+                           </a>
+                        </li>
+
+                        <li role="presentation">
                            <a href="#tab_proposals_leads" onclick="initDataTable('.table-proposals-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_leads" role="tab" data-toggle="tab">
                               <?php echo _l('proposals'); ?>
                            </a>
@@ -497,6 +503,29 @@ $last_lead_request = last_lead_request($lead->id);
                   </div>
                </div>
                <!-- end sms -->
+
+               <div role="tabpanel" class="tab-pane" id="tab_proposals_whatsapp">
+               <form id="whatsapp_message_form" action="/send-message" method="POST" onsubmit="send_whatsapp_message(); return false;">
+                     <div class="form-group">
+                        <select name="smsTemplate" id="smsTemplate" class="form-control">
+                           <option value="">Select an Whatsapp Template</option>
+                           <option value="Noida Office: 1114 World Trade Tower, WTT Sec 16, Plot No.1, Noida, Uttar Pradesh 201301">Send Noida Office Address</option>
+                           <option value="Diamond Chambers, 9N, 9th floor,Block-1&2, 4, Chowringhee Ln,Park Street area, Kolkata, 700016">Send Kolkata Office Address</option>
+                           <option value="Office no. 13 , 3rd floor , Kamala regency , Dnyaneshwar paduka chowk , Opposite petrol pump FC road , Pune - 004">Send Noida Office Address</option>
+                        </select>
+                     </div>
+                     <div class="form-group">
+                        <textarea id="whatsapp_message" name="whatsapp_message" class="form-control" rows="4"></textarea>
+                        <input type="hidden" id="w_phonenumber" value="<?=get_staff_phonenumber(get_staff_user_id())->phonenumber?>">
+                        <input type="hidden" id="w_contact" value="<?php echo (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>">
+                        <input type="file" id="w_media" name="media[]"  multiple class="form-control">
+                     </div>
+                     <button type="submit" class="btn btn-info pull-right"><?php echo _l('SEND NOW'); ?></button>
+                  </form>
+                  <div class="clearfix"></div>
+                  <hr />
+
+               </div>
 
                <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
                   <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>

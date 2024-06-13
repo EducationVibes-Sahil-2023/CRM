@@ -945,6 +945,14 @@ function convertSeconds($seconds)
     return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
 }
 
+function get_staff_phonenumber($id)
+{
+    $CI = &get_instance();
+    $CI->db->select("phonenumber");
+    $CI->db->where("staffid", $id);
+    return $CI->db->get(db_prefix() . 'staff')->row();
+}
+
 function get_user_lead_type($id)
 {
     $CI = &get_instance();
