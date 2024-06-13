@@ -715,8 +715,8 @@ function appDataTableInline(element, options) {
     }
 
     var settings = $.extend({}, defaults, options);
-    var length_options = [10, 25, 50, 100];
-    var length_options_names = [10, 25, 50, 100];
+    var length_options = [5,10, 25, 50, 100];
+    var length_options_names = [5,10, 25, 50, 100];
 
     settings.pageLength = parseFloat(settings.pageLength);
 
