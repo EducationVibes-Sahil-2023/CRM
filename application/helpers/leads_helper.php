@@ -328,7 +328,7 @@ function get_leads_summary_filter($params)
 
         $sql .= " GROUP BY " . db_prefix() . "leads.id ";
 
-        if (!empty($params['last_contact_date']) ||  !empty($params['update_count_max']) || !empty($params['last_update_date'])) {
+        if (!empty($params['last_contact_date']) ||  isset($params['update_count_max']) || !empty($params['last_update_date'])) {
             $sql .= ' HAVING ';
 
             if (!empty($params['last_contact_date'])) {
