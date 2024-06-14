@@ -379,6 +379,16 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                 </div>
                             </div>
+                            <div class="col-md-2 leads-filter-column">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="assign_from_date" id="assign_from_date" placeholder="From Assignation Date" autocomplete="off">
+                                    </div>
+                                 </div>
+                                 <div class="col-md-2 leads-filter-column">
+                                    <div class="form-group">
+                                       <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
+                                    </div>
+                                 </div>
 
                             <div class="col-md-2 leads-filter-column">
                                 <div class="form-group">
@@ -725,6 +735,8 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
             var up_from_date = document.getElementById("up_from_date").value;
             var up_to_date = document.getElementById("up_to_date").value;
+            var assign_from_date = document.getElementById("assign_from_date").value;
+            var assign_to_date = document.getElementById("assign_to_date").value;
             var lead_type = $("#lead_type").val();
             var view_assigned_options = "";
             var view_source_options = "";
@@ -845,7 +857,9 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                     daily_update_count: update_staff_id,
                     google_source: view_google_options,
                     fb_source: view_fb_options,
-                    date_type: date_type
+                    date_type: date_type,
+                    assign_from_date:assign_from_date,
+                    assign_to_date:assign_to_date
 
                 },
                 dataType: "JSON",
