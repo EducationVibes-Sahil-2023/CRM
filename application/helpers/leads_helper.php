@@ -328,7 +328,7 @@ function get_leads_summary_filter($params)
 
         $sql .= " GROUP BY " . db_prefix() . "leads.id ";
 
-        if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max']!= '') || !empty($params['last_update_date'])) {
+        if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
             $sql .= ' HAVING ';
 
             if (!empty($params['last_contact_date'])) {
@@ -372,7 +372,7 @@ function get_leads_summary_filter($params)
     $result = [];
 
     // Remove the last UNION ALL
-     $sql    = substr($sql, 0, -10);
+    $sql    = substr($sql, 0, -10);
 
     $result = $CI->db->query($sql)->result();
 
@@ -430,8 +430,7 @@ function get_leads_report_($params, $export = 0)
         }
         if (!empty($params['department']) || !empty($params['location'])) {
             $sql .= "JOIN " . db_prefix() . "staff as staff ON (staff.staffid = l.assigned) ";
-        }else  if (!empty($export) && $export == 1) 
-        {
+        } else  if (!empty($export) && $export == 1) {
             $sql .= "JOIN " . db_prefix() . "staff as staff ON (staff.staffid = l.assigned) ";
         }
 
@@ -1143,7 +1142,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         if (!empty($having)) {
             $sql_add = ' AND COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         } else {
-            $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+            $sql_add = ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         }
     }
 
@@ -1881,13 +1880,50 @@ function calls_update_count($params = false, $max_status = 0)
     //     $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
     // }
 
+    // $having = "";
+    // if (!empty($params['last_contact_date'])) {
+    //     $last_contact_date = $params["last_contact_date"];
+    //     $having .= " Having lastcontact <= '" . $last_contact_date . "' or lastcontact is NULL ";
+    // } else if (!empty($params['last_update_date'])) {
+    //     $last_contact_date = $params["last_update_date"];
+    //     $having .= " Having lastcontact <= '" . $last_update_date . "'  or lastcontact is NULL  ";
+    // }
+
     $having = "";
-    if (!empty($params['last_contact_date'])) {
-        $last_contact_date = $params["last_contact_date"];
-        $having .= " Having lastcontact <= '" . $last_contact_date . "' or lastcontact is NULL ";
-    } else if (!empty($params['last_update_date'])) {
-        $last_contact_date = $params["last_update_date"];
-        $having .= " Having lastcontact <= '" . $last_update_date . "'  or lastcontact is NULL  ";
+    if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
+        $having .= ' HAVING ';
+
+        if (!empty($params['last_contact_date'])) {
+            $last_contact_date = $params["last_contact_date"];
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= "(lastcontact <= '" . $last_contact_date . "')";
+            } else {
+                $having .= "(lastcontact <= '" . $last_contact_date . "' OR lastcontact IS NULL)";
+            }
+
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= ' AND ';
+            }
+        } else if (!empty($params['last_update_date'])) {
+            $last_contact_date = $params["last_update_date"];
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= "(lastupdatecontact <= '" . $last_contact_date . "')";
+            } else {
+                $having .= "(lastupdatecontact <= '" . $last_contact_date . "' OR lastupdatecontact IS NULL)";
+            }
+
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= ' AND ';
+            }
+        }
+
+
+        if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+            $min = $params['update_count_min'];
+            $max = $params['update_count_max'];
+            // $having .= 'COUNT(' . db_prefix() . 'leads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+            $having .= 'COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        }
     }
 
 
