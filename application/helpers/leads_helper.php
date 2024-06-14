@@ -328,7 +328,7 @@ function get_leads_summary_filter($params)
 
         $sql .= " GROUP BY " . db_prefix() . "leads.id ";
 
-        if (!empty($params['last_contact_date']) ||  isset($params['update_count_max']) || !empty($params['last_update_date'])) {
+        if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max']!= '') || !empty($params['last_update_date'])) {
             $sql .= ' HAVING ';
 
             if (!empty($params['last_contact_date'])) {
@@ -373,7 +373,7 @@ function get_leads_summary_filter($params)
 
     // Remove the last UNION ALL
      $sql    = substr($sql, 0, -10);
-     
+
     $result = $CI->db->query($sql)->result();
 
     $totalLeads = 0;
@@ -464,6 +464,11 @@ function get_leads_report_($params, $export = 0)
                 . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "' ";
         }
 
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+        }
         if (!empty($params['fb_source'])) {
             $facebook_source_name = $params['fb_source'];
             $sql .= 'AND l.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\') ';
@@ -574,7 +579,11 @@ function get_leads_report_conversion($params)
             $sql .= " AND DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
                 . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "' ";
         }
-
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+        }
         if (!empty($params['fb_source'])) {
             $facebook_source_name = $params['fb_source'];
             $sql .= ' AND l.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\') ';
@@ -676,6 +685,11 @@ function get_leads_report_marketing($params)
             $up_to_date = $params['up_to_date'];
             $sql .= " AND DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
                 . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "' ";
+        }
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
         if (!empty($params['fb_source'])) {
