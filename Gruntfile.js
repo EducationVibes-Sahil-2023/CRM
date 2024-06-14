@@ -37,6 +37,7 @@ module.exports = function(grunt) {
                     'assets/plugins/tagsinput/js/tag-it.min.js': ['assets/plugins/tagsinput/js/tag-it.js'], // tag-it.js is modified
                     'assets/builds/vendor-admin.js': ['assets/builds/vendor-admin.js'],
                     'assets/builds/common.js': ['assets/builds/common.js'],
+                    'assets/js/whatsapp.js': ['assets/js/whatsapp.js'],
                 }
             }
         },
@@ -72,6 +73,11 @@ module.exports = function(grunt) {
                         dest: 'assets/builds/vendor-admin.css',
                         ext: '.css'
                     },
+                    {
+                        src: ['assets/css/whatsapp.css'],
+                        dest: 'assets/css/whatsapp.css',
+                        ext: '.css'
+                    } 
                 ]
             }
         },
@@ -275,6 +281,7 @@ module.exports = function(grunt) {
                 },
                 files: {
                     'assets/js/main.min.js': 'assets/js/main.min.js',
+                    'assets/js/whatsapp.js': 'assets/js/whatsapp.js',
                     'assets/js/map.min.js': 'assets/js/map.min.js',
                     'assets/js/projects.min.js': 'assets/js/projects.min.js',
                     'assets/js/tickets.min.js': 'assets/js/tickets.min.js',

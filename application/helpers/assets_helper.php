@@ -59,6 +59,7 @@ function _init_admin_assets()
     add_google_api_js_assets();
 
     $CI->app_scripts->add('common-js', 'assets/builds/common.js');
+    $CI->app_scripts->add('whatsapp-js', 'assets/js/whatsapp.js');
 
     $CI->app_scripts->add(
         'app-js',
@@ -71,6 +72,7 @@ function _init_admin_assets()
     add_favicon_link_asset();
 
     $CI->app_css->add('reset-css', 'assets/css/reset.min.css');
+    $CI->app_css->add('whatsapp-css', 'assets/css/whatsapp.css');
     $CI->app_css->add('roboto-css', 'assets/plugins/roboto/roboto.css', 'admin', ['reset-css']);
     $CI->app_css->add('vendor-css', 'assets/builds/vendor-admin.css', 'admin', ['reset-css']);
 

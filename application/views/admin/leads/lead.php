@@ -515,10 +515,10 @@ $last_lead_request = last_lead_request($lead->id);
                         </select>
                      </div>
                      <div class="form-group">
-                        <textarea id="whatsapp_message" name="whatsapp_message" class="form-control" rows="4"></textarea>
-                        <input type="hidden" id="w_phonenumber" value="<?=get_staff_phonenumber(get_staff_user_id())->phonenumber?>">
-                        <input type="hidden" id="w_contact" value="<?php echo (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>">
-                        <input type="file" id="w_media" name="media[]"  multiple class="form-control">
+                        <textarea id="message" name="message" class="form-control" rows="4"></textarea>
+                        <input type="hidden" id="phoneNumber" name="phoneNumber"  value="<?=get_staff_phonenumber(get_staff_user_id())->phonenumber?>">
+                        <input type="hidden" id="contact" name="contact" value="<?php echo (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>">
+                        <input type="file" id="mediaFiles" name="mediaFiles[]"  multiple class="form-control">
                      </div>
                      <button type="submit" class="btn btn-info pull-right"><?php echo _l('SEND NOW'); ?></button>
                   </form>
