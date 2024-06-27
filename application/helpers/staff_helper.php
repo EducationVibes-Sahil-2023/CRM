@@ -138,6 +138,15 @@ function get_available_staff_permissions($data = [])
                 'delete' => _l('permission_delete'),
             ],
         ],
+        'whatsapp_template' => [
+            'name'         => _l('Whatsapp Template'),
+            'capabilities' => $withNotApplicableViewOwn,
+        ],
+
+        'whatsapp' => [
+            'name'         => _l('Whatsapp Integration'),
+            'capabilities' => ['view' => _l('permission_view_own')]
+        ],
     ];
 
     $addLeadsPermission = true;

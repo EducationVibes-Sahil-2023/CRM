@@ -516,4 +516,11 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 40,
                 ]);
         }
+        if (has_permission('whatsapp_templates', '', 'view') || is_Admin()) {
+                $CI->app_menu->add_setup_menu_item('whatsapp-templates', [
+                        'href'     => admin_url('whatsapp'),
+                        'name'     => _l('acs_whatsapp_templates'),
+                        'position' => 39,
+                ]);
+        }
 }

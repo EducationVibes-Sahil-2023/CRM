@@ -129,6 +129,10 @@ $route['knowledge-base/article/(:any)']  = 'knowledge_base/article/$1';
 $route['knowledge-base/category']        = 'knowledge_base/index';
 $route['knowledge-base/category/(:any)'] = 'knowledge_base/category/$1';
 
+
+$route['whatsapp']                 = 'Whatsapp/index';
+
+
 /**
  * @deprecated 2.2.0
  */
@@ -169,6 +173,8 @@ $route['privacy-policy']       = 'privacy_policy';
 $route['admin/modules']               = 'admin/mods';
 $route['admin/modules/(:any)']        = 'admin/mods/$1';
 $route['admin/modules/(:any)/(:any)'] = 'admin/mods/$1/$2';
+
+$route['admin/whatsapp']               = 'admin/Whatsapp';
 
 // Public single ticket route
 $route['forms/tickets/(:any)'] = 'forms/public_ticket/$1';

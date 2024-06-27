@@ -546,6 +546,14 @@ $lang['acs_email_templates']                   = 'Email Templates';
 $lang['acs_roles']                             = 'Roles';
 $lang['acs_settings']                          = 'Settings';
 
+#whatsapp
+$lang['acs_whatsapp_templates']                   = 'Whatsapp Templates';
+$lang['whatsapp_templates']                   = 'Whatsapp Templates';
+$lang['template_whatsapp_message']                   = 'Whatsapp Message';
+$lang['create_whatsapp_template']                   = 'Create Whatsapp Template';
+
+
+
 # Tickets
 $lang['new_ticket']                                          = 'Open New Ticket';
 $lang['tickets']                                             = 'Tickets';

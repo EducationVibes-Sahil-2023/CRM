@@ -1,14 +1,15 @@
 .a1-full-height {
     height: 500px;
 }
-.a1-row.container
-{
-padding: 0px;
+
+.a1-row.container {
+    padding: 0px;
 }
-.a1-long
-{
+
+.a1-long {
     height: unset !important;
 }
+
 .a1-self-center {
     align-self: center;
 }
@@ -187,12 +188,48 @@ main.a1-column {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+.media-preview {
+    max-width: 200px;
+}
+
+.fa-whatsapp:before
+{
+    font-weight: bold;
+}
+.message-size-font {
+    font-size: 30px !important;
+}
+
+.fa-file-pdf {
+    color: red !important;
+}
+
+.message-preview-box {
+    height: 350px !important;
+    max-width: 100% !important;
+    border-radius: 10px;
+    margin: 2% 0%;
+    overflow: auto !important;
+}
+
+.image-download {
+    text-align: center;
+    padding: 10px;
+}
+
+.whatsapp-notification-icon-count {
+    margin: 10px;
+}
+
+
 .a1-column:not(.a1-reverse) {
     flex-direction: column;
 }
 
 .a1-column:not(.a1-reverse).a1-spaced-items> :not(:first-child) {
     margin-top: 1rem;
+    padding: 1%;
+    overflow: hidden;
 }
 
 .a1-column:not(.a1-reverse).a1-divided-items> :not(:first-child):after {
@@ -354,24 +391,25 @@ i {
     max-height: 70vh;
 }
 
-.float_whatsapp_icon{
-	position:fixed;
-	width:60px;
-	height:60px;
-	bottom:40px;
-	right:40px;
-	background-color:#25d366;
-	color:#FFF;
-	border-radius:50px;
-	text-align:center;
-  font-size:30px;
-	box-shadow: 2px 2px 3px #999;
-  z-index:100;
+.float_whatsapp_icon {
+    position: fixed;
+    width: 60px;
+    height: 60px;
+    bottom: 40px;
+    right: 40px;
+    background-color: #25d366;
+    color: #FFF;
+    border-radius: 50px;
+    text-align: center;
+    font-size: 30px;
+    box-shadow: 2px 2px 3px #999;
+    z-index: 100;
 }
 
-.my-float{
-	margin-top:16px;
+.my-float {
+    margin-top: 16px;
 }
+
 section.container {
     width: 310px;
     height: 500px;
@@ -531,6 +569,7 @@ section.container {
 .text.text-sent {
     align-self: flex-end;
     background-color: var(--light-green);
+    text-wrap: pretty !important;
 }
 
 .text.text-sent::after {

@@ -1,7 +1,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 ob_start();
+$all_leads = all_leads();
 ?>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" />
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" /> -->
 
 <li id="top_search" class="dropdown" data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
    <input type="search" id="search_input" class="form-control" placeholder="<?php echo _l('top_search_placeholder'); ?>">
@@ -131,41 +132,59 @@ ob_end_clean();
             <?php $this->load->view('admin/includes/notifications'); ?>
          </li>
          <?php if (is_admin()) { ?>
-            <li class="dropdown" data-toggle="tooltip" title="<?= $this->session->userdata('Facebook_Error') ?>" data-placement="bottom"><a><i class="fab fa-facebook fa-fw fa-lg" aria-hidden="true"></i></a></li>
+            <li class="dropdown" data-toggle="tooltip" title="<?= $this->session->userdata('Facebook_Error') ?>" data-placement="bottom"><a><i class="fa fa-facebook fa-fw fa-lg" aria-hidden="true"></i></a></li>
          <?php } ?>
-      </ul>
+
+         <?php if (has_permission('whatsapp', '', 'view')) { ?>
+            <li class="dropdown whatsapp_alert-wrapper header-notifications header-whatsapp_alert" data-toggle="tooltip" title="WhatsApp Notification" data-placement="bottom">
+               <a><i class="fa fa-whatsapp fa-fw fa-lg whatsapp-notification-icon-color    text-danger" data-toggle="dropdown" onclick="toggle_function('.whatsapp_alert')" aria-expanded="true"></i>
+                  <span class="label icon-total-indicator bg-warning icon-notifications whatsapp-notification-icon  "></span>
+               </a>
+               <ul class="dropdown-menu whatsapp_alert animated fadeIn width400 whatsapp_notification">
+
+               </ul>
+            </li>
+
+         <?php } ?>
+
+
+   </nav>
+   </li>
+   </ul>
    </nav>
 </div>
-<div class="whatsapp_Chat" style="display:none;">
-   <div id="clients" style="text-align: center;">
-   </div>
-   <div style="display:none;" id="chats" class="">
-      <section class="a1-row container">
-         <aside class="a1-column aside">
-            <div class="a1-row a1-center-items-v a1-justify-items a1-half-padding-tb a1-padding-lr bg-left-panel-header a1-spaced-items border-r">
-               <img src="https://i.ibb.co/KK52Gp5/aviv-profile.jpg" class="profile-pic" alt="Profile Picture" />
-               <div class="a1-row a1-spaced-items a1-center-items-v icon-color">
-                  <!-- <i class="fas fa-adjust" onclick="toggle()"></i>
+
+<?php if (has_permission('whatsapp', '', 'chat') && 1 == 2) { ?>
+   <div class="whatsapp_Chat" style="display:none;">
+      <div id="clients" style="text-align: center;">
+      </div>
+      <d iv style="display:none;" id="chats" class="">
+         <section class="a1-row container">
+            <aside class="a1-column aside">
+               <div class="a1-row a1-center-items-v a1-justify-items a1-half-padding-tb a1-padding-lr bg-left-panel-header a1-spaced-items border-r">
+                  <img src="https://i.ibb.co/KK52Gp5/aviv-profile.jpg" class="profile-pic" alt="Profile Picture" />
+                  <div class="a1-row a1-spaced-items a1-center-items-v icon-color">
+                     <!-- <i class="fas fa-adjust" onclick="toggle()"></i>
                   <i class="fas fa-circle-notch"></i>
                   <i class="fas fa-comment-alt"></i>
                   <i class="fas fa-ellipsis-v"></i> -->
-                  <i class="fas fa-close" onclick="whats_app_toggle()"></i>
+                     <i class="fa fa-close" onclick="whats_app_toggle()"></i>
+                  </div>
                </div>
-            </div>
-            <div class="a1-row a1-center-items-v a1-padding a1-spaced-items search">
-               <i class="fas fa-search icon-color"></i>
-               <input type="text" class="a1-long" placeholder="Search or start new chat" />
-            </div>
-            <div class="a1-column a1-long a1-elastic friends-panel" id="friends-panel" onscroll="handleScroll(1,'friends-panel')"></div>
-         </aside>
-         <main class="a1-column main " style="display: none;"></main>
-      </section>
+               <div class="a1-row a1-center-items-v a1-padding a1-spaced-items search">
+                  <i class="fa fa-search icon-color"></i>
+                  <input type="text" class="a1-long" placeholder="Search or start new chat" />
+               </div>
+               <div class="a1-column a1-long a1-elastic friends-panel" id="friends-panel"></div>
+            </aside>
+            <main class="a1-column main " style="display: none;"></main>
+         </section>
    </div>
-</div>
 
-<a href="javascript:void(0);" style="display:none;" onclick="whats_app_toggle()" class="float_whatsapp_icon">
-   <i class="fab fa-whatsapp my-float"></i>
-</a>
+   <a href="javascript:void(0);" style="display:none;" onclick="whats_app_toggle()" class="float_whatsapp_icon">
+      <i class="fa fa-whatsapp my-float"></i>
+   </a>
+<?php } ?>
 
 
 <div id="mobile-search" class="<?php if (!is_mobile()) {
@@ -203,5 +222,21 @@ ob_end_clean();
 
 <script>
    var phoneNumber = <?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>;
-   // var tokken_login = "";
+console.log(phoneNumber);
+   var whatsapp_permission_view = "<?= has_permission('whatsapp', '', 'view') ?>";
+   console.log("whatsapp_permission", whatsapp_permission_view);
+
+
+   if (whatsapp_permission_view == 1) {
+     
+      // var tokken_login = "";
+      function toggle_function(selector) {
+         if ($(selector).length > 0) {
+            $(selector).toggle();
+         }
+      }
+
+      var lead_notification = <?= json_encode($all_leads, true) ?>;
+      // console.log(lead_notification);
+   }
 </script>

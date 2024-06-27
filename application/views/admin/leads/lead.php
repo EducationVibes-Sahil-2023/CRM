@@ -1,12 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 
 $staff_members     = get_all_staff();
+$whatsapp_template = get_whatsapp_template();
 array_unshift($staff_members, array());
 array_unshift($type, array());
 $last_lead_request = last_lead_request($lead->id);
 
 
 ?>
+
 <div class="modal-header">
    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
    <h4 class="modal-title">
@@ -80,12 +82,13 @@ $last_lead_request = last_lead_request($lead->id);
                            </a>
                         </li>
                         <!--end sms-->
-
-                        <li role="presentation">
-                           <a href="#tab_proposals_whatsapp" onclick="initDataTable('.table-proposals-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_whatsapp" role="tab" data-toggle="tab">
-                              <?php echo _l('Whatsaap'); ?>
-                           </a>
-                        </li>
+                        <?php if (has_permission('whatsapp', '', 'view')) { ?>
+                           <li role="presentation">
+                              <a id="tab_proposals_whatsapp_li" href="#tab_proposals_whatsapp" onclick="get_whatsapp_message(<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>,<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>);" aria-controls="tab_proposals_whatsapp" role="tab" data-toggle="tab">
+                                 <?php echo _l('Whatsapp'); ?>
+                              </a>
+                           </li>
+                        <?php } ?>
 
                         <li role="presentation">
                            <a href="#tab_proposals_leads" onclick="initDataTable('.table-proposals-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_leads" role="tab" data-toggle="tab">
@@ -504,28 +507,42 @@ $last_lead_request = last_lead_request($lead->id);
                </div>
                <!-- end sms -->
 
-               <div role="tabpanel" class="tab-pane" id="tab_proposals_whatsapp">
-               <form id="whatsapp_message_form" action="/send-message" method="POST" onsubmit="send_whatsapp_message(); return false;">
-                     <div class="form-group">
-                        <select name="smsTemplate" id="smsTemplate" class="form-control">
-                           <option value="">Select an Whatsapp Template</option>
-                           <option value="Noida Office: 1114 World Trade Tower, WTT Sec 16, Plot No.1, Noida, Uttar Pradesh 201301">Send Noida Office Address</option>
-                           <option value="Diamond Chambers, 9N, 9th floor,Block-1&2, 4, Chowringhee Ln,Park Street area, Kolkata, 700016">Send Kolkata Office Address</option>
-                           <option value="Office no. 13 , 3rd floor , Kamala regency , Dnyaneshwar paduka chowk , Opposite petrol pump FC road , Pune - 004">Send Noida Office Address</option>
-                        </select>
-                     </div>
-                     <div class="form-group">
-                        <textarea id="message" name="message" class="form-control" rows="4"></textarea>
-                        <input type="hidden" id="phoneNumber" name="phoneNumber"  value="<?=get_staff_phonenumber(get_staff_user_id())->phonenumber?>">
-                        <input type="hidden" id="contact" name="contact" value="<?php echo (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>">
-                        <input type="file" id="mediaFiles" name="mediaFiles[]"  multiple class="form-control">
-                     </div>
-                     <button type="submit" class="btn btn-info pull-right"><?php echo _l('SEND NOW'); ?></button>
-                  </form>
-                  <div class="clearfix"></div>
-                  <hr />
+               <?php if (has_permission('whatsapp', '', 'view')) { ?>
+                  <div role="tabpanel" class="tab-pane" id="tab_proposals_whatsapp">
+                     <form id="whatsapp_message_form" enctype="multipart/form-data" action="/send-message" method="POST" onsubmit="send_whatsapp_message(this.id); return false;">
+                        <div class="form-group">
+                           <select name="whatsapp_template" id="whatsapp_template" class="form-control" onchange="set_whatsapp_template_value('#message', this.value)">
+                              <option value="">Select a WhatsApp Template</option>
+                              <?php if (!empty($whatsapp_template)) {
+                                 foreach ($whatsapp_template as $template) {
+                              ?>
+                                    <option value="<?= base64_encode($template['message']) ?>"><?= $template['name'] . ' - ' . $template['subject'] ?></option>
+                              <?php
+                                 }
+                              } ?>
+                           </select>
 
-               </div>
+                        </div>
+                        <div class="form-group">
+                           <!-- <textarea id="message" name="message" class="form-control" rows="4"></textarea> -->
+                           <?php echo render_textarea('message', 'Template Message', '', array('placeholder' => _l('Template Message'), 'id' => "template_message"), array(), 'mtop15', 'whatsapp-template-message'); ?>
+                           <input type="hidden" id="phoneNumber" name="phoneNumber" value="<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>">
+                           <input type="hidden" id="contact" name="contact" value="<?php echo (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>">
+                           <br>
+                           <input type="file" id="mediaFiles" multiple class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-info pull-right"><?php echo _l('SEND NOW'); ?></button>
+                     </form>
+                     <div class="clearfix"></div>
+                     <div class="a1-column a1-long a1-elastic message-preview-box">
+                        <div  data-last_messgae_id="" id="message-<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>" class="chat-container a1-column a1-long a1-elastic chat-main a1-spaced-items">
+
+                        </div>
+                     </div>
+                     <hr />
+
+                  </div>
+               <?php } ?>
 
                <div role="tabpanel" class="tab-pane" id="lead_transfer_lead_request">
                   <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-transfer')); ?>
@@ -758,6 +775,8 @@ $last_lead_request = last_lead_request($lead->id);
 </div>
 <?php hooks()->do_action('lead_modal_profile_bottom', (isset($lead) ? $lead->id : '')); ?>
 <script>
+   // init_editor('#template_message');
+
    var staff_members = <?= json_encode($staff_members, true) ?>;
    var last_lead_request_assign = "<?= !empty($last_lead_request->assign) ? $last_lead_request->assign : '' ?>";
    console.log(staff_members);
@@ -806,4 +825,24 @@ $last_lead_request = last_lead_request($lead->id);
          x.value = '';
       }
    })
+
+   function removeTags(html) {
+      return new Promise((resolve, reject) => {
+         var doc = new DOMParser().parseFromString(html, 'text/html');
+         resolve(doc.body.textContent || "");
+         //  return doc.body.textContent || "";
+      });
+   }
+
+
+   async function set_whatsapp_template_value(selector, message = '') {
+
+      if (message === "") {
+         $('#message').val('');
+         // $(selector).val(''); // Set value to empty if message is empty
+      } else {
+         $('#message').val(atob(message));
+         // $(selector).val(message); // Decode and set the base64 encoded message
+      }
+   }
 </script>
