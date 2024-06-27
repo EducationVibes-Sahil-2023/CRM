@@ -2007,3 +2007,45 @@ function last_lead_request($lead_id)
     $lead_request = $CI->db->get(db_prefix() . 'lead_transfer_request')->row();
     return $lead_request;
 }
+
+function get_whatsapp_template()
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->where("status", 1);
+    $CI->db->order_by("id", "desc");
+    $whatsapp_template = $CI->db->get(db_prefix() . 'whatsapp_template')->result_array();
+    return $whatsapp_template;
+}
+
+
+function all_leads()
+{
+    $CI = &get_instance();
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    $CI->db->select('RIGHT(TRIM(phonenumber), 10) AS phonenumber, name, assigned,id');
+
+    if (!is_admin()) {
+        if ($role == 3) {
+            // $this->load->database();
+            $sid = get_staff_user_id(); //48;//get_staff_user_id();
+            $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            $CI->db->close();
+            $CI->db->initialize();
+            $idsarr = array_column($teamids, 'staffid');
+            $sids = implode(",", $idsarr);
+            if (!empty($sids)) {
+                $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+            } else {
+                $tids = ' AND assigned in (' . $sid . ')';
+            }
+            // print_r($where);die;
+        } else {
+            $CI->db->where('assigned', get_staff_user_id());
+        }
+    }
+
+    $leads = $CI->db->get(db_prefix() . 'leads')->result_array();
+    $leads = array_column($leads, null, 'phonenumber');
+    return $leads;
+}

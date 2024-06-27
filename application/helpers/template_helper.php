@@ -198,7 +198,9 @@ function app_external_form_footer($form)
 
     $CI->app_scripts->add('colorpicker-js', 'assets/plugins/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js', $assetsGroup);
 
-    $CI->app_scripts->add('common-js', 'assets/builds/common.js', $assetsGroup); ?>
+    $CI->app_scripts->add('common-js', 'assets/builds/common.js', $assetsGroup); 
+    $CI->app_scripts->add('whatsapp-js', 'assets/js/whatsapp.js', $assetsGroup); 
+    ?>
 
     <script>
        var app = {};
@@ -241,6 +243,7 @@ function app_external_form_header($form)
     add_favicon_link_asset($assetsGroup);
 
     $CI->app_css->add('reset-css', 'assets/css/reset.min.css', $assetsGroup);
+    $CI->app_css->add('whatsapp-css', 'assets/css/whatsapp.css', $assetsGroup);
 
     // $CI->app_css->add('roboto-css', 'assets/plugins/roboto/roboto.css', $assetsGroup);
     $CI->app_css->add('bootstrap-css', 'assets/plugins/bootstrap/css/bootstrap.min.css', $assetsGroup);

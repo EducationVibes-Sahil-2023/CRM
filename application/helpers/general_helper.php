@@ -1,5 +1,7 @@
 <?php
 
+use Firebase\JWT\JWT;
+
 defined('BASEPATH') or exit('No direct script access allowed');
 header('Content-Type: text/html; charset=utf-8');
 
@@ -945,6 +947,14 @@ function convertSeconds($seconds)
     return $dt1->diff($dt2)->format('%h Hr:%i min:%s sec');
 }
 
+function get_staff_phonenumber($id)
+{
+    $CI = &get_instance();
+    $CI->db->select("phonenumber");
+    $CI->db->where("staffid", $id);
+    return $CI->db->get(db_prefix() . 'staff')->row();
+}
+
 function get_user_lead_type($id)
 {
     $CI = &get_instance();
@@ -998,4 +1008,16 @@ function staff_has_assigned_knowledge_base($staff_id = false)
     if (!empty($knowledge_base->id)) {
         return true;
     }
+}
+
+function generate_token($data,$secretKey)
+{
+    $response = [];
+    try {
+        $jwt = new JWT();
+        $response = $jwt->encode($data, $secretKey, "HS256");
+    } catch (Exception $e) {
+        $response = array("status" => 0, "message" => "Not generate token.");
+    }
+    return $response;
 }

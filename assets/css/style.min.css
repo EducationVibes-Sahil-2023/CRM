@@ -9156,5 +9156,5 @@ body.gantt {
     height: 100%;
     background: black;
     opacity: 0.2;
-    z-index: 9;
+    z-index: 999999 !important;
 }

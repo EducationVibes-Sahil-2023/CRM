@@ -51,7 +51,8 @@ function theme_assets()
         }
     }
 
-    $CI->app_scripts->theme('common-js', 'assets/builds/common.js');
+    // $CI->app_scripts->theme('common-js', 'assets/builds/common.js');
+    $CI->app_scripts->theme('whatsaap-js', 'assets/js/whatsapp.js');
 
     $CI->app_scripts->theme(
         'theme-global-js',
@@ -77,6 +78,7 @@ function theme_assets()
 
     $CI->app_css->theme('bootstrap-css', 'assets/plugins/bootstrap/css/bootstrap.min.css');
     $CI->app_css->theme('roboto-css', 'assets/plugins/roboto/roboto.css');
+    $CI->app_css->theme('whatsapp-css', 'assets/css/whatsapp.css');
 
     if (is_rtl()) {
         $CI->app_css->theme('bootstrap-rtl-css', 'assets/plugins/bootstrap-arabic/css/bootstrap-arabic.min.css');

@@ -337,7 +337,7 @@ if (!empty($params["type"]) && $params["type"] == "counsellor") {
         if (is_admin() || has_permission('leads', '', 'approval')) {
             if ($aRow['status'] == '3') {
 
-                $edit_btn = "<i class='fa fa-edit btn btn-default' onclick='init_lead(" . $aRow['leadid'] . ", true,true)'></i>";
+                $edit_btn = "<i class='fa fa-edit btn btn-default' onclick='init_lead(" . $aRow['leadid'] . ", true,`#show_transfer_lead_div`)'></i>";
 
                 $row[] = $edit_btn . '&nbsp;<button class="btn btn-success" onclick="update_lead_transfer(' . $aRow['leadid'] . ', ' . $aRow['lead_type'] . ', ' . $aRow['lead_transfer_id'] . ', ' . $aRow['assign'] . ', 1)">Approved</button>';
             } else {
