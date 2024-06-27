@@ -328,7 +328,7 @@ function get_leads_summary_filter($params)
 
         $sql .= " GROUP BY " . db_prefix() . "leads.id ";
 
-        if (!empty($params['last_contact_date']) ||  isset($params['update_count_max']) || !empty($params['last_update_date'])) {
+        if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
             $sql .= ' HAVING ';
 
             if (!empty($params['last_contact_date'])) {
@@ -463,6 +463,11 @@ function get_leads_report_($params, $export = 0)
                 . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "' ";
         }
 
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+        }
         if (!empty($params['fb_source'])) {
             $facebook_source_name = $params['fb_source'];
             $sql .= 'AND l.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\') ';
@@ -573,7 +578,11 @@ function get_leads_report_conversion($params)
             $sql .= " AND DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
                 . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "' ";
         }
-
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+        }
         if (!empty($params['fb_source'])) {
             $facebook_source_name = $params['fb_source'];
             $sql .= ' AND l.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\') ';
@@ -675,6 +684,11 @@ function get_leads_report_marketing($params)
             $up_to_date = $params['up_to_date'];
             $sql .= " AND DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
                 . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "' ";
+        }
+        if (!empty($params['assign_to_date'])) {
+            $assign_from_date = $params['assign_from_date'];
+            $assign_to_date = $params['assign_to_date'];
+            $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
 
         if (!empty($params['fb_source'])) {
@@ -1128,7 +1142,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         if (!empty($having)) {
             $sql_add = ' AND COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         } else {
-            $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+            $sql_add = ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         }
     }
 
@@ -1866,13 +1880,50 @@ function calls_update_count($params = false, $max_status = 0)
     //     $sql_add = ' HAVING COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
     // }
 
+    // $having = "";
+    // if (!empty($params['last_contact_date'])) {
+    //     $last_contact_date = $params["last_contact_date"];
+    //     $having .= " Having lastcontact <= '" . $last_contact_date . "' or lastcontact is NULL ";
+    // } else if (!empty($params['last_update_date'])) {
+    //     $last_contact_date = $params["last_update_date"];
+    //     $having .= " Having lastcontact <= '" . $last_update_date . "'  or lastcontact is NULL  ";
+    // }
+
     $having = "";
-    if (!empty($params['last_contact_date'])) {
-        $last_contact_date = $params["last_contact_date"];
-        $having .= " Having lastcontact <= '" . $last_contact_date . "' or lastcontact is NULL ";
-    } else if (!empty($params['last_update_date'])) {
-        $last_contact_date = $params["last_update_date"];
-        $having .= " Having lastcontact <= '" . $last_update_date . "'  or lastcontact is NULL  ";
+    if (!empty($params['last_contact_date']) ||  (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
+        $having .= ' HAVING ';
+
+        if (!empty($params['last_contact_date'])) {
+            $last_contact_date = $params["last_contact_date"];
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= "(lastcontact <= '" . $last_contact_date . "')";
+            } else {
+                $having .= "(lastcontact <= '" . $last_contact_date . "' OR lastcontact IS NULL)";
+            }
+
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= ' AND ';
+            }
+        } else if (!empty($params['last_update_date'])) {
+            $last_contact_date = $params["last_update_date"];
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= "(lastupdatecontact <= '" . $last_contact_date . "')";
+            } else {
+                $having .= "(lastupdatecontact <= '" . $last_contact_date . "' OR lastupdatecontact IS NULL)";
+            }
+
+            if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+                $having .= ' AND ';
+            }
+        }
+
+
+        if (isset($params['update_count_max']) && $params['update_count_max'] != "") {
+            $min = $params['update_count_min'];
+            $max = $params['update_count_max'];
+            // $having .= 'COUNT(' . db_prefix() . 'leads.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+            $having .= 'COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        }
     }
 
 
