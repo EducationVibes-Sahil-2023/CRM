@@ -1787,7 +1787,13 @@ function calls_update_count($params = false, $max_status = 0)
     FROM " . db_prefix() . "calls_activity_logs AS calls 
     WHERE calls.contact = l.phonenumber 
     ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC 
-    LIMIT 1) as lastcontact  FROM " . db_prefix() . "leads l ";
+    LIMIT 1) as lastcontact,(
+            SELECT DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')
+            FROM " . db_prefix() . "calls_activity_logs AS calls
+            WHERE calls.contact = l.phonenumber
+            ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC
+            LIMIT 1
+        ) AS lastupdatecontact  FROM " . db_prefix() . "leads l ";
     // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
     if (!empty($params['followup_to_date'])) {
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
