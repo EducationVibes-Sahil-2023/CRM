@@ -215,8 +215,8 @@
 
         ws.onclose = () => {
             console.log('WebSocket connection closed');
-            connectWebSocket();
-            pollClientReady(phoneNumber);
+            // connectWebSocket();
+            // pollClientReady(phoneNumber);
         };
     }
 
@@ -388,7 +388,7 @@
 
             if (data.status === 1) {
                 // $(".float_whatsapp_icon").show();
-                pollClientReady(phoneNumber, clientDiv);
+                // pollClientReady(phoneNumber, clientDiv);f
                 return;
             } else {
                 console.error("Initialization failed: ", data.message);
@@ -432,7 +432,7 @@
 
     $(document).ready(() => {
         if (phoneNumber != undefined) {
-            initializeClient(phoneNumber);
+            // initializeClient(phoneNumber)
         }
     });
 
@@ -741,7 +741,7 @@
     }
 
 
-    connectWebSocket();
+    // connectWebSocket();
 
     
 
