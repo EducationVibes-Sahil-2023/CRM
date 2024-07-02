@@ -11,10 +11,104 @@
 
 
     var last_message_idd = "";
-
-    function toggle() {
-        document.body.classList.toggle("dark-mode");
+    async function pollClientReady(phoneNumber, clientDiv) {
+        const intervalId = setInterval(async () => {
+            try {
+                const response = await fetch(WebURL + `/is-client-ready/${phoneNumber}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ` + login_tokken
+                    }
+                });
+                const { ready } = await response.json();
+                if (ready === 1) {
+                    $(".whatsapp-notification-icon-color").removeClass("text-danger")
+                    $(".whatsapp-notification-icon-color").addClass("text-success")
+                    clearInterval(intervalId);
+                    $("#qr_scanner").hide();
+                    if ($(".whatsapp-logout-button").length > 0) {
+                        $(".qr_scanner").addClass("opacity");
+                    }
+                    else {
+                        $(".whatsapp-qr-scanner").append(`<button class="btn btn-danger whatsapp-logout-button" onclick="logout_whatsapp()">Whatsapp Logout</button>`);
+                        $(".qr_scanner").addClass("opacity");
+                    }
+                    getChats(phoneNumber);
+                }
+            } catch (error) {
+                console.error("Error polling client readiness:", error);
+                clearInterval(intervalId);
+            }
+        }, 3000);
     }
+    async function initializeClient(phoneNumber) {
+
+        try {
+            const response = await fetch(WebURL + `/add-client/${phoneNumber}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ` + login_tokken
+                }
+            });
+            const data = await response.json();
+
+            const clientDiv = document.createElement("div");
+            clientDiv.id = `client-${phoneNumber}`;
+            if (data.qrCodeUrl != "") {
+                $("#client-" + phoneNumber).remove();
+                clientDiv.innerHTML = `
+                    <img id="qr_scanner" src="${data.qrCodeUrl}" alt="QR Code" />
+                `;
+                $(".qr_scanner").remove();
+                $(".whatsapp-qr-scanner").append(`<img class="qr_scanner" src="${data.qrCodeUrl}" alt="QR Code" />`);
+            }
+            if (data.login_tokken != "") {
+                login_tokken = data.loginToken;
+            }
+            if (data.invalid) {
+                initializeClient(phoneNumber);
+            }
+
+            if ($("#clients").length > 0) {
+                document.getElementById("clients").appendChild(clientDiv);
+            }
+
+            if (data.status === 1) {
+                // $(".float_whatsapp_icon").show();
+                pollClientReady(phoneNumber, clientDiv);
+                return;
+            } else {
+                console.error("Initialization failed: ", data.message);
+            }
+        } catch (error) {
+            console.error("Error initializing client:", error);
+        }
+
+    }
+    function connectWebSocket() {
+        const ws = new WebSocket('wss://whatsapp.educationvibes.co.in/ws?phone=' + phoneNumber);
+        // const ws = new WebSocket('ws://your-websocket-server-domain-or-ip:9000');
+        ws.onopen = () => {
+            console.log('WebSocket connection established');
+        };
+
+        ws.onmessage = async (event) => {
+            const message = event.data;
+            await set_new_message_notification(message);
+        };
+
+        ws.onclose = () => {
+            console.log('WebSocket connection closed');
+            connectWebSocket();
+            pollClientReady(phoneNumber);
+        };
+    }
+
+    $(document).ready(() => {
+        if (phoneNumber != undefined) {
+            initializeClient(phoneNumber)
+        }
+    });
     async function convertToBase64(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -24,10 +118,6 @@
         });
     }
 
-    function whats_app_toggle() {
-        $(".whatsapp_Chat").toggle();
-        $(".float_whatsapp_icon").toggle();
-    }
 
     async function getChats(phoneNumber, limit = 0) {
         try {
@@ -41,7 +131,7 @@
             if (data.status === 1) {
                 var chatsDiv = document.getElementById(`chats`);
                 if (data.chats.length > 0) {
-                    await set_chat(data.chats)
+                    // await set_chat(data.chats)
                     await set_notification(data.unreadMessages)
 
                 }
@@ -195,30 +285,13 @@
         messageData.push(JSON.parse(message));
         console.log(messageData);
         await set_communication(messageData, messageData[0].id.remote, 1);
+        await set_notification(messageData)
         // await set_communication(messageData, messageData[0].id.remote);
         // await getChats(phoneNumber)
--
     }
 
     // public/script.js
-    function connectWebSocket() {
-        const ws = new WebSocket('wss://whatsapp.educationvibes.co.in/ws?phone=' + phoneNumber);
-        // const ws = new WebSocket('ws://your-websocket-server-domain-or-ip:9000');
-        ws.onopen = () => {
-            console.log('WebSocket connection established');
-        };
-
-        ws.onmessage = async (event) => {
-            const message = event.data;
-            await set_new_message_notification(message);
-        };
-
-        ws.onclose = () => {
-            console.log('WebSocket connection closed');
-            connectWebSocket();
-            pollClientReady(phoneNumber);
-        };
-    }
+  
 
     function scrollBottom(element) {
         if ($(element).length > 0) {
@@ -227,27 +300,8 @@
     }
 
 
-
-    async function goTo(chatid = "") {
-        if (chatid != "") {
-            await handleCommunicationChat(chatid);
-            document.querySelector(".main").classList.toggle("open-message");
-        }
-        else {
-            $(".main").hide();
-            $("aside.aside").show();
-
-        }
-    }
-
     var scroll_status = true;
 
-    // async function handleScroll(type = "", id = "", contact = '') {
-    //     const friendsPanel = document.getElementById(id);
-    //     const remainingScroll = friendsPanel.scrollHeight - friendsPanel.scrollTop - friendsPanel.clientHeight;
-    //     if (friendsPanel.scrollTop === 0) {
-    //     }
-    // }
 
 
    async function send_whatsapp_message(id) {
@@ -286,7 +340,7 @@
                 $("#" + id).find("#message").val("");
                 $("#" + id).find("input[type='file']").val("");
                 $("#" + id).find("#whatsapp_template").val("");
-                // get_whatsapp_message(phoneNumber, contact)
+                get_whatsapp_message(phoneNumber, contact)
             },
             error: function (xhr, status, error) {
                 console.error('Error sending message:', error);
@@ -354,99 +408,23 @@
         });
     }
 
-    async function initializeClient(phoneNumber) {
+ 
 
-        try {
-            const response = await fetch(WebURL + `/add-client/${phoneNumber}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ` + login_tokken
-                }
-            });
-            const data = await response.json();
+   
 
-            const clientDiv = document.createElement("div");
-            clientDiv.id = `client-${phoneNumber}`;
-            if (data.qrCodeUrl != "") {
-                $("#client-" + phoneNumber).remove();
-                clientDiv.innerHTML = `
-                    <img id="qr_scanner" src="${data.qrCodeUrl}" alt="QR Code" />
-                `;
-                $(".qr_scanner").remove();
-                $(".whatsapp-qr-scanner").append(`<img class="qr_scanner" src="${data.qrCodeUrl}" alt="QR Code" />`);
-            }
-            if (data.login_tokken != "") {
-                login_tokken = data.loginToken;
-            }
-            if (data.invalid) {
-                initializeClient(phoneNumber);
-            }
+  
 
-            if ($("#clients").length > 0) {
-                document.getElementById("clients").appendChild(clientDiv);
-            }
 
-            if (data.status === 1) {
-                // $(".float_whatsapp_icon").show();
-                pollClientReady(phoneNumber, clientDiv);
-                return;
+
+        function formatTimestamp(timestamp) {
+            const momentTimestamp = moment(timestamp * 1000);
+
+            if (moment().diff(momentTimestamp, 'days') < 7) {
+                return momentTimestamp.fromNow();
             } else {
-                console.error("Initialization failed: ", data.message);
+                return momentTimestamp.calendar();
             }
-        } catch (error) {
-            console.error("Error initializing client:", error);
         }
-
-    }
-
-    async function pollClientReady(phoneNumber, clientDiv) {
-        const intervalId = setInterval(async () => {
-            try {
-                const response = await fetch(WebURL + `/is-client-ready/${phoneNumber}`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ` + login_tokken
-                    }
-                });
-                const { ready } = await response.json();
-                if (ready === 1) {
-                    $(".whatsapp-notification-icon-color").removeClass("text-danger")
-                    $(".whatsapp-notification-icon-color").addClass("text-success")
-                    clearInterval(intervalId);
-                    $("#qr_scanner").hide();
-                    if ($(".whatsapp-logout-button").length > 0) {
-                        $(".qr_scanner").addClass("opacity");
-                    }
-                    else {
-                        $(".whatsapp-qr-scanner").append(`<button class="btn btn-danger whatsapp-logout-button" onclick="logout_whatsapp()">Whatsapp Logout</button>`);
-                        $(".qr_scanner").addClass("opacity");
-                    }
-                    getChats(phoneNumber);
-                }
-            } catch (error) {
-                console.error("Error polling client readiness:", error);
-                clearInterval(intervalId);
-            }
-        }, 3000);
-    }
-
-    $(document).ready(() => {
-        if (phoneNumber != undefined) {
-            initializeClient(phoneNumber)
-        }
-    });
-
-
-
-    function formatTimestamp(timestamp) {
-        const momentTimestamp = moment(timestamp * 1000);
-
-        if (moment().diff(momentTimestamp, 'days') < 7) {
-            return momentTimestamp.fromNow();
-        } else {
-            return momentTimestamp.calendar();
-        }
-    }
 
 
 
