@@ -237,8 +237,5 @@ console.log(phoneNumber);
       }
 
       var lead_notification = JSON.parse(<?= $all_leads ?>);
-
-      console.log(lead_notification);
-                               
    }
 </script>
