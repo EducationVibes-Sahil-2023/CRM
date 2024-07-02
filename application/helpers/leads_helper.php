@@ -2024,34 +2024,114 @@ function get_whatsapp_template()
     return $whatsapp_template;
 }
 
+function all_leads() {
+    $CI =& get_instance();
 
-function all_leads()
-{
-    $CI = &get_instance();
-    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-    $CI->db->select('RIGHT(TRIM(phonenumber), 10) AS phonenumber, name, assigned,id');
+    // Fetch active staff data
+    $staff_data = $CI->db->select('staffid')->where('active', 1)->get(db_prefix() . 'staff')->result_array();
 
-    if (!is_admin()) {
-        if ($role == 3) {
-            // $this->load->database();
-            $sid = get_staff_user_id(); //48;//get_staff_user_id();
-            $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
-            $CI->db->close();
-            $CI->db->initialize();
-            $idsarr = array_column($teamids, 'staffid');
-            $sids = implode(",", $idsarr);
-            if (!empty($sids)) {
-                $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+    foreach ($staff_data as $staff) {
+        // Fetch role of the staff
+        $role = $CI->db->select('role')->where('staffid', $staff['staffid'])->get(db_prefix() . 'staff')->row()->role;
+
+
+        $staff_ids = "";
+
+
+if($staff["staffid"] != 1){
+            if ($role == 3) {
+                $sid = $staff['staffid'];
+                // Get reporting persons
+                $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+                $CI->db->close();
+                $CI->db->initialize();
+                $CI->db->select('RIGHT(TRIM(phonenumber), 10) AS phonenumber, name, assigned, id');
+
+                $idsarr = array_column($teamids, 'staffid');
+                $sids = implode(",", $idsarr);
+
+                if (!empty($sids)) {
+                    $CI->db->where_in('assigned', explode(',', $sids));
+                    $staff_ids = $sids;
+                } else {
+                    $CI->db->where('assigned', $sid);
+                    $staff_ids = $sid;
+                }
             } else {
-                $tids = ' AND assigned in (' . $sid . ')';
+       
+          $CI->db->select('RIGHT(TRIM(phonenumber), 10) AS phonenumber, name, assigned, id');
+
+                $CI->db->where('assigned', $staff['staffid']);
+                $staff_ids = $staff['staffid'];
             }
-            // print_r($where);die;
+        }
+        else
+        {
+          $CI->db->select('RIGHT(TRIM(phonenumber), 10) AS phonenumber, name, assigned, id');
+
+        }
+
+
+        // Fetch leads data
+        $leads = $CI->db->get(db_prefix() . 'leads')->result_array();
+        $leads = array_column($leads, null, 'phonenumber');
+
+        // Prepare data for insertion
+        $staff_id = $staff['staffid'];
+        $contacts = json_encode($leads);
+        $data = array(
+            'staff_id' => $staff_id,
+            'contacts' => $contacts,
+            'count' => count($leads)
+        );
+
+        // Check if staff_id already exists
+        $CI->db->where('staff_id', $staff_id);
+        $query = $CI->db->get(db_prefix() . '_staff_contacts_assignation');
+
+        if ($query->num_rows() > 0) {
+            // Staff ID exists, update the record
+            $CI->db->where('staff_id', $staff_id);
+            $updated = $CI->db->update(db_prefix() . '_staff_contacts_assignation', $data);
+
+            // Optional: Log error if update fails
+            if (!$updated) {
+                $error = $CI->db->error();
+                log_message('error', 'Update failed for staff_id ' . $staff_id . ': ' . $error['message']);
+            } else {
+                log_message('info', 'Update successful for staff_id ' . $staff_id);
+            }
         } else {
-            $CI->db->where('assigned', get_staff_user_id());
+            // Staff ID does not exist, insert a new record
+            if (!empty($leads)) {
+                $inserted = $CI->db->insert(db_prefix() . '_staff_contacts_assignation', $data);
+
+                // Optional: Log error if insertion fails
+                if (!$inserted) {
+                    $error = $CI->db->error();
+                    log_message('error', 'Insert failed for staff_id ' . $staff_id . ': ' . $error['message']);
+                    return false;
+                } else {
+                    log_message('info', 'Insert successful for staff_id ' . $staff_id);
+                }
+            }
         }
     }
-
-    $leads = $CI->db->get(db_prefix() . 'leads')->result_array();
-    $leads = array_column($leads, null, 'phonenumber');
-    return $leads;
+    return true;
 }
+
+
+function get_all_leads ()
+ {
+    $CI =& get_instance();
+    $staff_data = $CI->db->select('contacts')->where(array("staff_id"=>get_staff_user_id()))->get(db_prefix() . '_staff_contacts_assignation')->row(); 
+  
+    if(empty($staff_data->contacts))
+    {
+        return [];
+    }
+    else
+    {
+        return $staff_data->contacts;
+    }
+ }

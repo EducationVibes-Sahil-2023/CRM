@@ -24,7 +24,7 @@ class Api_Controller extends CI_Controller
         // );
         // echo $jwt_token =  $this->generate_token($data);
         // die;
-        if (str_contains($current_url, 'login') || str_contains($current_url, 'call_activity_cron')) {
+        if (str_contains($current_url, 'login') || str_contains($current_url, 'call_activity_cron') |  str_contains($current_url, "update_all_contacts")) {
         } else {
             if (!empty($token)) {
                 $token = explode(" ", $token);

@@ -1,7 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 ob_start();
-// $all_leads = all_leads();
-$all_leads =[];
+$all_leads =  get_all_leads();
 ?>
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" /> -->
 
@@ -237,7 +236,7 @@ console.log(phoneNumber);
          }
       }
 
-      var lead_notification = <?= json_encode($all_leads, true) ?>;
-      // console.log(lead_notification);
+      var lead_notification = <?= !empty($all_leads)?$all_leads:[] ?>;
+                               
    }
 </script>
