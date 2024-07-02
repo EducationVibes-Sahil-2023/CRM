@@ -195,9 +195,9 @@
         messageData.push(JSON.parse(message));
         console.log(messageData);
         await set_communication(messageData, messageData[0].id.remote, 1);
-        await set_communication(messageData, messageData[0].id.remote);
-        await getChats(phoneNumber)
-
+        // await set_communication(messageData, messageData[0].id.remote);
+        // await getChats(phoneNumber)
+-
     }
 
     // public/script.js
@@ -388,7 +388,7 @@
 
             if (data.status === 1) {
                 // $(".float_whatsapp_icon").show();
-                // pollClientReady(phoneNumber, clientDiv);f
+                pollClientReady(phoneNumber, clientDiv);
                 return;
             } else {
                 console.error("Initialization failed: ", data.message);
