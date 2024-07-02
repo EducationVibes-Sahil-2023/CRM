@@ -399,4 +399,18 @@ class Api_Model extends CI_Model
         }
         return $response;
     }
+
+    public function update_all_contacts()
+    {
+        // $this->helper->load('leads_helper');
+       $response = [];
+        try {
+            $status = all_leads(); 
+            $response = array("status" => 1, "message" => "Staff contact update successfully");
+
+        } catch (Exception $e) {
+            $response = array("status" => 0, "message" => "Staff contact not update successfully");
+        }
+        return $response;
+    }
 }

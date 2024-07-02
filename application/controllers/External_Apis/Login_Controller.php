@@ -230,4 +230,10 @@ class Login_Controller extends Api_Controller
         $response = $this->Api_Model->update_call_activity();
         echo  $this->json_output($response);
     }
+
+    public function update_all_contacts()
+    {
+        $response = $this->Api_Model->update_all_contacts();
+        echo  $this->json_output($response);
+    }
 }
