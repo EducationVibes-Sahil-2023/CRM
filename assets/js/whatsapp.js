@@ -215,8 +215,8 @@
 
         ws.onclose = () => {
             console.log('WebSocket connection closed');
-            // connectWebSocket();
-            // pollClientReady(phoneNumber);
+            connectWebSocket();
+            pollClientReady(phoneNumber);
         };
     }
 
@@ -432,7 +432,7 @@
 
     $(document).ready(() => {
         if (phoneNumber != undefined) {
-            // initializeClient(phoneNumber)
+            initializeClient(phoneNumber)
         }
     });
 
