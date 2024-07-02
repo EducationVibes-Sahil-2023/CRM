@@ -2024,6 +2024,7 @@ function get_whatsapp_template()
     return $whatsapp_template;
 }
 
+
 function all_leads() {
     $CI =& get_instance();
 
@@ -2112,7 +2113,7 @@ if($staff["staffid"] != 1){
                     log_message('error', 'Insert failed for staff_id ' . $staff_id . ': ' . $error['message']);
                     return false;
                 } else {
-                    log_message('info', 'Insert successful for staff_id ' . $staff_id);
+                  log_message('info', 'Insert successful for staff_id ' . $staff_id);
                 }
             }
         }
@@ -2123,15 +2124,38 @@ if($staff["staffid"] != 1){
 
 function get_all_leads ()
  {
-    $CI =& get_instance();
-    $staff_data = $CI->db->select('contacts')->where(array("staff_id"=>get_staff_user_id()))->get(db_prefix() . '_staff_contacts_assignation')->row(); 
+    $CI = &get_instance();
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    $CI->db->select('RIGHT(TRIM(phonenumber), 10) AS phonenumber, name, assigned,id');
+    
+    if (!is_admin()) {
+        if ($role == 3) {
+            // $this->load->database();
+            $sid = get_staff_user_id(); //48;//get_staff_user_id();
+            $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            $CI->db->close();
+            $CI->db->initialize();
+            $idsarr = array_column($teamids, 'staffid');
+            $sids = implode(",", $idsarr);
+            $CI->db->where('assigned', $sids);
+        } else {
+            $CI->db->where('assigned', get_staff_user_id());
+        }
+    }
+
+    $leads = $CI->db->get(db_prefix() . 'leads')->result_array();
+    $leads = json_encode(array_column($leads, null, 'phonenumber'));
+    return $leads;
+    
+    // $CI =& get_instance();
+    // $staff_data = $CI->db->select('contacts')->where(array("staff_id"=>get_staff_user_id()))->get(db_prefix() . '_staff_contacts_assignation')->row(); 
   
-    if(empty($staff_data->contacts))
-    {
-        return [];
-    }
-    else
-    {
-        return $staff_data->contacts;
-    }
+    // if(empty($staff_data->contacts))
+    // {
+    //     return [];
+    // }
+    // else
+    // {
+    //     return $staff_data->contacts;
+    // }
  }
