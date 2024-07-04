@@ -1,6 +1,6 @@
 
 // if (phoneNumber != undefined && phoneNumber != '' && whatsapp_permission_view != undefined && whatsapp_permission_view == '1') {
-    var WebURL = "https://whatsapp.educationvibes.co.in";
+    // var WebURL = "https://whatsapp.educationvibes.co.in";
     console.log("whatsaap_script");
     var temp_client = [];
     var count_message = 0
@@ -86,7 +86,7 @@
 
     }
     function connectWebSocket() {
-        const ws = new WebSocket('wss://whatsapp.educationvibes.co.in/ws?phone=' + phoneNumber);
+        const ws = new WebSocket(WebSOCKETURL+'?phone=' + phoneNumber);
         // const ws = new WebSocket('ws://your-websocket-server-domain-or-ip:9000');
         ws.onopen = () => {
             console.log('WebSocket connection established');
@@ -95,6 +95,7 @@
         ws.onmessage = async (event) => {
             const message = event.data;
             await set_new_message_notification(message);
+            await getChats(phoneNumber);
         };
 
         ws.onclose = () => {
@@ -105,8 +106,9 @@
     }
 
     $(document).ready(() => {
-        if (phoneNumber != undefined) {
-            initializeClient(phoneNumber)
+        if (phoneNumber != undefined && whatsapp_permission_view ==1 ) {
+            initializeClient(phoneNumber);
+            connectWebSocket();
         }
     });
     async function convertToBase64(file) {
@@ -277,6 +279,7 @@
                 reject(error); // Reject the outer promise in case of any error
             }
         });
+        
     }
 
     async function set_new_message_notification(message) {
@@ -285,7 +288,6 @@
         messageData.push(JSON.parse(message));
         console.log(messageData);
         await set_communication(messageData, messageData[0].id.remote, 1);
-        await set_notification(messageData)
         // await set_communication(messageData, messageData[0].id.remote);
         // await getChats(phoneNumber)
     }
@@ -432,7 +434,6 @@
     async function set_notification(notification_data = "") {
         $(".whatsapp_notification").html('');
         let notification_count = 0;
-
         const notifications = notification_data.map(async (notification) => {
             try {
                 if (notification && notification.phonenumber) {

@@ -400,7 +400,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     </div>
                                  </div>
                                  <div class="col-md-3 leads-filter-column">
-                                    <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" id="show_update_counts" onclick="show_update_count_range(this)"> </label>
+                                    <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" class="set_disabled_date disabled_checkbox" id="show_update_counts" onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');"> </label>
                                     <div id="rangeSlider" style="display:none;"></div>
                                     <input type="hidden" id="update_count_min" name="update_count_min">
                                     <input type="hidden" id="update_count_max" name="update_count_max">
@@ -777,15 +777,21 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       $(".set_disabled_date").removeAttr("disabled");
       if (value != "") {
          $(".set_disabled_date").each(function() {
-            if ($(this).val() != "") {
-               $(this).removeAttr("disabled");
+            if ($(this).hasClass("disabled_checkbox")) {
+               if (!$(this).prop("checked")) {
+                  $(this).attr("disabled", "disabled");
+               }
             } else {
-               $(this).attr("disabled", "disabled");
+               if ($(this).val() != "") {
+                  $(this).removeAttr("disabled");
+               } else {
+                  $(this).attr("disabled", "disabled");
+               }
             }
-
          });
       }
    }
+
 
 
    $('#leads_bulk_actions').on('shown.bs.modal', function(e) {
