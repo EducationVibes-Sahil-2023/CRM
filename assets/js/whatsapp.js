@@ -86,7 +86,7 @@
 
     }
     function connectWebSocket() {
-        const ws = new WebSocket('wss://whatsapp.educationvibes.co.in/ws?phone=' + phoneNumber);
+        const ws = new WebSocket(WebSOCKETURL+'?phone=' + phoneNumber);
         // const ws = new WebSocket('ws://your-websocket-server-domain-or-ip:9000');
         ws.onopen = () => {
             console.log('WebSocket connection established');

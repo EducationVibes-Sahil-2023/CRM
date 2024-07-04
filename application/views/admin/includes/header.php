@@ -221,10 +221,12 @@ ob_end_clean();
 </style>
 
 <script>
+   var WebURL = "<?=WHATSAPP_WEB_URL?>";
+   var WebSOCKETURL = "<?=SOCKET_WEB_URL?>";
    var phoneNumber = <?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>;
 console.log(phoneNumber);
    var whatsapp_permission_view = "<?= has_permission('whatsapp', '', 'view') ?>";
-   if(<?=is_admin()?>)
+   if(<?=is_admin()?> || 1==1)
    {
        whatsapp_permission_view=0;
    }
