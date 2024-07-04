@@ -1,6 +1,6 @@
 
 // if (phoneNumber != undefined && phoneNumber != '' && whatsapp_permission_view != undefined && whatsapp_permission_view == '1') {
-    var WebURL = "https://whatsapp.educationvibes.co.in";
+    // var WebURL = "https://whatsapp.educationvibes.co.in";
     console.log("whatsaap_script");
     var temp_client = [];
     var count_message = 0
