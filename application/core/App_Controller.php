@@ -10,6 +10,7 @@ class App_Controller extends CI_Controller
     {
         parent::__construct();
 
+        
         $GLOBALS['EXT']->call_hook('pre_controller_constructor');
 
         /*
@@ -46,6 +47,7 @@ class App_Controller extends CI_Controller
         } else {
             $this->session->unset_userdata('is_mobile');
         }
+        
 
         /**
          * Set system timezone based on selected timezone from options

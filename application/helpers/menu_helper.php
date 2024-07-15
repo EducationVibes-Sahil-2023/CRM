@@ -494,6 +494,12 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 55,
                 ]);
 
+                $CI->app_menu->add_setup_menu_item('app-config', [
+                        'href'     => admin_url('app_config'),
+                        'name'     => _l('app_config   '),
+                        'position' => 45,
+                ]);
+
                 /*             $CI->app_menu->add_setup_menu_item('api', [
                           'href'     => admin_url('api'),
                           'name'     => 'API',

@@ -286,7 +286,8 @@ if ($role != 1) {
     $aColumns = [
 
         db_prefix() . 'leads.id as id',
-         db_prefix() . 'leads.id as leadsid',
+        db_prefix() . 'leads.id as leadsid',
+
         // db_prefix() . 'leads.id as leadsid',
     ];
 }
@@ -402,7 +403,7 @@ if ($role != 1) {
     ]);
 }
 
-$search_column = ["city","phonenumber", "state", db_prefix() . "tags.name"];
+$search_column = ["city", "state", db_prefix() . "tags.name"];
 
 
 $having = "";

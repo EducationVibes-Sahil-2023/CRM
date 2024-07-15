@@ -91,6 +91,37 @@ class Leads extends AdminController
 
         $this->load->view('admin/leads/manage_leads', $data);
     }
+    // public function lead_summary_filter()
+    // {
+    //     $summary = get_leads_summary_filter($_POST);
+    //     $updateCount = leads_update_count_($_POST);
+    //     // $max_count = leads_update_count("", 1);
+    //     $call_count = calls_update_count($_POST);
+
+    //     $max_count = '';
+    //     $ret = "";
+    //     $ret1 = '';
+
+
+    //     foreach ($summary as $status) {
+
+    //         $ret .= '<div class="col-md-2 col-xs-6 border-right"><h3 class="bold">';
+    //         if (isset($status['percent'])) {
+    //             $ret .= '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
+    //         } else {
+    //             // Is regular status
+    //             $ret .= $status['total'];
+    //         }
+    //         $ret .=  '</h3>';
+    //         $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
+    //     }
+
+
+    //     // echo $ret;
+    //     echo json_encode(['status' => $ret, 'update_count' => $updateCount, "max_count" => $max_count, "call_count" => $call_count]);
+    // }
+
+
     public function lead_summary_filter()
     {
         $summary = get_leads_summary_filter($_POST);
@@ -117,6 +148,7 @@ class Leads extends AdminController
     }
 
 
+
     public function updated_count()
     {
         print_r(leads_update_count());
@@ -125,6 +157,7 @@ class Leads extends AdminController
     public function table()
 
     {
+        $this->output->enable_profiler(TRUE);
 
         if (!is_staff_member()) {
 
@@ -3175,6 +3208,34 @@ class Leads extends AdminController
                 'success' => false,
                 'message' => 'Invalid request method.',
             ]);
+        }
+    }
+
+    public function get_tags()
+    {
+
+
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $search = $_POST['search'];
+            $tags = search_tags($search);
+        }
+        if (!empty($tags) && is_array($tags)) {
+            // Extracting columns
+            $array["available_tags"] = array_column($tags, "name");
+            $array["available_tags_ids"] = array_column($tags, "id");
+
+            // Removing numerical indexing (though array_column inherently does this)
+            $array["available_tags"] = array_values($array["available_tags"]);
+            $array["available_tags_ids"] = array_values($array["available_tags_ids"]);
+
+            // Adding language data
+            $array["lang"] = array("tag" => "Add a tag");
+
+            // Outputting JSON
+            echo json_encode($array);
+        } else {
+            // Handle the case where $tags is empty or not an array
+            echo json_encode(array("error" => "No tags available"));
         }
     }
 }
