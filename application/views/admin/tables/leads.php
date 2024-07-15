@@ -402,7 +402,7 @@ if ($role != 1) {
     ]);
 }
 
-$search_column = ["city", "state", db_prefix() . "tags.name"];
+$search_column = ["city","phonenumber", "state", db_prefix() . "tags.name"];
 
 
 $having = "";
