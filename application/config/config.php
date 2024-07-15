@@ -252,7 +252,7 @@ if (defined('APP_LOG_THRESHOLD')) {
 |
 */
 $config['log_path'] = '';
-
+$config['enable_profiler'] = TRUE;
 /*
 |--------------------------------------------------------------------------
 | Log File Extension

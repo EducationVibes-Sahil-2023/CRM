@@ -13,7 +13,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @param  string $sGroupBy group results
  * @return array
  */
-function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0)
+function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0, $search_column = [])
 {
     $CI          = &get_instance();
     $__post      = $CI->input->post();
@@ -128,6 +128,27 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 $columnName = "";
             }
 
+            if (!empty($search_column)) {
+                // Convert to lowercase and check for ' as '
+                $lowerColumnName = strtolower($columnName);
+                if (strpos($lowerColumnName, ' as ') !== false) {
+                    // Remove everything before and including ' as ', then trim
+                    $columnName = trim(substr($columnName, strpos($lowerColumnName, ' as ') + 4));
+                }
+
+                // Check if '.' exists, explode by '.' and get the last part
+                if (strpos($columnName, '.') !== false) {
+                    $columnParts = explode('.', $columnName);
+                    $columnName = end($columnParts); // Get the last part after exploding
+                }
+
+                if (in_array(strtolower($columnName), $search_column)) {
+                } else {
+                    $columnName = "";
+                }
+            }
+
+
             if (!empty($columnName) && $columnName != '') {
                 if (strpos($columnName, ' as ') !== false) {
                     $columnName = strbefore($columnName, ' as');
@@ -146,9 +167,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                                 $sMatchCustomFields[] = $columnName;
                             } else {
                                 if (str_contains($search_value, '!=')) {
-                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
                                 } else {
-                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
                                 }
                             }
                         }
@@ -156,6 +177,22 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 }
             }
         }
+
+        if (!empty($search_column)) {
+            for ($i = 0; $i < count($search_column); $i++) {
+                $columnName = $search_column[$i];
+
+                if (strpos($columnName, '.') !== false) {
+                    if (str_contains($search_value, '!=')) {
+                        $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+                    } else {
+                        $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                    }
+                }
+            }
+        }
+
+
         if (count($sMatchCustomFields) > 0) {
             $s = $CI->db->escape_str($search_value);
             foreach ($sMatchCustomFields as $matchCustomField) {
@@ -167,8 +204,32 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             }
         }
 
+
         if (count($additionalSelect) > 0) {
             foreach ($additionalSelect as $searchAdditionalField) {
+
+                if (!empty($search_column)) {
+                    // Convert to lowercase and check for ' as '
+                    $lowerColumnName = strtolower($searchAdditionalField);
+                    if (strpos($lowerColumnName, ' as ') !== false) {
+                        // Remove everything before and including ' as ', then trim
+                        $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
+                    }
+
+                    // Check if '.' exists, explode by '.' and get the last part
+                    if (strpos($searchAdditionalField, '.') !== false) {
+                        $columnParts = explode('.', $searchAdditionalField);
+                        $searchAdditionalField = end($columnParts); // Get the last part after exploding
+                    }
+
+                    if (in_array(strtolower($searchAdditionalField), $search_column)) {
+                    } else {
+                        $searchAdditionalField = "";
+                    }
+                }
+                if (empty($searchAdditionalField)) {
+                    continue;
+                }
                 if (strpos($searchAdditionalField, 'as') !== false) {
                     $searchAdditionalField = strbefore($searchAdditionalField, ' as');
                 }
@@ -178,9 +239,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                     // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
                     // Use index
                     if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
                     } else {
-                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
                     }
                 }
             }
@@ -207,9 +268,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                 // $columnName = explode(" ", $columnName)[0];
                 if ($search_value != '') {
                     if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT LIKE '%" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
                     } else {
-                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " LIKE '%" . $CI->db->escape_str($search_value) . "%' OR ";
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
                     }
                     if (count($additionalSelect) > 0) {
                         foreach ($additionalSelect as $searchAdditionalField) {
@@ -218,9 +279,9 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
                                 $searchAdditionalField = strbefore($searchAdditionalField, ' as');
                             }
                             if (str_contains($search_value, '!=')) {
-                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT LIKE '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "%' AND ";
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
                             } else {
-                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " LIKE '" . $CI->db->escape_str($search_value) . "%' OR ";
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
                             }
                         }
                     }
@@ -277,6 +338,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sOrder
     $sLimit
     ";
+
 
     $rResult = $CI->db->query($sQuery)->result_array();
 

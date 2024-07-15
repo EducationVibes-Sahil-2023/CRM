@@ -9,8 +9,12 @@ $lockAfterConvert      = get_option('lead_lock_after_convert_to_customer');
 
 $has_permission_delete = has_permission('leads', '', 'delete');
 $custom_fields = [];
+$customFieldValues = [];
 if (is_admin()) {
     $custom_fields         = get_table_custom_fields('leads');
+
+    $customFieldValues              = $this->ci->leads_model->get_custum_values();
+    $customFieldValues = array_column($customFieldValues, "value", "column_name");
 }
 
 $consentLeads          = get_option('gdpr_enable_consent_for_leads');
@@ -27,7 +31,6 @@ $source = array_column($source, null, "id");
 $staff_list = array_column($staff_list, null, "staffid");
 $up_from_date = "";
 $up_to_date = "";
-
 
 
 
@@ -250,10 +253,10 @@ if (!has_permission('leads', '', 'view')) {
 
 // Fix for big queries. Some hosting have max_join_limit
 
-if (count($custom_fields) > 4) {
+// if (count($custom_fields) > 4) {
 
-    @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
-}
+//     @$this->ci->db->query('SET SQL_BIG_SELECTS=1');
+// }
 
 // $call_query = "";
 $call_query = "";
@@ -283,6 +286,8 @@ if ($role != 1) {
     $aColumns = [
 
         db_prefix() . 'leads.id as id',
+        db_prefix() . 'leads.id as leadsid',
+
         // db_prefix() . 'leads.id as leadsid',
     ];
 }
@@ -315,13 +320,16 @@ if ($role != 1) {
 if (is_admin()) {
     foreach ($custom_fields as $key => $field) {
 
-        $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
 
-        array_push($customFieldsColumns, $selectAs);
+        // $selectAs = (is_cf_date($field) ? 'date_picker_cvalue_' . $key : 'cvalue_' . $key);
 
-        array_push($aColumns, 'ctable_' . $key . '.value as ' . trim(str_replace(' ', '_', strtolower($field["name"]))));
+        // array_push($customFieldsColumns, $selectAs);
 
-        array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
+        array_push($aColumns, 'CONCAT("' . $field['fieldto'] . '-", ' . db_prefix() . 'leads.id, "-' . $field['id'] . '") AS ' . strtolower(str_replace(' ', '_', $field["name"])));
+
+
+
+        // array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'leads.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
     }
 }
 
@@ -361,6 +369,12 @@ if ($role != 1) {
 }
 
 
+array_push($join, 'LEFT JOIN ' . db_prefix() . 'taggables ON ' . db_prefix() . 'taggables.rel_id = ' . db_prefix() . 'leads.id  AND ' . db_prefix() . 'taggables.rel_type = "lead" ');
+
+array_push($join, 'LEFT JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id ');
+
+
+
 $aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
 
 if ($role != 1) {
@@ -389,6 +403,7 @@ if ($role != 1) {
     ]);
 }
 
+$search_column = ["city", "state", db_prefix() . "tags.name"];
 
 
 $having = "";
@@ -425,9 +440,7 @@ $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
 // print_r($aColumns);
 
-$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '');
-
-
+$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
 
 $output  = $result['output'];
 
@@ -449,17 +462,17 @@ foreach ($rResult as $aRow) {
     $aRow['assigned_lastname'] = isset($staff_list[$aRow['assigned']]["lastname"]) ? $staff_list[$aRow['assigned']]["lastname"] : '';
 
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['id'] . '"><label></label></div>';
-    if ($role != 1) {
-        $curdate = date("Y-m-d");
-        $date1 = date("Y-m-d", strtotime($aRow['notesdate']));
-        $date2 = date("Y-m-d", strtotime($aRow['followup']));
-        if ($date1 >= $date2) {
-            $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
-        } else {
-            $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
-        }
-        $row[]    = $col;
+    // if ($role != 1) {
+    $curdate = date("Y-m-d");
+    $date1 = date("Y-m-d", strtotime($aRow['notesdate']));
+    $date2 = date("Y-m-d", strtotime($aRow['followup']));
+    if ($date1 >= $date2) {
+        $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
+    } else {
+        $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
     }
+    $row[]    = $col;
+    // }
     $updatecount = !empty($aRow["update_count"]) ? $aRow["update_count"] : 0;
     $row[]    = $updatecount;
     $call_duration = 0;
@@ -565,16 +578,24 @@ foreach ($rResult as $aRow) {
 
     $row[] = $outputStatus;
     foreach ($custom_fields as $key => $field) {
-        $row[] = (!empty($aRow[str_replace(" ", "_", strtolower($field['name']))]) && $aRow[str_replace(" ", "_", strtolower($field['name']))] != "null" &&  $aRow[str_replace(" ", "_", strtolower($field['name']))] != "undefined") ? $aRow[str_replace(" ", "_", strtolower($field['name']))] : '';
+
+
+        // $row[] = (!empty($aRow[str_replace(" ", "_", strtolower($field['name']))]) && $aRow[str_replace(" ", "_", strtolower($field['name']))] != "null" &&  $aRow[str_replace(" ", "_", strtolower($field['name']))] != "undefined") ? $aRow[str_replace(" ", "_", strtolower($field['name']))] : '';
+
+        // echo $aRow[strtolower($field['name'])];
+
+        $row[] = $customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]] ? $customFieldValues[$aRow[str_replace(" ", "_", strtolower($field['name']))]] : '';
     }
 
-    $i = 0;
-    $row1 = [];
-    foreach ($customFieldsColumns as $customFieldColumn) {
-        $row11 = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
-        $row1[$i] = $row11;
-        $i++;
-    }
+    // $i = 0;
+    // $row1 = [];
+    // foreach ($customFieldsColumns as $customFieldColumn) {
+    //     $row11 = (strpos($customFieldColumn, 'date_picker_') !== false ? _d($aRow[$customFieldColumn]) : $aRow[$customFieldColumn]);
+    //     $row1[$i] = $row11;
+    //     $i++;
+    // }
+
+    // die;
 
     $outputLeadType = '<span class="inline-block lead-type-' . $aRow['type'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['type_name'];
 
@@ -630,7 +651,7 @@ foreach ($rResult as $aRow) {
         $row[] = ($aRow['lastupdate_date'] == '0000-00-00 00:00:00' || !is_date($aRow['lastupdate_date']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
     }
 
- 
+
 
     if ($role != 1) {
         $row[] = ($aRow['email'] != '' ? '<a href="mailto:' . $aRow['email'] . '">' . $aRow['email'] . '</a>' : '');

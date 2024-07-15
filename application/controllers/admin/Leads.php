@@ -94,14 +94,17 @@ class Leads extends AdminController
     public function lead_summary_filter()
     {
         $summary = get_leads_summary_filter($_POST);
-        $updateCount = leads_update_count($_POST);
+        $updateCount = leads_update_count_($_POST);
         // $max_count = leads_update_count("", 1);
         $call_count = calls_update_count($_POST);
 
         $max_count = '';
         $ret = "";
         $ret1 = '';
+
+
         foreach ($summary as $status) {
+
             $ret .= '<div class="col-md-2 col-xs-6 border-right"><h3 class="bold">';
             if (isset($status['percent'])) {
                 $ret .= '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
@@ -112,6 +115,8 @@ class Leads extends AdminController
             $ret .=  '</h3>';
             $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
         }
+
+
         // echo $ret;
         echo json_encode(['status' => $ret, 'update_count' => $updateCount, "max_count" => $max_count, "call_count" => $call_count]);
     }
@@ -125,6 +130,7 @@ class Leads extends AdminController
     public function table()
 
     {
+        $this->output->enable_profiler(TRUE);
 
         if (!is_staff_member()) {
 

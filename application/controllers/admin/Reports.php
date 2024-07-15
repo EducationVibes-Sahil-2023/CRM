@@ -354,38 +354,40 @@ class Reports extends AdminController
             $update_count_array_label = [];
             $update_count_array_min = [];
             $update_count_array_max = [];
-            if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
-                // echo "<pre>";
-                // print_r($_POST);
-                // die;
-                foreach ($_POST["assigned"] as $assigned) {
-                    $update_count_data_min = $update_count_data = $post_data = $_POST;
-                    unset($post_data["assigned"]);
-                    unset($post_data["update_count_min"]);
-                    unset($post_data["update_count_max"]);
-                    $post_data["assigned"][] = $assigned;
-                    $summary = get_leads_summary_filter($post_data);
 
-                    $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
-                    $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
-                    $update_count_data['update_count_min'] = "";
-                    $update_count_data['update_count_max'] = "";
-                    $update_count_data["assigned"][] = $assigned;
-                    $update_count_data_min["assigned"][] =  $assigned;
-                    $updateCount = leads_update_count($update_count_data, 0, 1);
-                    $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
-                    $staff_name =  get_staff_full_name($assigned);
-                    $update_count_array_label[] = trim($staff_name);
-                    $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
-                    $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
-                    $update_count_array_min[] = intval($updateCount_min);
-                    $update_count_array_max[] = (intval($updateCount));
-                    array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
-                }
+            // if (isset($_POST["update_count_min"]) && isset($_POST["update_count_min"]) != '') {
+            //     // echo "<pre>";
+            //     // print_r($_POST);
+            //     // die;
+            //     foreach ($_POST["assigned"] as $assigned) {
+            //         $update_count_data_min = $update_count_data = $post_data = $_POST;
+            //         $post_data["assigned"];
+            //         unset($post_data["update_count_min"]);
+            //         unset($post_data["update_count_max"]);
+            //         // $post_data["assigned"][] = $assigned;
+            //         $summary = get_leads_summary_filter_report($post_data);
 
-                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max), "total_leads" => $source_html_json]);
-                die;
-            }
+
+            //         $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
+            //         $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
+            //         $update_count_data['update_count_min'] = "";
+            //         $update_count_data['update_count_max'] = "";
+            //         $update_count_data["assigned"][] = $assigned;
+            //         $update_count_data_min["assigned"][] =  $assigned;
+            //         $updateCount = leads_update_count($update_count_data, 0, 1);
+            //         $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
+            //         $staff_name =  get_staff_full_name($assigned);
+            //         $update_count_array_label[] = trim($staff_name);
+            //         $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
+            //         $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
+            //         $update_count_array_min[] = intval($updateCount_min);
+            //         $update_count_array_max[] = (intval($updateCount));
+            //         array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
+            //     }
+
+            //     echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max), "total_leads" => $source_html_json]);
+            //     die;
+            // }
 
 
             $index = 0;
@@ -404,11 +406,14 @@ class Reports extends AdminController
                 $update_count_data["assigned"] = [];
                 $update_count_data["assigned"][] = $assigned;
 
-                unset($post_data["assigned"]);
-                $post_data["assigned"][] = $assigned;
-                $summary = get_leads_summary_filter($post_data);
-                $excel_data = get_leads_summary_filter_excel($post_data);
-                $status_summary = get_status_summary_filter($post_data);
+                // unset($post_data["assigned"]);
+                // $post_data["assigned"][] = $assigned;
+                $summary = get_leads_summary_filter_report($post_data);
+
+                // $excel_data = get_leads_summary_filter_excel($post_data);
+                $status_summary = get_status_summary_filter_report($post_data);
+                print_r($status_summary);
+                die;
                 $status_summary_performance = get_status_summary_filter_performance($post_data);
                 $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
 

@@ -9,6 +9,29 @@ class AdminController extends App_Controller
         parent::__construct();
         // $this->load->driver('cache', array('adapter' => 'file'));
         // $this->db->cache_on();
+
+        if (is_admin()) {
+            // $this->output->enable_profiler(TRUE);
+
+            // // Define the sections to include in the profiler output
+            // $sections = array(
+            //     'benchmarks' => TRUE,
+            //     'config'     => TRUE,
+            //     'controller_info' => TRUE,
+            //     'get'        => TRUE,
+            //     'http_headers' => TRUE,
+            //     'memory_usage' => TRUE,
+            //     'post'       => TRUE,
+            //     'queries'    => TRUE,
+            //     'uri_string' => TRUE,
+            //     'session_data' => TRUE,
+            //     'query_toggle_count' => TRUE
+            // );
+
+            // // Set the sections
+            // $this->output->set_profiler_sections($sections);
+        }
+
         if ($this->app->is_db_upgrade_required($this->current_db_version)) {
             if ($this->input->post('upgrade_database')) {
                 hooks()->do_action('pre_upgrade_database');
@@ -59,7 +82,9 @@ class AdminController extends App_Controller
             $this->init_quick_actions_links();
         }
 
+
         $currentUser = $this->staff_model->get(get_staff_user_id());
+
 
         // Deleted or inactive but have session
         if (!$currentUser || $currentUser->active == 0) {
@@ -67,12 +92,14 @@ class AdminController extends App_Controller
             redirect(admin_url('authentication'));
         }
 
+
         $GLOBALS['current_user'] = $currentUser;
-
-        init_admin_assets();
-
-        hooks()->do_action('admin_init');
-
+        if (!$this->input->is_ajax_request()) {
+            init_admin_assets();
+        }
+        if (!$this->input->is_ajax_request()) {
+            hooks()->do_action('admin_init');
+        }
         $vars = [
             'current_user'    => $currentUser,
             'current_version' => $this->current_db_version,

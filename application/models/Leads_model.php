@@ -2598,6 +2598,74 @@ class Leads_model extends App_Model
         return $data;
     }
 
+    // function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
+    // {
+
+    //     //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
+    //     // if (!empty($lead_type)) {
+    //     //     $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+    //     // }
+    //     // $sql .= " ) where 1=1 ";
+
+    //     // if (!empty($state_name)) {
+    //     //     $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
+    //     // }
+    //     // if (!empty($deprtment_head_status)) {
+    //     //     $sql .= " and st.department_head = '1' ";
+    //     // }
+    //     // if (!empty($facebook_lead)) {
+    //     //     $sql .= " and st.facebook_lead_name != '' ";
+    //     // }
+    //     // if (!empty($lead_type)) {
+    //     //     $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+    //     // }
+    //     // if (!empty($staff_ids)) {
+    //     //     $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
+    //     // }
+
+    //     // $sql .= "  group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc  ";
+    //     // if (!empty($facebook_lead)) {
+    //     // } else {
+    //     //     $sql .= " limit 1 ";
+    //     // }
+
+    //     $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
+    //     if (!empty($lead_type)) {
+    //         $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+    //     }
+    //     $sql .= " ) ";
+    //     $sql .= " LEFT JOIN " . db_prefix() . "facebook_name f ON (FIND_IN_SET(f.id,st.facebook_lead_name) ) ";
+    //     $sql .= " where 1=1 ";
+    //     if (!empty($state_name)) {
+    //         $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
+    //     }
+
+    //     if (!empty($deprtment_head_status)) {
+    //         $sql .= " and st.department_head = '1' ";
+    //     }
+    //     if (!empty($facebook_lead)) {
+    //         $sql .= " and st.facebook_lead_name != '' ";
+    //     }
+    //     if (!empty($google_source)) {
+    //         $sql .= " and (st.google_source != '' AND FIND_IN_SET({$google_source},st.google_source)) ";
+    //     }
+    //     if (!empty($lead_type)) {
+    //         $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
+    //     }
+    //     if (!empty($staff_ids)) {
+    //         $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
+    //     }
+    //     $sql .= " group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
+    //     if (!empty($facebook_lead)) {
+    //     } else {
+    //         $sql .= " limit 1 ";
+    //     }
+    //     echo $sql;
+    //     die;
+    //     // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
+    //     return $this->db->query($sql)->result_array();
+    // }
+
     function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
     {
 
@@ -2629,12 +2697,28 @@ class Leads_model extends App_Model
         //     $sql .= " limit 1 ";
         // }
 
-        $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,group_concat(DISTINCT(f.name)) facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
+        $sql = "Select  s.name,
+    st.staffid,
+    CONCAT(st.firstname, ' ', st.lastname) AS staff_name,
+    last_lead.dateassigned,
+    GROUP_CONCAT(DISTINCT f.name) AS facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state)";
         if (!empty($lead_type)) {
             $sql .= " and st.lead_type = '" . trim($lead_type) . "' ";
         }
         $sql .= " ) ";
         $sql .= " LEFT JOIN " . db_prefix() . "facebook_name f ON (FIND_IN_SET(f.id,st.facebook_lead_name) ) ";
+        $sql .= " LEFT JOIN 
+    (
+        SELECT 
+            assigned, 
+            MAX(dateassigned) AS dateassigned
+        FROM 
+            " . db_prefix() . "leads
+        GROUP BY 
+            assigned
+    ) AS last_lead 
+    ON st.staffid = last_lead.assigned ";
+
         $sql .= " where 1=1 ";
         if (!empty($state_name)) {
             $sql .= " AND LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' ";
@@ -2655,11 +2739,12 @@ class Leads_model extends App_Model
         if (!empty($staff_ids)) {
             $sql .= " and st.staffid in (" . implode(",", $staff_ids) . ") ";
         }
-        $sql .= " group by st.staffid order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc ";
+        $sql .= " group by st.staffid,last_lead.dateassigned order by last_lead.dateassigned asc ";
         if (!empty($facebook_lead)) {
         } else {
             $sql .= " limit 1 ";
         }
+
         // echo $sql;
         // die;
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
@@ -2705,7 +2790,7 @@ class Leads_model extends App_Model
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
     }
-    public function get_marketing_type()
+    public function get_marketing_type($id = "")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
@@ -2715,7 +2800,7 @@ class Leads_model extends App_Model
         return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
     }
 
-    public function get_conversion_type()
+    public function get_conversion_type($id = "")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
@@ -2879,6 +2964,14 @@ class Leads_model extends App_Model
         $this->db->where_in("status", [3]);
         $this->db->where(array("leadid" => $lead_id));
         $staff = $this->db->get(db_prefix() . 'lead_transfer_request')->row();
+        return $staff;
+    }
+
+    public function get_custum_values()
+    {
+        $this->db->select('CONCAT(fieldto, "-", relid, "-", fieldid) AS column_name, value');
+        $this->db->where('fieldto', 'leads');
+        $staff = $this->db->get(db_prefix() . 'customfieldsvalues')->result_array();
         return $staff;
     }
 }

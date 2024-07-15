@@ -1010,7 +1010,7 @@ function staff_has_assigned_knowledge_base($staff_id = false)
     }
 }
 
-function generate_token($data,$secretKey)
+function generate_token($data, $secretKey)
 {
     $response = [];
     try {
@@ -1021,3 +1021,24 @@ function generate_token($data,$secretKey)
     }
     return $response;
 }
+
+function get_client_config_data()
+{
+    $CI = &get_instance();
+    
+    try {
+        $CI->db->select("*");
+        $CI->db->from(db_prefix() . 'client_app_config');
+        $data = $CI->db->get()->result_array();
+
+        if (!empty($data)) {
+            return $data;
+        } else {
+            return [];
+        }
+    } catch (Exception $e) {
+        log_message('error', 'Error fetching client config data: ' . $e->getMessage());
+        return [];
+    }
+}
+
