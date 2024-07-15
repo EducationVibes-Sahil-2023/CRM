@@ -572,7 +572,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               } else {
                                  $_table_data = array(
                                     '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
-
+                                    array(
+                                       'name' => _l('Reminder Flag'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
                                     array(
                                        'name' => _l('Update Count'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')

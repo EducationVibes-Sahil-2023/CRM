@@ -286,7 +286,8 @@ if ($role != 1) {
     $aColumns = [
 
         db_prefix() . 'leads.id as id',
-         db_prefix() . 'leads.id as leadsid',
+        db_prefix() . 'leads.id as leadsid',
+
         // db_prefix() . 'leads.id as leadsid',
     ];
 }

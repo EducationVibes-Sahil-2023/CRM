@@ -107,7 +107,7 @@ $db['default'] = array_merge([
 
 $db['secondary'] = array(
     'dsn'      => '',
-    'hostname' => APP_DB_HOSTNAME, // Replace with the actual hostname of your secondary database
+    'hostname' => APP_DB_S_HOSTNAME, // Replace with the actual hostname of your secondary database
     'username' => APP_DB_S_USERNAME, // Replace with the actual username of your secondary database
     'password' => APP_DB_S_PASSWORD, // Replace with the actual password of your secondary database
     'database' => APP_DB_NAME_SECONDARY, // Replace with the actual name of your secondary database

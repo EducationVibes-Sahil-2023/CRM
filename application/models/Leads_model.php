@@ -2660,13 +2660,14 @@ class Leads_model extends App_Model
     //     } else {
     //         $sql .= " limit 1 ";
     //     }
-    //     echo $sql;
-    //     die;
+    //     // echo $sql;
+    //     // die;
     //     // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
     //     return $this->db->query($sql)->result_array();
     // }
 
-    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
+
+ function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
     {
 
         //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
@@ -2751,6 +2752,7 @@ class Leads_model extends App_Model
         return $this->db->query($sql)->result_array();
     }
 
+
     function automatic_assign_staff_city($city_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
     {
 
@@ -2790,7 +2792,7 @@ class Leads_model extends App_Model
         // $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned from " . db_prefix() . "states s join " . db_prefix() . "staff st ON (FIND_IN_SET(s.id,st.assign_state) and st.lead_type = '" . trim($lead_type) . "'  and st.active = '1') where LOWER(TRIM(s.name)) = '" . strtolower(trim($state_name)) . "' order by (select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned desc limit 1) asc limit 1";
         return $this->db->query($sql)->result_array();
     }
-    public function get_marketing_type($id = "")
+    public function get_marketing_type()
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
@@ -2800,7 +2802,7 @@ class Leads_model extends App_Model
         return $this->db->get(db_prefix() . 'lead_marketing')->result_array();
     }
 
-    public function get_conversion_type($id = "")
+    public function get_conversion_type()
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
@@ -2966,12 +2968,13 @@ class Leads_model extends App_Model
         $staff = $this->db->get(db_prefix() . 'lead_transfer_request')->row();
         return $staff;
     }
-
+    
     public function get_custum_values()
     {
         $this->db->select('CONCAT(fieldto, "-", relid, "-", fieldid) AS column_name, value');
         $this->db->where('fieldto', 'leads');
         $staff = $this->db->get(db_prefix() . 'customfieldsvalues')->result_array();
         return $staff;
+        
     }
 }
