@@ -280,7 +280,7 @@
          <div class="col-md-12">
             <div class="form-group no-mbot" id="inputTagsWrapper">
                <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i> <?php echo _l('tags'); ?></label>
-               <input type="text" class="tagsinput" id="tags" name="tags" value="<?php echo (isset($lead) ? prep_tags_input(get_tags_in($lead->id, 'lead')) : ''); ?>" data-role="tagsinput">
+               <input type="text" class="tagsinput" onkeyup="init_tags_inputs()" id="tags" name="tags" value="<?php echo (isset($lead) ? prep_tags_input(get_tags_in($lead->id, 'lead')) : ''); ?>" data-role="tagsinput">
             </div>
          </div>
          <div class="clearfix"></div>

@@ -3210,4 +3210,32 @@ class Leads extends AdminController
             ]);
         }
     }
+
+    public function get_tags()
+    {
+
+
+        if ($this->input->server('REQUEST_METHOD') === 'POST') {
+            $search = $_POST['search'];
+            $tags = search_tags($search);
+        }
+        if (!empty($tags) && is_array($tags)) {
+            // Extracting columns
+            $array["available_tags"] = array_column($tags, "name");
+            $array["available_tags_ids"] = array_column($tags, "id");
+
+            // Removing numerical indexing (though array_column inherently does this)
+            $array["available_tags"] = array_values($array["available_tags"]);
+            $array["available_tags_ids"] = array_values($array["available_tags_ids"]);
+
+            // Adding language data
+            $array["lang"] = array("tag" => "Add a tag");
+
+            // Outputting JSON
+            echo json_encode($array);
+        } else {
+            // Handle the case where $tags is empty or not an array
+            echo json_encode(array("error" => "No tags available"));
+        }
+    }
 }

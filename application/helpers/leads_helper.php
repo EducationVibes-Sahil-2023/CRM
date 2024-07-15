@@ -3461,3 +3461,17 @@ function get_all_leads()
     //     return $staff_data->contacts;
     // }
 }
+
+function search_tags($search)
+{
+    $CI = &get_instance();
+    $search = preg_quote($search, '/'); // Escaping special characters for REGEXP
+
+    $sql = "SELECT name,id
+            FROM " . db_prefix() . "tags 
+            WHERE name REGEXP '" . $search . "'
+            LIMIT 20 ";
+
+    $query = $CI->db->query($sql);
+    return $query->result_array();
+}
