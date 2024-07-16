@@ -135,7 +135,7 @@ class Reports extends AdminController
                 $post_data = $_POST;
                 unset($post_data["view_assigned"]);
                 $post_data["assigned"][] = $assigned;
-                $summary = get_leads_summary_filter($post_data);
+                $summary = get_leads_summary_filter_old($post_data);
                 $status_summary = get_status_summary_filter($post_data);
 
                 $updateCount = leads_update_count($post_data);
@@ -189,7 +189,7 @@ class Reports extends AdminController
                 $index++;
             }
         } else {
-            $summary = get_leads_summary_filter($_POST);
+            $summary = get_leads_summary_filter_old($_POST);
             $status_summary = get_status_summary_filter($_POST);
 
             $updateCount = leads_update_count($_POST);
@@ -408,7 +408,7 @@ class Reports extends AdminController
 
     //             unset($post_data["assigned"]);
     //             $post_data["assigned"][] = $assigned;
-    //             $summary = get_leads_summary_filter($post_data);
+    //             $summary = get_leads_summary_filter_old($post_data);
     //             $excel_data = get_leads_summary_filter_excel($post_data);
     //             $status_summary = get_status_summary_filter($post_data);
            
@@ -765,7 +765,7 @@ class Reports extends AdminController
     //             $update_count_array_max = [];
     //         }
 
-    //         $summary = get_leads_summary_filter($_POST);
+    //         $summary = get_leads_summary_filter_old($_POST);
     //         $excel_data = get_leads_summary_filter_excel($_POST);
     //         $status_summary = get_status_summary_filter($_POST);
 
@@ -1218,7 +1218,7 @@ class Reports extends AdminController
                     unset($post_data["update_count_min"]);
                     unset($post_data["update_count_max"]);
                     $post_data["assigned"][] = $assigned;
-                    $summary = get_leads_summary_filter($post_data);
+                    $summary = get_leads_summary_filter_old($post_data);
 
                     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
                     $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
@@ -1260,7 +1260,7 @@ class Reports extends AdminController
 
                 unset($post_data["assigned"]);
                 $post_data["assigned"][] = $assigned;
-                $summary = get_leads_summary_filter($post_data);
+                $summary = get_leads_summary_filter_old($post_data);
                 $excel_data = get_leads_summary_filter_excel($post_data);
                 $status_summary = get_status_summary_filter($post_data);
                 $status_summary_performance = get_status_summary_filter_performance($post_data);
@@ -1616,7 +1616,7 @@ class Reports extends AdminController
                 $update_count_array_max = [];
             }
 
-            $summary = get_leads_summary_filter($_POST);
+            $summary = get_leads_summary_filter_old($_POST);
             $excel_data = get_leads_summary_filter_excel($_POST);
             $status_summary = get_status_summary_filter($_POST);
 
@@ -1994,7 +1994,7 @@ class Reports extends AdminController
     //     //         $post_data = $_POST;
     //     //         unset($post_data["view_assigned"]);
     //     //         $post_data["assigned"][] = $assigned;
-    //     //         $summary = get_leads_summary_filter($post_data);
+    //     //         $summary = get_leads_summary_filter_old($post_data);
     //     //         $status_summary = get_status_summary_filter($post_data);
 
     //     //         $updateCount = leads_update_count($post_data);
