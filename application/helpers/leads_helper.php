@@ -2118,6 +2118,8 @@ function get_leads_summary_filter($params)
 
         $totalLeads += !empty($statuses[$key]['total']) ? $statuses[$key]['total'] : 0;
     }
+    $statuses[] = array("name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads);
+    
     return $statuses;
 }
 
