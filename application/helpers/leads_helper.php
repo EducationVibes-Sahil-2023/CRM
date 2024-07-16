@@ -2101,6 +2101,7 @@ function get_leads_summary_filter($params)
     // if (!empty($result)) {
     //     $result = array_column($result, "total", "status_id");
     // }
+
     $totalLeads = 0;
     foreach ($statuses as $key => $status) {
         $statuses[$key]['total'] = 0;
@@ -2117,6 +2118,7 @@ function get_leads_summary_filter($params)
 
         $totalLeads += !empty($statuses[$key]['total']) ? $statuses[$key]['total'] : 0;
     }
+    return $statuses;
 }
 
 function get_leads_report_($params, $export = 0)
