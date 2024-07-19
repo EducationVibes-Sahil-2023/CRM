@@ -422,7 +422,7 @@
                            <hr>
                            <?php
                            $table_data = array(
-                              _l('time'),
+                              _l('Allocation Datetime'),
                               _l('asset_name'),
                               _l('acction_code'),
                               _l('action'),
@@ -439,7 +439,7 @@
                            <hr>
                            <?php
                            $table_data = array(
-                              _l('time'),
+                              _l('Revoke Datetime'),
                               _l('asset_name'),
                               _l('acction_code'),
                               _l('action'),
