@@ -2,6 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+die;
 $aColumns = [
     'time_acction',
     'assets',
