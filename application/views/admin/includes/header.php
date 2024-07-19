@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed');
 ob_start();
-$all_leads =  json_encode(get_all_leads(),true);
+$all_leads =  json_encode(get_all_leads(), true);
 ?>
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" /> -->
 
@@ -221,20 +221,19 @@ ob_end_clean();
 </style>
 
 <script>
-   var WebURL = "<?=WHATSAPP_WEB_URL?>";
-   var WebSOCKETURL = "<?=SOCKET_WEB_URL?>";
+   var WebURL = "<?= WHATSAPP_WEB_URL ?>";
+   var WebSOCKETURL = "<?= SOCKET_WEB_URL ?>";
    var phoneNumber = <?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>;
-console.log(phoneNumber);
+   console.log(phoneNumber);
    var whatsapp_permission_view = "<?= has_permission('whatsapp', '', 'view') ?>";
-   if(<?=is_admin()?> || 1==1)
-   {
-       whatsapp_permission_view=0;
+   if (1 == 1) {
+      whatsapp_permission_view = 0;
    }
    console.log("whatsapp_permission", whatsapp_permission_view);
 
 
    if (whatsapp_permission_view == 1) {
-     
+
       // var tokken_login = "";
       function toggle_function(selector) {
          if ($(selector).length > 0) {
