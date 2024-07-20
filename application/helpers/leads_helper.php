@@ -1839,7 +1839,12 @@ function get_leads_summary_filter_report($params)
         $google_source_name = $params['google_source'];
         $sql .= ' AND ' . db_prefix() . 'customfieldsvalues.fieldid = ' . MARKETING_SOURCE_ID . ' AND ' . db_prefix() . 'customfieldsvalues.value IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $google_source_name)) . '\')';
     }
-    $sql .= ' GROUP BY ' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.assigned ';
+
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql .= ' GROUP BY ' . db_prefix() . 'leads.status';
+    } else {
+        $sql .= ' GROUP BY ' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.assigned ';
+    }
     if (!empty($params['last_contact_date']) || (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
         $sql .= ' HAVING';
         if (!empty($params['last_contact_date'])) {
@@ -1870,12 +1875,19 @@ function get_leads_summary_filter_report($params)
         }
     }
     $sql .=  ' ORDER BY ' . db_prefix() . 'leads_status.statusorder ';
-    $sql = " SELECT t.assigned, CONCAT('{', GROUP_CONCAT(CONCAT('\"', t.status_name, '\"', ':', COALESCE(t.status_count, 0)) SEPARATOR ', '), '}') AS status_counts, COALESCE(SUM(t.status_count), 0) AS total  FROM ( " . $sql . ") t GROUP BY t.assigned ";
-
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql = " SELECT t.assigned, CONCAT('{', GROUP_CONCAT(CONCAT('\"', t.status_name, '\"', ':', COALESCE(t.status_count, 0)) SEPARATOR ', '), '}') AS status_counts, COALESCE(SUM(t.status_count), 0) AS total  FROM ( " . $sql . ") t  ";
+    } else {
+        $sql = " SELECT t.assigned, CONCAT('{', GROUP_CONCAT(CONCAT('\"', t.status_name, '\"', ':', COALESCE(t.status_count, 0)) SEPARATOR ', '), '}') AS status_counts, COALESCE(SUM(t.status_count), 0) AS total  FROM ( " . $sql . ") t GROUP BY t.assigned ";
+    }
     $result = [];
     $result = $CI->db->query($sql)->result();
 
-    return array_column($result, null, "assigned");
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        return $result;
+    } else {
+        return array_column($result, null, "assigned");
+    }
     // echo "<pre>";
     // print_r($result);
     // die;
@@ -2711,11 +2723,19 @@ function get_status_summary_filter_report($params)
         $google_source_name = $params['google_source'];
         $sql .= ' AND ' . db_prefix() . 'customfieldsvalues.fieldid = ' . MARKETING_SOURCE_ID . ' AND  ' . db_prefix() . 'customfieldsvalues.value IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $google_source_name)) . '\')';
     }
-    $sql .= " GROUP BY assigned,s.id; ";
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql .= " GROUP BY s.id; ";
+    } else {
+        $sql .= " GROUP BY assigned,s.id; ";
+    }
 
     $result = [];
     $result = $CI->db->query($sql)->result_array();
-    return array_column($result, null, 'uni');
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        return $result;
+    } else {
+        return array_column($result, null, 'uni');
+    }
 }
 
 
@@ -3876,12 +3896,19 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
         return $update_count = $CI->db->query($sql)->result_array();
         die;
     } else {
-        $sql .= " group by l.assigned " . $grup_by . $having . " " . $sql_add . "   ";
+        if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+            $sql .= " group by 1" . $grup_by . $having . " " . $sql_add . "   ";
+        } else {
+            $sql .= " group by l.assigned " . $grup_by . $having . " " . $sql_add . "   ";
+        }
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
-        $sql = trim($sql);
+
         // $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     }
-
+    if (!empty($leads_count) && $leads_count == 1) {
+        $sql .= " limit 10 ";
+    }
+    $sql = trim($sql);
 
     $update_count = $CI->db->query($sql)->result_array();
 
@@ -4616,10 +4643,18 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     }
 
     if ($conversion_status) {
-        $sql .= '  GROUP BY l.assigned,l.source,c.id ';
+        if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+            $sql .= '  GROUP BY l.source,c.id ';
+        } else {
+            $sql .= '  GROUP BY l.assigned,l.source,c.id ';
+        }
     } else {
-        // $sql .= '  GROUP BY m.id,c.id ';
-        $sql .= '  GROUP BY  l.assigned, ls.id, s.id, c.id, m.id ';
+
+        if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+            $sql .= '  GROUP BY  ls.id, s.id, c.id, m.id ';
+        } else {
+            $sql .= '  GROUP BY  l.assigned, ls.id, s.id, c.id, m.id ';
+        }
     }
     // $sql .= ' UNION ALL ';
     $sql = trim($sql);
