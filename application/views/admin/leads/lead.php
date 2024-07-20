@@ -82,7 +82,7 @@ $last_lead_request = last_lead_request($lead->id);
                            </a>
                         </li>
                         <!--end sms-->
-                        <?php if (has_permission('whatsapp', '', 'view') ) { ?>
+                        <?php if (has_permission('whatsapp', '', 'view') && 1 == 2) { ?>
                            <li role="presentation">
                               <a id="tab_proposals_whatsapp_li" href="#tab_proposals_whatsapp" onclick="get_whatsapp_message(<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>,<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>);" aria-controls="tab_proposals_whatsapp" role="tab" data-toggle="tab">
                                  <?php echo _l('Whatsapp'); ?>
@@ -507,7 +507,7 @@ $last_lead_request = last_lead_request($lead->id);
                </div>
                <!-- end sms -->
 
-               <?php if (has_permission('whatsapp', '', 'view') ) { ?>
+               <?php if (has_permission('whatsapp', '', 'view') && 1 == 2) { ?>
                   <div role="tabpanel" class="tab-pane" id="tab_proposals_whatsapp">
                      <form id="whatsapp_message_form" enctype="multipart/form-data" action="/send-message" method="POST" onsubmit="send_whatsapp_message(this.id); return false;">
                         <div class="form-group">
@@ -535,7 +535,7 @@ $last_lead_request = last_lead_request($lead->id);
                      </form>
                      <div class="clearfix"></div>
                      <div class="a1-column a1-long a1-elastic message-preview-box">
-                        <div  data-last_messgae_id="" id="message-<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>" class="chat-container a1-column a1-long a1-elastic chat-main a1-spaced-items">
+                        <div data-last_messgae_id="" id="message-<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>" class="chat-container a1-column a1-long a1-elastic chat-main a1-spaced-items">
 
                         </div>
                      </div>
