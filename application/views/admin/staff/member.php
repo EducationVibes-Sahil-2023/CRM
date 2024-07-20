@@ -416,42 +416,6 @@
                         $this->load->view('admin/staff/permissions', $permissionsData);
                         ?>
                      </div>
-                     <?php if (!empty($member->staffid)) { ?>
-                        <div role="tabpanel" class="tab-pane" id="staff_assets">
-                           <h4>Assects Allocation</h4>
-                           <hr>
-                           <?php
-                           $table_data = array(
-                              _l('Allocation Datetime'),
-                              _l('asset_name'),
-                              _l('acction_code'),
-                              _l('action'),
-                              _l('quantity_as_qty'),
-                              _l('acction_from'),
-                              _l('acction_to'),
-                           );
-                           render_datatable($table_data, 'table_action');
-                           ?>
-                           <br>
-                           <hr>
-                           <br>
-                           <h4>Assects Revoke</h4>
-                           <hr>
-                           <?php
-                           $table_data = array(
-                              _l('Revoke Datetime'),
-                              _l('asset_name'),
-                              _l('acction_code'),
-                              _l('action'),
-                              _l('quantity_as_qty'),
-                              _l('acction_from'),
-                              _l('acction_to'),
-                           );
-                           render_datatable($table_data, 'table_action_revoke');
-                           ?>
-                        </div>
-                     <?php } ?>
-
                   </div>
                </div>
             </div>
@@ -803,8 +767,6 @@
          }
       }
 
-      initDataTable('.table-table_action', admin_url + 'assets/table_action_allocate/allocation?action_to=<?= isset($member) ? $member->staffid : null ?>');
-      initDataTable('.table-table_action_revoke', admin_url + 'assets/table_action_allocate/revoke?action_to=<?= isset($member) ? $member->staffid : null ?>');
    </script>
    </body>
 

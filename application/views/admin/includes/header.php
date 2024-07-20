@@ -135,7 +135,7 @@ ob_end_clean();
             <li class="dropdown" data-toggle="tooltip" title="<?= $this->session->userdata('Facebook_Error') ?>" data-placement="bottom"><a><i class="fa fa-facebook fa-fw fa-lg" aria-hidden="true"></i></a></li>
          <?php } ?>
 
-         <?php if (has_permission('whatsapp', '', 'view')) { ?>
+         <?php if (has_permission('whatsapp', '', 'view') && 1 == 2) { ?>
             <li class="dropdown whatsapp_alert-wrapper header-notifications header-whatsapp_alert" data-toggle="tooltip" title="WhatsApp Notification" data-placement="bottom">
                <a><i class="fa fa-whatsapp fa-fw fa-lg whatsapp-notification-icon-color    text-danger" data-toggle="dropdown" onclick="toggle_function('.whatsapp_alert')" aria-expanded="true"></i>
                   <span class="label icon-total-indicator bg-warning icon-notifications whatsapp-notification-icon  "></span>
@@ -181,9 +181,9 @@ ob_end_clean();
          </section>
    </div>
 
-   <a href="javascript:void(0);" style="display:none;" onclick="whats_app_toggle()" class="float_whatsapp_icon">
+   <!-- <a href="javascript:void(0);" style="display:none;" onclick="whats_app_toggle()" class="float_whatsapp_icon">
       <i class="fa fa-whatsapp my-float"></i>
-   </a>
+   </a> -->
 <?php } ?>
 
 
