@@ -1202,32 +1202,7 @@ class Reports extends AdminController
         //     }
         // }
 
-        if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
-
-
-            // foreach ($_POST["assigned"] as $assigned) {
-            //     $update_count_data_min = $update_count_data = $post_data = $_POST;
-            //     unset($post_data["assigned"]);
-            //     unset($post_data["update_count_min"]);
-            //     unset($post_data["update_count_max"]);
-            //     $post_data["assigned"][] = $assigned;
-            //     $summary = get_leads_summary_filter_report($post_data);
-            //     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
-            //     $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
-            //     $update_count_data['update_count_min'] = "";
-            //     $update_count_data['update_count_max'] = "";
-            //     $update_count_data["assigned"][] = $assigned;
-            //     $update_count_data_min["assigned"][] =  $assigned;
-            //     $updateCount = leads_update_count($update_count_data, 0, 1);
-            //     $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
-            //     $staff_name =  get_staff_full_name($assigned);
-            //     $update_count_array_label[] = trim($staff_name);
-            //     $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
-            //     $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
-            //     $update_count_array_min[] = intval($updateCount_min);
-            //     $update_count_array_max[] = (intval($updateCount));
-            //     array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
-            // }
+        if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '' && isset($_POST["call_status"]) && $_POST["call_status"] == 1) {
 
             $update_count_data["status"][] = 20;
             $update_count_data["assigned"] = $_POST["assigned"];
