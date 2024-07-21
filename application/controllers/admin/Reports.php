@@ -1207,9 +1207,12 @@ class Reports extends AdminController
             $update_count_data["status"][] = 20;
             $update_count_data["assigned"] = $_POST["assigned"];
             $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
+            // echo $this->db->last_query(); die;
             $update_count_data['update_count_min'] = $_POST['update_count_min'];
             $update_count_data['update_count_max'] =  $_POST['update_count_max'];
             $updateCount_filter_min = leads_update_count_report($update_count_data, 0, 1);
+            // echo $this->db->last_query(); die;
+
             echo json_encode(["update_count_filter" => $updateCount_filter, "update_count_filter_min" => $updateCount_filter_min]);
             die;
         }

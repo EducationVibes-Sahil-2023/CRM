@@ -3668,7 +3668,7 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " SELECT count(DISTINCT(calls.id)) as total ";
     } else if (!empty($leads_count) && $leads_count == 1) {
-        $sql .= " SELECT l.assigned,count(DISTINCT(l.id)) as total ";
+        $sql .= " SELECT l.assigned,count(DISTINCT(l.id)) as total,count(calls.id) ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
         $sql .= " SELECT  count(DISTINCT(l.id)) as total ";
     } else {
@@ -3879,11 +3879,11 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
         if (!empty($having)) {
             $sql_add = ' AND COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         } else {
-            $sql_add = ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND  count(DISTINCT(l.id)) ';
+            $sql_add = ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND  "' . $CI->db->escape_str($max) . '" ';
         }
     }
 
- 
+
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " group by l.id " . $grup_by . $having . " order by total desc limit 1 ";
         $sql = trim($sql);
@@ -3900,24 +3900,46 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
             $sql .= " group by 1" . $grup_by . $having . " " . $sql_add . "   ";
         } else {
-            $sql .= " group by l.assigned " . $grup_by . $having . " " . $sql_add . "   ";
+            $sql .= " group by l.assigned,l.id " . $grup_by . $having . " " . $sql_add . "   ";
         }
         // $sql .= " order by concat(l.id,'-',CAST(n.dateadded AS date)) asc ";
 
         // $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     }
     if (!empty($leads_count) && $leads_count == 1) {
-        $sql .= " limit 10 ";
+        // $sql .= " limit 10 ";
     }
 
     $update_count = $CI->db->query($sql)->result_array();
 
+    $callsByDate = [];
+
+
+    foreach ($update_count as $entry) {
+        if (!empty($entry['uni_dates'])) {
+            if (!isset($callsByDate[$entry['assigned']])) {
+                $callsByDate[$entry['assigned']] = [
+                    "assigned" => $entry['assigned'],
+                    "total" => 0
+                ];
+            }
+            $callsByDate[$entry['assigned']]["total"] += $entry['total'];
+        }
+    }
+    
+    // To limit the results to 10, you can use array_slice
+    $callsByDate = array_slice($callsByDate, 0, 10);
+    
+
+    
+
+    return $callsByDate;
     // $result = $CI->db->query($sql)->result_array();
 
     // // $update_count = count(array_unique(array_column($result, "total")));
     // $update_count = count(array_count_values(array_column($result, "total")));
 
-    return !empty($update_count) ? array_column($update_count, null, "assigned") : [];
+    // return !empty($update_count) ? array_column($update_count, null, "assigned") : [];
 }
 
 function leads_update_count_id($id, $params = false)
