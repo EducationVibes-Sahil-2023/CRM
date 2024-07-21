@@ -105,6 +105,8 @@ $db['default'] = array_merge([
     'save_queries' => true
 ], defined('APP_DB_STRICTON') && APP_DB_STRICTON || !defined('APP_DB_STRICTON') ? ['stricton' => false] : []);
 
+
+
 $db['secondary'] = array(
     'dsn'      => '',
     'hostname' => APP_DB_S_HOSTNAME, // Replace with the actual hostname of your secondary database

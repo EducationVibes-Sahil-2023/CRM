@@ -4,13 +4,24 @@ $staff_details = $this->db->where('staffid', get_staff_user_id())->get(db_prefix
 // $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 $role = $staff_details->role;
 $staff_department = $staff_details->department;
-
 $fb_query = $this->db->select('DISTINCT(website) as fb_name')->where("website!=", "")->get('leads');
 $facebook_names = $fb_query->result_array();
-
 $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtube"), array("name" => "Meta"), array("name" => "Organic"), array("name" => "Direct"));
-
 $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("name" => "Month"), array("name" => "Year"));
+
+$source_type = $this->leads_model->get_source();
+
+$marketing_type =  $this->leads_model->get_marketing_type();
+$performance_array = array_column($marketing_type, null, 'id');
+
+$conversion_type = $this->leads_model->get_conversion_type();
+$conversion_type_ = array_column($conversion_type, null, "id");
+
+$staff_list     = $this->leads_model->get_staff_list();
+$staff_list = array_column($staff_list, 'staff_name', "staffid");
+
+$status_list = $this->leads_model->get_status();
+$status_list_ = array_column($status_list, null, "id");
 
 
 ?>
@@ -380,15 +391,15 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                 </div>
                             </div>
                             <div class="col-md-2 leads-filter-column">
-                                    <div class="form-group">
-                                       <input type="text" class="form-control datepicker" name="assign_from_date" id="assign_from_date" placeholder="From Assignation Date" autocomplete="off">
-                                    </div>
-                                 </div>
-                                 <div class="col-md-2 leads-filter-column">
-                                    <div class="form-group">
-                                       <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
-                                    </div>
-                                 </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="assign_from_date" id="assign_from_date" placeholder="From Assignation Date" autocomplete="off">
+                                </div>
+                            </div>
+                            <div class="col-md-2 leads-filter-column">
+                                <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
+                                </div>
+                            </div>
 
                             <div class="col-md-2 leads-filter-column">
                                 <div class="form-group">
@@ -428,7 +439,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                 <h3>Report Generate</h3>
 
                                 <div class="col-md-12 row">
-                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls'); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls'); set_call_filter_data(); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
                                     <div class="clearfix"></div>
                                     <div class="row hide col-md-12 leads-overview-calls">
                                         <hr class="hr-panel-heading" />
@@ -454,7 +465,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     </div>
                                     <br>
                                     <br>
-                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-daily hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-daily hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); graph_represent_(); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
 
                                     <div class="row hide col-md-12 leads-overview-calls-daily">
                                         <hr class="hr-panel-heading" />
@@ -483,8 +494,14 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                     <div id="show_hide_staff_list" class="hide">
                                         <h4 class="bold">Staff List</h4>
                                         <hr>
-                                        <div id="total_staff_list" class="col-12 panel-body leadSum mt-3">
+                                        <div id="total_staff_list" class="col-12 leadSum panel-body mt-3">
                                         </div>
+                                    </div>
+                                    <hr>
+                                    <br>
+                                    <br>
+                                    <div class="total_staff_report hide leadSum">
+
                                     </div>
                                     <hr>
 
@@ -497,7 +514,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                                 </div>
                             </div>
                             <div>
-                                <div class="leadSum">
+                                <div class="leadSum report_list">
                                 </div>
 
 
@@ -532,8 +549,10 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
         // console.log(conversion_type_color); // Output the converted colors
 
 
+
         var source_name = <?= !empty($sources) ? json_encode($sources, true) : '' ?>;
         var status_name = <?= !empty($status) ? json_encode($status, true) : '' ?>;
+        var status_name_color = <?php echo !empty($status) ? json_encode(array_column($status, null, "name")) : '[]'; ?>;
         var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
         var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
         var excel_data_array = [];
@@ -545,6 +564,20 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
         if (!window.myCharts) {
             window.myCharts = {};
         }
+
+
+        function set_call_filter_data() {
+            setTimeout(() => {
+                if ($(".leads-overview-calls").is(":visible")) {
+                    console.log("click call filter");
+                    slider_data = true;
+                    ajax_filter(1);
+
+                }
+            }, 1000); // Check every 2 seconds
+        }
+
+
 
         // Function to create or update a chart
         function createOrUpdateChart(chartKey, ctx, config) {
@@ -716,904 +749,9 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
-            $('#apply_filter').trigger("click");
+            ajax_filter(1);
         })
-        $('#apply_filter').on('click', function() {
-            var element_view_assign = document.getElementById("view_assigned");
-            var element_view_source = document.getElementById("view_source");
-            var element_view_status = document.getElementById("view_status");
-            var element_view_fb_name = document.getElementById("view_facebook_names");
-            var element_view_google_type = document.getElementById("view_source_marketing");
-            var location = document.getElementById("location");
-            date_type = document.getElementById("date_type").value;
-            <?php if (is_admin()) { ?>
-                var department = document.getElementById("department");
-            <?php } else if ($role == 3 && $staff_department != "") { ?>
-                var department = [];
-                department.push("<?= $staff_department ?>");
-            <?php } ?>
 
-            var up_from_date = document.getElementById("up_from_date").value;
-            var up_to_date = document.getElementById("up_to_date").value;
-            var assign_from_date = document.getElementById("assign_from_date").value;
-            var assign_to_date = document.getElementById("assign_to_date").value;
-            var lead_type = $("#lead_type").val();
-            var view_assigned_options = "";
-            var view_source_options = "";
-            var view_status_options = "";
-            var view_fb_options = "";
-            var view_google_options = "";
-            var view_location = "";
-            var view_department = "";
-            var update_count_min = '';
-            var update_count_max = '';
-            var update_staff_id = "";
-            if (slider_data) {
-                update_count_min = document.getElementById("update_count_min").value;
-                update_count_max = document.getElementById("update_count_max").value;
-            }
-            if (update_daily_staff_id != 0) {
-                update_staff_id = update_daily_staff_id;
-            }
-
-            if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
-                view_source_options = document.getElementById('view_source').selectedOptions;
-                view_source_options = Array.from(view_source_options).map(({
-                    value
-                }) => value);
-            }
-            if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
-                view_status_options = document.getElementById('view_status').selectedOptions;
-                view_status_options = Array.from(view_status_options).map(({
-                    value
-                }) => value);
-            }
-
-            if (typeof(element_view_fb_name) != 'undefined' && element_view_fb_name != null) {
-                view_fb_options = document.getElementById('view_facebook_names').selectedOptions;
-                view_fb_options = Array.from(view_fb_options).map(({
-                    value
-                }) => value);
-            }
-
-            if (typeof(element_view_google_type) != 'undefined' && element_view_google_type != null) {
-                view_google_options = document.getElementById('view_source_marketing').selectedOptions;
-                view_google_options = Array.from(view_google_options).map(({
-                    value
-                }) => value);
-            }
-            if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
-                view_assigned_options = document.getElementById('view_assigned').selectedOptions;
-                view_assigned_options = Array.from(view_assigned_options).map(({
-                    value
-                }) => value);
-            }
-
-
-            if (typeof(location) != 'undefined' && location != null) {
-                view_location = document.getElementById('location').selectedOptions;
-                view_location = Array.from(view_location).map(({
-                    value
-                }) => value);
-            }
-
-            <?php if (is_admin()) { ?>
-                if (typeof(department) != 'undefined' && department != null) {
-                    view_department = document.getElementById('department').selectedOptions;
-                    view_department = Array.from(view_department).map(({
-                        value
-                    }) => value);
-                }
-            <?php } else if ($role == 3 && $staff_department != "") { ?>
-                view_department = ["<?= $staff_department ?>"];
-            <?php } ?>
-
-
-
-            var from_date = document.getElementById("from_date").value;
-            var to_date = document.getElementById("to_date").value;
-
-            if (to_date != '') {
-                if (from_date == '') {
-                    $("#from_date").focus();
-                    return false;
-                }
-            }
-
-            if (from_date != '') {
-                if (to_date == '') {
-                    $("#to_date").focus();
-                    return false;
-                }
-            }
-
-            if (xhr != null) {
-                xhr.abort();
-            }
-            $("#generate_pdf").hide();
-            $(".hide-btn-response").hide();
-            $(".report-data .hide-graph").addClass("hide");
-            $("#show_hide_staff_list").addClass("hide");
-
-            // $(".leadSum").html('');
-            $('#apply_filter').attr("disabled", true);
-            show_loader("apply_filter");
-            xhr = $.ajax({
-                type: "POST",
-                url: admin_url + "reports/lead_summary_filter",
-                data: {
-                    assigned: view_assigned_options,
-                    source: view_source_options,
-                    status: view_status_options,
-                    from_date: from_date,
-                    to_date: to_date,
-                    up_from_date: up_from_date,
-                    up_to_date: up_to_date,
-                    lead_type: lead_type,
-                    update_count_min: update_count_min,
-                    update_count_max: update_count_max,
-                    location: view_location,
-                    department: view_department,
-                    daily_update_count: update_staff_id,
-                    google_source: view_google_options,
-                    fb_source: view_fb_options,
-                    date_type: date_type,
-                    assign_from_date:assign_from_date,
-                    assign_to_date:assign_to_date
-
-                },
-                dataType: "JSON",
-                cache: false,
-                success: function(data) {
-                    $('#apply_filter').attr("disabled", false);
-                    $('#apply_filter_update_count').attr("disabled", false);
-                    hide_loader("apply_filter");
-                    hide_loader("apply_filter_update_count");
-                    //alert(data);  //as a debugging message.
-                    if (data.status != undefined) {
-                        // $(".leadSum").html('');
-                        // $(".leadSum").innerHTML = data.status;
-                        $(".leadSum").html(data.status);
-                        $(".filter-hide").removeClass("hide");
-                    }
-                    // $("#updationCounter").html(data.update_count);
-                    slider_data = false;
-                    if (data.status != "") {
-                        $("#generate_pdf").show();
-                        $(".hide-btn-response").show();
-                    }
-                    if (data.excel_data != undefined) {
-                        excel_data_array = data.excel_data;
-                    }
-
-                    if (data.summary_daily_excel != undefined) {
-                        summary_daily_excel = data.summary_daily_excel;
-                    }
-
-
-                    if (data.update_count_daily_data != undefined) {
-                        let html_update = "<div class='row scroll-div col-12'>";
-                        for (i = 1; i < (data.update_count_daily_data).length; i++) {
-                            html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
-                        }
-                        html_update += "</div>";
-                        $(".leads-overview-" + update_daily_staff_id).html(html_update);
-                        $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
-                        update_daily_staff_id = 0;
-                    }
-
-                    update_daily_staff_id = 0;
-
-
-                    if (data.update_count_label != undefined && data.update_count_label.length > 0) {
-                        $("#show_hide_staff_list").removeClass("hide");
-                        $("#total_staff_list").html(data.total_staff_html);
-                        $(".hide-graph-calls").removeClass("hide");
-
-                        var configCalls = {
-                            type: "bar",
-                            data: {
-                                labels: data.update_count_label, // Date Objects
-                                datasets: [{
-                                        label: "Filtered",
-                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 1.0)",
-                                        borderWidth: 0,
-                                        data: data.update_count_min,
-                                        fill: false,
-                                        radius: 0,
-                                    },
-                                    {
-                                        label: "Max",
-                                        backgroundColor: "rgba(121, 200, 121, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 0.0)",
-                                        borderWidth: 0,
-                                        data: data.update_count_max,
-                                        fill: "-1",
-                                        line: false,
-                                        radius: 0,
-                                    },
-                                    // {
-                                    //     label: "Total leads",
-                                    //     backgroundColor: "rgba(0, o, 238, 0.8)",
-                                    //     borderColor: "rgba(140, 140, 140, 1.0)",
-                                    //     borderWidth: 0,
-                                    //     data: data.total_leads,
-                                    //     fill: false,
-                                    //     radius: 0,
-                                    // }
-                                ]
-                            },
-                            options: {
-                                tooltips: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    displayColors: false,
-                                },
-                                responsive: true,
-                                title: {
-                                    display: true,
-                                    text: "Not Reachable Leads chat - Filtered/Max "
-                                },
-                                scales: {
-                                    x: {
-                                        stacked: true,
-                                        format: "HH mm",
-                                    },
-                                    y: {
-                                        stacked: true,
-                                        scaleLabel: {
-                                            display: true,
-                                            labelString: "value"
-                                        }
-                                    }
-                                },
-                                pan: {
-                                    enabled: true,
-                                    mode: "x",
-                                    speed: 10,
-                                    threshold: 10
-                                },
-                                zoom: {
-                                    enabled: true,
-                                    drag: false,
-                                    mode: "xy",
-                                    limits: {
-                                        max: 10,
-                                        min: 0.5
-                                    }
-                                }
-                            }
-                        };
-
-                        // Get the canvas context
-                        var ctxCalls = document.getElementById("canvas").getContext("2d");
-
-                        createOrUpdateChart("myCallsChart", ctxCalls, configCalls);
-
-                    }
-
-
-                    if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                        $(".hide-graph-daily").removeClass("hide");
-
-                        if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                            $(".hide-graph-daily").removeClass("hide");
-                            var labels = []
-                            if (date_type.toLowerCase() == "week") {
-                                labels = data.summary_daily_.map(item => getWeekRange(item.dateadded));
-                            } else {
-                                labels = data.summary_daily_.map(item => item.dateadded);
-                            }
-                            var lable_value = data.summary_daily_.map(item => item.count);
-
-                            var configDaily = {
-                                type: "bar",
-                                data: {
-                                    labels: labels, // Date Objects
-                                    datasets: [{
-                                        label: "Leads",
-                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 1.0)",
-                                        borderWidth: 0,
-                                        data: lable_value,
-                                        fill: false,
-                                        radius: 0,
-                                    }]
-                                },
-                                options: {
-                                    tooltips: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        displayColors: false,
-                                    },
-                                    responsive: true,
-                                    title: {
-                                        display: true,
-                                        text: "Date Wise Leads chat - Leads"
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                            format: "HH mm",
-                                        },
-                                        y: {
-                                            stacked: true,
-                                            scaleLabel: {
-                                                display: true,
-                                                labelString: "value"
-                                            }
-                                        }
-                                    },
-                                    pan: {
-                                        enabled: true,
-                                        mode: "x",
-                                        speed: 10,
-                                        threshold: 10
-                                    },
-                                    zoom: {
-                                        enabled: true,
-                                        drag: false,
-                                        mode: "xy",
-                                        limits: {
-                                            max: 10,
-                                            min: 0.5
-                                        }
-                                    }
-                                }
-                            };
-
-                            // Get the canvas context
-                            var ctxDaily = document.getElementById("canvas_daily").getContext("2d");
-
-                            // Create a new chart with the updated configuration
-                            createOrUpdateChart("canvas_daily", ctxDaily, configDaily);
-
-                        }
-
-                        // Assuming data.summary_daily_conversion is an array of objects
-                        // if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
-                        //     $(".hide-graph-daily").removeClass("hide");
-                        //     var labels = []
-                        //     if (date_type.toLowerCase() == "week") {
-                        //         labels = data.summary_daily_conversion.map(item => getWeekRange(item.dateadded));
-                        //     } else {
-                        //         labels = data.summary_daily_conversion.map(item => item.dateadded);
-                        //     }
-
-                        //     // Collect unique conversion types and their data
-                        //     const conversionData = {};
-                        //     data.summary_daily_conversion.forEach(item => {
-                        //         const parsedCounts = parseConversionCounts(item.conversion_counts);
-                        //         Object.keys(parsedCounts).forEach(type => {
-                        //             if (!conversionData[type]) {
-                        //                 conversionData[type] = [];
-                        //             }
-                        //             conversionData[type].push(parsedCounts[type]);
-                        //         });
-                        //     });
-
-                        //     // Prepare datasets
-                        //     const datasets = Object.keys(conversionData).map(type => {
-                        //         return {
-                        //             label: type,
-                        //             backgroundColor: randomColor(), // Function to generate random color
-                        //             borderColor: randomColor(),
-                        //             borderWidth: 1,
-                        //             data: conversionData[type],
-                        //             fill: false
-                        //         };
-                        //     });
-
-                        //     // Create the chart
-                        //     const configDaily = {
-                        //         type: "bar",
-                        //         data: {
-                        //             labels: labels,
-                        //             datasets: datasets
-                        //         },
-                        //         options: {
-                        //             tooltips: {
-                        //                 mode: 'index',
-                        //                 intersect: false,
-                        //                 displayColors: false,
-                        //             },
-                        //             responsive: true,
-                        //             title: {
-                        //                 display: true,
-                        //                 text: "Date Wise Conversion Leads chat - Leads"
-                        //             },
-                        //             scales: {
-                        //                 x: {
-                        //                     stacked: true,
-                        //                 },
-                        //                 y: {
-                        //                     stacked: true,
-                        //                     scaleLabel: {
-                        //                         display: true,
-                        //                         labelString: "value"
-                        //                     }
-                        //                 }
-                        //             },
-                        //             pan: {
-                        //                 enabled: true,
-                        //                 mode: "x",
-                        //                 speed: 10,
-                        //                 threshold: 10
-                        //             },
-                        //             zoom: {
-                        //                 enabled: true,
-                        //                 drag: false,
-                        //                 mode: "xy",
-                        //                 limits: {
-                        //                     max: 10,
-                        //                     min: 0.5
-                        //                 }
-                        //             }
-                        //         }
-                        //     };
-
-                        //     // Get the canvas context
-                        //     var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
-                        //     createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
-
-
-                        // }
-
-
-                        if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
-                            $(".hide-graph-daily").removeClass("hide");
-
-                            // Function to get all unique conversion types
-                            function getAllConversionTypes(data) {
-                                const types = new Set();
-                                data.forEach(item => {
-                                    const parsedCounts = parseConversionCounts(item.conversion_counts);
-                                    Object.keys(parsedCounts).forEach(type => types.add(type));
-                                });
-                                return Array.from(types);
-                            }
-
-                            // Function to get all unique dates
-                            function getAllDates(data) {
-                                if (date_type.toLowerCase() == "week") {
-                                    return data.map(item => getWeekRange(item.dateadded));
-                                } else {
-                                    return data.map(item => item.dateadded);
-                                }
-                            }
-
-                            // Get all unique conversion types and dates
-                            const conversionTypes = getAllConversionTypes(data.summary_daily_conversion);
-                            const allDates = getAllDates(data.summary_daily_conversion);
-
-                            // Initialize conversion data structure
-                            const conversionData = {};
-                            conversionTypes.forEach(type => {
-                                conversionData[type] = allDates.map(date => ({
-                                    date,
-                                    count: 0
-                                }));
-                            });
-
-                            // Fill in actual data
-                            data.summary_daily_conversion.forEach(item => {
-                                const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
-                                const parsedCounts = parseConversionCounts(item.conversion_counts);
-                                Object.keys(parsedCounts).forEach(type => {
-                                    const index = allDates.indexOf(date);
-                                    if (index !== -1) {
-                                        conversionData[type][index].count = parsedCounts[type];
-                                    }
-                                });
-                            });
-                            // Prepare datasets
-                            const datasets = Object.keys(conversionData).map(type => ({
-                                label: type,
-                                backgroundColor: conversion_type_color[type], // Function to generate random color
-                                borderColor: conversion_type_color[type],
-                                borderWidth: 1,
-                                data: conversionData[type].map(item => item.count),
-                                fill: false
-                            }));
-
-                            // Create the chart
-                            const configDaily = {
-                                type: "bar",
-                                data: {
-                                    labels: allDates,
-                                    datasets: datasets
-                                },
-                                options: {
-                                    tooltips: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        displayColors: false,
-                                    },
-                                    responsive: true,
-                                    title: {
-                                        display: true,
-                                        text: "Date Wise Conversion Leads chat - Leads"
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                        },
-                                        y: {
-                                            stacked: true,
-                                            scaleLabel: {
-                                                display: true,
-                                                labelString: "value"
-                                            }
-                                        }
-                                    },
-                                    pan: {
-                                        enabled: true,
-                                        mode: "x",
-                                        speed: 10,
-                                        threshold: 10
-                                    },
-                                    zoom: {
-                                        enabled: true,
-                                        drag: false,
-                                        mode: "xy",
-                                        limits: {
-                                            max: 10,
-                                            min: 0.5
-                                        }
-                                    }
-                                }
-                            };
-
-                            // Get the canvas context
-                            var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
-                            createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
-                        }
-
-                        // if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
-                        //     $(".hide-graph-daily").removeClass("hide");
-                        //     var labels = []
-                        //     if (date_type.toLowerCase() == "week") {
-                        //         labels = data.summary_daily_marketing.map(item => getWeekRange(item.dateadded));
-                        //     } else {
-                        //         labels = data.summary_daily_marketing.map(item => item.dateadded);
-                        //     }
-
-                        //     // Collect unique conversion types and their data
-                        //     const marketingData = {};
-                        //     data.summary_daily_marketing.forEach(item => {
-                        //         const parsedCounts = parseConversionCounts(item.marketing_count);
-                        //         console.log(parsedCounts);
-                        //         Object.keys(parsedCounts).forEach(type => {
-                        //             if (!marketingData[type]) {
-                        //                 marketingData[type] = [];
-                        //             }
-                        //             marketingData[type].push(parsedCounts[type]);
-                        //         });
-                        //     });
-                        //     console.log(marketingData);
-                        //     // Prepare datasets
-                        //     const datasets = Object.keys(marketingData).map(type => {
-                        //         return {
-                        //             label: labels,
-                        //             backgroundColor: randomColor(), // Function to generate random color
-                        //             borderColor: randomColor(),
-                        //             borderWidth: 1,
-                        //             data: marketingData[type],
-                        //             fill: false
-                        //         };
-                        //     });
-
-                        //     // Create the chart
-                        //     const configDaily = {
-                        //         type: "bar",
-                        //         data: {
-                        //             labels: labels,
-                        //             datasets: datasets
-                        //         },
-                        //         options: {
-                        //             tooltips: {
-                        //                 mode: 'index',
-                        //                 intersect: false,
-                        //                 displayColors: false,
-                        //             },
-                        //             responsive: true,
-                        //             title: {
-                        //                 display: true,
-                        //                 text: "Date Wise Marketing Leads chat - Leads"
-                        //             },
-                        //             scales: {
-                        //                 x: {
-                        //                     stacked: true,
-                        //                 },
-                        //                 y: {
-                        //                     stacked: true,
-                        //                     scaleLabel: {
-                        //                         display: true,
-                        //                         labelString: "value"
-                        //                     }
-                        //                 }
-                        //             },
-                        //             pan: {
-                        //                 enabled: true,
-                        //                 mode: "x",
-                        //                 speed: 10,
-                        //                 threshold: 10
-                        //             },
-                        //             zoom: {
-                        //                 enabled: true,
-                        //                 drag: false,
-                        //                 mode: "xy",
-                        //                 limits: {
-                        //                     max: 10,
-                        //                     min: 0.5
-                        //                 }
-                        //             }
-                        //         }
-                        //     };
-
-                        //     // Get the canvas context
-                        //     var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
-                        //     createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
-
-
-                        // }
-
-                        if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
-                            $(".hide-graph-daily").removeClass("hide");
-
-                            // Function to get all unique marketing types
-                            function getAllMarketingTypes(data) {
-                                const types = new Set();
-                                data.forEach(item => {
-                                    const parsedCounts = parseConversionCounts(item.marketing_count);
-                                    Object.keys(parsedCounts).forEach(type => types.add(type));
-                                });
-                                return Array.from(types);
-                            }
-
-                            // Function to get all unique dates
-                            function getAllDates(data) {
-                                if (date_type.toLowerCase() == "week") {
-                                    return data.map(item => getWeekRange(item.dateadded));
-                                } else {
-                                    return data.map(item => item.dateadded);
-                                }
-                            }
-
-                            // Get all unique marketing types and dates
-                            const marketingTypes = getAllMarketingTypes(data.summary_daily_marketing);
-                            const allDates = getAllDates(data.summary_daily_marketing);
-
-                            // Initialize marketing data structure
-                            const marketingData = {};
-                            marketingTypes.forEach(type => {
-                                marketingData[type] = allDates.map(date => ({
-                                    date,
-                                    count: 0
-                                }));
-                            });
-
-                            // Fill in actual data
-                            data.summary_daily_marketing.forEach(item => {
-                                const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
-                                const parsedCounts = parseConversionCounts(item.marketing_count);
-                                Object.keys(parsedCounts).forEach(type => {
-                                    const index = allDates.indexOf(date);
-                                    if (index !== -1) {
-                                        marketingData[type][index].count = parsedCounts[type];
-                                    }
-                                });
-                            });
-
-                            // Prepare datasets
-                            const datasets = Object.keys(marketingData).map(type => ({
-                                label: type,
-                                backgroundColor: marketing_type_color[type], // Function to generate random color
-                                borderColor: marketing_type_color[type],
-                                borderWidth: 1,
-                                data: marketingData[type].map(item => item.count),
-                                fill: false
-                            }));
-
-                            // Create the chart
-                            const configDaily = {
-                                type: "bar",
-                                data: {
-                                    labels: allDates,
-                                    datasets: datasets
-                                },
-                                options: {
-                                    tooltips: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        displayColors: false,
-                                    },
-                                    responsive: true,
-                                    title: {
-                                        display: true,
-                                        text: "Date Wise Marketing Leads chat - Leads"
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                        },
-                                        y: {
-                                            stacked: true,
-                                            scaleLabel: {
-                                                display: true,
-                                                labelString: "value"
-                                            }
-                                        }
-                                    },
-                                    pan: {
-                                        enabled: true,
-                                        mode: "x",
-                                        speed: 10,
-                                        threshold: 10
-                                    },
-                                    zoom: {
-                                        enabled: true,
-                                        drag: false,
-                                        mode: "xy",
-                                        limits: {
-                                            max: 10,
-                                            min: 0.5
-                                        }
-                                    }
-                                }
-                            };
-
-                            // Get the canvas context
-                            var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
-                            createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
-                        }
-
-
-                        // if (data.total_leads_staff != undefined) {
-
-
-                        //     $(".hide-graph-leads").removeClass("hide");
-
-                        //     var config = {
-                        //         type: "bar",
-                        //         data: {
-                        //             labels: data.total_leads_staff, // Date Objects
-                        //             datasets: [{
-                        //                 label: "Total leads",
-                        //                 backgroundColor: "rgba(240, 140, 121, 0.8)",
-                        //                 borderColor: "rgba(140, 140, 140, 1.0)",
-                        //                 borderWidth: 0,
-                        //                 data: data.total_leads,
-                        //                 fill: false,
-                        //                 radius: 0,
-                        //             }]
-                        //         },
-                        //         options: {
-                        //             tooltips: {
-                        //                 mode: 'index',
-                        //                 intersect: false,
-                        //                 displayColors: false,
-                        //             },
-                        //             responsive: true,
-                        //             title: {
-                        //                 display: true,
-                        //                 text: "Total Leads chat"
-                        //             },
-                        //             scales: {
-                        //                 x: {
-                        //                     stacked: true,
-                        //                     format: "HH mm",
-                        //                 },
-                        //                 y: {
-                        //                     stacked: true,
-                        //                     scaleLabel: {
-                        //                         display: true,
-                        //                         labelString: "value"
-                        //                     }
-                        //                 }
-                        //             },
-                        //             pan: {
-                        //                 enabled: true,
-                        //                 mode: "x",
-                        //                 speed: 10,
-                        //                 threshold: 10
-                        //             },
-                        //             zoom: {
-                        //                 enabled: true,
-                        //                 drag: false,
-                        //                 mode: "xy",
-                        //                 limits: {
-                        //                     max: 10,
-                        //                     min: 0.5
-                        //                 }
-                        //             }
-                        //         }
-                        //     };
-
-                        //     // Get the canvas context
-                        //     var ctx = document.getElementById("canvas_").getContext("2d");
-
-                        //     // Destroy the existing chart (if it exists)
-                        //     if (window.myLine) {
-                        //         window.myLine.destroy();
-                        //     }
-
-                        //     // Create a new chart with the updated configuration
-                        //     window.myLine = new Chart(ctx, config);
-
-                        // }
-                    }
-                }
-            }); // you have missed this bracket
-            return false;
-        });
-
-
-        function getColumnLetter(index) {
-            let columnLetter = '';
-            while (index >= 0) {
-                columnLetter = String.fromCharCode((index % 26) + 65) + columnLetter;
-                index = Math.floor(index / 26) - 1;
-            }
-            return columnLetter;
-        }
-
-        function generateColumnSeries(rowNumber, count) {
-            let series = [];
-            for (let i = 0; i < count; i++) {
-                let columnLetter = getColumnLetter(i);
-                series.push(columnLetter);
-            }
-            return series;
-        }
-
-        var _getColumnLetter = generateColumnSeries(1, 100);
-
-        async function generatePDF() {
-            // Choose the element that your content will be rendered to.
-            // const element = document.getElementById('pdf_generate');
-            // // Choose the element and save the PDF for your user.
-            // html2pdf().from(element).save();
-            const element = document.getElementById('pdf_generate');
-            const options = {
-                filename: 'Report.pdf',
-                margin: [10, 0, 10, 0],
-                image: {
-                    type: 'jpeg',
-                    quality: 1
-                },
-                html2canvas: {
-                    dpi: 192,
-                    scale: 2,
-                    letterRendering: true,
-                    useCORS: true,
-                },
-                pagebreak: {
-                    mode: 'avoid-all',
-                    after: '.break-page'
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a3',
-                    orientation: 'landscape'
-                }
-            };
-            await html2pdf().set(options).from(element).save();
-            // await html2pdf().from(element).set(options).toPdf().output('datauristring').then(function(res) {
-            //     console.log(res);
-            // });
-            // this.blobString = res;
-            // await html2pdf().set(options).from(element).save();
-            // console.log("sjkcbns");
-            // var objWindow = window.open(location.href, "_self");
-            // objWindow.close();
-        }
-
-        // Create a new workbook and worksheet
-        // / create a new workbook and worksheet
-
-        const numberFormat = '#,##0.00'; // Number format pattern
 
 
         function RunExcelJSExport() {
@@ -2471,7 +1609,7 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
             $(id).toggle();
             $("#leads-overview-" + staffid).html('');
             if ($(id).is(":visible")) { // Corrected the if statement
-                $('#apply_filter').trigger("click");
+                ajax_filter();
             }
         }
 
@@ -2499,4 +1637,1271 @@ $date_type = array(array("name" => "Daily"), array("name" => "Week"), array("nam
                 });
             }
         });
+
+
+        var assigned_summary;
+        var totalLeads = 0;
+        var sum;
+        var staff_total_lead = 0;
+        var total_staff_report_array = [];
+
+        // var conversion_type_set;
+
+        var source_type = <?= (!empty($source_type)) ? json_encode($source_type) : [] ?>;
+        var conversion_type = <?= (!empty($conversion_type)) ? json_encode($conversion_type) : [] ?>;
+        var conversion_type_ = <?= (!empty($conversion_type_)) ? json_encode($conversion_type_) : [] ?>;
+        var status_list = <?= (!empty($status_list)) ? json_encode($status_list, true) : [] ?>;
+        var status_list_ = <?= (!empty($status_list_)) ? json_encode($status_list_, true) : [] ?>;
+        var staff = <?= (!empty($staff_list)) ? json_encode($staff_list) : [] ?>;
+        var staff_list = <?= (!empty($staff_list)) ? json_encode($staff_list) : [] ?>;
+        var status_list_ = <?= (!empty($status_list_)) ? json_encode($status_list_) : [] ?>;
+        var performance_array = <?= (!empty($marketing_type)) ? json_encode($marketing_type) : [] ?>;
+
+        if (status_list.length > 0) {
+            status_list.push({
+                name: 'Total Lead Status',
+                color: "#28b8da"
+            });
+        }
+        if (status_list.length > 0) {
+            source_type.push({
+                name: 'Total Lead Source',
+                color: "#28b8da"
+            });
+        }
+
+        function graph_represent_() {
+            setTimeout(() => {
+                if ($(".leads-overview-calls-daily").is(":visible")) {
+                    ajax_filter(2);
+                }
+            }, 1000);
+
+        }
+
+        function set_call_filter(updateCount_filter, updateCount_filter_min = []) {
+            if (Object.keys(updateCount_filter).length) {
+                updateCount_filter = Object.values(updateCount_filter);
+                updateCount_filter_min = Object.values(updateCount_filter_min);
+                // $("#show_hide_staff_list").removeClass("hide");
+                // $("#total_staff_list").html(data.total_staff_html);
+                // $(".hide-graph-calls").removeClass("hide");
+                console.log(updateCount_filter);
+                console.log(updateCount_filter_min);
+                let label_names = [];
+                let min = [];
+                let max = [];
+                for (let i = 0; i < updateCount_filter.length; i++) {
+                    let assigned = updateCount_filter[i].assigned;
+
+                    if (staff[assigned] !== undefined) {
+                        label_names.push(staff[assigned]);
+
+                        let minValue = updateCount_filter_min[i] && updateCount_filter_min[i].total ? updateCount_filter_min[i].total : 0;
+                        min.push(minValue);
+
+                        let maxValue = updateCount_filter[i].total ? updateCount_filter[i].total : 0;
+                        max.push(maxValue);
+                    }
+                }
+
+
+                console.log(label_names);
+                console.log(min);
+                console.log(max);
+
+                var configCalls = {
+                    type: "bar",
+                    data: {
+                        labels: label_names, // Date Objects
+                        datasets: [{
+                                label: "Filtered",
+                                backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                borderColor: "rgba(140, 140, 140, 1.0)",
+                                borderWidth: 0,
+                                data: min,
+                                fill: false,
+                                radius: 0,
+                            },
+                            {
+                                label: "Max",
+                                backgroundColor: "rgba(121, 200, 121, 0.8)",
+                                borderColor: "rgba(140, 140, 140, 0.0)",
+                                borderWidth: 0,
+                                data: max,
+                                fill: "-1",
+                                line: false,
+                                radius: 0,
+                            },
+                            // {
+                            //     label: "Total leads",
+                            //     backgroundColor: "rgba(0, o, 238, 0.8)",
+                            //     borderColor: "rgba(140, 140, 140, 1.0)",
+                            //     borderWidth: 0,
+                            //     data: data.total_leads,
+                            //     fill: false,
+                            //     radius: 0,
+                            // }
+                        ]
+                    },
+                    options: {
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false,
+                            displayColors: false,
+                        },
+                        responsive: true,
+                        title: {
+                            display: true,
+                            text: "Not Reachable Leads chat - Filtered/Max "
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                format: "HH mm",
+                            },
+                            y: {
+                                stacked: true,
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "value"
+                                }
+                            }
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: "x",
+                            speed: 10,
+                            threshold: 10
+                        },
+                        zoom: {
+                            enabled: true,
+                            drag: false,
+                            mode: "xy",
+                            limits: {
+                                max: 10,
+                                min: 0.5
+                            }
+                        }
+                    }
+                };
+
+                // Get the canvas context
+                var ctxCalls = document.getElementById("canvas").getContext("2d");
+
+                createOrUpdateChart("myCallsChart", ctxCalls, configCalls);
+
+            }
+        }
+
+        $('#apply_filter').on('click', function() {
+            ajax_filter()
+        });
+
+        function set_graph_(data) {
+            if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                console.log(data.summary_daily_);
+                $(".hide-graph-daily").removeClass("hide");
+
+                if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                    $(".hide-graph-daily").removeClass("hide");
+                    var labels = []
+                    if (date_type.toLowerCase() == "week") {
+                        labels = data.summary_daily_.map(item => getWeekRange(item.dateadded));
+                    } else {
+                        labels = data.summary_daily_.map(item => item.dateadded);
+                    }
+                    var lable_value = data.summary_daily_.map(item => item.count);
+
+                    var configDaily = {
+                        type: "bar",
+                        data: {
+                            labels: labels, // Date Objects
+                            datasets: [{
+                                label: "Leads",
+                                backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                borderColor: "rgba(140, 140, 140, 1.0)",
+                                borderWidth: 0,
+                                data: lable_value,
+                                fill: false,
+                                radius: 0,
+                            }]
+                        },
+                        options: {
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                                displayColors: false,
+                            },
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: "Date Wise Leads chat - Leads"
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    format: "HH mm",
+                                },
+                                y: {
+                                    stacked: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "value"
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: "x",
+                                speed: 10,
+                                threshold: 10
+                            },
+                            zoom: {
+                                enabled: true,
+                                drag: false,
+                                mode: "xy",
+                                limits: {
+                                    max: 10,
+                                    min: 0.5
+                                }
+                            }
+                        }
+                    };
+
+                    // Get the canvas context
+                    var ctxDaily = document.getElementById("canvas_daily").getContext("2d");
+
+                    // Create a new chart with the updated configuration
+                    createOrUpdateChart("canvas_daily", ctxDaily, configDaily);
+
+                }
+
+                if (data.update_count_daily_data != undefined) {
+                    let html_update = "<div class='row scroll-div col-12'>";
+                    for (i = 1; i < (data.update_count_daily_data).length; i++) {
+                        html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+                    }
+                    html_update += "</div>";
+                    $(".leads-overview-" + update_daily_staff_id).html(html_update);
+                    $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
+                    update_daily_staff_id = 0;
+                }
+                if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
+                    $(".hide-graph-daily").removeClass("hide");
+
+                    // Function to get all unique conversion types
+                    function getAllConversionTypes(data) {
+                        const types = new Set();
+                        data.forEach(item => {
+                            const parsedCounts = parseConversionCounts(item.conversion_counts);
+                            Object.keys(parsedCounts).forEach(type => types.add(type));
+                        });
+                        return Array.from(types);
+                    }
+
+                    // Function to get all unique dates
+                    function getAllDates(data) {
+                        if (date_type.toLowerCase() == "week") {
+                            return data.map(item => getWeekRange(item.dateadded));
+                        } else {
+                            return data.map(item => item.dateadded);
+                        }
+                    }
+
+                    // Get all unique conversion types and dates
+                    const conversionTypes = getAllConversionTypes(data.summary_daily_conversion);
+                    const allDates = getAllDates(data.summary_daily_conversion);
+
+                    // Initialize conversion data structure
+                    const conversionData = {};
+                    conversionTypes.forEach(type => {
+                        conversionData[type] = allDates.map(date => ({
+                            date,
+                            count: 0
+                        }));
+                    });
+
+                    // Fill in actual data
+                    data.summary_daily_conversion.forEach(item => {
+                        const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
+                        const parsedCounts = parseConversionCounts(item.conversion_counts);
+                        Object.keys(parsedCounts).forEach(type => {
+                            const index = allDates.indexOf(date);
+                            if (index !== -1) {
+                                conversionData[type][index].count = parsedCounts[type];
+                            }
+                        });
+                    });
+                    // Prepare datasets
+                    const datasets = Object.keys(conversionData).map(type => ({
+                        label: type,
+                        backgroundColor: conversion_type_color[type], // Function to generate random color
+                        borderColor: conversion_type_color[type],
+                        borderWidth: 1,
+                        data: conversionData[type].map(item => item.count),
+                        fill: false
+                    }));
+
+                    // Create the chart
+                    const configDaily = {
+                        type: "bar",
+                        data: {
+                            labels: allDates,
+                            datasets: datasets
+                        },
+                        options: {
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                                displayColors: false,
+                            },
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: "Date Wise Conversion Leads chat - Leads"
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                },
+                                y: {
+                                    stacked: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "value"
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: "x",
+                                speed: 10,
+                                threshold: 10
+                            },
+                            zoom: {
+                                enabled: true,
+                                drag: false,
+                                mode: "xy",
+                                limits: {
+                                    max: 10,
+                                    min: 0.5
+                                }
+                            }
+                        }
+                    };
+
+                    // Get the canvas context
+                    var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
+                    createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
+                }
+                if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
+                    $(".hide-graph-daily").removeClass("hide");
+
+                    // Function to get all unique marketing types
+                    function getAllMarketingTypes(data) {
+                        const types = new Set();
+                        data.forEach(item => {
+                            const parsedCounts = parseConversionCounts(item.marketing_count);
+                            Object.keys(parsedCounts).forEach(type => types.add(type));
+                        });
+                        return Array.from(types);
+                    }
+
+                    // Function to get all unique dates
+                    function getAllDates(data) {
+                        if (date_type.toLowerCase() == "week") {
+                            return data.map(item => getWeekRange(item.dateadded));
+                        } else {
+                            return data.map(item => item.dateadded);
+                        }
+                    }
+
+                    // Get all unique marketing types and dates
+                    const marketingTypes = getAllMarketingTypes(data.summary_daily_marketing);
+                    const allDates = getAllDates(data.summary_daily_marketing);
+
+                    // Initialize marketing data structure
+                    const marketingData = {};
+                    marketingTypes.forEach(type => {
+                        marketingData[type] = allDates.map(date => ({
+                            date,
+                            count: 0
+                        }));
+                    });
+
+                    // Fill in actual data
+                    data.summary_daily_marketing.forEach(item => {
+                        const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
+                        const parsedCounts = parseConversionCounts(item.marketing_count);
+                        Object.keys(parsedCounts).forEach(type => {
+                            const index = allDates.indexOf(date);
+                            if (index !== -1) {
+                                marketingData[type][index].count = parsedCounts[type];
+                            }
+                        });
+                    });
+
+                    // Prepare datasets
+                    const datasets = Object.keys(marketingData).map(type => ({
+                        label: type,
+                        backgroundColor: marketing_type_color[type], // Function to generate random color
+                        borderColor: marketing_type_color[type],
+                        borderWidth: 1,
+                        data: marketingData[type].map(item => item.count),
+                        fill: false
+                    }));
+
+                    // Create the chart
+                    const configDaily = {
+                        type: "bar",
+                        data: {
+                            labels: allDates,
+                            datasets: datasets
+                        },
+                        options: {
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                                displayColors: false,
+                            },
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: "Date Wise Marketing Leads chat - Leads"
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                },
+                                y: {
+                                    stacked: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "value"
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: "x",
+                                speed: 10,
+                                threshold: 10
+                            },
+                            zoom: {
+                                enabled: true,
+                                drag: false,
+                                mode: "xy",
+                                limits: {
+                                    max: 10,
+                                    min: 0.5
+                                }
+                            }
+                        }
+                    };
+
+                    // Get the canvas context
+                    var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
+                    createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
+                }
+            }
+        }
+
+        function ajax_filter(status_filter = 0) {
+
+            var element_view_assign = document.getElementById("view_assigned");
+            var element_view_source = document.getElementById("view_source");
+            var element_view_status = document.getElementById("view_status");
+            var element_view_fb_name = document.getElementById("view_facebook_names");
+            var element_view_google_type = document.getElementById("view_source_marketing");
+            var location = document.getElementById("location");
+            date_type = document.getElementById("date_type").value;
+            <?php if (is_admin()) { ?>
+                var department = document.getElementById("department");
+            <?php } else if ($role == 3 && $staff_department != "") { ?>
+                var department = [];
+                department.push("<?= $staff_department ?>");
+            <?php } ?>
+
+            var up_from_date = document.getElementById("up_from_date").value;
+            var up_to_date = document.getElementById("up_to_date").value;
+            var assign_from_date = document.getElementById("assign_from_date").value;
+            var assign_to_date = document.getElementById("assign_to_date").value;
+            var lead_type = $("#lead_type").val();
+            var view_assigned_options = "";
+            var view_source_options = "";
+            var view_status_options = "";
+            var view_fb_options = "";
+            var view_google_options = "";
+            var view_location = "";
+            var view_department = "";
+            var update_count_min = '';
+            var update_count_max = '';
+            var update_staff_id = "";
+            if (slider_data) {
+                update_count_min = document.getElementById("update_count_min").value;
+                update_count_max = document.getElementById("update_count_max").value;
+            }
+            if (update_daily_staff_id != 0) {
+                update_staff_id = update_daily_staff_id;
+            }
+
+            if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
+                view_source_options = document.getElementById('view_source').selectedOptions;
+                view_source_options = Array.from(view_source_options).map(({
+                    value
+                }) => value);
+            }
+            if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
+                view_status_options = document.getElementById('view_status').selectedOptions;
+                view_status_options = Array.from(view_status_options).map(({
+                    value
+                }) => value);
+            }
+
+            if (typeof(element_view_fb_name) != 'undefined' && element_view_fb_name != null) {
+                view_fb_options = document.getElementById('view_facebook_names').selectedOptions;
+                view_fb_options = Array.from(view_fb_options).map(({
+                    value
+                }) => value);
+            }
+
+            if (typeof(element_view_google_type) != 'undefined' && element_view_google_type != null) {
+                view_google_options = document.getElementById('view_source_marketing').selectedOptions;
+                view_google_options = Array.from(view_google_options).map(({
+                    value
+                }) => value);
+            }
+            if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
+                view_assigned_options = document.getElementById('view_assigned').selectedOptions;
+                view_assigned_options = Array.from(view_assigned_options).map(({
+                    value
+                }) => value);
+            }
+
+
+            if (typeof(location) != 'undefined' && location != null) {
+                view_location = document.getElementById('location').selectedOptions;
+                view_location = Array.from(view_location).map(({
+                    value
+                }) => value);
+            }
+
+            <?php if (is_admin()) { ?>
+                if (typeof(department) != 'undefined' && department != null) {
+                    view_department = document.getElementById('department').selectedOptions;
+                    view_department = Array.from(view_department).map(({
+                        value
+                    }) => value);
+                }
+            <?php } else if ($role == 3 && $staff_department != "") { ?>
+                view_department = ["<?= $staff_department ?>"];
+            <?php } ?>
+
+
+
+            var from_date = document.getElementById("from_date").value;
+            var to_date = document.getElementById("to_date").value;
+
+            if (to_date != '') {
+                if (from_date == '') {
+                    $("#from_date").focus();
+                    return false;
+                }
+            }
+
+            if (from_date != '') {
+                if (to_date == '') {
+                    $("#to_date").focus();
+                    return false;
+                }
+            }
+            let graph_status = 0;
+            if (status_filter == 2) {
+                graph_status = 1;
+            }
+
+
+
+            if (xhr != null) {
+                xhr.abort();
+            }
+            $("#generate_pdf").hide();
+            $(".hide-btn-response").hide();
+            $(".report-data .hide-graph").addClass("hide");
+            $(".hide-graph-daily").addClass("hide");
+            $("#show_hide_staff_list").addClass("hide");
+            $('#apply_filter').attr("disabled", true);
+            show_loader("apply_filter");
+            xhr = $.ajax({
+                type: "POST",
+                url: admin_url + "reports/lead_summary_filter",
+                data: {
+                    assigned: view_assigned_options,
+                    source: view_source_options,
+                    status: view_status_options,
+                    from_date: from_date,
+                    to_date: to_date,
+                    up_from_date: up_from_date,
+                    up_to_date: up_to_date,
+                    lead_type: lead_type,
+                    update_count_min: update_count_min,
+                    update_count_max: update_count_max,
+                    location: view_location,
+                    department: view_department,
+                    daily_update_count: update_staff_id,
+                    google_source: view_google_options,
+                    fb_source: view_fb_options,
+                    date_type: date_type,
+                    assign_from_date: assign_from_date,
+                    assign_to_date: assign_to_date,
+                    graph_status: graph_status
+
+                },
+                dataType: "JSON",
+                cache: false,
+                success: function(data) {
+
+                    $(".hide-graph-daily").removeClass("hide");
+                    $('#apply_filter').attr("disabled", false);
+                    setMinMaxValues();
+                    $('#apply_filter_update_count').attr("disabled", false);
+                    hide_loader("apply_filter");
+                    hide_loader("apply_filter_update_count");
+                    $(".hide-graph-calls").removeClass("hide");
+
+                    //alert(data);  //as a debugging message.
+
+                    if (status_filter == 2) {
+                        set_graph_(data);
+                        return;
+                    }
+
+                    if (status_filter == 0) {
+                        $(".leads-overview-calls").attr("style", "display:none");
+                        $(".leads-overview-calls-daily").attr("style", "display:none");
+                    }
+
+                    if (data.update_count_daily_data != undefined) {
+                        let html_update = "<div class='row scroll-div col-12'>";
+                        for (i = 1; i < (data.update_count_daily_data).length; i++) {
+                            html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+                        }
+                        html_update += "</div>";
+                        $(".leads-overview-" + update_daily_staff_id).html(html_update);
+                        $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
+                        update_daily_staff_id = 0;
+                    }
+
+                    update_daily_staff_id = 0;
+
+                    if (data.update_count_filter != undefined && Object.keys(data.update_count_filter).length > 0) {
+                        update_count_filter_min = data.update_count_filter_min ? data.update_count_filter_min : [];
+                        set_call_filter(data.update_count_filter, update_count_filter_min);
+                        return;
+                    }
+
+
+                    if (data.report_list == 1) {
+                        $(".leadSum").html("");
+                        var index = 1;
+                        let {
+                            source_summary = {}, assigned = [], summary = [], status_summary_performance = []
+                        } = data;
+                        let conversion_type_ = data.conversion_type_;
+
+
+
+
+                        function capitalizeFirstLetter(string) {
+                            return string.charAt(0).toUpperCase() + string.slice(1);
+                        }
+
+                        function calculateTotalLeads(assigned_summary) {
+                            return Object.values(assigned_summary).reduce((sum, count) => sum + count, 0);
+                        }
+
+                        function generateLeadTypeHTML(assigned, conversion_type_set) {
+                            // console.log("set-status", staff[assigned]);
+                            return new Promise((resolve) => {
+
+                                let ret = `<div class="col-12 panel-body"><h4><b>Leads Types</b></h4><hr>`;
+
+                                staff_total_lead = 0
+                                // if (summary && summary[assigned] && summary[assigned].status_counts) {
+                                assigned_summary = [];
+                                if (summary && summary[assigned] && summary[assigned].status_counts) {
+                                    assigned_summary = JSON.parse(summary[assigned].status_counts);
+                                    staff_total_lead = totalLeads = Object.values(assigned_summary).reduce((sum, count) => sum + count, 0);
+                                    assigned_summary["Total Lead Status"] = totalLeads;
+
+                                    total_staff_report_array["status"]["Total Lead Status"] = total_staff_report_array["status"]["Total Lead Status"] ? total_staff_report_array["status"]["Total Lead Status"] + totalLeads : totalLeads;
+
+                                }
+
+
+                                totalLeads = 0;
+                                // console.log(staff_total_lead);
+                                status_list.forEach(status => {
+                                    let status_count = assigned_summary[status.name] || 0;
+                                    // Ensure the 'status' property is initialized
+                                    if (!total_staff_report_array["status"]) {
+                                        total_staff_report_array["status"] = {};
+                                    }
+                                    // Initialize the specific status if it's not already defined
+                                    if (!total_staff_report_array["status"][status.name]) {
+                                        total_staff_report_array["status"][status.name] = 0;
+                                    }
+                                    // Add the status_count to the existing value
+
+                                    if (status.conversion_type > 0) {
+                                        totalLeads += status_count;
+
+                                        if (conversion_type_set) {
+                                            conversion_type_set[status.conversion_type] = conversion_type_set[status.conversion_type] ?
+                                                conversion_type_set[status.conversion_type] + status_count :
+                                                status_count;
+                                        }
+                                        total_staff_report_array["total"] = total_staff_report_array["total"] ? total_staff_report_array["total"] + status_count : status_count;
+                                    }
+
+                                    if (status.name != "Total Lead Status") {
+                                        total_staff_report_array["status"][status.name] += status_count;
+                                    }
+
+
+                                    ret += `<div class="col-md-3 col-xs-6 border-right">
+                                        <h3 class="bold">${status.percent ? `<span data-toggle="tooltip" data-title="${status_count}">${status.percent}%</span>` : status_count}</h3>
+                                        <span style="color:${status.color}">${status.name}</span>
+                                    </div>`;
+                                });
+                                // } else {
+                                //     ret += `<div class="col-md-12">No data available</div>`;
+                                // }
+                                ret += `</div>`;
+                                resolve(ret);
+                            });
+                        }
+
+                        function generateSourceTypeHTML(assigned) {
+                            // console.log("set-source", staff[assigned]);
+
+                            source_type["Total Lead Source"] = 0;
+                            return new Promise((resolve) => {
+                                let ret = `<div class="col-12 panel-body"><h4><b>Sources Types</b></h4><hr>`;
+
+
+                                source_type.forEach(source => {
+                                    let source_key = assigned + "-" + source.id;
+                                    let status_count = (source_summary[source_key] && source_summary[source_key].total) || 0;
+                                    source_type["Total Lead Source"] += parseInt(status_count);
+                                    if (source.name == "Total Lead Source") {
+                                        status_count = source_type["Total Lead Source"];
+                                        total_staff_report_array["source"]["Total Lead Source"] = total_staff_report_array["source"]["Total Lead Source"] ? total_staff_report_array["source"]["Total Lead Source"] + status_count : status_count;
+
+                                    }
+
+                                    // Ensure the 'status' property is initialized
+                                    if (!total_staff_report_array["source"]) {
+                                        total_staff_report_array["source"] = {};
+                                    }
+                                    // Initialize the specific status if it's not already defined
+                                    if (!total_staff_report_array["source"][source.name]) {
+                                        total_staff_report_array["source"][source.name] = 0;
+                                    }
+                                    // Add the status_count to the existing value
+                                    if (source.name != "Total Lead Source") {
+                                        total_staff_report_array["source"][source.name] += parseInt(status_count);
+                                    }
+
+
+
+                                    ret += `<div class="col-md-3 col-xs-6 border-right">
+                    <h3 class="bold">${source_summary[source_key] && source_summary[source_key].percent ? `<span data-toggle="tooltip" data-title="${status_count}">${source_summary[source_key].percent}%</span>` : status_count}</h3>
+                    <span style="color:${source.color_name}">${source.name}</span>
+                </div>`;
+
+                                });
+
+                                ret += `</div>`;
+                                resolve(ret);
+                            });
+                        }
+
+
+                        function generateConversionTypeHTML(totalLeads, conversion_type_set) {
+                            // console.log("set-conversion", staff[assigned]);
+
+                            return new Promise((resolve) => {
+                                let ret = '<div class="col-12 panel-body" class="con_tab"><h4><b>Conversion Type</b></h4><hr>';
+                                conversion_type.forEach(conversion => {
+                                    if (conversion.parent_id && conversion.parent_id !== "") {
+                                        return;
+                                    }
+                                    let percentage = conversion_type_set[conversion.id] || 0;
+                                    ret += '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                                    ret += percentage.toFixed(2);
+
+                                    total_staff_report_array["conversion"][conversion.name] = total_staff_report_array["conversion"][conversion.name] ? total_staff_report_array["conversion"][conversion.name] + percentage : percentage;
+
+                                    if (percentage > 0) {
+                                        if (totalLeads !== 0) {
+                                            percentage = (percentage / totalLeads) * 100;
+                                            ret += `<span class='show-persentage'>${percentage.toFixed(2)}% </span>`;
+                                        } else {
+                                            ret += "<span class='show-persentage'>0.00% </span>";
+                                        }
+                                    } else {
+                                        ret += "<span class='show-persentage'>0.00% </span>";
+                                    }
+                                    ret += `</h3><span style="color:${conversion.color || ''}">${conversion.name || ''}</span></div>`;
+                                });
+                                ret += '</div>';
+                                resolve(ret);
+                            });
+                        }
+
+                        function generatePerformanceTypeHTML(assigned) {
+                            // console.log("set-performance", staff[assigned]);
+
+                            return new Promise((resolve) => {
+                                let html = '';
+                                let sum = {};
+                                // let status_summary_performance = status_summary_performance[assigned];
+
+                                // Assuming conversion_type is an array of objects similar to the PHP $conversion_type array
+                                // const values_sum = Object.values(conversion_type_set).filter(element => element.total_status === 1).map(element => {
+                                //     const total = parseFloat(element.total); // Ensure 'total' is a number
+                                //     return isNaN(total) ? 0 : total; // Handle cases where 'total' is not a number
+                                // });
+                                // console.log("value", conversion_type_set);
+                                // console.log("value", values_sum);
+                                // const total_sum = values_sum.reduce((sum, value) => sum + value, 0);
+                                // console.log("total_sum", total_sum);
+
+                                if (status_summary_performance[assigned]) {
+                                    Object.values(status_summary_performance[assigned]).forEach(summary_performance => {
+                                        let conversion_id = summary_performance.conversion_id;
+                                        let marketing_id = summary_performance.marketing_id;
+
+                                        let key = marketing_id + "_" + conversion_id;
+
+                                        if (conversion_id > 0) {
+                                            if (sum[key] === undefined) {
+                                                sum[key] = 0;
+                                            }
+                                            sum[key] += parseInt(summary_performance.total);
+                                        }
+                                    });
+                                }
+
+
+                                Object.values(performance_array).forEach((per, key) => {
+                                    html += '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
+                                    html += `<span style="color:${per.color}">${per.name}</span></h3></div>`;
+
+                                    let per_percentage = 0;
+
+                                    Object.values(conversion_type).forEach((conversion, kkey) => {
+                                        if (conversion.parent_id) {
+                                            return;
+                                        }
+                                        let percentage = 0;
+
+                                        html += '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
+
+
+                                        html += sum[`${per.id}_${conversion.id}`] || 0;
+
+                                        percentage = 0;
+                                        if (conversion.parent_ids) {
+                                            const ids = conversion.parent_ids.split(",");
+                                            ids.forEach(c_id => {
+                                                percentage += sum[`${per.id}_${c_id}`] || 0;
+                                            });
+                                        }
+                                        // html += percentage || 0;
+                                        if (!total_staff_report_array["performance"][per.name]) {
+                                            total_staff_report_array["performance"][per.name] = {};
+                                        }
+                                        total_staff_report_array["performance"][per.name][conversion.name] = total_staff_report_array["performance"][per.name][conversion.name] ? total_staff_report_array["performance"][per.name][conversion.name] + percentage : percentage;
+                                        if (percentage > 0) {
+                                            if (totalLeads !== 0) {
+                                                per_percentage += percentage;
+                                                percentage = (percentage / totalLeads) * 100;
+                                                html += `<span class='show-persentage'>${percentage.toFixed(2)}% </span>`;
+                                            } else {
+                                                html += "<span class='show-persentage'>0.00% </span>";
+                                            }
+                                        } else {
+                                            html += "<span class='show-persentage'>0.00% </span>";
+                                        }
+
+
+                                        html += '</h3>';
+                                        html += `<span style="color:${conversion.color}">${conversion.name}</span></div>`;
+                                    });
+
+                                    html += `<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">${per_percentage}`;
+                                    if (per_percentage > 0) {
+                                        html += `<span class="show-persentage">${((per_percentage / totalLeads) * 100).toFixed(2)}% </span>`;
+                                    } else {
+                                        html += "<span class='show-persentage'>0.00% </span>";
+                                    }
+                                    html += '</h3><span>Total</span></div>';
+
+                                    html += '<br><hr class="hr-3" style="width: 100%; margin-top: 20px!important; display: inline-block;">';
+                                });
+
+                                resolve(html);
+                            });
+                        }
+
+                        async function processAssignedData(data, assigned, index, status_list, source_summary, source_type) {
+                            $("#show_hide_staff_list").removeClass("hide");
+                            total_staff_report_array = [];
+                            total_staff_report_array["status"] = {};
+                            total_staff_report_array["source"] = {};
+                            total_staff_report_array["conversion"] = {};
+                            total_staff_report_array["performance"] = {};
+                            for (let i = 0; i < assigned.length; i++) {
+                                const assignedId = assigned[i];
+                                // console.log(staff[assignedId]);
+                                let ret = '';
+                                let staff_name = staff[assignedId] || 'Unknown';
+                                let assigned_summary = [];
+                                totalLeads = 0;
+                                let conversion_type_set = []
+
+                                // console.log(conversion_type_set);
+                                if (!isEmpty(index) && index % 2 === 0) {
+                                    ret += '<div class="break-page" style="page-break-before: always;"></div>';
+                                }
+
+                                ret += `<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">
+            <h4><b>${capitalizeFirstLetter(staff_name)}</b> 
+            <a href="#" class="btn  filter-hide btn-default btn-with-tooltip daily-update-count" 
+               data-staffid="${assignedId}" 
+               data-toggle="tooltip" 
+               data-title="Update Count" 
+               data-placement="bottom" 
+               onclick="daily_update_count('.leads-overview-${assignedId}', ${assignedId}); return false;">
+               <i class="fa fa-bar-chart"></i>
+            </a>
+            </h4>
+            <div class="row leads-overview-${assignedId}" style="display:none;">
+            </div>
+            <hr>
+            <div class="col-md-6">
+                ${await generateLeadTypeHTML(assignedId,conversion_type_set)}
+            </div>
+            <div class="col-md-6">
+                ${await generateSourceTypeHTML(assignedId)}
+            </div>
+            <div class="col-md-12 parrent-div " style="margin-top:10px;">
+                <div class="col-12 text-right" style="margin:5px;">
+                    <button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
+                        <div class="handle"></div>
+                    </button>
+                </div>
+                ${await generateConversionTypeHTML(totalLeads,conversion_type_set)}
+                <div class="col-12 panel-body" class="con_tab" style="display:none;">
+                    <h4><b>Marketing Type</b></h4><hr>
+                    ${await generatePerformanceTypeHTML(assignedId)}
+                </div>
+            </div>
+        </div>`;
+
+                                $(".report_list").append(ret);
+
+                                $("#total_staff_list").append(`
+                                <div class="col-md-3 col-xs-6 border-right">
+                                <h3 class="bold">${staff_total_lead}</h3>
+                                <span>${capitalizeFirstLetter(staff_name)}</span>
+                                </div>
+                                `);
+
+
+
+                            }
+
+
+                            set_total_report();
+                        }
+
+
+
+
+                        function _l(key) {
+                            return key;
+                        }
+
+                        function isEmpty(value) {
+                            return value === undefined || value === null || value === '';
+                        }
+
+                        processAssignedData(data, assigned, index, status_list, source_summary, source_type);
+                        return;
+                    } else if (data.report_list == 0) {
+                        let all_status = data.summary;
+                        console.lo
+                        total_staff_report_array = [];
+                        total_staff_report_array["status"] = {};
+                        total_staff_report_array["source"] = {};
+                        total_staff_report_array["conversion"] = {};
+                        total_staff_report_array["performance"] = {};
+                        total_staff_report_array["total"] = 0;
+
+                        // Iterate over the summary to parse status counts
+                        all_status.forEach(statusItem => {
+                            // console.log(statusItem);
+                            // Parse status_counts if it exists, otherwise set to an empty object
+                            let statusCounts = statusItem.status_counts ? JSON.parse(statusItem.status_counts) : {};
+                            Object.keys(statusCounts).forEach(status => {
+
+                                // Add each key-value pair to the total_staff_report_array["status"]
+                                if (!total_staff_report_array["status"][status]) {
+                                    total_staff_report_array["status"][status] = 0;
+                                }
+                                total_staff_report_array["status"][status] += statusCounts[status];
+                                total_staff_report_array["status"]["Total Lead Status"] = total_staff_report_array["status"]["Total Lead Status"] ? total_staff_report_array["status"]["Total Lead Status"] + parseInt(statusCounts[status]) : parseInt(statusCounts[status]);
+
+                                if (status_name_color[status].conversion_type > 0) {
+                                    total_staff_report_array["total"] = total_staff_report_array["total"] ? total_staff_report_array["total"] + parseInt(statusCounts[status]) : parseInt(statusCounts[status]);
+                                }
+                            });
+                        });
+
+
+                        // Iterate over the source summary to add source totals
+                        data.source_summary.forEach(source_summary => {
+                            total_staff_report_array["source"][source_summary.source_name] = source_summary.total ? source_summary.total : 0;
+                            let total = source_summary.total ? source_summary.total : 0;
+                            total_staff_report_array["source"]["Total Lead Source"] = total_staff_report_array["source"]["Total Lead Source"] ? total_staff_report_array["source"]["Total Lead Source"] + parseInt(total) : parseInt(total);
+                        });
+
+                        // Iterate over the status_summary_conversion to add conversion data
+                        Object.keys(data.status_summary_conversion).forEach(summary_conversion => {
+                            data.status_summary_conversion[summary_conversion].forEach(conversion_ => {
+                                let conversionName = conversion_.conversion_name;
+                                if (conversionName !== "") {
+                                    if (!total_staff_report_array["conversion"][conversionName]) {
+                                        total_staff_report_array["conversion"][conversionName] = 0;
+                                    }
+                                    total_staff_report_array["conversion"][conversionName] += parseInt(conversion_.total) || 0;
+
+                                }
+                            });
+                        });
+
+                        // Iterate over the performance array to add performance data
+                        performance_array.forEach(per => {
+                            Object.keys(data.status_summary_performance).forEach(summary_performance => {
+                                data.status_summary_performance[summary_performance].forEach(performance_ => {
+                                    let conversionName = performance_.conversion_name;
+                                    if (conversionName !== "" && performance_.marketing_name == per.name) {
+                                        if (!total_staff_report_array["performance"][per.name]) {
+                                            total_staff_report_array["performance"][per.name] = {};
+                                        }
+                                        if (!total_staff_report_array["performance"][per.name][conversionName]) {
+                                            total_staff_report_array["performance"][per.name][conversionName] = 0;
+                                        }
+                                        total_staff_report_array["performance"][per.name][conversionName] += parseInt(performance_.total) || 0;
+                                    }
+                                });
+                            });
+                        });
+
+
+                        set_total_report();
+                        return;
+                    }
+
+
+
+                    function set_total_report() {
+                        // Ensure total_staff_report and status_list are defined
+                        if (!total_staff_report_array || !status_list) {
+                            console.error("Missing required data: total_staff_report_array or status_list.");
+                            return;
+                        }
+
+                        $(".total_staff_report").removeClass("hide");
+
+                        let html = `<h4 class="bold">Total</h4>
+                                        <hr>
+                            <div class="col-md-6">
+                    <div class="col-12 panel-body">
+                        <h4><b>Leads Types</b></h4>
+                        <hr>`;
+
+                        status_list.forEach(status => {
+                            // Ensure the status name exists in the total_staff_report_array
+                            let statusCount = total_staff_report_array["status"][status.name] || 0;
+
+                            html += `<div class="col-md-3 col-xs-6 border-right">
+                            <h3 class="bold">${statusCount}</h3>
+                            <span style="color:${status.color}">${status.name}</span>
+                            </div> `;
+                        });
+
+                        html += `</div>
+                                            </div> `;
+                        // start source
+                        html += `<div class="col-md-6">
+                            <div class="col-12 panel-body" class="con_tab"><h4><b>Source Type</b></h4><hr>`;
+                        source_type.forEach(source => {
+                            let statusCount = total_staff_report_array["source"][source.name] || 0;
+                            html += `<div class="col-md-3 col-xs-6 border-right">
+                            <h3 class="bold">${statusCount}</h3>
+                            <span style="color:${source.color_name}">${source.name}</span>
+                            </div>`;
+                        });
+                        html += `</div>`;
+
+                        // CONVERSION START
+                        html += `<div class="col-md-12 parrent-div " style="margin-top:10px;">
+                            <div class="col-12 text-right" style="margin:5px;">
+                            <button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
+                            <div class="handle"></div>
+                            </button>
+                            </div>
+                            <div class="col-12 panel-body" class="con_tab"><h4><b>Conversion Type</b></h4><hr>`;
+                        conversion_type.forEach(conversion => {
+                            if (conversion.parent_id) {
+                                return;
+                            }
+                            html += '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
+                            let percentage = (total_staff_report_array["conversion"][conversion.name] || 0).toFixed(2);
+                            html += percentage;
+
+                            if (percentage > 0) {
+                                if (total_staff_report_array["total"] !== 0) {
+                                    percentage = (percentage / total_staff_report_array["total"]) * 100;
+                                    html += `<span class='show-persentage'>${percentage.toFixed(2)}% </span>`;
+                                } else {
+                                    html += "<span class='show-persentage'>0.00% </span>";
+                                }
+                            } else {
+                                html += "<span class='show-persentage'>0.00% </span>";
+                            }
+                            html += `</h3><span style="color:${conversion.color || ''}">${conversion.name || ''}</span></div>`;
+
+
+                        });
+
+                        html += `</div><div class="col-12 panel-body" class="con_tab" style="display:none;">
+                                <h4><b>Marketing Type</b></h4><hr>`;
+                        Object.values(performance_array).forEach((per, key) => {
+                            html += '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
+                            html += `<span style="color:${per.color}">${per.name}</span></h3></div>`;
+                            let per_percentage = 0;
+                            conversion_type.forEach(conversion => {
+                                if (conversion.parent_id) {
+                                    return;
+                                }
+                                html += '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
+                                let percentage = total_staff_report_array["performance"][per.name][conversion.name];
+                                total_staff_report_array["performance"][per.name][conversion.name]["total"] = total_staff_report_array["performance"][per.name][conversion.name]["total"] ? total_staff_report_array["performance"][per.name][conversion.name]["total"] + percentage : percentage;
+                                html += percentage;
+                                per_percentage += percentage;
+                                if (percentage > 0) {
+                                    if (total_staff_report_array["total"] !== 0) {
+                                        percentage = (percentage / total_staff_report_array["total"]) * 100;
+                                        html += `<span class='show-persentage'>${percentage.toFixed(2)}% </span>`;
+                                    } else {
+                                        html += "<span class='show-persentage'>0.00% </span>";
+                                    }
+                                } else {
+                                    html += "<span class='show-persentage'>0.00% </span>";
+                                }
+
+
+                                html += '</h3>';
+                                html += `<span style="color:${conversion.color}">${conversion.name}</span></div>`;
+                            });
+
+                            html += `<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">${per_percentage}`;
+                            if (per_percentage > 0) {
+                                html += `<span class="show-persentage">${((per_percentage / total_staff_report_array["total"]) * 100).toFixed(2)}% </span>`;
+                            } else {
+                                html += "<span class='show-persentage'>0.00% </span>";
+                            }
+                            html += '</h3><span>Total</span></div>';
+
+                            html += '<br><hr class="hr-3" style="width: 100%; margin-top: 20px!important; display: inline-block;">';
+                        });
+                        html += ` </div>`;
+
+                        html += `</div>`;
+
+                        $(".total_staff_report").html(html);
+                        return;
+                    }
+
+
+                }
+            });
+
+        }
+
+        function getColumnLetter(index) {
+            let columnLetter = '';
+            while (index >= 0) {
+                columnLetter = String.fromCharCode((index % 26) + 65) + columnLetter;
+                index = Math.floor(index / 26) - 1;
+            }
+            return columnLetter;
+        }
+
+        function generateColumnSeries(rowNumber, count) {
+            let series = [];
+            for (let i = 0; i < count; i++) {
+                let columnLetter = getColumnLetter(i);
+                series.push(columnLetter);
+            }
+            return series;
+        }
+
+        var _getColumnLetter = generateColumnSeries(1, 100);
+
+        async function generatePDF() {
+            // Choose the element that your content will be rendered to.
+            // const element = document.getElementById('pdf_generate');
+            // // Choose the element and save the PDF for your user.
+            // html2pdf().from(element).save();
+            const element = document.getElementById('pdf_generate');
+            const options = {
+                filename: 'Report.pdf',
+                margin: [10, 0, 10, 0],
+                image: {
+                    type: 'jpeg',
+                    quality: 1
+                },
+                html2canvas: {
+                    dpi: 192,
+                    scale: 2,
+                    letterRendering: true,
+                    useCORS: true,
+                },
+                pagebreak: {
+                    mode: 'avoid-all',
+                    after: '.break-page'
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a3',
+                    orientation: 'landscape'
+                }
+            };
+            await html2pdf().set(options).from(element).save();
+            // await html2pdf().from(element).set(options).toPdf().output('datauristring').then(function(res) {
+            //     console.log(res);
+            // });
+            // this.blobString = res;
+            // await html2pdf().set(options).from(element).save();
+            // console.log("sjkcbns");
+            // var objWindow = window.open(location.href, "_self");
+            // objWindow.close();
+        }
     </script>

@@ -411,7 +411,7 @@ class Reports extends AdminController
     //             $summary = get_leads_summary_filter_old($post_data);
     //             $excel_data = get_leads_summary_filter_excel($post_data);
     //             $status_summary = get_status_summary_filter($post_data);
-           
+
     //             $status_summary_performance = get_status_summary_filter_performance($post_data);
     //             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
 
@@ -1137,13 +1137,6 @@ class Reports extends AdminController
             $_POST["assigned"] = [];
             $_POST["assigned"][] = get_staff_user_id();
         }
-        $source_type = $this->leads_model->get_source();
-        $marketing_type =  $this->leads_model->get_marketing_type();
-        $conversion_type = $this->leads_model->get_conversion_type();
-        $conversion_type_new = $conversion_type = array_column($conversion_type, null, "id");
-        $staff_list     = $this->leads_model->get_staff_list();
-        $staff_list = array_column($staff_list, 'staff_name', "staffid");
-
 
         if (!empty($_POST["location"]) && !empty($_POST["department"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
@@ -1181,769 +1174,256 @@ class Reports extends AdminController
         }
 
 
-        // $summary_daily_ = get_leads_report_($_POST);
-        $summary_daily_excel_ = get_leads_report_($_POST, 1);
-        $summary_daily_ = get_leads_report_($_POST);
-        $summary_daily_conversion = get_leads_report_conversion($_POST);
-        $summary_daily_marketing = get_leads_report_marketing($_POST);
-        $summary_daily_excel = [];
-        if (!empty($summary_daily_excel_)) {
-            // Initialize the resulting array
+        if (!empty($_POST["graph_status"]) && $_POST["graph_status"] == 1) {
+            $summary_daily_ = get_leads_report_($_POST);
+            $summary_daily_conversion = get_leads_report_conversion($_POST);
+            $summary_daily_marketing = get_leads_report_marketing($_POST);
+            $summary_daily_excel = [];
 
-            // Loop through each record in the source array
-            foreach ($summary_daily_excel_ as $summary_excel) {
+            $summary_daily_ = isset($summary_daily_) ? $summary_daily_ : [];
+            $summary_daily_conversion = isset($summary_daily_conversion) ? $summary_daily_conversion : [];
+            $summary_daily_marketing = isset($summary_daily_marketing) ? $summary_daily_marketing : [];
 
-                // Use the 'full_name' as the key and group the records
-                if (!empty($summary_excel->full_name)) {
-                    $summary_daily_excel[$summary_excel->full_name][] = $summary_excel;
-                }
-            }
+            echo json_encode([
+                "summary_daily_" => $summary_daily_,
+                "summary_daily_conversion" => $summary_daily_conversion,
+                "summary_daily_marketing" => $summary_daily_marketing
+            ]);
+            die;
         }
 
+        // $summary_daily_excel_ = get_leads_report_($_POST, 1);
+
+        // if (!empty($summary_daily_excel_)) {
+        //     foreach ($summary_daily_excel_ as $summary_excel) {
+        //         if (!empty($summary_excel->full_name)) {
+        //             $summary_daily_excel[$summary_excel->full_name][] = $summary_excel;
+        //         }
+        //     }
+        // }
+
+        if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
+
+
+            // foreach ($_POST["assigned"] as $assigned) {
+            //     $update_count_data_min = $update_count_data = $post_data = $_POST;
+            //     unset($post_data["assigned"]);
+            //     unset($post_data["update_count_min"]);
+            //     unset($post_data["update_count_max"]);
+            //     $post_data["assigned"][] = $assigned;
+            //     $summary = get_leads_summary_filter_report($post_data);
+            //     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
+            //     $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
+            //     $update_count_data['update_count_min'] = "";
+            //     $update_count_data['update_count_max'] = "";
+            //     $update_count_data["assigned"][] = $assigned;
+            //     $update_count_data_min["assigned"][] =  $assigned;
+            //     $updateCount = leads_update_count($update_count_data, 0, 1);
+            //     $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
+            //     $staff_name =  get_staff_full_name($assigned);
+            //     $update_count_array_label[] = trim($staff_name);
+            //     $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
+            //     $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
+            //     $update_count_array_min[] = intval($updateCount_min);
+            //     $update_count_array_max[] = (intval($updateCount));
+            //     array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
+            // }
+
+            $update_count_data["status"][] = 20;
+            $update_count_data["assigned"] = $_POST["assigned"];
+            $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
+            $update_count_data['update_count_min'] = $_POST['update_count_min'];
+            $update_count_data['update_count_max'] =  $_POST['update_count_max'];
+            $updateCount_filter_min = leads_update_count_report($update_count_data, 0, 1);
+            echo json_encode(["update_count_filter" => $updateCount_filter, "update_count_filter_min" => $updateCount_filter_min]);
+            die;
+        }
+
+
         if (!empty($_POST["assigned"]) && empty($return_status)) {
-
-
             $excel_array = [];
             $excel_performance_array = [];
             $update_count_array_label = [];
             $update_count_array_min = [];
             $update_count_array_max = [];
-            if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
-                // echo "<pre>";
-                // print_r($_POST);
-                // die;
-                foreach ($_POST["assigned"] as $assigned) {
-                    $update_count_data_min = $update_count_data = $post_data = $_POST;
-                    unset($post_data["assigned"]);
-                    unset($post_data["update_count_min"]);
-                    unset($post_data["update_count_max"]);
-                    $post_data["assigned"][] = $assigned;
-                    $summary = get_leads_summary_filter_old($post_data);
 
-                    $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
-                    $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
-                    $update_count_data['update_count_min'] = "";
-                    $update_count_data['update_count_max'] = "";
-                    $update_count_data["assigned"][] = $assigned;
-                    $update_count_data_min["assigned"][] =  $assigned;
-                    $updateCount = leads_update_count($update_count_data, 0, 1);
-                    $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
-                    $staff_name =  get_staff_full_name($assigned);
-                    $update_count_array_label[] = trim($staff_name);
-                    $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
-                    $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
-                    $update_count_array_min[] = intval($updateCount_min);
-                    $update_count_array_max[] = (intval($updateCount));
-                    array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
-                }
-
-                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max), "total_leads" => $source_html_json]);
-                die;
-            }
 
 
             $index = 0;
             $max_count = [];
             $staff_html = '';
-            foreach ($_POST["assigned"] as $assigned) {
 
-                if ($role == 3) {
-                    if (empty($role_staffs[$assigned])) {
-                        continue;
-                    }
-                }
+            $update_count_data = $post_data = $_POST;
+            $update_count_data["status"][] = 20;
+            $update_count_data['update_count_min'] = "";
+            $update_count_data['update_count_max'] = "";
+            $summary = get_leads_summary_filter_report($post_data);
+            // $excel_data = get_leads_summary_filter_excel($post_data);
+            $source_summary = get_status_summary_filter_report($post_data);
+            $status_summary_performance = get_status_summary_filter_performance($post_data);
+            $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
+            // $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
 
-                $update_count_data = $post_data = $_POST;
-                $update_count_data["status"][] = 20;
-                $update_count_data["assigned"] = [];
-                $update_count_data["assigned"][] = $assigned;
+            // Assume $updateCount is an array of arrays with 'total' and 'assigned' keys
 
-                unset($post_data["assigned"]);
-                $post_data["assigned"][] = $assigned;
-                $summary = get_leads_summary_filter_old($post_data);
-                $excel_data = get_leads_summary_filter_excel($post_data);
-                $status_summary = get_status_summary_filter($post_data);
-                $status_summary_performance = get_status_summary_filter_performance($post_data);
-                $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
+            // $update_count_array_min = array_map('intval', array_values(array_column($updateCount, 'total', 'assigned')));
 
-                $updateCount = leads_update_count($update_count_data, 0, 1);
-                $staff_name =  $staff_list[$assigned];
-                $update_count_array_label[] = trim($staff_name);
-                $update_count_array_min[] = intval($updateCount);
-                $update_count_array_max[] = intval($updateCount);
-                $max_count[] = intval($updateCount);
-
-                $marketing_type =  $this->leads_model->get_marketing_type();
-                $conversion_type = $this->leads_model->get_conversion_type();
-                $conversion_type = array_column($conversion_type, null, "id");
-
-                array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
-                array_push($source_html_staff_json, $staff_name);
-                $staff_html .= '<div class="col-md-3 col-xs-6 border-right" ><h3 class="bold">' . $summary[(count($summary) - 1)]["total"] . '</h3><span>' . $staff_name . '</span></div>';
-
-                if (!empty($excel_data)) {
-                    $excel_array[$staff_name] = $excel_data;
-
-                    $status_summary_conversion_excel = [];
-                    $status_summary_performance_excel = [];
-                    foreach ($status_summary_conversion as $item) {
-                        $source_name = $item['source_name'];
-                        $conversion_name = $item['conversion_name'];
-                        $key = $source_name . "-" . $conversion_name;
-                        if (!isset($excel_array[$staff_name]["conversion_data"][$key])) {
-                            $excel_array[$staff_name]["conversion_data"][$key] = 0;
-                        }
-                        $status_summary_conversion_excel[$key]["total"] += $item['total'];
-                    }
+            // $update_count_array_label =  array_values(array_column($updateCount, "assigned", "assigned"));
+            // $update_count_array_min = $update_count_array_min;
+            // $update_count_array_max = $update_count_array_min;
+            // $update_count_array_label = $update_count_array_label;
 
 
-                    // $status_summary_conversion_excel =  array_column($status_summary_conversion, null, "index_conversion_name");
-
-
-                    // $status_summary_performance_excel =  array_column($status_summary_performance, null, "index_performance_name");
-
-                    $excel_array[$staff_name]["conversion_data"] = [];
-                    $excel_array[$staff_name]["performance_data"] = [];
-                    foreach ($source_type as $s) {
-                        $total = 0;
-                        $percentage = 0;
-                        foreach ($conversion_type as $ct) {
-                            $percentage = 0;
-                            $source_name = $s['name'];
-                            $conversion_name = $ct['name'];
-                            $key = $source_name . "-" . $conversion_name;
-                            if (!isset($excel_array[$staff_name]["conversion_data"][$key])) {
-                                $excel_array[$staff_name]["conversion_data"][$key] = 0;
-                            }
-                            $excel_array[$staff_name]["conversion_data"][$key] += $status_summary_conversion_excel[$key]['total'];
-
-
-                            if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                                $ids = explode(",", $ct["parent_id"]);
-                                foreach ($ids as $c_id) {
-
-                                    $percentage +=  !empty($excel_array[$staff_name]["conversion_data"][$source_name . "-" . $conversion_type[$c_id]["name"]]) ? $excel_array[$staff_name]["conversion_data"][$source_name . "-" . $conversion_type[$c_id]["name"]] : 0;
-                                }
-                            }
-
-                            if (!empty($ct["total_status"]) && $ct["total_status"] == 1) {
-                                $total +=  $excel_array[$staff_name]["conversion_data"][$key];
-                            }
-                            if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                                if (!empty($percentage) && $percentage > 0) {
-
-                                    $percentage_cal = ($percentage / $total) * 100;
-                                    $excel_array[$staff_name]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
-                                } else {
-                                    $excel_array[$staff_name]["conversion_data"][$key] = number_format((float)$percentage, 2, '.', '');
-                                }
-                            }
-                        }
-                    }
-
-
-                    foreach ($status_summary_performance as $item) {
-                        $performance_name = $item['marketing_name'];
-                        $conversion_name = $item['conversion_name'];
-                        $key = $performance_name . "-" . $conversion_name;
-                        if (!isset($excel_array[$staff_name]["performance_data"][$key])) {
-                            $excel_array[$staff_name]["performance_data"][$key] = 0;
-                        }
-                        $status_summary_performance_excel[$key]["total"] += $item['total'];
-                    }
-
-                    foreach ($marketing_type as $m) {
-                        $total = 0;
-                        $percentage = 0;
-                        foreach ($conversion_type as $ct) {
-                            $percentage = 0;
-                            $marketing_name = $m['name'];
-                            $conversion_name = $ct['name'];
-                            $key = $marketing_name . "-" . $conversion_name;
-                            if (!isset($excel_array[$staff_name]["performance_data"][$key])) {
-                                $excel_array[$staff_name]["performance_data"][$key] = 0;
-                            }
-                            $excel_array[$staff_name]["performance_data"][$key] += $status_summary_performance_excel[$key]['total'];
-
-
-                            if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                                $ids = explode(",", $ct["parent_id"]);
-                                foreach ($ids as $c_id) {
-
-                                    $percentage +=  !empty($excel_array[$staff_name]["performance_data"][$marketing_name . "-" . $conversion_type[$c_id]["name"]]) ? $excel_array[$staff_name]["performance_data"][$marketing_name . "-" . $conversion_type[$c_id]["name"]] : 0;
-                                }
-                            }
-
-                            if (!empty($ct["total_status"]) && $ct["total_status"] == 1) {
-                                $total +=  $excel_array[$staff_name]["performance_data"][$key];
-                            }
-                            if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                                if (!empty($percentage) && $percentage > 0) {
-                                    $percentage_cal = ($percentage / $total) * 100;
-                                    $excel_array[$staff_name]["performance_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
-                                } else {
-                                    $excel_array[$staff_name]["performance_data"][$key] = number_format((float)$percentage, 2, '.', '');
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (!empty($index) && $index % 2 == 0) {
-                    $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
-                }
-                $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
-                $ret .= '<h4><b>' . ucwords($staff_name) . '</b> <a href="#" class="btn hide filter-hide btn-default btn-with-tooltip daily-update-count" data-staffid="' . $assigned . '" data-toggle="tooltip" data-title="' . _l('Update Count') . '" data-placement="bottom" onclick="daily_update_count(\'.leads-overview-' . $assigned . '\',' . $assigned . '); return false;"><i class="fa fa-bar-chart"></i></a></h4> 
-                <div class="row leads-overview-' . $assigned . '" style="display:none;">
-                </div>
-                <hr>';
-
-                $ret .= '<div class="col-md-6">';
-                $ret .= '<div class="col-12 panel-body">';
-                $ret .= '<h4><b>Leads Types</b></h4><hr>';
-                foreach ($summary as $status) {
-                    if (isset($conversion_type[$status['conversion_type']])) {
-                        $conversion_type[$status['conversion_type']]["total"] += !empty($status['total']) ?  $status['total'] : 0;
-                    }
-                    $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                    if (isset($status['percent'])) {
-                        $ret .= '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
-                    } else {
-                        $ret .= $status['total'];
-                    }
-                    $ret .=  '</h3>';
-                    $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
-                }
-
-                $ret .= '</div>';
-                $ret .= '</div>';
-                $ret .= '<div class="col-md-6">';
-                $ret .= '<div class="col-12 panel-body">';
-                $ret .= '<h4><b>Sources Types</b></h4><hr>';
-
-
-                foreach ($status_summary as $source_data) {
-
-                    if (isset($marketing_type[$source_data['marketing_type']])) {
-                        $marketing_type[$source_data['marketing_type']]["total"] += !empty($source_data['total']) ?  $source_data['total'] : 0;
-                    }
-
-                    $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                    if (isset($source_data['percent'])) {
-                        $ret .= '<span data-toggle="tooltip" data-title="' . $source_data['total'] . '">' . $source_data['percent'] . '%</span>';
-                    } else {
-                        // Is regular status
-                        $ret .= $source_data['total'];
-                    }
-                    $ret .=  '</h3>';
-                    $ret .= '<span style="color:' . $source_data['color_name'] . '">' . $source_data['name'] . '</span></div>';
-                }
-                $ret .= '</div>';
-                $ret .= '</div>';
-                $ret .= '<div class="col-md-12 parrent-div " style="margin-top:10px;">';
-                $ret .= '<div class="col-12 text-right" style="margin:5px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
-                <div class="handle"></div>
-              </button></div>';
-
-                $values_sum = array_column(array_filter($conversion_type, function ($element) {
-                    return $element['total_status'] == 1;
-                }), 'total');
-                $total_sum = array_sum($values_sum);
-                $percentage = 0;
-
-                $ret .= '<div class="col-12 panel-body" class="con_tab" >';
-                $ret .= '<h4><b>Conversion Type</b></h4><hr>';
-
-
-                foreach ($conversion_type as $conversion) {
-                    $percentage = 0;
-                    if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                        continue;
-                        $ids = explode(",", $conversion["parent_id"]);
-                        foreach ($ids as $c_id) {
-                            $percentage += $conversion_type[$c_id]['total'];
-                        }
-                    }
-                    $ret .= '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                    if (isset($conversion['percent'])) {
-                        $ret .= '<span data-toggle="tooltip" data-title="' . $conversion['total'] . '">' . $conversion['percent'] . '%</span>';
-                    } else {
-                        // Is regular status
-                        if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                            if (!empty($percentage) && $percentage > 0) {
-                                $percentage = ($percentage / $total_sum) * 100;
-
-                                $ret .= number_format((float)$percentage, 2, '.', '');
-                            } else {
-                                $ret .= number_format((float)$percentage, 2, '.', '');
-                            }
-                        } else {
-
-                            $ret .= !empty($conversion['total']) ? $conversion['total'] : 0;
-
-
-                            $percentage = 0;
-                            if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
-                                $ids = explode(",", $conversion["parent_ids"]);
-                                foreach ($ids as $c_id) {
-                                    $percentage += $conversion_type[$c_id]['total'];
-                                }
-                            }
-                            if (!empty($percentage) && $percentage > 0) {
-                                if ($total_sum != 0) {
-                                    $percentage = ($percentage / $total_sum) * 100;
-                                    $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
-                                } else {
-                                    // Handle division by zero case
-                                    $ret .= "<span class='show-persentage'>0.00% </span>";
-                                }
-                            } else {
-                                $ret .= "<span class='show-persentage'>0.00% </span>";
-                            }
-                        }
-                    }
-                    $ret .=  '</h3>';
-                    $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
-                }
-                $ret .= '</div>';
-
-                $ret .= '<div class="col-12 panel-body" class="con_tab" style="display:none;">';
-                $ret .= '<h4><b>Marketing Type</b></h4><hr>';
-
-                $sum = [];
-                foreach ($status_summary_performance as $item) {
-                    $conversion_id = $item['conversion_id'];
-                    $marketing_id = $item['marketing_id'];
-
-                    $key = $marketing_id . "_" . $conversion_id;
-                    if (!isset($sum[$key])) {
-                        $sum[$key] = 0;
-                    }
-
-                    $sum[$key] += $item['total'];
-                }
-                $performance_array = array_column($marketing_type, null, 'id');
-
-                foreach ($performance_array as $key => $per) {
-                    $ret .= '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
-                    $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
-                    $percentage = 0;
-                    $per_percentage = 0;
-                    foreach ($conversion_type as $kkey => $conversion) {
-
-                        $percentage = 0;
-                        if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                            continue;
-                            $ids = explode(",", $conversion["parent_id"]);
-                            foreach ($ids as $c_id) {
-                                $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
-                            }
-                        }
-
-                        $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
-                        // Is regular status
-                        if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                            if (!empty($percentage) && $percentage > 0) {
-                                if (!empty($total_sum)) {
-                                    $percentage = ($percentage / $total_sum) * 100;
-                                    $ret .= number_format((float)$percentage, 2, '.', '');
-                                } else {
-                                    $ret .= number_format(0, 2, '.', '');
-                                }
-                            } else {
-                                $ret .= number_format((float)$percentage, 2, '.', '');
-                            }
-                        } else {
-                            $ret .= !empty($sum[$key . "_" . $kkey]) ? $sum[$key . "_" . $kkey] : 0;
-
-
-                            $percentage = 0;
-                            if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
-                                $ids = explode(",", $conversion["parent_ids"]);
-                                foreach ($ids as $c_id) {
-                                    $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
-                                }
-                            }
-
-                            if (!empty($percentage) && $percentage > 0) {
-                                if ($total_sum != 0) {
-                                    $per_percentage += $percentage;
-                                    $percentage = ($percentage / $total_sum) * 100;
-
-                                    $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
-                                } else {
-                                    // Handle division by zero case
-                                    $ret .= "<span class='show-persentage'>0.00% </span>";
-                                }
-                            } else {
-                                $ret .= "<span class='show-persentage'>0.00% </span>";
-                            }
-                        }
-                        $ret .= '</h3>';
-                        $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
-                    }
-                    $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">' . $per_percentage;
-                    if (!empty($per_percentage) && $per_percentage > 0) {
-                        $ret .= '<span class="show-persentage">' . number_format((float)(($per_percentage / $total_sum) * 100), 2, '.', '') . '% </span>';
-                    } else {
-                        $ret .= "<span class='show-persentage'>0.00% </span>";
-                    }
-                    $ret .= '</h3><span >Total</span></div>';
-
-                    $ret .= '<br><hr class="hr-3" style="width: 100%;
-                    margin-top: 20px!important;
-                    display: inline-block;">';
-                }
-                $ret .= '</div>';
-                $ret .= '</div>';
-
-                $ret .= '</div>';
-                $index++;
-            }
-            if (!empty($index) && $index % 2 == 0) {
-                $ret .= '<div class="break-page" style="page-break-before: always;"></div>';
-            }
-
-            $html_ret = $this->lead_summary_filter(1);
-
-            $ret =   $html_ret . " " . $ret;
+            $report_list = 1;
         } else {
-            if (!empty($return_status)) {
-            } else {
-                $excel_array = [];
-                $update_count_array_label = [];
-                $update_count_array_min = [];
-                $update_count_array_max = [];
-            }
-
-            $summary = get_leads_summary_filter_old($_POST);
-            $excel_data = get_leads_summary_filter_excel($_POST);
-            $status_summary = get_status_summary_filter($_POST);
-
+            $excel_array = [];
+            $update_count_array_label = [];
+            $update_count_array_min = [];
+            $update_count_array_max = [];
+            $_POST["total_status"] = 1;
+            $summary = get_leads_summary_filter_report($_POST);
+            $source_summary = get_status_summary_filter_report($_POST);
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
             $status_summary_performance = get_status_summary_filter_performance($_POST);
-            $marketing_type =  $this->leads_model->get_marketing_type();
-            $conversion_type = $this->leads_model->get_conversion_type();
-            $conversion_type = array_column($conversion_type, null, "id");
+            $update_count_data = $post_data = $_POST;
+            $update_count_data["status"][] = 20;
+            // $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
+            $report_list = 0;
+
+            // if (!empty($excel_data)) {
+            //     $excel_array["Total Details"] = $excel_data;
+
+            //     $status_summary_conversion_excel = [];
+            //     $status_summary_performance_excel = [];
+            //     foreach ($status_summary_conversion as $item) {
+            //         $source_name = $item['source_name'];
+            //         $conversion_name = $item['conversion_name'];
+            //         $key = $source_name . "-" . $conversion_name;
+            //         if (!isset($excel_array["Total Details"]["conversion_data"][$key])) {
+            //             $excel_array["Total Details"]["conversion_data"][$key] = 0;
+            //         }
+            //         $status_summary_conversion_excel[$key]["total"] += $item['total'];
+            //     }
+
+            //     $excel_array["Total Details"]["conversion_data"] = [];
+            //     $excel_array["Total Details"]["performance_data"] = [];
+            //     foreach ($source_type as $s) {
+            //         $total = 0;
+            //         $percentage = 0;
+            //         foreach ($conversion_type as $ct) {
+            //             $percentage = 0;
+            //             $source_name = $s['name'];
+            //             $conversion_name = $ct['name'];
+            //             $key = $source_name . "-" . $conversion_name;
+            //             if (!isset($excel_array["Total Details"]["conversion_data"][$key])) {
+            //                 $excel_array["Total Details"]["conversion_data"][$key] = 0;
+            //             }
+            //             $excel_array["Total Details"]["conversion_data"][$key] += $status_summary_conversion_excel[$key]['total'];
 
 
-            // $source_type = $this->leads_model->get_source();
-            if (!empty($excel_data)) {
-                $excel_array["Total Details"] = $excel_data;
+            //             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
+            //                 $ids = explode(",", $ct["parent_id"]);
+            //                 foreach ($ids as $c_id) {
 
-                $status_summary_conversion_excel = [];
-                $status_summary_performance_excel = [];
-                foreach ($status_summary_conversion as $item) {
-                    $source_name = $item['source_name'];
-                    $conversion_name = $item['conversion_name'];
-                    $key = $source_name . "-" . $conversion_name;
-                    if (!isset($excel_array["Total Details"]["conversion_data"][$key])) {
-                        $excel_array["Total Details"]["conversion_data"][$key] = 0;
-                    }
-                    $status_summary_conversion_excel[$key]["total"] += $item['total'];
-                }
+            //                     $percentage +=  !empty($excel_array["Total Details"]["conversion_data"][$source_name . "-" . $conversion_type[$c_id]["name"]]) ? $excel_array["Total Details"]["conversion_data"][$source_name . "-" . $conversion_type[$c_id]["name"]] : 0;
+            //                 }
+            //             }
 
-                // $status_summary_conversion_excel =  array_column($status_summary_conversion, null, "index_conversion_name");
+            //             if (!empty($ct["total_status"]) && $ct["total_status"] == 1) {
+            //                 $total +=  $excel_array["Total Details"]["conversion_data"][$key];
+            //             }
+            //             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
+            //                 if (!empty($percentage) && $percentage > 0) {
 
-
-                // $status_summary_performance_excel =  array_column($status_summary_performance, null, "index_performance_name");
-
-                $excel_array["Total Details"]["conversion_data"] = [];
-                $excel_array["Total Details"]["performance_data"] = [];
-                foreach ($source_type as $s) {
-                    $total = 0;
-                    $percentage = 0;
-                    foreach ($conversion_type as $ct) {
-                        $percentage = 0;
-                        $source_name = $s['name'];
-                        $conversion_name = $ct['name'];
-                        $key = $source_name . "-" . $conversion_name;
-                        if (!isset($excel_array["Total Details"]["conversion_data"][$key])) {
-                            $excel_array["Total Details"]["conversion_data"][$key] = 0;
-                        }
-                        $excel_array["Total Details"]["conversion_data"][$key] += $status_summary_conversion_excel[$key]['total'];
+            //                     $percentage_cal = ($percentage / $total) * 100;
+            //                     $excel_array["Total Details"]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
+            //                 } else {
+            //                     $excel_array["Total Details"]["conversion_data"][$key] = number_format((float)$percentage, 2, '.', '');
+            //                 }
+            //             }
+            //         }
+            //     }
 
 
-                        if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                            $ids = explode(",", $ct["parent_id"]);
-                            foreach ($ids as $c_id) {
+            //     foreach ($status_summary_performance as $item) {
+            //         $performance_name = $item['marketing_name'];
+            //         $conversion_name = $item['conversion_name'];
+            //         $key = $performance_name . "-" . $conversion_name;
+            //         if (!isset($excel_array["Total Details"]["performance_data"][$key])) {
+            //             $excel_array["Total Details"]["performance_data"][$key] = 0;
+            //         }
+            //         $status_summary_performance_excel[$key]["total"] += $item['total'];
+            //     }
 
-                                $percentage +=  !empty($excel_array["Total Details"]["conversion_data"][$source_name . "-" . $conversion_type[$c_id]["name"]]) ? $excel_array["Total Details"]["conversion_data"][$source_name . "-" . $conversion_type[$c_id]["name"]] : 0;
-                            }
-                        }
-
-                        if (!empty($ct["total_status"]) && $ct["total_status"] == 1) {
-                            $total +=  $excel_array["Total Details"]["conversion_data"][$key];
-                        }
-                        if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                            if (!empty($percentage) && $percentage > 0) {
-
-                                $percentage_cal = ($percentage / $total) * 100;
-                                $excel_array["Total Details"]["conversion_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
-                            } else {
-                                $excel_array["Total Details"]["conversion_data"][$key] = number_format((float)$percentage, 2, '.', '');
-                            }
-                        }
-                    }
-                }
-
-
-                foreach ($status_summary_performance as $item) {
-                    $performance_name = $item['marketing_name'];
-                    $conversion_name = $item['conversion_name'];
-                    $key = $performance_name . "-" . $conversion_name;
-                    if (!isset($excel_array["Total Details"]["performance_data"][$key])) {
-                        $excel_array["Total Details"]["performance_data"][$key] = 0;
-                    }
-                    $status_summary_performance_excel[$key]["total"] += $item['total'];
-                }
-
-                foreach ($marketing_type as $m) {
-                    $total = 0;
-                    $percentage = 0;
-                    foreach ($conversion_type as $ct) {
-                        $percentage = 0;
-                        $marketing_name = $m['name'];
-                        $conversion_name = $ct['name'];
-                        $key = $marketing_name . "-" . $conversion_name;
-                        if (!isset($excel_array["Total Details"]["performance_data"][$key])) {
-                            $excel_array["Total Details"]["performance_data"][$key] = 0;
-                        }
-                        $excel_array["Total Details"]["performance_data"][$key] += $status_summary_performance_excel[$key]['total'];
+            //     foreach ($marketing_type as $m) {
+            //         $total = 0;
+            //         $percentage = 0;
+            //         foreach ($conversion_type as $ct) {
+            //             $percentage = 0;
+            //             $marketing_name = $m['name'];
+            //             $conversion_name = $ct['name'];
+            //             $key = $marketing_name . "-" . $conversion_name;
+            //             if (!isset($excel_array["Total Details"]["performance_data"][$key])) {
+            //                 $excel_array["Total Details"]["performance_data"][$key] = 0;
+            //             }
+            //             $excel_array["Total Details"]["performance_data"][$key] += $status_summary_performance_excel[$key]['total'];
 
 
-                        if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                            $ids = explode(",", $ct["parent_id"]);
-                            foreach ($ids as $c_id) {
+            //             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
+            //                 $ids = explode(",", $ct["parent_id"]);
+            //                 foreach ($ids as $c_id) {
 
-                                $percentage +=  !empty($excel_array["Total Details"]["performance_data"][$marketing_name . "-" . $conversion_type[$c_id]["name"]]) ? $excel_array["Total Details"]["performance_data"][$marketing_name . "-" . $conversion_type[$c_id]["name"]] : 0;
-                            }
-                        }
+            //                     $percentage +=  !empty($excel_array["Total Details"]["performance_data"][$marketing_name . "-" . $conversion_type[$c_id]["name"]]) ? $excel_array["Total Details"]["performance_data"][$marketing_name . "-" . $conversion_type[$c_id]["name"]] : 0;
+            //                 }
+            //             }
 
-                        if (!empty($ct["total_status"]) && $ct["total_status"] == 1) {
-                            $total +=  $excel_array["Total Details"]["performance_data"][$key];
-                        }
-                        if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
-                            if (!empty($percentage) && $percentage > 0) {
-                                $percentage_cal = ($percentage / $total) * 100;
-                                $excel_array["Total Details"]["performance_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
-                            } else {
-                                $excel_array["Total Details"]["performance_data"][$key] = number_format((float)$percentage, 2, '.', '');
-                            }
-                        }
-                    }
-                }
-            }
-
-            // $updateCount = leads_update_count($_POST);
-
-            $ret .= '<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">';
-            if (!empty($return_status)) {
-                $ret .= '<h4><b>' . ucwords("Total") . '</b></h4><hr>';
-            }
-            $ret .= '<div class="col-md-6">';
-            $ret .= '<div class="col-12 panel-body">';
-            $ret .= '<h4><b>Leads Types</b></h4><hr>';
-            foreach ($summary as $status) {
-                if (isset($conversion_type[$status['conversion_type']])) {
-                    $conversion_type[$status['conversion_type']]["total"] += !empty($status['total']) ?  $status['total'] : 0;
-                }
-                $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                if (isset($status['percent'])) {
-                    $ret .= '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
-                } else {
-                    $ret .= $status['total'];
-                }
-                $ret .=  '</h3>';
-                $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
-            }
-            $ret .= '</div>';
-            $ret .= '</div>';
-            $ret .= '<div class="col-md-6">';
-            $ret .= '<div class="col-12 panel-body">';
-            $ret .= '<h4><b>Sources Types</b></h4><hr>';
+            //             if (!empty($ct["total_status"]) && $ct["total_status"] == 1) {
+            //                 $total +=  $excel_array["Total Details"]["performance_data"][$key];
+            //             }
+            //             if (!empty($ct["parent_id"]) && $ct["parent_id"] != "") {
+            //                 if (!empty($percentage) && $percentage > 0) {
+            //                     $percentage_cal = ($percentage / $total) * 100;
+            //                     $excel_array["Total Details"]["performance_data"][$key] = number_format((float)$percentage_cal, 2, '.', '');
+            //                 } else {
+            //                     $excel_array["Total Details"]["performance_data"][$key] = number_format((float)$percentage, 2, '.', '');
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
 
 
-            foreach ($status_summary as $source) {
-
-                if (isset($marketing_type[$source['marketing_type']])) {
-                    $marketing_type[$source['marketing_type']]["total"] += !empty($source['total']) ?  $source['total'] : 0;
-                }
-
-                $ret .= '<div class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                if (isset($source['percent'])) {
-                    $ret .= '<span data-toggle="tooltip" data-title="' . $source['total'] . '">' . $source['percent'] . '%</span>';
-                } else {
-                    // Is regular status
-                    $ret .= $source['total'];
-                }
-                $ret .=  '</h3>';
-                $ret .= '<span style="color:' . $source['color_name'] . '">' . $source['name'] . '</span></div>';
-            }
-            $ret .= '</div>';
-            $ret .= '</div>';
-            $ret .= '<div class="col-md-12 parrent-div " style="margin-top:10px;">';
-            $ret .= '<div class="col-12 text-right" style="margin:5px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
-                <div class="handle"></div>
-              </button></div>';
-
-            $values_sum = array_column(array_filter($conversion_type, function ($element) {
-                return $element['total_status'] == 1;
-            }), 'total');
-            $total_sum = array_sum($values_sum);
-            $percentage = 0;
-
-            $ret .= '<div class="col-12 panel-body" class="con_tab" >';
-            $ret .= '<h4><b>Conversion Type</b></h4><hr>';
-            foreach ($conversion_type as $conversion) {
-                $percentage = 0;
-                if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                    continue;
-                    $ids = explode(",", $conversion["parent_id"]);
-                    foreach ($ids as $c_id) {
-                        $percentage += $conversion_type[$c_id]['total'];
-                    }
-                }
-                $ret .= '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                if (isset($conversion['percent'])) {
-                    $ret .= '<span data-toggle="tooltip" data-title="' . $conversion['total'] . '">' . $conversion['percent'] . '%</span>';
-                } else {
-                    // Is regular status
-                    if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                        if (!empty($percentage) && $percentage > 0) {
-                            $percentage = ($percentage / $total_sum) * 100;
-
-                            $ret .= number_format((float)$percentage, 2, '.', '');
-                        } else {
-                            $ret .= number_format((float)$percentage, 2, '.', '');
-                        }
-                    } else {
-
-                        $ret .= !empty($conversion['total']) ? $conversion['total'] : 0;
-
-                        $percentage = 0;
-                        if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
-                            $ids = explode(",", $conversion["parent_ids"]);
-                            foreach ($ids as $c_id) {
-                                $percentage += $conversion_type[$c_id]['total'];
-                            }
-                        }
-
-                        if (!empty($percentage) && $percentage > 0) {
-                            if ($total_sum != 0) {
-                                $percentage = ($percentage / $total_sum) * 100;
-                                $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
-                            } else {
-                                // Handle division by zero case
-                                $ret .= "<span class='show-persentage'>0.00% </span>";
-                            }
-                        } else {
-                            $ret .= "<span class='show-persentage'>0.00% </span>";
-                        }
-                    }
-                }
-                $ret .=  '</h3>';
-                $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
-            }
-            $ret .= '</div>';
-
-            $ret .= '<div class="col-12 panel-body" class="con_tab" style="display:none;">';
-            $ret .= '<h4><b>Marketing Type</b></h4><hr>';
-
-            $sum = [];
-            foreach ($status_summary_performance as $item) {
-                $conversion_id = $item['conversion_id'];
-                $marketing_id = $item['marketing_id'];
-
-                $key = $marketing_id . "_" . $conversion_id;
-                if (!isset($sum[$key])) {
-                    $sum[$key] = 0;
-                }
-
-                $sum[$key] += $item['total'];
-            }
-            $performance_array = array_column($marketing_type, null, 'id');
-            foreach ($performance_array as $key => $per) {
-                $ret .= '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
-                $ret .= '<span style="color:' . $per['color'] . '">' . $per['name'] . '</span></h3></div>';
-                $percentage = 0;
-                $per_percentage = 0;
-                foreach ($conversion_type as $kkey => $conversion) {
-                    $percentage = 0;
-                    if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                        continue;
-                        $ids = explode(",", $conversion["parent_id"]);
-                        foreach ($ids as $c_id) {
-                            $percentage += $sum[$key . "_" . $c_id];
-                        }
-                    }
-
-                    $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">';
-
-                    // Is regular status
-                    if (!empty($conversion["parent_id"]) && $conversion["parent_id"] != "") {
-                        if (!empty($percentage) && $percentage > 0) {
-                            if (!empty($total_sum)) {
-                                $percentage = ($percentage / $total_sum) * 100;
-
-                                $ret .= number_format((float)$percentage, 2, '.', '');
-                            } else {
-                                $ret .= number_format(0, 2, '.', '');
-                            }
-                        } else {
-                            $ret .= number_format((float)$percentage, 2, '.', '');
-                        }
-                    } else {
-                        $ret .= !empty($sum[$key . "_" . $kkey]) ? $sum[$key . "_" . $kkey] : 0;
-
-
-                        $percentage = 0;
-                        if (!empty($conversion["parent_ids"]) && $conversion["parent_ids"] != "") {
-                            $ids = explode(",", $conversion["parent_ids"]);
-                            foreach ($ids as $c_id) {
-                                $percentage += !empty($sum[$key . "_" . $c_id]) ? $sum[$key . "_" . $c_id] : 0;
-                            }
-                        }
-
-                        if (!empty($percentage) && $percentage > 0) {
-                            if ($total_sum != 0) {
-                                $per_percentage += $percentage;
-                                $percentage = ($percentage / $total_sum) * 100;
-                                $ret .= "<span class='show-persentage'>" . number_format((float)$percentage, 2, '.', '') . "% </span>";
-                            } else {
-                                // Handle division by zero case
-                                $ret .= "<span class='show-persentage'>0.00% </span>";
-                            }
-                        } else {
-                            $ret .= "<span class='show-persentage'>0.00% </span>";
-                        }
-                    }
-                    $ret .= '</h3>';
-                    $ret .= '<span style="color:' . $conversion['color'] . '">' . $conversion['name'] . '</span></div>';
-                }
-
-                $ret .= '<div class="col-md-3 col-xs-6 marketing-type border-right"><h3 class="bold">' . $per_percentage;
-                if (!empty($per_percentage) && $per_percentage > 0) {
-                    $ret .= '<span class="show-persentage">' . number_format((float)(($per_percentage / $total_sum) * 100), 2, '.', '') . '% </span>';
-                } else {
-                    $ret .= "<span class='show-persentage'>0.00% </span>";
-                }
-                $ret .= '</h3><span >Total</span></div>';
-
-                $ret .= '<br><hr class="hr-3" style="width: 100%;
-                    margin-top: 20px!important;
-                    display: inline-block;">';
-            }
-            $ret .= '</div>';
-            $ret .= '</div>';
-
-            $ret .= '</div>';
-            if (!empty($return_status)) {
-                return $ret;
-            }
         }
 
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "summary_daily_" => $summary_daily_, "summary_daily_conversion" => $summary_daily_conversion, "summary_daily_marketing" => $summary_daily_marketing, "total_staff_html" => $staff_html, "summary_daily_excel" => $summary_daily_excel]);
+        $assigned = isset($_POST["assigned"]) ? $_POST["assigned"] : [];
+        $summary = isset($summary) ? $summary : '';
+        // $updateCount_filter = isset($updateCount_filter) ? $updateCount_filter : [];
+        $excel_array = isset($excel_array) ? $excel_array : [];
+        $update_count_array_label = isset($update_count_array_label) ? $update_count_array_label : [];
+        $update_count_array_min = isset($update_count_array_min) ? $update_count_array_min : [];
+        $update_count_array_max = isset($update_count_array_max) ? $update_count_array_max : [];
+        $source_summary = isset($source_summary) ? $source_summary : [];
+        $status_summary_performance = isset($status_summary_performance) ? $status_summary_performance : [];
+        $status_summary_conversion = isset($status_summary_conversion) ? $status_summary_conversion : [];
+
+        $summary_daily_excel = isset($summary_daily_excel) ? $summary_daily_excel : [];
+
+        // Create an array and encode it to JSON
+        echo json_encode([
+            'assigned' => $assigned,
+            'report_list' => $report_list,
+            'summary' => $summary,
+            // 'updateCount_filter' => $updateCount_filter,
+            "excel_data" => $excel_array,
+            "update_count_label" => $update_count_array_label,
+            "update_count_min" => $update_count_array_min,
+            "update_count_max" => $update_count_array_max,
+            "total_leads" => $source_html_json,
+            "source_summary" => $source_summary,
+            "status_summary_performance" => $status_summary_performance,
+            "status_summary_conversion" => $status_summary_conversion,
+            "summary_daily_excel" => $summary_daily_excel
+        ]);
     }
 
     // public function leads_reports_generate()

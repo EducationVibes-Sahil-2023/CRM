@@ -208,7 +208,7 @@ function is_client_logged_in()
  */
 function is_staff_logged_in()
 {
-    return get_instance()->session->has_userdata('staff_logged_new');
+    return get_instance()->session->has_userdata('staff_logged_2025');
 }
 /**
  * Return logged staff User ID from session
