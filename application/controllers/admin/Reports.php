@@ -1174,20 +1174,71 @@ class Reports extends AdminController
         }
 
 
-        $summary_daily_ = get_leads_report_($_POST);
-        $summary_daily_excel_ = get_leads_report_($_POST, 1);
-        $summary_daily_ = get_leads_report_($_POST);
-        $summary_daily_conversion = get_leads_report_conversion($_POST);
-        $summary_daily_marketing = get_leads_report_marketing($_POST);
-        $summary_daily_excel = [];
+        if (!empty($_POST["graph_status"]) && $_POST["graph_status"] == 1) {
+            $summary_daily_ = get_leads_report_($_POST);
+            $summary_daily_conversion = get_leads_report_conversion($_POST);
+            $summary_daily_marketing = get_leads_report_marketing($_POST);
+            $summary_daily_excel = [];
 
-        if (!empty($summary_daily_excel_)) {
-            foreach ($summary_daily_excel_ as $summary_excel) {
-                if (!empty($summary_excel->full_name)) {
-                    $summary_daily_excel[$summary_excel->full_name][] = $summary_excel;
-                }
-            }
+            $summary_daily_ = isset($summary_daily_) ? $summary_daily_ : [];
+            $summary_daily_conversion = isset($summary_daily_conversion) ? $summary_daily_conversion : [];
+            $summary_daily_marketing = isset($summary_daily_marketing) ? $summary_daily_marketing : [];
+
+            echo json_encode([
+                "summary_daily_" => $summary_daily_,
+                "summary_daily_conversion" => $summary_daily_conversion,
+                "summary_daily_marketing" => $summary_daily_marketing
+            ]);
+            die;
         }
+
+        // $summary_daily_excel_ = get_leads_report_($_POST, 1);
+
+        // if (!empty($summary_daily_excel_)) {
+        //     foreach ($summary_daily_excel_ as $summary_excel) {
+        //         if (!empty($summary_excel->full_name)) {
+        //             $summary_daily_excel[$summary_excel->full_name][] = $summary_excel;
+        //         }
+        //     }
+        // }
+
+        if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
+
+
+            // foreach ($_POST["assigned"] as $assigned) {
+            //     $update_count_data_min = $update_count_data = $post_data = $_POST;
+            //     unset($post_data["assigned"]);
+            //     unset($post_data["update_count_min"]);
+            //     unset($post_data["update_count_max"]);
+            //     $post_data["assigned"][] = $assigned;
+            //     $summary = get_leads_summary_filter_report($post_data);
+            //     $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
+            //     $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
+            //     $update_count_data['update_count_min'] = "";
+            //     $update_count_data['update_count_max'] = "";
+            //     $update_count_data["assigned"][] = $assigned;
+            //     $update_count_data_min["assigned"][] =  $assigned;
+            //     $updateCount = leads_update_count($update_count_data, 0, 1);
+            //     $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
+            //     $staff_name =  get_staff_full_name($assigned);
+            //     $update_count_array_label[] = trim($staff_name);
+            //     $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
+            //     $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
+            //     $update_count_array_min[] = intval($updateCount_min);
+            //     $update_count_array_max[] = (intval($updateCount));
+            //     array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
+            // }
+
+            $update_count_data["status"][] = 20;
+            $update_count_data["assigned"] = $_POST["assigned"];
+            $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
+            $update_count_data['update_count_min'] = $_POST['update_count_min'];
+            $update_count_data['update_count_max'] =  $_POST['update_count_max'];
+            $updateCount_filter_min = leads_update_count_report($update_count_data, 0, 1);
+            echo json_encode(["update_count_filter" => $updateCount_filter, "update_count_filter_min" => $updateCount_filter_min]);
+            die;
+        }
+
 
         if (!empty($_POST["assigned"]) && empty($return_status)) {
             $excel_array = [];
@@ -1195,33 +1246,7 @@ class Reports extends AdminController
             $update_count_array_label = [];
             $update_count_array_min = [];
             $update_count_array_max = [];
-            if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '') {
-                foreach ($_POST["assigned"] as $assigned) {
-                    $update_count_data_min = $update_count_data = $post_data = $_POST;
-                    unset($post_data["assigned"]);
-                    unset($post_data["update_count_min"]);
-                    unset($post_data["update_count_max"]);
-                    $post_data["assigned"][] = $assigned;
-                    $summary = get_leads_summary_filter_report($post_data);
-                    $update_count_data_min["status"][] = $update_count_data["status"][] = 20;
-                    $update_count_data_min["assigned"] = $update_count_data["assigned"] = [];
-                    $update_count_data['update_count_min'] = "";
-                    $update_count_data['update_count_max'] = "";
-                    $update_count_data["assigned"][] = $assigned;
-                    $update_count_data_min["assigned"][] =  $assigned;
-                    $updateCount = leads_update_count($update_count_data, 0, 1);
-                    $updateCount_min = leads_update_count($update_count_data_min, 0, 1);
-                    $staff_name =  get_staff_full_name($assigned);
-                    $update_count_array_label[] = trim($staff_name);
-                    $update_count_data_min['update_count_min'] = $_POST["update_count_min"];
-                    $update_count_data_min['update_count_max'] = $_POST["update_count_max"];
-                    $update_count_array_min[] = intval($updateCount_min);
-                    $update_count_array_max[] = (intval($updateCount));
-                    array_push($source_html_json, $summary[(count($summary) - 1)]["total"]);
-                }
-                echo json_encode(["update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "max_count" => max($update_count_array_max), "total_leads" => $source_html_json]);
-                die;
-            }
+
 
 
             $index = 0;
@@ -1237,15 +1262,17 @@ class Reports extends AdminController
             $source_summary = get_status_summary_filter_report($post_data);
             $status_summary_performance = get_status_summary_filter_performance($post_data);
             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
-            $updateCount = leads_update_count_report($update_count_data, 0, 1);
+            // $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
+
             // Assume $updateCount is an array of arrays with 'total' and 'assigned' keys
 
-            $update_count_array_min = array_map('intval', array_values(array_column($updateCount, 'total', 'assigned')));
+            // $update_count_array_min = array_map('intval', array_values(array_column($updateCount, 'total', 'assigned')));
 
-            $update_count_array_label =  array_values(array_column($updateCount, "assigned", "assigned"));
-            $update_count_array_min = $update_count_array_min;
-            $update_count_array_max = $update_count_array_min;
-            $update_count_array_label[] = $update_count_array_label;
+            // $update_count_array_label =  array_values(array_column($updateCount, "assigned", "assigned"));
+            // $update_count_array_min = $update_count_array_min;
+            // $update_count_array_max = $update_count_array_min;
+            // $update_count_array_label = $update_count_array_label;
+
 
             $report_list = 1;
         } else {
@@ -1260,7 +1287,7 @@ class Reports extends AdminController
             $status_summary_performance = get_status_summary_filter_performance($_POST);
             $update_count_data = $post_data = $_POST;
             $update_count_data["status"][] = 20;
-            $updateCount = leads_update_count_report($update_count_data, 0, 1);
+            // $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
             $report_list = 0;
 
             // if (!empty($excel_data)) {
@@ -1370,7 +1397,7 @@ class Reports extends AdminController
 
         $assigned = isset($_POST["assigned"]) ? $_POST["assigned"] : [];
         $summary = isset($summary) ? $summary : '';
-        $updateCount = isset($updateCount) ? $updateCount : 0;
+        // $updateCount_filter = isset($updateCount_filter) ? $updateCount_filter : [];
         $excel_array = isset($excel_array) ? $excel_array : [];
         $update_count_array_label = isset($update_count_array_label) ? $update_count_array_label : [];
         $update_count_array_min = isset($update_count_array_min) ? $update_count_array_min : [];
@@ -1378,9 +1405,7 @@ class Reports extends AdminController
         $source_summary = isset($source_summary) ? $source_summary : [];
         $status_summary_performance = isset($status_summary_performance) ? $status_summary_performance : [];
         $status_summary_conversion = isset($status_summary_conversion) ? $status_summary_conversion : [];
-        $summary_daily_ = isset($summary_daily_) ? $summary_daily_ : [];
-        $summary_daily_conversion = isset($summary_daily_conversion) ? $summary_daily_conversion : [];
-        $summary_daily_marketing = isset($summary_daily_marketing) ? $summary_daily_marketing : [];
+
         $summary_daily_excel = isset($summary_daily_excel) ? $summary_daily_excel : [];
 
         // Create an array and encode it to JSON
@@ -1388,7 +1413,7 @@ class Reports extends AdminController
             'assigned' => $assigned,
             'report_list' => $report_list,
             'summary' => $summary,
-            'update_count' => $updateCount,
+            // 'updateCount_filter' => $updateCount_filter,
             "excel_data" => $excel_array,
             "update_count_label" => $update_count_array_label,
             "update_count_min" => $update_count_array_min,
@@ -1397,9 +1422,6 @@ class Reports extends AdminController
             "source_summary" => $source_summary,
             "status_summary_performance" => $status_summary_performance,
             "status_summary_conversion" => $status_summary_conversion,
-            "summary_daily_" => $summary_daily_,
-            "summary_daily_conversion" => $summary_daily_conversion,
-            "summary_daily_marketing" => $summary_daily_marketing,
             "summary_daily_excel" => $summary_daily_excel
         ]);
     }

@@ -3883,6 +3883,8 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
         }
     }
 
+    
+
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " group by l.id " . $grup_by . $having . " order by total desc limit 1 ";
         $sql = trim($sql);

@@ -439,7 +439,7 @@ $status_list_ = array_column($status_list, null, "id");
                                 <h3>Report Generate</h3>
 
                                 <div class="col-md-12 row">
-                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls'); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls'); set_call_filter_data(); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
                                     <div class="clearfix"></div>
                                     <div class="row hide col-md-12 leads-overview-calls">
                                         <hr class="hr-panel-heading" />
@@ -465,7 +465,7 @@ $status_list_ = array_column($status_list, null, "id");
                                     </div>
                                     <br>
                                     <br>
-                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-daily hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
+                                    <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-daily hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); graph_represent_(); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
 
                                     <div class="row hide col-md-12 leads-overview-calls-daily">
                                         <hr class="hr-panel-heading" />
@@ -564,6 +564,20 @@ $status_list_ = array_column($status_list, null, "id");
         if (!window.myCharts) {
             window.myCharts = {};
         }
+
+
+        function set_call_filter_data() {
+            setTimeout(() => {
+                if ($(".leads-overview-calls").is(":visible")) {
+                    console.log("click call filter");
+                    slider_data = true;
+                    ajax_filter(1);
+
+                }
+            }, 1000); // Check every 2 seconds
+        }
+
+
 
         // Function to create or update a chart
         function createOrUpdateChart(chartKey, ctx, config) {
@@ -735,7 +749,7 @@ $status_list_ = array_column($status_list, null, "id");
 
         $("#apply_filter_update_count").click(function() {
             slider_data = true;
-            $('#apply_filter').trigger("click");
+            ajax_filter(1);
         })
 
 
@@ -1595,7 +1609,7 @@ $status_list_ = array_column($status_list, null, "id");
             $(id).toggle();
             $("#leads-overview-" + staffid).html('');
             if ($(id).is(":visible")) { // Corrected the if statement
-                $('#apply_filter').trigger("click");
+                ajax_filter();
             }
         }
 
@@ -1656,8 +1670,445 @@ $status_list_ = array_column($status_list, null, "id");
             });
         }
 
+        function graph_represent_() {
+            setTimeout(() => {
+                if ($(".leads-overview-calls-daily").is(":visible")) {
+                    ajax_filter(2);
+                }
+            }, 1000);
+
+        }
+
+        function set_call_filter(updateCount_filter, updateCount_filter_min = []) {
+            if (Object.keys(updateCount_filter).length) {
+                updateCount_filter = Object.values(updateCount_filter);
+                updateCount_filter_min = Object.values(updateCount_filter_min);
+                // $("#show_hide_staff_list").removeClass("hide");
+                // $("#total_staff_list").html(data.total_staff_html);
+                // $(".hide-graph-calls").removeClass("hide");
+                console.log(updateCount_filter);
+                console.log(updateCount_filter_min);
+                let label_names = [];
+                let min = [];
+                let max = [];
+                for (let i = 0; i < updateCount_filter.length; i++) {
+                    let assigned = updateCount_filter[i].assigned;
+
+                    if (staff[assigned] !== undefined) {
+                        label_names.push(staff[assigned]);
+
+                        let minValue = updateCount_filter_min[i] && updateCount_filter_min[i].total ? updateCount_filter_min[i].total : 0;
+                        min.push(minValue);
+
+                        let maxValue = updateCount_filter[i].total ? updateCount_filter[i].total : 0;
+                        max.push(maxValue);
+                    }
+                }
+
+
+                console.log(label_names);
+                console.log(min);
+                console.log(max);
+
+                var configCalls = {
+                    type: "bar",
+                    data: {
+                        labels: label_names, // Date Objects
+                        datasets: [{
+                                label: "Filtered",
+                                backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                borderColor: "rgba(140, 140, 140, 1.0)",
+                                borderWidth: 0,
+                                data: min,
+                                fill: false,
+                                radius: 0,
+                            },
+                            {
+                                label: "Max",
+                                backgroundColor: "rgba(121, 200, 121, 0.8)",
+                                borderColor: "rgba(140, 140, 140, 0.0)",
+                                borderWidth: 0,
+                                data: max,
+                                fill: "-1",
+                                line: false,
+                                radius: 0,
+                            },
+                            // {
+                            //     label: "Total leads",
+                            //     backgroundColor: "rgba(0, o, 238, 0.8)",
+                            //     borderColor: "rgba(140, 140, 140, 1.0)",
+                            //     borderWidth: 0,
+                            //     data: data.total_leads,
+                            //     fill: false,
+                            //     radius: 0,
+                            // }
+                        ]
+                    },
+                    options: {
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false,
+                            displayColors: false,
+                        },
+                        responsive: true,
+                        title: {
+                            display: true,
+                            text: "Not Reachable Leads chat - Filtered/Max "
+                        },
+                        scales: {
+                            x: {
+                                stacked: true,
+                                format: "HH mm",
+                            },
+                            y: {
+                                stacked: true,
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: "value"
+                                }
+                            }
+                        },
+                        pan: {
+                            enabled: true,
+                            mode: "x",
+                            speed: 10,
+                            threshold: 10
+                        },
+                        zoom: {
+                            enabled: true,
+                            drag: false,
+                            mode: "xy",
+                            limits: {
+                                max: 10,
+                                min: 0.5
+                            }
+                        }
+                    }
+                };
+
+                // Get the canvas context
+                var ctxCalls = document.getElementById("canvas").getContext("2d");
+
+                createOrUpdateChart("myCallsChart", ctxCalls, configCalls);
+
+            }
+        }
 
         $('#apply_filter').on('click', function() {
+            ajax_filter()
+        });
+
+        function set_graph_(data) {
+            if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                console.log(data.summary_daily_);
+                $(".hide-graph-daily").removeClass("hide");
+
+                if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
+                    $(".hide-graph-daily").removeClass("hide");
+                    var labels = []
+                    if (date_type.toLowerCase() == "week") {
+                        labels = data.summary_daily_.map(item => getWeekRange(item.dateadded));
+                    } else {
+                        labels = data.summary_daily_.map(item => item.dateadded);
+                    }
+                    var lable_value = data.summary_daily_.map(item => item.count);
+
+                    var configDaily = {
+                        type: "bar",
+                        data: {
+                            labels: labels, // Date Objects
+                            datasets: [{
+                                label: "Leads",
+                                backgroundColor: "rgba(240, 140, 121, 0.8)",
+                                borderColor: "rgba(140, 140, 140, 1.0)",
+                                borderWidth: 0,
+                                data: lable_value,
+                                fill: false,
+                                radius: 0,
+                            }]
+                        },
+                        options: {
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                                displayColors: false,
+                            },
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: "Date Wise Leads chat - Leads"
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    format: "HH mm",
+                                },
+                                y: {
+                                    stacked: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "value"
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: "x",
+                                speed: 10,
+                                threshold: 10
+                            },
+                            zoom: {
+                                enabled: true,
+                                drag: false,
+                                mode: "xy",
+                                limits: {
+                                    max: 10,
+                                    min: 0.5
+                                }
+                            }
+                        }
+                    };
+
+                    // Get the canvas context
+                    var ctxDaily = document.getElementById("canvas_daily").getContext("2d");
+
+                    // Create a new chart with the updated configuration
+                    createOrUpdateChart("canvas_daily", ctxDaily, configDaily);
+
+                }
+
+                if (data.update_count_daily_data != undefined) {
+                    let html_update = "<div class='row scroll-div col-12'>";
+                    for (i = 1; i < (data.update_count_daily_data).length; i++) {
+                        html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+                    }
+                    html_update += "</div>";
+                    $(".leads-overview-" + update_daily_staff_id).html(html_update);
+                    $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
+                    update_daily_staff_id = 0;
+                }
+                if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
+                    $(".hide-graph-daily").removeClass("hide");
+
+                    // Function to get all unique conversion types
+                    function getAllConversionTypes(data) {
+                        const types = new Set();
+                        data.forEach(item => {
+                            const parsedCounts = parseConversionCounts(item.conversion_counts);
+                            Object.keys(parsedCounts).forEach(type => types.add(type));
+                        });
+                        return Array.from(types);
+                    }
+
+                    // Function to get all unique dates
+                    function getAllDates(data) {
+                        if (date_type.toLowerCase() == "week") {
+                            return data.map(item => getWeekRange(item.dateadded));
+                        } else {
+                            return data.map(item => item.dateadded);
+                        }
+                    }
+
+                    // Get all unique conversion types and dates
+                    const conversionTypes = getAllConversionTypes(data.summary_daily_conversion);
+                    const allDates = getAllDates(data.summary_daily_conversion);
+
+                    // Initialize conversion data structure
+                    const conversionData = {};
+                    conversionTypes.forEach(type => {
+                        conversionData[type] = allDates.map(date => ({
+                            date,
+                            count: 0
+                        }));
+                    });
+
+                    // Fill in actual data
+                    data.summary_daily_conversion.forEach(item => {
+                        const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
+                        const parsedCounts = parseConversionCounts(item.conversion_counts);
+                        Object.keys(parsedCounts).forEach(type => {
+                            const index = allDates.indexOf(date);
+                            if (index !== -1) {
+                                conversionData[type][index].count = parsedCounts[type];
+                            }
+                        });
+                    });
+                    // Prepare datasets
+                    const datasets = Object.keys(conversionData).map(type => ({
+                        label: type,
+                        backgroundColor: conversion_type_color[type], // Function to generate random color
+                        borderColor: conversion_type_color[type],
+                        borderWidth: 1,
+                        data: conversionData[type].map(item => item.count),
+                        fill: false
+                    }));
+
+                    // Create the chart
+                    const configDaily = {
+                        type: "bar",
+                        data: {
+                            labels: allDates,
+                            datasets: datasets
+                        },
+                        options: {
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                                displayColors: false,
+                            },
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: "Date Wise Conversion Leads chat - Leads"
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                },
+                                y: {
+                                    stacked: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "value"
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: "x",
+                                speed: 10,
+                                threshold: 10
+                            },
+                            zoom: {
+                                enabled: true,
+                                drag: false,
+                                mode: "xy",
+                                limits: {
+                                    max: 10,
+                                    min: 0.5
+                                }
+                            }
+                        }
+                    };
+
+                    // Get the canvas context
+                    var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
+                    createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
+                }
+                if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
+                    $(".hide-graph-daily").removeClass("hide");
+
+                    // Function to get all unique marketing types
+                    function getAllMarketingTypes(data) {
+                        const types = new Set();
+                        data.forEach(item => {
+                            const parsedCounts = parseConversionCounts(item.marketing_count);
+                            Object.keys(parsedCounts).forEach(type => types.add(type));
+                        });
+                        return Array.from(types);
+                    }
+
+                    // Function to get all unique dates
+                    function getAllDates(data) {
+                        if (date_type.toLowerCase() == "week") {
+                            return data.map(item => getWeekRange(item.dateadded));
+                        } else {
+                            return data.map(item => item.dateadded);
+                        }
+                    }
+
+                    // Get all unique marketing types and dates
+                    const marketingTypes = getAllMarketingTypes(data.summary_daily_marketing);
+                    const allDates = getAllDates(data.summary_daily_marketing);
+
+                    // Initialize marketing data structure
+                    const marketingData = {};
+                    marketingTypes.forEach(type => {
+                        marketingData[type] = allDates.map(date => ({
+                            date,
+                            count: 0
+                        }));
+                    });
+
+                    // Fill in actual data
+                    data.summary_daily_marketing.forEach(item => {
+                        const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
+                        const parsedCounts = parseConversionCounts(item.marketing_count);
+                        Object.keys(parsedCounts).forEach(type => {
+                            const index = allDates.indexOf(date);
+                            if (index !== -1) {
+                                marketingData[type][index].count = parsedCounts[type];
+                            }
+                        });
+                    });
+
+                    // Prepare datasets
+                    const datasets = Object.keys(marketingData).map(type => ({
+                        label: type,
+                        backgroundColor: marketing_type_color[type], // Function to generate random color
+                        borderColor: marketing_type_color[type],
+                        borderWidth: 1,
+                        data: marketingData[type].map(item => item.count),
+                        fill: false
+                    }));
+
+                    // Create the chart
+                    const configDaily = {
+                        type: "bar",
+                        data: {
+                            labels: allDates,
+                            datasets: datasets
+                        },
+                        options: {
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                                displayColors: false,
+                            },
+                            responsive: true,
+                            title: {
+                                display: true,
+                                text: "Date Wise Marketing Leads chat - Leads"
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                },
+                                y: {
+                                    stacked: true,
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: "value"
+                                    }
+                                }
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: "x",
+                                speed: 10,
+                                threshold: 10
+                            },
+                            zoom: {
+                                enabled: true,
+                                drag: false,
+                                mode: "xy",
+                                limits: {
+                                    max: 10,
+                                    min: 0.5
+                                }
+                            }
+                        }
+                    };
+
+                    // Get the canvas context
+                    var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
+                    createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
+                }
+            }
+        }
+
+        function ajax_filter(status_filter = 0) {
+
             var element_view_assign = document.getElementById("view_assigned");
             var element_view_source = document.getElementById("view_source");
             var element_view_status = document.getElementById("view_status");
@@ -1765,6 +2216,12 @@ $status_list_ = array_column($status_list, null, "id");
                     return false;
                 }
             }
+            let graph_status = 0;
+            if (status_filter == 2) {
+                graph_status = 1;
+            }
+
+
 
             if (xhr != null) {
                 xhr.abort();
@@ -1772,9 +2229,8 @@ $status_list_ = array_column($status_list, null, "id");
             $("#generate_pdf").hide();
             $(".hide-btn-response").hide();
             $(".report-data .hide-graph").addClass("hide");
+            $(".hide-graph-daily").addClass("hide");
             $("#show_hide_staff_list").addClass("hide");
-
-            // $(".leadSum").html('');
             $('#apply_filter').attr("disabled", true);
             show_loader("apply_filter");
             xhr = $.ajax({
@@ -1798,17 +2254,33 @@ $status_list_ = array_column($status_list, null, "id");
                     fb_source: view_fb_options,
                     date_type: date_type,
                     assign_from_date: assign_from_date,
-                    assign_to_date: assign_to_date
+                    assign_to_date: assign_to_date,
+                    graph_status: graph_status
 
                 },
                 dataType: "JSON",
                 cache: false,
                 success: function(data) {
+
+                    $(".hide-graph-daily").removeClass("hide");
                     $('#apply_filter').attr("disabled", false);
+                    setMinMaxValues();
                     $('#apply_filter_update_count').attr("disabled", false);
                     hide_loader("apply_filter");
                     hide_loader("apply_filter_update_count");
+                    $(".hide-graph-calls").removeClass("hide");
+
                     //alert(data);  //as a debugging message.
+
+                    if (status_filter == 2) {
+                        set_graph_(data);
+                        return;
+                    }
+
+                    if (status_filter == 0) {
+                        $(".leads-overview-calls").attr("style", "display:none");
+                        $(".leads-overview-calls-daily").attr("style", "display:none");
+                    }
 
                     if (data.update_count_daily_data != undefined) {
                         let html_update = "<div class='row scroll-div col-12'>";
@@ -1823,100 +2295,12 @@ $status_list_ = array_column($status_list, null, "id");
 
                     update_daily_staff_id = 0;
 
-
-                    if (data.update_count_label != undefined && data.update_count_label.length > 0) {
-                        $("#show_hide_staff_list").removeClass("hide");
-                        $("#total_staff_list").html(data.total_staff_html);
-                        $(".hide-graph-calls").removeClass("hide");
-                        let label_names = [];
-                        for (i = 0; i < (data.update_count_label).length; i++) {
-                            if (staff[data.update_count_label[i]] != undefined) {
-                                label_names.push(staff[data.update_count_label[i]]);
-                            }
-                        }
-
-                        var configCalls = {
-                            type: "bar",
-                            data: {
-                                labels: label_names, // Date Objects
-                                datasets: [{
-                                        label: "Filtered",
-                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 1.0)",
-                                        borderWidth: 0,
-                                        data: data.update_count_min,
-                                        fill: false,
-                                        radius: 0,
-                                    },
-                                    {
-                                        label: "Max",
-                                        backgroundColor: "rgba(121, 200, 121, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 0.0)",
-                                        borderWidth: 0,
-                                        data: data.update_count_max,
-                                        fill: "-1",
-                                        line: false,
-                                        radius: 0,
-                                    },
-                                    // {
-                                    //     label: "Total leads",
-                                    //     backgroundColor: "rgba(0, o, 238, 0.8)",
-                                    //     borderColor: "rgba(140, 140, 140, 1.0)",
-                                    //     borderWidth: 0,
-                                    //     data: data.total_leads,
-                                    //     fill: false,
-                                    //     radius: 0,
-                                    // }
-                                ]
-                            },
-                            options: {
-                                tooltips: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    displayColors: false,
-                                },
-                                responsive: true,
-                                title: {
-                                    display: true,
-                                    text: "Not Reachable Leads chat - Filtered/Max "
-                                },
-                                scales: {
-                                    x: {
-                                        stacked: true,
-                                        format: "HH mm",
-                                    },
-                                    y: {
-                                        stacked: true,
-                                        scaleLabel: {
-                                            display: true,
-                                            labelString: "value"
-                                        }
-                                    }
-                                },
-                                pan: {
-                                    enabled: true,
-                                    mode: "x",
-                                    speed: 10,
-                                    threshold: 10
-                                },
-                                zoom: {
-                                    enabled: true,
-                                    drag: false,
-                                    mode: "xy",
-                                    limits: {
-                                        max: 10,
-                                        min: 0.5
-                                    }
-                                }
-                            }
-                        };
-
-                        // Get the canvas context
-                        var ctxCalls = document.getElementById("canvas").getContext("2d");
-
-                        createOrUpdateChart("myCallsChart", ctxCalls, configCalls);
-
+                    if (data.update_count_filter != undefined && Object.keys(data.update_count_filter).length > 0) {
+                        update_count_filter_min = data.update_count_filter_min ? data.update_count_filter_min : [];
+                        set_call_filter(data.update_count_filter, update_count_filter_min);
+                        return;
                     }
+
 
                     if (data.report_list == 1) {
                         $(".leadSum").html("");
@@ -1938,7 +2322,7 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
                         function generateLeadTypeHTML(assigned, conversion_type_set) {
-                            console.log("set-status", staff[assigned]);
+                            // console.log("set-status", staff[assigned]);
                             return new Promise((resolve) => {
 
                                 let ret = `<div class="col-12 panel-body"><h4><b>Leads Types</b></h4><hr>`;
@@ -2000,7 +2384,7 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
                         function generateSourceTypeHTML(assigned) {
-                            console.log("set-source", staff[assigned]);
+                            // console.log("set-source", staff[assigned]);
 
                             source_type["Total Lead Source"] = 0;
                             return new Promise((resolve) => {
@@ -2046,7 +2430,7 @@ $status_list_ = array_column($status_list, null, "id");
 
 
                         function generateConversionTypeHTML(totalLeads, conversion_type_set) {
-                            console.log("set-conversion", staff[assigned]);
+                            // console.log("set-conversion", staff[assigned]);
 
                             return new Promise((resolve) => {
                                 let ret = '<div class="col-12 panel-body" class="con_tab"><h4><b>Conversion Type</b></h4><hr>';
@@ -2078,7 +2462,7 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
                         function generatePerformanceTypeHTML(assigned) {
-                            console.log("set-performance", staff[assigned]);
+                            // console.log("set-performance", staff[assigned]);
 
                             return new Promise((resolve) => {
                                 let html = '';
@@ -2257,6 +2641,7 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
                         processAssignedData(data, assigned, index, status_list, source_summary, source_type);
+                        return;
                     } else if (data.report_list == 0) {
                         let all_status = data.summary;
                         console.lo
@@ -2269,7 +2654,7 @@ $status_list_ = array_column($status_list, null, "id");
 
                         // Iterate over the summary to parse status counts
                         all_status.forEach(statusItem => {
-                            console.log(statusItem);
+                            // console.log(statusItem);
                             // Parse status_counts if it exists, otherwise set to an empty object
                             let statusCounts = statusItem.status_counts ? JSON.parse(statusItem.status_counts) : {};
                             Object.keys(statusCounts).forEach(status => {
@@ -2329,6 +2714,7 @@ $status_list_ = array_column($status_list, null, "id");
 
 
                         set_total_report();
+                        return;
                     }
 
 
@@ -2450,320 +2836,14 @@ $status_list_ = array_column($status_list, null, "id");
                         html += `</div>`;
 
                         $(".total_staff_report").html(html);
+                        return;
                     }
 
-                    if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                        console.log(data.summary_daily_);
-                        $(".hide-graph-daily").removeClass("hide");
 
-                        if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                            $(".hide-graph-daily").removeClass("hide");
-                            var labels = []
-                            if (date_type.toLowerCase() == "week") {
-                                labels = data.summary_daily_.map(item => getWeekRange(item.dateadded));
-                            } else {
-                                labels = data.summary_daily_.map(item => item.dateadded);
-                            }
-                            var lable_value = data.summary_daily_.map(item => item.count);
-
-                            var configDaily = {
-                                type: "bar",
-                                data: {
-                                    labels: labels, // Date Objects
-                                    datasets: [{
-                                        label: "Leads",
-                                        backgroundColor: "rgba(240, 140, 121, 0.8)",
-                                        borderColor: "rgba(140, 140, 140, 1.0)",
-                                        borderWidth: 0,
-                                        data: lable_value,
-                                        fill: false,
-                                        radius: 0,
-                                    }]
-                                },
-                                options: {
-                                    tooltips: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        displayColors: false,
-                                    },
-                                    responsive: true,
-                                    title: {
-                                        display: true,
-                                        text: "Date Wise Leads chat - Leads"
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                            format: "HH mm",
-                                        },
-                                        y: {
-                                            stacked: true,
-                                            scaleLabel: {
-                                                display: true,
-                                                labelString: "value"
-                                            }
-                                        }
-                                    },
-                                    pan: {
-                                        enabled: true,
-                                        mode: "x",
-                                        speed: 10,
-                                        threshold: 10
-                                    },
-                                    zoom: {
-                                        enabled: true,
-                                        drag: false,
-                                        mode: "xy",
-                                        limits: {
-                                            max: 10,
-                                            min: 0.5
-                                        }
-                                    }
-                                }
-                            };
-
-                            // Get the canvas context
-                            var ctxDaily = document.getElementById("canvas_daily").getContext("2d");
-
-                            // Create a new chart with the updated configuration
-                            createOrUpdateChart("canvas_daily", ctxDaily, configDaily);
-
-                        }
-
-                        if (data.update_count_daily_data != undefined) {
-                            let html_update = "<div class='row scroll-div col-12'>";
-                            for (i = 1; i < (data.update_count_daily_data).length; i++) {
-                                html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
-                            }
-                            html_update += "</div>";
-                            $(".leads-overview-" + update_daily_staff_id).html(html_update);
-                            $(".leads-overview-" + update_daily_staff_id).removeClass("hide");
-                            update_daily_staff_id = 0;
-                        }
-                        if (data.summary_daily_conversion != undefined && data.summary_daily_conversion.length > 0) {
-                            $(".hide-graph-daily").removeClass("hide");
-
-                            // Function to get all unique conversion types
-                            function getAllConversionTypes(data) {
-                                const types = new Set();
-                                data.forEach(item => {
-                                    const parsedCounts = parseConversionCounts(item.conversion_counts);
-                                    Object.keys(parsedCounts).forEach(type => types.add(type));
-                                });
-                                return Array.from(types);
-                            }
-
-                            // Function to get all unique dates
-                            function getAllDates(data) {
-                                if (date_type.toLowerCase() == "week") {
-                                    return data.map(item => getWeekRange(item.dateadded));
-                                } else {
-                                    return data.map(item => item.dateadded);
-                                }
-                            }
-
-                            // Get all unique conversion types and dates
-                            const conversionTypes = getAllConversionTypes(data.summary_daily_conversion);
-                            const allDates = getAllDates(data.summary_daily_conversion);
-
-                            // Initialize conversion data structure
-                            const conversionData = {};
-                            conversionTypes.forEach(type => {
-                                conversionData[type] = allDates.map(date => ({
-                                    date,
-                                    count: 0
-                                }));
-                            });
-
-                            // Fill in actual data
-                            data.summary_daily_conversion.forEach(item => {
-                                const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
-                                const parsedCounts = parseConversionCounts(item.conversion_counts);
-                                Object.keys(parsedCounts).forEach(type => {
-                                    const index = allDates.indexOf(date);
-                                    if (index !== -1) {
-                                        conversionData[type][index].count = parsedCounts[type];
-                                    }
-                                });
-                            });
-                            // Prepare datasets
-                            const datasets = Object.keys(conversionData).map(type => ({
-                                label: type,
-                                backgroundColor: conversion_type_color[type], // Function to generate random color
-                                borderColor: conversion_type_color[type],
-                                borderWidth: 1,
-                                data: conversionData[type].map(item => item.count),
-                                fill: false
-                            }));
-
-                            // Create the chart
-                            const configDaily = {
-                                type: "bar",
-                                data: {
-                                    labels: allDates,
-                                    datasets: datasets
-                                },
-                                options: {
-                                    tooltips: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        displayColors: false,
-                                    },
-                                    responsive: true,
-                                    title: {
-                                        display: true,
-                                        text: "Date Wise Conversion Leads chat - Leads"
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                        },
-                                        y: {
-                                            stacked: true,
-                                            scaleLabel: {
-                                                display: true,
-                                                labelString: "value"
-                                            }
-                                        }
-                                    },
-                                    pan: {
-                                        enabled: true,
-                                        mode: "x",
-                                        speed: 10,
-                                        threshold: 10
-                                    },
-                                    zoom: {
-                                        enabled: true,
-                                        drag: false,
-                                        mode: "xy",
-                                        limits: {
-                                            max: 10,
-                                            min: 0.5
-                                        }
-                                    }
-                                }
-                            };
-
-                            // Get the canvas context
-                            var ctxDaily = document.getElementById("canvas_conversion").getContext("2d");
-                            createOrUpdateChart("canvas_conversion", ctxDaily, configDaily);
-                        }
-                        if (data.summary_daily_marketing != undefined && data.summary_daily_marketing.length > 0) {
-                            $(".hide-graph-daily").removeClass("hide");
-
-                            // Function to get all unique marketing types
-                            function getAllMarketingTypes(data) {
-                                const types = new Set();
-                                data.forEach(item => {
-                                    const parsedCounts = parseConversionCounts(item.marketing_count);
-                                    Object.keys(parsedCounts).forEach(type => types.add(type));
-                                });
-                                return Array.from(types);
-                            }
-
-                            // Function to get all unique dates
-                            function getAllDates(data) {
-                                if (date_type.toLowerCase() == "week") {
-                                    return data.map(item => getWeekRange(item.dateadded));
-                                } else {
-                                    return data.map(item => item.dateadded);
-                                }
-                            }
-
-                            // Get all unique marketing types and dates
-                            const marketingTypes = getAllMarketingTypes(data.summary_daily_marketing);
-                            const allDates = getAllDates(data.summary_daily_marketing);
-
-                            // Initialize marketing data structure
-                            const marketingData = {};
-                            marketingTypes.forEach(type => {
-                                marketingData[type] = allDates.map(date => ({
-                                    date,
-                                    count: 0
-                                }));
-                            });
-
-                            // Fill in actual data
-                            data.summary_daily_marketing.forEach(item => {
-                                const date = date_type.toLowerCase() == "week" ? getWeekRange(item.dateadded) : item.dateadded;
-                                const parsedCounts = parseConversionCounts(item.marketing_count);
-                                Object.keys(parsedCounts).forEach(type => {
-                                    const index = allDates.indexOf(date);
-                                    if (index !== -1) {
-                                        marketingData[type][index].count = parsedCounts[type];
-                                    }
-                                });
-                            });
-
-                            // Prepare datasets
-                            const datasets = Object.keys(marketingData).map(type => ({
-                                label: type,
-                                backgroundColor: marketing_type_color[type], // Function to generate random color
-                                borderColor: marketing_type_color[type],
-                                borderWidth: 1,
-                                data: marketingData[type].map(item => item.count),
-                                fill: false
-                            }));
-
-                            // Create the chart
-                            const configDaily = {
-                                type: "bar",
-                                data: {
-                                    labels: allDates,
-                                    datasets: datasets
-                                },
-                                options: {
-                                    tooltips: {
-                                        mode: 'index',
-                                        intersect: false,
-                                        displayColors: false,
-                                    },
-                                    responsive: true,
-                                    title: {
-                                        display: true,
-                                        text: "Date Wise Marketing Leads chat - Leads"
-                                    },
-                                    scales: {
-                                        x: {
-                                            stacked: true,
-                                        },
-                                        y: {
-                                            stacked: true,
-                                            scaleLabel: {
-                                                display: true,
-                                                labelString: "value"
-                                            }
-                                        }
-                                    },
-                                    pan: {
-                                        enabled: true,
-                                        mode: "x",
-                                        speed: 10,
-                                        threshold: 10
-                                    },
-                                    zoom: {
-                                        enabled: true,
-                                        drag: false,
-                                        mode: "xy",
-                                        limits: {
-                                            max: 10,
-                                            min: 0.5
-                                        }
-                                    }
-                                }
-                            };
-
-                            // Get the canvas context
-                            var ctxDaily = document.getElementById("canvas_marketing").getContext("2d");
-                            createOrUpdateChart("canvas_marketing", ctxDaily, configDaily);
-                        }
-                    }
                 }
             });
 
-        });
-
-
+        }
 
         function getColumnLetter(index) {
             let columnLetter = '';
