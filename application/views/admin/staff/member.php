@@ -60,6 +60,13 @@
                            <?php echo _l('staff_add_edit_permissions'); ?>
                         </a>
                      </li>
+                     <?php if (!empty($member->staffid)) { ?>
+                        <li role="presentation">
+                           <a href="#staff_assets" aria-controls="staff_assets" role="tab" data-toggle="tab">
+                              <?php echo _l('staff_assets'); ?>
+                           </a>
+                        </li>
+                     <?php } ?>
                   </ul>
                   <div class="tab-content">
                      <div role="tabpanel" class="tab-pane active" id="tab_staff_profile">
@@ -759,6 +766,7 @@
 
          }
       }
+
    </script>
    </body>
 

@@ -78,9 +78,9 @@
               <p class="pull-right text-info"><?php echo _l('staff_admin_profile'); ?></p>
             <?php } ?>
             <?php echo staff_profile_image($staff_p->staffid, array('staff-profile-image-thumb'), 'thumb'); ?>
-            <?php if(has_permission('whatsapp', '', 'view')){ ?>
-            <div class="whatsapp-qr-scanner"></div>
-            <?php }?>
+            <?php if (has_permission('whatsapp', '', 'view')) { ?>
+              <div class="whatsapp-qr-scanner"></div>
+            <?php } ?>
             <div class="profile mtop20 display-inline-block">
               <h4>
                 <?php echo $staff_p->firstname . ' ' . $staff_p->lastname; ?>
@@ -115,6 +115,51 @@
             </div>
           </div>
         </div>
+
+        <div class="panel_s">
+          <div class="panel-body">
+            <h4 class="no-margin">
+              <?php echo "Assects Allocation" ?>
+            </h4>
+            <hr class="hr-panel-heading" />
+
+            <div class="_filters _hidden_inputs hidden staff_projects_filter">
+              <?php echo form_hidden('staff_id', $staff_p->staffid); ?>
+            </div>
+            <?php
+            $table_data = array(
+              _l('Allocation Datetime'),
+              _l('asset_name'),
+              _l('acction_code'),
+              _l('action'),
+              _l('quantity_as_qty'),
+              _l('acction_from'),
+              _l('acction_to'),
+            );
+            render_datatable($table_data, 'table_action');
+            ?>
+            <br>
+            <hr>
+            <br>
+            <h4 class="no-margin">
+              <?php echo "Assects Revoke" ?>
+            </h4>
+            <hr>
+            <?php
+            $table_data_revoke = array(
+              _l('Revoke Datetime'),
+              _l('asset_name'),
+              _l('acction_code'),
+              _l('action'),
+              _l('quantity_as_qty'),
+              _l('acction_from'),
+              _l('acction_to'),
+            );
+            render_datatable($table_data_revoke, 'table_action_revoke');
+            ?>
+          </div>
+        </div>
+
         <?php if (($staff_p->staffid == get_staff_user_id() || is_admin()) && !$this->input->get('notifications')) { ?>
           <div class="panel_s">
             <div class="panel-body">
@@ -137,6 +182,8 @@
             </div>
           </div>
         <?php } ?>
+
+
       </div>
       <?php if ($staff_p->staffid == get_staff_user_id()) { ?>
         <div class="col-md-7<?php if ($this->input->get('notifications')) {
@@ -214,6 +261,9 @@
       $('.loader').click();
     }
   });
+
+  initDataTable('.table-table_action', admin_url + 'assets/table_action_allocate/allocation?action_to=<?= isset($staff_p) ?  $staff_p->staffid : null ?>');
+  initDataTable('.table-table_action_revoke', admin_url + 'assets/table_action_allocate/revoke?action_to=<?= isset($staff_p) ?  $staff_p->staffid : null ?>');
 </script>
 </body>
 

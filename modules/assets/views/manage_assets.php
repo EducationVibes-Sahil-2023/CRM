@@ -31,7 +31,7 @@
                       <span class="glyphicon glyphicon-align-justify"></span>&nbsp;<?php echo _l('all_asset'); ?>
                     </a>
                   </li>
-                  <li role="presentation">
+                  <!-- <li role="presentation">
                     <a href="#not_pending_yet" aria-controls="not_pending_yet" role="tab" data-toggle="tab" aria-controls="not_pending_yet">
                       <span class="glyphicon glyphicon-briefcase"></span>&nbsp;<?php echo htmlspecialchars(_l('not_pending_yet')); ?>
                     </a>
@@ -61,7 +61,7 @@
                     <a href="#broken" aria-controls="broken" role="tab" data-toggle="tab" aria-controls="broken">
                       <span class="glyphicon glyphicon-remove"></span>&nbsp;<?php echo htmlspecialchars(_l('broken')); ?>
                     </a>
-                  </li>
+                  </li> -->
                 </ul>
               </div>
             </div>
