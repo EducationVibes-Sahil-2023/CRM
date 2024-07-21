@@ -2220,7 +2220,10 @@ $status_list_ = array_column($status_list, null, "id");
             if (status_filter == 2) {
                 graph_status = 1;
             }
-
+            let call_status = 0;
+            if (status_filter == 1) {
+                call_status = 1;
+            }
 
 
             if (xhr != null) {
@@ -2255,7 +2258,8 @@ $status_list_ = array_column($status_list, null, "id");
                     date_type: date_type,
                     assign_from_date: assign_from_date,
                     assign_to_date: assign_to_date,
-                    graph_status: graph_status
+                    graph_status: graph_status,
+                    call_status: call_status
 
                 },
                 dataType: "JSON",
