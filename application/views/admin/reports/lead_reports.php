@@ -2264,7 +2264,7 @@ $status_list_ = array_column($status_list, null, "id");
 
                     $(".hide-graph-daily").removeClass("hide");
                     $('#apply_filter').attr("disabled", false);
-                    setMinMaxValues();
+                    // setMinMaxValues();
                     $('#apply_filter_update_count').attr("disabled", false);
                     hide_loader("apply_filter");
                     hide_loader("apply_filter_update_count");

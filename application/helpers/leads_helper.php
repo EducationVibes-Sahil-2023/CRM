@@ -3879,11 +3879,9 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
         if (!empty($having)) {
             $sql_add = ' AND COUNT(l.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         } else {
-            $sql_add = ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+            $sql_add = ' HAVING COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND  count(DISTINCT(l.id)) ';
         }
     }
-
-    
 
     if (!empty($max_status) && $max_status == 1) {
         $sql .= " group by l.id " . $grup_by . $having . " order by total desc limit 1 ";
@@ -3910,7 +3908,6 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
     if (!empty($leads_count) && $leads_count == 1) {
         $sql .= " limit 10 ";
     }
-    $sql = trim($sql);
 
     $update_count = $CI->db->query($sql)->result_array();
 
