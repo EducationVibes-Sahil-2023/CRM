@@ -1656,6 +1656,7 @@ $status_list_ = array_column($status_list, null, "id");
         var staff_list = <?= (!empty($staff_list)) ? json_encode($staff_list) : [] ?>;
         var status_list_ = <?= (!empty($status_list_)) ? json_encode($status_list_) : [] ?>;
         var performance_array = <?= (!empty($marketing_type)) ? json_encode($marketing_type) : [] ?>;
+        var performance_array_name = <?= (!empty($performance_array)) ? json_encode($performance_array) : [] ?>;
 
         if (status_list.length > 0) {
             status_list.push({
@@ -2656,6 +2657,41 @@ $status_list_ = array_column($status_list, null, "id");
                         total_staff_report_array["performance"] = {};
                         total_staff_report_array["total"] = 0;
 
+                        // Initialize status array
+                        status_list.forEach(s => {
+                            total_staff_report_array["status"][s.name] = 0;
+                        });
+
+                        // Initialize source array and related performance array
+                        source_type.forEach(so => {
+                            total_staff_report_array["source"][so.name] = 0;
+
+                            // Ensure marketing_type and its corresponding name exist before accessing them
+                            if (performance_array_name[so.marketing_type] && performance_array_name[so.marketing_type].name) {
+                                total_staff_report_array["performance"][performance_array_name[so.marketing_type].name] = {};
+                            }
+                        });
+
+                        // Initialize conversion array
+                        conversion_type.forEach(co => {
+                            if (co.parents !== "") {
+                                total_staff_report_array["conversion"][co.name] = 0;
+                            }
+                        });
+
+                        // Initialize performance array and nested conversion types
+                        Object.keys(total_staff_report_array["performance"]).forEach(performanceKey => {
+                            conversion_type.forEach(coo => {
+                                if (coo.parents !== "") {
+                                    total_staff_report_array["performance"][performanceKey][coo.name] = 0;
+                                }
+                            });
+                        });
+
+                        // Log the initialized structure
+                        console.log(total_staff_report_array);
+
+
                         // Iterate over the summary to parse status counts
                         all_status.forEach(statusItem => {
                             // console.log(statusItem);
@@ -2716,7 +2752,7 @@ $status_list_ = array_column($status_list, null, "id");
                             });
                         });
 
-
+                        console.log(total_staff_report_array);
                         set_total_report();
                         return;
                     }
