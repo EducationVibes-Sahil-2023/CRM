@@ -2139,7 +2139,7 @@ $status_list_ = array_column($status_list, null, "id");
             var update_count_min = '';
             var update_count_max = '';
             var update_staff_id = "";
-            if (slider_data) {
+            if (slider_data && status_filter == 1) {
                 update_count_min = document.getElementById("update_count_min").value;
                 update_count_max = document.getElementById("update_count_max").value;
             }
