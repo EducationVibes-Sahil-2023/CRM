@@ -245,12 +245,12 @@ function app_init_admin_sidebar_menu_items()
                         'href'     => admin_url('reports/expenses_vs_income'),
                         'position' => 15,
                 ]);
-                // $CI->app_menu->add_sidebar_children_item('reports', [
-                //         'slug'     => 'leads-reports',
-                //         'name'     => _l('als_reports_leads_submenu'),
-                //         'href'     => admin_url('reports/leads'),
-                //         'position' => 20,
-                // ]);
+                $CI->app_menu->add_sidebar_children_item('reports', [
+                        'slug'     => 'leads-reports',
+                        'name'     => _l('als_reports_leads_submenu'),
+                        'href'     => admin_url('reports/leads'),
+                        'position' => 20,
+                ]);
 
                 if (is_admin()) {
                         $CI->app_menu->add_sidebar_children_item('reports', [

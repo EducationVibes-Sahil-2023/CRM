@@ -1880,7 +1880,7 @@ $status_list_ = array_column($status_list, null, "id");
 
                 if (data.update_count_daily_data != undefined) {
                     let html_update = "<div class='row scroll-div col-12'>";
-                    for (i = 1; i < (data.update_count_daily_data).length; i++) {
+                    for (i = 0; i < (data.update_count_daily_data).length; i++) {
                         html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
                     }
                     html_update += "</div>";
@@ -2289,7 +2289,7 @@ $status_list_ = array_column($status_list, null, "id");
 
                     if (data.update_count_daily_data != undefined) {
                         let html_update = "<div class='row scroll-div col-12'>";
-                        for (i = 1; i < (data.update_count_daily_data).length; i++) {
+                        for (i = 0; i < (data.update_count_daily_data).length; i++) {
                             html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
                         }
                         html_update += "</div>";
