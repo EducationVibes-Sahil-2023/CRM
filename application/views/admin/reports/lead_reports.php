@@ -559,6 +559,7 @@ $status_list_ = array_column($status_list, null, "id");
         var summary_daily_excel = [];
         const max_count = 30;
         const max = 30;
+        var excel_array = [];
 
         // Initialize an object to store chart instances
         if (!window.myCharts) {
@@ -1643,13 +1644,14 @@ $status_list_ = array_column($status_list, null, "id");
         var totalLeads = 0;
         var sum;
         var staff_total_lead = 0;
+        var staff_total_lead_array = [];
         var total_staff_report_array = [];
 
         // var conversion_type_set;
 
         var source_type = <?= (!empty($source_type)) ? json_encode($source_type) : [] ?>;
         var conversion_type = <?= (!empty($conversion_type)) ? json_encode($conversion_type) : [] ?>;
-        var conversion_type_ = <?= (!empty($conversion_type_)) ? json_encode($conversion_type_) : [] ?>;
+        var conversion_type__ = <?= (!empty($conversion_type_)) ? json_encode($conversion_type_) : [] ?>;
         var status_list = <?= (!empty($status_list)) ? json_encode($status_list, true) : [] ?>;
         var status_list_ = <?= (!empty($status_list_)) ? json_encode($status_list_, true) : [] ?>;
         var staff = <?= (!empty($staff_list)) ? json_encode($staff_list) : [] ?>;
@@ -2341,12 +2343,12 @@ $status_list_ = array_column($status_list, null, "id");
                                     assigned_summary["Total Lead Status"] = totalLeads;
 
                                     total_staff_report_array["status"]["Total Lead Status"] = total_staff_report_array["status"]["Total Lead Status"] ? total_staff_report_array["status"]["Total Lead Status"] + totalLeads : totalLeads;
-
                                 }
 
 
                                 totalLeads = 0;
                                 // console.log(staff_total_lead);
+                                staff_total_lead_array[staff[assigned]] = staff_total_lead;
                                 status_list.forEach(status => {
                                     let status_count = assigned_summary[status.name] || 0;
                                     // Ensure the 'status' property is initialized
@@ -2400,11 +2402,16 @@ $status_list_ = array_column($status_list, null, "id");
                                     let source_key = assigned + "-" + source.id;
                                     let status_count = (source_summary[source_key] && source_summary[source_key].total) || 0;
                                     source_type["Total Lead Source"] += parseInt(status_count);
+
+
                                     if (source.name == "Total Lead Source") {
                                         status_count = source_type["Total Lead Source"];
                                         total_staff_report_array["source"]["Total Lead Source"] = total_staff_report_array["source"]["Total Lead Source"] ? total_staff_report_array["source"]["Total Lead Source"] + status_count : status_count;
 
+
                                     }
+
+                                    // excel_data_array[staff[assigned]]["conversion_data"][source.name] = status_count;
 
                                     // Ensure the 'status' property is initialized
                                     if (!total_staff_report_array["source"]) {
@@ -2434,7 +2441,7 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
 
-                        function generateConversionTypeHTML(totalLeads, conversion_type_set) {
+                        function generateConversionTypeHTML(totalLeads, conversion_type_set, staff_name) {
                             // console.log("set-conversion", staff[assigned]);
 
                             return new Promise((resolve) => {
@@ -2448,6 +2455,10 @@ $status_list_ = array_column($status_list, null, "id");
                                     ret += percentage.toFixed(2);
 
                                     total_staff_report_array["conversion"][conversion.name] = total_staff_report_array["conversion"][conversion.name] ? total_staff_report_array["conversion"][conversion.name] + percentage : percentage;
+
+                                    // console.log(conversion);
+                                    // excel_data_array[staff[assigned]]["conversion_data"][source.name + "-" + conversion_type__[source.conversion_id].name] = status_count;
+
 
                                     if (percentage > 0) {
                                         if (totalLeads !== 0) {
@@ -2577,6 +2588,8 @@ $status_list_ = array_column($status_list, null, "id");
                                 let assigned_summary = [];
                                 totalLeads = 0;
                                 let conversion_type_set = []
+                                // Ensure that the staff member's object exists in excel_data_array
+
 
                                 // console.log(conversion_type_set);
                                 if (!isEmpty(index) && index % 2 === 0) {
@@ -2609,7 +2622,7 @@ $status_list_ = array_column($status_list, null, "id");
                         <div class="handle"></div>
                     </button>
                 </div>
-                ${await generateConversionTypeHTML(totalLeads,conversion_type_set)}
+                ${await generateConversionTypeHTML(totalLeads,conversion_type_set,staff_name)}
                 <div class="col-12 panel-body" class="con_tab" style="display:none;">
                     <h4><b>Marketing Type</b></h4><hr>
                     ${await generatePerformanceTypeHTML(assignedId)}
@@ -2631,6 +2644,65 @@ $status_list_ = array_column($status_list, null, "id");
                             }
 
 
+
+                            Object.keys(data.status_summary_conversion).forEach(summary_conversion => {
+                                console.log(summary_conversion);
+
+                                if (!excel_data_array[staff[summary_conversion]]) {
+                                    excel_data_array[staff[summary_conversion]] = {};
+                                }
+                                // Initialize 'conversion_data' as an empty array if it does not exist
+                                if (!Array.isArray(excel_data_array[staff[summary_conversion]]["conversion_data"])) {
+                                    excel_data_array[staff[summary_conversion]]["conversion_data"] = [];
+                                }
+                                // Initialize 'performance_data' as an empty array if it does not exist
+                                if (!Array.isArray(excel_data_array[staff[summary_conversion]]["performance_data"])) {
+                                    excel_data_array[staff[summary_conversion]]["performance_data"] = [];
+                                }
+
+                                data.status_summary_conversion[summary_conversion].forEach(conversion_ => {
+                                    console.log(conversion_);
+                                    let conversionName = conversion_.conversion_name;
+                                    let sourceName = conversion_.source_name;
+                                    if (sourceName != "" && conversionName != "") {
+                                        // Construct the key for the conversion data
+                                        let key = sourceName + "-" + conversionName;
+
+                                        // Ensure the property is initialized before adding the total
+                                        if (!excel_data_array[staff[summary_conversion]]["conversion_data"][key]) {
+                                            excel_data_array[staff[summary_conversion]]["conversion_data"][key] = 0;
+                                        }
+
+                                        // Add the total to the existing value, parsing it as an integer (or float)
+                                        excel_data_array[staff[summary_conversion]]["conversion_data"][key] += parseInt(conversion_.total, 10);
+                                    }
+                                });
+
+                                console.log(staff_name);
+
+                                data.status_summary_performance[summary_conversion].forEach(performance_ => {
+
+                                    let conversionName = performance_.conversion_name;
+                                    let marketingName = performance_.marketing_name;
+                                    if (marketingName != "" && conversionName != "") {
+                                        // Construct the key for the performance data
+                                        let key = marketingName + "-" + conversionName;
+
+                                        // Ensure the property is initialized before adding the total
+                                        if (!excel_data_array[staff[summary_conversion]]["performance_data"][key]) {
+                                            excel_data_array[staff[summary_conversion]]["performance_data"][key] = 0;
+                                        }
+
+                                        // Add the total to the existing value, parsing it as an integer (or float)
+                                        excel_data_array[staff[summary_conversion]]["performance_data"][key] += parseInt(performance_.total, 10);
+                                    }
+                                });
+                                console.log(staff_total_lead_array[staff_name]);
+
+
+                            });
+
+
                             set_total_report();
                         }
 
@@ -2645,6 +2717,7 @@ $status_list_ = array_column($status_list, null, "id");
                             return value === undefined || value === null || value === '';
                         }
 
+                        // console.log(data.excel_data);
                         processAssignedData(data, assigned, index, status_list, source_summary, source_type);
                         return;
                     } else if (data.report_list == 0) {
@@ -2729,6 +2802,8 @@ $status_list_ = array_column($status_list, null, "id");
                                         total_staff_report_array["conversion"][conversionName] = 0;
                                     }
                                     total_staff_report_array["conversion"][conversionName] += parseInt(conversion_.total) || 0;
+
+                                    // excel_array[staff[assigned]]["conversion_data"][source.name + "-" + source.marketing_name] = status_count;
 
                                 }
                             });

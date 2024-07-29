@@ -1171,6 +1171,17 @@ class Reports extends AdminController
                     $_POST["assigned"][] = $staff['staffid'];
                 }
             }
+        } else if (!empty($_POST["lead_type"])) {
+            $departmentStaff = $this->db->select("staffid")->where_in("lead_type", $_POST["lead_type"])->get(db_prefix() . "staff")->result_array();
+            foreach ($departmentStaff as $staff) {
+                if ($role == 3) {
+                    if (!empty($role_staffs[$staff['staffid']])) {
+                        $_POST["assigned"][] = $staff['staffid'];
+                    }
+                } else {
+                    $_POST["assigned"][] = $staff['staffid'];
+                }
+            }
         }
 
 
