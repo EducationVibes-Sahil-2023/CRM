@@ -1247,7 +1247,7 @@ class Reports extends AdminController
             $update_count_data['update_count_min'] = "";
             $update_count_data['update_count_max'] = "";
             $summary = get_leads_summary_filter_report($post_data);
-            // $excel_data = get_leads_summary_filter_excel($post_data);
+            $excel_data = get_leads_summary_filter_excel_report($post_data);
             $source_summary = get_status_summary_filter_report($post_data);
             $status_summary_performance = get_status_summary_filter_performance($post_data);
             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
@@ -1274,6 +1274,8 @@ class Reports extends AdminController
             $source_summary = get_status_summary_filter_report($_POST);
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
             $status_summary_performance = get_status_summary_filter_performance($_POST);
+            $excel_data = get_leads_summary_filter_excel_report($_POST);
+
             $update_count_data = $post_data = $_POST;
             $update_count_data["status"][] = 20;
             // $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
@@ -1403,7 +1405,7 @@ class Reports extends AdminController
             'report_list' => $report_list,
             'summary' => $summary,
             // 'updateCount_filter' => $updateCount_filter,
-            "excel_data" => $excel_array,
+            "excel_data" => $excel_data,
             "update_count_label" => $update_count_array_label,
             "update_count_min" => $update_count_array_min,
             "update_count_max" => $update_count_array_max,

@@ -2590,7 +2590,19 @@ $status_list_ = array_column($status_list, null, "id");
                                 let conversion_type_set = []
                                 // Ensure that the staff member's object exists in excel_data_array
 
+                                if (!excel_data_array[staff_name]) {
+                                    excel_data_array[staff_name] = {};
+                                    // excel_data_array[staff_name] = excel_array[assignedId];
 
+                                }
+                                // Initialize 'conversion_data' as an empty array if it does not exist
+                                if (!Array.isArray(excel_data_array[staff_name]["conversion_data"])) {
+                                    excel_data_array[staff_name]["conversion_data"] = [];
+                                }
+                                // Initialize 'performance_data' as an empty array if it does not exist
+                                if (!Array.isArray(excel_data_array[staff_name]["performance_data"])) {
+                                    excel_data_array[staff_name]["performance_data"] = [];
+                                }
                                 // console.log(conversion_type_set);
                                 if (!isEmpty(index) && index % 2 === 0) {
                                     ret += '<div class="break-page" style="page-break-before: always;"></div>';
@@ -2645,62 +2657,62 @@ $status_list_ = array_column($status_list, null, "id");
 
 
 
-                            Object.keys(data.status_summary_conversion).forEach(summary_conversion => {
-                                console.log(summary_conversion);
+                            // Object.keys(data.status_summary_conversion).forEach(summary_conversion => {
+                            //     console.log(summary_conversion);
 
-                                if (!excel_data_array[staff[summary_conversion]]) {
-                                    excel_data_array[staff[summary_conversion]] = {};
-                                }
-                                // Initialize 'conversion_data' as an empty array if it does not exist
-                                if (!Array.isArray(excel_data_array[staff[summary_conversion]]["conversion_data"])) {
-                                    excel_data_array[staff[summary_conversion]]["conversion_data"] = [];
-                                }
-                                // Initialize 'performance_data' as an empty array if it does not exist
-                                if (!Array.isArray(excel_data_array[staff[summary_conversion]]["performance_data"])) {
-                                    excel_data_array[staff[summary_conversion]]["performance_data"] = [];
-                                }
+                            //     if (!excel_data_array[staff[summary_conversion]]) {
+                            //         excel_data_array[staff[summary_conversion]] = {};
+                            //     }
+                            //     // Initialize 'conversion_data' as an empty array if it does not exist
+                            //     if (!Array.isArray(excel_data_array[staff[summary_conversion]]["conversion_data"])) {
+                            //         excel_data_array[staff[summary_conversion]]["conversion_data"] = [];
+                            //     }
+                            //     // Initialize 'performance_data' as an empty array if it does not exist
+                            //     if (!Array.isArray(excel_data_array[staff[summary_conversion]]["performance_data"])) {
+                            //         excel_data_array[staff[summary_conversion]]["performance_data"] = [];
+                            //     }
 
-                                data.status_summary_conversion[summary_conversion].forEach(conversion_ => {
-                                    console.log(conversion_);
-                                    let conversionName = conversion_.conversion_name;
-                                    let sourceName = conversion_.source_name;
-                                    if (sourceName != "" && conversionName != "") {
-                                        // Construct the key for the conversion data
-                                        let key = sourceName + "-" + conversionName;
+                            //     // data.status_summary_conversion[summary_conversion].forEach(conversion_ => {
+                            //     //     console.log(conversion_);
+                            //     //     let conversionName = conversion_.conversion_name;
+                            //     //     let sourceName = conversion_.source_name;
+                            //     //     if (sourceName != "" && conversionName != "") {
+                            //     //         // Construct the key for the conversion data
+                            //     //         let key = sourceName + "-" + conversionName;
 
-                                        // Ensure the property is initialized before adding the total
-                                        if (!excel_data_array[staff[summary_conversion]]["conversion_data"][key]) {
-                                            excel_data_array[staff[summary_conversion]]["conversion_data"][key] = 0;
-                                        }
+                            //     //         // Ensure the property is initialized before adding the total
+                            //     //         if (!excel_data_array[staff[summary_conversion]]["conversion_data"][key]) {
+                            //     //             excel_data_array[staff[summary_conversion]]["conversion_data"][key] = 0;
+                            //     //         }
 
-                                        // Add the total to the existing value, parsing it as an integer (or float)
-                                        excel_data_array[staff[summary_conversion]]["conversion_data"][key] += parseInt(conversion_.total, 10);
-                                    }
-                                });
+                            //     //         // Add the total to the existing value, parsing it as an integer (or float)
+                            //     //         excel_data_array[staff[summary_conversion]]["conversion_data"][key] += parseInt(conversion_.total, 10);
+                            //     //     }
+                            //     // });
 
-                                console.log(staff_name);
+                            //     // console.log(staff_name);
 
-                                data.status_summary_performance[summary_conversion].forEach(performance_ => {
+                            //     // data.status_summary_performance[summary_conversion].forEach(performance_ => {
 
-                                    let conversionName = performance_.conversion_name;
-                                    let marketingName = performance_.marketing_name;
-                                    if (marketingName != "" && conversionName != "") {
-                                        // Construct the key for the performance data
-                                        let key = marketingName + "-" + conversionName;
+                            //     //     let conversionName = performance_.conversion_name;
+                            //     //     let marketingName = performance_.marketing_name;
+                            //     //     if (marketingName != "" && conversionName != "") {
+                            //     //         // Construct the key for the performance data
+                            //     //         let key = marketingName + "-" + conversionName;
 
-                                        // Ensure the property is initialized before adding the total
-                                        if (!excel_data_array[staff[summary_conversion]]["performance_data"][key]) {
-                                            excel_data_array[staff[summary_conversion]]["performance_data"][key] = 0;
-                                        }
+                            //     //         // Ensure the property is initialized before adding the total
+                            //     //         if (!excel_data_array[staff[summary_conversion]]["performance_data"][key]) {
+                            //     //             excel_data_array[staff[summary_conversion]]["performance_data"][key] = 0;
+                            //     //         }
 
-                                        // Add the total to the existing value, parsing it as an integer (or float)
-                                        excel_data_array[staff[summary_conversion]]["performance_data"][key] += parseInt(performance_.total, 10);
-                                    }
-                                });
-                                console.log(staff_total_lead_array[staff_name]);
+                            //     //         // Add the total to the existing value, parsing it as an integer (or float)
+                            //     //         excel_data_array[staff[summary_conversion]]["performance_data"][key] += parseInt(performance_.total, 10);
+                            //     //     }
+                            //     // });
+                            //     // console.log(staff_total_lead_array[staff_name]);
 
 
-                            });
+                            // });
 
 
                             set_total_report();

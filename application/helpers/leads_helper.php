@@ -3926,12 +3926,12 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
             $callsByDate[$entry['assigned']]["total"] += $entry['total'];
         }
     }
-    
+
     // To limit the results to 10, you can use array_slice
     $callsByDate = array_slice($callsByDate, 0, 10);
-    
 
-    
+
+
 
     return $callsByDate;
     // $result = $CI->db->query($sql)->result_array();
@@ -4329,6 +4329,150 @@ function get_leads_summary_filter_excel($params)
     return $result;
 }
 
+
+function get_leads_summary_filter_excel_report($params)
+{
+    $CI = &get_instance();
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+    $statuses = $CI->leads_model->get_status();
+    $totalStatuses = count($statuses);
+    $has_permission_view = has_permission('leads', '', 'view');
+    $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned = ' . get_staff_user_id() . ' OR l.is_public = 1)';
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    $tids = '';
+
+    if ($role == 3) {
+        $sid = get_staff_user_id();
+        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $CI->db->close();
+        $CI->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+
+        if (!empty($sids)) {
+            $tids = ' AND assigned IN (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned IN (' . $sid . ')';
+        }
+    }
+
+    $sql = "SELECT l.assigned, 
+        COUNT(DISTINCT(l.id)) AS total,
+        c.id AS conversion_id,
+        m.id AS marketing_id,
+        ls.name AS status_name,
+        s.name AS source_name,
+        CONCAT(ls.name, ' - ', s.name) AS index_name,
+        CONCAT(ls.name, ' - ', s.name, ' - ', l.assigned) AS index_name_staff
+    FROM 
+        " . db_prefix() . "leads l
+    INNER JOIN " . db_prefix() . "leads_status ls ON ls.id = l.status
+    INNER JOIN " . db_prefix() . "leads_sources s ON s.id = l.source
+    LEFT JOIN " . db_prefix() . "lead_marketing m ON m.id = s.marketing_type
+    LEFT JOIN " . db_prefix() . "lead_conversion_type c ON c.id = ls.conversion_type";
+
+    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['google_source'])) {
+        $sql .= ' JOIN tblcustomfieldsvalues ON l.id = tblcustomfieldsvalues.relid';
+    }
+    if (!empty($params['up_to_date'])) {
+        $sql .= " JOIN " . db_prefix() . "calls_activity_logs AS calls ON (l.phonenumber = calls.contact)";
+    }
+    if (!empty($params['followup_to_date'])) {
+        $sql .= ' JOIN tblreminders ON tblreminders.rel_id = l.id';
+    }
+
+    $sql .= ' WHERE 1=1';
+
+    if (isset($status['lost'])) {
+        $sql .= ' AND lost = 1';
+    } elseif (isset($status['junk'])) {
+        $sql .= ' AND junk = 1';
+    } else {
+        if (!empty($params['status'])) {
+            $sql .= ' AND l.status IN (' . implode(",", $params['status']) . ')';
+        }
+    }
+
+    if (!$has_permission_view) {
+        $sql .= ' AND ' . $whereNoViewPermission;
+    }
+    if (!empty($params['assigned'])) {
+        $sql .= ' AND l.assigned IN (' . implode(",", $params['assigned']) . ')';
+    } else {
+        if ($role == 3) {
+            $sql .= $tids;
+        }
+    }
+
+    if (!empty($params['source'])) {
+        $sql .= ' AND l.source IN (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
+    }
+
+    if (!empty($params['lead_type'])) {
+        $sql .= ' AND type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
+    }
+    if (!empty($params['to_date'])) {
+        $from_date = $params['from_date'];
+        $to_date = $params['to_date'];
+        $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+    }
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= " AND DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+            . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "'";
+    }
+    if (!empty($params['followup_to_date'])) {
+        $followup_from_date = $params['followup_from_date'];
+        $followup_to_date = $params['followup_to_date'];
+        $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
+    }
+    if (!empty($params['assign_to_date'])) {
+        $assign_from_date = $params['assign_from_date'];
+        $assign_to_date = $params['assign_to_date'];
+        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+    }
+    if (!empty($params['fb_source'])) {
+        $facebook_source_name = $params['fb_source'];
+        $sql .= ' AND l.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\')';
+    }
+    if (!empty($params['google_source'])) {
+        $google_source_name = $params['google_source'];
+        $sql .= ' AND ' . db_prefix() . 'customfieldsvalues.fieldid = ' . MARKETING_SOURCE_ID . ' AND ' . db_prefix() . 'customfieldsvalues.value IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $google_source_name)) . '\')';
+    }
+
+    $sql .= ' GROUP BY l.assigned, l.source, c.id';
+
+    $result = $CI->db->query($sql)->result_array();
+
+    // if (!empty($result)) {
+    //     $result = array_column($result, null, "index_name_staff");
+    // }
+
+    $data_array = []; // Initialize an empty array to hold grouped data
+
+    // Iterate through each result from the query
+    foreach ($result as $res) {
+        // Use the 'assigned' field as the key to group data
+        $assignedId = $res["assigned"];
+
+        // Initialize the array for this 'assigned' key if it doesn't exist
+        if (!isset($data_array[$assignedId])) {
+            $data_array[$assignedId] = [];
+        }
+
+        // Append the current record to the group corresponding to the 'assigned' key
+        $data_array[$assignedId][] = $res;
+    }
+
+    // $data_array now contains the data grouped by the 'assigned' field
+
+    return $data_array;
+}
+
+
 // function get_status_summary_filter_performance($params, $conversion_status = 0)
 // {
 //     $CI = &get_instance();
@@ -4678,6 +4822,7 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
             $sql .= '  GROUP BY  l.assigned, ls.id, s.id, c.id, m.id ';
         }
     }
+
     // $sql .= ' UNION ALL ';
     $sql = trim($sql);
     // }
