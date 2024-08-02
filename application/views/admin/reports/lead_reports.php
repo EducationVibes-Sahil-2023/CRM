@@ -538,7 +538,7 @@ $status_list_ = array_column($status_list, null, "id");
         ?>
         var conversion_type_color = <?= !empty($conversion_type_color) ? json_encode($conversion_type_color, true) : '' ?>;
         var marketing_type_color = <?= !empty($marketing_type_color) ? json_encode($marketing_type_color, true) : '' ?>;
-
+        const numberFormat = '#,##0.00';
         // Convert all colors in conversion_type_color to rgba
         // for (let name in conversion_type_color) {
         //     if (conversion_type_color.hasOwnProperty(name)) {
@@ -556,9 +556,12 @@ $status_list_ = array_column($status_list, null, "id");
         var conversion_type = <?= !empty($conversion_type) ? json_encode($conversion_type, true) : '' ?>;
         var marketing_type = <?= !empty($marketing_type) ? json_encode($marketing_type, true) : '' ?>;
         var excel_data_array = [];
+        var excel_data_array_total = [];
+        var conversion_total = [];
         var summary_daily_excel = [];
         const max_count = 30;
         const max = 30;
+        var excel_array = [];
 
         // Initialize an object to store chart instances
         if (!window.myCharts) {
@@ -623,29 +626,49 @@ $status_list_ = array_column($status_list, null, "id");
 
 
         function getWeekRange(yearWeek) {
-            // Parse the year and week number from the input
-            const year = parseInt(yearWeek.slice(0, 4), 10);
-            const week = parseInt(yearWeek.slice(4), 10);
+            try {
+                // Check if input is null or not a string
+                if (!yearWeek || typeof yearWeek !== 'string') {
+                    throw new Error("Invalid input: yearWeek must be a non-null string");
+                }
 
-            // Create a date object set to January 1st of the given year
-            const firstDayOfYear = new Date(year, 0, 1);
+                // Check if the input has the correct format
+                if (yearWeek.length !== 6 || isNaN(yearWeek)) {
+                    throw new Error("Invalid input format: yearWeek should be a 6-digit string in the format 'YYYYWW'");
+                }
 
-            // Calculate the day offset to get the first Monday of the year
-            const dayOffset = (firstDayOfYear.getDay() <= 4 ? 0 : 7) + 1 - firstDayOfYear.getDay();
+                // Parse the year and week number from the input
+                const year = parseInt(yearWeek.slice(0, 4), 10);
+                const week = parseInt(yearWeek.slice(4), 10);
 
-            // Calculate the start date of the given week
-            const startDate = new Date(firstDayOfYear);
-            startDate.setDate(firstDayOfYear.getDate() + dayOffset + (week - 1) * 7);
+                // Check if the year and week number are valid
+                if (isNaN(year) || isNaN(week) || week < 1 || week > 53) {
+                    throw new Error("Invalid year or week number");
+                }
 
-            // Calculate the end date of the given week
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 6);
+                // Create a date object set to January 1st of the given year
+                const firstDayOfYear = new Date(year, 0, 1);
 
-            // Format the dates to 'YYYY-MM-DD'
-            const formatDate = (date) => date.toISOString().slice(0, 10);
+                // Calculate the day offset to get the first Monday of the year
+                const dayOffset = (firstDayOfYear.getDay() <= 4 ? 0 : 7) + 1 - firstDayOfYear.getDay();
 
-            return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+                // Calculate the start date of the given week
+                const startDate = new Date(firstDayOfYear);
+                startDate.setDate(firstDayOfYear.getDate() + dayOffset + (week - 1) * 7);
+
+                // Calculate the end date of the given week
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+
+                // Format the dates to 'YYYY-MM-DD'
+                const formatDate = (date) => date.toISOString().slice(0, 10);
+
+                return `${formatDate(startDate)} - ${formatDate(endDate)}`;
+            } catch (error) {
+                return `Error: ${error.message}`;
+            }
         }
+
 
 
 
@@ -753,11 +776,76 @@ $status_list_ = array_column($status_list, null, "id");
         })
 
 
+        var ajax_get_post_data = "";
+        var excel_xhr;
 
         function RunExcelJSExport() {
-            // RunExcelJSExport_()
-            RunExcelJSExport__();
+            // Abort any ongoing Excel export AJAX request if present
+            if (excel_xhr != null) {
+                excel_xhr.abort();
+            }
+
+            // Check if ajax_get_post_data is not empty and add the excel_status parameter
+            if (ajax_get_post_data != "") {
+                if (Array.isArray(ajax_get_post_data)) {
+                    ajax_get_post_data.push({
+                        name: "excel_status",
+                        value: 1
+                    });
+                } else if (typeof ajax_get_post_data === 'object') {
+                    ajax_get_post_data["excel_status"] = 1;
+                }
+                show_loader();
+                // Make the AJAX request
+                excel_xhr = $.ajax({
+                    type: "POST",
+                    url: admin_url + "reports/lead_summary_filter",
+                    data: ajax_get_post_data,
+                    dataType: "JSON",
+                    cache: false,
+                    success: function(data) {
+                        console.log("excel 1");
+                        if (data.summary_daily_excel != undefined) {
+                            // excel_data_array = data.excel_data;
+                            summary_daily_excel = data.summary_daily_excel;
+                        }
+                        generate_excel_data(data)
+                            .then(() => {
+                                RunExcelJSExport__()
+                                hide_loader();
+
+                            })
+                            .catch((error) => {
+                                console.error("An error occurred while processing data:", error);
+                            });
+                    }
+                });
+
+
+                // Handle the successful response and run subsequent code
+                excel_xhr.then(async function(data) {
+                    try {
+                        // Log the data received from the AJAX request
+                        console.log("Excel export data:", data);
+
+                        // Generate the Excel data using the response
+
+
+                        // Continue with the next function in the process
+
+                    } catch (error) {
+                        // Handle any error that occurred in the generate_excel_data function
+                        console.error("Error during Excel data generation:", error);
+                    }
+                }).catch(function(error) {
+                    // Handle any error that occurred in the AJAX request
+                    console.error("An error occurred:", error);
+                });
+            }
         }
+
+
+
 
         function RunExcelJSExport_() {
             var workbook = new ExcelJS.Workbook();
@@ -1025,6 +1113,7 @@ $status_list_ = array_column($status_list, null, "id");
         }
 
         function RunExcelJSExport__() {
+            console.log("generate excel");
             var workbook = new ExcelJS.Workbook();
             let excel_data_array_ = [{
                     "key": 1,
@@ -1040,6 +1129,7 @@ $status_list_ = array_column($status_list, null, "id");
                 }
             ];
 
+            var length_add = 2;
             excel_data_array_.forEach(function(item) {
                 if (item.key == 1) {
                     let worksheet = workbook.addWorksheet(item.name);
@@ -1047,8 +1137,9 @@ $status_list_ = array_column($status_list, null, "id");
                     Object.keys(excel_data_array).forEach(function(key) {
 
                         let excel_data = excel_data_array[key];
+                        // console.log(excel_data);
                         // set up some data
-                        console.log(excel_data)
+                        // console.log(excel_data)
                         let daily_report = [];
                         if (summary_daily_excel[key] != undefined) {
                             daily_report = summary_daily_excel[key];
@@ -1065,7 +1156,7 @@ $status_list_ = array_column($status_list, null, "id");
                         };
                         for (j = con_index; j <= (con_index); j++) {
                             let index = 0;
-                            for (let i = 2; i < (source_name.length); i++) {
+                            for (let i = 2; i < (source_name.length + length_add); i++) {
 
                                 if (source_name[index].name != undefined) {
                                     // console.log(_getColumnLetter[i] + j);
@@ -1084,10 +1175,8 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
                         var index_type = 0;
+                        for (j = con_index + 1; j < ((con_index + 1) + (status_name.length)); j++) {
 
-                        for (j = con_index + 1; j < ((con_index) + (status_name.length)); j++) {
-                            console.log(j);
-                            console.log((con_index) + (status_name.length));
                             if (status_name[index_type].name !== undefined) {
                                 worksheet.getCell("B" + j).value = status_name[index_type].name;
                                 worksheet.getCell("B" + j).font = {
@@ -1103,9 +1192,9 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
                         let index_upper = 0;
-                        for (j = con_index + 1; j < ((con_index) + (status_name.length)); j++) {
+                        for (j = con_index + 1; j < ((con_index + 1) + (status_name.length)); j++) {
                             let index = 0;
-                            for (let i = 2; i < (source_name.length); i++) {
+                            for (let i = 2; i < (source_name.length + length_add); i++) {
                                 if (source_name[index].name !== undefined && status_name[index_upper].name !== undefined) {
                                     worksheet.getCell("A" + j).value = key;
                                     worksheet.getCell("A" + j).font = {
@@ -1211,7 +1300,7 @@ $status_list_ = array_column($status_list, null, "id");
                         };
                         for (j = con_index; j <= con_index; j++) {
                             let index = 0;
-                            for (let i = 2; i < (source_name.length); i++) {
+                            for (let i = 2; i < (source_name.length + length_add); i++) {
                                 if (source_name[index].name != undefined) {
                                     worksheet.getCell(_getColumnLetter[i] + j).value = source_name[index].name;
                                     worksheet.getCell(_getColumnLetter[i] + j).font = {
@@ -1250,9 +1339,39 @@ $status_list_ = array_column($status_list, null, "id");
                         let con_index_upper = 0;
                         for (j = (con_index + 1); j < ((con_index + 1) + (conversion_type.length)); j++) {
                             let index = 0;
-                            for (let i = 2; i < (source_name.length); i++) {
+                            for (let i = 2; i < (source_name.length + length_add); i++) {
                                 if (source_name[index].name != undefined && conversion_type[con_index_upper].name != undefined) {
                                     let index_name = source_name[index].name + "-" + conversion_type[con_index_upper].name;
+                                    if (conversion_type[con_index_upper] && conversion_type[con_index_upper].conversion_type.trim() !== "") {
+                                        let parent_ids = conversion_type[con_index_upper].conversion_type.split(",").map(id => id.trim());
+
+
+                                        parent_ids.forEach(id => {
+                                            // Construct the index name for the parent
+                                            console.log("asddadada" + conversion_type[con_index_upper].name, conversion_type__[id].name);
+                                            let index_name_ = source_name[index].name + "-" + (conversion_type__[id] ? conversion_type__[id].name : "Unknown");
+
+                                            // Initialize the target if it doesn't exist
+                                            if (!excel_data["conversion_data"][index_name]) {
+                                                excel_data["conversion_data"][index_name] = 0;
+                                            }
+
+                                            // Check if the source exists and add its value if it does
+                                            if (excel_data["conversion_data"][index_name_]) {
+                                                excel_data["conversion_data"][index_name] += excel_data["conversion_data"][index_name_];
+                                            } else {
+                                                console.warn(`Data for index name ${index_name_} not found`);
+                                            }
+                                        });
+
+
+                                        if (parseInt(excel_data["conversion_data"][index_name]) > 0 && parseInt(excel_data_array_total[key]) > 0 && parent_ids.length > 0) {
+                                            excel_data["conversion_data"][index_name] = parseInt(excel_data["conversion_data"][index_name]) / parseInt(excel_data_array_total[key]) * 100;
+                                        }
+                                    } else {
+                                        console.warn(`Invalid or missing parent_id for con_index_upper ${con_index_upper}`);
+                                    }
+
                                     if (excel_data["conversion_data"][index_name] != undefined) {
                                         worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["conversion_data"][index_name]);
                                         worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
@@ -1352,7 +1471,9 @@ $status_list_ = array_column($status_list, null, "id");
                         };
                         for (j = con_index; j <= con_index; j++) {
                             let index = 0;
-                            for (let i = 2; i < (conversion_type.length); i++) {
+                            // console.log(conversion_type.length);
+                            for (let i = 2; i < (conversion_type.length + length_add); i++) {
+                                // console.log(conversion_type[index].name);
                                 if (conversion_type[index].name != undefined) {
                                     worksheet.getCell(_getColumnLetter[i] + j).value = conversion_type[index].name;
                                     worksheet.getCell(_getColumnLetter[i] + j).font = {
@@ -1388,13 +1509,44 @@ $status_list_ = array_column($status_list, null, "id");
                         let con_index_mar = 0;
                         for (j = (con_index + 1); j < ((con_index + 1) + (marketing_type.length)); j++) {
                             let index = 0;
-                            for (let i = 2; i < (conversion_type.length); i++) {
+                            for (let i = 2; i < (conversion_type.length + length_add); i++) {
                                 if (conversion_type[index].name != undefined && marketing_type[con_index_mar].name != undefined) {
                                     worksheet.getCell("A" + j).value = key;
                                     worksheet.getCell("A" + j).font = {
                                         bold: true,
                                     };
                                     let index_name = marketing_type[con_index_mar].name + "-" + conversion_type[index].name;
+                                    if (conversion_type[con_index_mar] && conversion_type[index].conversion_type.trim() !== "") {
+                                        let parent_ids = conversion_type[index].conversion_type.split(",").map(id => id.trim());
+
+
+                                        parent_ids.forEach(id => {
+                                            // Construct the index name for the parent
+
+                                            let index_name_ = marketing_type[con_index_mar].name + "-" + (conversion_type__[id] ? conversion_type__[id].name : "Unknown");
+                                            console.log(index_name_);
+                                            console.log("asddadada" + marketing_type[con_index_mar].name, conversion_type__[id].name, excel_data["performance_data"][index_name_]);
+                                            // Initialize the target if it doesn't exist
+                                            if (!excel_data["performance_data"][index_name]) {
+                                                excel_data["performance_data"][index_name] = 0;
+                                            }
+
+                                            // Check if the source exists and add its value if it does
+                                            if (excel_data["performance_data"][index_name_]) {
+                                                excel_data["performance_data"][index_name] += excel_data["performance_data"][index_name_];
+                                            } else {
+                                                console.warn(`Data for index name ${index_name_} not found`);
+                                            }
+                                        });
+
+
+                                        if (parseInt(excel_data["performance_data"][index_name]) > 0 && parseInt(excel_data_array_total[key]) > 0 && parent_ids.length > 0) {
+                                            excel_data["performance_data"][index_name] = parseInt(excel_data["performance_data"][index_name]) / parseInt(excel_data_array_total[key]) * 100;
+                                        }
+                                    } else {
+                                        console.warn(`Invalid or missing parent_id for con_index_upper ${con_index_mar}`);
+                                    }
+
                                     if (excel_data["performance_data"][index_name] != undefined) {
                                         worksheet.getCell(_getColumnLetter[i] + j).value = Number(excel_data["performance_data"][index_name]);
                                         worksheet.getCell(_getColumnLetter[i] + j).numFmt = numberFormat;
@@ -1501,79 +1653,13 @@ $status_list_ = array_column($status_list, null, "id");
         }
 
 
-        // // Create a new workbook
-        // var workbook = new ExcelJS.Workbook();
-
-        // // Add a worksheet to the workbook
-        // var worksheet = workbook.addWorksheet('My Sheet');
-
-        // // Add some data to the worksheet
-        // worksheet.columns = [{
-        //         header: 'Name',
-        //         key: 'name'
-        //     },
-        //     {
-        //         header: 'Age',
-        //         key: 'age'
-        //     },
-        //     {
-        //         header: 'Gender',
-        //         key: 'gender'
-        //     }
-        // ];
-
-        // worksheet.addRow({
-        //     name: 'John',
-        //     age: 30,
-        //     gender: 'Male'
-        // });
-        // worksheet.addRow({
-        //     name: 'Jane',
-        //     age: 25,
-        //     gender: 'Female'
-        // });
-        // worksheet.addRow({
-        //     name: 'Bob',
-        //     age: 40,
-        //     gender: 'Male'
-        // });
-
-        // // Save the workbook
-        // workbook.xlsx.writeBuffer().then(function(buffer) {
-        //     // Create a blob from the buffer
-        //     var blob = new Blob([buffer], {
-        //         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        //     });
-
-        //     // Create a URL for the blob
-        //     var url = window.URL.createObjectURL(blob);
-
-        //     // Create a link to download the file
-        //     var a = document.createElement('a');
-        //     a.href = url;
-        //     a.download = 'my-workbook.xlsx';
-        //     document.body.appendChild(a);
-
-        //     // Click the link to download the file
-        //     a.click();
-
-        //     // Remove the link
-        //     document.body.removeChild(a);
-        // });
 
         $(document).on('click', '.btn-switch-toggle', function() {
             var parentDiv = $(this).closest(".parrent-div");
             parentDiv.find(".panel-body").toggle();
         });
 
-        //based on:
-        //https://github.com/chartjs/chartjs-plugin-zoom/blob/master/samples/zoom-time.html
 
-
-        // window.onload = function() {
-        //     var ctx = document.getElementById("canvas").getContext("2d");
-        //     window.myLine = new Chart(ctx, config);
-        // };
         $(".filter_reset select").change(function() {
             var selectedValue = $(this).val();
             if ($(this).attr("id") == "view_assigned") {
@@ -1643,13 +1729,14 @@ $status_list_ = array_column($status_list, null, "id");
         var totalLeads = 0;
         var sum;
         var staff_total_lead = 0;
+        var staff_total_lead_array = [];
         var total_staff_report_array = [];
 
         // var conversion_type_set;
 
         var source_type = <?= (!empty($source_type)) ? json_encode($source_type) : [] ?>;
         var conversion_type = <?= (!empty($conversion_type)) ? json_encode($conversion_type) : [] ?>;
-        var conversion_type_ = <?= (!empty($conversion_type_)) ? json_encode($conversion_type_) : [] ?>;
+        var conversion_type__ = <?= (!empty($conversion_type_)) ? json_encode($conversion_type_) : [] ?>;
         var status_list = <?= (!empty($status_list)) ? json_encode($status_list, true) : [] ?>;
         var status_list_ = <?= (!empty($status_list_)) ? json_encode($status_list_, true) : [] ?>;
         var staff = <?= (!empty($staff_list)) ? json_encode($staff_list) : [] ?>;
@@ -1687,8 +1774,8 @@ $status_list_ = array_column($status_list, null, "id");
                 // $("#show_hide_staff_list").removeClass("hide");
                 // $("#total_staff_list").html(data.total_staff_html);
                 // $(".hide-graph-calls").removeClass("hide");
-                console.log(updateCount_filter);
-                console.log(updateCount_filter_min);
+                // console.log(updateCount_filter);
+                // console.log(updateCount_filter_min);
                 let label_names = [];
                 let min = [];
                 let max = [];
@@ -1707,9 +1794,9 @@ $status_list_ = array_column($status_list, null, "id");
                 }
 
 
-                console.log(label_names);
-                console.log(min);
-                console.log(max);
+                // console.log(label_names);
+                // console.log(min);
+                // console.log(max);
 
                 var configCalls = {
                     type: "bar",
@@ -1801,7 +1888,7 @@ $status_list_ = array_column($status_list, null, "id");
 
         function set_graph_(data) {
             if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
-                console.log(data.summary_daily_);
+                // console.log(data.summary_daily_);
                 $(".hide-graph-daily").removeClass("hide");
 
                 if (data.summary_daily_ != undefined && data.summary_daily_.length > 0) {
@@ -2230,39 +2317,45 @@ $status_list_ = array_column($status_list, null, "id");
             if (xhr != null) {
                 xhr.abort();
             }
-            $("#generate_pdf").hide();
-            $(".hide-btn-response").hide();
-            $(".report-data .hide-graph").addClass("hide");
-            $(".hide-graph-daily").addClass("hide");
-            $("#show_hide_staff_list").addClass("hide");
-            $('#apply_filter').attr("disabled", true);
+            if (status_filter == "") {
+                $("#generate_pdf").hide();
+                $(".hide-btn-response").hide();
+                $(".report-data .hide-graph").addClass("hide");
+                $(".hide-graph-daily").addClass("hide");
+                $("#show_hide_staff_list").addClass("hide");
+                $('#apply_filter').attr("disabled", true);
+            }
             show_loader("apply_filter");
+
+            let ajax_post_data = {
+                assigned: view_assigned_options,
+                source: view_source_options,
+                status: view_status_options,
+                from_date: from_date,
+                to_date: to_date,
+                up_from_date: up_from_date,
+                up_to_date: up_to_date,
+                lead_type: lead_type,
+                update_count_min: update_count_min,
+                update_count_max: update_count_max,
+                location: view_location,
+                department: view_department,
+                daily_update_count: update_staff_id,
+                google_source: view_google_options,
+                fb_source: view_fb_options,
+                date_type: date_type,
+                assign_from_date: assign_from_date,
+                assign_to_date: assign_to_date,
+                graph_status: graph_status,
+                call_status: call_status,
+                total_status: view_assigned_options.length > 0 ? 0 : 1
+            };
+
+            ajax_get_post_data = ajax_post_data
             xhr = $.ajax({
                 type: "POST",
                 url: admin_url + "reports/lead_summary_filter",
-                data: {
-                    assigned: view_assigned_options,
-                    source: view_source_options,
-                    status: view_status_options,
-                    from_date: from_date,
-                    to_date: to_date,
-                    up_from_date: up_from_date,
-                    up_to_date: up_to_date,
-                    lead_type: lead_type,
-                    update_count_min: update_count_min,
-                    update_count_max: update_count_max,
-                    location: view_location,
-                    department: view_department,
-                    daily_update_count: update_staff_id,
-                    google_source: view_google_options,
-                    fb_source: view_fb_options,
-                    date_type: date_type,
-                    assign_from_date: assign_from_date,
-                    assign_to_date: assign_to_date,
-                    graph_status: graph_status,
-                    call_status: call_status
-
-                },
+                data: ajax_post_data,
                 dataType: "JSON",
                 cache: false,
                 success: function(data) {
@@ -2305,7 +2398,9 @@ $status_list_ = array_column($status_list, null, "id");
                         set_call_filter(data.update_count_filter, update_count_filter_min);
                         return;
                     }
-
+                    if (data.report_list == 0) {
+                        $(".leadSum").html("");
+                    }
 
                     if (data.report_list == 1) {
                         $(".leadSum").html("");
@@ -2341,12 +2436,12 @@ $status_list_ = array_column($status_list, null, "id");
                                     assigned_summary["Total Lead Status"] = totalLeads;
 
                                     total_staff_report_array["status"]["Total Lead Status"] = total_staff_report_array["status"]["Total Lead Status"] ? total_staff_report_array["status"]["Total Lead Status"] + totalLeads : totalLeads;
-
                                 }
 
 
                                 totalLeads = 0;
                                 // console.log(staff_total_lead);
+                                staff_total_lead_array[staff[assigned]] = staff_total_lead;
                                 status_list.forEach(status => {
                                     let status_count = assigned_summary[status.name] || 0;
                                     // Ensure the 'status' property is initialized
@@ -2400,11 +2495,16 @@ $status_list_ = array_column($status_list, null, "id");
                                     let source_key = assigned + "-" + source.id;
                                     let status_count = (source_summary[source_key] && source_summary[source_key].total) || 0;
                                     source_type["Total Lead Source"] += parseInt(status_count);
+
+
                                     if (source.name == "Total Lead Source") {
                                         status_count = source_type["Total Lead Source"];
                                         total_staff_report_array["source"]["Total Lead Source"] = total_staff_report_array["source"]["Total Lead Source"] ? total_staff_report_array["source"]["Total Lead Source"] + status_count : status_count;
 
+
                                     }
+
+                                    // excel_data_array[staff[assigned]]["conversion_data"][source.name] = status_count;
 
                                     // Ensure the 'status' property is initialized
                                     if (!total_staff_report_array["source"]) {
@@ -2434,7 +2534,7 @@ $status_list_ = array_column($status_list, null, "id");
                         }
 
 
-                        function generateConversionTypeHTML(totalLeads, conversion_type_set) {
+                        function generateConversionTypeHTML(totalLeads, conversion_type_set, staff_name) {
                             // console.log("set-conversion", staff[assigned]);
 
                             return new Promise((resolve) => {
@@ -2448,6 +2548,10 @@ $status_list_ = array_column($status_list, null, "id");
                                     ret += percentage.toFixed(2);
 
                                     total_staff_report_array["conversion"][conversion.name] = total_staff_report_array["conversion"][conversion.name] ? total_staff_report_array["conversion"][conversion.name] + percentage : percentage;
+
+                                    // console.log(conversion);
+                                    // excel_data_array[staff[assigned]]["conversion_data"][source.name + "-" + conversion_type__[source.conversion_id].name] = status_count;
+
 
                                     if (percentage > 0) {
                                         if (totalLeads !== 0) {
@@ -2564,6 +2668,8 @@ $status_list_ = array_column($status_list, null, "id");
 
                         async function processAssignedData(data, assigned, index, status_list, source_summary, source_type) {
                             $("#show_hide_staff_list").removeClass("hide");
+                            $("#generate_excel").show();
+                            // excel_data_array = [];
                             total_staff_report_array = [];
                             total_staff_report_array["status"] = {};
                             total_staff_report_array["source"] = {};
@@ -2578,7 +2684,37 @@ $status_list_ = array_column($status_list, null, "id");
                                 totalLeads = 0;
                                 let conversion_type_set = []
 
-                                // console.log(conversion_type_set);
+
+                                // // Initialize the object for the staff_name if it doesn't exist
+                                // if (!excel_data_array[staff_name]) {
+                                //     excel_data_array[staff_name] = [];
+                                //     excel_data_array[staff_name] = {};
+                                //     excel_data_array[staff_name]["conversion_data"] = [];
+                                //     excel_data_array[staff_name]["performance_data"] = [];
+                                // }
+
+                                // // Retrieve the data for the assignedId, defaulting to an empty array if not present
+                                // var assignedData = data.excel_data[assignedId] || [];
+
+                                // // Ensure that assignedData is an array before pushing to excel_data_array
+                                // if (assignedData && typeof assignedData === 'object' && !Array.isArray(assignedData)) {
+                                //     // Assign the object to excel_data_array[staff_name]
+                                //     excel_data_array[staff_name] = assignedData;
+                                // } else {
+                                //     console.warn(`Data for assignedId ${assignedId} is not an object and will be skipped.`);
+                                // }
+
+
+                                // // Initialize conversion_data and performance_data for the staff_name if needed
+                                // if (!excel_data_array[staff_name]["conversion_data"]) {
+                                //     excel_data_array[staff_name]["conversion_data"] = [];
+                                // }
+
+                                // if (!excel_data_array[staff_name]["performance_data"]) {
+                                //     excel_data_array[staff_name]["performance_data"] = [];
+                                // }
+
+
                                 if (!isEmpty(index) && index % 2 === 0) {
                                     ret += '<div class="break-page" style="page-break-before: always;"></div>';
                                 }
@@ -2609,7 +2745,7 @@ $status_list_ = array_column($status_list, null, "id");
                         <div class="handle"></div>
                     </button>
                 </div>
-                ${await generateConversionTypeHTML(totalLeads,conversion_type_set)}
+                ${await generateConversionTypeHTML(totalLeads,conversion_type_set,staff_name)}
                 <div class="col-12 panel-body" class="con_tab" style="display:none;">
                     <h4><b>Marketing Type</b></h4><hr>
                     ${await generatePerformanceTypeHTML(assignedId)}
@@ -2632,6 +2768,8 @@ $status_list_ = array_column($status_list, null, "id");
 
 
                             set_total_report();
+                            // generate_excel_data(data, assigned);
+
                         }
 
 
@@ -2645,9 +2783,11 @@ $status_list_ = array_column($status_list, null, "id");
                             return value === undefined || value === null || value === '';
                         }
 
+                        // console.log(data.excel_data);
                         processAssignedData(data, assigned, index, status_list, source_summary, source_type);
                         return;
                     } else if (data.report_list == 0) {
+                        $("#generate_excel").show();
                         let all_status = data.summary;
                         console.lo
                         total_staff_report_array = [];
@@ -2729,6 +2869,8 @@ $status_list_ = array_column($status_list, null, "id");
                                         total_staff_report_array["conversion"][conversionName] = 0;
                                     }
                                     total_staff_report_array["conversion"][conversionName] += parseInt(conversion_.total) || 0;
+
+                                    // excel_array[staff[assigned]]["conversion_data"][source.name + "-" + source.marketing_name] = status_count;
 
                                 }
                             });
@@ -2884,6 +3026,264 @@ $status_list_ = array_column($status_list, null, "id");
             });
 
         }
+
+
+        // function generate_excel_data(data) {
+
+        //     for (let i = 0; i < data.assigned.length; i++) {
+        //         const assignedId = assigned[i];
+        //         let staff_name = staff[assignedId] || 'Unknown';
+        //         // Initialize the object for the staff_name if it doesn't exist
+        //         if (!excel_data_array[staff_name]) {
+        //             excel_data_array[staff_name] = [];
+        //             excel_data_array[staff_name] = {};
+        //             excel_data_array[staff_name]["conversion_data"] = [];
+        //             excel_data_array[staff_name]["performance_data"] = [];
+        //         }
+
+        //         Object.keys(data.status_summary_conversion).forEach(summary_conversion => {
+
+        //             data.status_summary_conversion[summary_conversion].forEach(conversion_ => {
+        //                 let conversionName = conversion_.conversion_name;
+        //                 let sourceName = conversion_.source_name;
+        //                 if (sourceName != "" && conversionName != "") {
+        //                     // Construct the key for the conversion data
+        //                     let key = sourceName + "-" + conversionName;
+
+        //                     // Ensure the property is initialized before adding the total
+        //                     if (!excel_data_array[staff[summary_conversion]]["conversion_data"][key]) {
+        //                         excel_data_array[staff[summary_conversion]]["conversion_data"][key] = 0;
+        //                     }
+
+        //                     // Add the total to the existing value, parsing it as an integer (or float)
+        //                     excel_data_array[staff[summary_conversion]]["conversion_data"][key] += parseInt(conversion_.total, 10);
+        //                 }
+        //             });
+
+        //             // console.log(staff_name);
+
+        //             data.status_summary_performance[summary_conversion].forEach(performance_ => {
+
+        //                 let conversionName = performance_.conversion_name;
+        //                 let marketingName = performance_.marketing_name;
+        //                 if (marketingName != "" && conversionName != "") {
+        //                     // Construct the key for the performance data
+        //                     let key = marketingName + "-" + conversionName;
+
+        //                     // Ensure the property is initialized before adding the total
+        //                     if (!excel_data_array[staff[summary_conversion]]["performance_data"][key]) {
+        //                         excel_data_array[staff[summary_conversion]]["performance_data"][key] = 0;
+        //                     }
+
+        //                     // Add the total to the existing value, parsing it as an integer (or float)
+        //                     excel_data_array[staff[summary_conversion]]["performance_data"][key] += parseInt(performance_.total, 10);
+        //                 }
+        //             });
+        //             // console.log(excel_data_array);
+        //         });
+
+        //     }
+        // }
+
+        function generate_excel_data(data) {
+            console.log("Generating Excel data...");
+
+            return new Promise((resolve, reject) => {
+                try {
+                    // Check if data and necessary properties exist and are in correct format
+                    if (!data || typeof data !== 'object') {
+                        throw new Error("Invalid input: 'data' should be an object.");
+                    }
+
+                    if (!Array.isArray(data.assigned)) {
+                        throw new Error("Invalid data format: 'assigned' should be an array.");
+                    }
+                    if (data.assigned.length > 0) {
+                        data.assigned.forEach((assignedId, index) => {
+                            let staff_name = staff[assignedId] || 'Unknown';
+                            excel_data_array_total[staff_name] = 0;
+
+                            // Initialize the object for the staff_name if it doesn't exist
+                            if (!excel_data_array[staff_name]) {
+                                excel_data_array[staff_name] = {
+                                    conversion_data: {},
+                                    performance_data: {}
+                                };
+                            }
+
+                            // Validate and copy summary data if available
+                            if (data.summary && data.summary[assignedId]) {
+
+                                // Assuming data.summary[assignedId] is an object or array of objects
+                                Object.values(data.summary[assignedId]).forEach(summ => {
+                                    if (summ.conversion_id > 0) {
+                                        excel_data_array_total[staff_name] += parseInt(summ.total, 10) || 0;
+                                    }
+                                });
+
+                                Object.assign(excel_data_array[staff_name], data.summary[assignedId]);
+                            } else {
+                                console.warn(`No summary found for assignedId ${assignedId}`);
+                            }
+
+                            // Process conversion data if available
+                            if (data.status_summary_conversion && data.status_summary_conversion[assignedId]) {
+
+                                data.status_summary_conversion[assignedId].forEach(conversion_ => {
+                                    let conversionName = conversion_.conversion_name;
+                                    let sourceName = conversion_.source_name;
+
+                                    if (sourceName && conversionName) {
+                                        // Construct the key for the conversion data
+                                        let key = `${sourceName}-${conversionName}`;
+
+                                        // Initialize if necessary and add the total
+                                        if (!excel_data_array[staff_name]["conversion_data"][key]) {
+                                            excel_data_array[staff_name]["conversion_data"][key] = 0;
+                                        }
+                                        excel_data_array[staff_name]["conversion_data"][key] += parseInt(conversion_.total, 10);
+                                        // Ensure conversion_total[staff_name] is initialized
+                                        if (!conversion_total[staff_name]) {
+                                            conversion_total[staff_name] = {};
+                                        }
+
+                                        // Ensure conversion_total[staff_name][sourceName] is initialized
+                                        if (!conversion_total[staff_name][sourceName]) {
+                                            conversion_total[staff_name][sourceName] = 0;
+                                        }
+
+                                        // Add the total to the conversion data, ensuring it's parsed as an integer
+                                        conversion_total[staff_name][sourceName] += parseInt(conversion_.total, 10) || 0;
+
+                                    } else {
+                                        console.warn(`Invalid conversion data for assignedId ${assignedId}:`, conversion_);
+                                    }
+                                });
+                            } else {
+                                console.warn(`No conversion data found for assignedId ${assignedId}`);
+                            }
+
+                            // Process performance data if available
+                            if (data.status_summary_performance && data.status_summary_performance[assignedId]) {
+                                data.status_summary_performance[assignedId].forEach(performance_ => {
+                                    let conversionName = performance_.conversion_name;
+                                    let marketingName = performance_.marketing_name;
+
+                                    if (marketingName && conversionName) {
+                                        // Construct the key for the performance data
+                                        let key = `${marketingName}-${conversionName}`;
+
+                                        // Initialize if necessary and add the total
+                                        if (!excel_data_array[staff_name]["performance_data"][key]) {
+                                            excel_data_array[staff_name]["performance_data"][key] = 0;
+                                        }
+                                        excel_data_array[staff_name]["performance_data"][key] += parseInt(performance_.total, 10);
+                                    } else {
+                                        console.warn(`Invalid performance data for assignedId ${assignedId}:`, performance_);
+                                    }
+                                });
+                            } else {
+                                console.warn(`No performance data found for assignedId ${assignedId}`);
+                            }
+                        });
+                    } else {
+                        data.assigned.push("Total Details");
+                        data.assigned.forEach((assignedId, index) => {
+                            let staff_name = staff[assignedId] || 'Unknown';
+                            excel_data_array_total[staff_name] = 0;
+
+                            // Initialize the object for the staff_name if it doesn't exist
+                            if (!excel_data_array[staff_name]) {
+                                excel_data_array[staff_name] = {
+                                    conversion_data: {},
+                                    performance_data: {}
+                                };
+                            }
+
+                            // Validate and copy summary data if available
+                            if (data.summary && data.summary[assignedId]) {
+
+                                // Assuming data.summary[assignedId] is an object or array of objects
+                                Object.values(data.summary[assignedId]).forEach(summ => {
+                                    if (summ.conversion_id > 0) {
+                                        excel_data_array_total[staff_name] += parseInt(summ.total, 10) || 0;
+                                    }
+                                });
+
+                                Object.assign(excel_data_array[staff_name], data.summary[assignedId]);
+                            } else {
+                                console.warn(`No summary found for assignedId ${assignedId}`);
+                            }
+
+                            // Process conversion data if available
+                            if (data.status_summary_conversion && data.status_summary_conversion[assignedId]) {
+
+                                data.status_summary_conversion[assignedId].forEach(conversion_ => {
+                                    let conversionName = conversion_.conversion_name;
+                                    let sourceName = conversion_.source_name;
+
+                                    if (sourceName && conversionName) {
+                                        // Construct the key for the conversion data
+                                        let key = `${sourceName}-${conversionName}`;
+
+                                        // Initialize if necessary and add the total
+                                        if (!excel_data_array[staff_name]["conversion_data"][key]) {
+                                            excel_data_array[staff_name]["conversion_data"][key] = 0;
+                                        }
+                                        excel_data_array[staff_name]["conversion_data"][key] += parseInt(conversion_.total, 10);
+                                        // Ensure conversion_total[staff_name] is initialized
+                                        if (!conversion_total[staff_name]) {
+                                            conversion_total[staff_name] = {};
+                                        }
+
+                                        // Ensure conversion_total[staff_name][sourceName] is initialized
+                                        if (!conversion_total[staff_name][sourceName]) {
+                                            conversion_total[staff_name][sourceName] = 0;
+                                        }
+
+                                        // Add the total to the conversion data, ensuring it's parsed as an integer
+                                        conversion_total[staff_name][sourceName] += parseInt(conversion_.total, 10) || 0;
+
+                                    } else {
+                                        console.warn(`Invalid conversion data for assignedId ${assignedId}:`, conversion_);
+                                    }
+                                });
+                            } else {
+                                console.warn(`No conversion data found for assignedId ${assignedId}`);
+                            }
+
+                            // Process performance data if available
+                            if (data.status_summary_performance && data.status_summary_performance[assignedId]) {
+                                data.status_summary_performance[assignedId].forEach(performance_ => {
+                                    let conversionName = performance_.conversion_name;
+                                    let marketingName = performance_.marketing_name;
+
+                                    if (marketingName && conversionName) {
+                                        // Construct the key for the performance data
+                                        let key = `${marketingName}-${conversionName}`;
+
+                                        // Initialize if necessary and add the total
+                                        if (!excel_data_array[staff_name]["performance_data"][key]) {
+                                            excel_data_array[staff_name]["performance_data"][key] = 0;
+                                        }
+                                        excel_data_array[staff_name]["performance_data"][key] += parseInt(performance_.total, 10);
+                                    } else {
+                                        console.warn(`Invalid performance data for assignedId ${assignedId}:`, performance_);
+                                    }
+                                });
+                            } else {
+                                console.warn(`No performance data found for assignedId ${assignedId}`);
+                            }
+                        });
+                    }
+
+                    resolve(); // Indicate successful completion
+                } catch (error) {
+                    reject(`Error processing data: ${error.message}`); // Handle any errors
+                }
+            });
+        }
+
 
         function getColumnLetter(index) {
             let columnLetter = '';
