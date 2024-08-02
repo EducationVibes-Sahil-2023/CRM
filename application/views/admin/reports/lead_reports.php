@@ -2197,6 +2197,7 @@ $status_list_ = array_column($status_list, null, "id");
 
         function ajax_filter(status_filter = 0) {
 
+            var total_status = 1;
             var element_view_assign = document.getElementById("view_assigned");
             var element_view_source = document.getElementById("view_source");
             var element_view_status = document.getElementById("view_status");
@@ -2267,6 +2268,10 @@ $status_list_ = array_column($status_list, null, "id");
                 }) => value);
             }
 
+            if (element_view_assign.length > 0 || department.length > 0 || view_location.length > 0 || lead_type.length > 0) {
+                total_status = 0;
+            }
+
 
             if (typeof(location) != 'undefined' && location != null) {
                 view_location = document.getElementById('location').selectedOptions;
@@ -2290,7 +2295,6 @@ $status_list_ = array_column($status_list, null, "id");
 
             var from_date = document.getElementById("from_date").value;
             var to_date = document.getElementById("to_date").value;
-
             if (to_date != '') {
                 if (from_date == '') {
                     $("#from_date").focus();
@@ -2348,7 +2352,7 @@ $status_list_ = array_column($status_list, null, "id");
                 assign_to_date: assign_to_date,
                 graph_status: graph_status,
                 call_status: call_status,
-                total_status: view_assigned_options.length > 0 ? 0 : 1
+                total_status: total_status
             };
 
             ajax_get_post_data = ajax_post_data
