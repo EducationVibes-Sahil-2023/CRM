@@ -1714,7 +1714,7 @@ function get_leads_summary()
 //     return $groupedData_array;
 // }
 
-function get_leads_summary_filter_report($params)
+function get_leads_summary_filter_report($params, $all_status = 0)
 {
     $CI = &get_instance();
     if (!class_exists('leads_model')) {
@@ -1888,6 +1888,294 @@ function get_leads_summary_filter_report($params)
     } else {
         return array_column($result, null, "assigned");
     }
+    // echo "<pre>";
+    // print_r($result);
+    // die;
+    // $groupedData = [];
+
+    // foreach ($result as $item) {
+    //     if (!isset($groupedData[$item->assigned])) {
+    //         $groupedData[$item->assigned] = [
+    //             'assigned' => $item->assigned,
+    //             'statuses' => []
+    //         ];
+    //     }
+    //     $groupedData[$item->assigned]['statuses'][] = [
+    //         'status_id' => $item->status_id,
+    //         'total' => $item->total
+    //     ];
+    // }
+
+
+
+
+    // $totalLeads = 0;
+    // foreach ($groupedData as $key => $ass) {
+    //     foreach ($statuses as $key => $status) {
+    //         $statuses[$key]['total'] = 0;
+    //         // echo $status["id"];
+    //         if (!empty($_POST["status"])) {
+    //             if (in_array($status["id"], $_POST["status"])) {
+    //                 $statuses[$key]['total'] = !empty($result[$status["id"]]) ? $result[$status["id"]] : 0;
+    //             } else {
+    //                 $statuses[$key]['total'] = 0;
+    //             }
+    //         } else {
+    //             $statuses[$key]['total']  = !empty($result[$status["id"]]) ? $result[$status["id"]] : 0;
+    //         }
+
+    //         $totalLeads += !empty($statuses[$key]['total']) ? $statuses[$key]['total'] : 0;
+    //     }
+    // }
+    // $statuses[] = array("name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads);
+
+    // return $statuses;
+}
+function get_leads_summary_filter_report_($params)
+{
+    $CI = &get_instance();
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+    $statuses = $CI->leads_model->get_status();
+
+
+    $totalStatuses         = count($statuses);
+    $has_permission_view   = has_permission('leads', '', 'view');
+    $sql                   = '';
+    $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    if ($role == 3) {
+        // $this->load->database();
+        $sid = get_staff_user_id(); //48;//get_staff_user_id();
+
+        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $CI->db->close();
+        $CI->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+
+        if (!empty($sids)) {
+            $tids = ' AND assigned in (' . $sid . ',' . $sids . ')';
+        } else {
+            $tids = ' AND assigned in (' . $sid . ')';
+        }
+    }
+
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql = 'SELECT ' . db_prefix() . 'leads_sources.name source_name,' . db_prefix() . 'leads_status.name status_name,' . db_prefix() . 'leads.source source_id,"Total Details" as assigned,' . db_prefix() . 'leads_status.id as status_id,' . db_prefix() . 'leads_status.name as status_name,count(DISTINCT ' . db_prefix() . 'leads.id) AS total,CONCAT(' . db_prefix() . 'leads_status.name,"-",' . db_prefix() . 'leads_sources.name) as index_name,' . db_prefix() . 'leads_status.conversion_type conversion_id,' . db_prefix() . 'leads_sources.marketing_type marketing_id';
+    } else {
+        $sql = 'SELECT ' . db_prefix() . 'leads_sources.name source_name,' . db_prefix() . 'leads_status.name status_name,' . db_prefix() . 'leads.source source_id,' . db_prefix() . 'leads.assigned,' . db_prefix() . 'leads_status.id as status_id,' . db_prefix() . 'leads_status.name as status_name,count(DISTINCT ' . db_prefix() . 'leads.id) AS total,CONCAT(' . db_prefix() . 'leads_status.name,"-",' . db_prefix() . 'leads_sources.name) as index_name,' . db_prefix() . 'leads_status.conversion_type conversion_id,' . db_prefix() . 'leads_sources.marketing_type marketing_id';
+    }
+
+
+    if (!empty($params['last_contact_date'])) {
+        $sql .= ',
+        ( SELECT DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') 
+            FROM ' . db_prefix() . 'calls_activity_logs AS calls 
+            WHERE calls.contact = ' . db_prefix() . 'leads.phonenumber 
+            AND LOWER(TRIM(call_status)) IN (\'answered\', \'status_unknow\') 
+            ORDER BY DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') DESC 
+            LIMIT 1 ) AS lastcontact';
+    }
+
+    if (!empty($params['last_update_date'])) {
+        $sql .= ', (
+            SELECT DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') 
+            FROM ' . db_prefix() . 'calls_activity_logs AS calls 
+            WHERE calls.contact = ' . db_prefix() . 'leads.phonenumber 
+            ORDER BY DATE_FORMAT(DATE_ADD(\'1970-01-01\', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), \'%Y-%m-%d\') DESC 
+            LIMIT 1  ) AS lastupdatecontact';
+    }
+    $sql .= ' FROM ' . db_prefix() . 'leads
+    LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads.status = ' . db_prefix() . 'leads_status.id';
+    $sql .=  ' LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads.source = ' . db_prefix() . 'leads_sources.id';
+    if (!empty($_POST["status"])) {
+        $sql .= ' AND ' . db_prefix() . 'leads_status.id IN (' . implode(',', $params['status']) . ') ';
+    }
+    if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score']) || !empty($params['google_source'])) {
+        $sql .= ' JOIN ' . db_prefix() . 'customfieldsvalues ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'customfieldsvalues.relid';
+    }
+    if (!empty($params['up_to_date'])) {
+        $sql .= ' JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON ' . db_prefix() . 'leads.phonenumber = calls.contact';
+    } else if ((isset($params['update_count_max']) && $params['update_count_max'] != "") || (!empty($params['last_contact_date'])) || !empty($params['last_update_date'])) {
+        $sql .= ' LEFT JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON ' . db_prefix() . 'leads.phonenumber = calls.contact';
+        if (!empty($params['last_contact_date'])) {
+            $sql .= ' AND LOWER(TRIM(call_status)) IN (\'answered\', \'status_unknow\')';
+        }
+    }
+    if (!empty($params['followup_to_date'])) {
+        $sql .= ' JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . db_prefix() . 'leads.id';
+    }
+    if (isset($status['lost'])) {
+        $sql .= ' WHERE lost = 1';
+    } elseif (isset($status['junk'])) {
+        $sql .= ' WHERE junk = 1';
+    } else {
+        $sql .= ' WHERE ' . db_prefix() . 'leads_status.id IS NOT NULL';
+    }
+    if (!$has_permission_view) {
+        $sql .= ' AND ' . $whereNoViewPermission;
+    }
+    if (!empty($params['assigned'])) {
+        $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+    } else if ($role == 3) {
+        $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+    }
+    if (!empty($params['source'])) {
+        $sql .= ' AND source IN (' . implode(',', $CI->db->escape_str($params['source'])) . ')';
+    }
+    if (!empty($params['neet_score'])) {
+        $neet_range = explode('-', $params['neet_score']);
+        $sql .= ' AND ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value != ""';
+    }
+    if (!empty($params['lead_type'])) {
+        $sql .= ' AND type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
+    }
+    if (!empty($params['to_date'])) {
+        $from_date = $params['from_date'];
+        $to_date = $params['to_date'];
+        $sql .= ' AND DATE(' . db_prefix() . 'leads.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
+    }
+    if (!empty($params['up_to_date'])) {
+        $up_from_date = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $sql .= ' AND DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), \'%Y-%m-%d\') BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
+    }
+    if (!empty($params['followup_to_date'])) {
+        $followup_from_date = $params['followup_from_date'];
+        $followup_to_date = $params['followup_to_date'];
+        $sql .= ' AND DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
+    }
+    if (!empty($params['assign_to_date'])) {
+        $assign_from_date = $params['assign_from_date'];
+        $assign_to_date = $params['assign_to_date'];
+        $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
+    }
+    if (!empty($params['fb_source'])) {
+        $facebook_source_name = $params['fb_source'];
+        $sql .= ' AND ' . db_prefix() . 'leads.website IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $facebook_source_name)) . '\')';
+    }
+    if (!empty($params['google_source'])) {
+        $google_source_name = $params['google_source'];
+        $sql .= ' AND ' . db_prefix() . 'customfieldsvalues.fieldid = ' . MARKETING_SOURCE_ID . ' AND ' . db_prefix() . 'customfieldsvalues.value IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $google_source_name)) . '\')';
+    }
+
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql .= ' GROUP BY ' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.source';
+    } else {
+        $sql .= ' GROUP BY ' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.source,' . db_prefix() . 'leads.assigned ';
+    }
+    if (!empty($params['last_contact_date']) || (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
+        $sql .= ' HAVING';
+        if (!empty($params['last_contact_date'])) {
+            $last_contact_date = $params['last_contact_date'];
+            if (isset($params['update_count_max']) && $params['update_count_max'] != '') {
+                $sql .= ' (lastcontact <= "' . $last_contact_date . '")';
+            } else {
+                $sql .= ' (lastcontact <= "' . $last_contact_date . '" OR lastcontact IS NULL)';
+            }
+            if (isset($params['update_count_max']) && $params['update_count_max'] != '') {
+                $sql .= ' AND ';
+            }
+        } else if (!empty($params['last_update_date'])) {
+            $last_update_date = $params['last_update_date'];
+            if (isset($params['update_count_max']) && $params['update_count_max'] != '') {
+                $sql .= ' (lastupdatecontact <= "' . $last_update_date . '")';
+            } else {
+                $sql .= ' (lastupdatecontact <= "' . $last_update_date . '" OR lastupdatecontact IS NULL)';
+            }
+            if (isset($params['update_count_max']) && $params['update_count_max'] != '') {
+                $sql .= ' AND ';
+            }
+        }
+        if (isset($params['update_count_max']) && $params['update_count_max'] != '') {
+            $min = $params['update_count_min'];
+            $max = $params['update_count_max'];
+            $sql .= ' COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
+        }
+    }
+    $sql .=  ' ORDER BY ' . db_prefix() . 'leads_status.statusorder ';
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        // $sql = " SELECT t.assigned, CONCAT('{', GROUP_CONCAT(CONCAT('\"', t.status_name, '\"', ':', COALESCE(t.status_count, 0)) SEPARATOR ', '), '}') AS status_counts, COALESCE(SUM(t.status_count), 0) AS total  FROM ( " . $sql . ") t  ";
+
+        // $sql = "
+        // SELECT 
+        //     t.assigned, 
+        //     CONCAT(
+        //         '{', 
+        //         GROUP_CONCAT(
+        //             CONCAT(
+        //                 '\"', 
+        //                 t.status_name, 
+        //                 '\": ', 
+        //                 COALESCE(t.status_count, 0),
+        //                 ', \"color\": \"', 
+        //                 t.color, 
+        //                 '\", ',
+        //                 '\"conversion_type\": \"', 
+        //                 t.conversion_type, 
+        //                 '\", ',
+        //                 '\"source_id\": \"', 
+        //                 t.source_id, 
+        //                 '\", ',
+        //                 '\"status_name\": \"', 
+        //                 t.name, 
+        //                 '\"'
+        //             ) 
+        //             SEPARATOR ', '
+        //         ), 
+        //         ', \"status_1\": 1', -- Set this to the appropriate value or condition
+        //         '}'
+        //     ) AS status_counts, 
+        //     COALESCE(SUM(t.status_count), 0) AS total  
+        // FROM ( " . $sql . ") t 
+
+        // ";
+    } else {
+        // $sql = " SELECT t.assigned, CONCAT('{', GROUP_CONCAT(CONCAT('\"', t.status_name, '\"', ':', COALESCE(t.status_count, 0)) SEPARATOR ', '), '}') AS status_counts, COALESCE(SUM(t.status_count), 0) AS total  FROM ( " . $sql . ") t GROUP BY t.assigned ";
+
+        //     $sql = "
+        //     SELECT 
+        //         t.assigned, 
+        //         CONCAT(
+        //             '{',
+        //             GROUP_CONCAT(
+        //                 CONCAT(
+        //                     '\"', 
+        //                     t.status_name, 
+        //                     '\": {',
+        //                     '\"status_count\": ', COALESCE(t.status_count, 0), ', ',
+        //                     '\"color\": \"', t.color, '\", ',
+        //                     '\"conversion_type\": \"', t.conversion_type, '\", ',
+        //                     '\"source_id\": \"', t.source_id, '\", ',
+        //                     '\"status_name\": \"', t.name, '\"',
+        //                     '}'
+        //                 ) 
+        //                 SEPARATOR ', '
+        //             ),
+        //             '}'
+        //         ) AS status_counts, 
+        //         COALESCE(SUM(t.status_count), 0) AS total  
+        //     FROM ( " . $sql . ") t 
+        //     GROUP BY t.assigned
+        // ";
+    }
+    $result = [];
+    $result = $CI->db->query($sql)->result_array();
+
+    $result_array = [];
+    foreach ($result as $r) {
+        $result_array[$r["assigned"]][$r["index_name"]] = $r;
+    }
+    return $result_array;
+    // if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+    //     return $result;
+    // } else {
+    //     return array_column($result, null, "assigned");
+    // }
     // echo "<pre>";
     // print_r($result);
     // die;
@@ -2221,7 +2509,10 @@ function get_leads_report_($params, $export = 0)
             }
 
             if (!empty($export) && $export == 1) {
-                $sql .= ",l.assigned";
+                if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+                } else {
+                    $sql .= ",l.assigned";
+                }
             }
         }
 
@@ -2643,7 +2934,12 @@ function get_status_summary_filter_report($params)
         }
     }
 
-    $sql .= " SELECT  l.assigned,COUNT(DISTINCT(l.id)) as total,c.id conversion_id,ls.id status_id,s.id,s.name source_name,s.color_name,s.marketing_type as marketing_id,CONCAT(l.assigned,'-',s.id) uni ";
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+
+        $sql .= " SELECT COUNT(DISTINCT(l.id)) as total,c.id conversion_id,ls.id status_id,s.id,s.name source_name,s.color_name,s.marketing_type as marketing_id,CONCAT(l.assigned,'-',s.id) uni ";
+    } else {
+        $sql .= " SELECT  l.assigned,COUNT(DISTINCT(l.id)) as total,c.id conversion_id,ls.id status_id,s.id,s.name source_name,s.color_name,s.marketing_type as marketing_id,CONCAT(l.assigned,'-',s.id) uni ";
+    }
 
     $sql .= ' FROM ' . db_prefix() . 'leads l  inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status  inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
 
@@ -4338,6 +4634,8 @@ function get_leads_summary_filter_excel_report($params)
     }
     $statuses = $CI->leads_model->get_status();
     $totalStatuses = count($statuses);
+
+
     $has_permission_view = has_permission('leads', '', 'view');
     $whereNoViewPermission = '(l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned = ' . get_staff_user_id() . ' OR l.is_public = 1)';
     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
@@ -4357,21 +4655,35 @@ function get_leads_summary_filter_excel_report($params)
             $tids = ' AND assigned IN (' . $sid . ')';
         }
     }
-
-    $sql = "SELECT l.assigned, 
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql = "SELECT 'Total Details' assigned, 
         COUNT(DISTINCT(l.id)) AS total,
         c.id AS conversion_id,
         m.id AS marketing_id,
         ls.name AS status_name,
         s.name AS source_name,
-        CONCAT(ls.name, ' - ', s.name) AS index_name,
-        CONCAT(ls.name, ' - ', s.name, ' - ', l.assigned) AS index_name_staff
+        CONCAT(ls.name, '-', s.name) AS index_name
     FROM 
         " . db_prefix() . "leads l
     INNER JOIN " . db_prefix() . "leads_status ls ON ls.id = l.status
     INNER JOIN " . db_prefix() . "leads_sources s ON s.id = l.source
     LEFT JOIN " . db_prefix() . "lead_marketing m ON m.id = s.marketing_type
     LEFT JOIN " . db_prefix() . "lead_conversion_type c ON c.id = ls.conversion_type";
+    } else {
+        $sql = "SELECT l.assigned, 
+        COUNT(DISTINCT(l.id)) AS total,
+        c.id AS conversion_id,
+        m.id AS marketing_id,
+        ls.name AS status_name,
+        s.name AS source_name,
+        CONCAT(ls.name, '-', s.name) AS index_name
+    FROM 
+        " . db_prefix() . "leads l
+    INNER JOIN " . db_prefix() . "leads_status ls ON ls.id = l.status
+    INNER JOIN " . db_prefix() . "leads_sources s ON s.id = l.source
+    LEFT JOIN " . db_prefix() . "lead_marketing m ON m.id = s.marketing_type
+    LEFT JOIN " . db_prefix() . "lead_conversion_type c ON c.id = ls.conversion_type";
+    }
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['google_source'])) {
         $sql .= ' JOIN tblcustomfieldsvalues ON l.id = tblcustomfieldsvalues.relid';
@@ -4443,7 +4755,7 @@ function get_leads_summary_filter_excel_report($params)
         $sql .= ' AND ' . db_prefix() . 'customfieldsvalues.fieldid = ' . MARKETING_SOURCE_ID . ' AND ' . db_prefix() . 'customfieldsvalues.value IN (\'' . implode('\', \'', array_map(array($CI->db, 'escape_str'), $google_source_name)) . '\')';
     }
 
-    $sql .= ' GROUP BY l.assigned, l.source, c.id';
+    $sql .= ' GROUP BY assigned, l.source, c.id';
 
     $result = $CI->db->query($sql)->result_array();
 
@@ -4464,7 +4776,7 @@ function get_leads_summary_filter_excel_report($params)
         }
 
         // Append the current record to the group corresponding to the 'assigned' key
-        $data_array[$assignedId][] = $res;
+        $data_array[$assignedId][$res["index_name"]] = $res;
     }
 
     // $data_array now contains the data grouped by the 'assigned' field
@@ -4693,7 +5005,9 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     }
 
     // foreach ($statuses as $status) {
-    $sql .= " SELECT l.assigned,
+
+    if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+        $sql .= " SELECT 'Total Details' AS assigned,
         COUNT(DISTINCT l.id) AS total,
         COALESCE(c.id, 0) AS conversion_id,
         COALESCE(m.id, 0) AS marketing_id,
@@ -4706,6 +5020,22 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
         ls.id AS status_id,
         CONCAT(s.name, '-', c.name) AS index_conversion_name,
         CONCAT(m.name, '-', c.name) AS index_performance_name ";
+    } else {
+        $sql .= " SELECT l.assigned,
+        COUNT(DISTINCT l.id) AS total,
+        COALESCE(c.id, 0) AS conversion_id,
+        COALESCE(m.id, 0) AS marketing_id,
+        COALESCE(m.name, '') AS marketing_name,
+        COALESCE(c.name, '') AS conversion_name,
+        ls.name AS status_name,
+        s.name AS source_name,
+        CONCAT(ls.name, '-', s.name) AS index_name,
+        s.id AS source_id,
+        ls.id AS status_id,
+        CONCAT(s.name, '-', c.name) AS index_conversion_name,
+        CONCAT(m.name, '-', c.name) AS index_performance_name ";
+    }
+
     $sql .= ' FROM ' . db_prefix() . 'leads l inner join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status inner join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
 
     // $sql .=' FROM ' . db_prefix() . 'lead_marketing m left join ' . db_prefix() . 'leads_sources s ON s.marketing_type = m.id left join ' . db_prefix() . 'leads l ON s.id = l.source left join ' . db_prefix() . 'leads_status ls ON  ls.id = l.status left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
@@ -4810,16 +5140,15 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 
     if ($conversion_status) {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY l.source,c.id ';
+            $sql .= '  GROUP BY l.assigned';
         } else {
             $sql .= '  GROUP BY l.assigned,l.source,c.id ';
         }
     } else {
-
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY  ls.id, s.id, c.id, m.id ';
+            $sql .= '  GROUP BY l.assigned';
         } else {
-            $sql .= '  GROUP BY  l.assigned, ls.id, s.id, c.id, m.id ';
+            $sql .= '  GROUP BY  assigned, ls.id, s.id, c.id, m.id ';
         }
     }
 
@@ -4828,30 +5157,23 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     // }
     $result = [];
 
-    // Remove the last UNION ALL
-    //    echo $sql    = substr($sql, 0, -10);
-
     $sql = " SELECT 
-    assigned,
-   
-           
-                'total', total,
-                'conversion_id', conversion_id,
-                'marketing_id', marketing_id,
-                'marketing_name', marketing_name,
-                'conversion_name', conversion_name,
-                'status_name', status_name,
-                'source_name', source_name,
-                'index_name', index_name,
-                'source_id', source_id,
-                'status_id', status_id,
-                'index_conversion_name', index_conversion_name,
-                'index_performance_name', index_performance_name
-            
-           
- 
-FROM ( " . $sql . " )  AS subquery
-";
+        assigned,
+        'total', total,
+        'conversion_id', conversion_id,
+        'marketing_id', marketing_id,
+        'marketing_name', marketing_name,
+        'conversion_name', conversion_name,
+        'status_name', status_name,
+        'source_name', source_name,
+        'index_name', index_name,
+        'source_id', source_id,
+        'status_id', status_id,
+        'index_conversion_name', index_conversion_name,
+        'index_performance_name', index_performance_name
+        FROM ( " . $sql . " )  AS subquery
+        ";
+
 
     $result = $CI->db->query($sql)->result_array();
     $groupedResult = array_reduce($result, function ($carry, $item) {
