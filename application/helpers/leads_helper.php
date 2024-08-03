@@ -5140,13 +5140,13 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 
     if ($conversion_status) {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY l.assigned';
+            $sql .= '  GROUP BY assigned,l.source,c.id';
         } else {
-            $sql .= '  GROUP BY l.assigned,l.source,c.id ';
+            $sql .= '  GROUP BY assigned,l.source,c.id ';
         }
     } else {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY l.assigned';
+            $sql .= '  GROUP BY assigned, ls.id, s.id, c.id, m.id';
         } else {
             $sql .= '  GROUP BY  assigned, ls.id, s.id, c.id, m.id ';
         }

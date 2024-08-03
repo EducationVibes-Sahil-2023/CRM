@@ -2268,9 +2268,7 @@ $status_list_ = array_column($status_list, null, "id");
                 }) => value);
             }
 
-            if (element_view_assign.length > 0 || department.length > 0 || view_location.length > 0 || lead_type.length > 0) {
-                total_status = 0;
-            }
+
 
 
             if (typeof(location) != 'undefined' && location != null) {
@@ -2292,6 +2290,10 @@ $status_list_ = array_column($status_list, null, "id");
             <?php } ?>
 
 
+  
+            if (view_assigned_options.length > 0 || view_department.length > 0 || view_location.length > 0 || lead_type.length > 0) {
+                total_status = 0;
+            }
 
             var from_date = document.getElementById("from_date").value;
             var to_date = document.getElementById("to_date").value;
@@ -3104,7 +3106,7 @@ $status_list_ = array_column($status_list, null, "id");
                     }
                     if (data.assigned.length > 0) {
                         data.assigned.forEach((assignedId, index) => {
-                            let staff_name = staff[assignedId] || 'Unknown';
+                            let staff_name = staff[assignedId] || 'Total Details';
                             excel_data_array_total[staff_name] = 0;
 
                             // Initialize the object for the staff_name if it doesn't exist
