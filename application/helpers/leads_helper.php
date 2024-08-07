@@ -2549,7 +2549,7 @@ function get_leads_report_conversion($params)
             $sql .= "YEAR(l.dateadded) as dateadded, c.name as conversion_type_name, COUNT(DISTINCT l.id) as conversion_count ";
         }
 
-        $sql .= "FROM " . db_prefix() . "leads l ";
+        $sql .= ",DATE_FORMAT(l.dateadded, '%Y-%m') dateadded_modify FROM " . db_prefix() . "leads l ";
 
         if (!empty($params['up_to_date'])) {
             $sql .= "JOIN " . db_prefix() . "calls_activity_logs as calls ON (l.phonenumber = calls.contact) ";
@@ -2616,7 +2616,7 @@ function get_leads_report_conversion($params)
         } elseif ($params['date_type'] == "week") {
             $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), c.name ORDER BY YEARWEEK(l.dateadded, 1) ASC";
         } elseif ($params['date_type'] == "month") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), c.name ORDER BY DATE_FORMAT(l.dateadded, '%Y-%m') ASC";
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), c.name ORDER BY DATE_FORMAT(dateadded_modify, '%Y-%m') ASC";
         } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), c.name ORDER BY YEAR(l.dateadded) ASC";
         }
@@ -2636,7 +2636,7 @@ function get_leads_report_marketing($params)
 
     $CI = &get_instance();
     $sql = "SELECT 
-        dateadded,
+        dateadded,dateadded_modify,
         GROUP_CONCAT(CONCAT(marketing_type_name, ': ', marketing_count) SEPARATOR ', ') as marketing_count
     FROM (
         SELECT ";
@@ -2652,7 +2652,7 @@ function get_leads_report_marketing($params)
             $sql .= "YEAR(l.dateadded) as dateadded, m.name as marketing_type_name, COUNT(DISTINCT l.id) as marketing_count ";
         }
 
-        $sql .= "FROM " . db_prefix() . "leads l ";
+        $sql .= ",DATE_FORMAT(l.dateadded, '%Y-%m') dateadded_modify FROM " . db_prefix() . "leads l ";
 
         if (!empty($params['up_to_date'])) {
             $sql .= "JOIN " . db_prefix() . "calls_activity_logs as calls ON (l.phonenumber = calls.contact) ";
@@ -2719,7 +2719,7 @@ function get_leads_report_marketing($params)
         } elseif ($params['date_type'] == "week") {
             $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), m.name ORDER BY YEARWEEK(l.dateadded, 1) ASC";
         } elseif ($params['date_type'] == "month") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), m.name ORDER BY DATE_FORMAT(l.dateadded, '%Y-%m') ASC";
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), m.name ORDER BY DATE_FORMAT(dateadded_modify, '%Y-%m') ASC";
         } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), m.name ORDER BY DATE_FORMAT(l.dateadded, '%Y') ASC";
         }
