@@ -2719,7 +2719,7 @@ function get_leads_report_marketing($params)
         } elseif ($params['date_type'] == "week") {
             $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), m.name ";
         } elseif ($params['date_type'] == "month") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), m.name ";
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%M - %Y'), m.name ";
         } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), m.name ";
         }
