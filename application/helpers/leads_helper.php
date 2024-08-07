@@ -2622,7 +2622,7 @@ function get_leads_report_conversion($params)
         }
 
         // Close the subquery and group by the final dateadded column
-        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ORDER BY dateadded ASC";
+        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ";
         $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
@@ -2715,16 +2715,16 @@ function get_leads_report_marketing($params)
         }
 
         if ($params['date_type'] == "daily") {
-            $sql .= "GROUP BY DATE(l.dateadded), m.name ";
+            $sql .= "GROUP BY DATE(l.dateadded), m.name ORDER BY DATE(l.dateadded) ASC";
         } elseif ($params['date_type'] == "week") {
-            $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), m.name ";
+            $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), m.name ORDER BY YEARWEEK(l.dateadded, 1) ASC";
         } elseif ($params['date_type'] == "month") {
             $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), m.name ORDER BY DATE_FORMAT(l.dateadded, '%M - %Y') ASC";
         } elseif ($params['date_type'] == "year") {
-            $sql .= "GROUP BY YEAR(l.dateadded), m.name ";
+            $sql .= "GROUP BY YEAR(l.dateadded), m.name ORDER BY DATE_FORMAT(l.dateadded, '%Y') ASC";
         }
 
-        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ORDER BY dateadded ASC";
+        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ";
         $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
