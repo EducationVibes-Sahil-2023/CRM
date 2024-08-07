@@ -2616,7 +2616,7 @@ function get_leads_report_conversion($params)
         } elseif ($params['date_type'] == "week") {
             $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), c.name ORDER BY YEARWEEK(l.dateadded, 1) ASC";
         } elseif ($params['date_type'] == "month") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), c.name ORDER BY DATE_FORMAT(l.dateadded, '%Y - %M') ASC";
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), c.name ORDER BY DATE_FORMAT(l.dateadded, '%M - %Y ASC";
         } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), c.name ORDER BY YEAR(l.dateadded) ASC";
         }
@@ -2719,7 +2719,7 @@ function get_leads_report_marketing($params)
         } elseif ($params['date_type'] == "week") {
             $sql .= "GROUP BY YEARWEEK(l.dateadded, 1), m.name ";
         } elseif ($params['date_type'] == "month") {
-            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %M'), m.name ";
+            $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%M - %Y'), m.name ";
         } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), m.name ";
         }
