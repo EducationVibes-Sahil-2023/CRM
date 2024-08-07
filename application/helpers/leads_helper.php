@@ -2533,7 +2533,7 @@ function get_leads_report_conversion($params)
 
     $CI = &get_instance();
     $sql = "SELECT 
-        dateadded,
+        dateadded,dateadded_modify,
         GROUP_CONCAT(CONCAT(conversion_type_name, ': ', conversion_count) SEPARATOR ', ') as conversion_counts
     FROM (
         SELECT ";
@@ -2621,8 +2621,14 @@ function get_leads_report_conversion($params)
             $sql .= "GROUP BY YEAR(l.dateadded), c.name ORDER BY YEAR(l.dateadded) ASC";
         }
 
-        // Close the subquery and group by the final dateadded column
-        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ";
+        if ($params['date_type'] == "month") {
+            $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded_modify asc";
+        }
+        else
+        {
+            $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded asc";
+        }
+
         $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
@@ -2723,8 +2729,13 @@ function get_leads_report_marketing($params)
         } elseif ($params['date_type'] == "year") {
             $sql .= "GROUP BY YEAR(l.dateadded), m.name ORDER BY DATE_FORMAT(l.dateadded, '%Y') ASC";
         }
-
-        $sql .= ") as conversion_counts_subquery GROUP BY dateadded ";
+        if ($params['date_type'] == "month") {
+            $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded_modify asc";
+        }
+        else
+        {
+            $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded asc";
+        }
         $sql .= " LIMIT 15 ";
         return $result = $CI->db->query($sql)->result();
     } else {
