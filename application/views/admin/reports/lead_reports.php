@@ -2551,7 +2551,7 @@ $status_list_ = array_column($status_list, null, "id");
                                     }
                                     let percentage = conversion_type_set[conversion.id] || 0;
                                     ret += '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                                    ret += percentage.toFixed(2);
+                                    ret += percentage;
 
                                     total_staff_report_array["conversion"][conversion.name] = total_staff_report_array["conversion"][conversion.name] ? total_staff_report_array["conversion"][conversion.name] + percentage : percentage;
 
@@ -2960,7 +2960,7 @@ $status_list_ = array_column($status_list, null, "id");
                                 return;
                             }
                             html += '<div style="" class="col-md-3 col-xs-6 border-right"><h3 class="bold">';
-                            let percentage = (total_staff_report_array["conversion"][conversion.name] || 0).toFixed(2);
+                            let percentage = (total_staff_report_array["conversion"][conversion.name] || 0);
                             html += percentage;
 
                             if (percentage > 0) {
