@@ -549,6 +549,8 @@ class Facebook_leads_integration extends ClientsController
                                 $lead_data_array["form-cf-35"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             } else if (strpos(strtolower($field_data["name"]), "what_kind_of_assistance_you_are_looking_for") !== false) {
                                 $lead_data_array["form-cf-36"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
+                            }else if (strpos(strtolower($field_data["name"]), "12th") !== false) {
+                                $lead_data_array["form-cf-40"] = !empty($field_data["values"][0]) ? $field_data["values"][0] : '';
                             }
                         }
                     }
