@@ -3637,6 +3637,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         $CI->load->model('leads_model');
     }
     $statuses = $CI->leads_model->get_status();
+    $check_today = true;
 
     $totalStatuses         = count($statuses);
     $has_permission_view   = has_permission('leads', '', 'view');
@@ -3721,6 +3722,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
 
 
     if (!empty($params['up_to_date'])) {
+        $check_today = false;
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
         // $sql .= ' AND DATE(n.dateadded) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
@@ -3743,6 +3745,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
 
 
     if (!empty($params['assigned'])) {
+        $check_today = false;
         // $tids = " AND l.assigned = " . $params['assigned'];
         // $tids = " AND calls.staffid IN ( " . implode(",", $params['assigned']) . ") ";
 
@@ -3758,6 +3761,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     }
 
     if (!empty($params['followup_to_date'])) {
+        $check_today = false;
         $sql .= ' join ' . db_prefix() . 'reminders  on  ' . db_prefix() . 'reminders.rel_id = l.id ';
     }
 
@@ -3769,6 +3773,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     $sql .= " Where 1= 1 ";
 
     if (!empty($params['assigned'])) {
+        $check_today = false;
         // $tids = " AND l.assigned = " . $params['assigned'];
         $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
 
@@ -3780,14 +3785,17 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     }
 
     if (!empty($params['status'])) {
+        $check_today = false;
         // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
         $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
     }
     if (!empty($params['source'])) {
+        $check_today = false;
         // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
         $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
     }
     if (!empty($params['lead_type'])) {
+        $check_today = false;
         $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
         // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
     }
@@ -3796,25 +3804,30 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
 
 
     if (!empty($params['neet_score'])) {
+        $check_today = false;
         $neet_range = explode("-", $params['neet_score']);
         $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
     }
     if (!empty($params['to_date'])) {
+        $check_today = false;
         $from_date = $params['from_date'];
         $to_date = $params['to_date'];
         $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
     }
     if (!empty($params['followup_to_date'])) {
+        $check_today = false;
         $followup_from_date = $params['followup_from_date'];
         $followup_to_date = $params['followup_to_date'];
         $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
     }
 
     if (!empty($params['assign_to_date'])) {
+        $check_today = false;
         $assign_from_date = $params['assign_from_date'];
         $assign_to_date = $params['assign_to_date'];
         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
     } elseif (!empty($params['up_to_date'])) {
+        $check_today = false;
         // $up_from_date = $params['up_from_date'];
         // $up_to_date = $params['up_to_date'];
         // $sql .= ' AND DATE(l.lastcontact) BETWEEN "' . $CI->db->escape_str($up_from_date) . '" AND "' . $CI->db->escape_str($up_to_date) . '"';
@@ -3824,9 +3837,11 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         }*/
 
     if (!empty($params['last_contact_date'])) {
+        $check_today = false;
         $last_contact_date = $params['last_contact_date'];
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') <= '{$last_contact_date}' AND staffid = l.assigned and LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') ";
     } else if (!empty($params['last_update_date'])) {
+        $check_today = false;
         $last_update_date = $params['last_update_date'];
         $sql .= " AND  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') <= '{$last_update_date}' AND staffid = l.assigned  ";
     }
@@ -3839,6 +3854,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
 
     $grup_by = "";
     if (!empty($params['neet_score'])) {
+        $check_today = false;
         $grup_by = ',' . db_prefix() . 'customfieldsvalues.relid';
     }
 
@@ -3847,31 +3863,45 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     if (!empty($leads_count) && $leads_count == 1) {
 
         if (!empty($params['status'])) {
+            $check_today = false;
             // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
             $sql .= ' AND l.status in (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
         }
         if (!empty($params['source'])) {
+            $check_today = false;
             // $sql .= ' AND l.source =' . $CI->db->escape_str($params['source']);
             $sql .= ' AND source in (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
         }
         if (!empty($params['lead_type'])) {
+            $check_today = false;
             $sql .= ' AND type in (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
             // $sql .= ' AND type =' . $CI->db->escape_str($params['lead_type']);
         }
         if (!empty($params['to_date'])) {
+            $check_today = false;
             $from_date = $params['from_date'];
             $to_date = $params['to_date'];
             $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
         }
         if (!empty($params['assign_to_date'])) {
+            $check_today = false;
             $assign_from_date = $params['assign_from_date'];
             $assign_to_date = $params['assign_to_date'];
             $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
         }
         if (!empty($params['assigned'])) {
+            $check_today = false;
             // $tids = " AND l.assigned = " . $params['assigned'];
             $sql .= " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
         }
+    }
+
+
+    if ($check_today === true) {
+
+        $current_date = date('Y-m-d');
+        $sql .= " AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+            . $CI->db->escape_str($current_date) . "' AND '" . $CI->db->escape_str($current_date) . "')";
     }
 
     $having = "";
@@ -3912,7 +3942,6 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         $sql = trim($sql);
         $sql = "SELECT count(total) as total_sum FROM ( {$sql} )  as subquery ";
     }
-
 
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
@@ -5445,20 +5474,24 @@ function calls_update_count($params = false, $max_status = 0)
         }
     }
 
+    $check_today = true;
     // $sql = "SELECT IFNULL(SUM(call_duration), 0) AS call_duration FROM (";
     $sql .= "SELECT SUM(calls.duration) AS call_duration,MAX(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) AS lastcontact,
         MAX(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) AS lastupdatecontact FROM " . db_prefix() . "leads l ";
     // $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.assigned = calls.staffid AND RIGHT(TRIM(REPLACE(REPLACE(calls.contact, ' ', ''), ',', '')), 10) = RIGHT(TRIM(REPLACE(REPLACE(l.phonenumber, ' ', ''), ',', '')), 10) AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknown')) ";
     if (!empty($params['followup_to_date'])) {
+        $check_today = false;
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
     }
     $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.phonenumber = calls.contact AND l.assigned = calls.staffid ";
 
     if (!empty($params['assigned'])) {
+        $check_today = false;
         $sql .= " AND l.assigned IN (" . implode(",", $params['assigned']) . ") ";
     }
 
     if (!empty($params['last_update_date'])) {
+        $check_today = false;
         $sql .= ' AND calls.staffid = l.assigned ';
     }
 
@@ -5473,56 +5506,73 @@ function calls_update_count($params = false, $max_status = 0)
     }
 
     if (!empty($params['status'])) {
+        $check_today = false;
         $sql .= ' AND l.status IN (' . implode(",", $CI->db->escape_str($params['status'])) . ')';
     }
 
     if (!empty($params['source'])) {
+        $check_today = false;
         $sql .= ' AND l.source IN (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
     }
 
     if (!empty($params['lead_type'])) {
+        $check_today = false;
         $sql .= ' AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
     }
 
     if (!empty($params['neet_score'])) {
+        $check_today = false;
         $neet_range = explode("-", $params['neet_score']);
         $sql .= ' AND ( ' . db_prefix() . 'customfieldsvalues.fieldid = 8 AND  ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . db_prefix() . 'customfieldsvalues.value!="" )';
     }
 
     if (!empty($params['last_update_date'])) {
+        $check_today = false;
         $last_update_date = $params['last_update_date'];
         $sql .= " AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') <= '" . $CI->db->escape_str($last_update_date) . "' ";
     }
 
     if (!empty($params['to_date'])) {
+        $check_today = false;
         $from_date = $params['from_date'];
         $to_date = $params['to_date'];
         $sql .= ' AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '"';
     }
 
     if (!empty($params['last_contact_date'])) {
+        $check_today = false;
         $last_contact_date = $params['last_contact_date'];
         $sql .= " AND ( lastcontact <= '" . $CI->db->escape_str($last_contact_date) . "'  or lastcontact is NULL ) ";
     } else if (!empty($params['last_update_date'])) {
+        $check_today = false;
         $last_update_date = $params['last_update_date'];
         $sql .= " AND ( lastcontact <= '" . $CI->db->escape_str($last_update_date) . "'  or lastcontact is NULL ) ";
     }
 
     if (!empty($params['followup_to_date'])) {
+        $check_today = false;
         $followup_from_date = $params['followup_from_date'];
         $followup_to_date = $params['followup_to_date'];
         $sql .= ' AND DATE(tblreminders.date) BETWEEN "' . $CI->db->escape_str($followup_from_date) . '" AND "' . $CI->db->escape_str($followup_to_date) . '"';
     }
 
     if (!empty($params['assign_to_date'])) {
+        $check_today = false;
         $assign_from_date = $params['assign_from_date'];
         $assign_to_date = $params['assign_to_date'];
         $sql .= ' AND DATE(dateassigned) BETWEEN "' . $CI->db->escape_str($assign_from_date) . '" AND "' . $CI->db->escape_str($assign_to_date) . '"';
     } elseif (!empty($params['up_to_date'])) {
+        $check_today = false;
         $up_from_date = $params['up_from_date'];
         $up_to_date = $params['up_to_date'];
         $sql .= " AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
             . $CI->db->escape_str($up_from_date) . "' AND '" . $CI->db->escape_str($up_to_date) . "')";
+    }
+
+    if ($check_today === true) {
+        $current_date = date('Y-m-d');
+        $sql .= " AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
+            . $CI->db->escape_str($current_date) . "' AND '" . $CI->db->escape_str($current_date) . "')";
     }
 
     $grup_by = "";
