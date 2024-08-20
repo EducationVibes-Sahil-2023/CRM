@@ -1799,7 +1799,7 @@ function get_leads_summary_filter_report($params, $all_status = 0)
     if (!empty($params['assigned'])) {
         $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     } else if ($role == 3) {
-        $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+        // $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     }
     if (!empty($params['source'])) {
         $sql .= ' AND source IN (' . implode(',', $CI->db->escape_str($params['source'])) . ')';
@@ -2022,7 +2022,7 @@ function get_leads_summary_filter_report_($params)
     if (!empty($params['assigned'])) {
         $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     } else if ($role == 3) {
-        $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+        // $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     }
     if (!empty($params['source'])) {
         $sql .= ' AND source IN (' . implode(',', $CI->db->escape_str($params['source'])) . ')';
@@ -2306,7 +2306,7 @@ function get_leads_summary_filter($params)
     if (!empty($params['assigned'])) {
         $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     } else if ($role == 3) {
-        $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+        // $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     }
     if (!empty($params['source'])) {
         $sql .= ' AND source IN (' . implode(',', $CI->db->escape_str($params['source'])) . ')';
