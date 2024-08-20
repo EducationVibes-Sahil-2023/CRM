@@ -203,7 +203,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        }
                                     }
                                     echo '<div id="leads-filter-status">';
-                                    echo render_select('view_status[]', $statuses, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('leads_all'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status');
+                                    echo render_select('view_status[]', $statuses, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_all'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status');
                                     echo '</div>';
                                     ?>
                                  </div>
