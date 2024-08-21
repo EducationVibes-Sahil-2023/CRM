@@ -286,7 +286,7 @@ if ($role != 1) {
     $aColumns = [
 
         db_prefix() . 'leads.id as id',
-        db_prefix() . 'leads.id as leadsid',
+         db_prefix() . 'leads.id as leadsid',
         // db_prefix() . 'leads.id as leadsid',
     ];
 }
@@ -385,8 +385,7 @@ if ($role != 1) {
         'assigned',
         db_prefix() . 'leads.addedfrom as addedfrom',
         '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
-        ' zip',
-        'alternative_phonenumber'
+        ' zip'
     ]);
 } else {
 
@@ -399,12 +398,11 @@ if ($role != 1) {
         db_prefix() . 'leads.addedfrom as addedfrom',
         '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
         ' zip',
-        'alternative_phonenumber',
         $last_update_query
     ]);
 }
 
-$search_column = ["city", "phonenumber", "state", db_prefix() . "tags.name"];
+$search_column = ["city","phonenumber", "state", db_prefix() . "tags.name"];
 
 
 $having = "";
@@ -478,15 +476,7 @@ foreach ($rResult as $aRow) {
     $row[]    = $updatecount;
     $call_duration = 0;
     $last_call_update = "";
-    $row[] = !empty($call_data[$aRow['phonenumber']]["duration"])
-        ? convertToHMS(
-            $call_data[$aRow['phonenumber']]["duration"] +
-                (!empty($call_data[$aRow['alternative_phonenumber']]["duration"]) ? $call_data[$aRow['alternative_phonenumber']]["duration"] : 0),
-            1
-        )
-        : convertToHMS($call_duration, 1);
-
-    // $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"] + (!empty($call_data[$aRow['alternative_phonenumber']]["duration"])), 1) : convertToHMS($call_duration, 1);
+    $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
     // $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? date("Y-m-d", strtotime($call_data[$aRow['phonenumber']]["last_contact_date"])) : $last_call_update;
     $row[] =  !empty($aRow["lastcontact_date"]) ? date("Y-m-d", strtotime($aRow["lastcontact_date"])) : '';
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
