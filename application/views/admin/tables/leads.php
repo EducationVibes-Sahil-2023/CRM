@@ -20,7 +20,6 @@ if (is_admin()) {
 $consentLeads          = get_option('gdpr_enable_consent_for_leads');
 
 $statuses              = $this->ci->leads_model->get_status();
-
 $type              = $this->ci->leads_model->get_type();
 $source              = $this->ci->leads_model->get_source();
 $staff_list              = $this->ci->leads_model->get_staff_list();
@@ -368,9 +367,9 @@ if ($role != 1) {
 }
 
 
-array_push($join, 'LEFT JOIN ' . db_prefix() . 'taggables ON ' . db_prefix() . 'taggables.rel_id = ' . db_prefix() . 'leads.id  AND ' . db_prefix() . 'taggables.rel_type = "lead" ');
+// array_push($join, 'LEFT JOIN ' . db_prefix() . 'taggables ON ' . db_prefix() . 'taggables.rel_id = ' . db_prefix() . 'leads.id  AND ' . db_prefix() . 'taggables.rel_type = "lead" ');
 
-array_push($join, 'LEFT JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id ');
+// array_push($join, 'LEFT JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id ');
 
 
 
@@ -402,7 +401,9 @@ if ($role != 1) {
     ]);
 }
 
+if(!empty($_POST["search"]["value"])){
 $search_column = ["city","phonenumber", "state", db_prefix() . "tags.name"];
+}
 
 
 $having = "";
@@ -437,10 +438,9 @@ if (!empty($having_)) {
 
 $group_by = ' Group By ' . db_prefix() . 'leads.id ' . $having . " ";
 
-// print_r($aColumns);
-
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
 
+// die;
 $output  = $result['output'];
 
 $rResult = $result['rResult'];
