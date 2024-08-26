@@ -2623,7 +2623,9 @@ function get_leads_report_conversion($params)
 
         if ($params['date_type'] == "month") {
             $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded_modify asc";
-        } else {
+        }
+        else
+        {
             $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded asc";
         }
 
@@ -2729,7 +2731,9 @@ function get_leads_report_marketing($params)
         }
         if ($params['date_type'] == "month") {
             $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded_modify asc";
-        } else {
+        }
+        else
+        {
             $sql .= ") as conversion_counts_subquery GROUP BY dateadded order by dateadded asc";
         }
         $sql .= " LIMIT 15 ";
@@ -3092,14 +3096,14 @@ function leads_update_count_($params = false, $max_status = 0, $leads_count = 0,
     }
 
     if (!empty($leads_count) && $leads_count == 1) {
-        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
         if (!empty($params["up_to_date"])) {
-            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact";
         } else if (!empty($params["to_date"])) {
-            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         } else {
-            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         }
     } else {
         $sql .= ",(
@@ -3121,7 +3125,7 @@ function leads_update_count_($params = false, $max_status = 0, $leads_count = 0,
             ),
             '-', 
             calls.contact
-        ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  (l.phonenumber = calls.contact or calls.contact = l.alternative_phonenumber )  ";
+        ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  l.phonenumber = calls.contact  ";
     }
 
 
@@ -3385,14 +3389,14 @@ function leads_update_count_($params = false, $max_status = 0, $leads_count = 0,
 //     }
 
 //     if (!empty($leads_count) && $leads_count == 1) {
-//         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+//         $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
 //     } else if (!empty($day_update_count) && $day_update_count == 1) {
 //         if (!empty($params["up_to_date"])) {
-//             $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+//             $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact";
 //         } else if (!empty($params["to_date"])) {
-//             $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+//             $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
 //         } else {
-//             $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+//             $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
 //         }
 //     } else {
 //         $sql .= ",(
@@ -3684,14 +3688,14 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
     }
 
     if (!empty($leads_count) && $leads_count == 1) {
-        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber  ";
+        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
         if (!empty($params["up_to_date"])) {
-            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber";
+            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact";
         } else if (!empty($params["to_date"])) {
-            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber  ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         } else {
-            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber  ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         }
     } else {
         $sql .= ",(
@@ -3713,7 +3717,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
             ),
             '-', 
             calls.contact
-        ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  (l.phonenumber = calls.contact or calls.contact = l.alternative_phonenumber )  ";
+        ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  l.phonenumber = calls.contact  ";
     }
 
 
@@ -4008,14 +4012,14 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
     }
 
     if (!empty($leads_count) && $leads_count == 1) {
-        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+        $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d'),'-',calls.contact) uni_dates FROM " . db_prefix() . "leads as l left join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
         if (!empty($params["up_to_date"])) {
-            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+            $sql .= ",concat(DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (calls.call_start+(5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d')) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact";
         } else if (!empty($params["to_date"])) {
-            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         } else {
-            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact OR calls.contact = l.alternative_phonenumber ";
+            $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         }
     } else {
         $sql .= ",(
@@ -4037,7 +4041,7 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
             ),
             '-', 
             calls.contact
-        ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  (l.phonenumber = calls.contact or calls.contact = l.alternative_phonenumber )  ";
+        ) AS uni_dates FROM " . db_prefix() . "leads as l inner join " . db_prefix() . "calls_activity_logs as calls on  l.phonenumber = calls.contact  ";
     }
 
 
@@ -5479,7 +5483,7 @@ function calls_update_count($params = false, $max_status = 0)
         $check_today = false;
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
     }
-    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON ((l.phonenumber = calls.contact AND l.assigned = calls.staffid or calls.contact=l.alternative_phonenumber )";
+    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.phonenumber = calls.contact AND l.assigned = calls.staffid ";
 
     if (!empty($params['assigned'])) {
         $check_today = false;
