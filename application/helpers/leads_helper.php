@@ -6354,7 +6354,7 @@ function calls_update_count_pri($params = false, $max_status = 0)
         $check_today = false;
         $sql .= ' join tblreminders  on  tblreminders.rel_id = l.id ';
     }
-    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.alternative_phonenumber = calls.contact AND l.assigned = calls.staffid ";
+    $sql .= "JOIN " . db_prefix() . "calls_activity_logs calls ON (l.phonenumber = calls.contact AND l.assigned = calls.staffid ";
 
     if (!empty($params['assigned'])) {
         $check_today = false;
