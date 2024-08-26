@@ -125,9 +125,35 @@ class Leads extends AdminController
     public function lead_summary_filter()
     {
         $summary = get_leads_summary_filter($_POST);
-        $updateCount = leads_update_count($_POST);
+        $updateCount = leads_update_count_pri($_POST);
+        $updateCount_sec = leads_update_count_sec($_POST);
+
+        $updateCount = array_merge($updateCount, $updateCount_sec);
+
+
+        // Array to store unique values
+        $uniqueData = [];
+
+        // Loop through each item
+        foreach ($updateCount as $item) {
+            // Create a unique key based on id and lastcontact
+            $key = $item['id'] . '-' . $item['lastcontact'];
+
+            // If the key doesn't exist in the unique array, add it
+            if (!isset($uniqueData[$key])) {
+                $uniqueData[$key] = $item;
+            }
+        }
+
+        // Convert back to a numerically indexed array
+        $mergedArray = array_values($uniqueData);
+
+
         // $max_count = leads_update_count("", 1);
-        $call_count = calls_update_count($_POST);
+        $call_count = calls_update_count_pri($_POST);
+        $call_count_sec = calls_update_count_sec($_POST);
+        $call_count = convertToHMS($call_count + $call_count_sec);
+        $updateCount = count($mergedArray);
         $max_count = '';
         $ret = "";
         $ret1 = '';
