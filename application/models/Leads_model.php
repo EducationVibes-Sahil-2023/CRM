@@ -2051,7 +2051,7 @@ class Leads_model extends App_Model
 
     public function get_lead_call_activity_log($id)
     {
-        $sql = "SELECT c.*,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON l.phonenumber = c.contact join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id order by FROM_UNIXTIME(c.call_start) DESC";
+        $sql = "SELECT c.*,IF(c.contact = l.phonenumber, 'Primary Number', 'Alternative Number') AS contact_type,concat(s.firstname,' ',s.lastname) staff_name,s.profile_image,t.name call_type_name,so.name source_name,t.icon type_icon,so.icon source_icon FROM " . db_prefix() . "calls_activity_logs c JOIN " . db_prefix() . "leads l ON (l.phonenumber = c.contact or l.alternative_phonenumber = c.contact) join " . db_prefix() . "staff s on s.staffid = c.staffid join " . db_prefix() . "calls_type t on t.id=c.calls_type join " . db_prefix() . "calls_source so ON so.id = c.calls_source WHERE l.id = '{$id}' AND c.status = 1 GROUP by c.id order by FROM_UNIXTIME(c.call_start) DESC";
         return $this->db->query($sql)->result_array();
     }
 
@@ -2667,7 +2667,7 @@ class Leads_model extends App_Model
     // }
 
 
- function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
+    function automatic_assign_staff($state_name = "", $lead_type = "", $deprtment_head_status = "", $facebook_lead = "", $staff_ids = array(), $google_source = '')
     {
 
         //   $sql = "Select s.name,st.staffid ,CONCAT(st.firstname,' ',st.lastname) staff_name,(select dateassigned from " . db_prefix() . "leads where assigned = st.staffid order by dateassigned  desc limit 1) dateassigned,st.facebook_lead_name from  " . db_prefix() . "staff st LEFT JOIN " . db_prefix() . "states s ON (FIND_IN_SET(s.id,st.assign_state) ";
@@ -2968,13 +2968,12 @@ class Leads_model extends App_Model
         $staff = $this->db->get(db_prefix() . 'lead_transfer_request')->row();
         return $staff;
     }
-    
+
     public function get_custum_values()
     {
         $this->db->select('CONCAT(fieldto, "-", relid, "-", fieldid) AS column_name, value');
         $this->db->where('fieldto', 'leads');
         $staff = $this->db->get(db_prefix() . 'customfieldsvalues')->result_array();
         return $staff;
-        
     }
 }

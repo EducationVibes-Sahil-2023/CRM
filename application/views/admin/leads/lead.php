@@ -361,7 +361,7 @@ $last_lead_request = last_lead_request($lead->id);
                                        </span>
                                     <?php } ?>
                                     <a href="<?php echo admin_url('profile/' . $call["staffid"]); ?>" target="_blank">
-                                       <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?></h5>
+                                       <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?> - ( <?= $call["contact_type"] ?> )</h5>
                                     </a>
                                     <?php
                                     $color = "primary";

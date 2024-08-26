@@ -285,7 +285,7 @@ if ($role != 1) {
     $aColumns = [
 
         db_prefix() . 'leads.id as id',
-         db_prefix() . 'leads.id as leadsid',
+        db_prefix() . 'leads.id as leadsid',
         // db_prefix() . 'leads.id as leadsid',
     ];
 }
@@ -366,12 +366,10 @@ if ($role != 1) {
     ]);
 }
 
-
-// array_push($join, 'LEFT JOIN ' . db_prefix() . 'taggables ON ' . db_prefix() . 'taggables.rel_id = ' . db_prefix() . 'leads.id  AND ' . db_prefix() . 'taggables.rel_type = "lead" ');
-
-// array_push($join, 'LEFT JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id ');
-
-
+if (!empty($_POST["search"]["value"])) {
+    array_push($join, 'LEFT JOIN ' . db_prefix() . 'taggables ON ' . db_prefix() . 'taggables.rel_id = ' . db_prefix() . 'leads.id  AND ' . db_prefix() . 'taggables.rel_type = "lead" ');
+    array_push($join, 'LEFT JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id ');
+}
 
 $aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
 
@@ -384,7 +382,8 @@ if ($role != 1) {
         'assigned',
         db_prefix() . 'leads.addedfrom as addedfrom',
         '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
-        ' zip'
+        'alternative_phonenumber',
+        'zip'
     ]);
 } else {
 
@@ -396,13 +395,14 @@ if ($role != 1) {
         'assigned',
         db_prefix() . 'leads.addedfrom as addedfrom',
         '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . db_prefix() . 'leads.id) as is_converted',
-        ' zip',
+        'alternative_phonenumber',
+        'zip',
         $last_update_query
     ]);
 }
 
-if(!empty($_POST["search"]["value"])){
-$search_column = ["city","phonenumber", "state", db_prefix() . "tags.name"];
+if (!empty($_POST["search"]["value"])) {
+    $search_column = ["city", "phonenumber", "state", db_prefix() . "tags.name"];
 }
 
 
@@ -476,7 +476,15 @@ foreach ($rResult as $aRow) {
     $row[]    = $updatecount;
     $call_duration = 0;
     $last_call_update = "";
-    $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
+    $row[] = !empty($call_data[$aRow['phonenumber']]["duration"])
+        ? convertToHMS(
+            $call_data[$aRow['phonenumber']]["duration"] +
+                (!empty($call_data[$aRow['alternative_phonenumber']]["duration"]) ? $call_data[$aRow['alternative_phonenumber']]["duration"] : 0),
+            1
+        )
+        : convertToHMS($call_duration, 1);
+
+    // $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
     // $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? date("Y-m-d", strtotime($call_data[$aRow['phonenumber']]["last_contact_date"])) : $last_call_update;
     $row[] =  !empty($aRow["lastcontact_date"]) ? date("Y-m-d", strtotime($aRow["lastcontact_date"])) : '';
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
