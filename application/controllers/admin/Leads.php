@@ -1782,6 +1782,8 @@ class Leads extends AdminController
 
             'website',
 
+            'alternative_phonenumber'
+
         ];
 
 
@@ -1791,6 +1793,7 @@ class Leads extends AdminController
 
 
         $className = 'form-control';
+
 
 
 
@@ -1827,6 +1830,11 @@ class Leads extends AdminController
             } elseif ($f == 'lead_value') {
 
                 $label = _l('lead_add_edit_lead_value');
+
+                $type = 'number';
+            } elseif ($f == 'alternative_phonenumber') {
+
+                $label = 'Alternative Phonenumber';
 
                 $type = 'number';
             } else {
