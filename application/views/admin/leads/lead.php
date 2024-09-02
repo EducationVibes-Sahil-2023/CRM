@@ -350,12 +350,8 @@ $last_lead_request = last_lead_request($lead->id);
                                     <?php if (!empty($call["call_status"]) && (strtolower(trim($call["call_status"])) == "missed" || str_contains(strtolower(trim($call["call_status"])), 'disconnected'))) {
                                        $call['type_icon'] = "assets/images/missed.png";
                                     } ?>
-                                    <a href="javascript:void(0)" class="pull-right"><img style="height: 40px;" src='<?php echo base_url($call['source_icon']); ?>'>
+                                    <a href="javascript:void(0)" class="pull-right"><img style="height: 50px;" src='<?php echo base_url($call['source_icon']); ?>'><img style="height: 25px;" src='<?php echo base_url($call['image_icon']); ?>'>
                                        <small><?= $call["source_name"] ?></small>
-                                       <br>
-                                       <br>
-                                       <img style="height: 40px;" src='<?php echo base_url($call['image_icon']); ?>'>
-                                       <small><?= $call["contact_type"] ?></small>
 
                                     </a>
                                     <!-- <a href="#" class="pull-right"><img style="height: 40px;" src='<?php echo base_url($call['image_icon']); ?>'>
