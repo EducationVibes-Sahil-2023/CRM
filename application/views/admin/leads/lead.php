@@ -350,10 +350,18 @@ $last_lead_request = last_lead_request($lead->id);
                                     <?php if (!empty($call["call_status"]) && (strtolower(trim($call["call_status"])) == "missed" || str_contains(strtolower(trim($call["call_status"])), 'disconnected'))) {
                                        $call['type_icon'] = "assets/images/missed.png";
                                     } ?>
-                                    <a href="#" class="pull-right"><img style="height: 40px;" src='<?php echo base_url($call['source_icon']); ?>'>
+                                    <a href="javascript:void(0)" class="pull-right"><img style="height: 40px;" src='<?php echo base_url($call['source_icon']); ?>'>
                                        <small><?= $call["source_name"] ?></small>
+                                       <br>
+                                       <br>
+                                       <img style="height: 40px;" src='<?php echo base_url($call['image_icon']); ?>'>
+                                       <small><?= $call["contact_type"] ?></small>
 
                                     </a>
+                                    <!-- <a href="#" class="pull-right"><img style="height: 40px;" src='<?php echo base_url($call['image_icon']); ?>'>
+                                       <small><?= $call["contact_type"] ?></small>
+
+                                    </a> -->
 
                                     <?php if (!empty($call['datetime'])) { ?>
                                        <span data-toggle="tooltip" data-title="<?php echo $call['datetime']; ?>">
@@ -361,7 +369,9 @@ $last_lead_request = last_lead_request($lead->id);
                                        </span>
                                     <?php } ?>
                                     <a href="<?php echo admin_url('profile/' . $call["staffid"]); ?>" target="_blank">
-                                       <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?> - ( <?= $call["contact_type"] ?> )</h5>
+                                       <!-- <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?> - ( <?= $call["contact_type"] ?> )</h5> -->
+
+                                       <h5 class="media-heading bold"><?php echo get_staff_full_name($call['staffid']); ?></h5>
                                     </a>
                                     <?php
                                     $color = "primary";
