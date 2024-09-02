@@ -837,7 +837,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       if ($(this).prop('checked') === true) {
          $('#input[name="mass_delete"]').prop("checked", false);
          $bulkChange.find('select').selectpicker('val', '');
-         $('#delete_created_date').prop("checked", true);
+         $('#delete_created_date').prop("checked", false);
          $('.delete_created_date').removeClass('hide');
          // $bulkChange.hide();
          // $("#re-assignation_div").show();
