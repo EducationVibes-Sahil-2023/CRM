@@ -1129,7 +1129,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
          }
          xhr = $.ajax({
             type: "POST",
-            url: "leads/lead_summary_filter",
+            url: admin_url + "leads/lead_summary_filter",
             // data: {lead_type: $("#lead_type").val()},
             /* data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source,course:view_course,courseid:courseid,degree:view_degree,degreeid:degreeid, from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date},*/
             //  data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source_options,from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date,status:view_status_options},

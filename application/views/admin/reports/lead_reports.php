@@ -362,7 +362,7 @@ $status_list_ = array_column($status_list, null, "id");
                                 </div>
                             <?php } ?>
 
-                            <div class="col-md-2 leads-filter-column">
+                            <div class="col-md-2 leads-filter-column filter_reset">
                                 <?php
                                 echo '<div id="leads-filter-source">';
                                 echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");

@@ -1248,10 +1248,12 @@ class Reports extends AdminController
 
         if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '' && isset($_POST["call_status"]) && $_POST["call_status"] == 1) {
 
+            $update_count_data = $_POST;
             $update_count_data["status"][] = 20;
-            $update_count_data["assigned"] = $_POST["assigned"];
+            $update_count_data['update_count_min'] = '';
+            $update_count_data['update_count_max'] =  '';
             $updateCount_filter = leads_update_count_report($update_count_data, 0, 1);
-            // echo $this->db->last_query(); die;
+
             $update_count_data['update_count_min'] = $_POST['update_count_min'];
             $update_count_data['update_count_max'] =  $_POST['update_count_max'];
             $updateCount_filter_min = leads_update_count_report($update_count_data, 0, 1);
