@@ -1184,6 +1184,7 @@ class Reports extends AdminController
             }
         }
 
+$_POST["assigned"] = array_unique($_POST["assigned"]);
         if (!empty($_POST["excel_status"]) && $_POST["excel_status"] == 1) {
             $excel_data = get_leads_summary_filter_excel_report($_POST);
             // die;
@@ -1249,6 +1250,7 @@ class Reports extends AdminController
         if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '' && isset($_POST["call_status"]) && $_POST["call_status"] == 1) {
 
             $update_count_data = $_POST;
+             $update_count_data["status"] =[];
             $update_count_data["status"][] = 20;
             $update_count_data['update_count_min'] = '';
             $update_count_data['update_count_max'] =  '';

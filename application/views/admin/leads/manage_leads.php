@@ -565,6 +565,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
+                                       'name' => _l('leads_dt_datecreated'),
+                                       'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                                    ),
+                                    array(
+                                       'name' => _l('Last Updated Date'),
+                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                                    ),
+                                    array(
                                        'name' => _l('leads_dt_name'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
                                     ),
@@ -587,6 +595,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     array(
                                        'name' => _l('Last Connected Date'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                    ),
+                                    array(
+                                       'name' => _l('leads_dt_datecreated'),
+                                       'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
                                     ),
                                     array(
                                        'name' => _l('leads_dt_name'),
@@ -658,15 +670,15 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  'name' => _l('leads_source'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')
                               );
-                              $_table_data[] = array(
-                                 'name' => _l('leads_dt_datecreated'),
-                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                              );
+                              // $_table_data[] = array(
+                              //    'name' => _l('leads_dt_datecreated'),
+                              //    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                              // );
                               if ($role != 1) {
-                                 $_table_data[] = array(
-                                    'name' => _l('Last Updated Date'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
-                                 );
+                                 // $_table_data[] = array(
+                                 //    'name' => _l('Last Updated Date'),
+                                 //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                                 // );
 
                                  $_table_data[] =   array(
                                     'name' => _l('leads_dt_email'),
