@@ -46,7 +46,7 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     // Construct the JOIN clause with BETWEEN condition
     $join = [
         " LEFT JOIN " . db_prefix() . "leads ON (
-            " . db_prefix() . "calls_activity_logs.contact = " . db_prefix() . "leads.phonenumber 
+            " . db_prefix() . "calls_activity_logs.contact IN (" . db_prefix() . "leads.phonenumber," . db_prefix() . "leads.alternative_phonenumber) 
             AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') BETWEEN '{$up_from_date}' AND '{$up_to_date}'
         ) "
     ];
@@ -299,6 +299,8 @@ if ($role != 1) {
         $update_count_query,
         '1',
         $last_contact_date_q,
+        db_prefix() . 'leads.dateadded as dateadded',
+        $last_update_query,
         db_prefix() . 'leads.name as name',
         db_prefix() . 'leads.phonenumber as phonenumber',
         db_prefix() . 'leads.status as status'
@@ -336,8 +338,6 @@ if ($role != 1) {
         'type',
         'website',
         'source',
-        db_prefix() . 'leads.dateadded as dateadded',
-        $last_update_query,
         db_prefix() . 'leads.email as email',
         db_prefix() . 'leads.assigned as staffid',
         'dateassigned',
@@ -487,6 +487,10 @@ foreach ($rResult as $aRow) {
     // $row[] = !empty($call_data[$aRow['phonenumber']]["duration"]) ? convertToHMS($call_data[$aRow['phonenumber']]["duration"], 1) : convertToHMS($call_duration, 1);
     // $row[] = !empty($call_data[$aRow['phonenumber']]["last_contact_date"]) ? date("Y-m-d", strtotime($call_data[$aRow['phonenumber']]["last_contact_date"])) : $last_call_update;
     $row[] =  !empty($aRow["lastcontact_date"]) ? date("Y-m-d", strtotime($aRow["lastcontact_date"])) : '';
+    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    if ($role != 1) {
+        $row[] = ($aRow['lastupdate_date'] == '0000-00-00 00:00:00' || !is_date($aRow['lastupdate_date']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
+    }
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
     $nameRow = '<a ' . $hrefAttr . '>' . $aRow['name'] . '</a>';
     $nameRow .= '<div class="row-options">';
@@ -652,11 +656,8 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['website'];
 
     $row[] = $aRow['source_name'];
-    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
 
-    if ($role != 1) {
-        $row[] = ($aRow['lastupdate_date'] == '0000-00-00 00:00:00' || !is_date($aRow['lastupdate_date']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
-    }
+   
 
 
 
