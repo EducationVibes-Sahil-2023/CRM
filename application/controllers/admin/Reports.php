@@ -1172,7 +1172,11 @@ class Reports extends AdminController
                 }
             }
         } else if (!empty($_POST["lead_type"])) {
-            $departmentStaff = $this->db->select("staffid")->where_in("lead_type", $_POST["lead_type"])->get(db_prefix() . "staff")->result_array();
+            if (!empty($_POST["assigned"])) {
+                $departmentStaff = $this->db->select("staffid")->where_in("lead_type", $_POST["lead_type"])->where_in("staffid", $_POST["assigned"])->get(db_prefix() . "staff")->result_array();
+            } else {
+                $departmentStaff = $this->db->select("staffid")->where_in("lead_type", $_POST["lead_type"])->get(db_prefix() . "staff")->result_array();
+            }
             foreach ($departmentStaff as $staff) {
                 if ($role == 3) {
                     if (!empty($role_staffs[$staff['staffid']])) {
@@ -1184,7 +1188,7 @@ class Reports extends AdminController
             }
         }
 
-$_POST["assigned"] = array_unique($_POST["assigned"]);
+        $_POST["assigned"] = array_unique($_POST["assigned"]);
         if (!empty($_POST["excel_status"]) && $_POST["excel_status"] == 1) {
             $excel_data = get_leads_summary_filter_excel_report($_POST);
             // die;
@@ -1250,7 +1254,7 @@ $_POST["assigned"] = array_unique($_POST["assigned"]);
         if (isset($_POST["update_count_min"]) && $_POST["update_count_min"] != '' && isset($_POST["call_status"]) && $_POST["call_status"] == 1) {
 
             $update_count_data = $_POST;
-             $update_count_data["status"] =[];
+            $update_count_data["status"] = [];
             $update_count_data["status"][] = 20;
             $update_count_data['update_count_min'] = '';
             $update_count_data['update_count_max'] =  '';

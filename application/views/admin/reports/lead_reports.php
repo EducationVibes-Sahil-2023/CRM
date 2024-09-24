@@ -362,7 +362,7 @@ $status_list_ = array_column($status_list, null, "id");
                                 </div>
                             <?php } ?>
 
-                            <div class="col-md-2 leads-filter-column filter_reset">
+                            <div class="col-md-2 leads-filter-column">
                                 <?php
                                 echo '<div id="leads-filter-source">';
                                 echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
@@ -1662,15 +1662,26 @@ $status_list_ = array_column($status_list, null, "id");
 
         $(".filter_reset select").change(function() {
             var selectedValue = $(this).val();
+
+            // Check if the changed select element has id="view_assigned"
             if ($(this).attr("id") == "view_assigned") {
+                // Disable other selects and buttons except the one that triggered the change
                 $(".filter_reset select").not(this).prop('disabled', true);
+                $(".filter_reset .bs-actionsbox button").prop('disabled', true);
+                $(this).closest(".filter_reset").find(".bs-actionsbox button").prop('disabled', false);
+
             } else {
+                // Disable the select element with id="view_assigned"
                 $("#view_assigned").prop('disabled', true);
             }
+
+            // If no value is selected, enable all selects and buttons
             if (selectedValue.length == 0) {
                 $(".filter_reset select").prop('disabled', false);
+                $(".filter_reset .bs-actionsbox button").prop('disabled', false);
             }
         });
+
 
         var update_daily_staff_id = 0;
 
@@ -2290,7 +2301,7 @@ $status_list_ = array_column($status_list, null, "id");
             <?php } ?>
 
 
-  
+
             if (view_assigned_options.length > 0 || view_department.length > 0 || view_location.length > 0 || lead_type.length > 0) {
                 total_status = 0;
             }
