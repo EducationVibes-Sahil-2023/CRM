@@ -347,74 +347,74 @@ class Authentication extends ClientsController
 
     public function re_assign_cron()
     {
-       // Load required libraries and models
-    $this->load->library('import/import_leads', [], 'import');
-    $this->load->model('Leads_model');
-    $limit = 500;
+        // Load required libraries and models
+        $this->load->library('import/import_leads', [], 'import');
+        $this->load->model('Leads_model');
+        $limit = RE_ASSIGN_LEADS;
 
-    // Fetch lead data with status 1
-    $data_leads = $this->db->query("SELECT id, data, lead_id FROM " . db_prefix() . "lead_temp WHERE status = 1 and lead_id > 0 ORDER BY id DESC LIMIT {$limit}")->result_array();
+        // Fetch lead data with status 1
+        $data_leads = $this->db->query("SELECT id, data, lead_id FROM " . db_prefix() . "lead_temp WHERE status = 1 and lead_id > 0 ORDER BY id DESC LIMIT {$limit}")->result_array();
 
 
-    if (!empty($data_leads)) {
-        $reassign_data_array = [];
-        $ids_to_delete = [];
+        if (!empty($data_leads)) {
+            $reassign_data_array = [];
+            $ids_to_delete = [];
 
-        foreach ($data_leads as $lead) {
-            if (!empty($lead['data'])) {
-                // Decode JSON data for the lead
-                $temp_lead_data = json_decode($lead['data'], true);
+            foreach ($data_leads as $lead) {
+                if (!empty($lead['data'])) {
+                    // Decode JSON data for the lead
+                    $temp_lead_data = json_decode($lead['data'], true);
 
-                if (!empty($lead['lead_id'])) {
-                    // Delete the existing lead in the main table if `lead_id` exists
-                    $this->Leads_model->delete($lead['lead_id'],$temp_lead_data);
+                    if (!empty($lead['lead_id'])) {
+                        // Delete the existing lead in the main table if `lead_id` exists
+                        $this->Leads_model->delete($lead['lead_id'], $temp_lead_data);
 
-                    // Prepare for mass assignation and collect IDs for deletion
-                    $reassign_data_array[] = $temp_lead_data;
-                    $ids_to_delete[] = $lead['id'];
-                    
-                    
-                    // $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
-                    // $phonenumber = substr($phonenumber, -10);
-                    // $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
-                    // FROM " . db_prefix() . "leads where phonenumber like '%{$phonenumber}%'
-                    // GROUP BY RIGHT(phonenumber, 10)
-                    // HAVING COUNT(*) > 0 ")->row();
+                        // Prepare for mass assignation and collect IDs for deletion
+                        $reassign_data_array[] = $temp_lead_data;
+                        $ids_to_delete[] = $lead['id'];
 
-                    // if (empty($check_exist)) {
-                    //     if ($this->Leads_model->add($temp_lead_data, 1)) {
-                    //         $this->db->where('id', $leads["id"]);
-                    //         $this->db->delete(db_prefix() . 'lead_temp');
-                    //     }
-                    // } else {
-                    //     $this->db->where('id', $leads["id"]);
-                    //     $this->db->update(db_prefix() . 'lead_temp', ["status" => 2]);
-                    // }
+
+                        // $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
+                        // $phonenumber = substr($phonenumber, -10);
+                        // $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
+                        // FROM " . db_prefix() . "leads where phonenumber like '%{$phonenumber}%'
+                        // GROUP BY RIGHT(phonenumber, 10)
+                        // HAVING COUNT(*) > 0 ")->row();
+
+                        // if (empty($check_exist)) {
+                        //     if ($this->Leads_model->add($temp_lead_data, 1)) {
+                        //         $this->db->where('id', $leads["id"]);
+                        //         $this->db->delete(db_prefix() . 'lead_temp');
+                        //     }
+                        // } else {
+                        //     $this->db->where('id', $leads["id"]);
+                        //     $this->db->update(db_prefix() . 'lead_temp', ["status" => 2]);
+                        // }
+                    }
                 }
             }
-        }
 
-        // Check if there's any data to reassign
-        if (!empty($reassign_data_array)) {
-            try {
-                // Perform mass assignation
-                $this->import->mass_assignation($reassign_data_array);
+            // Check if there's any data to reassign
+            if (!empty($reassign_data_array)) {
+                try {
+                    // Perform mass assignation
+                    $this->import->mass_assignation($reassign_data_array);
 
-                // Delete successfully reassigned leads from the temporary table
-                $this->db->where_in('id', $ids_to_delete);
-                $this->db->delete(db_prefix() . 'lead_temp');
+                    // Delete successfully reassigned leads from the temporary table
+                    $this->db->where_in('id', $ids_to_delete);
+                    $this->db->delete(db_prefix() . 'lead_temp');
 
-                echo json_encode(['status' => 1, 'message' => 'Leads reassigned successfully.']);
-            } catch (Exception $e) {
-                // Log and display error if assignation fails
-                log_message('error', 'Error in mass assignation: ' . $e->getMessage());
-                echo json_encode(['status' => 0, 'message' => 'Failed to reassign leads.']);
+                    echo json_encode(['status' => 1, 'message' => 'Leads reassigned successfully.']);
+                } catch (Exception $e) {
+                    // Log and display error if assignation fails
+                    log_message('error', 'Error in mass assignation: ' . $e->getMessage());
+                    echo json_encode(['status' => 0, 'message' => 'Failed to reassign leads.']);
+                }
+            } else {
+                echo json_encode(['status' => 0, 'message' => 'No leads available for reassignment.']);
             }
         } else {
-            echo json_encode(['status' => 0, 'message' => 'No leads available for reassignment.']);
+            echo json_encode(['status' => 0, 'message' => 'No leads found to reassign.']);
         }
-    } else {
-        echo json_encode(['status' => 0, 'message' => 'No leads found to reassign.']);
-    }
     }
 }
