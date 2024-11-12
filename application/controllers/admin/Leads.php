@@ -124,52 +124,47 @@ class Leads extends AdminController
 
     public function lead_summary_filter()
     {
+        // Fetch the lead summary and update counts
         $summary = get_leads_summary_filter($_POST);
-        $updateCount = leads_update_count_pri($_POST);
-        $updateCount_sec = leads_update_count_sec($_POST);
+        $updateCount = array_merge(
+            leads_update_count_pri($_POST),
+            leads_update_count_sec($_POST)
+        );
 
-        $updateCount = array_merge($updateCount, $updateCount_sec);
-
-
-        // Array to store unique values
+        // Remove duplicate entries based on 'id' and 'lastcontact'
         $uniqueData = [];
-
-        // Loop through each item
         foreach ($updateCount as $item) {
-            // Create a unique key based on id and lastcontact
             $key = $item['id'] . '-' . $item['lastcontact'];
-
-            // If the key doesn't exist in the unique array, add it
             if (!isset($uniqueData[$key])) {
                 $uniqueData[$key] = $item;
             }
         }
 
-        // Convert back to a numerically indexed array
+        // Convert uniqueData to numerically indexed array
         $mergedArray = array_values($uniqueData);
 
+        // Get call counts and convert them to hours, minutes, and seconds
+        $call_count = convertToHMS(
+            calls_update_count_pri($_POST) + calls_update_count_sec($_POST)
+        );
 
-        // $max_count = leads_update_count("", 1);
-        $call_count = calls_update_count_pri($_POST);
-        $call_count_sec = calls_update_count_sec($_POST);
-        $call_count = convertToHMS($call_count + $call_count_sec);
-        $updateCount = count($mergedArray);
-        $max_count = '';
-        $ret = "";
-        $ret1 = '';
+        // Prepare summary status HTML
+        $statusHtml = '';
         foreach ($summary as $status) {
-            $ret .= '<div class="col-md-2 col-xs-6 border-right"><h3 class="bold">';
-            if (isset($status['percent'])) {
-                $ret .= '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
-            } else {
-                // Is regular status
-                $ret .= $status['total'];
-            }
-            $ret .=  '</h3>';
-            $ret .= '<span style="color:' . $status['color'] . '">' . $status['name'] . '</span></div>';
+            $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+            $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
+                                <h3 class='bold'>{$percent}</h3>
+                                <span style='color: {$status['color']}'>{$status['name']}</span>
+                            </div>";
         }
-        // echo $ret;
-        echo json_encode(['status' => $ret, 'update_count' => $updateCount, "max_count" => $max_count, "call_count" => $call_count]);
+
+        // Return the result as JSON
+        echo json_encode([
+            'status' => $statusHtml,
+            'update_count' => count($mergedArray),
+            'max_count' => '', // Max count is not being set, you can adjust if needed
+            'call_count' => $call_count
+        ]);
     }
 
 
@@ -2707,6 +2702,7 @@ class Leads extends AdminController
                         (!empty($this->input->post('delete_created')) && $this->input->post('delete_created') == 1) ?  array_push($keysToRemove, 'dateadded') : "";
                         $re_assign_array = [];
                         foreach ($lead_data as $key => $lead_d) {
+                            $lead_id = $lead_d["id"];
                             foreach ($keysToRemove as $k) {
                                 if (isset($lead_data[$key][$k])) {
                                     unset($lead_data[$key][$k]);
@@ -2731,7 +2727,8 @@ class Leads extends AdminController
                                 "data" => json_encode($lead_data[$key], true),
                                 "status" => 1,
                                 "delete_created" => !empty($this->input->post('delete_created')) ? $this->input->post('delete_created') : 0,
-                                "date" => date('Y-m-d H:i:s')
+                                "date" => date('Y-m-d H:i:s'),
+                                "lead_id" => $lead_id
                             );
                         }
                     }
@@ -2740,20 +2737,26 @@ class Leads extends AdminController
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
 
-                        foreach ($ids as $lead_id_delete) {
-                            $this->leads_model->delete($lead_id_delete);
-                        }
+                        // foreach ($ids as $lead_id_delete) {
+                        //     $this->leads_model->delete($lead_id_delete);
+                        // }
 
                         // $this->db->where_in('id', $ids);
                         // $this->db->delete(db_prefix() . 'leads');
 
-                        $this->leads_model->delete_notes($ids);
+                        // $this->leads_model->delete_notes($ids);
+
+
+                        $this->db->where_in('id', $ids);
+                        $this->db->delete(db_prefix() . 'leads');
 
                         set_alert('success', "Re-assign lead successfully.");
+                        echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
                     } else {
                         set_alert('danger', "Something bad happen.");
+                        echo json_encode(array("status" => 0, "message" => "Something bad happen."));
                     }
-                    echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
+
 
                     die;
                 }

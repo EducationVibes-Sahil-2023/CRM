@@ -9,7 +9,7 @@ class Import_leads extends App_import
 
     protected $notImportableFields = [];
 
-    protected $requiredFields = ['name','phonenumber','email'];
+    protected $requiredFields = ['name', 'phonenumber', 'email'];
 
     public function __construct()
     {
@@ -56,63 +56,62 @@ class Import_leads extends App_import
                 } elseif ($databaseFields[$i] == 'country') {
                     $row[$i] = $this->countryValue($row[$i]);
                 } elseif ($databaseFields[$i] == 'phonenumber') { //get last 10 digit from string.
-                    $row[$i] = substr($row[$i],-10);
+                    $row[$i] = substr($row[$i], -10);
                 }
 
                 $insert[$databaseFields[$i]] = $row[$i];
             }
-            if(!empty($row[0]) && !empty($row[1])){ //check name,mobile not null;
-            $insert = $this->trimInsertValues($insert);
+            if (!empty($row[0]) && !empty($row[1])) { //check name,mobile not null;
+                $insert = $this->trimInsertValues($insert);
 
-            if (count($insert) > 0) {
-                if ($this->isDuplicateLead($insert)) {
-                    continue;
-                }
-
-                $this->incrementImported();
-
-                $id = null;
-
-                if (!$this->isSimulation()) {
-                    if (!isset($insert['dateadded'])) {
-                        $insert['dateadded'] = date('Y-m-d H:i:s');
+                if (count($insert) > 0) {
+                    if ($this->isDuplicateLead($insert)) {
+                        continue;
                     }
 
-                    if (!isset($insert['addedfrom'])) {
-                        $insert['addedfrom'] = get_staff_user_id();
-                    }
+                    $this->incrementImported();
 
-                    $insert['status'] = $this->ci->input->post('status');
-                    $insert['source'] = $this->ci->input->post('source');
-                    $insert['type'] = $this->ci->input->post('type');
+                    $id = null;
 
-
-                    if ($this->ci->input->post('responsible')) {
-                        $insert['assigned'] = $this->ci->input->post('responsible');
-                    }
-
-                    $tags = '';
-                    if (isset($insert['tags']) || is_null($insert['tags'])) {
-                        if (!is_null($insert['tags'])) {
-                            $tags = $insert['tags'];
+                    if (!$this->isSimulation()) {
+                        if (!isset($insert['dateadded'])) {
+                            $insert['dateadded'] = date('Y-m-d H:i:s');
                         }
-                        unset($insert['tags']);
+
+                        if (!isset($insert['addedfrom'])) {
+                            $insert['addedfrom'] = get_staff_user_id();
+                        }
+
+                        $insert['status'] = $this->ci->input->post('status');
+                        $insert['source'] = $this->ci->input->post('source');
+                        $insert['type'] = $this->ci->input->post('type');
+
+
+                        if ($this->ci->input->post('responsible')) {
+                            $insert['assigned'] = $this->ci->input->post('responsible');
+                        }
+
+                        $tags = '';
+                        if (isset($insert['tags']) || is_null($insert['tags'])) {
+                            if (!is_null($insert['tags'])) {
+                                $tags = $insert['tags'];
+                            }
+                            unset($insert['tags']);
+                        }
+
+                        $this->ci->db->insert(db_prefix() . 'leads', $insert);
+                        $id = $this->ci->db->insert_id();
+
+                        if ($id) {
+                            handle_tags_save($tags, $id, 'lead');
+                        }
+                    } else {
+                        $this->simulationData[$rowNumber] = $this->formatValuesForSimulation($insert);
                     }
 
-                    $this->ci->db->insert(db_prefix() . 'leads', $insert);
-                    $id = $this->ci->db->insert_id();
-
-                    if ($id) {
-                        handle_tags_save($tags, $id, 'lead');
-                    }
-                } else {
-                    $this->simulationData[$rowNumber] = $this->formatValuesForSimulation($insert);
+                    $this->handleCustomFieldsInsert($id, $row, $i, $rowNumber, 'leads');
                 }
-
-                $this->handleCustomFieldsInsert($id, $row, $i, $rowNumber, 'leads');
-            }
-
-        }//check name,mobile,emiil not null;
+            } //check name,mobile,emiil not null;
 
             if ($this->isSimulation() && $rowNumber >= $this->maxSimulationRows) {
                 break;
@@ -148,7 +147,8 @@ class Import_leads extends App_import
     {
         foreach ($this->uniqueValidationFields as $field) {
             if ((isset($data[$field]) && $data[$field] != '')
-                && total_rows(db_prefix() . 'leads', [$field => $data[$field]]) > 0) {
+                && total_rows(db_prefix() . 'leads', [$field => $data[$field]]) > 0
+            ) {
                 return true;
             }
         }
@@ -195,5 +195,68 @@ class Import_leads extends App_import
         }
 
         return $value;
+    }
+    public function mass_assignation($leads_data)
+    {
+        // Load the necessary libraries and models
+
+        $this->ci->load->model('Leads_model');
+
+        foreach ($leads_data as $row) {
+            try {
+                $insert = $this->trimInsertValues($row);
+
+                if (count($insert) > 0) {
+                    // Skip if lead is a duplicate
+                    if ($this->isDuplicateLead($insert)) {
+                        continue;
+                    }
+
+                    // Set default values
+                    $insert['dateadded'] = !empty($insert['dateadded']) ? $insert['dateadded'] : date('Y-m-d H:i:s');
+                    $insert['addedfrom'] = get_staff_user_id();
+
+                    // Handle tags
+                    $tags = '';
+                    if (isset($insert['tags'])) {
+                        $tags = $insert['tags'];
+                        unset($insert['tags']);
+                    }
+
+                    // Handle exam details if available
+                    $insert['exam_details'] = [];
+                    if (!empty($insert['exam_name']) && count($insert['exam_name']) > 0) {
+                        foreach ($insert['exam_name'] as $key => $exam_name) {
+                            if (!empty($exam_name) && !empty($insert['exam_score'][$key])) {
+                                $insert['exam_details'][] = [
+                                    'exam_name' => $exam_name,
+                                    'exam_score' => $insert['exam_score'][$key]
+                                ];
+                            }
+                        }
+                        unset($insert['exam_name'], $insert['exam_score']);
+                    }
+
+                    // Encode exam details if present, or set it as an empty string
+                    $insert['exam_details'] = !empty($insert['exam_details']) ? json_encode($insert['exam_details']) : '';
+
+                    // Insert into the leads table
+                    $this->ci->db->insert(db_prefix() . 'leads', $insert);
+                    $insert_id = $this->ci->db->insert_id();
+
+                    // If insertion successful, log the activity and handle tags
+                    if ($insert_id) {
+                        log_activity('New Lead Added [ID: ' . $insert_id . ']');
+                        $this->ci->Leads_model->log_lead_activity($insert_id, 'not_lead_activity_created');
+                        hooks()->do_action('lead_created', $insert_id);
+                        handle_tags_save($tags, $insert_id, 'lead');
+                    }
+                }
+            } catch (Exception $e) {
+                // Log error and continue with the next record
+                log_message('error', 'Failed to insert lead: ' . $e->getMessage());
+                continue;
+            }
+        }
     }
 }
