@@ -345,16 +345,25 @@ class Authentication extends ClientsController
         return TRUE;
     }
 
-    public function re_assign_cron()
-    {
-        // Load required libraries and models
-        $this->load->library('import/import_leads', [], 'import');
-        $this->load->model('Leads_model');
-        $limit = RE_ASSIGN_LEADS;
+   public function re_assign_cron()
+{
+    // Load required libraries and models
+    $this->load->library('import/import_leads', [], 'import');
+    $this->load->model('Leads_model');
+    $limit = RE_ASSIGN_LEADS; // Define the number of leads to process per chunk
+    $chunkSize = 500; // Number of leads to process per iteration
 
-        // Fetch lead data with status 1
-        $data_leads = $this->db->query("SELECT id, data, lead_id FROM " . db_prefix() . "lead_temp WHERE status = 1 and lead_id > 0 ORDER BY id DESC LIMIT {$limit}")->result_array();
+    $offset = 0; // Initialize offset for chunking
 
+    do {
+        // Fetch a chunk of lead data with status 1
+        $data_leads = $this->db->query(
+            "SELECT id, data, lead_id 
+            FROM " . db_prefix() . "lead_temp 
+            WHERE status = 1 and lead_id > 0 
+            ORDER BY id DESC 
+            LIMIT {$offset}, {$chunkSize}"
+        )->result_array();
 
         if (!empty($data_leads)) {
             $reassign_data_array = [];
@@ -372,24 +381,6 @@ class Authentication extends ClientsController
                         // Prepare for mass assignation and collect IDs for deletion
                         $reassign_data_array[] = $temp_lead_data;
                         $ids_to_delete[] = $lead['id'];
-
-
-                        // $phonenumber = str_replace("+91", "", $temp_lead_data["phonenumber"]);
-                        // $phonenumber = substr($phonenumber, -10);
-                        // $check_exist = $this->db->query("SELECT RIGHT(phonenumber, 10) AS last_10_digits, COUNT(*) AS count
-                        // FROM " . db_prefix() . "leads where phonenumber like '%{$phonenumber}%'
-                        // GROUP BY RIGHT(phonenumber, 10)
-                        // HAVING COUNT(*) > 0 ")->row();
-
-                        // if (empty($check_exist)) {
-                        //     if ($this->Leads_model->add($temp_lead_data, 1)) {
-                        //         $this->db->where('id', $leads["id"]);
-                        //         $this->db->delete(db_prefix() . 'lead_temp');
-                        //     }
-                        // } else {
-                        //     $this->db->where('id', $leads["id"]);
-                        //     $this->db->update(db_prefix() . 'lead_temp', ["status" => 2]);
-                        // }
                     }
                 }
             }
@@ -411,10 +402,16 @@ class Authentication extends ClientsController
                     echo json_encode(['status' => 0, 'message' => 'Failed to reassign leads.']);
                 }
             } else {
-                echo json_encode(['status' => 0, 'message' => 'No leads available for reassignment.']);
+                echo json_encode(['status' => 0, 'message' => 'No leads available for reassignment in this chunk.']);
             }
-        } else {
-            echo json_encode(['status' => 0, 'message' => 'No leads found to reassign.']);
         }
+
+        $offset += $chunkSize; // Move to the next chunk
+    } while (!empty($data_leads)); // Continue until no leads are left
+
+    if ($offset === 0) {
+        echo json_encode(['status' => 0, 'message' => 'No leads found to reassign.']);
     }
+}
+
 }

@@ -2969,10 +2969,14 @@ class Leads_model extends App_Model
         return $staff;
     }
 
-    public function get_custum_values()
+    public function get_custum_values($lead_ids=[])
     {
         $this->db->select('CONCAT(fieldto, "-", relid, "-", fieldid) AS column_name, value');
         $this->db->where('fieldto', 'leads');
+        if(!empty($lead_ids))
+        {
+             $this->db->where_in('relid', $lead_ids);
+        }
         $staff = $this->db->get(db_prefix() . 'customfieldsvalues')->result_array();
         return $staff;
     }

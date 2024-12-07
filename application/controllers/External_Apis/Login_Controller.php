@@ -65,20 +65,23 @@ class Login_Controller extends Api_Controller
 
     public function call_update()
     {
+        
+   $response = [];
+        if(!empty($_POST["call_data"])){
         $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
 
         $form_data = !empty($_POST["call_data"]) ? json_decode($_POST["call_data"], true) : '';
         $form_data_array = [];
         $form_data_array_temp = [];
         if (json_last_error() !== JSON_ERROR_NONE) {
-            $response[] = array(
+            $response = array(
                 "status" => 0,
                 "message" => 'Error decoding JSON: ' . json_last_error_msg()
             );
             echo  $this->json_output($response);
             die;
         }
-        $response = [];
+     
         $rules[] = array(
             "field" => "Staff Id",
             "value" => !empty($this->staffId) ? $this->staffId : '',
@@ -109,7 +112,24 @@ class Login_Controller extends Api_Controller
                 $call_start =  !empty($form_d["startdate_time"]) ? strtotime($form_d["startdate_time"]) : '';
                 $call_end =  !empty($form_d["enddate_time"]) ? strtotime($form_d["enddate_time"]) : '';
 
+// Validate $call_start
+if (!is_numeric($call_start)) {
+    // throw new InvalidArgumentException('Invalid UNIX timestamp for call_start');
+}
+
+// Adjust the timestamp by 5 hours and 30 minutes
+$adjusted_time = intval($call_start) + (5 * 3600) + (30 * 60);
+
+// Format the adjusted time to 'Y-m-d'
+$adjusted_date = date('Y-m-d', $adjusted_time);
+
+// Compare with the current date
+if ($adjusted_date == date('Y-m-d')) {
+    
+    $phonenumber = !empty($phonenumber) ? substr(trim($phonenumber), -10) : '';
+                $phonenumber = str_replace("+91", "",$phonenumber);
                 array_push($form_data_array_temp, array(
+                   "staffid" => !empty($this->staffId) ? intval($this->staffId) : '',
                     "staff_contact" => $callassignee,
                     "contact" => $phonenumber,
                     "call_status" => $call_status,
@@ -120,6 +140,7 @@ class Login_Controller extends Api_Controller
                     "call_end" => $call_end,
                     "datetime" => date('Y-m-d H:i:s')
                 ));
+            }
             }
         } else {
 
@@ -160,7 +181,8 @@ class Login_Controller extends Api_Controller
                     $staffid = !empty($staff_data_["data"][0]["staffid"]) ? $staff_data_["data"][0]["staffid"] : '';
                 }
             }
-
+                $phonenumber = !empty($phonenumber) ? substr(trim($phonenumber), -10) : '';
+                $phonenumber = str_replace("+91", "",$phonenumber);
 
             $form_data_array = array(
                 "staffid" => $staffid,
@@ -213,14 +235,37 @@ class Login_Controller extends Api_Controller
             if (!empty($form_data["type"]) && $form_data["type"] == 1) {
                 $response = $this->Api_Model->update_call_data($form_data_array);
             }
-            if (!empty($form_data["type"]) && $form_data["type"] == 2) {
+            else if (!empty($form_data["type"]) && $form_data["type"] == 2) {
+                if(!empty($form_data_array_temp)){
                 $response = $this->Api_Model->update_call_data_bulk_temp($form_data_array_temp);
+                }
+                else
+                {
+                     $response = array(
+                "status" => 1,
+                "message" =>"Call data update successfully.",
+            );
+                }
+            }
+            else{
+                 $response = array(
+                "status" => 1,
+                "message" =>"Call data update successfully.",
+            );
             }
         } else {
-            $response[] = array(
+            $response = array(
                 "status" => 0,
                 "message" => $validate[0],
             );
+        }
+        }
+        else
+        {
+            $response = array(
+                "status" => 1,
+                "message" =>"Call data update successfully.",
+            ); 
         }
         echo  $this->json_output($response);
     }
