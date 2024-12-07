@@ -936,7 +936,7 @@ if (!empty($search_column)) {
         $searchFound = 0;
         $sWhere      = 'WHERE (';
         for ($i = 0; $i < count($aColumns); $i++) {
-            if (($__post['columns'][$i]) && $__post['columns'][$i]['searchable'] == 'true') {
+            if (!empty($__post['columns'][$i]) &&  !empty($__post['columns'][$i]['searchable']) && ($__post['columns'][$i]) && $__post['columns'][$i]['searchable'] == 'true') {
                 $search_value = $__post['columns'][$i]['search']['value'];
 
                 $columnName = $aColumns[$i];
@@ -1051,6 +1051,384 @@ if (!empty($search_column)) {
         'draw'                 => $__post['draw'] ? intval($__post['draw']) : 0,
         'iTotalRecords'        => $iTotal,
         'iTotalDisplayRecords' => $iFilteredTotal,
+        'aaData'               => [],
+    ];
+    //print_r($output);die;
+    return [
+        'rResult' => $rResult,
+        'output'  => $output,
+    ];
+}
+
+
+function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0, $search_column = [])
+{
+    $CI          = &get_instance();
+    $__post      = $CI->input->post();
+    $havingCount = '';
+    /*
+     * Paging
+     */
+    $sLimit = '';
+    if ((is_numeric($CI->input->post('start'))) && $CI->input->post('length') != '-1') {
+        $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', ' . intval($CI->input->post('length'));
+        // $sLimit = 'LIMIT ' . intval($CI->input->post('start')) . ', 50 ';
+    }
+    $_aColumns = [];
+    foreach ($aColumns as $column) {
+        // if found only one dot
+        if (substr_count($column, '.') == 1 && strpos($column, ' as ') === false) {
+            $_column = explode('.', $column);
+            if (isset($_column[1])) {
+                if (startsWith($_column[0], db_prefix())) {
+                    $_prefix = prefixed_table_fields_wildcard($_column[0], $_column[0], $_column[1]);
+                    array_push($_aColumns, $_prefix);
+                } else {
+                    array_push($_aColumns, $column);
+                }
+            } else {
+                array_push($_aColumns, $_column[0]);
+            }
+        } else {
+            array_push($_aColumns, $column);
+        }
+    }
+
+    /*
+     * Ordering
+     */
+    $nullColumnsAsLast = get_null_columns_that_should_be_sorted_as_last();
+
+    $sOrder = '';
+    if ($CI->input->post('order')) {
+        $sOrder = 'ORDER BY ';
+        foreach ($CI->input->post('order') as $key => $val) {
+            $columnName = $aColumns[intval($__post['order'][$key]['column'])];
+            $dir        = strtoupper($__post['order'][$key]['dir']);
+
+            if (strpos($columnName, ' as ') !== false) {
+                $columnName = strbefore($columnName, ' as');
+            }
+
+            // first checking is for eq tablename.column name
+            // second checking there is already prefixed table name in the column name
+            // this will work on the first table sorting - checked by the draw parameters
+            // in future sorting user must sort like he want and the duedates won't be always last
+            if ((in_array($sTable . '.' . $columnName, $nullColumnsAsLast)
+                || in_array($columnName, $nullColumnsAsLast))) {
+                $sOrder .= $columnName . ' IS NULL ' . $dir . ', ' . $columnName;
+            } else {
+                $sOrder .= hooks()->apply_filters('datatables_query_order_column', $columnName, $sTable);
+            }
+            $sOrder .= ' ' . $dir . ', ';
+        }
+        if (trim($sOrder) == 'ORDER BY') {
+            $sOrder = '';
+        }
+
+        if ($order_by_status == 1) {
+            $sOrder = '';
+        }
+
+        $sOrder = rtrim($sOrder, ', ');
+
+        if (
+            get_option('save_last_order_for_tables') == '1'
+            && $CI->input->post('last_order_identifier')
+            && $CI->input->post('order')
+        ) {
+            // https://stackoverflow.com/questions/11195692/json-encode-sparse-php-array-as-json-array-not-json-object
+
+            $indexedOnly = [];
+            foreach ($CI->input->post('order') as $row) {
+                $indexedOnly[] = array_values($row);
+            }
+
+            $meta_name = $CI->input->post('last_order_identifier') . '-table-last-order';
+
+            update_staff_meta(get_staff_user_id(), $meta_name, json_encode($indexedOnly, JSON_NUMERIC_CHECK));
+        }
+    }
+    /*
+     * Filtering
+     * NOTE this does not match the built-in DataTables filtering which does it
+     * word by word on any field. It's possible to do here, but concerned about efficiency
+     * on very large tables, and MySQL's regex functionality is very limited
+     */
+    $sWhere = '';
+    if ((isset($__post['search'])) && $__post['search']['value'] != '') {
+        $search_value = $__post['search']['value'];
+        $search_value = trim($search_value);
+
+        $sWhere             = 'WHERE (';
+        $sMatchCustomFields = [];
+        // Not working, do not use it
+        $useMatchForCustomFieldsTableSearch = hooks()->apply_filters('use_match_for_custom_fields_table_search', 'false');
+
+
+        for ($i = 0; $i < count($aColumns); $i++) {
+            $columnName = $aColumns[$i];
+
+            $ignore_column = array('update_count');
+            multi_strpos($columnName, $ignore_column);
+            if (multi_strpos($columnName, $ignore_column) !== false) {
+
+                $columnName = "";
+            }
+if (!empty($search_column)) {
+            // Convert to lowercase and check for ' as '
+            $lowerColumnName = strtolower($columnName);
+            if (strpos($lowerColumnName, ' as ') !== false) {
+                // Remove everything before and including ' as ', then trim
+                $columnName = trim(substr($columnName, strpos($lowerColumnName, ' as ') + 4));
+            }
+
+            // Check if '.' exists, explode by '.' and get the last part
+            if (strpos($columnName, '.') !== false) {
+                $columnParts = explode('.', $columnName);
+                $columnName = end($columnParts); // Get the last part after exploding
+            }
+
+            if (in_array(strtolower($columnName), $search_column)) {
+            } else {
+                $columnName = "";
+            }
+
+}
+
+            if (!empty($columnName) && $columnName != '') {
+                if (strpos($columnName, ' as ') !== false) {
+                    $columnName = strbefore($columnName, ' as');
+                }
+
+                if (!empty(trim($columnName))) {
+                    if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
+                    } else {
+                        if (($__post['columns'][$i]) && $__post['columns'][$i]['searchable'] == 'true') {
+                            if (isset($searchAs[$i])) {
+                                $columnName = $searchAs[$i];
+                            }
+                            // Custom fields values are FULLTEXT and should be searched with MATCH
+                            // Not working ATM
+                            if ($useMatchForCustomFieldsTableSearch === 'true' && startsWith($columnName, 'ctable_')) {
+                                $sMatchCustomFields[] = $columnName;
+                            } else {
+                                if (str_contains($search_value, '!=')) {
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+                                } else {
+                                    $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!empty($search_column)) {
+            for ($i = 0; $i < count($search_column); $i++) {
+                $columnName = $search_column[$i];
+
+                if (strpos($columnName, '.') !== false) {
+                    if (str_contains($search_value, '!=')) {
+                        $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+                    } else {
+                        $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                    }
+                }
+            }
+        }
+
+      
+        if (count($sMatchCustomFields) > 0) {
+            $s = $CI->db->escape_str($search_value);
+            foreach ($sMatchCustomFields as $matchCustomField) {
+                if (str_contains($s, '!=')) {
+                    $sWhere .= " NOT MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('" . str_replace("!=", "", $s) . "') USING utf8)) AND ";
+                } else {
+                    $sWhere .= " MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('{$s}') USING utf8)) OR ";
+                }
+            }
+        }
+
+
+        if (count($additionalSelect) > 0) {
+            foreach ($additionalSelect as $searchAdditionalField) {
+if (!empty($search_column)) {
+                // Convert to lowercase and check for ' as '
+                $lowerColumnName = strtolower($searchAdditionalField);
+                if (strpos($lowerColumnName, ' as ') !== false) {
+                    // Remove everything before and including ' as ', then trim
+                    $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
+                }
+
+                // Check if '.' exists, explode by '.' and get the last part
+                if (strpos($searchAdditionalField, '.') !== false) {
+                    $columnParts = explode('.', $searchAdditionalField);
+                    $searchAdditionalField = end($columnParts); // Get the last part after exploding
+                }
+
+                if (in_array(strtolower($searchAdditionalField), $search_column)) {
+                } else {
+                    $searchAdditionalField = "";
+                }
+}
+
+                if (empty($searchAdditionalField)) {
+                    continue;
+                }
+                if (strpos($searchAdditionalField, 'as') !== false) {
+                    $searchAdditionalField = strbefore($searchAdditionalField, ' as');
+                }
+                if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
+                } else {
+
+                    // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
+                    // Use index
+                    if (str_contains($search_value, '!=')) {
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+                    } else {
+                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                    }
+                }
+            }
+        }
+
+        if (str_contains($search_value, '!=')) {
+            $sWhere = substr_replace($sWhere, '', -4);
+        } else {
+            $sWhere = substr_replace($sWhere, '', -3);
+        }
+        $sWhere .= ')';
+    } else {
+        // Check for custom filtering
+        $searchFound = 0;
+        $sWhere      = 'WHERE (';
+        for ($i = 0; $i < count($aColumns); $i++) {
+            if (!empty($__post['columns'][$i]) &&  !empty($__post['columns'][$i]['searchable']) && ($__post['columns'][$i]) && $__post['columns'][$i]['searchable'] == 'true') {
+                $search_value = $__post['columns'][$i]['search']['value'];
+
+                $columnName = $aColumns[$i];
+                if (strpos($columnName, ' as ') !== false) {
+                    $columnName = strbefore($columnName, ' as');
+                }
+                // $columnName = explode(" ", $columnName)[0];
+                if ($search_value != '') {
+                    if (str_contains($search_value, '!=')) {
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+                    } else {
+                        $sWhere .= 'convert(ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                    }
+                    if (count($additionalSelect) > 0) {
+                        foreach ($additionalSelect as $searchAdditionalField) {
+                            // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
+                            if (strpos($searchAdditionalField, ' as ') !== false) {
+                                $searchAdditionalField = strbefore($searchAdditionalField, ' as');
+                            }
+                            if (str_contains($search_value, '!=')) {
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+                            } else {
+                                $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                            }
+                        }
+                    }
+                    $searchFound++;
+                }
+            }
+        }
+        if ($searchFound > 0) {
+
+            if ((isset($__post['search'])) && $__post['search']['value'] != '') {
+                if (str_contains($__post['search']['value'], '!=')) {
+                    $sWhere = substr_replace($sWhere, '', -4);
+                } else {
+                    $sWhere = substr_replace($sWhere, '', -3);
+                }
+            } else {
+                $sWhere = substr_replace($sWhere, '', -3);
+            }
+            $sWhere .= ')';
+        } else {
+            $sWhere = '';
+        }
+    }
+    /*
+     * SQL queries
+     * Get data to display
+     */
+    $_additionalSelect = '';
+    if (count($additionalSelect) > 0) {
+        $_additionalSelect = ',' . implode(',', $additionalSelect);
+    }
+    $where = implode(' ', $where);
+    if ($sWhere == '') {
+        $where = trim($where);
+        if (startsWith($where, 'AND') || startsWith($where, 'OR')) {
+            if (startsWith($where, 'OR')) {
+                $where = substr($where, 2);
+            } else {
+                $where = substr($where, 3);
+            }
+            $where = 'WHERE ' . $where;
+        }
+    }
+
+    $join = implode(' ', $join);
+
+    $sQuery = '
+    SELECT  ' . str_replace(' , ', ' ', implode(', ', $_aColumns)) . ' ' . $_additionalSelect . "
+    FROM $sTable
+    " . $join . "
+    " . $sWhere . "
+    " . $where . "
+    $sGroupBy
+    $sOrder
+    $sLimit
+    ";
+
+
+    $rResult = $CI->db->query($sQuery)->result_array();
+
+
+    $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [
+        'table' => $sTable,
+        'limit' => $sLimit,
+        'order' => $sOrder,
+    ]);
+    
+  
+
+    /* Data set length after filtering */
+    // $sQuery = '
+    // SELECT FOUND_ROWS()
+    // ';
+    // $_query         = $CI->db->query($sQuery)->result_array();
+    // $iFilteredTotal = $_query[0]['FOUND_ROWS()'];
+
+    // if (startsWith($where, 'AND')) {
+    //     $where = 'WHERE ' . substr($where, 3);
+    // }
+    // /* Total data set length */
+    // $sQuery = '
+    // SELECT COUNT(distinct(' . $sTable . '.' . $sIndexColumn . "))
+    // FROM $sTable " . $join . ' ' . $where;
+
+
+    // $_query = $CI->db->query($sQuery)->result_array();
+    // $iTotal = $_query[0]['COUNT(distinct(' . $sTable . '.' . $sIndexColumn . '))'];
+
+    /*
+     * Output
+     */
+    
+    $start_ = (intval($CI->input->post('start')) ==0 )?1:intval($CI->input->post('start'));
+    $last_ = (count($rResult) == intval($CI->input->post('length')))?(1+intval($CI->input->post('length'))) :count($rResult);
+    
+
+    $output = [
+        'draw'                 => $__post['draw'] ? intval($__post['draw']) : 0,
+        'iTotalRecords' =>       $start_+$last_,
+        'iTotalDisplayRecords' =>intval($CI->input->post('start'))+$last_,
         'aaData'               => [],
     ];
     //print_r($output);die;
@@ -1561,3 +1939,76 @@ function data_call_data()
         contact
 ")->result_array();
 }
+
+function get_call_information($phonenumber_array=[])
+{
+    $where ="";
+    
+    if(!empty($phonenumber_array))
+    {
+        $phonenumber_array = implode(",",$phonenumber_array);
+      $where = " AND contact IN ({$phonenumber_array}) "; 
+    }
+    $CI = &get_instance();
+    return   $CI->db->query("
+          SELECT 
+    contact,
+    SUM(IF(LOWER(TRIM(call_status)) IN ('answered', 'status_unknow'), IFNULL(calls.duration, 0), 0)) AS duration,
+    DATE_FORMAT(
+        DATE_ADD(
+            '1970-01-01', 
+            INTERVAL (MAX(CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') THEN call_start ELSE NULL END) + (5 * 3600 + 30 * 60)) SECOND
+        ), '%Y-%m-%d'
+    ) AS lastcontact_date,
+    COUNT(1) AS update_count,
+  DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (MAX(call_start) + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') AS lastupdate_date
+FROM 
+    " . db_prefix() . "calls_activity_logs calls
+WHERE 
+    LENGTH(contact) >= 10 AND contact != '' {$where}
+GROUP BY 
+    contact
+ORDER BY 
+    id ASC
+
+            ")->result_array();
+}
+
+function get_call_information_new($phonenumber_array = [])
+{
+    $where = "";
+  
+    if (!empty($phonenumber_array)) {
+        // Sanitize phone numbers and prepare them for the query
+        $phonenumber_array = implode(",", array_map('intval', $phonenumber_array));
+        $where = " AND contact IN ({$phonenumber_array})"; 
+    }
+    
+    $CI = &get_instance();
+    
+    try {
+        // Execute the query
+        $result = $CI->db->query("
+            SELECT 
+                *
+            FROM 
+                " . db_prefix() . "calls_update 
+            WHERE 
+               1=1 {$where}
+            GROUP BY 
+                contact
+            ORDER BY 
+                id ASC
+        ")->result_array();
+
+        return $result;
+    } catch (Exception $e) {
+        // Log the error
+        log_message('error', 'Error in get_call_information: ' . $e->getMessage());
+
+        // Return an empty array or any default fallback response
+        return [];
+    }
+}
+
+

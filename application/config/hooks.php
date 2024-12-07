@@ -57,6 +57,14 @@ $hook['pre_controller_constructor'][] = [
         'filepath' => 'hooks',
 ];
 
+$hook['post_controller'] = array(
+    'class'    => 'LogQueries',
+    'function' => 'log',
+    'filename' => 'LogQueries.php',
+    'filepath' => 'hooks',
+);
+
+
 if (file_exists(APPPATH . 'config/my_hooks.php')) {
     include_once(APPPATH . 'config/my_hooks.php');
 }

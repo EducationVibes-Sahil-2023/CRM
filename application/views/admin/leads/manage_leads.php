@@ -13,6 +13,16 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       height: 10px !important;
    }
 
+.border-right
+{
+    text-align: center;
+    border-right: 1px solid #f0f0f0;
+    /* border: 1px solid black; */
+    margin: 10px;
+    padding: 10px;
+    border-radius: 8px 20px;
+    box-shadow: 1px 1px 6px 1px lightgray;
+}
    .noUi-horizontal .noUi-handle {
       width: 20px;
       height: 20px;
@@ -55,67 +65,77 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                            <?php echo _l('import_leads'); ?>
                         </a>
                      <?php } ?>
-                     <div class="row">
-                        <div class="col-md-8">
-                           <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
-                           <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
-                           <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
+                        <div class="row">
+                                <div class="col-md-8">
+                                    <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
+                                    
+                                    <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo "Show Update count and Call duraryion"; ?>" data-placement="bottom" onclick="slideToggle('.leads-count-overview'); summary(2); return false; "><i class="fa fa-clock-o"></i></a>
+                                    
+                                    <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
+                                    <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
                            <?php if ($switch_kanban == 1) {
-                              echo _l('leads_switch_to_kanban');
-                           } else {
-                              echo _l('switch_to_list_view');
-                           }; ?>
+                                echo _l('leads_switch_to_kanban');
+                            } else {
+                                echo _l('switch_to_list_view');
+                            }; ?>
                            </a> -->
-                           <div class="row">
-
-                              <div class="text-center  col-md-6">
-                                 <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
-                                 <span id="updationCounterText">Updates Count</span>
-                              </div>
-                              <div class="text-center  col-md-6">
-                                 <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
-                                 <span id="updationCounterText_time">Updates Calls Duration</span>
-                              </div>
-                           </div>
+                                 
 
 
-                        </div>
+                                </div>
 
-                        <div class="col-md-4 col-xs-12 pull-right leads-search">
-                           <?php if ($this->session->userdata('leads_kanban_view') == 'true' && 1 == 0) { ?>
-                              <!-- <div data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
+                                <div class="col-md-4 col-xs-12 pull-right leads-search">
+                                    <?php if ($this->session->userdata('leads_kanban_view') == 'true' && 1 == 0) { ?>
+                                        <!-- <div data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
                               <?php echo render_input('search', '', '', 'search', array('data-name' => 'search', 'onkeyup' => 'leads_kanban();', 'placeholder' => _l('leads_search')), array(), 'no-margin') ?>
                            </div> -->
-                           <?php } ?>
-                           <?php echo form_hidden('sort_type'); ?>
-                           <?php echo form_hidden('sort', (get_option('default_leads_kanban_sort') != '' ? get_option('default_leads_kanban_sort_type') : '')); ?>
-                        </div>
-                     </div>
-                     <div class="clearfix"></div>
-                     <div class="row hide leads-overview">
-                        <hr class="hr-panel-heading" />
-                        <div class="col-md-12">
-                           <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
-                        </div>
-                        <div id="leadSum">
-                           <?php
-                           foreach ($summary as $status) { ?>
-                              <div class="col-md-2 col-xs-6 border-right">
-                                 <h3 class="bold">
+                                    <?php } ?>
+                                    <?php echo form_hidden('sort_type'); ?>
+                                    <?php echo form_hidden('sort', (get_option('default_leads_kanban_sort') != '' ? get_option('default_leads_kanban_sort_type') : '')); ?>
+                                </div>
+                            </div>
+                            <div class="clearfix"></div>
+                            <div class="row hide leads-overview">
+                                <hr class="hr-panel-heading" />
+                                <div class="col-md-12">
+                                    <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
+                                </div>
+                                <div id="leadSum">
                                     <?php
-                                    if (isset($status['percent'])) {
-                                       echo '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
-                                    } else {
-                                       // Is regular status
-                                       echo $status['total'];
-                                    }
-                                    ?>
-                                 </h3>
-                                 <span style="color:<?php echo $status['color']; ?>" class="<?php echo isset($status['junk']) || isset($status['lost']) ? 'text-danger' : ''; ?>"><?php echo $status['name']; ?></span>
-                              </div>
-                           <?php } ?>
-                        </div>
-                     </div>
+                                    foreach ($summary as $status) { ?>
+                                        <div class="col-md-2 col-xs-6 border-right">
+                                            <h3 class="bold">
+                                                <?php
+                                                if (isset($status['percent'])) {
+                                                    echo '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>';
+                                                } else {
+                                                    // Is regular status
+                                                    echo $status['total'];
+                                                }
+                                                ?>
+                                            </h3>
+                                            <span style="color:<?php echo $status['color']; ?>" class="<?php echo isset($status['junk']) || isset($status['lost']) ? 'text-danger' : ''; ?>"><?php echo $status['name']; ?></span>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                            </div>
+                              <div class="row hide leads-count-overview">
+                                <hr class="hr-panel-heading" />
+                                <div class="col-md-12">
+                                    <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
+                                </div>
+                                    <div class="row">
+
+                                        <div class="text-center  col-md-6">
+                                            <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
+                                            <span id="updationCounterText">Update Count</span>
+                                        </div>
+                                        <div class="text-center  col-md-6">
+                                            <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
+                                            <span id="updationCounterText_time">Updates Calls Duration</span>
+                                        </div>
+                                    </div>
+                                    </div>
 
                      <!-- <div class="row hide source-overview">
                         <hr class="hr-panel-heading" />
@@ -786,440 +806,508 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 <?php include_once(APPPATH . 'views/admin/leads/status.php'); ?>
 <?php init_tail(); ?>
 <script>
-   var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
+    var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
 
-   function set_disabled_date(value) {
-      $(".set_disabled_date").removeAttr("disabled");
-      if (value != "") {
-         $(".set_disabled_date").each(function() {
-            if ($(this).hasClass("disabled_checkbox")) {
-               if (!$(this).prop("checked")) {
-                  $(this).attr("disabled", "disabled");
-               }
+    function set_disabled_date(value) {
+        $(".set_disabled_date").removeAttr("disabled");
+        if (value != "") {
+            $(".set_disabled_date").each(function() {
+                if ($(this).hasClass("disabled_checkbox")) {
+                    if (!$(this).prop("checked")) {
+                        $(this).attr("disabled", "disabled");
+                    }
+                } else {
+                    if ($(this).val() != "") {
+                        $(this).removeAttr("disabled");
+                    } else {
+                        $(this).attr("disabled", "disabled");
+                    }
+                }
+            });
+        }
+    }
+
+
+
+    $('#leads_bulk_actions').on('shown.bs.modal', function(e) {
+        $("#re-assignation_div").hide();
+        $("#bulk_change").show();
+    })
+
+
+    // Global on change for mass delete to hide all other elements for bulk actions
+    $('.bulk_actions').on('change', 'input[name="mass_delete"]', function() {
+        var $bulkChange = $('#bulk_change');
+
+        if ($(this).prop('checked') === true) {
+            $bulkChange.find('select').selectpicker('val', '');
+            $("#re-assignation_div").hide();
+            $("#bulk_change").hide();
+            $('#delete_created_date').prop("checked", false);
+
+        } else {
+
+            if ($('input[name="mass_re-assignation"]').prop('checked') === true) {
+                $("#bulk_change").show();
+                // $("#re-assignation_div").show();
+                $("#re-assignation_div").find('select').selectpicker('val', '');
+
+
             } else {
-               if ($(this).val() != "") {
-                  $(this).removeAttr("disabled");
-               } else {
-                  $(this).attr("disabled", "disabled");
-               }
+                $("#bulk_change").show();
+                $("#bulk_change").find('select').selectpicker('val', '');
+                // $("#re-assignation_div").hide();
             }
-         });
-      }
-   }
+
+        }
+    });
 
 
 
-   $('#leads_bulk_actions').on('shown.bs.modal', function(e) {
-      $("#re-assignation_div").hide();
-      $("#bulk_change").show();
-   })
-
-
-   // Global on change for mass delete to hide all other elements for bulk actions
-   $('.bulk_actions').on('change', 'input[name="mass_delete"]', function() {
-      var $bulkChange = $('#bulk_change');
-
-      if ($(this).prop('checked') === true) {
-         $bulkChange.find('select').selectpicker('val', '');
-         $("#re-assignation_div").hide();
-         $("#bulk_change").hide();
-         $('#delete_created_date').prop("checked", false);
-
-      } else {
-
-         if ($('input[name="mass_re-assignation"]').prop('checked') === true) {
-            $("#bulk_change").show();
+    $('input[name="mass_re-assignation"]').click(function() {
+        var $bulkChange = $('#bulk_change');
+        if ($(this).prop('checked') === true) {
+            $('#input[name="mass_delete"]').prop("checked", false);
+            $bulkChange.find('select').selectpicker('val', '');
+            $('#delete_created_date').prop("checked", false);
+            $('.delete_created_date').removeClass('hide');
+            // $bulkChange.hide();
             // $("#re-assignation_div").show();
+        } else {
             $("#re-assignation_div").find('select').selectpicker('val', '');
-
-
-         } else {
-            $("#bulk_change").show();
-            $("#bulk_change").find('select').selectpicker('val', '');
+            $('#delete_created_date').prop("checked", false);
+            $('.delete_created_date').addClass('hide');
             // $("#re-assignation_div").hide();
-         }
+            // $bulkChange.show();
+        }
 
-      }
-   });
+        // $('.mass_delete_separator').toggleClass('hide');
+    });
 
+    function show_update_count_range(obj) {
+        if ($(obj).is(":checked")) {
+            $("#rangeSlider").show();
+            setMinMaxValues();
+        } else {
+            $("#rangeSlider").hide();
 
+        }
+    }
 
-   $('input[name="mass_re-assignation"]').click(function() {
-      var $bulkChange = $('#bulk_change');
-      if ($(this).prop('checked') === true) {
-         $('#input[name="mass_delete"]').prop("checked", false);
-         $bulkChange.find('select').selectpicker('val', '');
-         $('#delete_created_date').prop("checked", false);
-         $('.delete_created_date').removeClass('hide');
-         // $bulkChange.hide();
-         // $("#re-assignation_div").show();
-      } else {
-         $("#re-assignation_div").find('select').selectpicker('val', '');
-         $('#delete_created_date').prop("checked", false);
-         $('.delete_created_date').addClass('hide');
-         // $("#re-assignation_div").hide();
-         // $bulkChange.show();
-      }
-
-      // $('.mass_delete_separator').toggleClass('hide');
-   });
-
-   function show_update_count_range(obj) {
-      if ($(obj).is(":checked")) {
-         $("#rangeSlider").show();
-         setMinMaxValues();
-      } else {
-         $("#rangeSlider").hide();
-
-      }
-   }
-
-   function setMinMaxValues() {
-      // Get the current values of the slider
-      var currentValues = rangeSlider.noUiSlider.get();
-      max_count = 30;
-      // Update the options with new min and max values
-      rangeSlider.noUiSlider.updateOptions({
-         range: {
-            'min': 0,
-            'max': max_count
-         },
-         start: [0, max_count] // Preserve the current slider values
-      });
-   }
-
-   function recreate_range_slider(max) {
-
-      if (max != undefined && parseInt(max) != max_count) {
-         max_count = 30;
-         rangeSlider.noUiSlider.destroy();
-         max_count = parseInt(max);
-         let min_ = document.getElementById("update_count_min").value;
-         let max_ = document.getElementById("update_count_max").value;
-         make_range_slider(min_, max_);
-      }
-   }
-   // Initialize the range slider
-   function make_range_slider(min = 0, max = 0) {
-      var rangeSlider = document.getElementById('rangeSlider');
-      if (max == 0) {
-         max = max_count;
-      }
-      maxs = 30;
-      max_count = 30;
-
-      noUiSlider.create(rangeSlider, {
-         start: [min, max], // Initial values for min and max
-         connect: true,
-         tooltips: [true, true],
-         format: {
-            to: function(value) {
-               return Math.round(value); // Round the tooltip values
+    function setMinMaxValues() {
+        // Get the current values of the slider
+        var currentValues = rangeSlider.noUiSlider.get();
+        max_count = 30;
+        // Update the options with new min and max values
+        rangeSlider.noUiSlider.updateOptions({
+            range: {
+                'min': 0,
+                'max': max_count
             },
-            from: function(value) {
-               return parseFloat(value); // Convert tooltip values to numbers
+            start: [0, max_count] // Preserve the current slider values
+        });
+    }
+
+    function recreate_range_slider(max) {
+
+        if (max != undefined && parseInt(max) != max_count) {
+            max_count = 30;
+            rangeSlider.noUiSlider.destroy();
+            max_count = parseInt(max);
+            let min_ = document.getElementById("update_count_min").value;
+            let max_ = document.getElementById("update_count_max").value;
+            make_range_slider(min_, max_);
+        }
+    }
+    // Initialize the range slider
+    function make_range_slider(min = 0, max = 0) {
+        var rangeSlider = document.getElementById('rangeSlider');
+        if (max == 0) {
+            max = max_count;
+        }
+        maxs = 30;
+        max_count = 30;
+
+        noUiSlider.create(rangeSlider, {
+            start: [min, max], // Initial values for min and max
+            connect: true,
+            tooltips: [true, true],
+            format: {
+                to: function(value) {
+                    return Math.round(value); // Round the tooltip values
+                },
+                from: function(value) {
+                    return parseFloat(value); // Convert tooltip values to numbers
+                }
+            },
+            step: 1,
+            range: {
+                'min': 0,
+                'max': max_count
             }
-         },
-         step: 1,
-         range: {
-            'min': 0,
-            'max': max_count
-         }
-      });
+        });
 
-      // Get handles for min and max sliders
-      var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
-      var minSliderHandle = sliderHandles[0];
-      var maxSliderHandle = sliderHandles[1];
+        // Get handles for min and max sliders
+        var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+        var minSliderHandle = sliderHandles[0];
+        var maxSliderHandle = sliderHandles[1];
 
-      // Set event listeners for slider change
-      rangeSlider.noUiSlider.on('update', function(values, handle) {
-         var minValue = parseFloat(values[0]);
-         var maxValue = parseFloat(values[1]);
+        // Set event listeners for slider change
+        rangeSlider.noUiSlider.on('update', function(values, handle) {
+            var minValue = parseFloat(values[0]);
+            var maxValue = parseFloat(values[1]);
 
-         // Update the hidden input values
-         document.getElementById('update_count_min').value = minValue;
-         document.getElementById('update_count_max').value = maxValue;
-      });
+            // Update the hidden input values
+            document.getElementById('update_count_min').value = minValue;
+            document.getElementById('update_count_max').value = maxValue;
+        });
 
-      // Set event listeners for slider handle drag
-      minSliderHandle.addEventListener('drag', function() {
-         var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
-         rangeSlider.noUiSlider.set([minValue, null]);
-      });
+        // Set event listeners for slider handle drag
+        minSliderHandle.addEventListener('drag', function() {
+            var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+            rangeSlider.noUiSlider.set([minValue, null]);
+        });
 
-      maxSliderHandle.addEventListener('drag', function() {
-         var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
-         rangeSlider.noUiSlider.set([null, maxValue]);
-      });
-   }
-   make_range_slider("", "");
+        maxSliderHandle.addEventListener('drag', function() {
+            var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+            rangeSlider.noUiSlider.set([null, maxValue]);
+        });
+    }
+    make_range_slider("", "");
 
-   var openLeadID = '<?php echo $leadid; ?>';
-   $(function() {
-      leads_kanban();
-      $('#leads_bulk_mark_lost').on('change', function() {
-         $('#move_to_status_leads_bulk').prop('disabled', $(this).prop('checked') == true);
-         $('#move_to_status_leads_bulk').selectpicker('refresh')
-      });
-      $('#move_to_status_leads_bulk').on('change', function() {
-         if ($(this).selectpicker('val') != '') {
-            $('#leads_bulk_mark_lost').prop('disabled', true);
-            $('#leads_bulk_mark_lost').prop('checked', false);
-         } else {
-            $('#leads_bulk_mark_lost').prop('disabled', false);
-         }
-      });
-
-
-      $('#apply_filter').on('click', function() {
-
-         var from_date = document.getElementById("from_date").value;
-         var to_date = document.getElementById("to_date").value;
-         var assign_from_date = document.getElementById("assign_from_date").value;
-         var assign_to_date = document.getElementById("assign_to_date").value;
-         var followup_from_date = document.getElementById("followup_from_date").value;
-         var followup_to_date = document.getElementById("followup_to_date").value;
-         var up_from_date = document.getElementById("up_from_date").value;
-         var up_to_date = document.getElementById("up_to_date").value;
-         var up_from_date_call = document.getElementById("up_from_date_call").value;
-         var up_to_date_call = document.getElementById("up_to_date_call").value;
-         var last_contact_date = document.getElementById("last_contact_date").value;
-         var last_update_date = document.getElementById("last_update_date").value;
-         if (to_date != '') {
-            if (from_date == '') {
-               $("#from_date").focus();
-               return false;
-            }
-         }
-
-         if (from_date != '') {
-            if (to_date == '') {
-               $("#to_date").focus();
-               return false;
-            }
-         }
-
-         if (assign_to_date != '') {
-            if (assign_from_date == '') {
-               $("#assign_from_date").focus();
-               return false;
-            }
-         }
-
-         if (assign_from_date != '') {
-            if (assign_to_date == '') {
-               $("#assign_to_date").focus();
-               return false;
-            }
-         }
-         if (followup_to_date != '') {
-            if (followup_from_date == '') {
-               $("#followup_from_date").focus();
-               return false;
-            }
-         }
-
-         if (followup_from_date != '') {
-            if (followup_to_date == '') {
-               $("#followup_to_date").focus();
-               return false;
-            }
-         }
-
-         if (up_to_date != '') {
-            if (up_from_date == '') {
-               $("#up_from_date").focus();
-               return false;
-            }
-         }
-
-         if (up_from_date != '') {
-            if (up_to_date == '') {
-               $("#up_to_date").focus();
-               return false;
-            }
-         }
-
-         if (up_to_date_call != '') {
-            if (up_from_date_call == '') {
-               $("#up_from_date_call").focus();
-               return false;
-            }
-         }
-
-         if (up_from_date_call != '') {
-            if (up_to_date_call == '') {
-               $("#up_to_date_call").focus();
-               return false;
-            }
-         }
-         show_loader("apply_filter");
-         periodFilter();
-         summary();
-      });
-
+    var openLeadID = '<?php echo $leadid; ?>';
+    
       function periodFilter() {
+    return new Promise((resolve, reject) => {
+        try {
+            table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function () {
+                hide_loader("apply_filter");
+                 $("#leadSum").innerHTML = "";
+                 $("#leadSum").html('')
+                    $("#updationCounter").html('');
+                    $("#updationCounter_time").html('');
+                    $(".leads-overview").css("display", "none");
+                    $(".leads-count-overview").css("display", "none");
+                    set_datatable_string(); 
+                    status_summury_filter = 0;
 
+                resolve(); // Resolve the promise when the draw event is triggered
+            });
+        } catch (error) {
+            reject(error); // Reject the promise if an error occurs
+        }
+    });
+}
 
-         table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
-            hide_loader("apply_filter");
-         });
-
-      }
-      var xhr = null;
-
-      function summary() {
-         var element_view_assign = document.getElementById("view_assigned");
-         var element_view_source = document.getElementById("view_source");
-         var element_view_status = document.getElementById("view_status");
-         var element_lead_type = document.getElementById("lead_type");
-         // if (typeof(element) != 'undefined' && element != null)
-         // {
-         //    var view_assigned = document.getElementById("view_assigned").value;
-         // }else{
-         //    var view_assigned = '';
-         // }
-         // var view_source = document.getElementById("view_source").value;
-         // var view_status = document.getElementById("view_status").value;
-         var view_assigned_options = "";
-         var view_source_options = "";
-         var view_status_options = "";
-         var view_lead_type_options = "";
-         if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
-            view_source_options = document.getElementById('view_source').selectedOptions;
-            view_source_options = Array.from(view_source_options).map(({
-               value
-            }) => value);
-         }
-         if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
-            view_status_options = document.getElementById('view_status').selectedOptions;
-            view_status_options = Array.from(view_status_options).map(({
-               value
-            }) => value);
-         }
-         if (typeof(element_lead_type) != 'undefined' && element_lead_type != null) {
-            view_lead_type_options = document.getElementById('lead_type').selectedOptions;
-            view_lead_type_options = Array.from(view_lead_type_options).map(({
-               value
-            }) => value);
-         }
-
-         if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
-            view_assigned_options = document.getElementById('view_assigned').selectedOptions;
-            view_assigned_options = Array.from(view_assigned_options).map(({
-               value
-            }) => value);
-         }
-
-         /* var view_course = document.getElementById("view_course").value;
-          var courseid ='16';
-          var view_degree = document.getElementById("view_degree").value;
-          var degreeid ='20';*/
-         // console.log(view_status);
-         var custom_view = document.getElementById("custom_view").value;
-         var from_date = document.getElementById("from_date").value;
-         var to_date = document.getElementById("to_date").value;
-         var up_from_date = document.getElementById("up_from_date").value;
-         var up_to_date = document.getElementById("up_to_date").value;
-         var followup_from_date = document.getElementById("followup_from_date").value;
-         var followup_to_date = document.getElementById("followup_to_date").value;
-         var assign_from_date = document.getElementById("assign_from_date").value;
-         var assign_to_date = document.getElementById("assign_to_date").value;
-         var update_count_min, update_count_max = '';
-         var up_from_date_call = document.getElementById("up_from_date_call").value;
-         var up_to_date_call = document.getElementById("up_to_date_call").value;
-         var last_contact_date = document.getElementById("last_contact_date").value;
-         var last_update_date = document.getElementById("last_update_date").value;
-         if ($("#show_update_counts").is(":checked")) {
-            update_count_min = document.getElementById("update_count_min").value;
-            update_count_max = document.getElementById("update_count_max").value;
-         }
-
-         if (xhr != null) {
-            xhr.abort();
-         }
-         xhr = $.ajax({
-            type: "POST",
-            url: admin_url + "leads/lead_summary_filter",
-            // data: {lead_type: $("#lead_type").val()},
-            /* data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source,course:view_course,courseid:courseid,degree:view_degree,degreeid:degreeid, from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date},*/
-            //  data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source_options,from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date,status:view_status_options},
-            data: {
-               lead_type: view_lead_type_options,
-               assigned: view_assigned_options,
-               source: view_source_options,
-               from_date: from_date,
-               to_date: to_date,
-               up_from_date: up_from_date,
-               up_to_date: up_to_date,
-               followup_from_date: followup_from_date,
-               followup_to_date: followup_to_date,
-               assign_from_date: assign_from_date,
-               assign_to_date: assign_to_date,
-               status: view_status_options,
-               update_count_min: update_count_min,
-               update_count_max: update_count_max,
-               neet_score: $("#neet_score").val(),
-               up_from_date_call: up_from_date_call,
-               up_to_date_call: up_to_date_call,
-               last_contact_date: last_contact_date,
-               last_update_date: last_update_date
-
-
-            },
-            dataType: "JSON",
-            cache: false,
-            success: function(data) {
-               //alert(data);  //as a debugging message.
-               $("#leadSum").html('');
-               $("#leadSum").html(data.status);
-               $("#leadSum").innerHTML = data.status;
-               $("#updationCounter").html(data.update_count);
-               $("#updationCounter_time").html(data.call_count);
-               if (data.max_count != undefined && parseInt(data.max_count) > 0) {
-                  recreate_range_slider(data.max_count);
-               }
+    $(function() {
+        leads_kanban();
+        $('#leads_bulk_mark_lost').on('change', function() {
+            $('#move_to_status_leads_bulk').prop('disabled', $(this).prop('checked') == true);
+            $('#move_to_status_leads_bulk').selectpicker('refresh')
+        });
+        $('#move_to_status_leads_bulk').on('change', function() {
+            if ($(this).selectpicker('val') != '') {
+                $('#leads_bulk_mark_lost').prop('disabled', true);
+                $('#leads_bulk_mark_lost').prop('checked', false);
+            } else {
+                $('#leads_bulk_mark_lost').prop('disabled', false);
             }
-         }); // you have missed this bracket
-         return false;
-      }
+        });
 
-      summary();
-   });
+
+
+
+        $('#apply_filter').on('click', async function() {
+
+            var from_date = document.getElementById("from_date").value;
+            var to_date = document.getElementById("to_date").value;
+            var assign_from_date = document.getElementById("assign_from_date").value;
+            var assign_to_date = document.getElementById("assign_to_date").value;
+            var followup_from_date = document.getElementById("followup_from_date").value;
+            var followup_to_date = document.getElementById("followup_to_date").value;
+            var up_from_date = document.getElementById("up_from_date").value;
+            var up_to_date = document.getElementById("up_to_date").value;
+            var up_from_date_call = document.getElementById("up_from_date_call").value;
+            var up_to_date_call = document.getElementById("up_to_date_call").value;
+            var last_contact_date = document.getElementById("last_contact_date").value;
+            var last_update_date = document.getElementById("last_update_date").value;
+            if (to_date != '') {
+                if (from_date == '') {
+                    $("#from_date").focus();
+                    return false;
+                }
+            }
+
+            if (from_date != '') {
+                if (to_date == '') {
+                    $("#to_date").focus();
+                    return false;
+                }
+            }
+
+            if (assign_to_date != '') {
+                if (assign_from_date == '') {
+                    $("#assign_from_date").focus();
+                    return false;
+                }
+            }
+
+            if (assign_from_date != '') {
+                if (assign_to_date == '') {
+                    $("#assign_to_date").focus();
+                    return false;
+                }
+            }
+            if (followup_to_date != '') {
+                if (followup_from_date == '') {
+                    $("#followup_from_date").focus();
+                    return false;
+                }
+            }
+
+            if (followup_from_date != '') {
+                if (followup_to_date == '') {
+                    $("#followup_to_date").focus();
+                    return false;
+                }
+            }
+
+            if (up_to_date != '') {
+                if (up_from_date == '') {
+                    $("#up_from_date").focus();
+                    return false;
+                }
+            }
+
+            if (up_from_date != '') {
+                if (up_to_date == '') {
+                    $("#up_to_date").focus();
+                    return false;
+                }
+            }
+
+            if (up_to_date_call != '') {
+                if (up_from_date_call == '') {
+                    $("#up_from_date_call").focus();
+                    return false;
+                }
+            }
+
+            if (up_from_date_call != '') {
+                if (up_to_date_call == '') {
+                    $("#up_to_date_call").focus();
+                    return false;
+                }
+            }
+            show_loader("apply_filter");
+            await periodFilter();
+            
+            set_datatable_string();
+            // summary();
+        });
+     
+
+
+var status_summury_filter = 0;
+
+       $("#leadSum").html('')
+                    $("#updationCounter").html('');
+                    $("#updationCounter_time").html('');
+ 
+
+      
+
+ 
+        // summary();
+    });
+    
+function set_datatable_string() {
+ 
+     setTimeout(function() {
+    var table_leads = $('table.table-leads').DataTable();
+    
+    // Check if there is data to update the text
+    if (table_leads.page.info().recordsTotal === 0) {
+        // Change the 'Showing 0 to 0' text dynamically
+        $('div.dataTables_info').text('Showing 0 to 0');
+    } else {
+        
+        // For cases where data exists, update the text
+        $('div.dataTables_info').text('Showing ' + (table_leads.page.info().start + 1) + ' to ' + table_leads.page.info().end);
+        
+        // Once data is set, clear the interval
+        // clearInterval(dataCheckInterval);
+    }
+     }, 500);
+}
+
+// Set an interval to check every 500ms until data is available
+var dataCheckInterval = setInterval(function() {
+    set_datatable_string();
+}, 0);
+
+$(document).ready(function() {
+    // Optionally, you can ensure this starts only once the page is fully loaded
+   set_datatable_string();
+});
+
+
+
 </script>
 <script>
-   $(".mFilterBtn").click(function() {
-      var element = document.getElementById("filterArea");
-      // console.log(element.classList);
-      element.classList.remove("hidden-xs");
-      // $("#filterArea").toggle();
-   });
-   // });
-
-   function show_lead_request() {
-
-      slideToggle('.lead-transfer-table');
-      setTimeout(() => {
-         if ($(".lead-transfer-table").length > 0 && $(".lead-transfer-table").is(':visible')) {
-            if ($.fn.DataTable.isDataTable('.table-lead-transfer-table')) {
-               $('.table-lead-transfer-table').DataTable().destroy();
+  var xhr = null;
+       function summary(status ="") {
+  show_loader();
+            var element_view_assign = document.getElementById("view_assigned");
+            var element_view_source = document.getElementById("view_source");
+            var element_view_status = document.getElementById("view_status");
+            var element_lead_type = document.getElementById("lead_type");
+            var view_assigned_options = "";
+            var view_source_options = "";
+            var view_status_options = "";
+            var view_lead_type_options = "";
+            if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
+                view_source_options = document.getElementById('view_source').selectedOptions;
+                view_source_options = Array.from(view_source_options).map(({
+                    value
+                }) => value);
             }
-            initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+            if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
+                view_status_options = document.getElementById('view_status').selectedOptions;
+                view_status_options = Array.from(view_status_options).map(({
+                    value
+                }) => value);
+            }
+            if (typeof(element_lead_type) != 'undefined' && element_lead_type != null) {
+                view_lead_type_options = document.getElementById('lead_type').selectedOptions;
+                view_lead_type_options = Array.from(view_lead_type_options).map(({
+                    value
+                }) => value);
+            }
+
+            if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
+                view_assigned_options = document.getElementById('view_assigned').selectedOptions;
+                view_assigned_options = Array.from(view_assigned_options).map(({
+                    value
+                }) => value);
+            }
+
+                if($("#leadSum").html() != ''  && status == 1){
+                    hide_loader();
+                return false;
+                }
+                
+                
+                
+                if($("#updationCounter").html() != '' !='' && status == 2){
+                     hide_loader();
+                return false;
+                }
+ 
+            var custom_view = document.getElementById("custom_view").value;
+            var from_date = document.getElementById("from_date").value;
+            var to_date = document.getElementById("to_date").value;
+            var up_from_date = document.getElementById("up_from_date").value;
+            var up_to_date = document.getElementById("up_to_date").value;
+            var followup_from_date = document.getElementById("followup_from_date").value;
+            var followup_to_date = document.getElementById("followup_to_date").value;
+            var assign_from_date = document.getElementById("assign_from_date").value;
+            var assign_to_date = document.getElementById("assign_to_date").value;
+            var update_count_min, update_count_max = '';
+            var up_from_date_call = document.getElementById("up_from_date_call").value;
+            var up_to_date_call = document.getElementById("up_to_date_call").value;
+            var last_contact_date = document.getElementById("last_contact_date").value;
+            var last_update_date = document.getElementById("last_update_date").value;
+            if ($("#show_update_counts").is(":checked")) {
+                update_count_min = document.getElementById("update_count_min").value;
+                update_count_max = document.getElementById("update_count_max").value;
+            }
+
+            if (xhr != null) {
+                xhr.abort();
+            }
+            xhr = $.ajax({
+                type: "POST",
+                url: admin_url + "leads/lead_summary_filter",
+                data: {
+                    lead_type: view_lead_type_options,
+                    assigned: view_assigned_options,
+                    source: view_source_options,
+                    from_date: from_date,
+                    to_date: to_date,
+                    up_from_date: up_from_date,
+                    up_to_date: up_to_date,
+                    followup_from_date: followup_from_date,
+                    followup_to_date: followup_to_date,
+                    assign_from_date: assign_from_date,
+                    assign_to_date: assign_to_date,
+                    status: view_status_options,
+                    update_count_min: update_count_min,
+                    update_count_max: update_count_max,
+                    neet_score: $("#neet_score").val(),
+                    up_from_date_call: up_from_date_call,
+                    up_to_date_call: up_to_date_call,
+                    last_contact_date: last_contact_date,
+                    last_update_date: last_update_date,
+                    show_lead_status:status
+
+
+                },
+                dataType: "JSON",
+                cache: false,
+                success: function(data) {
+                    
+                    //alert(data);  //as a debugging message.
+                    if($("#leadSum").html() == '' && data.status!=''){
+                    $("#leadSum").html('');
+                    $("#leadSum").html(data.status);
+                    }
+                    if($("#updationCounter").html() == '' && data.update_count!= undefined){
+                    $("#updationCounter").html(data.update_count);
+                    $("#updationCounter_time").html(data.call_count);
+                    }
+                    if (data.max_count != undefined && parseInt(data.max_count) > 0) {
+                        recreate_range_slider(data.max_count);
+                    }
+                    
+                     hide_loader();
+                }
+            }); // you have missed this bracket
             return false;
-         }
-      }, 1000);
+        }
 
 
-   }
+    $(".mFilterBtn").click(function() {
+        var element = document.getElementById("filterArea");
+        // console.log(element.classList);
+        element.classList.remove("hidden-xs");
+        // $("#filterArea").toggle();
+    });
+    // });
 
-   function change_lead_request_table() {
-      if ($.fn.DataTable.isDataTable('.table-lead-transfer-table')) {
-         $('.table-lead-transfer-table').DataTable().destroy();
-      }
-      initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
-      return false;
-   }
+    function show_lead_request() {
+
+        slideToggle('.lead-transfer-table');
+        setTimeout(() => {
+            if ($(".lead-transfer-table").length > 0 && $(".lead-transfer-table").is(':visible')) {
+                if ($.fn.DataTable.isDataTable('.table-lead-transfer-table')) {
+                    $('.table-lead-transfer-table').DataTable().destroy();
+                }
+                initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+                return false;
+            }
+        }, 1000);
+
+
+    }
+
+    function change_lead_request_table() {
+        if ($.fn.DataTable.isDataTable('.table-lead-transfer-table')) {
+            $('.table-lead-transfer-table').DataTable().destroy();
+        }
+        initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+        return false;
+    }
 </script>
 
 </body>

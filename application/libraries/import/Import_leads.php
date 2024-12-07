@@ -215,6 +215,8 @@ class Import_leads extends App_import
                     // Set default values
                     $insert['dateadded'] = !empty($insert['dateadded']) ? $insert['dateadded'] : date('Y-m-d H:i:s');
                     $insert['addedfrom'] = get_staff_user_id();
+                    
+                    $insert['dateassigned'] = date('Y-m-d H:i:s');
 
                     // Handle tags
                     $tags = '';
