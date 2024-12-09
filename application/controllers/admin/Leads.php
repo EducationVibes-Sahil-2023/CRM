@@ -2909,9 +2909,11 @@ class Leads extends AdminController
                         foreach ($ids as $lead_id_delete) {
                             $this->leads_model->delete($lead_id_delete);
                         }
+                        $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
                         $this->leads_model->hitCronUrlAsync(base_url("external/re_assign_cron"));
                         set_alert('success', "Re-assign " . count($ids) . " lead successfully.");
                         echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
+                        die;
                     } else {
                         set_alert('danger', "Something bad happen.");
                         echo json_encode(array("status" => 0, "message" => "Something bad happen."));
@@ -3175,10 +3177,11 @@ class Leads extends AdminController
 
         if ($this->input->post('mass_delete')) {
 
-            set_alert('success', _l('total_leads_deleted', $total_deleted
-        ));
+            set_alert('success', _l(
+                'total_leads_deleted',
+                $total_deleted
+            ));
             $response = $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
-            print_r($response);
         }
     }
 
