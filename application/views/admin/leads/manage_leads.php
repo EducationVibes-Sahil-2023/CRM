@@ -13,6 +13,16 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       height: 10px !important;
    }
 
+   .border-right {
+      text-align: center;
+      border-right: 1px solid #f0f0f0;
+      /* border: 1px solid black; */
+      margin: 10px;
+      padding: 10px;
+      border-radius: 8px 20px;
+      box-shadow: 1px 1px 6px 1px lightgray;
+   }
+
    .noUi-horizontal .noUi-handle {
       width: 20px;
       height: 20px;
@@ -57,7 +67,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                      <?php } ?>
                      <div class="row">
                         <div class="col-md-8">
-                           <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
+                           <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
+
+                           <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo "Show Update count and Call duraryion"; ?>" data-placement="bottom" onclick="slideToggle('.leads-count-overview'); summary(2); return false; "><i class="fa fa-clock-o"></i></a>
+
                            <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('sources_summary'); ?>" data-placement="bottom" onclick="slideToggle('.source-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                            <!-- <a href="<?php echo admin_url('leads/switch_kanban/' . $switch_kanban); ?>" class="btn btn-default mleft10 hidden-xs">
                            <?php if ($switch_kanban == 1) {
@@ -66,17 +79,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               echo _l('switch_to_list_view');
                            }; ?>
                            </a> -->
-                           <div class="row">
 
-                              <div class="text-center  col-md-6">
-                                 <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
-                                 <span id="updationCounterText">Updates Count</span>
-                              </div>
-                              <div class="text-center  col-md-6">
-                                 <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
-                                 <span id="updationCounterText_time">Updates Calls Duration</span>
-                              </div>
-                           </div>
 
 
                         </div>
@@ -114,6 +117,23 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  <span style="color:<?php echo $status['color']; ?>" class="<?php echo isset($status['junk']) || isset($status['lost']) ? 'text-danger' : ''; ?>"><?php echo $status['name']; ?></span>
                               </div>
                            <?php } ?>
+                        </div>
+                     </div>
+                     <div class="row hide leads-count-overview">
+                        <hr class="hr-panel-heading" />
+                        <div class="col-md-12">
+                           <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
+                        </div>
+                        <div class="row">
+
+                           <div class="text-center  col-md-6">
+                              <h3><span id="updationCounter"><?php echo $updateCount; ?></span></h3><br>
+                              <span id="updationCounterText">Update Count</span>
+                           </div>
+                           <div class="text-center  col-md-6">
+                              <h3><span id="updationCounter_time"><?php echo $call_count; ?></span></h3><br>
+                              <span id="updationCounterText_time">Updates Calls Duration</span>
+                           </div>
                         </div>
                      </div>
 
@@ -811,7 +831,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
    $('#leads_bulk_actions').on('shown.bs.modal', function(e) {
       $("#re-assignation_div").hide();
-      $("#bulk_change").show();
+      $("#bulk_change").removeClass("hide").show();
+      $('.delete_created_date').addClass('hide');
+      $('#delete_created_date').prop("checked", false);
    })
 
 
@@ -956,6 +978,29 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    make_range_slider("", "");
 
    var openLeadID = '<?php echo $leadid; ?>';
+
+   function periodFilter() {
+      return new Promise((resolve, reject) => {
+         try {
+            table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
+               hide_loader("apply_filter");
+               $("#leadSum").innerHTML = "";
+               $("#leadSum").html('')
+               $("#updationCounter").html('');
+               $("#updationCounter_time").html('');
+               $(".leads-overview").css("display", "none");
+               $(".leads-count-overview").css("display", "none");
+               set_datatable_string();
+               status_summury_filter = 0;
+
+               resolve(); // Resolve the promise when the draw event is triggered
+            });
+         } catch (error) {
+            reject(error); // Reject the promise if an error occurs
+         }
+      });
+   }
+
    $(function() {
       leads_kanban();
       $('#leads_bulk_mark_lost').on('change', function() {
@@ -972,7 +1017,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       });
 
 
-      $('#apply_filter').on('click', function() {
+
+
+      $('#apply_filter').on('click', async function() {
 
          var from_date = document.getElementById("from_date").value;
          var to_date = document.getElementById("to_date").value;
@@ -1055,140 +1102,181 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             }
          }
          show_loader("apply_filter");
-         periodFilter();
-         summary();
+         await periodFilter();
+
+         set_datatable_string();
+         // summary();
       });
 
-      function periodFilter() {
 
 
-         table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
-            hide_loader("apply_filter");
-         });
+      var status_summury_filter = 0;
 
-      }
-      var xhr = null;
+      $("#leadSum").html('')
+      $("#updationCounter").html('');
+      $("#updationCounter_time").html('');
 
-      function summary() {
-         var element_view_assign = document.getElementById("view_assigned");
-         var element_view_source = document.getElementById("view_source");
-         var element_view_status = document.getElementById("view_status");
-         var element_lead_type = document.getElementById("lead_type");
-         // if (typeof(element) != 'undefined' && element != null)
-         // {
-         //    var view_assigned = document.getElementById("view_assigned").value;
-         // }else{
-         //    var view_assigned = '';
-         // }
-         // var view_source = document.getElementById("view_source").value;
-         // var view_status = document.getElementById("view_status").value;
-         var view_assigned_options = "";
-         var view_source_options = "";
-         var view_status_options = "";
-         var view_lead_type_options = "";
-         if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
-            view_source_options = document.getElementById('view_source').selectedOptions;
-            view_source_options = Array.from(view_source_options).map(({
-               value
-            }) => value);
+
+
+
+
+      // summary();
+   });
+
+   function set_datatable_string() {
+
+      setTimeout(function() {
+         var table_leads = $('table.table-leads').DataTable();
+
+         // Check if there is data to update the text
+         if (table_leads.page.info().recordsTotal === 0) {
+            // Change the 'Showing 0 to 0' text dynamically
+            $('div.dataTables_info').text('Showing 0 to 0');
+         } else {
+
+            // For cases where data exists, update the text
+            $('div.dataTables_info').text('Showing ' + (table_leads.page.info().start + 1) + ' to ' + table_leads.page.info().end);
+
+            // Once data is set, clear the interval
+            // clearInterval(dataCheckInterval);
          }
-         if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
-            view_status_options = document.getElementById('view_status').selectedOptions;
-            view_status_options = Array.from(view_status_options).map(({
-               value
-            }) => value);
-         }
-         if (typeof(element_lead_type) != 'undefined' && element_lead_type != null) {
-            view_lead_type_options = document.getElementById('lead_type').selectedOptions;
-            view_lead_type_options = Array.from(view_lead_type_options).map(({
-               value
-            }) => value);
-         }
+      }, 500);
+   }
 
-         if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
-            view_assigned_options = document.getElementById('view_assigned').selectedOptions;
-            view_assigned_options = Array.from(view_assigned_options).map(({
-               value
-            }) => value);
-         }
+   // Set an interval to check every 500ms until data is available
+   var dataCheckInterval = setInterval(function() {
+      set_datatable_string();
+   }, 0);
 
-         /* var view_course = document.getElementById("view_course").value;
-          var courseid ='16';
-          var view_degree = document.getElementById("view_degree").value;
-          var degreeid ='20';*/
-         // console.log(view_status);
-         var custom_view = document.getElementById("custom_view").value;
-         var from_date = document.getElementById("from_date").value;
-         var to_date = document.getElementById("to_date").value;
-         var up_from_date = document.getElementById("up_from_date").value;
-         var up_to_date = document.getElementById("up_to_date").value;
-         var followup_from_date = document.getElementById("followup_from_date").value;
-         var followup_to_date = document.getElementById("followup_to_date").value;
-         var assign_from_date = document.getElementById("assign_from_date").value;
-         var assign_to_date = document.getElementById("assign_to_date").value;
-         var update_count_min, update_count_max = '';
-         var up_from_date_call = document.getElementById("up_from_date_call").value;
-         var up_to_date_call = document.getElementById("up_to_date_call").value;
-         var last_contact_date = document.getElementById("last_contact_date").value;
-         var last_update_date = document.getElementById("last_update_date").value;
-         if ($("#show_update_counts").is(":checked")) {
-            update_count_min = document.getElementById("update_count_min").value;
-            update_count_max = document.getElementById("update_count_max").value;
-         }
-
-         if (xhr != null) {
-            xhr.abort();
-         }
-         xhr = $.ajax({
-            type: "POST",
-            url: admin_url + "leads/lead_summary_filter",
-            // data: {lead_type: $("#lead_type").val()},
-            /* data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source,course:view_course,courseid:courseid,degree:view_degree,degreeid:degreeid, from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date},*/
-            //  data : {lead_type: $("#lead_type").val(), assigned: view_assigned,source:view_source_options,from_date: from_date, to_date:to_date, up_from_date: up_from_date, up_to_date: up_to_date, followup_from_date: followup_from_date, followup_to_date: followup_to_date, assign_from_date: assign_from_date, assign_to_date: assign_to_date,status:view_status_options},
-            data: {
-               lead_type: view_lead_type_options,
-               assigned: view_assigned_options,
-               source: view_source_options,
-               from_date: from_date,
-               to_date: to_date,
-               up_from_date: up_from_date,
-               up_to_date: up_to_date,
-               followup_from_date: followup_from_date,
-               followup_to_date: followup_to_date,
-               assign_from_date: assign_from_date,
-               assign_to_date: assign_to_date,
-               status: view_status_options,
-               update_count_min: update_count_min,
-               update_count_max: update_count_max,
-               neet_score: $("#neet_score").val(),
-               up_from_date_call: up_from_date_call,
-               up_to_date_call: up_to_date_call,
-               last_contact_date: last_contact_date,
-               last_update_date: last_update_date
-
-
-            },
-            dataType: "JSON",
-            cache: false,
-            success: function(data) {
-               //alert(data);  //as a debugging message.
-               $("#leadSum").html('');
-               $("#leadSum").html(data.status);
-               $("#leadSum").innerHTML = data.status;
-               $("#updationCounter").html(data.update_count);
-               $("#updationCounter_time").html(data.call_count);
-               if (data.max_count != undefined && parseInt(data.max_count) > 0) {
-                  recreate_range_slider(data.max_count);
-               }
-            }
-         }); // you have missed this bracket
-         return false;
-      }
-
-      summary();
+   $(document).ready(function() {
+      // Optionally, you can ensure this starts only once the page is fully loaded
+      set_datatable_string();
    });
 </script>
 <script>
+   var xhr = null;
+
+   function summary(status = "") {
+      show_loader();
+      var element_view_assign = document.getElementById("view_assigned");
+      var element_view_source = document.getElementById("view_source");
+      var element_view_status = document.getElementById("view_status");
+      var element_lead_type = document.getElementById("lead_type");
+      var view_assigned_options = "";
+      var view_source_options = "";
+      var view_status_options = "";
+      var view_lead_type_options = "";
+      if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
+         view_source_options = document.getElementById('view_source').selectedOptions;
+         view_source_options = Array.from(view_source_options).map(({
+            value
+         }) => value);
+      }
+      if (typeof(element_view_status) != 'undefined' && element_view_status != null) {
+         view_status_options = document.getElementById('view_status').selectedOptions;
+         view_status_options = Array.from(view_status_options).map(({
+            value
+         }) => value);
+      }
+      if (typeof(element_lead_type) != 'undefined' && element_lead_type != null) {
+         view_lead_type_options = document.getElementById('lead_type').selectedOptions;
+         view_lead_type_options = Array.from(view_lead_type_options).map(({
+            value
+         }) => value);
+      }
+
+      if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
+         view_assigned_options = document.getElementById('view_assigned').selectedOptions;
+         view_assigned_options = Array.from(view_assigned_options).map(({
+            value
+         }) => value);
+      }
+
+      if ($("#leadSum").html() != '' && status == 1) {
+         hide_loader();
+         return false;
+      }
+
+
+
+      if ($("#updationCounter").html() != '' != '' && status == 2) {
+         hide_loader();
+         return false;
+      }
+
+      var custom_view = document.getElementById("custom_view").value;
+      var from_date = document.getElementById("from_date").value;
+      var to_date = document.getElementById("to_date").value;
+      var up_from_date = document.getElementById("up_from_date").value;
+      var up_to_date = document.getElementById("up_to_date").value;
+      var followup_from_date = document.getElementById("followup_from_date").value;
+      var followup_to_date = document.getElementById("followup_to_date").value;
+      var assign_from_date = document.getElementById("assign_from_date").value;
+      var assign_to_date = document.getElementById("assign_to_date").value;
+      var update_count_min, update_count_max = '';
+      var up_from_date_call = document.getElementById("up_from_date_call").value;
+      var up_to_date_call = document.getElementById("up_to_date_call").value;
+      var last_contact_date = document.getElementById("last_contact_date").value;
+      var last_update_date = document.getElementById("last_update_date").value;
+      if ($("#show_update_counts").is(":checked")) {
+         update_count_min = document.getElementById("update_count_min").value;
+         update_count_max = document.getElementById("update_count_max").value;
+      }
+
+      if (xhr != null) {
+         xhr.abort();
+      }
+      xhr = $.ajax({
+         type: "POST",
+         url: admin_url + "leads/lead_summary_filter",
+         data: {
+            lead_type: view_lead_type_options,
+            assigned: view_assigned_options,
+            source: view_source_options,
+            from_date: from_date,
+            to_date: to_date,
+            up_from_date: up_from_date,
+            up_to_date: up_to_date,
+            followup_from_date: followup_from_date,
+            followup_to_date: followup_to_date,
+            assign_from_date: assign_from_date,
+            assign_to_date: assign_to_date,
+            status: view_status_options,
+            update_count_min: update_count_min,
+            update_count_max: update_count_max,
+            neet_score: $("#neet_score").val(),
+            up_from_date_call: up_from_date_call,
+            up_to_date_call: up_to_date_call,
+            last_contact_date: last_contact_date,
+            last_update_date: last_update_date,
+            show_lead_status: status
+
+
+         },
+         dataType: "JSON",
+         cache: false,
+         success: function(data) {
+
+            //alert(data);  //as a debugging message.
+            if ($("#leadSum").html() == '' && data.status != '') {
+               $("#leadSum").html('');
+               $("#leadSum").html(data.status);
+            }
+            if ($("#updationCounter").html() == '' && data.update_count != undefined) {
+               $("#updationCounter").html(data.update_count);
+               $("#updationCounter_time").html(data.call_count);
+            }
+            if (data.max_count != undefined && parseInt(data.max_count) > 0) {
+               recreate_range_slider(data.max_count);
+            }
+
+            hide_loader();
+         }
+      }); // you have missed this bracket
+      return false;
+   }
+
+
    $(".mFilterBtn").click(function() {
       var element = document.getElementById("filterArea");
       // console.log(element.classList);

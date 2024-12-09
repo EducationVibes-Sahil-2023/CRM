@@ -2906,20 +2906,11 @@ class Leads extends AdminController
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
 
-                        // foreach ($ids as $lead_id_delete) {
-                        //     $this->leads_model->delete($lead_id_delete);
-                        // }
-
-                        // $this->db->where_in('id', $ids);
-                        // $this->db->delete(db_prefix() . 'leads');
-
-                        // $this->leads_model->delete_notes($ids);
-
-
-                        $this->db->where_in('id', $ids);
-                        $this->db->delete(db_prefix() . 'leads');
-
-                        set_alert('success', "Re-assign lead successfully.");
+                        foreach ($ids as $lead_id_delete) {
+                            $this->leads_model->delete($lead_id_delete);
+                        }
+                        $this->leads_model->hitCronUrlAsync(base_url("external/re_assign_cron"));
+                        set_alert('success', "Re-assign " . count($ids) . " lead successfully.");
                         echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
                     } else {
                         set_alert('danger', "Something bad happen.");
@@ -2946,11 +2937,11 @@ class Leads extends AdminController
                             }
                         }
                     } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                        if ($has_permission_mass_assign) {
-                            if ($this->leads_model->re_assign($id, $this->input->post())) {
-                                $total_assign++;
-                            }
-                        }
+                        // if ($has_permission_mass_assign) {
+                        //     if ($this->leads_model->re_assign($id, $this->input->post())) {
+                        //         $total_assign++;
+                        //     }
+                        // }
                     } else {
 
 
@@ -3184,7 +3175,8 @@ class Leads extends AdminController
 
         if ($this->input->post('mass_delete')) {
 
-            set_alert('success', _l('total_leads_deleted', $total_deleted));
+            set_alert('success', _l('total_leads_deleted', $total_deleted
+        ));
             $response = $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
             print_r($response);
         }

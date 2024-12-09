@@ -26,9 +26,9 @@ $source = array_column($source, null, "id");
 $staff_list = array_column($staff_list, null, "staffid");
 
 
-$sTable  =  db_prefix() . "leads";
-
-$call_table     = db_prefix() . 'calls_activity_logs';
+$sTable  =  db_prefix() . "leads_";
+$lead_table     = db_prefix() . "leads_ l";
+$call_table     = db_prefix() . 'calls_activity_logs_';
 $sIndexColumn   = 'id';
 $up_from_date   = $this->ci->input->post('up_from_date');
 $up_to_date     = $this->ci->input->post('up_to_date');
@@ -37,47 +37,6 @@ $join           = [];
 $filter = false;
 $sIndexColumn = 'id';
 
-if (!empty($this->ci->input->post('up_to_date'))) {
-    $up_to_date = $this->ci->input->post('up_to_date');
-    $up_from_date   = $this->ci->input->post('up_from_date');
-    // Inputs for the query
-    // Escape input dates
-    $up_from_date = $this->ci->db->escape_str($up_from_date); // Start date
-    $up_to_date = $this->ci->db->escape_str($up_to_date);     // End date
-    $start = intval($start);                                  // Offset
-    $length = intval($length);
-    $where_c = "";
-    $join_type = "";
-    $sql_p1 ="";
-    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
-
-        $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
-        $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
-        // $where_c = " AND ifnull(tblcalls_activity_logs.id,0) between {$min} AND {$max} ";
-
-
-        if ($min == 0) {
-            $join_type = "RIGHT";
-        }
-    }
-
-if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
-    $where_c  .= " AND {$sTable}.assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
-}
-
-
-// $sTable = $call_table;
-
-  $join[] = " JOIN " . db_prefix() . "leads ON (
-   {$call_table}.contact IN (
-        REPLACE(TRIM(REPLACE(phonenumber, '+91', '')), ' ', ''),
-        REPLACE(TRIM(REPLACE(alternative_phonenumber, '+91', '')), ' ', '')
-    )
-    AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c
-)";
-
-    $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
-} 
 
 
 if (!empty($_POST["search"]["value"])) {
@@ -86,7 +45,45 @@ if (!empty($_POST["search"]["value"])) {
 }
 
 
+if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_contact_date')) {
+    // Start the query
+    $query = "SELECT contact
+              FROM (
+                  SELECT DISTINCT contact
+                  FROM tblcalls_activity_logs_ AS calls
+                  WHERE LENGTH(contact) >= 10
+                    AND contact != ''";
 
+    // Add condition for last_contact_date
+    if (!empty($this->ci->input->post('last_contact_date'))) {
+        $last_contact_date = $this->ci->db->escape_str($this->ci->input->post('last_contact_date'));
+
+        $query .= " AND LOWER(TRIM(call_status)) IN ('answered', 'status_unknow') 
+                    AND (DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') <= '{$last_contact_date}')";
+    }
+
+    // Add condition for last_update_date
+    if (!empty($this->ci->input->post('last_update_date'))) {
+        $last_update_date = $this->ci->db->escape_str($this->ci->input->post('last_update_date'));
+
+        if ($this->ci->input->post('show_update_counts') == 1) {
+            // If show_update_counts is 1, use this condition
+            $query .= " AND DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') <= '{$last_update_date}'";
+        } else {
+            // If show_update_counts is not 1, allow NULL values as well
+            $query .= " AND (DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') <= '{$last_update_date}'
+                         OR DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') IS NULL)";
+        }
+    }
+
+    // Close the subquery and order the results
+    $query .= " ORDER BY DATE_FORMAT(DATE_ADD('1970-01-01', INTERVAL (call_start + (5 * 3600 + 30 * 60)) SECOND), '%Y-%m-%d') DESC
+              
+              ) AS limited_contacts";
+
+    // Append the condition to your main query
+    $where[] = " AND {$sTable}.phonenumber IN ($query)";
+}
 
 
 if (!$filter || ($filter && !in_array($filter, ['lost', 'junk']))) {
@@ -135,35 +132,11 @@ if ($this->ci->input->post('to_date')) {
     $where[]   = "AND DATE(" . $sTable . ".dateadded) BETWEEN '{$this->ci->db->escape_str($from_date)}' AND '{$this->ci->db->escape_str($to_date)}'";
 }
 
-
 if ($this->ci->input->post('followup_to_date')) {
     $followup_from_date = $this->ci->input->post('followup_from_date');
     $followup_to_date   = $this->ci->input->post('followup_to_date');
     $join[] = " JOIN " . db_prefix() . "reminders ON " . db_prefix() . "reminders.rel_id = " . $sTable . ".id";
     $where[] = "AND DATE(" . db_prefix() . "reminders.date) BETWEEN '{$this->ci->db->escape_str($followup_from_date)}' AND '{$this->ci->db->escape_str($followup_to_date)}'";
-}
-
-if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_contact_date')) {
-
-    // Add condition for last_contact_date
-    if (!empty($this->ci->input->post('last_contact_date'))) {
-        $last_contact_date = $this->ci->db->escape_str($this->ci->input->post('last_contact_date'));
-        array_push($where, ' AND lastconnect_date <= "' . $this->ci->db->escape_str($last_contact_date) . '"');
-    }
-
-    // Add condition for last_update_date
-    if (!empty($this->ci->input->post('last_update_date'))) {
-        $last_update_date = $this->ci->db->escape_str($this->ci->input->post('last_update_date'));
-        array_push($where, ' AND lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '"');
-    }
-
-}
-
-if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
-    $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
-    $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
-
-    $where[] = "AND update_count BETWEEN '{$this->ci->db->escape_str($min)}' AND '{$this->ci->db->escape_str($max)}'";
 }
 
 // Check user permissions and access scope
@@ -182,15 +155,15 @@ if (is_gdpr() && $consentLeads == '1') {
     $aColumns[] = '1';
 }
 $aColumns = array_merge($aColumns, [
-     "IFNULL({$sTable}.update_count,0) as update_count",
-    "IFNULL({$sTable}.call_duration,0) as call_duration",
-     $sTable .'.lastconnect_date as lastcontact_date',
+    '1',
+    '1',
+    '1',
     $sTable . '.dateadded as dateadded',
-     $sTable .'.lastupdate_date as lastupdate_date',
+    '1',
     $sTable . '.name as name',
     $sTable . '.phonenumber as phonenumber',
     $sTable . '.status as status',
-
+    
 ]);
 
 if ($is_admin) {
@@ -236,69 +209,235 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . $sTable . '.id) as is_converted',
     'alternative_phonenumber',
     'zip',
-    '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate'
+    '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
+    'phonenumber_'
 
 ]);
 
 
 
+if (!empty($this->ci->input->post('up_to_date'))) {
+    $up_to_date = $this->ci->input->post('up_to_date');
+    $up_from_date   = $this->ci->input->post('up_from_date');
+    $start = $_POST["start"];
+    $length = $_POST["length"];
+
+    // Inputs for the query
+    // Escape input dates
+    $up_from_date = $this->ci->db->escape_str($up_from_date); // Start date
+    $up_to_date = $this->ci->db->escape_str($up_to_date);     // End date
+    $start = intval($start);                                  // Offset
+    $length = intval($length);
+    $where_c = "";
+    $join_type = "";
+    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+
+        $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
+        $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
+        $where_c = " AND ifnull(update_count,0) between {$min} AND {$max} ";
 
 
-$search_column = [];
+        if ($min == 0) {
+            $join_type = "RIGHT";
+        }
+    }
+
+    // SQL Queries
+     $sql_p1 = " SELECT id 
+FROM  ( SELECT leads.id FROM {$sTable} leads  {$join_type} JOIN " . db_prefix() . "calls_update calls ON calls.contact IN (leads.phonenumber) WHERE 1=1
+AND lastupdate_date BETWEEN '{$up_from_date}' AND '{$up_to_date}' {$where_c} ";
+
+ $sql_p1 .= " UNION ALL ";
+ 
+  $sql_p1 .= "SELECT leads.id FROM {$sTable} leads  {$join_type} JOIN " . db_prefix() . "calls_update calls ON calls.contact IN (leads.alternative_phonenumber) WHERE 1=1
+AND lastupdate_date BETWEEN '{$up_from_date}' AND '{$up_to_date}' {$where_c} ";
+
+   $sql_p1 .=" ) AS combined_result GROUP BY id ORDER BY id DESC LIMIT {$start},{$length} ";
+
+
+
+    // Run the query and get the results
+    // $query_p1 = $this->ci->db->query($sql_p1)->result_array();
+
+    // Extract only the `id` values into an array
+    // $ids = array_column($query_p1, 'id');
+
+    // If no IDs are found, avoid an invalid query
+    if (empty($ids)) {
+        $where[] = "AND 1=0"; // This ensures no rows are returned
+    } else {
+        // Escape the `id` values and join them in the IN clause
+        // $ids_str = implode(',', array_map([$this->ci->db, 'escape_str'], $ids));
+        $where[] = "AND {$sTable}.id IN ($sql_p1)";
+    }
+} else if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+
+
+    $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
+    $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
+    $where_c = " AND IFNULL(update_count,0) between {$min} AND {$max} ";
+    $join_type = "";
+    if ($min == 0) {
+        $join_type = "RIGHT";
+    }
+    // SQL Queries
+    $sql_p1 = "SELECT leads.id,IFNULL(update_count,0) as update_count,lastupdate_date,contact FROM " . db_prefix() . "calls_update calls {$join_type} JOIN {$sTable} leads ON calls.contact IN (leads.phonenumber_) WHERE 1=1
+{$where_c}
+GROUP BY id 
+ORDER BY id DESC ";
+
+    // Run the query and get the results
+    $query_p1 = $this->ci->db->query($sql_p1)->result_array();
+
+    // Extract only the `id` values into an array
+    $ids = array_column($query_p1, 'id');
+
+    // If no IDs are found, avoid an invalid query
+    if (empty($ids)) {
+        $where[] = "AND 1=0"; // This ensures no rows are returned
+    } else {
+        // Escape the `id` values and join them in the IN clause
+        $ids_str = implode(',', array_map([$this->ci->db, 'escape_str'], $ids));
+        $where[] = "AND {$sTable}.id IN ($ids_str)";
+    }
+}
+
+if ($this->ci->input->post('last_contact_date')) {
+    $last_contact_date = $this->ci->input->post('last_contact_date');
+    $start = $_POST["start"];
+    $length = $_POST["length"];
+
+    $where_c = "";
+    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+        $where_c = '    AND lastcontact_date <= "' . $this->ci->db->escape_str($last_contact_date) . '" ';
+    } else {
+        $where_c = " AND (lastcontact_date <= '{$last_contact_date}' OR lastcontact_date IS NULL)";
+    }
+
+    // Inputs for the query
+    // Escape input dates
+    $last_contact_date = $this->ci->db->escape_str($last_contact_date); // Start date
+    $start = intval($start);                                  // Offset
+    $length = intval($length);                                // Limit
+
+    // SQL Queries
+
+    $sql_p1 = "
+SELECT 
+leads.id,
+leads.phonenumber_,
+lastcontact_date,
+contact
+FROM 
+" . db_prefix() . "calls_update calls
+JOIN 
+{$sTable} leads 
+ON calls.contact IN (leads.phonenumber_)
+WHERE 
+calls.contact != '' 
+AND LENGTH(calls.contact) >= 10
+{$where_c}
+GROUP BY 
+leads.id
+ORDER BY 
+(lastcontact_date IS NULL) DESC, 
+lastcontact_date DESC";
+
+    $query_p1 = $this->ci->db->query($sql_p1)->result_array();
+    $ids = array_column($query_p1, 'id');
+    if (empty($ids)) {
+        $where[] = "AND 1=0";
+    } else {
+        $ids_str = implode(',', array_map([$this->ci->db, 'escape_str'], $ids));
+        $where[] = "AND {$sTable}.id IN ($ids_str) ";
+    }
+}
+
+if ($this->ci->input->post('last_update_date')) {
+    $last_update_date = $this->ci->input->post('last_update_date');
+    $start = $_POST["start"];
+    $length = $_POST["length"];
+
+    // Inputs for the query
+    // Escape input dates
+    $last_update_date = $this->ci->db->escape_str($last_update_date); // Start date
+    $start = intval($start);                                  // Offset
+    $length = intval($length);                                // Limit
+
+    $where_c = "";
+    if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
+        $where_c = '    AND lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '" ';
+    } else {
+        $where_c = " AND (lastupdate_date <= '{$last_update_date}' OR lastupdate_date IS NULL)";
+    }
+
+    $sql_p1 = "
+    SELECT 
+    leads.id,
+    leads.phonenumber_,
+    lastupdate_date,
+    contact
+    FROM 
+    " . db_prefix() . "calls_update calls
+    JOIN 
+    {$sTable} leads 
+    ON calls.contact IN (leads.phonenumber_)
+    WHERE 
+    calls.contact != '' 
+    AND LENGTH(calls.contact) >= 10
+    {$where_c}
+    GROUP BY 
+    leads.id
+    ORDER BY 
+    (lastupdate_date IS NULL) DESC, 
+    lastupdate_date DESC";
+
+    $query_p1 = $this->ci->db->query($sql_p1)->result_array();
+    $ids = array_column($query_p1, 'id');
+
+    if (empty($ids)) {
+        $where[] = "AND 1=0";
+    } else {
+        $ids_str = implode(',', array_map([$this->ci->db, 'escape_str'], $ids));
+        $where[] = "AND {$sTable}.id IN ($ids_str) ";
+    }
+}
+
+
+
+
+  $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
-     $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name'];
+    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name'];
 }
 
 $having_ = "";
 $having = "";
 $group_by = ' Group By ' . $sTable . '.id ' . $having . " ";
 
-
-
 // Execute final query with applied filters and joins
-
-if(is_admin()){
-if(!empty($_POST["order"][0]["column"]) && ($_POST["order"][0]["column"] == 5))
-{
-   $_POST["order"][0]["column"] =0;
-}
-}
-else
-{
-   if(!empty($_POST["order"][0]["column"]))
-{
-//   $_POST["order"][0]["column"] =0;
-} 
-}
-
-if (!empty($this->ci->input->post('up_to_date'))) {
-    $sTable = $call_table;
- 
-}
-
-$result = data_tables_init_($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
-
+$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
+die;
 $output  = $result['output'];
 $rResult = $result['rResult'];
-
 // print_r($rResult);
 // die;
 $lead_ids_array = array_column($rResult, "id");
-// $phone_numbers = array_column($rResult, "phonenumber_");
+$phone_numbers = array_column($rResult, "phonenumber_");
 
-// $call_data = [];
-// if (!empty($phone_numbers)) {
-//     $phone_numbers = implode(",", $phone_numbers);
-//     $phone_numbers = explode(",", $phone_numbers);
-//     $phone_numbers = array_map(function ($value) {
-//         return preg_replace('/\s+/', '', trim($value));  // Remove all spaces
-//     }, $phone_numbers);
+$call_data =[];
+if(!empty($phone_numbers)){
+$phone_numbers = implode(",",$phone_numbers);
+$phone_numbers = explode(",",$phone_numbers);
+$phone_numbers = array_map(function($value) {
+    return preg_replace('/\s+/', '', trim($value));  // Remove all spaces
+}, $phone_numbers);
 
 
-//     $get_call_data = get_call_information_new($phone_numbers);
-//     $call_data = array_column($get_call_data, null, 'contact');
-// }
+$get_call_data = get_call_information($phone_numbers);
+$call_data = array_column($get_call_data, null, 'contact');
+}
 
 
 
@@ -334,28 +473,36 @@ foreach ($rResult as $aRow) {
         $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
     }
     $row[]    = $col;
+   $updatecount = !empty($call_data[$aRow['phonenumber']]["update_count"]) 
+    ? $call_data[$aRow['phonenumber']]["update_count"] 
+    : 0;
 
-
-    $updatecount = !empty($aRow['update_count'])?$aRow['update_count']:0;
+$updatecount += !empty($call_data[$aRow['alternative_phonenumber']]["update_count"]) 
+    ? $call_data[$aRow['alternative_phonenumber']]["update_count"] 
+    : 0;
 
     $row[]    = $updatecount;
     $call_duration = 0;
     $last_call_update = "";
-    $row[] = !empty($aRow['call_duration'])
-        ? convertToHMS($aRow['call_duration'],
-            1
-        )
-        : convertToHMS($call_duration, 1);
+   $row[] = !empty($call_data[$aRow['phonenumber']]["duration"])
+    ? convertToHMS(
+        $call_data[$aRow['phonenumber']]["duration"] + 
+        (!empty($call_data[$aRow['alternative_phonenumber']]["duration"]) 
+            ? $call_data[$aRow['alternative_phonenumber']]["duration"] 
+            : 0),
+        1
+    )
+    : convertToHMS($call_duration, 1);
 
 
-    $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
+    $row[] =  !empty($call_data[$aRow['phonenumber']]["lastcontact_date"]) ? date("Y-m-d", strtotime($call_data[$aRow['phonenumber']]["lastcontact_date"])) : '';
 
     $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     if ($role != 1) {
-        if (empty($aRow['lastupdate_date'])) {
+        if (empty($call_data[$aRow['phonenumber']]["lastupdate_date"])) {
             $row[] = "";
         } else {
-            $row[] = (($aRow['lastupdate_date'] == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
+            $row[] = (($call_data[$aRow['phonenumber']]["lastupdate_date"] == '0000-00-00 00:00:00' || !is_date($call_data[$aRow['phonenumber']]["lastupdate_date"])) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($call_data[$aRow['phonenumber']]["lastupdate_date"]) . '" class="text-has-action is-date">' . $call_data[$aRow['phonenumber']]["lastupdate_date"] . '</span>');
         }
     }
 
