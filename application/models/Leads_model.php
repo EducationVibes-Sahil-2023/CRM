@@ -838,120 +838,167 @@ class Leads_model extends App_Model
 
             log_activity('Lead Deleted [Deleted by: ' . get_staff_full_name() . ', ID: ' . $id . ']');
 
+            $data_array["phonenumber"] = substr(preg_replace('/\D/', '', $lead->phonenumber), -10);
+            $data_array["alternative_phonenumber"] = substr(preg_replace('/\D/', '', $lead->alternative_phonenumber), -10);
 
+            $data_array["email"] = $lead->email;
+            $data_array["name"] = $lead->name;
+            $data_array["lead_id"] = $lead->id;
 
-            $attachments = $this->get_lead_attachments($id);
-
-            foreach ($attachments as $attachment) {
-
-                $this->delete_lead_attachment($attachment['id']);
+            if (!$this->db->insert(db_prefix() . "leads_delete", $data_array)) {
+                log_message('error', 'Failed to insert into tblleads_delete: ' . $this->db->last_query());
             }
-
-
-
-            // Delete the custom field values
-
-            $this->db->where('relid', $id);
-
-            $this->db->where('fieldto', 'leads');
-
-            $this->db->delete(db_prefix() . 'customfieldsvalues');
-
-
-
-            $this->db->where('leadid', $id);
-
-            $this->db->delete(db_prefix() . 'lead_activity_log');
-
-
-
-            $this->db->where('leadid', $id);
-
-            $this->db->delete(db_prefix() . 'lead_integration_emails');
-
-
-
-            $this->db->where('rel_id', $id);
-
-            $this->db->where('rel_type', 'lead');
-
-            $this->db->delete(db_prefix() . 'notes');
-
-
-
-            $this->db->where('rel_type', 'lead');
-
-            $this->db->where('rel_id', $id);
-
-            $this->db->delete(db_prefix() . 'reminders');
-
-
-
-            $this->db->where('rel_type', 'lead');
-
-            $this->db->where('rel_id', $id);
-
-            $this->db->delete(db_prefix() . 'taggables');
-
-
-
-            $this->load->model('proposals_model');
-
-            $this->db->where('rel_id', $id);
-
-            $this->db->where('rel_type', 'lead');
-
-            $proposals = $this->db->get(db_prefix() . 'proposals')->result_array();
-
-
-
-            foreach ($proposals as $proposal) {
-
-                $this->proposals_model->delete($proposal['id']);
-            }
-
-
-
-            // Get related tasks
-
-            $this->db->where('rel_type', 'lead');
-
-            $this->db->where('rel_id', $id);
-
-            $tasks = $this->db->get(db_prefix() . 'tasks')->result_array();
-
-            foreach ($tasks as $task) {
-
-                $this->tasks_model->delete_task($task['id']);
-            }
-
-
-
-            $phonenumber = str_replace("+91", "", $lead->phonenumber);
-            $phonenumber = substr($phonenumber, -10);
-            if (!empty($phonenumber)) {
-                $this->delete_call_list($phonenumber);
-            }
-            if (is_gdpr()) {
-
-                $this->db->where('(description LIKE "%' . $lead->email . '%" OR description LIKE "%' . $lead->name . '%" OR description LIKE "%' . $lead->phonenumber . '%")');
-
-                $this->db->delete(db_prefix() . 'activity_log');
-            }
-
-
 
             $affectedRows++;
         }
 
         if ($affectedRows > 0) {
-
+           
             return true;
         }
 
 
 
         return false;
+    }
+
+    function hitCronUrlAsync($cronUrl)
+    {
+        try {
+            // Initialize cURL session
+            $ch = curl_init();
+
+            // Set cURL options for asynchronous request
+            curl_setopt($ch, CURLOPT_URL, $cronUrl); // Set the URL to hit
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, false); // Don't return the response
+            curl_setopt($ch, CURLOPT_TIMEOUT, 1); // Timeout for quick execution
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Allow redirects if necessary
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);  // Bypass SSL verification
+
+            // Execute cURL request asynchronously
+            curl_exec($ch);
+
+            // Close cURL session
+            curl_close($ch);
+
+            // No need to wait for response
+            return array("status" => 1, "message" => "Cron URL hit asynchronously.");
+        } catch (Exception $e) {
+            // Handle exceptions and return an error response
+            return array("status" => 0, "message" => $e->getMessage());
+        }
+    }
+
+    public function delete_leads_information($lead)
+    {
+        $id = $lead->lead_id;
+        $attachments = $this->get_lead_attachments($id);
+
+        foreach ($attachments as $attachment) {
+
+            $this->delete_lead_attachment($attachment['id']);
+        }
+
+
+
+        // Delete the custom field values
+
+        $this->db->where('relid', $id);
+
+        $this->db->where('fieldto', 'leads');
+
+        $this->db->delete(db_prefix() . 'customfieldsvalues');
+
+
+
+        $this->db->where('leadid', $id);
+
+        $this->db->delete(db_prefix() . 'lead_activity_log');
+
+
+
+        $this->db->where('leadid', $id);
+
+        $this->db->delete(db_prefix() . 'lead_integration_emails');
+
+
+
+        $this->db->where('rel_id', $id);
+
+        $this->db->where('rel_type', 'lead');
+
+        $this->db->delete(db_prefix() . 'notes');
+
+
+
+        $this->db->where('rel_type', 'lead');
+
+        $this->db->where('rel_id', $id);
+
+        $this->db->delete(db_prefix() . 'reminders');
+
+
+
+        $this->db->where('rel_type', 'lead');
+
+        $this->db->where('rel_id', $id);
+
+        $this->db->delete(db_prefix() . 'taggables');
+
+
+
+        $this->load->model('proposals_model');
+
+        $this->db->where('rel_id', $id);
+
+        $this->db->where('rel_type', 'lead');
+
+        $proposals = $this->db->get(db_prefix() . 'proposals')->result_array();
+
+
+
+        foreach ($proposals as $proposal) {
+
+            $this->proposals_model->delete($proposal['id']);
+        }
+
+
+
+        // Get related tasks
+
+        $this->db->where('rel_type', 'lead');
+
+        $this->db->where('rel_id', $id);
+
+        $tasks = $this->db->get(db_prefix() . 'tasks')->result_array();
+
+        foreach ($tasks as $task) {
+
+            $this->tasks_model->delete_task($task['id']);
+        }
+
+
+
+        $phonenumber = str_replace("+91", "", $lead->phonenumber);
+        $phonenumber = substr(preg_replace('/\D/', '', $phonenumber), -10);
+        if (!empty($phonenumber)) {
+            $this->delete_call_list($phonenumber);
+        }
+
+        $alternative_phonenumber = str_replace("+91", "", $lead->alternative_phonenumber);
+        $alternative_phonenumber = $phonenumber = substr(preg_replace('/\D/', '', $alternative_phonenumber), -10);
+        if (!empty($alternative_phonenumber)) {
+            $this->delete_call_list($alternative_phonenumber);
+        }
+
+        $this->delete_notes(array($id));
+
+        if (is_gdpr()) {
+
+            $this->db->where('(description LIKE "%' . $lead->email . '%" OR description LIKE "%' . $lead->name . '%" OR description LIKE "%' . $lead->phonenumber . '%")');
+
+            $this->db->delete(db_prefix() . 'activity_log');
+        }
     }
 
 
@@ -2934,7 +2981,9 @@ class Leads_model extends App_Model
 
     public function delete_call_list($phonenumber)
     {
-        $this->db->like('contact', $phonenumber);
+
+        $phonenumber = substr(preg_replace('/\D/', '', $phonenumber), -10);
+        $this->db->where('contact', $phonenumber);
         $this->db->delete(db_prefix() . 'calls_activity_logs');
     }
 

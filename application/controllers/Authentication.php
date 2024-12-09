@@ -367,11 +367,12 @@ class Authentication extends ClientsController
                         if ($this->Leads_model->add($temp_lead_data, 1, $delete_created)) {
                             $this->db->where('id', $leads["id"]);
                             $this->db->delete(db_prefix() . 'lead_temp');
-
+                            $leads["lead_id"] = $temp_lead_data["id"];
+                            $this->db->delete_leads_information($temp_lead_data);
                             // $this->db->where('contact', $phonenumber);
                             // $this->db->delete(db_prefix() . 'calls_activity_logs');
 
-                            $this->Leads_model->delete_call_list($phonenumber);
+                            // $this->Leads_model->delete_call_list($phonenumber);
                         }
                     } else {
                         $this->db->where('id', $leads["id"]);
@@ -386,4 +387,43 @@ class Authentication extends ClientsController
         echo json_encode(array("status" => 1, "message" => "No Lead reassign successfully."));
         die;
     }
+
+    public function delete_leads_information()
+    {
+        try {
+            // Define the limit for deletion
+            $limit = RE_ASSIGN_LEADS;
+    
+            // Load the required model
+            $this->load->model("Leads_model");
+    
+            // Fetch the leads to delete
+            $data_leads = $this->db->query("SELECT * FROM " . db_prefix() . "leads_delete ORDER BY id DESC LIMIT {$limit}")->result();
+    
+            // Check if there are leads to delete
+            if (!empty($data_leads)) {
+                foreach ($data_leads as $leads) {
+                    // Delete the lead using the Leads_model
+                    $this->Leads_model->delete_leads_information($leads);
+    
+                    // Remove the entry from the `leads_delete` table
+                    $this->db->where("lead_id", $leads->lead_id)->delete(db_prefix() . "leads_delete");
+                }
+    
+                // Return success response
+                echo json_encode(array("status" => 1, "message" => "Lead information deleted successfully."));
+            } else {
+                // No leads found to delete
+                echo json_encode(array("status" => 0, "message" => "No leads found to delete."));
+            }
+        } catch (Exception $e) {
+            // Handle exceptions and return error response
+            echo json_encode(array("status" => 0, "message" => "An error occurred: " . $e->getMessage()));
+        } catch (Throwable $t) {
+            // Handle critical errors for PHP 7+ (optional for PHP 8+)
+            echo json_encode(array("status" => 0, "message" => "A critical error occurred: " . $t->getMessage()));
+        }
+        die; // Ensure no further script execution
+    }
+    
 }
