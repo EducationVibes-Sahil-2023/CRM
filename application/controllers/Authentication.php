@@ -345,73 +345,111 @@ class Authentication extends ClientsController
         return TRUE;
     }
 
-   public function re_assign_cron()
-{
-    // Load required libraries and models
-    $this->load->library('import/import_leads', [], 'import');
-    $this->load->model('Leads_model');
-    $limit = RE_ASSIGN_LEADS; // Define the number of leads to process per chunk
-    $chunkSize = 500; // Number of leads to process per iteration
+    public function re_assign_cron()
+    {
+        // Load required libraries and models
+        $this->load->library('import/import_leads', [], 'import');
+        $this->load->model('Leads_model');
+        $limit = RE_ASSIGN_LEADS; // Define the number of leads to process per chunk
+        $chunkSize = 500; // Number of leads to process per iteration
 
-    $offset = 0; // Initialize offset for chunking
+        $offset = 0; // Initialize offset for chunking
 
-    do {
-        // Fetch a chunk of lead data with status 1
-        $data_leads = $this->db->query(
-            "SELECT id, data, lead_id 
+        do {
+            // Fetch a chunk of lead data with status 1
+            $data_leads = $this->db->query(
+                "SELECT id, data, lead_id 
             FROM " . db_prefix() . "lead_temp 
             WHERE status = 1 and lead_id > 0 
             ORDER BY id DESC 
             LIMIT {$offset}, {$chunkSize}"
-        )->result_array();
+            )->result_array();
 
-        if (!empty($data_leads)) {
-            $reassign_data_array = [];
-            $ids_to_delete = [];
+            if (!empty($data_leads)) {
+                $reassign_data_array = [];
+                $ids_to_delete = [];
 
-            foreach ($data_leads as $lead) {
-                if (!empty($lead['data'])) {
-                    // Decode JSON data for the lead
-                    $temp_lead_data = json_decode($lead['data'], true);
+                foreach ($data_leads as $lead) {
+                    if (!empty($lead['data'])) {
+                        // Decode JSON data for the lead
+                        $temp_lead_data = json_decode($lead['data'], true);
 
-                    if (!empty($lead['lead_id'])) {
-                        // Delete the existing lead in the main table if `lead_id` exists
-                        $this->Leads_model->delete($lead['lead_id'], $temp_lead_data);
-
-                        // Prepare for mass assignation and collect IDs for deletion
-                        $reassign_data_array[] = $temp_lead_data;
-                        $ids_to_delete[] = $lead['id'];
+                        if (!empty($lead['lead_id'])) {
+                            // Delete the existing lead in the main table if `lead_id` exists
+                            // $this->Leads_model->delete($lead['lead_id']);
+                            // $leads["lead_id"] = $temp_lead_data["id"];
+                            // $this->db->delete_leads_information($temp_lead_data);
+                            // Prepare for mass assignation and collect IDs for deletion
+                            $reassign_data_array[] = $temp_lead_data;
+                            $ids_to_delete[] = $lead['id'];
+                        }
                     }
                 }
-            }
 
-            // Check if there's any data to reassign
-            if (!empty($reassign_data_array)) {
-                try {
-                    // Perform mass assignation
-                    $this->import->mass_assignation($reassign_data_array);
+                // Check if there's any data to reassign
+                if (!empty($reassign_data_array)) {
+                    try {
+                        // Perform mass assignation
+                        $this->import->mass_assignation($reassign_data_array);
 
-                    // Delete successfully reassigned leads from the temporary table
-                    $this->db->where_in('id', $ids_to_delete);
-                    $this->db->delete(db_prefix() . 'lead_temp');
+                        // Delete successfully reassigned leads from the temporary table
+                        $this->db->where_in('id', $ids_to_delete);
+                        $this->db->delete(db_prefix() . 'lead_temp');
 
-                    echo json_encode(['status' => 1, 'message' => 'Leads reassigned successfully.']);
-                } catch (Exception $e) {
-                    // Log and display error if assignation fails
-                    log_message('error', 'Error in mass assignation: ' . $e->getMessage());
-                    echo json_encode(['status' => 0, 'message' => 'Failed to reassign leads.']);
+                        echo json_encode(['status' => 1, 'message' => 'Leads reassigned successfully.']);
+                    } catch (Exception $e) {
+                        // Log and display error if assignation fails
+                        log_message('error', 'Error in mass assignation: ' . $e->getMessage());
+                        echo json_encode(['status' => 0, 'message' => 'Failed to reassign leads.']);
+                    }
+                } else {
+                    echo json_encode(['status' => 0, 'message' => 'No leads available for reassignment in this chunk.']);
                 }
-            } else {
-                echo json_encode(['status' => 0, 'message' => 'No leads available for reassignment in this chunk.']);
             }
+
+            $offset += $chunkSize; // Move to the next chunk
+        } while (!empty($data_leads)); // Continue until no leads are left
+
+        if ($offset === 0) {
+            echo json_encode(['status' => 0, 'message' => 'No leads found to reassign.']);
         }
-
-        $offset += $chunkSize; // Move to the next chunk
-    } while (!empty($data_leads)); // Continue until no leads are left
-
-    if ($offset === 0) {
-        echo json_encode(['status' => 0, 'message' => 'No leads found to reassign.']);
     }
-}
 
+    public function delete_leads_information()
+    {
+        try {
+            // Define the limit for deletion
+            $limit = RE_ASSIGN_LEADS;
+
+            // Load the required model
+            $this->load->model("Leads_model");
+
+            // Fetch the leads to delete
+            $data_leads = $this->db->query("SELECT * FROM " . db_prefix() . "leads_delete ORDER BY id DESC LIMIT {$limit}")->result();
+
+            // Check if there are leads to delete
+            if (!empty($data_leads)) {
+                foreach ($data_leads as $leads) {
+                    // Delete the lead using the Leads_model
+                    $this->Leads_model->delete_leads_information($leads);
+
+                    // Remove the entry from the `leads_delete` table
+                    $this->db->where("lead_id", $leads->lead_id)->delete(db_prefix() . "leads_delete");
+                }
+
+                // Return success response
+                echo json_encode(array("status" => 1, "message" => "Lead information deleted successfully."));
+            } else {
+                // No leads found to delete
+                echo json_encode(array("status" => 0, "message" => "No leads found to delete."));
+            }
+        } catch (Exception $e) {
+            // Handle exceptions and return error response
+            echo json_encode(array("status" => 0, "message" => "An error occurred: " . $e->getMessage()));
+        } catch (Throwable $t) {
+            // Handle critical errors for PHP 7+ (optional for PHP 8+)
+            echo json_encode(array("status" => 0, "message" => "A critical error occurred: " . $t->getMessage()));
+        }
+        die; // Ensure no further script execution
+    }
 }

@@ -91,7 +91,7 @@ class Leads extends AdminController
 
         $this->load->view('admin/leads/manage_leads', $data);
     }
-    
+
     public function leads_new($id = '')
     {
         close_setup_menu();
@@ -113,7 +113,7 @@ class Leads extends AdminController
         $data['leadid'] = $id;
         $this->load->view('admin/leads/manage_leads_new', $data);
     }
-    
+
     // public function lead_summary_filter()
     // {
     //     $summary = get_leads_summary_filter($_POST);
@@ -148,22 +148,22 @@ class Leads extends AdminController
     public function lead_summary_filter()
     {
 
-//  if(is_admin()){
-//      echo json_encode([
-//         'status' => "",
-//         'update_count' => !empty($call_duration)?count($call_duration):0,
-//         'max_count' => '', // Max count is not being set, you can adjust if needed
-//         'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
-//         ]);
-//         die;
-       
-//  }
+        //  if(is_admin()){
+        //      echo json_encode([
+        //         'status' => "",
+        //         'update_count' => !empty($call_duration)?count($call_duration):0,
+        //         'max_count' => '', // Max count is not being set, you can adjust if needed
+        //         'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
+        //         ]);
+        //         die;
+
+        //  }
         // $summary = get_leads_summary_filter_new($_POST);
         // $updateCount = array_merge(
         //     leads_update_count_pri($_POST),
         //     leads_update_count_sec($_POST)
         // );
-        
+
         // // Remove duplicate entries based on 'id' and 'lastcontact'
         // $uniqueData = [];
         // foreach ($updateCount as $item) {
@@ -194,8 +194,8 @@ class Leads extends AdminController
         //     'max_count' => '', // Max count is not being set, you can adjust if needed
         //     'call_count' => $call_count
         // ]);
-        
-        
+
+
         //  $call_duration = 0;
         // $totalDuration = 0;
         // $statusHtml = '';
@@ -207,145 +207,128 @@ class Leads extends AdminController
         // <span style='color: {$status['color']}'>{$status['name']}</span>
         // </div>";
         // }
-        
-        
-        
+
+
+
         // $call_duration = calculate_call_duration($_POST);
-        
+
         // $totalDuration = array_reduce($call_duration , function ($carry, $item) {
         // return $carry + $item['total_call_duration'];
         // }, 0);
-        
-        
-        
-        
+
+
+
+
         // echo json_encode([
         // 'status' => $statusHtml,
         // 'update_count' => !empty($call_duration)?count($call_duration):0,
         // 'max_count' => '', // Max count is not being set, you can adjust if needed
         // 'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
         // ]);
-        
-        
-         if(!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"]==1)
-       {
-            $statusHtml = '';
-        $summary = get_leads_summary_filter_neww($_POST);
-        foreach ($summary as $status) {
-        $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
-        $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
-        <h3 class='bold'>{$percent}</h3>
-        <span style='color: {$status['color']}'>{$status['name']}</span>
-        </div>";
-        }
-        
-         echo json_encode([
-        'status' => $statusHtml,
-        ]);
-       }
-       
-       
-      else if(!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"]==2){
-                    $call_duration = 0;
-        $totalDuration = 0;
-        $call_duration = calculate_call_duration_new($_POST);
-        $totalDuration = array_reduce($call_duration , function ($carry, $item) {
-        return $carry + $item['total_call_duration'];
-        }, 0);
-        
-         echo json_encode([
-        'update_count' => !empty($call_duration)?count($call_duration):0,
-        'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
-        ]);
-        }
-        else
-        {
-            return true;
-        }
-        
-       
-       
-    }
-    
-        public function lead_summary_filter_neww()
-   {
-       
-       
-       if(!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"]==1)
-       {
-            $statusHtml = '';
-        $summary = get_leads_summary_filter_neww($_POST);
-        foreach ($summary as $status) {
-        $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
-        $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
-        <h3 class='bold'>{$percent}</h3>
-        <span style='color: {$status['color']}'>{$status['name']}</span>
-        </div>";
-        }
-        
-         echo json_encode([
-        'status' => $statusHtml,
-        ]);
-       }
-       
-       
-      else if(!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"]==2){
-                    $call_duration = 0;
-        $totalDuration = 0;
-        $call_duration = calculate_call_duration_new($_POST);
-        $totalDuration = array_reduce($call_duration , function ($carry, $item) {
-        return $carry + $item['total_call_duration'];
-        }, 0);
-        
-         echo json_encode([
-        'update_count' => !empty($call_duration)?count($call_duration):0,
-        'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
-        ]);
-        }
-        else
-        {
-            return true;
-        }
-        
-       
-   }
-    
-    
-    
-      public function lead_summary_filter_new()
-   {
 
-      
-       $call_duration = 0;
+
+        if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
+            $statusHtml = '';
+            $summary = get_leads_summary_filter_neww($_POST);
+            foreach ($summary as $status) {
+                $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+                $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
+        <h3 class='bold'>{$percent}</h3>
+        <span style='color: {$status['color']}'>{$status['name']}</span>
+        </div>";
+            }
+
+            echo json_encode([
+                'status' => $statusHtml,
+            ]);
+        } else if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 2) {
+            $call_duration = 0;
+            $totalDuration = 0;
+            $call_duration = calculate_call_duration_new($_POST);
+            $totalDuration = array_reduce($call_duration, function ($carry, $item) {
+                return $carry + $item['total_call_duration'];
+            }, 0);
+
+            echo json_encode([
+                'update_count' => !empty($call_duration) ? count($call_duration) : 0,
+                'call_count' => !empty($totalDuration) ? convertToHMS($totalDuration) : 0
+            ]);
+        } else {
+            return true;
+        }
+    }
+
+    public function lead_summary_filter_neww()
+    {
+
+
+        if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
+            $statusHtml = '';
+            $summary = get_leads_summary_filter_neww($_POST);
+            foreach ($summary as $status) {
+                $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+                $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
+        <h3 class='bold'>{$percent}</h3>
+        <span style='color: {$status['color']}'>{$status['name']}</span>
+        </div>";
+            }
+
+            echo json_encode([
+                'status' => $statusHtml,
+            ]);
+        } else if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 2) {
+            $call_duration = 0;
+            $totalDuration = 0;
+            $call_duration = calculate_call_duration_new($_POST);
+            $totalDuration = array_reduce($call_duration, function ($carry, $item) {
+                return $carry + $item['total_call_duration'];
+            }, 0);
+
+            echo json_encode([
+                'update_count' => !empty($call_duration) ? count($call_duration) : 0,
+                'call_count' => !empty($totalDuration) ? convertToHMS($totalDuration) : 0
+            ]);
+        } else {
+            return true;
+        }
+    }
+
+
+
+    public function lead_summary_filter_new()
+    {
+
+
+        $call_duration = 0;
         $totalDuration = 0;
         $statusHtml = '';
         $summary = get_leads_summary_filter_new($_POST);
         foreach ($summary as $status) {
-        $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
-        $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
+            $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+            $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
         <h3 class='bold'>{$percent}</h3>
         <span style='color: {$status['color']}'>{$status['name']}</span>
         </div>";
         }
-        
-        
-        
+
+
+
         $call_duration = calculate_call_duration($_POST);
-        
-        $totalDuration = array_reduce($call_duration , function ($carry, $item) {
-        return $carry + $item['total_call_duration'];
+
+        $totalDuration = array_reduce($call_duration, function ($carry, $item) {
+            return $carry + $item['total_call_duration'];
         }, 0);
-        
-        
-        
-        
+
+
+
+
         echo json_encode([
-        'status' => $statusHtml,
-        'update_count' => !empty($call_duration)?count($call_duration):0,
-        'max_count' => '', // Max count is not being set, you can adjust if needed
-        'call_count' => !empty($totalDuration)?convertToHMS($totalDuration):0
+            'status' => $statusHtml,
+            'update_count' => !empty($call_duration) ? count($call_duration) : 0,
+            'max_count' => '', // Max count is not being set, you can adjust if needed
+            'call_count' => !empty($totalDuration) ? convertToHMS($totalDuration) : 0
         ]);
-   }
+    }
 
     public function updated_count()
     {
@@ -365,7 +348,7 @@ class Leads extends AdminController
         $this->app->get_table_data('leads');
     }
 
-   public function table_new()
+    public function table_new()
 
     {
         // $this->output->enable_profiler(TRUE);
@@ -874,13 +857,9 @@ class Leads extends AdminController
 
             access_denied('Delte Lead');
         }
-        $lead_data = $this->leads_model->get($id);
-        $phonenumber = substr(trim($lead_data->phonenumber), -10);
-
+        // $lead_data = $this->leads_model->get($id);
         $response = $this->leads_model->delete($id);
-        $this->leads_model->delete_notes(array($id));
-        $this->leads_model->delete_call_list($phonenumber);
-
+        $response = $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
         if (is_array($response) && isset($response['referenced'])) {
 
             set_alert('warning', _l('is_referenced', _l('lead_lowercase')));
@@ -919,7 +898,7 @@ class Leads extends AdminController
         if ($has_permission_delete) {
 
             $response = $this->leads_model->delete($id);
-
+            $response = $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
             if (is_array($response) && isset($response['referenced'])) {
 
                 set_alert('warning', _l('is_referenced', _l('lead_lowercase')));
@@ -2927,20 +2906,11 @@ class Leads extends AdminController
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
 
-                        // foreach ($ids as $lead_id_delete) {
-                        //     $this->leads_model->delete($lead_id_delete);
-                        // }
-
-                        // $this->db->where_in('id', $ids);
-                        // $this->db->delete(db_prefix() . 'leads');
-
-                        // $this->leads_model->delete_notes($ids);
-
-
-                        $this->db->where_in('id', $ids);
-                        $this->db->delete(db_prefix() . 'leads');
-
-                        set_alert('success', "Re-assign lead successfully.");
+                        foreach ($ids as $lead_id_delete) {
+                            $this->leads_model->delete($lead_id_delete);
+                        }
+                        $this->leads_model->hitCronUrlAsync(base_url("external/re_assign_cron"));
+                        set_alert('success', "Re-assign " . count($ids) . " lead successfully.");
                         echo json_encode(array("status" => 1, "message" => "Lead mass re-assign successfully."));
                     } else {
                         set_alert('danger', "Something bad happen.");
@@ -2962,16 +2932,16 @@ class Leads extends AdminController
                         if ($has_permission_delete) {
 
                             if ($this->leads_model->delete($id)) {
-                                $this->leads_model->delete_notes($ids);
+                                // $this->leads_model->delete_notes($ids);
                                 $total_deleted++;
                             }
                         }
                     } else if ($this->input->post('mass_assign') && !empty($this->input->post('assigned'))) {
-                        if ($has_permission_mass_assign) {
-                            if ($this->leads_model->re_assign($id, $this->input->post())) {
-                                $total_assign++;
-                            }
-                        }
+                        // if ($has_permission_mass_assign) {
+                        //     if ($this->leads_model->re_assign($id, $this->input->post())) {
+                        //         $total_assign++;
+                        //     }
+                        // }
                     } else {
 
 
@@ -3205,7 +3175,10 @@ class Leads extends AdminController
 
         if ($this->input->post('mass_delete')) {
 
-            set_alert('success', _l('total_leads_deleted', $total_deleted));
+            set_alert('success', _l('total_leads_deleted', $total_deleted
+        ));
+            $response = $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
+            print_r($response);
         }
     }
 
