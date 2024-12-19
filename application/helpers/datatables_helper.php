@@ -1374,6 +1374,11 @@ if (!empty($search_column)) {
     }
 
     $join = implode(' ', $join);
+if(!empty($sOrder))
+{
+    $sOrder .= ",id"; 
+}
+
 
     $sQuery = '
     SELECT  ' . str_replace(' , ', ' ', implode(', ', $_aColumns)) . ' ' . $_additionalSelect . "

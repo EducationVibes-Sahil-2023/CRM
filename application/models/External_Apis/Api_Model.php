@@ -149,7 +149,7 @@ class Api_Model extends CI_Model
 public function insert_data_batch($table, $data)
 {
     $response = [];
-    $chunk_size = 100;  // Break data into smaller chunks (e.g., 1000 rows at a time)
+    $chunk_size = 500;  // Break data into smaller chunks (e.g., 1000 rows at a time)
 
     try {
         // Disable foreign key checks (if needed) for faster insertion
@@ -343,11 +343,12 @@ public function insert_data_batch($table, $data)
         try {
 
             // $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
-             $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_logs', $call_data);
-            
+            //  $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+             $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
 
             if ($call_activity_temp["status"] == 1) {
+                
                 $response = array(
                     "status" => 1,
                     "message" => "Call data update successfully.",
@@ -367,12 +368,13 @@ public function insert_data_batch($table, $data)
 
     public function update_call_activity()
     {
-        die;
+        
+
         $response = [];
         try {
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
-            $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
-            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => ""), "*", 2000);
+            // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
+            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => "","status"=>1), "*", 2000);
             // echo "<pre>";
             // print_r($get_all_activity_temp );
           
@@ -396,12 +398,12 @@ public function insert_data_batch($table, $data)
                     if ($check_exisit["status"] == 1) {
                         $delete_ids[] = $call_data["id"];
                     } else {
-                        $staffid = "";
-                        $staff_data =  $this->getdata(db_prefix() . "staff", array("phonenumber" => $call_data["staff_contact"], "active" => 1), "staffid");
+                        $staffid = $call_data["staffid"]?$call_data["staffid"]:'';
+                        // $staff_data =  $this->getdata(db_prefix() . "staff", array("phonenumber" => $call_data["staff_contact"], "active" => 1), "staffid");
                     
-                        if (!empty($staff_data["status"]) && $staff_data["status"] == 1) {
-                            $staffid = !empty($staff_data["data"][0]["staffid"]) ? $staff_data["data"][0]["staffid"] : '';
-                        }
+                        // if (!empty($staff_data["status"]) && $staff_data["status"] == 1) {
+                        //     $staffid = !empty($staff_data["data"][0]["staffid"]) ? $staff_data["data"][0]["staffid"] : '';
+                        // }
                         
                         if (!empty($staffid)) {
                             $delete_ids[] = $call_data["id"];
@@ -425,10 +427,12 @@ public function insert_data_batch($table, $data)
                 }
 
                 if (!empty($delete_ids)) {
-
-                    $sql = "DELETE FROM " . db_prefix() . "calls_activity_temp_logs WHERE id IN (" . implode(',', $delete_ids) . ")";
+$this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs 
+     SET status = 2 
+     where id IN (" . implode(',', $delete_ids) . ") ");
+                    // $sql = "DELETE FROM " . db_prefix() . "calls_activity_temp_logs WHERE id IN (" . implode(',', $delete_ids) . ")";
                     // Execute the query
-                    $this->db->query($sql);
+                    // $this->db->query($sql);
                 }
             }
     //         $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs 

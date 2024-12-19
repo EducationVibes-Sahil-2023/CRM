@@ -2867,9 +2867,10 @@ class Leads extends AdminController
                 if ($has_permission_mass_assign) {
                     $lead_data = $this->leads_model->lead_data($ids);
                     if (!empty($lead_data)) {
-                        $keysToRemove = array('id', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change');
+                        $keysToRemove = array('id', 'lastcontact', 'dateassigned', 'last_status_change', 'last_type_change', 'update_count', 'call_duration', 'lastconnect_date', 'lastupdate_date');
                         (!empty($this->input->post('delete_created')) && $this->input->post('delete_created') == 1) ?  array_push($keysToRemove, 'dateadded') : "";
                         $re_assign_array = [];
+                        $data_array = [];
                         foreach ($lead_data as $key => $lead_d) {
                             $lead_id = $lead_d["id"];
                             foreach ($keysToRemove as $k) {
@@ -2891,6 +2892,13 @@ class Leads extends AdminController
                             }
 
 
+                            $data_array[] = array(
+                                "phonenumber" => substr(preg_replace('/\D/', '', $lead_d["phonenumber"]), -10),
+                                "alternative_phonenumber" => substr(preg_replace('/\D/', '', $lead_d["alternative_phonenumber"]), -10),
+                                "email" => $lead_d["email"],
+                                "name" => $lead_d["name"],
+                                "lead_id" => $lead_d["id"]
+                            );
 
                             $re_assign_array[] = array(
                                 "data" => json_encode($lead_data[$key], true),
@@ -2905,9 +2913,14 @@ class Leads extends AdminController
                     if (!empty($re_assign_array)) {
 
                         $this->db->insert_batch(db_prefix() . 'lead_temp', $re_assign_array);
+                        if (!empty($data_array)) {
+                            $this->db->insert_batch(db_prefix() . 'leads_delete', $data_array);
+                        }
+                        $this->db->where_in('id', $ids);
+                        $this->db->delete(db_prefix() . 'leads');
 
-                        foreach ($ids as $lead_id_delete) {
-                            $this->leads_model->delete($lead_id_delete);
+                        if (!$this->db->insert(db_prefix() . "leads_delete", $data_array)) {
+                            log_message('error', 'Failed to insert into tblleads_delete: ' . $this->db->last_query());
                         }
                         $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
                         $this->leads_model->hitCronUrlAsync(base_url("external/re_assign_cron"));

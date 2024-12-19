@@ -66,7 +66,7 @@ class Login_Controller extends Api_Controller
     public function call_update()
     {
         
-   $response = [];
+  $response = [];
         if(!empty($_POST["call_data"])){
         $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("staffid" => $this->staffId));
 
@@ -124,12 +124,12 @@ $adjusted_time = intval($call_start) + (5 * 3600) + (30 * 60);
 $adjusted_date = date('Y-m-d', $adjusted_time);
 
 // Compare with the current date
-if ($adjusted_date == date('Y-m-d')) {
+// if ($adjusted_date == date('Y-m-d')) {
     
     $phonenumber = !empty($phonenumber) ? substr(trim($phonenumber), -10) : '';
                 $phonenumber = str_replace("+91", "",$phonenumber);
                 array_push($form_data_array_temp, array(
-                   "staffid" => !empty($this->staffId) ? intval($this->staffId) : '',
+                  "staffid" => !empty($this->staffId) ? intval($this->staffId) : '',
                     "staff_contact" => $callassignee,
                     "contact" => $phonenumber,
                     "call_status" => $call_status,
@@ -140,7 +140,7 @@ if ($adjusted_date == date('Y-m-d')) {
                     "call_end" => $call_end,
                     "datetime" => date('Y-m-d H:i:s')
                 ));
-            }
+            // }
             }
         } else {
 
@@ -237,7 +237,9 @@ if ($adjusted_date == date('Y-m-d')) {
             }
             else if (!empty($form_data["type"]) && $form_data["type"] == 2) {
                 if(!empty($form_data_array_temp)){
-                $response = $this->Api_Model->update_call_data_bulk_temp($form_data_array_temp);
+                 $this->load->model('Leads_model');
+                 $response = $this->Api_Model->update_call_data_bulk_temp($form_data_array_temp);
+                 $this->Leads_model->hitCronUrlAsync(base_url("external/call_activity_cron"));
                 }
                 else
                 {
@@ -269,6 +271,231 @@ if ($adjusted_date == date('Y-m-d')) {
         }
         echo  $this->json_output($response);
     }
+
+
+
+// public function call_update()
+//     {
+//         // ini_set('display_errors', '1');
+//         // ini_set('display_startup_errors', '1');
+//         // error_reporting(E_ALL);
+//         $response = [];
+
+//         // Check if call_data is provided
+//         if (empty($_POST['call_data'])) {
+//             $response = [
+//                 'status' => 1,
+//                 'message' => 'No call data to update.',
+//             ];
+//             echo $this->json_output($response);
+//             return;
+//         }
+
+//         $staff_data = $this->Api_Model->getdata(
+//             db_prefix() . 'staff',
+//             ['staffid' => $this->staffId]
+//         );
+
+// // print_r($staff_data);
+//         // Decode and validate JSON input
+//         $form_data = json_decode($_POST['call_data'], true);
+//         if (json_last_error() !== JSON_ERROR_NONE) {
+//             $response = [
+//                 'status' => 0,
+//                 'message' => 'Error decoding JSON: ' . json_last_error_msg(),
+//             ];
+//             echo $this->json_output($response);
+//             return;
+//         }
+
+//         // Build and validate input data
+//         $rules = $this->build_validation_rules($form_data);
+//         $validate = $this->validate->validation($rules);
+
+//         if ($validate !== true) {
+//             $response = [
+//                 'status' => 0,
+//                 'message' => $validate[0],
+//             ];
+//             echo $this->json_output($response);
+//             return;
+//         }
+
+//         // Get the last sync date from the form data
+//         $firstValue = reset($form_data["formData"]);
+//         $last_sync_date = $firstValue["startdate_time"] ?? null;
+        
+
+//         // Process call data while avoiding duplicates
+//         $call_data = $this->process_call_data($form_data, $staff_data);
+
+//         // Update based on type
+//         if ($form_data['type'] == 1) {
+//             if (!empty($call_data)) {
+//                 $response = $this->Api_Model->update_call_data($call_data);
+//             } else {
+//                 $response = [
+//                     'status' => 1,
+//                     'message' => 'Call data already updated.',
+//                 ];
+//             }
+//         } elseif ($form_data['type'] == 2 && !empty($call_data)) {
+//             $response = $this->Api_Model->update_call_data_bulk_temp($call_data);
+
+//             if (!empty($last_sync_date) && $response["status"] == 1) {
+//                 $this->update_last_sync($this->staffId, $last_sync_date);
+//             }
+//         } else {
+//             $response = [
+//                 'status' => 1,
+//                 'message' => 'Call data already updated.',
+//             ];
+//         }
+
+//         echo $this->json_output($response);
+//     }
+
+    private function build_validation_rules($form_data)
+    {
+        return [
+            [
+                'field' => 'Staff Id',
+                'value' => $this->staffId,
+                'condition' => 'required|{exist:{' . db_prefix() . 'staff:staffid:active:1}}',
+            ],
+            [
+                'field' => 'Call Data',
+                'value' => json_encode($form_data, true),
+                'condition' => 'required',
+            ]
+            // [
+            //     'field' => 'Assignee Contact Number',
+            //     'value' => $form_data['formData']['callassignee'] ?? '',
+            //     'condition' => 'required|{exist:{' . db_prefix() . 'staff:phonenumber:active:1}}',
+            // ],
+        ];
+        
+        
+    }
+    private function process_call_data($form_data, $staff_data)
+    {
+        $call_data = [];
+        $type = $form_data['type'] ?? 1;
+
+        if ($type == 2) {
+
+            $where = array("staffid" => $this->staffId);
+            $existing_sync = $this->Api_Model->getdata(
+                db_prefix() . "call_sync",
+                $where
+            );
+            $last_sync_time = "";
+            if ($existing_sync["data"][0]["last_sync"]) {
+                $last_sync_time = $existing_sync["data"][0]["last_sync"];
+            }
+
+            foreach ($form_data['formData'] as $form_d) {
+
+                // Add only if no duplicate exists
+                if (($last_sync_time <= $form_d["startdate_time"]) || $last_sync_time  = "") {
+                    $call_data[] = $this->map_call_data($form_d, $staff_data, $type);
+                }
+            }
+        } else {
+            
+                $call_data = $this->map_call_data($form_data['formData'], $staff_data, $type);
+        }
+
+        return $call_data;
+    }
+
+    private function map_call_data($form_d, $staff_data, $type)
+    {
+        if($type == 2){
+        $callassignee = $staff_data['data'][0]['phonenumber'] ?? ($form_d['callassignee'] ?? '');
+        $phonenumber = !empty($form_d['phonenumber']) ? substr(trim(str_replace('+91', '', $form_d['phonenumber'])), -10) : '';
+        $call_start = !empty($form_d['startdate_time']) ? strtotime($form_d['startdate_time']) : '';
+        $call_end = !empty($form_d['enddate_time']) ? strtotime($form_d['enddate_time']) : '';
+
+        return [
+            'staffid' => $this->staffId,
+            'staff_contact' => $callassignee,
+            'contact' => $phonenumber,
+            'call_status' => $form_d['form-cf-13'] ?? 'Not Found',
+            'calls_source' => $type,
+            'calls_type' => $form_d['calls_type'] ?? ($form_d['call_type'] ?? ''),
+            'duration' => $form_d['call_duration'] ?? '',
+            'call_start' => $call_start,
+            'call_end' => $call_end,
+            'datetime' => date('Y-m-d H:i:s'),
+        ];
+        }
+        else if($type == 1)
+        {
+                $staffid = "";
+            $callassignee =  !empty($form_d["callassignee"]) ? $form_d["callassignee"] : '';
+            $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("phonenumber" => $form_d["callassignee"]));
+
+            if (!empty($staff_data_["data"][0]["phonenumber"])) {
+                $callassignee = !empty($staff_data_["data"][0]["phonenumber"]) ? $staff_data_["data"][0]["phonenumber"] : $form_d["callassignee"];
+            } else {
+                $staff_data_ =   $this->Api_Model->getdata(db_prefix() . "staff", array("alternate_number" => $form_d["callassignee"]));
+
+                if (!empty($staff_data_["data"][0]["phonenumber"])) {
+                    $callassignee = !empty($staff_data_["data"][0]["phonenumber"]) ? $staff_data_["data"][0]["phonenumber"] : $form_d["callassignee"];
+                }
+            }
+
+            $phonenumber = !empty($form_d['phonenumber']) ? substr(trim(str_replace('+91', '', $form_d['phonenumber'])), -10) : '';
+        $call_start = !empty($form_d['startdate_time']) ? strtotime($form_d['startdate_time']) : '';
+        $call_end = !empty($form_d['enddate_time']) ? strtotime($form_d['enddate_time']) : '';
+        $type =1;
+            if (!empty($callassignee)) {
+                if (!empty($staff_data_["data"][0]["staffid"])) {
+                    $staffid = !empty($staff_data_["data"][0]["staffid"]) ? $staff_data_["data"][0]["staffid"] : '';
+                }
+            }
+            
+             return [
+            'staffid' => $staffid,
+            'staff_contact' => $callassignee,
+            'contact' => $phonenumber,
+            'call_status' => $form_d['form-cf-13'] ?? 'Not Found',
+            'calls_source' => $type,
+            'calls_type' => $form_d['calls_type'] ?? ($form_d['call_type'] ?? ''),
+            'duration' => $form_d['call_duration'] ?? '',
+            'call_start' => $call_start,
+            'call_end' => $call_end,
+            'datetime' => date('Y-m-d H:i:s'),
+        ];
+            
+        }
+    }
+
+    private function update_last_sync($staffId, $start_date_time)
+    {
+        $last_sync_time = $start_date_time;
+        $where = array("staffid" => $staffId);
+        $existing_sync = $this->Api_Model->getdata(
+            db_prefix() . "call_sync",
+            $where
+        );
+
+
+        if (!empty($existing_sync['data'])) {
+            $this->Api_Model->update_data(
+                db_prefix() . 'call_sync',
+                ['last_sync' => $last_sync_time],
+                ['staffid' => $staffId]
+            );
+        } else {
+            $this->Api_Model->insert_data(
+                db_prefix() . 'call_sync',
+                ['staffid' => $staffId, 'last_sync' => $last_sync_time]
+            );
+        }
+    }
+
 
     public function call_activity_cron()
     {
