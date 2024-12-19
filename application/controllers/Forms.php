@@ -49,8 +49,18 @@ class Forms extends ClientsController
                 $post_data = $this->input->post();
 
                 $google_source =  !empty($form->lead_source) ? $form->lead_source : '';
+                $post_data["phonenumber"] =  substr(preg_replace('/\D/', '', $post_data["phonenumber"]), -10);
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
+                if (!isset($post_data["phonenumber"]) || strlen(trim($post_data["phonenumber"])) != 10) {
+                    echo json_encode([
+                        'success' => false, // Set this to false since validation failed
+                        'message' => 'Invalid phone number. It must be exactly 10 digits.', // Custom error message
+                        'redirect_url' => false, // Use the redirect URL if applicable
+                    ]);
+                    return true; // Stop further execution
+                }
+
                 $call_data = array();
                 $required  = [];
                 $lead_type = !empty($form->lead_type) ? trim($form->lead_type) : '';
@@ -63,6 +73,7 @@ class Forms extends ClientsController
                         $call_data = array("type" => 1, "formData" => $post_data);
                     }
                 }
+                $post_data["call_duration"] = 0;
                 foreach ($data['form_fields'] as $field) {
                     if (isset($field->required)) {
                         $required[] = $field->name;
@@ -297,17 +308,7 @@ class Forms extends ClientsController
                 //     $this->curl_function($call_data);
                 // }
 
-                if (!empty($call_data)) {
-                    $response_call = $this->curl_function($call_data);
-                    $response_call = json_decode($response_call);
-                    if (isset($response_call[0]->status) && $response_call[0]->status == 0) {
-                        echo json_encode([
-                            'success' => 0,
-                            'message' => $response_call[0]->message
-                        ]);
-                        die;
-                    }
-                }
+
 
                 if ($form->allow_duplicate == 0) {
                     $where = [];
@@ -746,6 +747,18 @@ class Forms extends ClientsController
                 //  else {
                 //     $redirect_url = false;
                 // }
+
+                if (!empty($call_data)) {
+                    $response_call = $this->curl_function($call_data);
+                    $response_call = json_decode($response_call);
+                    if (isset($response_call[0]->status) && $response_call[0]->status == 0) {
+                        echo json_encode([
+                            'success' => 0,
+                            'message' => $response_call[0]->message
+                        ]);
+                        die;
+                    }
+                }
                 $redirect_url = false;
                 echo json_encode([
                     'success' => $success,

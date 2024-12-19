@@ -454,8 +454,9 @@ foreach ($rResult as $aRow) {
     $outputLeadType .= '</span>';
 
     $row[] = $outputLeadType;
-
+ if ($is_admin) {
     $row[] = $aRow['website'];
+ }
 
     $row[] = $aRow['source_name'];
     if ($role != 1) {
@@ -474,7 +475,7 @@ foreach ($rResult as $aRow) {
         $row[] = $assignedOutput;
     }
 
-    $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned'])) . '</span>');
+    $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned']))."<br>". date("H:i:s", strtotime($aRow['dateassigned'])). '</span>');
     $row[] = $aRow['city'];
     $row[] = $aRow['state'];
     $row[] .= render_tags($aRow['tags']);

@@ -569,19 +569,19 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  $_table_data = array(
                                     '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
                                     array(
-                                       'name' => _l('Reminder Flag'),
+                                       'name' => _l('Flag'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
-                                       'name' => _l('Update Count'),
+                                       'name' => _l('Count'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
-                                       'name' => _l('Call Durations'),
+                                       'name' => _l('Durations'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
-                                       'name' => _l('Last Connected Date'),
+                                       'name' => _l('Connected'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
@@ -589,7 +589,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
                                     ),
                                     array(
-                                       'name' => _l('Last Updated Date'),
+                                       'name' => _l('Updated'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
                                     ),
                                     array(
@@ -601,19 +601,19 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  $_table_data = array(
                                     '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
                                     array(
-                                       'name' => _l('Reminder Flag'),
+                                       'name' => _l('Flag'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
-                                       'name' => _l('Update Count'),
+                                       'name' => _l('Count'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
-                                       'name' => _l('Call Durations'),
+                                       'name' => _l('Durations'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
-                                       'name' => _l('Last Connected Date'),
+                                       'name' => _l('Connected'),
                                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                     ),
                                     array(
@@ -680,12 +680,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-lead-type')
 
                               );
+                               if (is_admin()) {
                               $_table_data[] = array(
                                  'name' => _l('lead_website'),
 
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-website')
 
                               );
+                               }
                               $_table_data[] = array(
                                  'name' => _l('leads_source'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')
