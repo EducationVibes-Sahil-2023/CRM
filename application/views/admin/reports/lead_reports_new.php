@@ -2206,21 +2206,18 @@ $status_list_ = array_column($status_list, null, "id");
             }
         }
         var xhrr= "";
-         var show_data_ajax = "";
+        
         function show_data(assigned)
         {
             if($.trim($(".lead-type-"+assigned).html()) != "")
             {
-                $(".leads-overview-report-"+assigned).toggle();
              return;   
             }
- 
+         let show_data_ajax = ajax_get_post_data;
 
 // Delete the existing 'assigned' property
 delete show_data_ajax.assigned;
-delete show_data_ajax.excel_status;
-delete show_data_ajax.graph_status;
-delete show_data_ajax.call_status;
+
 // Assign a new array to 'assigned'
 show_data_ajax.assigned = assigned; // Assuming 'assigned' is already an array
 
@@ -2524,7 +2521,7 @@ $(".lead-source-" + assignedId).html(await generateSourceTypeHTML(assignedId));
 $(".lead-conversion-" + assignedId).html(await generateConversionTypeHTML(totalLeads, conversion_type_set, staff_name));
 $(".lead-conversion-button-"+assignedId).removeClass("hide");
 $(".lead-marketing-" + assignedId).html(await generatePerformanceTypeHTML(assignedId));
-$(".leads-overview-report"+assigned).toggle("show");
+
 
                             }
 
@@ -2716,7 +2713,6 @@ $(".leads-overview-report"+assigned).toggle("show");
             };
 
             ajax_get_post_data = ajax_post_data
-       
             xhr = $.ajax({
                 type: "POST",
                 url: admin_url + "reports/lead_summary_filter",
@@ -2768,7 +2764,6 @@ $(".leads-overview-report"+assigned).toggle("show");
                     }
 
                     if (data.report_list == 1) {
-                         show_data_ajax = ajax_post_data;
                         $(".leadSum").html("");
                         var index = 1;
                         let {
@@ -2820,10 +2815,9 @@ $(".leads-overview-report"+assigned).toggle("show");
             </a>
             <button class="btn btn-primary float-right" onclick="show_data(${assignedId})" >Show Data</button>
             </h4>
-            <div class="leads-overview-${assignedId} " style="display:none;" >
-           </div>
+            <div class="row leads-overview-${assignedId}" style="display:none;">
+            </div>
             <hr>
-            <div class="leads-overview-report-${assignedId}">
             <div class="col-md-6 lead-type-${assignedId}">
             </div>
             <div class="col-md-6 lead-source-${assignedId}">
@@ -2841,7 +2835,6 @@ $(".leads-overview-report"+assigned).toggle("show");
                 <div class="col-12 panel-body con_tab lead-marketing-${assignedId}" style="display:none;">
                     <h4><b>Marketing Type</b></h4><hr>
                 </div>
-            </div>
             </div>
         </div>`;
 
@@ -3179,7 +3172,7 @@ $(".leads-overview-report"+assigned).toggle("show");
 
         function generate_excel_data(data) {
             console.log("Generating Excel data...");
-excel_data_array =[];
+
             return new Promise((resolve, reject) => {
                 try {
                     // Check if data and necessary properties exist and are in correct format

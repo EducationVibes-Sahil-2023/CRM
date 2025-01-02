@@ -222,6 +222,8 @@ ob_end_clean();
 </style>
 
 <script>
+var isAdmin = <?=is_admin();?>;
+var TablePagination = <?=TABLEPAGINATION?>;
    var WebURL = "<?= WHATSAPP_WEB_URL ?>";
    var WebSOCKETURL = "<?= SOCKET_WEB_URL ?>";
    var phoneNumber = <?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>;
