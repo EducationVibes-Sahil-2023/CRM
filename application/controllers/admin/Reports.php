@@ -1097,6 +1097,9 @@ class Reports extends AdminController
 
     public function lead_summary_filter($return_status = '')
     {
+//         ini_set('display_errors', '1');
+// ini_set('display_startup_errors', '1');
+// error_reporting(E_ALL);
 
         $this->load->model('leads_model');
         $ret = "";
@@ -1138,7 +1141,7 @@ class Reports extends AdminController
             $_POST["assigned"][] = get_staff_user_id();
         }
 
-        if (!empty($_POST["location"]) && !empty($_POST["department"])) {
+        if (!empty($_POST["location"]) && !empty($_POST["department"]) && empty($_POST["assigned"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
             foreach ($locationStaff as $staff) {
                 if ($role == 3) {
@@ -1149,7 +1152,7 @@ class Reports extends AdminController
                     $_POST["assigned"][] = $staff['staffid'];
                 }
             }
-        } else if (!empty($_POST["location"])) {
+        } else if (!empty($_POST["location"]) && empty($_POST["assigned"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->get(db_prefix() . "staff")->result_array();
             foreach ($locationStaff as $staff) {
                 if ($role == 3) {
@@ -1160,7 +1163,7 @@ class Reports extends AdminController
                     $_POST["assigned"][] = $staff['staffid'];
                 }
             }
-        } else if (!empty($_POST["department"])) {
+        } else if (!empty($_POST["department"]) && empty($_POST["assigned"])) {
             $departmentStaff = $this->db->select("staffid")->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
             foreach ($departmentStaff as $staff) {
                 if ($role == 3) {
@@ -1171,7 +1174,7 @@ class Reports extends AdminController
                     $_POST["assigned"][] = $staff['staffid'];
                 }
             }
-        } else if (!empty($_POST["lead_type"])) {
+        } else if (!empty($_POST["lead_type"]) && empty($_POST["assigned"])) {
             if (!empty($_POST["assigned"])) {
                 $departmentStaff = $this->db->select("staffid")->where_in("lead_type", $_POST["lead_type"])->where_in("staffid", $_POST["assigned"])->get(db_prefix() . "staff")->result_array();
             } else {
@@ -1188,10 +1191,9 @@ class Reports extends AdminController
             }
         }
 
-        $_POST["assigned"] = array_unique($_POST["assigned"]);
+        $_POST["assigned"] = !empty($_POST["assigned"])?array_unique($_POST["assigned"]):[];
         if (!empty($_POST["excel_status"]) && $_POST["excel_status"] == 1) {
             $excel_data = get_leads_summary_filter_excel_report($_POST);
-            // die;
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
             $status_summary_performance = get_status_summary_filter_performance($_POST);
             $summary = get_leads_summary_filter_report_($_POST);
@@ -1270,7 +1272,7 @@ class Reports extends AdminController
         }
 
 
-        if (!empty($_POST["assigned"]) && empty($return_status)) {
+        if (!empty($_POST["assigned"]) && empty($return_status) && (!empty($_POST["show_data"]) && !empty($_POST["show_data"]) == 1)) {
             $excel_array = [];
             $excel_performance_array = [];
             $update_count_array_label = [];
@@ -1282,18 +1284,44 @@ class Reports extends AdminController
             $index = 0;
             $max_count = [];
             $staff_html = '';
-
+$_POST["total_status"] = 0;
             $update_count_data = $post_data = $_POST;
             $update_count_data["status"][] = 20;
             $update_count_data['update_count_min'] = "";
             $update_count_data['update_count_max'] = "";
             $summary = get_leads_summary_filter_report($post_data);
-            // $excel_data = get_leads_summary_filter_excel_report($post_data);
             $source_summary = get_status_summary_filter_report($post_data);
             $status_summary_performance = get_status_summary_filter_performance($post_data);
             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
+            
             $report_list = 1;
-        } else {
+        }
+        else if(!empty($_POST["assigned"]) && empty($return_status))
+        {
+            //  $excel_array = [];
+            // $excel_performance_array = [];
+            // $update_count_array_label = [];
+            // $update_count_array_min = [];
+            // $update_count_array_max = [];
+
+
+
+            // $index = 0;
+            // $max_count = [];
+            // $staff_html = '';
+
+            // $update_count_data = $post_data = $_POST;
+            // $update_count_data["status"][] = 20;
+            // $update_count_data['update_count_min'] = "";
+            // $update_count_data['update_count_max'] = "";
+            // $summary = get_leads_summary_filter_report($post_data);
+            // $source_summary = get_status_summary_filter_report($post_data);
+            // $status_summary_performance = get_status_summary_filter_performance($post_data);
+            // $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
+            
+            $report_list = 1;
+        }
+        else {
             $excel_array = [];
             $update_count_array_label = [];
             $update_count_array_min = [];

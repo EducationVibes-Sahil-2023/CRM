@@ -181,17 +181,32 @@ $aColumns = [
 if (is_gdpr() && $consentLeads == '1') {
     $aColumns[] = '1';
 }
+if ($is_admin) {
 $aColumns = array_merge($aColumns, [
      "IFNULL({$sTable}.update_count,0) as update_count",
     "IFNULL({$sTable}.call_duration,0) as call_duration",
      $sTable .'.lastconnect_date as lastcontact_date',
     $sTable . '.dateadded as dateadded',
-     $sTable .'.lastupdate_date as lastupdate_date',
+    $sTable .'.lastupdate_date as lastupdate_date',
     $sTable . '.name as name',
     $sTable . '.phonenumber as phonenumber',
     $sTable . '.status as status',
 
 ]);
+}
+else
+{
+   $aColumns = array_merge($aColumns, [
+     "IFNULL({$sTable}.update_count,0) as update_count",
+    "IFNULL({$sTable}.call_duration,0) as call_duration",
+     $sTable .'.lastconnect_date as lastcontact_date',
+    $sTable . '.dateadded as dateadded',
+    $sTable . '.name as name',
+    $sTable . '.phonenumber as phonenumber',
+    $sTable . '.status as status',
+
+]); 
+}
 
 if ($is_admin) {
     foreach ($custom_fields as $field) {
@@ -247,7 +262,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
-     $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name'];
+     $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name',"alternative_phonenumber"];
 }
 
 $having_ = "";
