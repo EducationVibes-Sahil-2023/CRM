@@ -176,7 +176,7 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
                             </div>
                         </div>
                         <!-- </form> -->
-                        <div class="row hide">
+                        <div class="row ">
                             <div class="col-md-8">
                                 <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
                             </div>
