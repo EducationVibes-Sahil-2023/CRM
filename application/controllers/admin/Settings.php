@@ -21,6 +21,8 @@ class Settings extends AdminController
         $tab = $this->input->get('group');
 
         if ($this->input->post()) {
+
+
             if (!has_permission('settings', '', 'edit')) {
                 access_denied('settings');
             }
@@ -46,7 +48,34 @@ class Settings extends AdminController
             if (isset($post_data['settings']['smtp_password'])) {
                 $post_data['settings']['smtp_password'] = $tmpData['settings']['smtp_password'];
             }
+            if (isset($post_data['settings']['_leads_performance_settings'])) {
+                $post_data['settings']['_leads_performance_settings'] = $tmpData['settings']['_leads_performance_settings'];
+            }
 
+            echo "<pre";
+            // print_r($_POST);
+
+            $ids = isset($_POST['id']) ? $_POST['id'] : [];
+            $show_column = isset($_POST['show_column']) ? $_POST['show_column'] : [];
+            $labels = isset($_POST['label']) ? $_POST['label'] : [];
+            $sequences = isset($_POST['sequence']) ? $_POST['sequence'] : [];
+            $sql_conditions = isset($_POST['sql_condition']) ? $_POST['sql_condition'] : [];
+
+            // Initialize an array to store formatted data
+            $columns_data = [];
+
+            // Loop through the data to create a structured array
+            foreach ($ids as $key => $id) {
+                $columns_data[] = [
+                    'id' => $id,
+                    'show_column' => !empty($show_column[$key]) ? $show_column[$key] : 0,
+                    'label_name' => $labels[$key] ?? '',
+                    'sequence' => $sequences[$key] ?? '',
+                    'sql_condition' => $sql_conditions[$key] ?? ''
+                ];
+            }
+            $post_data["columns_data"] = $columns_data;
+ 
             $success = $this->settings_model->update($post_data);
 
             if ($success > 0) {

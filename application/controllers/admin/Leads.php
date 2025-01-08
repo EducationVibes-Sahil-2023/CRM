@@ -348,6 +348,18 @@ class Leads extends AdminController
         $this->app->get_table_data('leads');
     }
 
+    public function lead_performance_table()
+
+    {
+
+        if (!is_staff_member()) {
+
+            ajax_access_denied();
+        }
+
+        $this->app->get_table_data('leads_performance_table');
+    }
+
     public function table_new()
 
     {
@@ -3456,6 +3468,60 @@ class Leads extends AdminController
             }
         } else {
             echo json_encode(array("error" => "No tags available"));
+        }
+    }
+
+    public function leads_performance_column_update()
+    {
+        try {
+            // Fetch data from POST request
+            if (empty($_POST['id']) || !isset($_POST['status'])) {
+                throw new Exception("Missing required fields.");
+            }
+
+            $id = $_POST['id'];  // Column name identifier
+            $label = $_POST['label_'];  // Label name
+            $status = intval($_POST['status']);  // Status (0 or 1)
+
+            // Validate the id, label, and status (you can customize this validation based on your needs)
+            if (!is_string($id)) {
+                throw new Exception("Invalid data type for id or label.");
+            }
+
+            if (!in_array($status, [0, 1], true)) {
+                throw new Exception("Invalid status value. Must be 0 or 1.");
+            }
+
+            // Prefix for table
+            $tbl = db_prefix() . "lead_performance_column";
+
+            // Prepare the data for insertion/updating
+            $data = array(
+                'tbl_column_name' => $id,
+                'label_name' => $label,
+                'show_column' => $status
+            );
+
+            // Check if the record already exists
+            $where = array('tbl_column_name' => $id);
+            $query = $this->db->get_where($tbl, $where);
+
+            if ($query->num_rows() > 0) {
+                // If record exists, perform update
+                $this->db->where($where);
+                $this->db->update($tbl, $data);
+
+                // Optionally, return a success message
+                echo json_encode(array('status' => '1', 'message' => 'Record updated successfully.'));
+            } else {
+                // If record doesn't exist, perform insert
+                $this->db->insert($tbl, $data);
+                // Optionally, return a success message
+                echo json_encode(array('status' => '0', 'message' => 'Record updated successfully.'));
+            }
+        } catch (Exception $e) {
+            // Handle any exceptions and return the error message
+            echo json_encode(array('status' => '0', 'message' => $e->getMessage()));
         }
     }
 }
