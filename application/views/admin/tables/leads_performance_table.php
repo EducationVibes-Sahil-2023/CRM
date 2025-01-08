@@ -48,6 +48,7 @@ $join[] = " LEFT JOIN " . db_prefix() . "leads_status  ON ({$sTable}.status = " 
 $join[] = " LEFT JOIN " . db_prefix() . "leads_sources  ON ({$sTable}.source = " . db_prefix() . "leads_sources.id)";
 $join[] = " LEFT JOIN " . db_prefix() . "leads_type ON ({$sTable}.type = " . db_prefix() . "leads_type.id)";
 $join[] = " LEFT JOIN " . db_prefix() . "staff ON ({$sTable}.assigned = " . db_prefix() . "staff.staffid)";
+$join[] = " LEFT JOIN " . db_prefix() . "countries ON ({$sTable}.country = " . db_prefix() . "countries.country_id)";
 
 if (!empty($this->ci->input->post('up_to_date'))) {
     $up_to_date = $this->ci->input->post('up_to_date');
@@ -210,7 +211,7 @@ if (!empty($tbllead_performance_column)) {
         if (!empty($value["sql_condition"])) {
             $key = $value["sql_condition"];
         }
-        $aColumns[] = $key . " as " . strtolower($value["label_name"]);
+        $aColumns[] = $key . " as " . str_replace(" ","_",strtolower($value["label_name"]));
     }
 }
 
@@ -306,9 +307,9 @@ $additionalColumns = [];
 
 $search_column = [];
 // Define search and group-by clauses
-if (!empty($_POST["search"]["value"])) {
-    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber"];
-}
+// if (!empty($_POST["search"]["value"])) {
+//     $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber"];
+// }
 
 $having_ = "";
 $having = "";

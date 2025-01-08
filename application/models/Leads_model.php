@@ -3040,7 +3040,7 @@ class Leads_model extends App_Model
         // $this->db->where('show_column', '1');
         // $column = $this->db->get(db_prefix() . 'lead_performance_column')->result_array();
 
-        $this->db->select('*, columnid as tbl_column_name'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
+        $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
         $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
         if (!empty($ids)) { // Check if the $ids variable is not empty.
             $this->db->where_in('id', $ids); // Add a condition to match multiple 'id' values in the $ids array.

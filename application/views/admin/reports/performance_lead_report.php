@@ -23,7 +23,7 @@ $staff_list = array_column($staff_list, 'staff_name', "staffid");
 $status_list = $this->leads_model->get_status();
 $status_list_ = array_column($status_list, null, "id");
 $tbllead_performance_column = $this->leads_model->tbllead_performance_column();
-$selected_performance_column = array_column($tbllead_performance_column, "id");
+$selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0,5);
 
 ?>
 
