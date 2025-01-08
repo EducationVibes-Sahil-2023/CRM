@@ -493,6 +493,34 @@ class Facebook_leads_integration extends ClientsController
         $key = FORM_KEY;
         $access_token = FACEBOOK_ACCESS_TOKEN;
 
+// $leadgen_id=1305189844128324;
+//  $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?fields=ad_id,campaign_id,adset_id,field_data&access_token=$access_token"), true);
+
+//  $ad_id =  !empty($lead_data_response["ad_id"]) ? trim($lead_data_response["ad_id"]) : "";
+//                 $campaign_id =  !empty($lead_data_response["campaign_id"]) ? trim($lead_data_response["campaign_id"]) : "";
+//                 $ad_set_id =  !empty($lead_data_response["adset_id"]) ? trim($lead_data_response["adset_id"]) : "";
+
+//                 // 2. Fetch Ad Details
+// $ad_name="";
+// if (!empty($ad_id)) {
+//     $ad_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/$ad_id?fields=name,adset_id,campaign_id&access_token=$access_token"), true);
+//   $ad_name = !empty($ad_response["name"]) ? trim($ad_response["name"]) : "";
+// }
+
+// // 3. Fetch Ad Set Details
+// $ad_set_name = "";
+// if (!empty($ad_set_id)) {
+//     $ad_set_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/$ad_set_id?fields=name&access_token=$access_token"), true);
+// $ad_set_name = !empty($ad_set_response["name"]) ? trim($ad_set_response["name"]) : "";
+// }
+
+// // 4. Fetch Campaign Details
+// $campaign_name = "";
+// if (!empty($campaign_id)) {
+//     $campaign_response = json_decode(file_get_contents("https://graph.facebook.com/v21.0/$campaign_id?fields=name&access_token=$access_token"), true);
+
+//   $campaign_name = !empty($campaign_response["name"]) ? trim($campaign_response["name"]) : "";
+// }
         // Verify the webhook by returning the challenge value
         if ($this->input->get('hub_mode') === 'subscribe' && $this->input->get('hub_verify_token') === 'token99099') {
             echo $this->input->get('hub_challenge');
@@ -507,13 +535,40 @@ class Facebook_leads_integration extends ClientsController
                 $leadgen_id =  $lead_data['entry'][0]['changes'][0]['value']['leadgen_id'];
                 $form_name = "";
                 $form_id =  !empty($lead_data['entry'][0]['changes'][0]['value']['form_id']) ? $lead_data['entry'][0]['changes'][0]['value']['form_id'] : '';
+    
 
-                $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?access_token=$access_token"), true);
+                $lead_data_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$leadgen_id}?fields=ad_id,campaign_id,adset_id,field_data&access_token=$access_token"), true);
+                $ad_name="";
                 if (!empty($form_id)) {
                     $lead_form_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/{$form_id}?access_token=$access_token"), true);
                     $form_name = !empty($lead_form_response["name"]) ? trim($lead_form_response["name"]) : "";
+                    
                 }
-                $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data_response, true), "ledgen_id" => $leadgen_id, "form_name" => $form_name, "form_id" => $form_id, "datetime" => date("Y-m-d h:i:s")));
+                $ad_id =  !empty($lead_data_response["ad_id"]) ? trim($lead_data_response["ad_id"]) : "";
+                $campaign_id =  !empty($lead_data_response["campaign_id"]) ? trim($lead_data_response["campaign_id"]) : "";
+                $ad_set_id =  !empty($lead_data_response["adset_id"]) ? trim($lead_data_response["adset_id"]) : "";
+
+                // 2. Fetch Ad Details
+$ad_name="";
+if (!empty($ad_id)) {
+    $ad_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/$ad_id?fields=name,adset_id,campaign_id&access_token=$access_token"), true);
+    $ad_name = !empty($ad_response["name"]) ? trim($ad_response["name"]) : "";
+}
+
+// 3. Fetch Ad Set Details
+$ad_set_name = "";
+if (!empty($ad_set_id)) {
+    $ad_set_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/$ad_set_id?fields=name&access_token=$access_token"), true);
+    $ad_set_name = !empty($ad_set_response["name"]) ? trim($ad_set_response["name"]) : "";
+}
+
+// 4. Fetch Campaign Details
+$campaign_name = "";
+if (!empty($campaign_id)) {
+    $campaign_response = json_decode(file_get_contents("https://graph.facebook.com/v21.0/$campaign_id?fields=name&access_token=$access_token"), true);
+    $campaign_name = !empty($campaign_response["name"]) ? trim($campaign_response["name"]) : "";
+}
+                $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data_response, true), "ledgen_id" => $leadgen_id, "form_name" => $form_name, "form_id" => $form_id, "datetime" => date("Y-m-d H:i:s")));
 
                 $lead_data_array = [];
                 $token = $this->security->get_csrf_hash();
@@ -522,6 +577,10 @@ class Facebook_leads_integration extends ClientsController
                     $lead_data_array["csrf_token_name"] = $token;
                     $lead_data_array["key"] = $key;
                     $lead_data_array["website"] = $form_name;
+                    $lead_data_array["utm_campaign_name"] = $campaign_name;
+                    $lead_data_array["utm_ads_set_name"] = $ad_set_name;
+                    $lead_data_array["utm_ads_name"] = $ad_name;
+                    $lead_data_array["utm_form_name"] = $form_name;
 
                     foreach ($lead_data_response["field_data"] as $field_data) {
                         if (!empty($field_data["name"])) {
