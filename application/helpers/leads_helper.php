@@ -1768,7 +1768,7 @@ function get_leads_summary_filter_report($params, $all_status = 0)
             LIMIT 1  ) AS lastupdatecontact';
     }
     $sql .= ' FROM ' . db_prefix() . 'leads ';
-        if (!empty($params['up_to_date'])) {
+    if (!empty($params['up_to_date'])) {
         $sql .= ' JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON calls.contact IN (' . db_prefix() . 'leads.phonenumber,' . db_prefix() . 'leads.alternative_phonenumber)';
     } else if ((isset($params['update_count_max']) && $params['update_count_max'] != "") || (!empty($params['last_contact_date'])) || !empty($params['last_update_date'])) {
         $sql .= ' LEFT JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON calls.contact IN (' . db_prefix() . 'leads.phonenumber,' . db_prefix() . 'leads.alternative_phonenumber)';
@@ -1847,22 +1847,22 @@ function get_leads_summary_filter_report($params, $all_status = 0)
     } else {
         $sql .= ' GROUP BY ' . db_prefix() . 'leads.status,' . db_prefix() . 'leads.assigned ';
     }
- 
+
     //   $sql_alternative = str_replace(db_prefix() . 'leads.phonenumber', db_prefix() . 'leads.alternative_phonenumber', $sql);
 
 
-    
-//   $sql = $sql." UNION ALL ".$sql_alternative;
 
-//  $sql =  'SELECT tt.assigned,tt.status_id,tt.status_name,sum(tt.status_count) status_count,tt.statusorder  from ('.$sql.') tt ';
+    //   $sql = $sql." UNION ALL ".$sql_alternative;
 
-//     if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-//         $sql .= ' GROUP BY tt.status_id';
-//     } else {
-//         $sql .= ' GROUP BY tt.status_id,tt.assigned ';
-//     }
-//  $sql .=' ORDER BY tt.statusorder ';
- 
+    //  $sql =  'SELECT tt.assigned,tt.status_id,tt.status_name,sum(tt.status_count) status_count,tt.statusorder  from ('.$sql.') tt ';
+
+    //     if (!empty($params["total_status"]) && $params["total_status"] == 1) {
+    //         $sql .= ' GROUP BY tt.status_id';
+    //     } else {
+    //         $sql .= ' GROUP BY tt.status_id,tt.assigned ';
+    //     }
+    //  $sql .=' ORDER BY tt.statusorder ';
+
     if (!empty($params['last_contact_date']) || (isset($params['update_count_max']) && $params['update_count_max'] != '') || !empty($params['last_update_date'])) {
         $sql .= ' HAVING';
         if (!empty($params['last_contact_date'])) {
@@ -1892,7 +1892,7 @@ function get_leads_summary_filter_report($params, $all_status = 0)
             $sql .= ' COUNT(calls.id) BETWEEN "' . $CI->db->escape_str($min) . '" AND "' . $CI->db->escape_str($max) . '"';
         }
     }
-    
+
 
 
     if (!empty($params["total_status"]) && $params["total_status"] == 1) {
@@ -1900,7 +1900,7 @@ function get_leads_summary_filter_report($params, $all_status = 0)
     } else {
         $sql = " SELECT t.assigned, CONCAT('{', GROUP_CONCAT(CONCAT('\"', t.status_name, '\"', ':', COALESCE(t.status_count, 0)) SEPARATOR ', '), '}') AS status_counts, COALESCE(SUM(t.status_count), 0) AS total  FROM ( " . $sql . ") t GROUP BY t.assigned ";
     }
-    
+
 
 
     $result = [];
@@ -2442,46 +2442,43 @@ function get_leads_summary_filter($params)
 function get_leads_report_($params, $export = 0)
 {
     $params['date_type'] = !empty($params['date_type']) ? trim(strtolower($params['date_type'])) : '';
- if (!empty($params['date_type'])) {
-    $CI = &get_instance();
-    $sql = "SELECT ";
     if (!empty($params['date_type'])) {
-       
+        $CI = &get_instance();
+        $sql = "SELECT ";
+        if (!empty($params['date_type'])) {
+
             if (!empty($params['assign_to_date'])) {
-            if ($params['date_type'] == "daily") {
-            $sql .= "DATE(l.dateassigned) as dateadded, ";
-            } elseif ($params['date_type'] == "week") {
-            $sql .= "YEARWEEK(l.dateassigned, 1) as dateadded, ";
-            } elseif ($params['date_type'] == "month") {
-            $sql .= "DATE_FORMAT(l.dateassigned, '%Y - %M') as dateadded, ";
-            } elseif ($params['date_type'] == "year") {
-            $sql .= "YEAR(l.dateassigned) as dateadded, ";
+                if ($params['date_type'] == "daily") {
+                    $sql .= "DATE(l.dateassigned) as dateadded, ";
+                } elseif ($params['date_type'] == "week") {
+                    $sql .= "YEARWEEK(l.dateassigned, 1) as dateadded, ";
+                } elseif ($params['date_type'] == "month") {
+                    $sql .= "DATE_FORMAT(l.dateassigned, '%Y - %M') as dateadded, ";
+                } elseif ($params['date_type'] == "year") {
+                    $sql .= "YEAR(l.dateassigned) as dateadded, ";
+                }
+            } else  if (!empty($params['up_to_date'])) {
+                if ($params['date_type'] == "daily") {
+                    $sql .= "DATE(calls.adjusted_call_start) as dateadded, ";
+                } elseif ($params['date_type'] == "week") {
+                    $sql .= "YEARWEEK(calls.adjusted_call_start, 1) as dateadded, ";
+                } elseif ($params['date_type'] == "month") {
+                    $sql .= "DATE_FORMAT(calls.adjusted_call_start, '%Y - %M') as dateadded, ";
+                } elseif ($params['date_type'] == "year") {
+                    $sql .= "YEAR(calls.adjusted_call_start) as dateadded, ";
+                }
+            } else {
+                if ($params['date_type'] == "daily") {
+                    $sql .= "DATE(l.dateadded) as dateadded, ";
+                } elseif ($params['date_type'] == "week") {
+                    $sql .= "YEARWEEK(l.dateadded, 1) as dateadded, ";
+                } elseif ($params['date_type'] == "month") {
+                    $sql .= "DATE_FORMAT(l.dateadded, '%Y - %M') as dateadded, ";
+                } elseif ($params['date_type'] == "year") {
+                    $sql .= "YEAR(l.dateadded) as dateadded, ";
+                }
             }
-            }
-            else  if(!empty($params['up_to_date'])) {
-            if ($params['date_type'] == "daily") {
-            $sql .= "DATE(calls.adjusted_call_start) as dateadded, ";
-            } elseif ($params['date_type'] == "week") {
-            $sql .= "YEARWEEK(calls.adjusted_call_start, 1) as dateadded, ";
-            } elseif ($params['date_type'] == "month") {
-            $sql .= "DATE_FORMAT(calls.adjusted_call_start, '%Y - %M') as dateadded, ";
-            } elseif ($params['date_type'] == "year") {
-            $sql .= "YEAR(calls.adjusted_call_start) as dateadded, ";
-            }
-            }
-            else
-            {
-                 if ($params['date_type'] == "daily") {
-            $sql .= "DATE(l.dateadded) as dateadded, ";
-            } elseif ($params['date_type'] == "week") {
-            $sql .= "YEARWEEK(l.dateadded, 1) as dateadded, ";
-            } elseif ($params['date_type'] == "month") {
-            $sql .= "DATE_FORMAT(l.dateadded, '%Y - %M') as dateadded, ";
-            } elseif ($params['date_type'] == "year") {
-            $sql .= "YEAR(l.dateadded) as dateadded, ";
-            }
-            }
-            }
+        }
 
         if (!empty($export) && $export == 1) {
             $sql .= " CONCAT(staff.firstname,' ',staff.lastname) full_name,l.assigned,";
@@ -2515,8 +2512,8 @@ function get_leads_report_($params, $export = 0)
             $to_date = $params['to_date'];
             $sql .= 'AND DATE(l.dateadded) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '" ';
         }
-        
-          if (!empty($params['assign_to_date'])) {
+
+        if (!empty($params['assign_to_date'])) {
             $from_date = $params['assign_from_date'];
             $to_date = $params['assign_to_date'];
             $sql .= 'AND DATE(l.dateassigned) BETWEEN "' . $CI->db->escape_str($from_date) . '" AND "' . $CI->db->escape_str($to_date) . '" ';
@@ -2553,42 +2550,39 @@ function get_leads_report_($params, $export = 0)
         }
 
         if (!empty($params['date_type'])) {
-     
-        if (!empty($params['assign_to_date'])) {
-            
-                 if ($params['date_type'] == "daily") {
-                $sql .= "GROUP BY DATE(l.dateassigned) ";
-            } elseif ($params['date_type'] == "week") {
-                $sql .= "GROUP BY YEARWEEK(l.dateassigned, 1) ";
-            } elseif ($params['date_type'] == "month") {
-                $sql .= "GROUP BY DATE_FORMAT(l.dateassigned, '%Y - %m') ";
-            } elseif ($params['date_type'] == "year") {
-                $sql .= "GROUP BY YEAR(l.dateassigned) ";
+
+            if (!empty($params['assign_to_date'])) {
+
+                if ($params['date_type'] == "daily") {
+                    $sql .= "GROUP BY DATE(l.dateassigned) ";
+                } elseif ($params['date_type'] == "week") {
+                    $sql .= "GROUP BY YEARWEEK(l.dateassigned, 1) ";
+                } elseif ($params['date_type'] == "month") {
+                    $sql .= "GROUP BY DATE_FORMAT(l.dateassigned, '%Y - %m') ";
+                } elseif ($params['date_type'] == "year") {
+                    $sql .= "GROUP BY YEAR(l.dateassigned) ";
+                }
+            } else if (!empty($params['up_to_date'])) {
+                if ($params['date_type'] == "daily") {
+                    $sql .= "GROUP BY DATE(calls.adjusted_call_start) ";
+                } elseif ($params['date_type'] == "week") {
+                    $sql .= "GROUP BY YEARWEEK(calls.adjusted_call_start, 1) ";
+                } elseif ($params['date_type'] == "month") {
+                    $sql .= "GROUP BY DATE_FORMAT(calls.adjusted_call_start, '%Y - %m') ";
+                } elseif ($params['date_type'] == "year") {
+                    $sql .= "GROUP BY YEAR(calls.adjusted_call_start) ";
+                }
+            } else {
+                if ($params['date_type'] == "daily") {
+                    $sql .= "GROUP BY DATE(l.dateadded) ";
+                } elseif ($params['date_type'] == "week") {
+                    $sql .= "GROUP BY YEARWEEK(l.dateadded, 1) ";
+                } elseif ($params['date_type'] == "month") {
+                    $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %m') ";
+                } elseif ($params['date_type'] == "year") {
+                    $sql .= "GROUP BY YEAR(l.dateadded) ";
+                }
             }
-            }
-           else if (!empty($params['up_to_date'])) {
-                   if ($params['date_type'] == "daily") {
-                $sql .= "GROUP BY DATE(calls.adjusted_call_start) ";
-            } elseif ($params['date_type'] == "week") {
-                $sql .= "GROUP BY YEARWEEK(calls.adjusted_call_start, 1) ";
-            } elseif ($params['date_type'] == "month") {
-                $sql .= "GROUP BY DATE_FORMAT(calls.adjusted_call_start, '%Y - %m') ";
-            } elseif ($params['date_type'] == "year") {
-                $sql .= "GROUP BY YEAR(calls.adjusted_call_start) ";
-            }
-             }
-               
-             else{
-            if ($params['date_type'] == "daily") {
-                $sql .= "GROUP BY DATE(l.dateadded) ";
-            } elseif ($params['date_type'] == "week") {
-                $sql .= "GROUP BY YEARWEEK(l.dateadded, 1) ";
-            } elseif ($params['date_type'] == "month") {
-                $sql .= "GROUP BY DATE_FORMAT(l.dateadded, '%Y - %m') ";
-            } elseif ($params['date_type'] == "year") {
-                $sql .= "GROUP BY YEAR(l.dateadded) ";
-            }
-}
             if (!empty($export) && $export == 1) {
                 if (!empty($params["total_status"]) && $params["total_status"] == 1) {
                 } else {
@@ -2596,12 +2590,12 @@ function get_leads_report_($params, $export = 0)
                 }
             }
         }
- $sql_alternative = str_replace('l.phonenumber','l.alternative_phonenumber', $sql);
- $sql = $sql." UNION ALL ".$sql_alternative;
-     $sql = "Select * from (".$sql.") tt ";
-     
-      if (!empty($params['date_type'])) {
-           if ($params['date_type'] == "daily") {
+        $sql_alternative = str_replace('l.phonenumber', 'l.alternative_phonenumber', $sql);
+        $sql = $sql . " UNION ALL " . $sql_alternative;
+        $sql = "Select * from (" . $sql . ") tt ";
+
+        if (!empty($params['date_type'])) {
+            if ($params['date_type'] == "daily") {
                 $sql .= "GROUP BY tt.dateadded ";
             } elseif ($params['date_type'] == "week") {
                 $sql .= "GROUP BY tt.dateadded ";
@@ -2610,16 +2604,15 @@ function get_leads_report_($params, $export = 0)
             } elseif ($params['date_type'] == "year") {
                 $sql .= "GROUP BY tt.dateadded ";
             }
-            
-               if (!empty($export) && $export == 1) {
+
+            if (!empty($export) && $export == 1) {
                 if (!empty($params["total_status"]) && $params["total_status"] == 1) {
                 } else {
                     $sql .= ",tt.assigned";
                 }
             }
-            
-      }
-     
+        }
+
         if (!empty($export) && $export == 1) {
         } else {
             $sql .= " LIMIT 15 ";
@@ -3052,8 +3045,8 @@ function get_status_summary_filter_report($params)
         $sql .= " SELECT  l.assigned,COUNT(DISTINCT(l.id)) as total,c.id conversion_id,ls.id status_id,s.id,s.id as source_id,s.name source_name,s.color_name,s.marketing_type as marketing_id,CONCAT(l.assigned,'-',s.id) uni ";
     }
 
-if (!empty($params['up_to_date'])) {
-    $sql .= ' 
+    if (!empty($params['up_to_date'])) {
+        $sql .= ' 
         FROM ' . db_prefix() . 'calls_activity_logs AS calls
         LEFT JOIN ' . db_prefix() . 'leads AS l 
             ON calls.contact IN (l.phonenumber, l.alternative_phonenumber)
@@ -3066,13 +3059,10 @@ if (!empty($params['up_to_date'])) {
         LEFT JOIN ' . db_prefix() . 'lead_conversion_type AS c 
             ON c.id = ls.conversion_type
     ';
-}
+    } else {
+        $sql .= ' FROM ' . db_prefix() . 'leads l  left join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status  left join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
+    }
 
- else
- {
-      $sql .= ' FROM ' . db_prefix() . 'leads l  left join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status  left join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
- }
-   
 
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['google_source'])) {
         $sql .= ' join tblcustomfieldsvalues ON  l.id=tblcustomfieldsvalues.relid ';
@@ -3156,10 +3146,10 @@ if (!empty($params['up_to_date'])) {
     } else {
         $sql .= " GROUP BY assigned,s.id ";
     }
-     $sql_alternative = str_replace('l.phonenumber','l.alternative_phonenumber', $sql);
-     
-     $sql = $sql." UNION ALL ".$sql_alternative;
-     $sql = "Select * from (".$sql.") tt ";
+    $sql_alternative = str_replace('l.phonenumber', 'l.alternative_phonenumber', $sql);
+
+    $sql = $sql . " UNION ALL " . $sql_alternative;
+    $sql = "Select * from (" . $sql . ") tt ";
     if (!empty($params["total_status"]) && $params["total_status"] == 1) {
         $sql .= " GROUP BY tt.source_id; ";
     } else {
@@ -3230,10 +3220,9 @@ function leads_update_count_($params = false, $max_status = 0, $leads_count = 0,
     } else if (!empty($day_update_count) && $day_update_count == 1) {
         if (!empty($params["assign_to_date"])) {
             $sql .= ",date(l.dateassigned) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
-        }
-       else if (!empty($params["up_to_date"])) {
+        } else if (!empty($params["up_to_date"])) {
             $sql .= ",concat(Date(adjusted_call_start)) uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact";
-        }   else {
+        } else {
             $sql .= ",date(l.dateadded) as uni_dates, SUM( CASE WHEN LOWER(TRIM(call_status)) IN ('answered', 'status_unknown') THEN calls.duration ELSE NULL END) AS call_duration  FROM " . db_prefix() . "leads as l  join " . db_prefix() . "calls_activity_logs as calls on ( l.phonenumber = calls.contact  ";
         }
     } else {
@@ -4061,7 +4050,7 @@ function leads_update_count($params = false, $max_status = 0, $leads_count = 0, 
         $sql = trim($sql);
         $sql = "SELECT sum(total) as total_sum FROM ( {$sql} )  as subquery ";
     } else if (!empty($day_update_count) && $day_update_count == 1) {
-         $sql .= " group by date(uni_dates) " . $having . "order by date(uni_dates) asc  limit 50";
+        $sql .= " group by date(uni_dates) " . $having . "order by date(uni_dates) asc  limit 50";
         return $update_count = $CI->db->query($sql)->result_array();
         die;
     } else {
@@ -4737,7 +4726,7 @@ function leads_update_count_sec($params = false, $max_status = 0, $leads_count =
 }
 
 
-function leads_update_count_duration($params = false,$alternative =0)
+function leads_update_count_duration($params = false, $alternative = 0)
 {
 
     $CI = &get_instance();
@@ -4774,16 +4763,13 @@ function leads_update_count_duration($params = false,$alternative =0)
     }
 
 
- $sql .= " SELECT l.id, count(DISTINCT(calls.id)) as total,SUM(duration) as duration FROM " . db_prefix() . "leads as l ";
- 
- if(!empty($alternative) && $alternative == 1)
- {
-   $sql .= " join " . db_prefix() . "calls_activity_logs as calls on  calls.contact IN (l.alternative_phonenumber) ";
- }
- else
- {
- $sql .= " join " . db_prefix() . "calls_activity_logs as calls on  calls.contact IN (l.phonenumber) ";
- }
+    $sql .= " SELECT l.id, count(DISTINCT(calls.id)) as total,SUM(duration) as duration FROM " . db_prefix() . "leads as l ";
+
+    if (!empty($alternative) && $alternative == 1) {
+        $sql .= " join " . db_prefix() . "calls_activity_logs as calls on  calls.contact IN (l.alternative_phonenumber) ";
+    } else {
+        $sql .= " join " . db_prefix() . "calls_activity_logs as calls on  calls.contact IN (l.phonenumber) ";
+    }
 
     if (!empty($params['up_to_date'])) {
         $check_today = false;
@@ -4930,7 +4916,7 @@ function leads_update_count_duration($params = false,$alternative =0)
         $sql .= " AND (DATE_FORMAT(FROM_UNIXTIME(calls.call_start + (5 * 3600 + 30 * 60)), '%Y-%m-%d') BETWEEN '"
             . $CI->db->escape_str($current_date) . "' AND '" . $CI->db->escape_str($current_date) . "')";
     }
-    
+
 
     $having = "";
     if (!empty($params['last_contact_date'])) {
@@ -4968,13 +4954,12 @@ function leads_update_count_duration($params = false,$alternative =0)
         $sql .= " group by l.id " . $grup_by . $having . " " . $sql_add . "   ";
         $sql = trim($sql);
 
-        return $update_count = $CI->db->query("SELECT count(total) as update_count,SUM(duration) as duration FROM (".$sql." )  as subquery")->result_array();
-        
+        return $update_count = $CI->db->query("SELECT count(total) as update_count,SUM(duration) as duration FROM (" . $sql . " )  as subquery")->result_array();
     }
 
 
     $update_count = $CI->db->query($sql)->row()->total_sum;
-    
+
     return !empty($update_count) ? $update_count : 0;
 }
 
@@ -5269,8 +5254,8 @@ function leads_update_count_report($params = false, $max_status = 0, $leads_coun
 
 
     $update_count = $CI->db->query($sql)->result_array();
-   $sql = str_replace('l.phonenumber', 'l.alternative_phonenumber', $sql);
-$update_count_alternative = $CI->db->query($sql)->result_array();
+    $sql = str_replace('l.phonenumber', 'l.alternative_phonenumber', $sql);
+    $update_count_alternative = $CI->db->query($sql)->result_array();
     $callsByDate = [];
 
 
@@ -6110,19 +6095,17 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
         CONCAT(m.name, '-', c.name) AS index_performance_name ";
     }
 
-  if (!empty($params['up_to_date'])) {
+    if (!empty($params['up_to_date'])) {
 
-  $sql .= ' FROM ' . db_prefix() . 'calls_activity_logs as calls';
-$sql .= ' LEFT JOIN ' . db_prefix() . 'leads l ON calls.contact IN (l.phonenumber)';
-$sql .= ' LEFT JOIN ' . db_prefix() . 'leads_status ls ON ls.id = l.status';
-$sql .= ' LEFT JOIN ' . db_prefix() . 'leads_sources s ON s.id = l.source';
-$sql .= ' LEFT JOIN ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type';
-$sql .= ' LEFT JOIN ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type';
-
-}
-else{
-    $sql .= ' FROM ' . db_prefix() . 'leads l LEFT join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status LEFT join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
-}
+        $sql .= ' FROM ' . db_prefix() . 'calls_activity_logs as calls';
+        $sql .= ' LEFT JOIN ' . db_prefix() . 'leads l ON calls.contact IN (l.phonenumber)';
+        $sql .= ' LEFT JOIN ' . db_prefix() . 'leads_status ls ON ls.id = l.status';
+        $sql .= ' LEFT JOIN ' . db_prefix() . 'leads_sources s ON s.id = l.source';
+        $sql .= ' LEFT JOIN ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type';
+        $sql .= ' LEFT JOIN ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type';
+    } else {
+        $sql .= ' FROM ' . db_prefix() . 'leads l LEFT join  ' . db_prefix() . 'leads_status ls ON  ls.id = l.status LEFT join ' . db_prefix() . 'leads_sources s ON s.id = l.source left join ' . db_prefix() . 'lead_marketing m ON m.id = s.marketing_type left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
+    }
 
     // $sql .=' FROM ' . db_prefix() . 'lead_marketing m left join ' . db_prefix() . 'leads_sources s ON s.marketing_type = m.id left join ' . db_prefix() . 'leads l ON s.id = l.source left join ' . db_prefix() . 'leads_status ls ON  ls.id = l.status left join ' . db_prefix() . 'lead_conversion_type c ON c.id = ls.conversion_type ';
 
@@ -6242,7 +6225,7 @@ else{
     $sql .= " UNION ALL ";
 
     $sql = $sql . " " . $alt;
-    
+
     // $sql .= ' UNION ALL ';
     $sql = trim($sql);
     // }
@@ -7582,7 +7565,7 @@ function calculate_call_duration($params = false, $max_status = 0)
 
 
 
-return !empty($duration) ? $duration : [];
+    return !empty($duration) ? $duration : [];
 }
 
 function calculate_call_duration_new($params = false, $max_status = 0)
@@ -7786,7 +7769,7 @@ function calculate_call_duration_new($params = false, $max_status = 0)
 
 
 
-return !empty($duration) ? $duration : [];
+    return !empty($duration) ? $duration : [];
 }
 function get_leads_summary_filter_new($params)
 {
@@ -7850,9 +7833,9 @@ function get_leads_summary_filter_new($params)
     }
     if (!empty($params['neet_score'])) {
         $neet_range = explode('-', $params['neet_score']);
-        $conditions[] = db_prefix() . 'customfieldsvalues.fieldid = 8 AND ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . 
-                        $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . 
-                        db_prefix() . 'customfieldsvalues.value != ""';
+        $conditions[] = db_prefix() . 'customfieldsvalues.fieldid = 8 AND ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' .
+            $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' .
+            db_prefix() . 'customfieldsvalues.value != ""';
     }
     if (!empty($params['lead_type'])) {
         $conditions[] = 'type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
@@ -7866,60 +7849,59 @@ function get_leads_summary_filter_new($params)
     if (!empty($params['followup_to_date'])) {
         $conditions[] = 'DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $CI->db->escape_str($params['followup_from_date']) . '" AND "' . $CI->db->escape_str($params['followup_to_date']) . '"';
     }
-    
-      if (!empty($params['assign_from_date'])) {
+
+    if (!empty($params['assign_from_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.dateassigned) BETWEEN "' . $CI->db->escape_str($params['assign_from_date']) . '" AND "' . $CI->db->escape_str($params['assign_to_date']) . '"';
     }
-    
-     if (!empty($params['last_contact_date'])) {
+
+    if (!empty($params['last_contact_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.lastconnect_date) <= "' . $CI->db->escape_str($params['last_contact_date']) . '"';
     }
-    
-       if (!empty($params['last_update_date'])) {
+
+    if (!empty($params['last_update_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
 
-   if (!empty($params['update_count_min'])) {
+    if (!empty($params['update_count_min'])) {
         $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
-    
     }
-    
+
     if (!empty($params['up_to_date'])) {
-    $up_to_date = $params['up_to_date'];
-    $up_from_date   = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $up_from_date   = $params['up_from_date'];
 
-    $up_from_date = $CI->db->escape_str($up_from_date); // Start date
-    $up_to_date = $CI->db->escape_str($up_to_date);     // End date
-
-
-    $where_c = "";
-    $join_type = "";
-    if ($params['update_count_min']) {
-
-        $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
-        $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
-        $where_c = " AND ifnull(calls.update_count,0) between {$min} AND {$max} ";
+        $up_from_date = $CI->db->escape_str($up_from_date); // Start date
+        $up_to_date = $CI->db->escape_str($up_to_date);     // End date
 
 
-        if ($min == 0) {
-            $join_type = "RIGHT";
+        $where_c = "";
+        $join_type = "";
+        if ($params['update_count_min']) {
+
+            $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
+            $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
+            $where_c = " AND ifnull(calls.update_count,0) between {$min} AND {$max} ";
+
+
+            if ($min == 0) {
+                $join_type = "RIGHT";
+            }
         }
-    }
 
-    // SQL Queries
-    $sql_p1 = " SELECT id 
+        // SQL Queries
+        $sql_p1 = " SELECT id 
     FROM  ( SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON (calls.contact IN (leads.phonenumber)  {$where_c}) WHERE 1=1
     AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' {$where_c} ";
 
-    $sql_p1 .= " UNION ALL ";
+        $sql_p1 .= " UNION ALL ";
 
-    $sql_p1 .= "SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON ( calls.contact IN (leads.alternative_phonenumber)  {$where_c}) WHERE 1=1
+        $sql_p1 .= "SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON ( calls.contact IN (leads.alternative_phonenumber)  {$where_c}) WHERE 1=1
     AND DAte(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' {$where_c} ";
 
-     $sql_p1 .= " ) AS combined_result GROUP BY id ORDER BY id DESC ";
+        $sql_p1 .= " ) AS combined_result GROUP BY id ORDER BY id DESC ";
 
-    $conditions[] = "  {$tblleads}.id IN ($sql_p1) ";
-}
+        $conditions[] = "  {$tblleads}.id IN ($sql_p1) ";
+    }
 
     // Apply conditions to WHERE clause
     if (!empty($conditions)) {
@@ -7983,6 +7965,7 @@ function get_leads_summary_filter_neww($params)
     $sql .= 'FROM ' . $tblleads . ' ';
     $sql .= 'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . $tblleads . '.status = ' . db_prefix() . 'leads_status.id ';
 
+
     // Conditional joins based on parameters
     if (!empty($params['course']) || !empty($params['degree']) || !empty($params['neet_score']) || !empty($params['google_source'])) {
         $sql .= 'JOIN ' . db_prefix() . 'customfieldsvalues ON ' . $tblleads . '.id = ' . db_prefix() . 'customfieldsvalues.relid ';
@@ -8014,9 +7997,9 @@ function get_leads_summary_filter_neww($params)
     }
     if (!empty($params['neet_score'])) {
         $neet_range = explode('-', $params['neet_score']);
-        $conditions[] = db_prefix() . 'customfieldsvalues.fieldid = 8 AND ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' . 
-                        $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' . 
-                        db_prefix() . 'customfieldsvalues.value != ""';
+        $conditions[] = db_prefix() . 'customfieldsvalues.fieldid = 8 AND ' . db_prefix() . 'customfieldsvalues.value BETWEEN ' .
+            $CI->db->escape_str(trim($neet_range[0])) . ' AND ' . $CI->db->escape_str(trim($neet_range[1])) . ' AND ' .
+            db_prefix() . 'customfieldsvalues.value != ""';
     }
     if (!empty($params['lead_type'])) {
         $conditions[] = 'type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
@@ -8030,60 +8013,84 @@ function get_leads_summary_filter_neww($params)
     if (!empty($params['followup_to_date'])) {
         $conditions[] = 'DATE(' . db_prefix() . 'reminders.date) BETWEEN "' . $CI->db->escape_str($params['followup_from_date']) . '" AND "' . $CI->db->escape_str($params['followup_to_date']) . '"';
     }
-    
-      if (!empty($params['assign_from_date'])) {
+
+    if (!empty($params['assign_from_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.dateassigned) BETWEEN "' . $CI->db->escape_str($params['assign_from_date']) . '" AND "' . $CI->db->escape_str($params['assign_to_date']) . '"';
     }
-    
-     if (!empty($params['last_contact_date'])) {
+
+    if (!empty($params['last_contact_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.lastconnect_date) <= "' . $CI->db->escape_str($params['last_contact_date']) . '"';
     }
-    
-       if (!empty($params['last_update_date'])) {
+
+    if (!empty($params['last_update_date'])) {
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
 
-   if (!empty($params['update_count_min'])) {
+    if (!empty($params['update_count_min'])) {
         $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
-    
     }
-    
+
+
+    if (!empty($params["utm_status"]) && $params["utm_status"] == 1) {
+        $conditions[] = ' ' . $tblleads . '.utm_campaign_name != " " ';
+    }
+
+    if (!empty($params['utm_campaign_name'])) {
+        $conditions[] = " " . $tblleads . ".utm_campaign_name IN ('" . implode("','", $CI->db->escape_str($params['utm_campaign_name'])) . "')";
+    }
+
+    if (!empty($params['utm_ads_set_name'])) {
+        $conditions[] = " " . $tblleads . ".utm_ads_set_name IN ('" . implode("','", $CI->db->escape_str($params['utm_ads_set_name'])) . "')";
+    }
+
+    if (!empty($params['utm_ads_name'])) {
+        $conditions[] = " " . $tblleads . ".utm_ads_name IN ('" . implode("','", $CI->db->escape_str($params['utm_ads_name'])) . "')";
+    }
+
+    if (!empty($params['utm_term'])) {
+        $conditions[] = " " . $tblleads . ".utm_term IN ('" . implode("','", $CI->db->escape_str($params['utm_term'])) . "')";
+    }
+
+    if (!empty($params['utm_form_name'])) {
+        $conditions[] = " " . $tblleads . ".utm_form_name IN ('" . implode("','", $CI->db->escape_str($params['utm_form_name'])) . "')";
+    }
+
     if (!empty($params['up_to_date'])) {
-    $up_to_date = $params['up_to_date'];
-    $up_from_date   = $params['up_from_date'];
+        $up_to_date = $params['up_to_date'];
+        $up_from_date   = $params['up_from_date'];
 
-    $up_from_date = $CI->db->escape_str($up_from_date); // Start date
-    $up_to_date = $CI->db->escape_str($up_to_date);     // End date
-
-
-    $where_c = "";
-    $join_type = "";
-    if ($params['update_count_min']) {
-
-        $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
-        $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
-        $where_c = " AND ifnull(calls.update_count,0) between {$min} AND {$max} ";
+        $up_from_date = $CI->db->escape_str($up_from_date); // Start date
+        $up_to_date = $CI->db->escape_str($up_to_date);     // End date
 
 
-        if ($min == 0) {
-            $join_type = "RIGHT";
+        $where_c = "";
+        $join_type = "";
+        if ($params['update_count_min']) {
+
+            $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
+            $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
+            $where_c = " AND ifnull(calls.update_count,0) between {$min} AND {$max} ";
+
+
+            if ($min == 0) {
+                $join_type = "RIGHT";
+            }
         }
-    }
 
-    // SQL Queries
-    $sql_p1 = " SELECT id 
+        // SQL Queries
+        $sql_p1 = " SELECT id 
     FROM  ( SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON (calls.contact IN (leads.phonenumber)  AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
     {$where_c} ";
 
-    $sql_p1 .= " UNION ALL ";
+        $sql_p1 .= " UNION ALL ";
 
-    $sql_p1 .= "SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON ( calls.contact IN (leads.alternative_phonenumber) AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
+        $sql_p1 .= "SELECT leads.id FROM {$tblleads} leads  {$join_type} JOIN " . db_prefix() . "calls_activity_logs calls ON ( calls.contact IN (leads.alternative_phonenumber) AND DATE(calls.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}'  {$where_c}) WHERE 1=1
      AND '{$up_to_date}' {$where_c} ";
 
-     $sql_p1 .= " ) AS combined_result ";
+        $sql_p1 .= " ) AS combined_result ";
 
-    $conditions[] = "  {$tblleads}.id IN ($sql_p1) ";
-}
+        $conditions[] = "  {$tblleads}.id IN ($sql_p1) ";
+    }
 
     // Apply conditions to WHERE clause
     if (!empty($conditions)) {

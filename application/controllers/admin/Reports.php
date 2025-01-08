@@ -73,6 +73,27 @@ class Reports extends AdminController
         $this->load->view('admin/reports/lead_reports', $data);
     }
 
+
+    public function performance_leads()
+    {
+
+        $this->load->model('leads_model');
+        $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+        $data['status'] = $this->leads_model->get_status();
+        $data['department'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "staff_department")->result_array();
+        $data['location'] = $this->db->select("id,name")->where(array("status" => 1))->get(db_prefix() . "office_location")->result_array();
+        $data['sources']  = $this->leads_model->get_source("", 1);
+        $data['type']  = $this->leads_model->get_type();
+        $data['conversion_type']  = $this->leads_model->get_conversion_type();
+        $data['marketing_type']  = $this->leads_model->get_marketing_type();
+
+        $data['performance_related_dropdown']  = $this->leads_model->performance_related_dropdown();
+        if (!empty($data['performance_related_dropdown'])) {
+            $data['performance_related_dropdown'] = array_column($data['performance_related_dropdown'], null, "source");
+        }
+        $this->load->view('admin/reports/performance_lead_report', $data);
+    }
+
     public function leads_reports_generate()
     {
         $ret = "";
@@ -1097,9 +1118,9 @@ class Reports extends AdminController
 
     public function lead_summary_filter($return_status = '')
     {
-//         ini_set('display_errors', '1');
-// ini_set('display_startup_errors', '1');
-// error_reporting(E_ALL);
+        //         ini_set('display_errors', '1');
+        // ini_set('display_startup_errors', '1');
+        // error_reporting(E_ALL);
 
         $this->load->model('leads_model');
         $ret = "";
@@ -1191,7 +1212,7 @@ class Reports extends AdminController
             }
         }
 
-        $_POST["assigned"] = !empty($_POST["assigned"])?array_unique($_POST["assigned"]):[];
+        $_POST["assigned"] = !empty($_POST["assigned"]) ? array_unique($_POST["assigned"]) : [];
         if (!empty($_POST["excel_status"]) && $_POST["excel_status"] == 1) {
             $excel_data = get_leads_summary_filter_excel_report($_POST);
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
@@ -1284,7 +1305,7 @@ class Reports extends AdminController
             $index = 0;
             $max_count = [];
             $staff_html = '';
-$_POST["total_status"] = 0;
+            $_POST["total_status"] = 0;
             $update_count_data = $post_data = $_POST;
             $update_count_data["status"][] = 20;
             $update_count_data['update_count_min'] = "";
@@ -1293,11 +1314,9 @@ $_POST["total_status"] = 0;
             $source_summary = get_status_summary_filter_report($post_data);
             $status_summary_performance = get_status_summary_filter_performance($post_data);
             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
-            
+
             $report_list = 1;
-        }
-        else if(!empty($_POST["assigned"]) && empty($return_status))
-        {
+        } else if (!empty($_POST["assigned"]) && empty($return_status)) {
             //  $excel_array = [];
             // $excel_performance_array = [];
             // $update_count_array_label = [];
@@ -1318,10 +1337,9 @@ $_POST["total_status"] = 0;
             // $source_summary = get_status_summary_filter_report($post_data);
             // $status_summary_performance = get_status_summary_filter_performance($post_data);
             // $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
-            
+
             $report_list = 1;
-        }
-        else {
+        } else {
             $excel_array = [];
             $update_count_array_label = [];
             $update_count_array_min = [];
