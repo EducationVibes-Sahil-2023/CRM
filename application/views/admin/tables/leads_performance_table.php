@@ -89,7 +89,7 @@ if (!empty($this->ci->input->post('up_to_date'))) {
         $_POST["order"][0]["column"] = "";
     }
 }
-echo $_POST["order"][0]["column"];
+// echo $_POST["order"][0]["column"];
 
 // print_r($_POST);
 
