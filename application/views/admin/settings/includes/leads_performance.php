@@ -78,6 +78,7 @@ foreach ($tbl_columns as $key => $row) {
                                 type="text"
                                 class="form-control"
                                 value="<?= !empty($name["sql_condition"]) ? htmlspecialchars($name["sql_condition"]) : '' ?>"
+                                readonly
                                 placeholder="SQL Condition">
                         </td>
                     </tr>
