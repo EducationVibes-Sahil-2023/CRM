@@ -1387,7 +1387,7 @@ function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where
     $sOrder
     $sLimit
     ";
-
+    
 
     $rResult = $CI->db->query($sQuery)->result_array();
 

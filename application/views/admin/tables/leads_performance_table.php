@@ -44,12 +44,6 @@ $filter = false;
 $sIndexColumn = 'id';
 
 
-$join[] = " LEFT JOIN " . db_prefix() . "leads_status  ON ({$sTable}.status = " . db_prefix() . "leads_status.id)";
-$join[] = " LEFT JOIN " . db_prefix() . "leads_sources  ON ({$sTable}.source = " . db_prefix() . "leads_sources.id)";
-$join[] = " LEFT JOIN " . db_prefix() . "leads_type ON ({$sTable}.type = " . db_prefix() . "leads_type.id)";
-$join[] = " LEFT JOIN " . db_prefix() . "staff ON ({$sTable}.assigned = " . db_prefix() . "staff.staffid)";
-$join[] = " LEFT JOIN " . db_prefix() . "countries ON ({$sTable}.country = " . db_prefix() . "countries.country_id)";
-
 if (!empty($this->ci->input->post('up_to_date'))) {
     $up_to_date = $this->ci->input->post('up_to_date');
     $up_from_date   = $this->ci->input->post('up_from_date');
@@ -82,15 +76,31 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     // $sTable = $call_table;
 
     $join[] = " JOIN " . db_prefix() . "leads ON (
-   {$call_table}.contact IN (
-        REPLACE(TRIM(REPLACE(phonenumber, '+91', '')), ' ', ''),
-        REPLACE(TRIM(REPLACE(alternative_phonenumber, '+91', '')), ' ', '')
+   {$call_table}.contact IN (phonenumber,alternative_phonenumber
     )
     AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c
 )";
 
     $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
+
+    if (is_admin()) {
+        $_POST["order"][0]["column"] = "";
+    } else {
+        $_POST["order"][0]["column"] = "";
+    }
 }
+echo $_POST["order"][0]["column"];
+
+// print_r($_POST);
+
+
+$join[] = " LEFT JOIN " . db_prefix() . "leads_status  ON ({$sTable}.status = " . db_prefix() . "leads_status.id)";
+$join[] = " LEFT JOIN " . db_prefix() . "leads_sources  ON ({$sTable}.source = " . db_prefix() . "leads_sources.id)";
+$join[] = " LEFT JOIN " . db_prefix() . "leads_type ON ({$sTable}.type = " . db_prefix() . "leads_type.id)";
+$join[] = " LEFT JOIN " . db_prefix() . "staff ON ({$sTable}.assigned = " . db_prefix() . "staff.staffid)";
+$join[] = " LEFT JOIN " . db_prefix() . "countries ON ({$sTable}.country = " . db_prefix() . "countries.country_id)";
+
+
 
 
 if (!empty($_POST["search"]["value"])) {
@@ -211,7 +221,7 @@ if (!empty($tbllead_performance_column)) {
         if (!empty($value["sql_condition"])) {
             $key = $value["sql_condition"];
         }
-        $aColumns[] = $key . " as " . str_replace(" ","_",strtolower($value["label_name"]));
+        $aColumns[] = $key . " as " . str_replace(" ", "_", strtolower($value["label_name"]));
     }
 }
 
