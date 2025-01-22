@@ -14,7 +14,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
  * @return array
  */
 
- // function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0)
+// function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where = [], $additionalSelect = [], $sGroupBy = '', $searchAs = [], $order_by_status = 0)
 // {
 //     $CI          = &get_instance();
 //     $__post      = $CI->input->post();
@@ -806,26 +806,25 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
 
                 $columnName = "";
             }
-if (!empty($search_column)) {
-            // Convert to lowercase and check for ' as '
-            $lowerColumnName = strtolower($columnName);
-            if (strpos($lowerColumnName, ' as ') !== false) {
-                // Remove everything before and including ' as ', then trim
-                $columnName = trim(substr($columnName, strpos($lowerColumnName, ' as ') + 4));
-            }
+            if (!empty($search_column)) {
+                // Convert to lowercase and check for ' as '
+                $lowerColumnName = strtolower($columnName);
+                if (strpos($lowerColumnName, ' as ') !== false) {
+                    // Remove everything before and including ' as ', then trim
+                    $columnName = trim(substr($columnName, strpos($lowerColumnName, ' as ') + 4));
+                }
 
-            // Check if '.' exists, explode by '.' and get the last part
-            if (strpos($columnName, '.') !== false) {
-                $columnParts = explode('.', $columnName);
-                $columnName = end($columnParts); // Get the last part after exploding
-            }
+                // Check if '.' exists, explode by '.' and get the last part
+                if (strpos($columnName, '.') !== false) {
+                    $columnParts = explode('.', $columnName);
+                    $columnName = end($columnParts); // Get the last part after exploding
+                }
 
-            if (in_array(strtolower($columnName), $search_column)) {
-            } else {
-                $columnName = "";
+                if (in_array(strtolower($columnName), $search_column)) {
+                } else {
+                    $columnName = "";
+                }
             }
-
-}
 
             if (!empty($columnName) && $columnName != '') {
                 if (strpos($columnName, ' as ') !== false) {
@@ -870,7 +869,7 @@ if (!empty($search_column)) {
             }
         }
 
-      
+
         if (count($sMatchCustomFields) > 0) {
             $s = $CI->db->escape_str($search_value);
             foreach ($sMatchCustomFields as $matchCustomField) {
@@ -885,25 +884,25 @@ if (!empty($search_column)) {
 
         if (count($additionalSelect) > 0) {
             foreach ($additionalSelect as $searchAdditionalField) {
-if (!empty($search_column)) {
-                // Convert to lowercase and check for ' as '
-                $lowerColumnName = strtolower($searchAdditionalField);
-                if (strpos($lowerColumnName, ' as ') !== false) {
-                    // Remove everything before and including ' as ', then trim
-                    $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
-                }
+                if (!empty($search_column)) {
+                    // Convert to lowercase and check for ' as '
+                    $lowerColumnName = strtolower($searchAdditionalField);
+                    if (strpos($lowerColumnName, ' as ') !== false) {
+                        // Remove everything before and including ' as ', then trim
+                        $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
+                    }
 
-                // Check if '.' exists, explode by '.' and get the last part
-                if (strpos($searchAdditionalField, '.') !== false) {
-                    $columnParts = explode('.', $searchAdditionalField);
-                    $searchAdditionalField = end($columnParts); // Get the last part after exploding
-                }
+                    // Check if '.' exists, explode by '.' and get the last part
+                    if (strpos($searchAdditionalField, '.') !== false) {
+                        $columnParts = explode('.', $searchAdditionalField);
+                        $searchAdditionalField = end($columnParts); // Get the last part after exploding
+                    }
 
-                if (in_array(strtolower($searchAdditionalField), $search_column)) {
-                } else {
-                    $searchAdditionalField = "";
+                    if (in_array(strtolower($searchAdditionalField), $search_column)) {
+                    } else {
+                        $searchAdditionalField = "";
+                    }
                 }
-}
 
                 if (empty($searchAdditionalField)) {
                     continue;
@@ -1175,26 +1174,25 @@ function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where
 
                 $columnName = "";
             }
-if (!empty($search_column)) {
-            // Convert to lowercase and check for ' as '
-            $lowerColumnName = strtolower($columnName);
-            if (strpos($lowerColumnName, ' as ') !== false) {
-                // Remove everything before and including ' as ', then trim
-                $columnName = trim(substr($columnName, strpos($lowerColumnName, ' as ') + 4));
-            }
+            if (!empty($search_column)) {
+                // Convert to lowercase and check for ' as '
+                $lowerColumnName = strtolower($columnName);
+                if (strpos($lowerColumnName, ' as ') !== false) {
+                    // Remove everything before and including ' as ', then trim
+                    $columnName = trim(substr($columnName, strpos($lowerColumnName, ' as ') + 4));
+                }
 
-            // Check if '.' exists, explode by '.' and get the last part
-            if (strpos($columnName, '.') !== false) {
-                $columnParts = explode('.', $columnName);
-                $columnName = end($columnParts); // Get the last part after exploding
-            }
+                // Check if '.' exists, explode by '.' and get the last part
+                if (strpos($columnName, '.') !== false) {
+                    $columnParts = explode('.', $columnName);
+                    $columnName = end($columnParts); // Get the last part after exploding
+                }
 
-            if (in_array(strtolower($columnName), $search_column)) {
-            } else {
-                $columnName = "";
+                if (in_array(strtolower($columnName), $search_column)) {
+                } else {
+                    $columnName = "";
+                }
             }
-
-}
 
             if (!empty($columnName) && $columnName != '') {
                 if (strpos($columnName, ' as ') !== false) {
@@ -1239,7 +1237,7 @@ if (!empty($search_column)) {
             }
         }
 
-      
+
         if (count($sMatchCustomFields) > 0) {
             $s = $CI->db->escape_str($search_value);
             foreach ($sMatchCustomFields as $matchCustomField) {
@@ -1254,25 +1252,25 @@ if (!empty($search_column)) {
 
         if (count($additionalSelect) > 0) {
             foreach ($additionalSelect as $searchAdditionalField) {
-if (!empty($search_column)) {
-                // Convert to lowercase and check for ' as '
-                $lowerColumnName = strtolower($searchAdditionalField);
-                if (strpos($lowerColumnName, ' as ') !== false) {
-                    // Remove everything before and including ' as ', then trim
-                    $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
-                }
+                if (!empty($search_column)) {
+                    // Convert to lowercase and check for ' as '
+                    $lowerColumnName = strtolower($searchAdditionalField);
+                    if (strpos($lowerColumnName, ' as ') !== false) {
+                        // Remove everything before and including ' as ', then trim
+                        $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
+                    }
 
-                // Check if '.' exists, explode by '.' and get the last part
-                if (strpos($searchAdditionalField, '.') !== false) {
-                    $columnParts = explode('.', $searchAdditionalField);
-                    $searchAdditionalField = end($columnParts); // Get the last part after exploding
-                }
+                    // Check if '.' exists, explode by '.' and get the last part
+                    if (strpos($searchAdditionalField, '.') !== false) {
+                        $columnParts = explode('.', $searchAdditionalField);
+                        $searchAdditionalField = end($columnParts); // Get the last part after exploding
+                    }
 
-                if (in_array(strtolower($searchAdditionalField), $search_column)) {
-                } else {
-                    $searchAdditionalField = "";
+                    if (in_array(strtolower($searchAdditionalField), $search_column)) {
+                    } else {
+                        $searchAdditionalField = "";
+                    }
                 }
-}
 
                 if (empty($searchAdditionalField)) {
                     continue;
@@ -1374,10 +1372,9 @@ if (!empty($search_column)) {
     }
 
     $join = implode(' ', $join);
-if(!empty($sOrder))
-{
-    $sOrder .= ",id"; 
-}
+    if (!empty($sOrder)) {
+        $sOrder .= ",tblleads.id";
+    }
 
 
     $sQuery = '
@@ -1390,7 +1387,7 @@ if(!empty($sOrder))
     $sOrder
     $sLimit
     ";
-
+    
 
     $rResult = $CI->db->query($sQuery)->result_array();
 
@@ -1400,8 +1397,8 @@ if(!empty($sOrder))
         'limit' => $sLimit,
         'order' => $sOrder,
     ]);
-    
-  
+
+
 
     /* Data set length after filtering */
     // $sQuery = '
@@ -1425,15 +1422,15 @@ if(!empty($sOrder))
     /*
      * Output
      */
-    
-    $start_ = (intval($CI->input->post('start')) ==0 )?1:intval($CI->input->post('start'));
-    $last_ = (count($rResult) == intval($CI->input->post('length')))?(1+intval($CI->input->post('length'))) :count($rResult);
-    
+
+    $start_ = (intval($CI->input->post('start')) == 0) ? 1 : intval($CI->input->post('start'));
+    $last_ = (count($rResult) == intval($CI->input->post('length'))) ? (1 + intval($CI->input->post('length'))) : count($rResult);
+
 
     $output = [
         'draw'                 => $__post['draw'] ? intval($__post['draw']) : 0,
-        'iTotalRecords' =>       $start_+$last_,
-        'iTotalDisplayRecords' =>intval($CI->input->post('start'))+$last_,
+        'iTotalRecords' =>       $start_ + $last_,
+        'iTotalDisplayRecords' => intval($CI->input->post('start')) + $last_,
         'aaData'               => [],
     ];
     //print_r($output);die;
@@ -1945,14 +1942,13 @@ function data_call_data()
 ")->result_array();
 }
 
-function get_call_information($phonenumber_array=[])
+function get_call_information($phonenumber_array = [])
 {
-    $where ="";
-    
-    if(!empty($phonenumber_array))
-    {
-        $phonenumber_array = implode(",",$phonenumber_array);
-      $where = " AND contact IN ({$phonenumber_array}) "; 
+    $where = "";
+
+    if (!empty($phonenumber_array)) {
+        $phonenumber_array = implode(",", $phonenumber_array);
+        $where = " AND contact IN ({$phonenumber_array}) ";
     }
     $CI = &get_instance();
     return   $CI->db->query("
@@ -1982,15 +1978,15 @@ ORDER BY
 function get_call_information_new($phonenumber_array = [])
 {
     $where = "";
-  
+
     if (!empty($phonenumber_array)) {
         // Sanitize phone numbers and prepare them for the query
         $phonenumber_array = implode(",", array_map('intval', $phonenumber_array));
-        $where = " AND contact IN ({$phonenumber_array})"; 
+        $where = " AND contact IN ({$phonenumber_array})";
     }
-    
+
     $CI = &get_instance();
-    
+
     try {
         // Execute the query
         $result = $CI->db->query("
@@ -2015,5 +2011,3 @@ function get_call_information_new($phonenumber_array = [])
         return [];
     }
 }
-
-

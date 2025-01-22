@@ -212,4 +212,5 @@ define('KNOWLEDGE_BASE_MEDIA_PATH', 'uploads/knowledge_base' . '/');
 define('WHATSAPP_WEB_URL', 'http://localhost:9000');
 define('SOCKET_WEB_URL', 'ws://localhost:9000/ws');
 define('TABLEPAGINATION', '500');
+define('PERFORMANCE_ARRAY', '39,40');
 

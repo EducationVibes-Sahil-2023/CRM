@@ -15,12 +15,12 @@ defined('BASEPATH') or exit('No direct script access allowed');
 function add_option($name, $value = '', $autoload = 1)
 {
     if (!option_exists($name)) {
-        $CI = & get_instance();
+        $CI = &get_instance();
 
         $newData = [
-                'name'  => $name,
-                'value' => $value,
-            ];
+            'name'  => $name,
+            'value' => $value,
+        ];
 
         if ($CI->db->field_exists('autoload', db_prefix() . 'options')) {
             $newData['autoload'] = $autoload;
@@ -47,7 +47,7 @@ function add_option($name, $value = '', $autoload = 1)
  */
 function get_option($name)
 {
-    $CI = & get_instance();
+    $CI = &get_instance();
     if (!class_exists('app', false)) {
         $CI->load->library('app');
     }
@@ -74,7 +74,7 @@ function update_option($name, $value, $autoload = null)
         return add_option($name, $value, $autoload === null ? 1 : 0);
     }
 
-    $CI = & get_instance();
+    $CI = &get_instance();
 
     $CI->db->where('name', $name);
     $data = ['value' => $value];
@@ -192,6 +192,12 @@ function app_init_settings_tabs()
         'position' => 55,
     ]);
 
+    $CI->app_tabs->add_settings_tab('leads_performance', [
+        'name'     => 'Leads Performance',
+        'view'     => 'admin/settings/includes/leads_performance',
+        'position' => 55,
+    ]);
+
     $CI->app_tabs->add_settings_tab('calendar', [
         'name'     => _l('settings_calendar'),
         'view'     => 'admin/settings/includes/calendar',
@@ -239,4 +245,42 @@ function app_init_settings_tabs()
         'view'     => 'admin/settings/includes/misc',
         'position' => 95,
     ]);
+}
+
+function tbl_columns_leads_performance()
+{
+    $CI = &get_instance();
+
+    // // List of tables to fetch column details from
+    // $tables = [
+    //     db_prefix() . 'leads',
+    //     db_prefix() . 'calls_activity_logs',
+    //     db_prefix() . 'leads_status',
+    //     db_prefix() . 'leads_sources',
+    //     db_prefix() . 'leads_type'
+    // ];
+
+    // $columns = [];
+
+    // // Loop through each table and fetch its column details
+    // foreach ($tables as $table) {
+    //     $query = $CI->db->query("SHOW COLUMNS FROM $table");
+    //     $table = str_replace(db_prefix(), "", $table);
+    //     if ($query->num_rows() > 0) {
+    //         $columns[$table] = []; // Initialize array for the table
+
+    //         foreach ($query->result_array() as $row) {
+    //             $columns[$table][] = [
+    //                 'name' => $row['Field'], // Column name
+    //                 'type' => $row['Type']   // Column type (e.g., VARCHAR, INT)
+    //             ];
+    //         }
+    //     } else {
+    //         $columns[$table] = []; // Add empty array for the table if no columns found
+    //     }
+    // }
+
+    return $CI->db->select("id,columnid as name,label_name,show_column,sql_condition,sequence,tbl,column_name as column")->where("status",1)->order_by("tbl_sequence","asc")->get(db_prefix() . "performance_columns")->result_array();
+
+    // return $columns; // Return structured array with table-wise column details
 }

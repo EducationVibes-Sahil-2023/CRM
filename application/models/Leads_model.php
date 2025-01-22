@@ -853,7 +853,7 @@ class Leads_model extends App_Model
         }
 
         if ($affectedRows > 0) {
-           
+
             return true;
         }
 
@@ -1427,7 +1427,7 @@ class Leads_model extends App_Model
 
      */
 
-    public function get_source($id = false)
+    public function get_source($id = false, $performance_status = 0)
 
     {
 
@@ -1438,6 +1438,14 @@ class Leads_model extends App_Model
 
 
             return $this->db->get(db_prefix() . 'leads_sources')->row();
+        }
+        if (!empty($performance_status) && is_numeric($performance_status) && $performance_status == 1) {
+            $this->db->select('l.*,m.name as marketing_name');
+            $this->db->from(db_prefix() . 'leads_sources As l');
+            $this->db->join(db_prefix() . 'lead_marketing m', "l.marketing_type = m.id", "left");
+            $this->db->where('performance_status', 1);
+            $this->db->order_by('l.name', 'asc');
+            return $this->db->get()->result_array();
         }
 
 
@@ -3024,5 +3032,43 @@ class Leads_model extends App_Model
         $this->db->where('fieldto', 'leads');
         $staff = $this->db->get(db_prefix() . 'customfieldsvalues')->result_array();
         return $staff;
+    }
+
+    public function tbllead_performance_column($ids = [])
+    {
+        // $this->db->select('*');
+        // $this->db->where('show_column', '1');
+        // $column = $this->db->get(db_prefix() . 'lead_performance_column')->result_array();
+
+        $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
+        $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
+        if (!empty($ids)) { // Check if the $ids variable is not empty.
+            $this->db->where_in('id', $ids); // Add a condition to match multiple 'id' values in the $ids array.
+        }
+        $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
+        $column = $this->db->get(db_prefix() . 'performance_columns')->result_array();
+        // Execute the query on the table prefixed with 'performance_columns' and get the results as an array.
+        return $column; // Return the resulting array.
+
+    }
+
+    public function performance_related_dropdown()
+    {
+        return $this->db->query("
+    SELECT 
+        source,
+        " . db_prefix() . "leads_sources.name as source_name,
+        GROUP_CONCAT(DISTINCT utm_campaign_name) AS campaign_name,
+        GROUP_CONCAT(DISTINCT CONCAT(utm_campaign_name, '##', utm_ads_set_name)) AS ads_set_name,
+        GROUP_CONCAT(DISTINCT CONCAT(utm_ads_set_name, '##', utm_ads_name)) AS ads_name,
+        GROUP_CONCAT(DISTINCT utm_form_name) AS form_name,
+        GROUP_CONCAT(DISTINCT utm_term) AS term
+    FROM " . db_prefix() . "leads 
+    JOIN " . db_prefix() . "leads_sources 
+        ON (" . db_prefix() . "leads.source = " . db_prefix() . "leads_sources.id 
+        AND " . db_prefix() . "leads_sources.performance_status = 1)
+    WHERE utm_campaign_name != ''
+    GROUP BY " . db_prefix() . "leads.source
+")->result_array();
     }
 }

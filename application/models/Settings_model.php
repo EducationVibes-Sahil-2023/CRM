@@ -34,6 +34,8 @@ class Settings_model extends App_Model
         $affectedRows = 0;
         $data         = hooks()->apply_filters('before_settings_updated', $data);
 
+
+
         if (isset($data['tags'])) {
             $tagsExists = false;
             foreach ($data['tags'] as $id => $name) {
@@ -57,13 +59,15 @@ class Settings_model extends App_Model
 
             return (bool) $affectedRows;
         }
+
         if (!isset($data['settings']['default_tax']) && isset($data['finance_settings'])) {
             $data['settings']['default_tax'] = [];
         }
         $all_settings_looped = [];
+
         foreach ($data['settings'] as $name => $val) {
 
-                // Do not trim thousand separator option
+            // Do not trim thousand separator option
             // There is an option of white space there and if will be trimmed wont work as configured
             if (is_string($val) && $name != 'thousand_separator') {
                 $val = trim($val);
@@ -134,8 +138,10 @@ class Settings_model extends App_Model
         }
 
         // Contact permission default none
-        if (!in_array('default_contact_permissions', $all_settings_looped)
-                && in_array('customer_settings', $all_settings_looped)) {
+        if (
+            !in_array('default_contact_permissions', $all_settings_looped)
+            && in_array('customer_settings', $all_settings_looped)
+        ) {
             $this->db->where('name', 'default_contact_permissions');
             $this->db->update(db_prefix() . 'options', [
                 'value' => serialize([]),
@@ -143,8 +149,10 @@ class Settings_model extends App_Model
             if ($this->db->affected_rows() > 0) {
                 $affectedRows++;
             }
-        } elseif (!in_array('visible_customer_profile_tabs', $all_settings_looped)
-                && in_array('customer_settings', $all_settings_looped)) {
+        } elseif (
+            !in_array('visible_customer_profile_tabs', $all_settings_looped)
+            && in_array('customer_settings', $all_settings_looped)
+        ) {
             $this->db->where('name', 'visible_customer_profile_tabs');
             $this->db->update(db_prefix() . 'options', [
                 'value' => 'all',
@@ -152,8 +160,10 @@ class Settings_model extends App_Model
             if ($this->db->affected_rows() > 0) {
                 $affectedRows++;
             }
-        } elseif (!in_array('lead_unique_validation', $all_settings_looped)
-                && in_array('_leads_settings', $all_settings_looped)) {
+        } elseif (
+            !in_array('lead_unique_validation', $all_settings_looped)
+            && in_array('_leads_settings', $all_settings_looped)
+        ) {
             $this->db->where('name', 'lead_unique_validation');
             $this->db->update(db_prefix() . 'options', [
                 'value' => json_encode([]),
@@ -161,7 +171,11 @@ class Settings_model extends App_Model
             if ($this->db->affected_rows() > 0) {
                 $affectedRows++;
             }
+        } else if (in_array('_leads_performance_settings', $all_settings_looped)) {
+            $update_data = $data["columns_data"];
+            $this->db->update_batch('tblperformance_columns', $update_data, 'id'); // 'id' is the key
         }
+
 
         if (isset($data['custom_fields'])) {
             if (handle_custom_fields_post(0, $data['custom_fields'])) {

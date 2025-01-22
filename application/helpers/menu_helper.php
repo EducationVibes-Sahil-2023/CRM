@@ -252,6 +252,14 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 20,
                 ]);
 
+                $CI->app_menu->add_sidebar_children_item('reports', [
+                        'slug'     => 'leads-performance-reports',
+                        'name'     => 'Leads Performance',
+                        'href'     => admin_url('reports/performance_leads'),
+                        'position' => 21,
+                ]);
+
+
                 if (is_admin()) {
                         $CI->app_menu->add_sidebar_children_item('reports', [
                                 'slug'     => 'timesheets-reports',
