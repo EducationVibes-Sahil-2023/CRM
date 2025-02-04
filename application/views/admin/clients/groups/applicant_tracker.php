@@ -1,9 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
-$applicant_tracker = applicant_tracker();
+$applicant_tracker = applicant_tracker($lead_type_status);
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
-$document_files = !empty($documents[0]["documents"]) ? json_decode($documents[0]["documents"], true) : '';
+$documents_type =  get_documents($lead_type_status,[],1);
+
+
+$documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
+
+// $document_files = !empty($documents[0]["documents"]) ? json_decode($documents[0]["documents"], true) : '';
 
 ?>
 <style>
@@ -546,6 +551,44 @@ $document_files = !empty($documents[0]["documents"]) ? json_decode($documents[0]
     .university_div.bg-warning {
         background-color: #fcf8e3;
     } */
+    .list-autocomplete {
+        padding: 0;
+    }
+
+    .list-autocomplete em {
+        font-style: normal;
+        background-color: #e1f2f9;
+    }
+
+    .hasNoResults {
+        color: #aaa;
+    }
+
+    .hasNoResults {
+        display: block;
+        padding: 30px 15px;
+    }
+
+    .hasNoResults {
+        color: #aaa;
+    }
+
+    .dropdown-menu {
+        padding: 0;
+    }
+
+    .dropdown-item {
+        background: transparent;
+        border: none;
+        width: 100%;
+        text-align: left;
+        padding: 5px 5px;
+        border-top: 1px solid;
+    }
+
+    .dropdown-menu hr {
+        margin: 0;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
@@ -590,6 +633,7 @@ if (empty($customer_admins)) { ?>
                                 if (!empty($upload_documents[0]["data"])) {
                                     $doc_data_array = json_decode($upload_documents[0]["data"], true);
                                 }
+
                                 if (!empty($upload_documents) && !empty($doc_data_array)) {
                                     foreach ($doc_data_array as $d_key => $docs) {
                                         $file_name = "";
@@ -599,30 +643,23 @@ if (empty($customer_admins)) { ?>
                                 ?>
 
                                         <div class="row col-md-12 document_upload_files ">
-                                            <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= $docs["label_name"] ?>"></div>
-                                            <div class="col-md-5">
+                                            <div class="col-md-4"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" readonly doc_id="<?= !empty($documents_type[$docs['id']]['id']) ? $documents_type[$docs['id']]['id'] : '' ?>" value="<?= !empty($documents_type[$docs['id']]['name']) ? $documents_type[$docs['id']]['name'] : '' ?>"></div>
+                                            <div class="col-md-4">
                                                 <div class="margin-bottom ">
                                                     <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $docs["document_file"] ?>" onchange="real_time_media_show(this)" name="document_file[]" placeholder="">
                                                 </div>
-                                                <?php if (!empty($docs['document_file'])) { ?>
-                                                    <div class="row media-text-div">
-                                                        <div class="col-md-10">
-                                                            <p class="document-file-name"><?= $file_name ?></p>
-                                                        </div>
-                                                        <div class="col-md-2 file-download-block">
-                                                            <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
-                                                        </div>
-                                                    </div>
-                                                <?php } ?>
+
 
                                             </div>
+                                            <?php if (!empty($docs['document_file'])) { ?>
+                                                <div class="col-md-2">
+                                                    <a class="col-md-12 download_document" onclick="show_media_files(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-eye" aria-hidden="true"></i></a>
 
+                                                    <a class="col-md-12 download_document" onclick="download_media_files(`<?= base_url($docs['document_file']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                </div>
+                                            <?php } ?>
                                             <div class="col-md-2">
-                                                <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
-
                                                 <button class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-
-                                                <!-- <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                             </div>
 
 
@@ -630,6 +667,7 @@ if (empty($customer_admins)) { ?>
                                     <?php
                                     }
                                 } else if (!empty($document_files)) {
+
                                     foreach ($document_files as $doc_files) {
                                         $file_name = "";
                                         if (!empty($doc_files['file_path'])) {
@@ -638,7 +676,8 @@ if (empty($customer_admins)) { ?>
 
                                     ?>
                                         <div class="row col-md-12 document_upload_files ">
-                                            <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= $doc_files['title'] ?>"></div>
+
+                                            <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name" value="<?= !empty($documents_type[$doc_files['id']]['name']) ? $documents_type[$doc_files['id']]['name'] : '' ?>"></div>
                                             <div class="col-md-5">
                                                 <div class="margin-bottom ">
                                                     <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" data-url="<?= $doc_files['file_path'] ?>" onchange="real_time_media_show(this)" name="document_file[]" placeholder="">
@@ -649,7 +688,7 @@ if (empty($customer_admins)) { ?>
                                                             <p class="document-file-name"><?= $file_name ?></p>
                                                         </div>
                                                         <div class="col-md-2 file-download-block">
-                                                            <a class="col-md-12 download_document" onclick="window.open(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                            <a class="col-md-12 download_document" onclick="show_media_files(`<?= base_url($doc_files['file_path']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-eye" aria-hidden="true"></i></a>
                                                         </div>
                                                     </div>
                                                 <?php } ?>
@@ -657,11 +696,7 @@ if (empty($customer_admins)) { ?>
                                             </div>
 
                                             <div class="col-md-2">
-                                                <!-- <a class="col-md-2 download_document" download href="<?= base_url($docs["document_file"]) ?>" type="button"><i class="fa fa-download" aria-hidden="true"></i></a> -->
-
                                                 <button class="col-md-2 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-
-                                                <!-- <button class="col-md-2 add_document add_document_btn" style="display:none;" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
                                             </div>
 
 
@@ -671,8 +706,8 @@ if (empty($customer_admins)) { ?>
                                 } else { ?>
                                     <div id="upload_documents">
                                         <div class="row col-md-12 document_upload_files ">
-                                            <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
-                                            <div class="col-md-5"><input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" onchange="real_time_media_show(this)" name="document_file[]" placeholder=""></div>
+                                            <div class="col-md-4"><input class="col-md-4 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
+                                            <div class="col-md-4"><input class="col-md-4 form-control" type="file" accept="image/*,application/pdf" onchange="real_time_media_show(this)" name="document_file[]" placeholder=""></div>
                                             <div class="col-md-2">
                                                 <button class="col-md-2 add_document remove_document_btn" style="display:none;" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                                 <!-- <button class="col-md-2 add_document add_document_btn" type="button" onclick="add_documents()"><i class="fa fa-plus" aria-hidden="true"></i></button> -->
@@ -743,7 +778,7 @@ if (empty($customer_admins)) { ?>
                                                             <p class="document-file-name"><?= $file_name ?></p>
                                                         </div>
                                                         <div class="col-md-2 file-download-block">
-                                                            <a class="col-md-12 download_document" href="javascript:void(0);" onclick="window.open(`<?= base_url($profile_creation_data[0]['sop']) ?>`, '_blank');" type=" button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                            <a class="col-md-12 download_document" href="javascript:void(0);" onclick="show_media_files(`<?= base_url($profile_creation_data[0]['sop']) ?>`, '_blank');" type=" button"><i class="fa fa-eye" aria-hidden="true"></i></a>
                                                         </div>
                                                     </div>
                                                 <?php } ?>
@@ -1012,7 +1047,7 @@ if (empty($customer_admins)) { ?>
                                                         </div>
                                                         <div class="col-md-2">
                                                             <?php if (!empty($short_list["media_file"])) { ?>
-                                                                <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($short_list['media_file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="show_media_files(`<?= base_url($short_list['media_file']) ?>`, '_blank');" type="button"><i class="fa fa-eye" aria-hidden="true"></i></a>
                                                             <?php }
                                                             ?>
                                                         </div>
@@ -1044,7 +1079,7 @@ if (empty($customer_admins)) { ?>
                                                                         </div>
                                                                         <div class="col-md-2">
                                                                             <?php if (!empty($con["file"])) { ?>
-                                                                                <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="window.open(`<?= base_url($con['file']) ?>`, '_blank');" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                                <a class="col-md-12 download_document" accept="image/*,application/pdf" href="javascript:void(0);" onclick="show_media_files(`<?= base_url($con['file']) ?>`, '_blank');" type="button"><i class="fa fa-eye" aria-hidden="true"></i></a>
                                                                             <?php }
                                                                             ?>
                                                                         </div>
@@ -1089,7 +1124,7 @@ if (empty($customer_admins)) { ?>
                                                             </div>
                                                             <div class="col-md-2">
                                                                 <?php if (!empty($fees_file_name)) { ?>
-                                                                    <a class="col-md-12 download_document" accept="image/*,application/pdf" onclick="window.open(`<?= base_url($short_list['fee_media']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-download" aria-hidden="true"></i></a>
+                                                                    <a class="col-md-12 download_document" accept="image/*,application/pdf" onclick="show_media_files(`<?= base_url($short_list['fee_media']) ?>`, '_blank');" href="javascript:void(0);" type="button"><i class="fa fa-eye" aria-hidden="true"></i></a>
                                                                 <?php }
                                                                 ?>
                                                             </div>
@@ -1199,6 +1234,9 @@ if (empty($customer_admins)) { ?>
 <!-- /.MultiStep Form -->
 <script>
     //jQuery time
+    let lead_type_status = "<?=$lead_type_status?>";
+    console.log(lead_type_status);
+    let documents_type_dropdown = <?= json_encode($documents_type_dropdown) ?>; // Get your data from PHP
     var applicant_status = "<?= $applicant_status ?>";
     // console.log(applicant_status);
     var current_fs, next_fs, previous_fs; //fieldsets
@@ -1392,7 +1430,6 @@ if (empty($customer_admins)) { ?>
 
                     });
                 } else {
-                    console.log("sdkcfnlsdkcndskn");
                     if (upload_documents.document_status != undefined && (upload_documents.document_status == 0 || upload_documents.updated_date > upload_documents.document_update_datetime)) {
                         html = '<h3 class="message-notification">Your Documents under Processing</h3>';
                     } else {
@@ -1752,17 +1789,69 @@ if (empty($customer_admins)) { ?>
     }
 
 
+    function suggest_file_type(obj, id) {
+        let search_value = $(obj).val().toLowerCase().trim(); // Get the search value and normalize it
+        let already_used_dropdown = $("#upload_documents input[name='document_label[]']")
+            .map(function() {
+                return $(this).val();
+            })
+            .get(); // Collect all already used dropdown values into an array
+
+        console.log('Selected Values:', already_used_dropdown);
+
+
+
+        // Filter the data based on the search value and exclude already used values
+        let filtered_data = Object.entries(documents_type_dropdown).filter(([key, value]) => {
+            let doc_type = value.name;
+            return doc_type.toLowerCase().includes(search_value) && !already_used_dropdown.includes(doc_type);
+        });
+
+        // Build the dropdown HTML dynamically
+        let html = `
+        <div class="dropdown-menu show">
+            ${
+                filtered_data.length
+                    ? filtered_data
+                          .map(([key, value]) => `<button type="button" onclick="set_value(${key},'${value.name}',${id},${value.id})" class="dropdown-item" data-id="${key}">${value.name}</button>`)
+                          .join('')
+                    : '<i class="hasNoResults">No matching results</i>'
+            }
+        </div>
+    `;
+
+        // Remove any existing dropdown-menu in siblings
+        $(obj).siblings("div.dropdown-menu").remove();
+
+        // Append the new dropdown-menu after the target element
+        $(obj).after(html);
+    }
+
+    function set_value(key, value, id,doc_id) {
+        $("#" + id).val(value);
+        $("#" + id).attr("doc_id",doc_id);
+        $(".document_upload_files .dropdown-menu").remove();
+    }
+
+
+
+
+
 
     async function add_documents() {
-
+        var date = new Date();
+        var timestamp = date.getTime();
+        $("#upload_documents input[name='document_label[]']").attr("readonly", true);
         let response = await is_validate_document();
         if (response) {
             let html = `<div class="row col-md-12 document_upload_files">
-                                <div class="col-md-5"><input class="col-md-5 form-control" name="document_label[]" type="input" placeholder="Enter label Name"></div>
-                                <div class="col-md-5">
+                                <div class="col-md-4"><input class="col-md-5 form-control" id="${timestamp}" onclick="suggest_file_type(this,${timestamp})" onkeyup="suggest_file_type(this,${timestamp})" name="document_label[]" type="input" placeholder="Enter label Name"></div>
+                                <div class="col-md-4">
                                 <div class="margin-bottom " >
-                                <input class="col-md-5 form-control" type="file" accept="image/*,application/pdf" name="document_file[]" onchange="real_time_media_show(this)" placeholder=""></div>
-                                           </div>     
+                                <input class="col-md-4 form-control" type="file" accept="" name="document_file[]" onchange="real_time_media_show(this)" placeholder=""></div>
+                                           </div>  
+                                           <div class="col-md-2">   
+                                           </div>
                                 <div class="col-md-2">
                                 <button class="col-md-6 add_document remove_document_btn" type="button" onclick="remove_document(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                               
@@ -2377,23 +2466,31 @@ if (empty($customer_admins)) { ?>
         return new Promise(async (resolve, reject) => {
             let upload_data = new FormData();
 
-            $(".document_upload_files").each(function(index) {
-                let label_name = $(this).find("input[name='document_label[]']").val();
-                let document = $(this).find("input[name='document_file[]']").prop("files")[0];
-                let document_url = $(this).find("input[name='document_file[]']").attr("data-url");
-                if (document_url === undefined || document_url == "undefined") {
-                    document_url = "";
-                }
-                if (document === undefined || document == "undefined") {
-                    document = document_url;
-                }
-                upload_data.append("document_label[]", label_name);
-                upload_data.append("document_file_" + index, document);
-                upload_data.append("document_url[]", document_url);
+            $(".document_upload_files").each(function() {
+    let fileInput = $(this).find("input[name='document_file[]']")[0]; // Get input element
+    let files = fileInput ? fileInput.files : []; // Safely access files
+    let doc_type = $(this).find("input[name='document_label[]']").attr("doc_id") || ''; // Get doc_type safely
+    let doc_name = $(this).find("input[name='document_label[]']").val() || ''; // Get doc_name safely
+    let doc_url = $(this).find("input[name='document_file[]']").attr("data-url") || ''; // Get doc_url safely
+
+    if (files.length > 0) {
+        // Append each file to FormData
+        for (let i = 0; i < files.length; i++) {
+            upload_data.append("files_" + doc_type, files[i]); // Ensure array notation for multiple files
+        }
+        upload_data.append("doc_type_id[]", doc_type);
+        upload_data.append("doc_type_name[]", doc_name);
+    } else if (doc_url.trim() !== '') {
+        // Handle URLs if no files are uploaded
+        upload_data.append("doc_url[]", doc_url);
+        upload_data.append("doc_type_id[]", doc_type);
+        upload_data.append("doc_type_name[]", doc_name);
+    }
+});
 
 
-            });
-            upload_data.append("client_id", client_id);
+
+            upload_data.append("clientid", client_id);
             upload_data.append("applicant_status", (step_stage - 1));
 
             if (status == 1) {
@@ -3021,8 +3118,8 @@ if (empty($customer_admins)) { ?>
                 '<p class="document-file-name">' + file.name + '</p>' +
                 '</div>' +
                 '<div class="col-md-2 file-download-block">' +
-                '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="window.open(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
-                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '<a class="col-md-12 download_document" accept="image/*,application/pdf"  onclick="show_media_files(`' + URL.createObjectURL(file) + ' `, `_blank`);" href="javascript:void(0);"  type="button">' +
+                '<i class="fa fa-eye" aria-hidden="true"></i>' +
                 '</a>' +
                 '</div>' +
                 '</div>');
@@ -3045,7 +3142,7 @@ if (empty($customer_admins)) { ?>
                 '</div>' +
                 '<div class="col-md-2 file-download-block">' +
                 '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
-                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '<i class="fa fa-eye" aria-hidden="true"></i>' +
                 '</a>' +
                 '</div>' +
                 '</div>');
@@ -3068,7 +3165,7 @@ if (empty($customer_admins)) { ?>
                 '</div>' +
                 '<div class="col-md-2 file-download-block">' +
                 '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
-                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '<i class="fa fa-eye" aria-hidden="true"></i>' +
                 '</a>' +
                 '</div>' +
                 '</div>');
@@ -3092,7 +3189,7 @@ if (empty($customer_admins)) { ?>
                 '</div>' +
                 '<div class="col-md-2 file-download-block">' +
                 '<a class="col-md-12 download_document" accept="image/*,application/pdf" download href="' + URL.createObjectURL(file) + '" type="button">' +
-                '<i class="fa fa-download" aria-hidden="true"></i>' +
+                '<i class="fa fa-eye" aria-hidden="true"></i>' +
                 '</a>' +
                 '</div>' +
                 '</div>');

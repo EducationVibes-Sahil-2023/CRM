@@ -107,7 +107,8 @@
                 if (program_id === getCourse[j].program_id) {
                     course_array.push({
                         id: getCourse[j].id,
-                        name: getCourse[j].name
+                        name: getCourse[j].name,
+                        spe_status: getCourse[j].spe_status
                     });
                 }
             }
@@ -153,13 +154,14 @@
         // console.log(selectedCourse);
         $select.find('option').remove();
         if (getProgram_array[program] != undefined) {
+            console.log(getProgram_array[program]);
             $.each(getProgram_array[program], function(key, value) {
                 var sel = "";
 
                 if (selectedCourse != '') {
                     sel = (value.id == selectedCourse) ? 'selected' : '';
                 }
-                $select.append('<option value="' + value.id + '"' + sel + ' >' + value.name + '</option>');
+                $select.append('<option data-spe="' + value.spe_status + '" value="' + value.id + '"' + sel + ' >' + value.name + '</option>');
             });
         }
         $select.selectpicker("refresh")
@@ -173,26 +175,22 @@
 
         var course = $("#course").val();
         var selectedCourseText = $("#course option:selected").text();
+        var selectedSpec = $("#course option:selected").attr("data-spe");
+        $("#course_name").removeAttr('requried');
+        $("#course_name").removeAttr('requried-check');
+        $(".course_name_field").hide();
+        $("#course_name_field input").val('');
         if (course != "") {
-            $(".course_name_field").show();
-            if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
+            if (selectedSpec == 1) {
                 $(".course_name_field").show();
-                $(".course_name_field").find("label").text("Course Name with Specialization");
-            } else {
-                $(".course_name_field").show();
-                $(".course_name_field").find("label").text("Specialization Name");
+                $("#course_name").attr('requried', true);
+                $("#course_name").attr('requried-check', true);
 
             }
-        } else {
-            $(".course_name_field").hide();
-        }
 
-        // $("#course_name_field input").val('');
-        // if ($.trim(selectedCourseText.toLowerCase()) == 'other') {
-        //     $(".course_name_field").show();
-        // } else {
-        //     $(".course_name_field").hide();
-        // }
+        } else {}
+
+
 
         var getEntrance_array = [];
         for (let i = 0; i < getCourse.length; i++) {

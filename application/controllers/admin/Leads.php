@@ -1161,6 +1161,12 @@ class Leads extends AdminController
 
             $data             = $this->input->post();
 
+
+
+
+
+
+
             $data['password'] = $this->input->post('password', false);
 
 
@@ -1233,14 +1239,52 @@ class Leads extends AdminController
             $data['billing_zip']     = $data['zip'];
 
             $data['billing_country'] = $data['country'];
-
-
-
+            $data['application_text'] = "Registration";
+            $data['applicant_stage'] = "1";
+            $data['applicant_status'] = "0";
+            $data['applicant_sub_status'] = "1";
             $data['is_primary'] = 1;
+            $fees_array = [];
+            foreach ($data["applicant_fees"] as $applicant_fee) {
+                if (!empty($data[$applicant_fee])) {
+                    $fees_array[] = array(
+                        "amount"      => $data[$applicant_fee],
+                        "fees_id"     => $data[$applicant_fee . "_id"],
+                        "currency_id" => $data[$applicant_fee . "_currency_type"],
+                        "created_by" => get_staff_user_id(),
+                        "created_at" => date('Y-m-d H:i:s')
+                    );
+                }
+                unset($data[$applicant_fee]);
+                unset($data[$applicant_fee . "_id"]);
+                unset($data[$applicant_fee . "_currency_type"]);
+            }
+            unset($data["applicant_fees"]);
 
             $id                 = $this->clients_model->add($data, true);
 
             if ($id) {
+                // Prepare the fees array for batch insert or update
+                foreach ($fees_array as &$item) {
+                    $item["client_id"] = $id;
+                }
+                if (!empty($fees_array)) {
+                    $this->db->insert_batch(db_prefix() . 'applicant_fees_details', $fees_array);
+                }
+
+
+                $basic_details = [];
+
+                $basic_details["userid"] = $id;
+                $basic_details["first_name"] = $data["firstname"];
+                $basic_details["last_name"] = $data["lastname"];
+                $basic_details["email"] = $data["email"];
+                $basic_details["mobile"] = $data["phonenumber"];
+                // $basic_details["gender"] = $data["gender"];
+                $basic_details["created_by"] = get_staff_user_id();
+                $basic_details["created_at"] = date('Y-m-d H:i:s');
+
+                $this->db->insert(db_prefix() . 'basic_details', $basic_details);
 
                 $primary_contact_id = get_primary_contact_user_id($id);
 

@@ -1,4 +1,35 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+   .currency-selector {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      padding-left: .5rem;
+      border: 0;
+      background: transparent;
+
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1024' height='640'><path d='M1017 68L541 626q-11 12-26 12t-26-12L13 68Q-3 49 6 24.5T39 0h952q24 0 33 24.5t-7 43.5z'></path></svg>") 90%/12px 6px no-repeat;
+
+      font-family: inherit;
+      color: inherit;
+   }
+
+   .currency-amount {
+      text-align: right;
+   }
+
+   .currency-addon {
+      width: 6em;
+      text-align: left;
+      position: relative;
+   }
+</style>
 <div class="modal fade" id="convert_lead_to_client_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
    <div class="modal-dialog modal-lg" role="document">
       <?php echo form_open('admin/leads/convert_to_customer', array('id' => 'lead_to_client_form')); ?>
@@ -119,7 +150,7 @@
                <div class="col-md-12 mtop15">
                   <?php $rel_id = (isset($lead) ? $lead->id : false);
                   ?>
-                  <?php echo render_custom_fields('customers', $rel_id, "","", (isset($lead->type) ? $lead->type : ''),$lead,1); ?>
+                  <?php echo render_custom_fields('customers', $rel_id, "", "", (isset($lead->type) ? $lead->type : ''), $lead, 1); ?>
                </div>
             </div>
             <!-- <hr class="mtop5 mbot10" /> -->
@@ -220,7 +251,58 @@
 
 
             <?php echo form_hidden('original_lead_email', $lead->email); ?>
+            <?php
+            $get_clients_fees = get_clients_fees((isset($lead) ? $lead->type : ''));
+            $get_currencies = get_currencies();
+
+            if (!empty($get_clients_fees) && !empty($get_currencies)) {
+            ?>
+               <div id="applicant_fees">
+                  <label>Fees Details</label>
+                  <hr class="mtop5 mbot10" />
+                  <?php
+                  foreach ($get_clients_fees as $fees) {
+                     $id = $fees["id"];
+                     // Prepare the field name by replacing spaces with underscores and converting to lowercase
+                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
+                     // Set the required attribute based on the "mandatry" field
+                     $required = !empty($fees["mandatry"]) ? "required" : "false";
+                     $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
+
+
+                  ?>
+                     <div class="col-lg-4 col-md-4 col-6">
+                        <label><?= $fees['name'] ?> <?= $mandatry ?></label><br>
+                        <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                           <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
+                           <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
+                           <div class="input-group-addon currency-symbol-<?= $id ?>">$</div>
+                           <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount" placeholder="0.00" id="inlineFormInputGroup" size="8">
+                           <div class="input-group-addon currency-addon">
+
+                              <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                 <?php foreach ($get_currencies as $c) {
+                                 ?>
+                                    <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($c["isdefault"]) ? "" : "selected" ?>><?= $c["name"] ?></option>
+                                 <?php
+                                 }
+                                 ?>
+
+                              </select>
+
+                           </div>
+                        </div>
+                     </div>
+                  <?php
+                  }
+                  ?>
+               </div>
+
+
+            <?php } ?>
+            <div class="clearfix"></div>
             <hr class="mtop5 mbot10" />
+
             <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
             <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
             <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
@@ -275,4 +357,9 @@
 <script>
    validate_lead_convert_to_client_form();
    init_selectpicker();
+
+   function updateSymbol(id) {
+      var selected = $(".currency-selector-" + id + " option:selected");
+      $(".currency-symbol-" + id).text(selected.data("symbol"));
+   }
 </script>

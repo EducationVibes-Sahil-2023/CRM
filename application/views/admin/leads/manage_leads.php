@@ -680,14 +680,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-lead-type')
 
                               );
-                               if (is_admin()) {
-                              $_table_data[] = array(
-                                 'name' => _l('lead_website'),
+                              if (is_admin()) {
+                                 $_table_data[] = array(
+                                    'name' => _l('lead_website'),
 
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-website')
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-website')
 
-                              );
-                               }
+                                 );
+                              }
                               $_table_data[] = array(
                                  'name' => _l('leads_source'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')

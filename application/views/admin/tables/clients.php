@@ -8,6 +8,12 @@ if (!empty($user_lead_type->lead_type)) {
 } else {
     $user_lead_type = 0;
 }
+$get_applicant_stages = get_applicant_stage();
+$get_applicant_stages = array_column($get_applicant_stages,null,'id');
+
+
+$get_applicant_sub_stages = get_applicant_sub_stage();
+$get_applicant_sub_stages = array_column($get_applicant_sub_stages,null,'id');
 
 $hasPermissionDelete = has_permission('customers', '', 'delete');
 $customFieldsColumns = [];
@@ -22,6 +28,9 @@ $aColumns = [
     db_prefix() . 'contacts.email  as email',
     db_prefix() . 'clients.phonenumber as phonenumber',
     db_prefix() . 'clients.active',
+    db_prefix() . 'clients.applicant_stage as applicant_stage',
+    db_prefix() . 'clients.applicant_sub_status as applicant_sub_status',
+    
     // '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'customer_groups JOIN ' . db_prefix() . 'customers_groups ON ' . db_prefix() . 'customer_groups.groupid = ' . db_prefix() . 'customers_groups.id WHERE customer_id = ' . db_prefix() . 'clients.userid ORDER by name ASC) as customerGroups',
     db_prefix() . 'clients.datecreated as datecreated',
     db_prefix() . 'leads_status.name as status_name',
@@ -308,6 +317,7 @@ $output  = $result['output'];
 $rResult = $result['rResult'];
 
 foreach ($rResult as $aRow) {
+
     $row = [];
     $row[] = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
     $company = ($aRow['contact_id'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['client_name'] . '</a>' : '');
@@ -366,8 +376,11 @@ foreach ($rResult as $aRow) {
     // }
 
     // $row[] = $groupsRow;
-    $row[] = $aRow['applicant_stage_name'];
-    $check_applicant_status = get_applicant_status($aRow['applicant_stage_id'], $aRow['userid']);
+    $row[] = !empty($get_applicant_stages[$aRow['applicant_stage']]["name"])?$get_applicant_stages[$aRow['applicant_stage']]["name"]:'Unknown';
+    $row[] = !empty($get_applicant_sub_stages[$aRow['applicant_sub_status']]["name"])?$get_applicant_sub_stages[$aRow['applicant_sub_status']]["name"]:'Unknown';
+    // $check_applicant_status = get_applicant_status($aRow['applicant_stage_id'], $aRow['userid']);
+
+    
     // $check_applicant_status = [];
     $row[] = !empty($check_applicant_status["applicant_stage_status"]) ? $check_applicant_status["applicant_stage_status"] : "";
     $row[] = !empty($check_applicant_status["updated_date"]) ? $check_applicant_status["updated_date"] : "";

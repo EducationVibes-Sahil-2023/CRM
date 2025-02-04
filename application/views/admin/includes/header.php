@@ -155,6 +155,27 @@ ob_end_clean();
    </nav>
 </div>
 
+
+
+
+   <div class="modal fade " id="mediaPreviewModal" tabindex="-1" aria-labelledby="mediaPreviewLabel" aria-hidden="true">
+   <div class="modal-dialog modal-lg" role="document">
+   <div class="modal-content">
+   <div class="modal-header">
+   <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+   <h4 class="modal-title">Media Preview</h4>
+   </div>
+   <div class="modal-body" id="mediaPreviewContent">
+
+   </div>
+
+   </div>
+   <!-- /.modal-content -->
+   </div>
+   <!-- /.modal-dialog -->
+   </div>
+
+
 <?php if (has_permission('whatsapp', '', 'chat') && 1 == 2) { ?>
    <div class="whatsapp_Chat" style="display:none;">
       <div id="clients" style="text-align: center;">
