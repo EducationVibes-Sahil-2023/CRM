@@ -1314,30 +1314,160 @@ class Reports extends AdminController
             $source_summary = get_status_summary_filter_report($post_data);
             $status_summary_performance = get_status_summary_filter_performance($post_data);
             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
+            $assigned = isset($_POST["assigned"]) ? $_POST["assigned"] : [];
+            $total_status = isset($_POST["total_status"]) ? $_POST["total_status"] : [];
+
+
+
+            if ($total_status == 1 || strpos($assigned[0], ",") !== false) {
+
+                if (!empty($summary)) {
+                    $mergedData = ["assigned" => 0, "status_counts" => [], "total" => 0];
+
+                    foreach ($summary as $item) {
+                        $mergedData["total"] += $item->total;
+
+                        foreach (json_decode($item->status_counts, true) as $status => $count) {
+                            $mergedData["status_counts"][$status] = ($mergedData["status_counts"][$status] ?? 0) + $count;
+                        }
+                    }
+                    $mergedData["status_counts"] = json_encode($mergedData["status_counts"]);
+
+                    $summary = [0 => (object) $mergedData]; // Convert to object at the end if needed
+                }
+
+                if (!empty($source_summary)) {
+                    $prefix = "0"; // Set prefix dynamically
+                    $source_summary_merged = [];
+                    foreach ($source_summary as $key => $item) {
+                        $newKey = "{$prefix}-{$item['id']}"; // Create dynamic key using ID
+
+                        // Initialize mergedData_source for the new key if not already initialized
+                        if (!isset($source_summary_merged[$newKey])) {
+                            $source_summary_merged[$newKey] = [
+                                "assigned" => 0,
+                                "total" => 0,
+                                "conversion_id" => null,
+                                "status_id" => null,
+                                "id" => null,
+                                "source_id" => null,
+                                "source_name" => null,
+                                "color_name" => null,
+                                "marketing_id" => null,
+                                "uni" => null
+                            ];
+                        }
+
+                        // Merge non-null fields (except 'total') from the current item into the existing entry
+                        foreach ($item as $field => $value) {
+                            if ($value !== null && $field !== 'total') {
+                                $source_summary_merged[$newKey][$field] = $value;
+                            }
+                        }
+
+                        // Update 'total' field by adding the current item's 'total' value
+                        $source_summary_merged[$newKey]["total"] += $item["total"];
+
+                        // Update ID and UNI fields if they are empty
+                        if (empty($source_summary_merged[$newKey]["id"])) {
+                            $source_summary_merged[$newKey]["id"] = $item["id"];
+                            $source_summary_merged[$newKey]["uni"] = "{$prefix}-{$item['id']}";
+                        }
+                    }
+                    $source_summary = $source_summary_merged;
+                }
+
+                if (!empty($status_summary_performance)) {
+                    $status_summary_performance_array_merge = []; // Initialize merged array
+
+                    // Loop over each main array (153, 154)
+                    foreach ($status_summary_performance as $key => $items) {
+                        foreach ($items as $item) {
+                            // Create the key using source_id and status_id
+                            $mergeKey = $item['index_performance_name'];
+
+                            // Initialize the merged data if it doesn't exist
+                            if (!isset($status_summary_performance_array_merge[0][$mergeKey])) {
+                                $status_summary_performance_array_merge[0][$mergeKey] = [
+                                    "assigned" => 0,
+                                    "total" => 0,
+                                    "conversion_id" => null,
+                                    "marketing_id" => null,
+                                    "marketing_name" => null,
+                                    "conversion_name" => null,
+                                    "status_name" => null,
+                                    "source_name" => null,
+                                    "index_name" => null,
+                                    "source_id" => null,
+                                    "status_id" => null,
+                                    "index_conversion_name" => null,
+                                    "index_performance_name" => null,
+                                ];
+                            }
+
+                            // Sum up the 'assigned' and 'total' values for each item
+                            $status_summary_performance_array_merge[0][$mergeKey]["total"] += $item["total"];
+
+                            // Merge other values (only take the last non-null value encountered)
+                            foreach ($item as $field => $value) {
+                                if ($value !== null && $field != 'total' && $field != 'assigned') {
+                                    // Assign the non-null value for each field
+                                    $status_summary_performance_array_merge[0][$mergeKey][$field] = $value;
+                                }
+                            }
+                        }
+                    }
+                    $status_summary_performance = array_values($status_summary_performance_array_merge[0]);
+                }
+
+                if (!empty($status_summary_conversion)) {
+                    // Initialize merged array
+                    $status_summary_conversion_array_merge = []; // Initialize merged array
+
+                    // Loop over each main array (153, 154)
+                    foreach ($status_summary_conversion as $key => $items) {
+                        foreach ($items as $item) {
+                            // Create the key using source_id and status_id
+                            $mergeKey = $item['index_conversion_name'];
+
+                            // Initialize the merged data if it doesn't exist
+                            if (!isset($status_summary_conversion_array_merge[0][$mergeKey])) {
+                                $status_summary_conversion_array_merge[0][$mergeKey] = [
+                                    "assigned" => 0,
+                                    "total" => 0,
+                                    "conversion_id" => null,
+                                    "marketing_id" => null,
+                                    "marketing_name" => null,
+                                    "conversion_name" => null,
+                                    "status_name" => null,
+                                    "source_name" => null,
+                                    "index_name" => null,
+                                    "source_id" => null,
+                                    "status_id" => null,
+                                    "index_conversion_name" => null,
+                                    "index_performance_name" => null,
+                                ];
+                            }
+
+                            // Sum up the 'assigned' and 'total' values for each item
+                            $status_summary_conversion_array_merge[0][$mergeKey]["total"] += $item["total"];
+
+                            // Merge other values (only take the last non-null value encountered)
+                            foreach ($item as $field => $value) {
+                                if ($value !== null && $field != 'total' && $field != 'assigned') {
+                                    // Assign the non-null value for each field
+                                    $status_summary_conversion_array_merge[0][$mergeKey][$field] = $value;
+                                }
+                            }
+                        }
+                    }
+                    $status_summary_conversion = array_values($status_summary_conversion_array_merge[0]);
+                }
+            }
+
 
             $report_list = 1;
         } else if (!empty($_POST["assigned"]) && empty($return_status)) {
-            //  $excel_array = [];
-            // $excel_performance_array = [];
-            // $update_count_array_label = [];
-            // $update_count_array_min = [];
-            // $update_count_array_max = [];
-
-
-
-            // $index = 0;
-            // $max_count = [];
-            // $staff_html = '';
-
-            // $update_count_data = $post_data = $_POST;
-            // $update_count_data["status"][] = 20;
-            // $update_count_data['update_count_min'] = "";
-            // $update_count_data['update_count_max'] = "";
-            // $summary = get_leads_summary_filter_report($post_data);
-            // $source_summary = get_status_summary_filter_report($post_data);
-            // $status_summary_performance = get_status_summary_filter_performance($post_data);
-            // $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
-
             $report_list = 1;
         } else {
             $excel_array = [];
@@ -1367,6 +1497,10 @@ class Reports extends AdminController
         $status_summary_conversion = isset($status_summary_conversion) ? $status_summary_conversion : [];
 
         $summary_daily_excel = isset($summary_daily_excel) ? $summary_daily_excel : [];
+        if (strpos($assigned[0], ",") !== false) {
+            $assigned = [];
+            $assigned[] = 0;
+        }
 
         // Create an array and encode it to JSON
         echo json_encode([
