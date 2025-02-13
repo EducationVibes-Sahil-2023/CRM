@@ -1116,7 +1116,7 @@ class Reports extends AdminController
     //     echo json_encode(['status' => $ret, 'update_count' => $updateCount, "excel_data" => $excel_array, "update_count_label" => $update_count_array_label, "update_count_min" => $update_count_array_min, "update_count_max" => $update_count_array_max, "total_leads" => $source_html_json, "total_leads_staff" => $source_html_staff_json, "summary_daily_" => $summary_daily_, "summary_daily_conversion" => $summary_daily_conversion, "summary_daily_marketing" => $summary_daily_marketing, "total_staff_html" => $staff_html, "summary_daily_excel" => $summary_daily_excel]);
     // }
 
-    public function lead_summary_filter($return_status = '')
+  public function lead_summary_filter($return_status = '')
     {
         //         ini_set('display_errors', '1');
         // ini_set('display_startup_errors', '1');
@@ -1315,11 +1315,9 @@ class Reports extends AdminController
             $status_summary_performance = get_status_summary_filter_performance($post_data);
             $status_summary_conversion = get_status_summary_filter_performance($post_data, 1);
             $assigned = isset($_POST["assigned"]) ? $_POST["assigned"] : [];
-            $total_status = isset($_POST["total_status"]) ? $_POST["total_status"] : [];
+           $total_staff_status = isset($_POST["total_staff_status"]) ? $_POST["total_staff_status"] : 0;
 
-
-
-            if ($total_status == 1 || strpos($assigned[0], ",") !== false) {
+            if ($total_staff_status == 1 || strpos($assigned[0], ",") !== false) {
 
                 if (!empty($summary)) {
                     $mergedData = ["assigned" => 0, "status_counts" => [], "total" => 0];
@@ -1417,7 +1415,7 @@ class Reports extends AdminController
                             }
                         }
                     }
-                    $status_summary_performance = array_values($status_summary_performance_array_merge[0]);
+                    $status_summary_performance[0] = array_values($status_summary_performance_array_merge[0]);
                 }
 
                 if (!empty($status_summary_conversion)) {
@@ -1461,7 +1459,7 @@ class Reports extends AdminController
                             }
                         }
                     }
-                    $status_summary_conversion = array_values($status_summary_conversion_array_merge[0]);
+                    $status_summary_conversion[0] = array_values($status_summary_conversion_array_merge[0]);
                 }
             }
 
@@ -1497,7 +1495,7 @@ class Reports extends AdminController
         $status_summary_conversion = isset($status_summary_conversion) ? $status_summary_conversion : [];
 
         $summary_daily_excel = isset($summary_daily_excel) ? $summary_daily_excel : [];
-        if (strpos($assigned[0], ",") !== false) {
+        if ((!empty($total_staff_status) && $total_staff_status ==1) || strpos($assigned[0], ",") !== false) {
             $assigned = [];
             $assigned[] = 0;
         }
@@ -1519,7 +1517,6 @@ class Reports extends AdminController
             "summary_daily_excel" => $summary_daily_excel
         ]);
     }
-
     // public function leads_reports_generate()
     // {
 

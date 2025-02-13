@@ -59,7 +59,7 @@ class Staff extends AdminController
         echo json_encode($response);
     }
     /* Add new staff member or edit existing */
-    public function member($id = '')
+       public function member($id = '')
     {
 
         if (!has_permission('staff', '', 'view')) {

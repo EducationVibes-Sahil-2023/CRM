@@ -969,9 +969,8 @@ class Staff_model extends App_Model
     {
         return $this->db->where(["post_sales" => 1, "active" => 1])->get(db_prefix() . 'staff')->result_array();
     }
-
-
-    public function office_location($id="")
+    
+       public function office_location($id="")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);

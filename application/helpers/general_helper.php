@@ -208,7 +208,7 @@ function is_client_logged_in()
  */
 function is_staff_logged_in()
 {
-    return get_instance()->session->has_userdata('staff_logged_2025');
+    return get_instance()->session->has_userdata(LOGIN_CHECK);
 }
 /**
  * Return logged staff User ID from session
@@ -1025,7 +1025,7 @@ function generate_token($data, $secretKey)
 function get_client_config_data()
 {
     $CI = &get_instance();
-    
+
     try {
         $CI->db->select("*");
         $CI->db->from(db_prefix() . 'client_app_config');
@@ -1041,4 +1041,3 @@ function get_client_config_data()
         return [];
     }
 }
-
