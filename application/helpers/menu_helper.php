@@ -13,18 +13,52 @@ function app_init_admin_sidebar_menu_items()
                 'icon'     => 'fa fa-home',
         ]);
 
+        // if (
+        //         has_permission('customers', '', 'view')
+        //         || (have_assigned_customers()
+        //                 || (!have_assigned_customers() && has_permission('customers', '', 'create')))
+        // ) {
+        //         $CI->app_menu->add_sidebar_menu_item('customers', [
+        //                 'name'     => _l('als_clients'),
+        //                 'href'     => admin_url('clients'),
+        //                 'position' => 5,
+        //                 'icon'     => 'fa fa-user-o',
+        //         ]);
+        // }
+
         if (
                 has_permission('customers', '', 'view')
                 || (have_assigned_customers()
                         || (!have_assigned_customers() && has_permission('customers', '', 'create')))
         ) {
                 $CI->app_menu->add_sidebar_menu_item('customers', [
+                        'collapse' => true,
                         'name'     => _l('als_clients'),
-                        'href'     => admin_url('clients'),
                         'position' => 5,
                         'icon'     => 'fa fa-user-o',
                 ]);
         }
+
+        $CI->app_menu->add_sidebar_children_item('customers', [
+                // 'slug'     => 'proposals',
+                'icon'     => 'fa fa-user-o',
+                'name'     => "MA Applicant",
+                'href'     => admin_url('clients/mbbs_abroad'),
+                'position' => 1,
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('customers', [
+                // 'slug'     => 'proposals',
+                'icon'     => 'fa fa-user-o',
+                'name'     => "SA Applicant",
+                'href'     => admin_url('clients/study_abroad'),
+                'position' => 1,
+        ]);
+
+        // 'href'     => admin_url('clients'),
+
+
+
 
         $CI->app_menu->add_sidebar_menu_item('sales', [
                 'collapse' => true,

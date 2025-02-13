@@ -158,7 +158,7 @@
 	</div>
 	<div class="container">
 		<div class="row">
-			<div class="col-lg-4" style="display:none">
+			<div class="col-lg-4" style="display:none1">
 				<div class="form-group">
 					<label for="program">Segment</label>
 					<?php
@@ -171,7 +171,11 @@
 
 			<div class="col-lg-12">
 				<div class="card">
-					<?php // print_r($contact); 
+					<?php 
+					// echo "<pre>";
+					//  print_r($lead_type_status); 
+					 
+					//  "</pre>"
 					?>
 					<?php // echo validation_errors('<div class="alert alert-danger text-center">', '</div>'); 
 					?>
@@ -296,6 +300,7 @@
 	</div>
 	<script>
 		var getProgram = <?= !empty($program_data) ? (json_encode($program_data, true)) : "[]"; ?>;
+		console.log(getProgram);
 		var getCourse = <?= !empty($course_data) ? (json_encode($course_data, true)) : "[]"; ?>;
 		var getEntrance = <?= !empty($entrance_data) ? (json_encode($entrance_data, true)) : "[]"; ?>;
 

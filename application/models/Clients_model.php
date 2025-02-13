@@ -1546,6 +1546,11 @@ class Clients_model extends App_Model
         $this->db->where('userid', $userid);
         return $this->db->get(db_prefix() . 'basic_details')->row();
     }
+    public function getPassportDetails($userid)
+    {
+        $this->db->where('client_id', $userid);
+        return $this->db->get(db_prefix() . 'client_passport_details')->row();
+    }
 
     public function getAdmissionPreferences($userid)
     {
@@ -1766,7 +1771,7 @@ class Clients_model extends App_Model
     {
         $this->db->select('us.*,cv.name vendor_name');
         $this->db->from(db_prefix() . 'client_university_shortlisting us');
-        $this->db->join(db_prefix() . 'profile_creater_vendor cv', "cv.id = us.vendor_id");
+        $this->db->join(db_prefix() . 'profile_creater_vendor cv', "cv.id = us.vendor_id","LEFT");
         $this->db->where('us.client_id', $client_id);
         $this->db->where('us.status', 1);
         $this->db->order_by('us.id', "asc");

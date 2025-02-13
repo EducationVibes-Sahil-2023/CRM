@@ -70,6 +70,7 @@ class Clients extends ClientsController
             $this->form_validation->set_rules('mother_name', _l('client_mothersname'), 'required');
             $this->form_validation->set_rules('dob', _l('DOB'), 'required');
             $this->form_validation->set_rules('gender', _l('Gender'), 'required');
+            $this->form_validation->set_rules('passport', _l('Passport'), 'required');
 
             if ($this->form_validation->run() !== false) {
                 $data = $this->input->post();
@@ -85,6 +86,8 @@ class Clients extends ClientsController
                     'mobile' => $data['mobile'],
                     'dob' => $data['dob'],
                     'gender' => $data['gender'],
+                    'passport' => $data['passport'],
+                    'passport_number' => $data['passport_number'],
                     'father_name' => $data['father_name'],
                     'mother_name' => $data['mother_name'],
                     'fathers_mobile' => $data['fathers_mobile'],

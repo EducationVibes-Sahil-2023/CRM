@@ -1,4 +1,35 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+   .currency-selector {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      padding-left: .5rem;
+      border: 0;
+      background: transparent;
+
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1024' height='640'><path d='M1017 68L541 626q-11 12-26 12t-26-12L13 68Q-3 49 6 24.5T39 0h952q24 0 33 24.5t-7 43.5z'></path></svg>") 90%/12px 6px no-repeat;
+
+      font-family: inherit;
+      color: inherit;
+   }
+
+   .currency-amount {
+      text-align: right;
+   }
+
+   .currency-addon {
+      width: 6em;
+      text-align: left;
+      position: relative;
+   }
+</style>
 <div class="modal fade" id="convert_lead_to_client_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
    <div class="modal-dialog modal-lg" role="document">
       <?php echo form_open('admin/leads/convert_to_customer', array('id' => 'lead_to_client_form')); ?>
@@ -24,93 +55,80 @@
                $firstname = $lead->name;
             }
             ?>
-            <!-- <div class="row">
-               <div class="col-md-3">
-                  <?php
-                  $selected = '';
-                  if (isset($lead)) {
-                     $selected = $lead->status;
-                  } else if (isset($status_id)) {
-                     $selected = $status_id;
-                  }
-                  echo render_leads_status_select($statuses, $selected, 'lead_add_edit_status');
-                  ?>
-               </div>
-               <div class="col-md-3">
-                  <?php
-                  $selected = (isset($lead) ? $lead->type : '');
-                  echo render_leads_type_select($type, $selected, 'lead_add_edit_type');
-                  ?>
-               </div>
-               <div class="col-md-3">
-                  <?php
-                  $selected = (isset($lead) ? $lead->source : get_option('leads_default_source'));
-                  echo render_leads_source_select($sources, $selected, 'lead_add_edit_source');
-                  ?>
-               </div>
-               <div class="col-md-3 <?php echo $hide_change_assignee; ?>">
-                  <?php
-                  $assigned_attrs = array();
-                  $selected = (isset($lead) ? $lead->assigned : get_staff_user_id());
-                  if (
-                     isset($lead)
-                     && $lead->assigned == get_staff_user_id()
-                     && $lead->addedfrom != get_staff_user_id()
-                     && !is_admin($lead->assigned)
-                     && !has_permission('leads', '', 'view')
-                  ) {
-                     $assigned_attrs['disabled'] = true;
-                  }
-                  echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs); ?>
-               </div>
 
-            </div> -->
             <div class="clearfix"></div>
             <hr class="mtop5 mbot10" />
             <div class="row">
 
                <?php echo form_hidden('default_language', $lead->default_language); ?>
+               <div class="row col-md-12">
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('firstname', 'lead_convert_to_client_firstname', $firstname); ?>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('lastname', 'lead_convert_to_client_lastname', $lastname); ?>
+                  </div>
 
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('firstname', 'lead_convert_to_client_firstname', $firstname); ?>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('email', 'lead_convert_to_email', $lead->email); ?>
+                  </div>
                </div>
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('lastname', 'lead_convert_to_client_lastname', $lastname); ?>
-               </div>
-               <!-- <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('title', 'contact_position', $lead->title); ?>
-               </div> -->
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('email', 'lead_convert_to_email', $lead->email); ?>
-               </div>
-               <!-- <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('company', 'lead_company', $lead->company); ?>
-               </div> -->
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('phonenumber', 'lead_convert_to_client_phone', $lead->phonenumber); ?>
-               </div>
-               <!-- <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('website', 'client_website', $lead->website); ?>
-               </div> -->
+               <div class="row col-md-12">
 
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('city', 'client_city', $lead->city); ?>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('phonenumber', 'lead_convert_to_client_phone', $lead->phonenumber, "", ["required" => "required"]); ?>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('city', 'client_city', $lead->city); ?>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('state', 'client_state', $lead->state); ?>
+                  </div>
                </div>
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('state', 'client_state', $lead->state); ?>
-               </div>
+               <div class="row col-md-12">
 
-               <div class="col-lg-6 col-md-6 col-12">
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label>University Name <small class="text-danger">*</small></label>
+                     <select name="university_name" required id="university_name" class="form-control selectpicker" data-actions-box="true" data-live-search="true" onclick="select_university_country(this)">
+                        <option value="">Select university</option>
+                        <?php foreach ($university_list as $uni) {
+                        ?>
+                           <option data-country="<?= $uni["country_name"] ?>" data-mandatory="<?= $uni["fees_mandatory"] ?>" value="<?= $uni['university_name'] ?>"><?= $uni["university_name"] ?> - <?= $uni["country_name"] ?></option>
+                        <?php
+                        }
+                        ?>
+
+                     </select>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label>Country/Destination Name <small class="text-danger">*</small></label>
+                     <input type="text" required name="university_country" id="university_country" class="form-control" readonly placeholder="Country/Destination" value="">
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label>Passport Status <small class="text-danger">*</small></label>
+                     <select name="Passport_status" required id="Passport_status" class="form-control">
+                        <option value="">Select Passport</option>
+                        <?php foreach ($passpost_status as $pass) {
+                        ?>
+                           <option value="<?= $pass['id'] ?>"><?= $pass["name"] ?></option>
+                        <?php
+                        }
+                        ?>
+
+                     </select>
+                  </div>
+               </div>
+               <!-- 
+               <div class="col-lg-4 col-md-6 col-12">
                   <?php
                   $countries = get_all_countries();
                   $customer_default_country = get_option('customer_default_country');
                   $selected = ($lead->country != 0 ? $lead->country : $customer_default_country);
                   echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
                   ?>
-               </div>
-               <div class="col-lg-6 col-md-6 col-12">
-                  <?php echo render_input('zip', 'clients_zip', $lead->zip); ?>
-               </div>
+               </div> -->
+               <div class="clearfix"></div>
+               <br>
                <div class="col-lg-12 col-md-12 col-12">
                   <?php echo render_textarea('address', 'client_address', $lead->address); ?>
                </div>
@@ -119,10 +137,9 @@
                <div class="col-md-12 mtop15">
                   <?php $rel_id = (isset($lead) ? $lead->id : false);
                   ?>
-                  <?php echo render_custom_fields('customers', $rel_id, "","", (isset($lead->type) ? $lead->type : ''),$lead,1); ?>
+                  <?php echo render_custom_fields('customers', $rel_id, "", "", (isset($lead->type) ? $lead->type : ''), $lead, 1); ?>
                </div>
             </div>
-            <!-- <hr class="mtop5 mbot10" /> -->
             <div class="row">
                <?php
                $not_mergable_customer_fields  = array('userid', 'datecreated', 'leadid', 'default_language', 'default_currency', 'active');
@@ -143,84 +160,61 @@
                ?>
             </div>
 
-            <!-- <?php
-                  if ($found_custom_fields == true) {
-                     echo '<h4 class="bold text-center mtop30">' . _l('copy_custom_fields_convert_to_customer') . '</h4><hr />';
-                  }
-                  foreach ($custom_fields as $field) {
-                     $value = get_custom_field_value($lead->id, $field['id'], 'leads');
-                     if ($value == '') {
-                        continue;
-                     }
-                  ?>
-
-                     <p class="bold text-info"><?php echo $field['name']; ?> (<?php echo $value; ?>)</p>
-                     <hr />
-                     <p class="bold no-margin"><?php echo _l('leads_merge_customer'); ?></p>
-                     <div class="radio radio-primary">
-                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_1_<?php echo $field['id']; ?>" class="include_leads_custom_fields" checked name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="1">
-                        <label for="m_1_<?php echo $field['id']; ?>" class="bold">
-                           <span data-toggle="tooltip" data-title="<?php echo _l('copy_custom_fields_convert_to_customer_help'); ?>"><i class="fa fa-info-circle"></i></span> <?php echo _l('lead_merge_custom_field'); ?>
-                        </label>
-                     </div>
-                     <div class="radio radio-primary">
-                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_2_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="2">
-                        <label for="m_2_<?php echo $field['id']; ?>" class="bold">
-                           <?php echo _l('lead_merge_custom_field_existing'); ?>
-                        </label>
-                     </div>
-                     <div class="hide" id="merge_db_field_<?php echo $field['id']; ?>">
-                        <hr />
-                        <select name="merge_db_fields[<?php echo $field['id']; ?>]" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                           <option value=""></option>
-                           <?php foreach ($customer_fields as $c_field) {
-                              if (!in_array($c_field, $not_mergable_customer_fields)) {
-                                 echo '<option value="' . $c_field . '">' . str_replace('_', ' ', ucfirst($c_field)) . '</option>';
-                              }
-                           }
-                           ?>
-                        </select>
-                        <hr />
-                     </div>
-                     <p class="bold"><?php echo _l('leads_merge_contact'); ?></p>
-                     <div class="radio radio-primary">
-                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_3_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="3">
-                        <label for="m_3_<?php echo $field['id']; ?>" class="bold">
-                           <?php echo _l('leads_merge_as_contact_field'); ?>
-                        </label>
-                     </div>
-                     <div class="radio radio-primary">
-                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_4_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="4">
-                        <label for="m_4_<?php echo $field['id']; ?>" class="bold">
-                           <span data-toggle="tooltip" data-title="<?php echo _l('copy_custom_fields_convert_to_customer_help'); ?>"><i class="fa fa-info-circle"></i></span>
-                           <?php echo _l('lead_merge_custom_field'); ?>
-                        </label>
-                     </div>
-                     <div class="hide" id="merge_db_contact_field_<?php echo $field['id']; ?>">
-                        <hr />
-                        <select name="merge_db_contact_fields[<?php echo $field['id']; ?>]" class="selectpicker" data-width="100%" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                           <option value=""></option>
-                           <?php foreach ($contact_fields as $c_field) {
-                              if (!in_array($c_field, $not_mergable_contact_fields)) {
-                                 echo '<option value="' . $c_field . '">' . str_replace('_', ' ', ucfirst($c_field)) . '</option>';
-                              }
-                           }
-                           ?>
-                        </select>
-                     </div>
-                     <hr />
-                     <div class="radio radio-primary">
-                        <input type="radio" data-field-id="<?php echo $field['id']; ?>" id="m_5_<?php echo $field['id']; ?>" class="include_leads_custom_fields" name="include_leads_custom_fields[<?php echo $field['id']; ?>]" value="5">
-                        <label for="m_5_<?php echo $field['id']; ?>" class="bold">
-                           <?php echo _l('lead_dont_merge_custom_field'); ?>
-                        </label>
-                     </div>
-                     <hr />
-                  <?php } ?> -->
-
-
             <?php echo form_hidden('original_lead_email', $lead->email); ?>
+            <?php
+            $get_clients_fees = get_clients_fees((isset($lead) ? $lead->type : ''));
+            $get_currencies = get_currencies();
+
+            if (!empty($get_clients_fees) && !empty($get_currencies)) {
+            ?>
+               <div id="applicant_fees">
+                  <label>Fees Details</label>
+                  <hr class="mtop5 mbot10" />
+                  <div class="row">
+                     <?php
+                     foreach ($get_clients_fees as $fees) {
+                        $id = $fees["id"];
+                        // Prepare the field name by replacing spaces with underscores and converting to lowercase
+                        $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
+                        // Set the required attribute based on the "mandatry" field
+                        $required = !empty($fees["mandatry"]) ? "required" : "false";
+                        $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
+
+
+                     ?>
+                        <div class="col-lg-4 col-md-4 col-6">
+                           <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
+                           <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                              <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
+                              <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
+                              <div class="input-group-addon currency-symbol-<?= $id ?>">$</div>
+                              <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="inlineFormInputGroup" size="8">
+                              <div class="input-group-addon currency-addon">
+
+                                 <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                    <?php foreach ($get_currencies as $c) {
+                                    ?>
+                                       <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($c["isdefault"]) ? "" : "selected" ?>><?= $c["name"] ?></option>
+                                    <?php
+                                    }
+                                    ?>
+
+                                 </select>
+
+                              </div>
+                           </div>
+                        </div>
+                     <?php
+                     }
+                     ?>
+                  </div>
+               </div>
+
+
+            <?php } ?>
+            <div class="clearfix"></div>
             <hr class="mtop5 mbot10" />
+
             <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
             <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
             <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
@@ -246,8 +240,8 @@
                </div>
             <?php } ?>
             <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="donotsendwelcomeemail" id="donotsendwelcomeemail">
+               <div class="checkbox checkbox-primary hide">
+                  <input type="checkbox" checked name="donotsendwelcomeemail" id="donotsendwelcomeemail">
                   <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>
                </div>
             <?php } ?>
@@ -275,4 +269,37 @@
 <script>
    validate_lead_convert_to_client_form();
    init_selectpicker();
+
+   function updateSymbol(id) {
+      var selected = $(".currency-selector-" + id + " option:selected");
+      $(".currency-symbol-" + id).text(selected.data("symbol"));
+   }
+
+   $("#university_name").change(function() {
+      // Remove required attribute and reset classes
+      $(".external_requried_label").closest('div').find("#inlineFormInputGroup-error").remove();
+      $(".external_requried").removeAttr("required").removeClass("external_requried");
+      $(".external_requried_label").removeClass("external_requried_label").html("");
+      $("#inlineFormInputGroup-error").remove();
+
+      let selectedOption = $(this).find(":selected");
+      let selectedValue = selectedOption.val(); // Get selected value
+      let countryName = selectedOption.data("country"); // Get selected option's data-country attribute
+      let feesMandatory = selectedOption.data("mandatory"); // Get selected option's data-mandatory attribute
+
+      if (feesMandatory) {
+         let mandatoryArray = feesMandatory.split(',').map(item => item.trim()); // Split and trim values
+
+         mandatoryArray.forEach(item => {
+            let feeElement = $(".fees_" + item);
+            let feeLabel = $(".fees_label_" + item);
+
+            feeElement.addClass("external_requried").attr("required", true);
+            feeLabel.addClass("external_requried_label").html("<small class='text-danger'>*</small>");
+         });
+      }
+
+      $("#university_country").val(countryName || ""); // Set university country value, default to empty string if undefined
+      validate_lead_convert_to_client_form();
+   });
 </script>

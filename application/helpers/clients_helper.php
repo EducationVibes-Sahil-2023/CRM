@@ -1183,16 +1183,45 @@ function can_logged_in_contact_change_language()
 }
 
 
-function applicant_tracker()
+function applicant_tracker($lead_type)
 {
     $CI = &get_instance();
-    return $client_tracker = $CI->db->select("*")
-        ->where('status', 1)
+
+    $CI->db->select("*")
         ->from(db_prefix() . 'applicant_tracker')
-        ->order_by("orderby", "asc")
-        ->get()
-        ->result_array();
+        ->where('status', 1);
+
+    if (!empty($lead_type)) {
+        $CI->db->where("FIND_IN_SET('$lead_type',lead_type) >", 0);
+    }
+
+    $CI->db->order_by("orderby", "asc");
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+
 }
+
+function applicant_tracker_mbbs($lead_type)
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'applicant_tracker_mbbs')
+        ->where('status', 1);
+
+    if (!empty($lead_type)) {
+        $CI->db->where("FIND_IN_SET('$lead_type',lead_type) >", 0);
+    }
+
+    $CI->db->order_by("orderby", "asc");
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+
+}
+
+
+
+
 
 function get_condition_offer($client_id, $university_id)
 {
@@ -1205,4 +1234,249 @@ function get_condition_offer($client_id, $university_id)
         ->order_by("id", "asc")
         ->get()
         ->result_array();
+}
+
+function get_clients_fees($lead_type)
+{
+    $CI = &get_instance();
+    return $client_fees = $CI->db->select("*")
+        ->where('status', 1)
+        ->where('lead_type', $lead_type)
+        ->from(db_prefix() . 'applicant_fees')
+        ->order_by("sequence", "asc")
+        ->get()
+        ->result_array();
+}
+
+function get_passport_stages()
+{
+    $CI = &get_instance();
+    return $passport_stages = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'passport_stages')
+        ->order_by("sequence", "asc")
+        ->get()
+        ->result_array();
+}
+
+function get_caste_category()
+{
+    $CI = &get_instance();
+    return $caste_category = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'caste_category')
+        ->get()
+        ->result_array();
+}
+
+function get_neet_status()
+{
+    $CI = &get_instance();
+    return $caste_category = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'neet_status')
+        ->get()
+        ->result_array();
+}
+
+function get_currencies()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the currencies table with specified ordering
+        $currencies = $CI->db->select("*")
+            ->from(db_prefix() . 'currencies')
+            ->order_by("isdefault", "DESC")
+            ->order_by("id", "ASC")
+            ->get()
+            ->result_array();
+
+        return $currencies; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching currencies: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+function get_documents($lead_type, $selected_country = [], $show_all = 0, $stage = "")
+{
+
+
+    $CI = &get_instance();
+
+    try {
+        $CI->db->select(db_prefix() . "document_upload_type.*, " . db_prefix() . "file_type.type AS file_type," . db_prefix() . "applicant_stages.name AS stage")
+            ->from(db_prefix() . 'document_upload_type')
+            ->join(db_prefix() . 'file_type', db_prefix() . 'file_type.id = ' . db_prefix() . 'document_upload_type.file_type', 'left')
+            ->join(db_prefix() . 'applicant_stages', db_prefix() . 'applicant_stages.id = ' . db_prefix() . 'document_upload_type.stages', 'left');
+        if (!empty($lead_type)) {
+            $CI->db->where(db_prefix() . "document_upload_type.lead_type", $lead_type);
+        }
+
+        if (!empty($stage)) {
+            $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
+        }
+
+        // Apply additional conditions only if $show_all is set to 0
+        if ($show_all == 0) {
+            $CI->db->group_start()
+                ->where(db_prefix() . "document_upload_type.comman", 1);
+
+            if (!empty($selected_country)) {
+                $CI->db->or_group_start(); // Start OR group for FIND_IN_SET conditions
+                foreach ($selected_country as $country) {
+                    $CI->db->or_where("FIND_IN_SET('$country', " . db_prefix() . "document_upload_type.country) >", 0);
+                }
+                $CI->db->group_end(); // End OR group
+            }
+
+            $CI->db->group_end(); // End the main OR group
+        }
+
+        $document = $CI->db->order_by("sequence", "ASC")
+            ->get()
+            ->result_array();
+
+        return $document;
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+function get_clients_documents($client_id)
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $clients_document = $CI->db
+            ->select("data")
+            ->where(array("client_id" => $client_id))
+            ->from(db_prefix() . 'client_documents')
+            ->get()
+            ->result_array();
+
+        return $clients_document; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+function get_applicant_stage()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $applicant_stages = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'applicant_stages')
+            ->get()
+            ->result_array();
+
+        return $applicant_stages; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+function get_applicant_stage_mbbs()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $applicant_stages = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'applicant_stages')
+            ->get()
+            ->result_array();
+
+        return $applicant_stages; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+function get_applicant_sub_stage()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $applicant_sub_stages = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'application_sub_category')
+            ->get()
+            ->result_array();
+
+        return $applicant_sub_stages; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+
+function get_applicant_sub_stage_mbbs()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $applicant_sub_stages = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'application_sub_category_mbbs')
+            ->get()
+            ->result_array();
+
+        return $applicant_sub_stages; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+function get_university_partner_names()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $university_partner = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'university_partner')
+            ->get()
+            ->result_array();
+
+        return $university_partner; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
 }

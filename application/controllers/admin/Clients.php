@@ -7,6 +7,8 @@ class Clients extends AdminController
     /* List all clients */
     public function index()
     {
+
+        $lastSegment = $this->uri->segment($this->uri->total_segments());
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
                 access_denied('customers');
@@ -37,7 +39,8 @@ class Clients extends AdminController
         $data['project_statuses'] = $this->projects_model->get_project_statuses();
 
         $data['customer_admins'] = $this->clients_model->get_customers_admin_unique_ids();
-        $data['application_stage'] = $this->clients_model->get_application_stage();
+        // $data['application_stage'] = $this->clients_model->get_application_stage();
+        $data['application_stage'] = get_applicant_stage();
         $data['application_sub_stage'] = $this->clients_model->get_application_sub_stage();
 
         $whereContactsLoggedIn = '';
@@ -53,10 +56,12 @@ class Clients extends AdminController
         $data['sources']  = $this->leads_model->get_source();
         $data['leadType'] = $this->leads_model->get_type();
         $data['vendorType'] = $this->leads_model->get_vendor();
-        $this->load->view('admin/clients/manage', $data);
+        $view_page = 'admin/clients/' . $lastSegment . "_manage";
+
+        $this->load->view($view_page, $data);
     }
 
-    public function table()
+    public function table($type = "")
     {
 
         if (!has_permission('customers', '', 'view')) {
@@ -64,8 +69,11 @@ class Clients extends AdminController
                 ajax_access_denied();
             }
         }
-
-        $this->app->get_table_data('clients');
+        $view = "clients";
+        if ($type == 2) {
+            $view = "mbbs_abroad_clients";
+        }
+        $this->app->get_table_data($view);
     }
 
     public function all_contacts()
@@ -82,250 +90,6 @@ class Clients extends AdminController
         $data['title'] = _l('customer_contacts');
         $this->load->view('admin/clients/all_contacts', $data);
     }
-
-    /* Edit client or add new client*/
-    // public function client($id = '')
-    // {
-    //     // $database_secondary = $this->load->database('database_secondary', TRUE);
-    //     $this->load->model('leads_model');
-    //     $data['lead_type'] = $this->leads_model->get_type();
-    //     $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
-    //     if (!has_permission('customers', '', 'view')) {
-    //         if ($id != '' && !is_customer_admin($id)) {
-    //             access_denied('customers');
-    //         }
-    //     }
-
-    //     if ($this->input->post() && !$this->input->is_ajax_request()) {
-    //         if ($id == '') {
-    //             if (!has_permission('customers', '', 'create')) {
-    //                 access_denied('customers');
-    //             }
-
-    //             $data = $this->input->post();
-    //             $save_and_add_contact = false;
-    //             if (isset($data['save_and_add_contact'])) {
-    //                 unset($data['save_and_add_contact']);
-    //                 $save_and_add_contact = true;
-    //             }
-    //             $id = $this->clients_model->add($data);
-    //             if (!has_permission('customers', '', 'view')) {
-    //                 $assign['customer_admins']   = [];
-    //                 $assign['customer_admins'][] = get_staff_user_id();
-    //                 $this->clients_model->assign_admins($assign, $id);
-    //             }
-    //             if ($id) {
-    //                 set_alert('success', _l('added_successfully', _l('client')));
-    //                 if ($save_and_add_contact == false) {
-    //                     redirect(admin_url('clients/client/' . $id));
-    //                 } else {
-    //                     redirect(admin_url('clients/client/' . $id . '?group=contacts&new_contact=true'));
-    //                 }
-    //             }
-    //         } else {
-    //             if (!has_permission('customers', '', 'edit')) {
-    //                 if (!is_customer_admin($id)) {
-    //                     access_denied('customers');
-    //                 }
-    //             }
-    //             $success = $this->clients_model->update($this->input->post(), $id);
-    //             if ($success == true) {
-    //                 set_alert('success', _l('updated_successfully', _l('client')));
-    //             }
-    //             redirect(admin_url('clients/client/' . $id));
-    //         }
-    //     }
-
-    //     $group         = !$this->input->get('group') ? 'profile' : $this->input->get('group');
-    //     $data['group'] = $group;
-
-    //     if ($group != 'contacts' && $contact_id = $this->input->get('contactid')) {
-    //         redirect(admin_url('clients/client/' . $id . '?group=contacts&contactid=' . $contact_id));
-    //     }
-
-    //     // Customer groups
-    //     $data['groups'] = $this->clients_model->get_groups();
-
-    //     if ($id == '') {
-    //         $title = _l('add_new', _l('client_lowercase'));
-    //     } else {
-    //         $this->load->model('leads_model');
-
-    //         $client                = $this->clients_model->get($id);
-    //         $data["lead_data"]                = $this->leads_model->get($client->leadid);
-    //         $data['customer_tabs'] = get_customer_profile_tabs();
-
-    //         if (!$client) {
-    //             show_404();
-    //         }
-
-    //         $data['contacts'] = $this->clients_model->get_contacts($id);
-    //         $data['basicDetails'] = $this->clients_model->get_contact_by_userid($data['contacts'][0]['userid']);
-
-    //         $data['tab']      = isset($data['customer_tabs'][$group]) ? $data['customer_tabs'][$group] : null;
-
-    //         if (!$data['tab']) {
-    //             show_404();
-    //         }
-
-
-    //         // Fetch data based on groups
-    //         if ($group == 'profile') {
-    //             $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
-    //             $data['customer_admins'] = $this->clients_model->get_admins($id);
-    //             $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
-    //             $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
-    //             $data['parentdetails'] = $this->clients_model->getParentDetails($id);
-    //             $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
-    //             $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
-    //             $data['program_data'] = $this->clients_model->getProgram();
-    //             $data['course_data'] = $this->clients_model->getCourse();
-    //             $data['entrance_data'] = $this->clients_model->getEntrance();
-    //             $data['documents'] =  $this->clients_model->get_documents($id);
-    //             $data['score_columns'] =  $this->clients_model->get_scroe_column();
-    //             $data['score_value'] =  $this->clients_model->get_scroe_value($id);
-    //         } elseif ($group == 'attachments') {
-    //             $data['attachments'] = get_all_customer_attachments($id);
-    //         } elseif ($group == 'vault') {
-    //             $data['vault_entries'] = hooks()->apply_filters('check_vault_entries_visibility', $this->clients_model->get_vault_entries($id));
-
-    //             if ($data['vault_entries'] === -1) {
-    //                 $data['vault_entries'] = [];
-    //             }
-    //         } elseif ($group == 'estimates') {
-    //             $this->load->model('estimates_model');
-    //             $data['estimate_statuses'] = $this->estimates_model->get_statuses();
-    //         } elseif ($group == 'invoices') {
-    //             $this->load->model('invoices_model');
-    //             $data['invoice_statuses'] = $this->invoices_model->get_statuses();
-    //         } elseif ($group == 'credit_notes') {
-    //             $this->load->model('credit_notes_model');
-    //             $data['credit_notes_statuses'] = $this->credit_notes_model->get_statuses();
-    //             $data['credits_available']     = $this->credit_notes_model->total_remaining_credits_by_customer($id);
-    //         } elseif ($group == 'payments') {
-    //             $this->load->model('payment_modes_model');
-    //             $data['payment_modes'] = $this->payment_modes_model->get();
-    //         } elseif ($group == 'notes') {
-    //             $data['user_notes'] = $this->misc_model->get_notes($id, 'customer');
-    //         } elseif ($group == 'projects') {
-    //             $this->load->model('projects_model');
-    //             $data['project_statuses'] = $this->projects_model->get_project_statuses();
-    //         } elseif ($group == 'statement') {
-    //             if (!has_permission('invoices', '', 'view') && !has_permission('payments', '', 'view')) {
-    //                 set_alert('danger', _l('access_denied'));
-    //                 redirect(admin_url('clients/client/' . $id));
-    //             }
-
-    //             $data = array_merge($data, prepare_mail_preview_data('customer_statement', $id));
-    //         } elseif ($group == 'map') {
-    //             if (get_option('google_api_key') != '' && !empty($client->latitude) && !empty($client->longitude)) {
-    //                 $this->app_scripts->add('map-js', base_url($this->app_scripts->core_file('assets/js', 'map.js')) . '?v=' . $this->app_css->core_version());
-
-    //                 $this->app_scripts->add('google-maps-api-js', [
-    //                     'path'       => 'https://maps.googleapis.com/maps/api/js?key=' . get_option('google_api_key') . '&callback=initMap',
-    //                     'attributes' => [
-    //                         'async',
-    //                         'defer',
-    //                         'latitude'       => "$client->latitude",
-    //                         'longitude'      => "$client->longitude",
-    //                         'mapMarkerTitle' => "$client->company",
-    //                     ],
-    //                 ]);
-    //             }
-    //         } elseif ($group == 'tracker') {
-
-    //             $data['upload_documents'] = $this->clients_model->get_update_documents($id);
-    //             $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
-    //             $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
-    //             $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
-    //             $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
-    //             $data['customer_admins'] = $this->clients_model->get_admins($id);
-    //             $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
-    //             $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
-    //             $data['university_application_status'] = $this->clients_model->university_status_update();
-    //             $data['university_status_submit'] = $this->clients_model->university_status_submit();
-    //             $data['documents'] =  $this->clients_model->get_documents($id);
-
-    //             $data['customer_vendors'] = [];
-    //             if (!empty($data['profile_creation_data'][0]["vendor"])) {
-    //                 $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
-    //             }
-    //         }
-
-
-    //         // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
-
-    //         $data['members'] = $this->staff_model->post_sale_get();
-
-    //         $data['staff'] = [];
-    //         if (!empty($data["lead_data"]->type)) {
-    //             $lead_status_data = $data["lead_data"]->type;
-    //             foreach ($data['members'] as $members) {
-    //                 // if ($members["lead_type"] == $lead_status_data) {
-    //                 $data['staff'][] = $members;
-    //                 // }
-    //             }
-    //         }
-    //             // echo $data["lead_data"]->form_data->lead_status;
-    //         ;
-
-    //         $data['client'] = $client;
-    //         $title          = $client->company;
-
-    //         // Get all active staff members (used to add reminder)
-    //         $data['members'] = $data['staff'];
-
-    //         if (!empty($data['client']->company)) {
-    //             // Check if is realy empty client company so we can set this field to empty
-    //             // The query where fetch the client auto populate firstname and lastname if company is empty
-    //             if (is_empty_customer_company($data['client']->userid)) {
-    //                 $data['client']->company = '';
-    //             }
-    //         }
-    //     }
-    //     $data['lead_type_status'] = $this->db->select('type')->where('id', $client->leadid)->get(db_prefix() . 'leads')->row()->type;
-    //     $this->load->model('currencies_model');
-    //     $data['currencies'] = $this->currencies_model->get();
-
-    //     if ($id != '') {
-    //         $customer_currency = $data['client']->default_currency;
-
-    //         foreach ($data['currencies'] as $currency) {
-    //             if ($customer_currency != 0) {
-    //                 if ($currency['id'] == $customer_currency) {
-    //                     $customer_currency = $currency;
-
-    //                     break;
-    //                 }
-    //             } else {
-    //                 if ($currency['isdefault'] == 1) {
-    //                     $customer_currency = $currency;
-
-    //                     break;
-    //                 }
-    //             }
-    //         }
-
-    //         if (is_array($customer_currency)) {
-    //             $customer_currency = (object) $customer_currency;
-    //         }
-
-    //         $data['customer_currency'] = $customer_currency;
-
-    //         $slug_zip_folder = ($client->company != ''
-    //             ? $client->companyclient
-    //             : get_contact_full_name(get_primary_contact_user_id($client->userid))
-    //         );
-
-    //         $data['zip_in_folder'] = slug_it($slug_zip_folder);
-    //     }
-
-    //     $data['bodyclass'] = 'customer-profile dynamic-create-groups';
-    //     $data['title']     = $title;
-    //     $data['client_id']     = $id;
-
-    //     $this->load->view('admin/clients/client', $data);
-    // }
 
 
     public function client($id = '')
@@ -346,6 +110,9 @@ class Clients extends AdminController
                 }
             }
         }
+
+        $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+
 
         if ($this->input->post() && !$this->input->is_ajax_request()) {
             if ($id == '') {
@@ -401,6 +168,7 @@ class Clients extends AdminController
         // Customer groups
         $data['groups'] = $this->clients_model->get_groups();
 
+
         if ($id == '') {
             $title = _l('add_new', _l('client_lowercase'));
         } else {
@@ -410,6 +178,33 @@ class Clients extends AdminController
 
             $data["lead_data"]                = $this->leads_model->get($client->leadid);
             $data['customer_tabs'] = get_customer_profile_tabs();
+
+            $prefix_page = !empty($data["lead_data"]->type_name)
+                ? strtolower(str_replace(" ", "_", $data["lead_data"]->type_name))
+                : '';
+
+            foreach ($data['customer_tabs'] as $key => $tabs) {
+                $urls = explode("/", $tabs["view"]); // Split URL into parts
+                $last_index = count($urls) - 1; // Get last index
+
+                // Modify the last segment by adding the prefix
+                $urls[$last_index] = $prefix_page . '_' . $urls[$last_index];
+
+                // Rebuild the URL
+                $modified_url = implode("/", $urls);
+
+                // Construct full file path using CodeIgniter's VIEWPATH constant
+                $file_path = VIEWPATH . $modified_url . ".php";
+
+                // Check if the file exists
+                if (file_exists($file_path)) {
+                    $data['customer_tabs'][$key]["view"] = $modified_url;
+                } else {
+                }
+            }
+
+
+
 
             if (!$client) {
                 show_404();
@@ -430,6 +225,7 @@ class Clients extends AdminController
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
+                $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
                 $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
@@ -501,7 +297,6 @@ class Clients extends AdminController
                 $data['university_application_status'] = $this->clients_model->university_status_update();
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
                 $data['documents'] =  $this->clients_model->get_documents($id);
-
                 $data['customer_vendors'] = [];
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
                     $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
@@ -516,6 +311,8 @@ class Clients extends AdminController
                 $data["accommodation_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'accommodation')->result_array();
                 $data["flight_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'flight')->result_array();
             }
+
+
 
 
             // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
@@ -589,8 +386,16 @@ class Clients extends AdminController
         $data['title']     = $title;
         $data['client_id']     = $id;
 
+
+
+
+        // $data["customer_tabs"]["profile"]["view"] = 'admin/clients/groups/' . !empty($data["lead_data"]->type_name) ? 'admin/clients/groups/' . 'profile_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/groups/' . 'profile';
+
+
+        $data["tab"]["js"] =  !empty($data["lead_data"]->type_name) ? 'admin/clients/client_js_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/client_js';
         $this->load->view('admin/clients/client', $data);
     }
+
 
     public function export($contact_id)
     {
@@ -1414,15 +1219,15 @@ class Clients extends AdminController
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $params = $this->input->post();
-
+            $client_id = $params['client_id'];
             $dataArr = [
-                'program' => $params['program'],
+                'program' => !empty($params['program']) ? $params['program'] : '',
                 'course' => $params['course'],
-                // 'entrance_exam_given' => $params['entranceExamGiven'],
                 'entrance_exam_details' => (!empty($params['entranceExamDetails'])) ? implode(",", $params['entranceExamDetails']) : '',
-                'session_intake' => $params['sessionIntake'],
+                'session_intake' => !empty($params['sessionIntake']) ? $params['sessionIntake'] : '',
+                'acadmic_year' => !empty($params['acadmic_year']) ? $params['acadmic_year'] : '',
                 'userid' => $params['client_id'],
-                'course_name' => $params['course_name'],
+                'course_name' => !empty($params['course_name']) ? $params['course_name'] : '',
             ];
 
             if ($params['countries'] != "") {
@@ -1430,9 +1235,13 @@ class Clients extends AdminController
                 $dataArr['university'] = json_encode($params['universities'], true);
             }
 
-
             $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $params['admissionPreferencesId']);
             if ($admissionPreferencesId) {
+                if (!empty($params['admissionPreferencesId'])) {
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Admission Preferences Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                } else {
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Admission Preferences Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'Admission Preferences successfully updated';
                 $data['resp_id'] = $admissionPreferencesId;
@@ -1481,36 +1290,105 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    public function upload_documents()
+    public function documents_approval()
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $label_data = $this->input->post("document_label");
-            $document_url = $this->input->post("document_url");
-            $documents = $_FILES["document_file"];
-            $update_array = [];
+            $doc_id = $this->input->post("doc_id");
             $client_id = $this->input->post("client_id");
-            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+            $status = $this->input->post("status");
+            $document_data =  $this->db->select("id,data");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+            if (!empty($check_->id)) {
+                // Ensure $check_->data is valid JSON
+                $already_data = json_decode($check_->data, true);
 
+                $documents_type =  get_documents("", [], 1);
+                $documents_type =  array_column($documents_type, null, 'id');
+                $already_data = array_column($already_data, null, "id"); // Convert to associative array
+                if (!empty($already_data[$doc_id])) {
+                    $already_data[$doc_id]["approval_date"] = date('Y-m-d H:i:s');
+                    $already_data[$doc_id]["approval_status"] = $status;
+                    $already_data[$doc_id]["approval_by"] = get_staff_user_id();
+                    $doc_name = $documents_type[$doc_id]["name"];
+                    $status_name =  !empty($status) && $status == 1 ? 'Approved' : 'Reject';
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "{$doc_name} document {$status_name} by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
 
-            for ($i = 0; $i < count($label_data); $i++) {
-                $upload_data = [];
-                $files = $_FILES['document_file_' . $i];
-
-                if (!empty($files['name'])) {
-                    $upload_data["name"] = $files['name'];
-                    $upload_data["type"] = $files['type'];
-                    $upload_data["tmp_name"] = $files['tmp_name'];
-                    $upload_data["error"] = $files['error'];
-                    $upload_data["size"] = $files['size'];
-                    if ($upload_data["error"] === UPLOAD_ERR_OK) {;
-                        $file_name = upload_applicant_documents($client_id, $upload_data);
-                        array_push($update_array, array("label_name" => $label_data[$i], "document_file" => $file_name["file_path"]));
-                    }
-                } else if (!empty($document_url[$i])) {
-                    array_push($update_array, array("label_name" => $label_data[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
+                $update = $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_documents', array("data" => json_encode($already_data, true)));
+                $rows_affected = $this->db->affected_rows();
+                if ($rows_affected > 0) {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Document update successfully";
+                    set_alert('success', "Document update successfully");
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Some this went wrong update data";
+                    set_alert('danger', "Some this went wrong update data");
                 }
             }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function upload_documents()
+    {
+
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $doc_ids = $this->input->post("doc_type_id");
+            $doc_names = $this->input->post("doc_type_name");
+            $document_url = $this->input->post("doc_url");
+            $documents_type =  get_documents("", [], 1);
+            $documents_type =  array_column($documents_type, null, 'id');
+
+            $update_array = [];
+            $client_id = $this->input->post("clientid");
+            $applicant_status = !empty($this->input->post("applicant_status")) ? $this->input->post("applicant_status") : 0;
+
+            $this->db->select("data");
+            $this->db->where('client_id', $client_id);
+            $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
+
+
+            if (!empty($already_data->data)) {
+                // Ensure $check_->data is valid JSON
+                $already_data = json_decode($already_data->data, true);
+                $already_data = array_column($already_data, null, "id");
+            }
+
+
+            for ($i = 0; $i < count($doc_ids); $i++) {
+                $documents = $_FILES["files_" . $doc_ids[$i]];
+
+                $upload_data = [];
+                $file_name_ = str_replace(" ", "-", $doc_names[$i]);
+                if (!empty($documents['name'])) {
+                    $upload_data["name"] =  $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION);
+                    $upload_data["type"] = $documents['type'];
+                    $upload_data["tmp_name"] = $documents['tmp_name'];
+                    $upload_data["error"] = $documents['error'];
+                    $upload_data["size"] = $documents['size'];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {;
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        array_push($update_array, array("id" => $doc_ids[$i], "document_file" => $file_name["file_path"], "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')));
+                        $doc_name = $documents_type[$doc_ids[$i]]["name"];
+
+                        $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "{$doc_name} document uploaded by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                    }
+                } else if (!empty($document_url[$i])) {
+                    if (!empty($already_data[$doc_ids[$i]])) {
+                        array_push($update_array, $already_data[$doc_ids[$i]]);
+                    }
+                }
+            }
+
 
             $this->db->select("id");
             $this->db->where('client_id', $client_id);
@@ -1527,11 +1405,10 @@ class Clients extends AdminController
                 $this->db->where("id", $check_->id);
                 $this->db->update(db_prefix() . 'client_documents', $_update_data);
 
-                $insert_id =   $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Document upload by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 $rows_affected = $this->db->affected_rows();
                 if (isset($applicant_status)) {
-                    $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status));
+                    // $this->db->where("userid", $client_id);
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status, "applicant_stage" => 2, "applicant_sub_status" => 6));
                     get_applicant_status($applicant_status, $client_id);
                 }
                 if ($rows_affected > 0) {
@@ -1544,6 +1421,7 @@ class Clients extends AdminController
                     set_alert('danger', _l('update_client_document_failed', _l('client')));
                 }
             } else {
+
                 if (!empty($update_array)) {
                     $insert_update_data = array(
                         "client_id" => $client_id,
@@ -1577,6 +1455,98 @@ class Clients extends AdminController
 
         echo json_encode($data);
     }
+
+    public function welcome_configuration()
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            try {
+                $client_id = $this->input->post("clientid");
+                $update_student_data = [];
+                $_update = [];
+
+                foreach ($_FILES as $key => $files) {
+                    $documents = $files;
+                    $file_name_ = $key;
+                    if (!empty($documents['name'])) {
+                        $upload_data["name"] =  $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION);
+                        $upload_data["type"] = $documents['type'];
+                        $upload_data["tmp_name"] = $documents['tmp_name'];
+                        $upload_data["error"] = $documents['error'];
+                        $upload_data["size"] = $documents['size'];
+                        if ($upload_data["error"] === UPLOAD_ERR_OK) {;
+                            $file_name = upload_applicant_documents($client_id, $upload_data);
+                            $_update[$key] = $file_name["file_path"];
+                        }
+                    }
+                }
+
+
+                $_update["date_of_payment"] = !empty($_POST["date_of_payment"]) ? $_POST["date_of_payment"] : '';
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $_update);
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Welcome message data updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Welcome Information update successfully";
+                set_alert('success', "Welcome Information update successfully");
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
+    public function final_submitted()
+    {
+
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            try {
+                $client_id = $this->input->post("clientid");
+                $update_student_data = [];
+                $_update = [];
+
+                $_update["submission_status"] = !empty($_POST["submition_status"]) ? $_POST["submition_status"] : '';
+                $_update["submission_date"] = date('Y-m-d H:i:s');
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $_update);
+
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Registration complete successfully";
+                set_alert('success', "Registration complete successfully");
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => DOCUMENT, "applicant_sub_status" => DOCUMENT_APPROVAL_PENDING));
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array(
+                    "description" => "Registration process completed and submitted by - ",
+                    "date" => date('Y-m-d H:i:s'),
+                    "staffid" => get_staff_user_id(),
+                    "client_id" => $client_id
+                ));
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
 
     public function update_email_creation()
     {
@@ -1861,13 +1831,16 @@ class Clients extends AdminController
                 $document_status_text = "";
                 if ($document_status == 1) {
                     $document_status_text = "Approved";
-                    $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 1));
+                    // $this->db->where("userid", $client_id);
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_status" => 1, "applicant_stage" => 2, "applicant_sub_status" => 7));
                     get_applicant_status(1, $client_id);
+                    // $this->mbbs_update_university($client_id);
+
                 } else if ($document_status == 2) {
                     $document_status_text = "Reject";
-                    $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0));
+                    // $this->db->where("userid", $client_id);
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => 2, "applicant_sub_status" => 8));
+
                     get_applicant_status(0, $client_id);
                 }
 
@@ -1929,6 +1902,71 @@ class Clients extends AdminController
 
         echo json_encode($data);
     }
+
+    public function mbbs_update_university($client_id)
+    {
+        // if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        //         $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
+        //         $university_shortlisting = !empty($admissionpreferences->university) ? json_decode($admissionpreferences->university, true) : [];
+        //         $university_shortlisting_insert_arr = [];
+        //         $university_shortlisting_update_arr = [];
+        //         if (!empty($university_shortlisting)) {
+        //             $this->db->where('client_id', $client_id);
+        //             $this->db->update(db_prefix() . 'client_university_shortlisting', array("status" => 0));
+        //             foreach ($university_shortlisting as $university_s) {
+        //                 print_r($university_s);
+        //                 $this->db->select("id");
+        //                 $this->db->where(array('client_id' => $client_id, "university_name" => $university_s));
+        //                 $check_ = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+
+        //                 if (!empty($check_->id)) {
+        //                     array_push($university_shortlisting_update_arr, array("university_name" => $university_s, "status" => 1, "id" => $check_->id, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s')));
+        //                 } else {
+        //                     array_push($university_shortlisting_insert_arr, array("client_id" => $client_id, "university_name" => $university_s, "status" => 1, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s')));
+        //                 }
+        //             }
+        //         }
+
+
+        //         $update_university = "";
+        //         if (!empty($university_shortlisting_insert_arr) || !empty($university_shortlisting_update_arr)) {
+        //             if (!empty($university_shortlisting_insert_arr)) {
+        //                 $update_university =  $this->db->insert_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_insert_arr);
+        //             }
+
+        //             if (!empty($university_shortlisting_update_arr)) {
+        //                 $update_university = $this->db->update_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_update_arr, "id");
+        //             }
+
+        //             $this->db->where("userid", $client_id);
+        //             $this->db->update(db_prefix() . 'clients', array("applicant_status" => 4));
+        //             $rows_affected = $this->db->affected_rows();
+
+        //             $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "University shortlisted list send to applicant by  - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+        //         }
+
+        //         $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+        //         $ids = array_column($university_shortlisting_data, "id");
+        //         if ($update_university) {
+        //             $data['resp_code'] = 'RCS';
+        //             $data['resp_desc'] = _l('update_custumer_update_successfully', _l('client'));
+        //             $data['ids'] = $ids;
+        //             $data['university_shortlisting'] = $university_shortlisting_data;
+        //             set_alert('success', _l('update_custumer_update_successfully', _l('client')));
+        //         } else {
+        //             $data['resp_code'] = 'RCS';
+        //             $data['resp_desc'] = _l('update_custumer_failed_successfully', _l('client'));
+        //             set_alert('danger', _l('update_custumer_failed_successfully', _l('client')));
+        //         }
+
+        //     } else {
+        //         $data['resp_code'] = 'ERR';
+        //         $data['resp_desc'] = 'Something bad happen.';
+        //     }
+        //     echo json_encode($data);
+
+    }
+
 
     public function update_university()
     {
@@ -2474,15 +2512,128 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
+    public function media_upload($data, $media)
+    {
+
+        if (empty($media["files"]["name"])) {
+            return false;
+            die;
+        }
+        $doc_ids = $data["doc_type_id"];
+        $doc_names = $data["doc_type_name"];
+        $document_url = $data["doc_url"];
+        $update_array = [];
+        $client_id = $data["clientid"];
+
+        $documents_type =  get_documents("", [], 1);
+        $documents_type =  array_column($documents_type, null, 'id');
+        $this->db->select("data");
+        $this->db->where('client_id', $client_id);
+        $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
+
+
+        if (!empty($already_data->data)) {
+            // Ensure $check_->data is valid JSON
+            $already_data = json_decode($already_data->data, true);
+            $already_data = array_column($already_data, null, "id");
+        }
+
+        for ($i = 0; $i < count($doc_ids); $i++) {
+            $documents = $media["files_" . $doc_ids[$i]];
+
+            $upload_data = [];
+            $file_name_ = str_replace(" ", "-", $doc_names[$i]);
+            if (!empty($documents['name'])) {
+                $upload_data["name"] =  $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION);
+                $upload_data["type"] = $documents['type'];
+                $upload_data["tmp_name"] = $documents['tmp_name'];
+                $upload_data["error"] = $documents['error'];
+                $upload_data["size"] = $documents['size'];
+                if ($upload_data["error"] === UPLOAD_ERR_OK) {;
+                    $file_name = upload_applicant_documents($client_id, $upload_data);
+                    array_push($update_array, array("id" => $doc_ids[$i], "document_file" => $file_name["file_path"], "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')));
+                    $doc_name = $documents_type[$doc_ids[$i]]["name"];
+
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "{$doc_name} document uploaded by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
+            } else if (!empty($document_url[$i])) {
+                if (!empty($already_data[$doc_ids[$i]])) {
+                    array_push($update_array, $already_data[$doc_ids[$i]]);
+                }
+                // array_push($update_array, array("id" => $doc_ids[$i], "document_file" => !empty($document_url[$i]) ? $document_url[$i] : ''));
+            }
+        }
+
+        $this->db->select("*");
+        $this->db->where('client_id', $client_id);
+        $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+
+        if (!empty($check_->id)) {
+            // Ensure $check_->data is valid JSON
+            $already_data = json_decode($check_->data, true);
+            if (!is_array($already_data)) {
+                $already_data = []; // Fallback to an empty array if JSON is invalid
+            }
+
+            // Ensure $doc_ids is an array
+            $doc_ids = is_array($doc_ids) ? $doc_ids : [];
+
+            $already_data = array_column($already_data, null, "id"); // Convert to associative array
+
+            $new_array_update = [];
+
+            // Remove IDs that exist in $doc_ids
+            $filtered_data = array_diff_key($already_data, array_flip($doc_ids));
+
+            $new_array_update = array_values($filtered_data); // Re-index the array
+
+            // Ensure $update_array is an array before merging
+            $update_array = isset($update_array) && is_array($update_array) ? $update_array : [];
+
+            $update_array = array_merge($update_array, $new_array_update);
+
+
+
+            $_update_data = array(
+                "data" => json_encode($update_array, true),
+                "updated_date" => date('Y-m-d H:i:s'),
+                "document_status" => 0,
+                "document_update_datetime" => date('Y-m-d H:i:s'),
+                "updated_by" => get_staff_user_id()
+            );
+            $this->db->where("id", $check_->id);
+            $this->db->update(db_prefix() . 'client_documents', $_update_data);
+        } else {
+
+            if (!empty($update_array)) {
+                $insert_update_data = array(
+                    "client_id" => $client_id,
+                    "data" => json_encode($update_array, true),
+                    "status" => 1,
+                    "created_date" => date('Y-m-d H:i:s'),
+                    "created_by" => get_staff_user_id()
+                );
+                $this->db->insert(db_prefix() . 'client_documents', $insert_update_data);
+            }
+        }
+    }
+
     public function student_update()
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $client_id = $this->input->post("clientid");
+                $media_upload_data = $_POST;
                 $update_student_data = [];
                 $update_applicant_custom_data["customers"] = [];
                 unset($_POST["clientid"]);
+                unset($_POST["doc_type_id"]);
+                unset($_POST["doc_type_name"]);
+                unset($_POST["doc_type"]);
+                unset($_POST["doc_name"]);
+                unset($_POST["doc_url"]);
+
                 foreach ($_POST as $key => $value) {
                     if (!empty($value) && strpos($key, 'custom_fields') !== false) {
                         // If the key contains 'custom_fields' and the value is not empty, add to custom data array
@@ -2499,21 +2650,26 @@ class Clients extends AdminController
                 // Assuming this is part of a function or method in a CodeIgniter controller or model
                 $check_client = $this->db->select('id')
                     ->where('userid', $client_id)
-                    ->get(db_prefix() . 'basic_details')->row();;
+                    ->get(db_prefix() . 'basic_details')->row();
 
 
                 if (!empty($check_client->id)) {
                     $update_student_data["updated_at"] = date('Y-m-d H:i:s');
                     $this->db->where('userid', $client_id);
                     $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 } else {
                     $update_student_data["created_at"] = date('Y-m-d H:i:s');
                     $update_student_data["userid"] = $client_id;
                     $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
 
 
                 if ($rows_affected) {
+                    if (!empty($media_upload_data["doc_type"][0])) {
+                        $this->media_upload($media_upload_data, $_FILES);
+                    }
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = "Basic information update successfully.";
@@ -2535,12 +2691,94 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
+    public function passport_info()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $media_upload_data = $_POST;
+                $passpot_data = [];
+                unset($_POST["clientid"]);
+                unset($_POST["doc_type_id"]);
+                unset($_POST["doc_type_name"]);
+                unset($_POST["doc_type"]);
+                unset($_POST["doc_name"]);
+                unset($_POST["doc_url"]);
+
+
+                foreach ($_POST as $key => $value) {
+                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                        foreach ($value as $k => $custom_value) {
+                            $update_applicant_custom_data["customers"] = $custom_value;
+                        }
+                    } else {
+                        // Otherwise, add to general data array
+                        if ($key != 'clientid') {
+                            $passpot_data[$key] = $value;
+                        }
+                    }
+                }
+
+                $check_client = $this->db->select('id')
+                    ->where('client_id', $client_id)
+                    ->get(db_prefix() . 'client_passport_details')->row();
+                if (!empty($check_client->id)) {
+                    $passpot_data["updated_date"] = date('Y-m-d H:i:s');
+                    $passpot_data["updated_by"] = get_staff_user_id();
+                    $this->db->where('client_id', $client_id);
+                    $rows_affected = $this->db->update(db_prefix() . 'client_passport_details', $passpot_data);
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Passport Information updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                } else {
+                    $passpot_data["client_id"] = $client_id;
+                    $passpot_data["created_date"] = date('Y-m-d H:i:s');
+                    $passpot_data["created_by"] = get_staff_user_id();
+                    $rows_affected = $this->db->insert(db_prefix() . 'client_passport_details', $passpot_data);
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Passport Information updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
+
+                if ($rows_affected) {
+
+                    if (!empty($media_upload_data["doc_type"][0])) {
+                        $this->media_upload($media_upload_data, $_FILES);
+                    }
+                    // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = "Passport information update successfully.";
+                    set_alert('success', "Passport information update successfully.");
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = "Passport information update failed";
+                    set_alert('danger', "Passport information update failed");
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
     public function student_acadmic()
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $client_id = $this->input->post("clientid");
+                $media_upload_data = $_POST;
+                $passpot_data = [];
+                unset($_POST["clientid"]);
+                unset($_POST["doc_type_id"]);
+                unset($_POST["doc_type_name"]);
+                unset($_POST["doc_type"]);
+                unset($_POST["doc_name"]);
+                unset($_POST["doc_url"]);
+
                 $academicDetailsId = $this->input->post("academicDetailsId");
                 $update_academic_data = [];
                 $update_applicant_custom_data["customers"] = [];
@@ -2589,21 +2827,31 @@ class Clients extends AdminController
                         // Insert the new batch of academic entrance scores
 
                         $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
+                        // $this->db->where("userid", $client_id);
+                        // $this->db->update(db_prefix() . 'clients', array("applicant_stage" => 2, "applicant_sub_status" => 5));
                     }
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Acadmic Details Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 } else {
                     $update_academic_data["updated_at"] = date('Y-m-d H:i:s');
                     $this->db->where('userid', $client_id);
                     $this->db->where('id', $academicDetailsId);
                     $rows_affected = $this->db->update(db_prefix() . 'academic_details', $update_academic_data);
-
+                    // $this->db->where("userid", $client_id);
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_stage" => 2, "applicant_sub_status" => 5));
                     if (!empty($scrore_update)) {
                         // Insert the new batch of academic entrance scores
 
                         $this->db->insert_batch(db_prefix() . "academic_entrance_score", $scrore_update);
                     }
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Acadmic Details Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
                 if ($rows_affected) {
+                    if (!empty($media_upload_data["doc_type"][0])) {
+                        $this->media_upload($media_upload_data, $_FILES);
+                    }
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    // $this->db->where("userid", $client_id);
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_stage" => 2, "applicant_sub_status" => 5));
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = "Academic information update successfully.";
                     set_alert('success', "Academic information update successfully.");
@@ -2927,7 +3175,7 @@ class Clients extends AdminController
         }
 
         $rows_affected = $this->db->where(["client_id" => $client_id])->update(db_prefix() . 'flight', $update_data);
-        // $rows_affected = $this->db->affected_rows();
+        $rows_affected = $this->db->affected_rows();
 
         if ($rows_affected) {
             $data['resp_code'] = 'RCS';
@@ -2940,5 +3188,376 @@ class Clients extends AdminController
         }
 
         echo json_encode($data);
+    }
+
+    public function pdf_preview()
+    {
+        try {
+
+            stream_context_set_default(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
+            $is_default = 1;
+            $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+            $pdf->SetMargins(20, 20, 20, 20); // Left: 50px, Top: 50px, Right: 50px
+            $pdf->SetHeaderMargin(0);
+            $pdf->SetFooterMargin(0);
+            $pdf->SetAutoPageBreak(true, 50); // Enable auto page break with a 50px bottom margin
+
+            $pdf->AddPage();
+            $font_style = new TCPDF_FONTS();
+            $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';
+            $path_book_antiqua = APPPATH . 'libraries/tcpdf/fonts/book-antiqua-bold.ttf';
+            $path_Cambria_Math = APPPATH . 'libraries/tcpdf/fonts/Cambria Math.ttf';
+            $path_Cambria = APPPATH . 'libraries/tcpdf/fonts/Cambria/Cambria Bold 700.ttf';
+            $data["gillsansmt"] = TCPDF_FONTS::addTTFfont($path_gill_sans_mt, 'TrueTypeUnicode', '', 15);
+            $data["book_antiqua"] = TCPDF_FONTS::addTTFfont($path_book_antiqua, 'TrueTypeUnicode', '', 15);
+            $data["Cambria_Math"] = TCPDF_FONTS::addTTFfont($path_Cambria_Math, 'TrueTypeUnicode', '', 15);
+            $data["Cambria"] = TCPDF_FONTS::addTTFfont($path_Cambria, 'TrueTypeUnicode', '', 15);
+            $pdf->setImageScale(1.5);
+            $html = $this->load->view('admin/pdf/registration', $data, true);
+            // $pdf->writeHTMLCell(0, 0, 0, 0, $html, 0, 0, false, true, 'J', true);
+            $pdf->writeHTML($html, true, false, true, false, '');
+            $pdf->Output('example.pdf', 'I');
+        } catch (Exception $e) {
+
+            header('Location: ' . $_SERVER['REQUEST_URI']);
+        }
+    }
+
+    public function mbbs_tracker()
+    {
+        $data = array();
+
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+
+        $client_id = $this->input->post("client_id");
+        $lead_type = $this->input->post("lead_type");
+        $tracker_id = $this->input->post("tracker_id");
+        $post_data = $_POST;
+        if (empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+        // $applicant_tracker_old = applicant_tracker($lead_type);
+        // $applicant_tracker = array_column($applicant_tracker_old, null, "id");
+
+        if ($tracker_id == 1) {
+            $data = $this->document_verification($post_data);
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
+        } else if ($tracker_id == 2) {
+            $data = $this->university_shortlisting($post_data);
+        } else if ($tracker_id == 3) {
+            $data = $this->admission_letter();
+        }
+
+
+
+        echo json_encode($data);
+    }
+
+    private function update_applicant_tracker_stages($client_id, $tracker_id)
+    {
+        $this->db->where("userid", $client_id);
+        $this->db->update(db_prefix() . 'clients', array("tracker_id" => $tracker_id));
+    }
+
+    private function document_verification($data)
+    {
+
+        $client_id = !empty($data["client_id"]) ? $data["client_id"] : '';
+        $this->db->insert(db_prefix() . 'application_activity_log', array(
+            "description" => "All documents verified by - " . get_staff_full_name(get_staff_user_id()),
+            "date" => date('Y-m-d H:i:s'),
+            "staffid" => get_staff_user_id(),
+            "client_id" => $client_id
+        ));
+        $rows_affected = $this->db->affected_rows();
+        if ($rows_affected) {
+            $this->update_applicant_tracker_stages($client_id, 1);
+        }
+        $data = [];
+        if ($rows_affected) {
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = "Document Verification update successfully.";
+            set_alert('success', "Document Verification update successfully.");
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = "Document Verification update failed";
+            set_alert('danger', "Document Verification update failed");
+        }
+        return $data;
+    }
+
+    private function university_shortlisting($post_date)
+    {
+        $data = array();
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $client_id = $this->input->post("client_id");
+            $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
+            $university_shortlisting = !empty($this->input->post("university_shortlisting")) ? json_decode($this->input->post("university_shortlisting"), true) : [];
+            $university_shortlisting_insert_arr = [];
+            $university_shortlisting_update_arr = [];
+            if (!empty($university_shortlisting)) {
+                $this->db->where('client_id', $client_id);
+                $this->db->update(db_prefix() . 'client_university_shortlisting', array("status" => 0));
+                foreach ($university_shortlisting as $university_s) {
+                    $this->db->select("id");
+                    $this->db->where(array('client_id' => $client_id, "id" => $university_s["id"]));
+                    $check_ = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+
+                    if (!empty($check_->id)) {
+                        array_push($university_shortlisting_update_arr, array("university_name" => $university_s["university_name"], "country_name" => $university_s["country_name"], "vendor_id" => $university_s["vendor"], "status" => 1, "university_status" => 1, "id" => $check_->id, 'updated_by' => get_staff_user_id(), 'updated_date' => date('Y-m-d H:i:s')));
+                    } else {
+                        array_push($university_shortlisting_insert_arr, array("client_id" => $client_id, "university_name" => $university_s["university_name"], "country_name" => $university_s["country_name"], "vendor_id" => $university_s["vendor"], "university_status" => 1, "status" => 1, "created_by" => get_staff_user_id(), "created_date" => date('Y-m-d H:i:s')));
+                    }
+                }
+            }
+
+            $update_university = "";
+            if (!empty($university_shortlisting_insert_arr) || !empty($university_shortlisting_update_arr)) {
+                if (!empty($university_shortlisting_insert_arr)) {
+                    $update_university =  $this->db->insert_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_insert_arr);
+                }
+
+                if (!empty($university_shortlisting_update_arr)) {
+                    $update_university = $this->db->update_batch(db_prefix() . "client_university_shortlisting", $university_shortlisting_update_arr, "id");
+                }
+
+
+                $rows_affected = $this->db->affected_rows();
+                if ($rows_affected) {
+                    // Check required documents for stage 3
+                    $check_documents = $this->check_documents(3);
+
+                    if (empty($check_documents)) {
+                        // If no missing documents, update applicant tracker stage
+                        $this->update_applicant_tracker_stages($client_id, 2);
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_PENDING));
+                    } else {
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_DOC_PENDING));
+                    }
+
+                    // Insert activity log for university shortlisting update
+                    $this->db->insert(db_prefix() . 'application_activity_log', array(
+                        "description" => "University shortlisting completed and updated by " . get_staff_full_name(get_staff_user_id()),
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id
+                    ));
+                }
+
+                // Fetch updated university shortlisting data
+                $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+                $ids = array_column($university_shortlisting_data, "id");
+
+                if ($update_university) {
+                    if (!empty($check_documents)) {
+                        // If required documents are missing
+                        $doc_names = implode(", ", $check_documents);
+                        $message = "{$doc_names} are mandatory to proceed to the next step.";
+
+                        $data = [
+                            'resp_code'               => 'ERR',
+                            'resp_desc'               => "University shortlisting updated successfully. " . $message,
+                            'ids'                     => $ids,
+                            'university_shortlisting' => $university_shortlisting_data
+                        ];
+
+                        set_alert('danger', "University shortlisting updated successfully. " . $message);
+                    } else {
+                        // If all required documents are available
+                        $data = [
+                            'resp_code'               => 'RCS',
+                            'resp_desc'               => "University shortlisting updated successfully.",
+                            'ids'                     => $ids,
+                            'university_shortlisting' => $university_shortlisting_data
+                        ];
+
+                        set_alert('success', "University shortlisting updated successfully.");
+                    }
+                } else {
+                    // Handle university update failure
+                    $data = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => _l('update_customer_failed_successfully', _l('client'))
+                    ];
+
+                    set_alert('danger', _l('update_customer_failed_successfully', _l('client')));
+                }
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Something bad happen.';
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        return $data;
+    }
+
+    private function check_documents($stage)
+    {
+        // Retrieve POST data safely
+        $lead_type = filter_input(INPUT_POST, "lead_type", FILTER_SANITIZE_STRING);
+        $client_id = filter_input(INPUT_POST, "client_id", FILTER_SANITIZE_STRING);
+
+        // Decode university_shortlisting JSON safely
+        $university_shortlisting = isset($_POST["university_shortlisting"]) ? json_decode($_POST["university_shortlisting"], true) : [];
+
+        if (!is_array($university_shortlisting)) {
+            $university_shortlisting = [];
+        }
+
+        // Extract country names
+        $country_names = array_column($university_shortlisting, "country_name");
+
+        // Fetch document types based on lead type and country names
+        $documents_type = get_documents($lead_type, $country_names, "", $stage);
+
+        // Map document types by ID
+        $documents_type_ids = !empty($documents_type) ? array_column($documents_type, null, "id") : [];
+
+        // Fetch client documents
+        $applicant_documents = get_clients_documents($client_id);
+        $client_documents = (!empty($applicant_documents[0]["data"])) ? json_decode($applicant_documents[0]["data"], true) : [];
+
+        // Map client documents by ID
+        $client_documents_ids = !empty($client_documents) ? array_column($client_documents, null, "id") : [];
+
+        // Initialize required documents array
+        $doc_required = [];
+
+        // Compare required documents with client documents
+        if (!empty($documents_type_ids)) {
+            foreach ($documents_type_ids as $key => $doc) {
+                if (!isset($client_documents_ids[$key]) || empty($client_documents_ids[$key]['approval_status']) || $client_documents_ids[$key]['approval_status'] != 1) {
+                    $doc_required[] = $doc["name"];
+                }
+            }
+        }
+
+        return $doc_required; // Return the missing document names
+    }
+
+    private function admission_letter()
+    {
+        $data = [];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return [
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Invalid request method',
+            ];
+        }
+
+        $client_id = $this->input->post("client_id");
+        $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
+        $admission = !empty($this->input->post("admission")) ? json_decode($this->input->post("admission"), true) : [];
+        $admission_letter = [];
+        $files = $_FILES;
+
+        if (empty($client_id) || empty($admission)) {
+            return [
+                'resp_code' => 'ERR',
+                'resp_desc' => 'No valid client ID or admission data received',
+            ];
+        }
+
+        $batch_update_data = [];
+
+        foreach ($admission as $row) {
+            if (empty($row['id'])) {
+                continue; // Skip invalid entries
+            }
+
+            $university_name = $row['university'] ?? '';
+            $country_name = $row['country'] ?? '';
+
+            $update_entry = [
+                'id'                => $row['id'],
+                'partner'           => $row['partner'] ?? null,
+                'application_date'  => $row['application_date'] ?? null,
+                'documents'         => !empty($row['documents']) ? $row['documents'] : '',
+            ];
+            $admission_letter[] = $row['addmission_letter_url'];
+
+            $file_input_name = "admission_letter_" . $row['id'];
+
+            if (isset($files[$file_input_name]) && !empty($files[$file_input_name]['name'])) {
+                $document = $files[$file_input_name];
+
+                if ($document['error'] === UPLOAD_ERR_OK) {
+                    $file_extension = pathinfo($document['name'], PATHINFO_EXTENSION);
+                    $file_name = uniqid("admission_letter_") . "." . $file_extension;
+
+                    $uploaded_file = upload_applicant_documents($client_id, [
+                        "name"      => $file_name,
+                        "type"      => $document['type'],
+                        "tmp_name"  => $document['tmp_name'],
+                        "error"     => $document['error'],
+                        "size"      => $document['size']
+                    ]);
+
+                    if (!empty($uploaded_file["file_path"])) {
+                        $update_entry['application_file'] = $uploaded_file["file_path"];
+                        $update_entry['application_updated_date'] = date('Y-m-d H:i:s');
+                    }
+
+                    // Log file upload
+                    $this->db->insert(db_prefix() . 'application_activity_log', [
+                        "description" => "Admission letter uploaded for {$university_name}, {$country_name} by staff ID: " . get_staff_user_id(),
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id
+                    ]);
+                }
+            }
+
+            $batch_update_data[] = $update_entry;
+        }
+
+        if (!empty($files) || !empty($admission_letter)) {
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ENTRANCE_EXAM, "applicant_sub_status" => ENTRANCE_EXAM_PENDING));
+        } else {
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_WAITING));
+        }
+
+        if (!empty($batch_update_data)) {
+            $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $batch_update_data, 'id');
+
+            if (empty($files)) {
+                return [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Admission data updated successfully.Waiting for admission letter.',
+                ];
+            } else {
+                return [
+                    'resp_code' => 'RCS',
+                    'resp_desc' => "Admission data updated successfully.",
+                ];
+            }
+        } else {
+            return [
+                'resp_code' => 'ERR',
+                'resp_desc' => 'No valid records to update',
+            ];
+        }
     }
 }

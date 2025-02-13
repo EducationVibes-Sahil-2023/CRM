@@ -875,6 +875,14 @@ $lang['lead_email_already_exists']             = 'Lead email already exists in c
 $lang['lead_to_client_base_converted_success'] = 'Lead converted to applicant successfully';
 $lang['lead_have_client_profile']              = 'This lead have applicant profile.';
 $lang['lead_converted_edit_client_profile']    = 'Edit Profile';
+$lang['total_service_charge']      = 'Total Service Charge';
+$lang['registration_amount']      = 'Registration Amount';
+$lang['otc']      = 'One time Charge';
+$lang['ptp']      = 'Total Service Charge';
+$lang['ev_hostel']      = 'EV Hostel';
+$lang['ev_mesh']      = 'EV Mesh';
+$lang['medical_insurance']      = 'Medical Insurance';
+
 
 # Invoices
 $lang['view_invoice_as_customer_tooltip']                                     = 'View invoice as applicant';
@@ -3732,4 +3740,3 @@ $lang['app_config']                = 'App Config';
 $lang['create_client_config']                = 'Add Client Config';
 $lang['client_app_config_edit_heading']                = 'Edit New Client Config';
 $lang['client_app_config_add_heading']                = 'Add New Client Config';
-
