@@ -2784,7 +2784,7 @@ class Leads_model extends App_Model
             $sql .= " and st.department_head = '1' ";
         }
         if (!empty($facebook_lead)) {
-            $sql .= " and st.facebook_lead_name != '' ";
+            $sql .= " and st.facebook_lead_name != '' AND f.name = '{$facebook_lead}' ";
         }
         if (!empty($google_source)) {
             $sql .= " and (st.google_source != '' AND FIND_IN_SET({$google_source},st.google_source)) ";
@@ -2797,6 +2797,7 @@ class Leads_model extends App_Model
         }
         $sql .= " group by st.staffid,last_lead.dateassigned order by last_lead.dateassigned asc ";
         if (!empty($facebook_lead)) {
+            
         } else {
             $sql .= " limit 1 ";
         }

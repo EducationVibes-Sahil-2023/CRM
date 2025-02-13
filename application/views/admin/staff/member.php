@@ -159,9 +159,9 @@
 
 
                         <div class="form-group select-placeholder">
-                           <label for="lead_type" class="control-label">Select Department Type</label>
-                           <select name="lead_type" data-live-search="true" id="lead_type" class="form-control selectpicker" data-none-selected-text="Select Department Type">
-                              <option value="">Select Department Type</option>
+                           <label for="lead_type" class="control-label">Select Lead Type</label>
+                           <select name="lead_type" data-live-search="true" id="lead_type" class="form-control selectpicker" data-none-selected-text="Select Lead Type">
+                              <option value="">Select Lead Type</option>
                               <?php
                               if (!empty($lead_type)) {
                                  $select_lead_type = explode(',', $member->lead_type);
@@ -179,6 +179,47 @@
                            </select>
                         </div>
 
+                        <div class="form-group select-placeholder">
+                           <label for="office_location" class="control-label">Select Office Location</label>
+                           <select name="office_location" data-live-search="true" id="office_location" class="form-control selectpicker" data-none-selected-text="Select Office Location">
+                              <option value="">Select Office Location</option>
+                              <?php
+                              if (!empty($office_location)) {
+                                 $select_office_location = explode(',', $member->office_location);
+                                 foreach ($office_location as $location) {
+                                    $selected = '';
+                                    if (isset($select_office_location)) {
+                                       if (in_array($location['id'], $select_office_location)) {
+                                          $selected = 'selected';
+                                       }
+                                    }
+                              ?>
+                                    <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?>><?php echo $location['name'] ?></option>
+                              <?php }
+                              } ?>
+                           </select>
+                        </div>
+
+                        <div class="form-group select-placeholder">
+                           <label for="department" class="control-label">Select Department</label>
+                           <select name="department" data-live-search="true" id="department" class="form-control selectpicker" data-none-selected-text="Select Department">
+                              <option value="">Select Department</option>
+                              <?php
+                              if (!empty($staff_department)) {
+                                 $select_staff_department = explode(',', $member->department);
+                                 foreach ($staff_department as $department) {
+                                    $selected = '';
+                                    if (isset($select_staff_department)) {
+                                       if (in_array($department['id'], $select_staff_department)) {
+                                          $selected = 'selected';
+                                       }
+                                    }
+                              ?>
+                                    <option value="<?php echo $department['id']; ?>" <?php echo $selected; ?>><?php echo $department['name'] ?></option>
+                              <?php }
+                              } ?>
+                           </select>
+                        </div>
                         <div class="checkbox checkbox-primary">
                            <input type="checkbox" value="1" name="post_sales" id="post_sales" <?php if (isset($member->post_sales) && $member->post_sales == 1) {
                                                                                                    echo ' checked';
@@ -261,6 +302,8 @@
                            echo '</div>';
                            ?>
                         </div>
+
+
 
                         <div class="form-group">
                            <label for="facebook" class="control-label"><i class="fa fa-facebook"></i> <?php echo _l('staff_add_edit_facebook'); ?></label>
@@ -766,7 +809,6 @@
 
          }
       }
-
    </script>
    </body>
 

@@ -3032,9 +3032,9 @@ class Leads extends AdminController
                         $this->db->where_in('id', $ids);
                         $this->db->delete(db_prefix() . 'leads');
 
-                        if (!$this->db->insert(db_prefix() . "leads_delete", $data_array)) {
-                            log_message('error', 'Failed to insert into tblleads_delete: ' . $this->db->last_query());
-                        }
+                        // if (!$this->db->insert(db_prefix() . "leads_delete", $data_array)) {
+                        //     log_message('error', 'Failed to insert into tblleads_delete: ' . $this->db->last_query());
+                        // }
                         $this->leads_model->hitCronUrlAsync(base_url("authentication/delete_leads_information"));
                         $this->leads_model->hitCronUrlAsync(base_url("external/re_assign_cron"));
                         set_alert('success', "Re-assign " . count($ids) . " lead successfully.");
