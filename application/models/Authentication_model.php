@@ -78,7 +78,7 @@ class Authentication_model extends App_Model
                     $user_data = [
                         'staff_user_id'   => $user->$_id,
                         'staff_logged_in' => true,
-                        'staff_logged_2025' => true,
+                        LOGIN_CHECK => true,
                         "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
                     ];
                 } else {
@@ -137,7 +137,7 @@ class Authentication_model extends App_Model
 
             $this->session->unset_userdata('staff_user_id');
             $this->session->unset_userdata('staff_logged_in');
-            $this->session->unset_userdata('staff_logged_2025');
+            $this->session->unset_userdata(LOGIN_CHECK);
             $this->session->unset_userdata('staff_department');
         }
 
@@ -545,7 +545,7 @@ class Authentication_model extends App_Model
             [
                 'staff_user_id'   => $user->staffid,
                 'staff_logged_in' => true,
-                'staff_logged_2025' => true,
+                LOGIN_CHECK => true,
                 "staff_department" => !empty($user->lead_type) ? $user->lead_type : ''
             ]
 

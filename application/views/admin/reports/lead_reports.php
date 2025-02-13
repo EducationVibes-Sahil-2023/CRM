@@ -497,9 +497,9 @@ $status_list_ = array_column($status_list, null, "id");
                                         <!--<div id="total_staff_list" class="col-12 leadSum panel-body mt-3">-->
                                         <!--</div>-->
                                     </div>
-                                    <hr>
+                                    
                                     <br>
-                                    <br>
+                                 
                                     <div class="total_staff_report hide leadSum">
 
                                     </div>
@@ -1696,7 +1696,7 @@ $status_list_ = array_column($status_list, null, "id");
             if (status === 1) {
                 return hours + ":" + minutes + ":" + seconds;
             } else {
-                return hours + " Hours : " + minutes + " Mins : " + seconds + " Sec";
+                return hours + " Hrs: " + minutes + " Mins: " + seconds + " Sec";
             }
 
         }
@@ -1755,7 +1755,7 @@ $status_list_ = array_column($status_list, null, "id");
         var status_list_ = <?= (!empty($status_list_)) ? json_encode($status_list_) : [] ?>;
         var performance_array = <?= (!empty($marketing_type)) ? json_encode($marketing_type) : [] ?>;
         var performance_array_name = <?= (!empty($performance_array)) ? json_encode($performance_array) : [] ?>;
-
+        staff[0] = "Total";
         if (status_list.length > 0) {
             status_list.push({
                 name: 'Total Lead Status',
@@ -1979,7 +1979,7 @@ $status_list_ = array_column($status_list, null, "id");
                 if (data.update_count_daily_data != undefined) {
                     let html_update = "<div class='row scroll-div col-12'>";
                     for (i = 0; i < (data.update_count_daily_data).length; i++) {
-                        html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+                        html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
                     }
                     html_update += "</div>";
                     $(".leads-overview-" + update_daily_staff_id).html(html_update);
@@ -2205,31 +2205,39 @@ $status_list_ = array_column($status_list, null, "id");
                 }
             }
         }
-        var xhrr= "";
-         var show_data_ajax = "";
-        function show_data(assigned)
-        {
-            if($.trim($(".lead-type-"+assigned).html()) != "")
-            {
-                $(".leads-overview-report-"+assigned).toggle();
-             return;   
+        var xhrr = "";
+        var show_data_ajax = "";
+
+function show_data_(classid)
+{
+    $("."+classid).toggleClass('hide');
+}
+        function show_data(assigned, assignedids = '') {
+            if ($.trim($(".lead-type-" + assigned).html()) != "") {
+                $(".section-hide-show-"+assigned).addClass("hide");
+                $(".leads-overview-report-" + assigned).toggle();
+                return;
             }
- 
+            delete show_data_ajax.total_staff_status;
+            if (assigned == 0) {
+                assigned = assignedids
+                show_data_ajax.total_staff_status = 1
+            }
+            // Delete the existing 'assigned' property
+            delete show_data_ajax.assigned;
+            delete show_data_ajax.excel_status;
+            delete show_data_ajax.graph_status;
+            delete show_data_ajax.call_status;
+            // Assign a new array to 'assigned'
+            show_data_ajax.assigned = assigned; // Assuming 'assigned' is already an array
 
-// Delete the existing 'assigned' property
-delete show_data_ajax.assigned;
-delete show_data_ajax.excel_status;
-delete show_data_ajax.graph_status;
-delete show_data_ajax.call_status;
-// Assign a new array to 'assigned'
-show_data_ajax.assigned = assigned; // Assuming 'assigned' is already an array
-
-// If 'assigned' is not an array and you want to create it dynamically:
-show_data_ajax.assigned = []; // Initialize as an empty array if needed
-show_data_ajax.assigned.push(assigned); // Add values to the array dynamically
-show_data_ajax.show_data =1;
-show_loader("apply_filter");
-              xhrr = $.ajax({
+            // If 'assigned' is not an array and you want to create it dynamically:
+            show_data_ajax.assigned = []; // Initialize as an empty array if needed
+            show_data_ajax.assigned.push(assigned); // Add values to the array dynamically
+            show_data_ajax.show_data = 1;
+            console.log(show_data_ajax);
+            show_loader("apply_filter");
+            xhrr = $.ajax({
                 type: "POST",
                 url: admin_url + "reports/lead_summary_filter",
                 data: show_data_ajax,
@@ -2237,7 +2245,7 @@ show_loader("apply_filter");
                 cache: false,
                 success: function(data) {
                     hide_loader("apply_filter");
-                     if (data.report_list == 1) {
+                    if (data.report_list == 1) {
                         var index = 1;
                         let {
                             source_summary = {}, assigned = [], summary = [], status_summary_performance = []
@@ -2259,7 +2267,7 @@ show_loader("apply_filter");
                             // console.log("set-status", staff[assigned]);
                             return new Promise((resolve) => {
 
-                                let ret = `<div class="col-12 panel-body"><h4><b>Leads Types</b></h4><hr>`;
+                                let ret = `<div class="col-12 panel-body"><h4><b>Leads Types</b><button class="btn btn-primary float-right btn-xs" onclick="show_data_('leads-section-${assigned}')" ><i class='fa fa-eye'></i></button></h4><hr><div class='section-hide-show-${assigned} hide leads-section-${assigned}'>`;
 
                                 staff_total_lead = 0
                                 // if (summary && summary[assigned] && summary[assigned].status_counts) {
@@ -2312,7 +2320,7 @@ show_loader("apply_filter");
                                 // } else {
                                 //     ret += `<div class="col-md-12">No data available</div>`;
                                 // }
-                                ret += `</div>`;
+                                ret += `</div></div>`;
                                 resolve(ret);
                             });
                         }
@@ -2322,7 +2330,7 @@ show_loader("apply_filter");
 
                             source_type["Total Lead Source"] = 0;
                             return new Promise((resolve) => {
-                                let ret = `<div class="col-12 panel-body"><h4><b>Sources Types</b></h4><hr>`;
+                                let ret = `<div class="col-12 panel-body"><h4><b>Sources Types</b><button class="btn btn-primary float-right btn-xs" onclick="show_data_('source_section_${assigned}')" ><i class='fa fa-eye'></i></button></h4><hr><div class='section-hide-show-${assigned} hide source_section_${assigned}'>`;
 
 
                                 source_type.forEach(source => {
@@ -2362,7 +2370,7 @@ show_loader("apply_filter");
 
                                 });
 
-                                ret += `</div>`;
+                                ret += `</div></div>`;
                                 resolve(ret);
                             });
                         }
@@ -2372,7 +2380,7 @@ show_loader("apply_filter");
                             // console.log("set-conversion", staff[assigned]);
 
                             return new Promise((resolve) => {
-                                let ret = '<div class="col-12 panel-body" class="con_tab"><h4><b>Conversion Type</b></h4><hr>';
+                                let ret = `<h4><b>Conversion/Marketing</b><button class="btn btn-primary float-right btn-xs" onclick="show_data_('conversion-marketing-section-${assigned}')" ><i class='fa fa-eye'></i></button><h4><hr><div class="conversion-marketing-section-${assigned} hide section-hide-show-${assigned}"><div class="col-12 panel-body" class="con_tab"><h4><b>Conversion Type</b></h4><hr>`;
                                 conversion_type.forEach(conversion => {
                                     if (conversion.parent_id && conversion.parent_id !== "") {
                                         return;
@@ -2399,7 +2407,7 @@ show_loader("apply_filter");
                                     }
                                     ret += `</h3><span style="color:${conversion.color || ''}">${conversion.name || ''}</span></div>`;
                                 });
-                                ret += '</div>';
+                                ret += '</div></div>';
                                 resolve(ret);
                             });
                         }
@@ -2440,7 +2448,7 @@ show_loader("apply_filter");
 
 
                                 Object.values(performance_array).forEach((per, key) => {
-                                    html += '<div class="col-md-12 col-xs-12 "><h3 class="bold">';
+                                    html += `<div class="col-md-12 col-xs-12 "><h3 class="bold">`;
                                     html += `<span style="color:${per.color}">${per.name}</span></h3></div>`;
 
                                     let per_percentage = 0;
@@ -2509,22 +2517,24 @@ show_loader("apply_filter");
                             total_staff_report_array["source"] = {};
                             total_staff_report_array["conversion"] = {};
                             total_staff_report_array["performance"] = {};
+                            console.log(assigned);
                             for (let i = 0; i < assigned.length; i++) {
                                 const assignedId = assigned[i];
                                 // console.log(staff[assignedId]);
-                          
+
                                 let staff_name = staff[assignedId] || 'Unknown';
                                 let assigned_summary = [];
                                 totalLeads = 0;
                                 let conversion_type_set = []
 
 
-$(".lead-type-" + assignedId).html(await generateLeadTypeHTML(assignedId, conversion_type_set));
-$(".lead-source-" + assignedId).html(await generateSourceTypeHTML(assignedId));
-$(".lead-conversion-" + assignedId).html(await generateConversionTypeHTML(totalLeads, conversion_type_set, staff_name));
-$(".lead-conversion-button-"+assignedId).removeClass("hide");
-$(".lead-marketing-" + assignedId).html(await generatePerformanceTypeHTML(assignedId));
-$(".leads-overview-report"+assigned).toggle("show");
+                                $(".lead-type-" + assignedId).html(await generateLeadTypeHTML(assignedId, conversion_type_set));
+                                $(".lead-source-" + assignedId).html(await generateSourceTypeHTML(assignedId));
+                                $(".lead-conversion-" + assignedId).html(await generateConversionTypeHTML(totalLeads, conversion_type_set, staff_name));
+                                $(".lead-conversion-button-" + assignedId).removeClass("hide");
+                                $(".lead-marketing-" + assignedId).html(await generatePerformanceTypeHTML(assignedId));
+                                $(".leads-overview-report" + assigned).toggle("show");
+                                 $(".leads-overview-report-" + assigned).toggle();
 
                             }
 
@@ -2545,12 +2555,12 @@ $(".leads-overview-report"+assigned).toggle("show");
                             return value === undefined || value === null || value === '';
                         }
 
-                        // console.log(data.excel_data);
+
                         processAssignedData(data, assigned, index, status_list, source_summary, source_type);
                         return;
+                    }
                 }
-                }
-        });
+            });
         }
 
         function ajax_filter(status_filter = 0) {
@@ -2716,7 +2726,7 @@ $(".leads-overview-report"+assigned).toggle("show");
             };
 
             ajax_get_post_data = ajax_post_data
-       
+
             xhr = $.ajax({
                 type: "POST",
                 url: admin_url + "reports/lead_summary_filter",
@@ -2748,7 +2758,7 @@ $(".leads-overview-report"+assigned).toggle("show");
                     if (data.update_count_daily_data != undefined) {
                         let html_update = "<div class='row scroll-div col-12'>";
                         for (i = 0; i < (data.update_count_daily_data).length; i++) {
-                            html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Call Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
+                            html_update += "<div class='col-md-3 show-daily-update'><p>Date : " + data.update_count_daily_data[i].uni_dates + "</p><br><p>Update Count : " + data.update_count_daily_data[i].total + "</p><br><p>Duration : " + convertToHMS(data.update_count_daily_data[i].call_duration) + "</p></div>";
                         }
                         html_update += "</div>";
                         $(".leads-overview-" + update_daily_staff_id).html(html_update);
@@ -2768,7 +2778,7 @@ $(".leads-overview-report"+assigned).toggle("show");
                     }
 
                     if (data.report_list == 1) {
-                         show_data_ajax = ajax_post_data;
+                        show_data_ajax = ajax_post_data;
                         $(".leadSum").html("");
                         var index = 1;
                         let {
@@ -2783,7 +2793,7 @@ $(".leads-overview-report"+assigned).toggle("show");
                             return string.charAt(0).toUpperCase() + string.slice(1);
                         }
 
-      
+
 
                         async function processAssignedData(data, assigned, index, status_list, source_summary, source_type) {
                             $("#show_hide_staff_list").removeClass("hide");
@@ -2793,6 +2803,44 @@ $(".leads-overview-report"+assigned).toggle("show");
                             total_staff_report_array["source"] = {};
                             total_staff_report_array["conversion"] = {};
                             total_staff_report_array["performance"] = {};
+                           
+                            if (assigned.length > 0) {
+                                let ret = '';
+                                let assignedId = 0;
+                                let assignedIds = assigned.join(',');
+                                 let name= staff[assignedId] || 'Unknown';
+                                ret += `<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body">
+            <h4><b>${name}</b> 
+           
+            <button class="btn btn-primary float-right btn-xs" onclick="show_data(${assignedId},'${assignedIds}')" >View Report</button>
+            </h4>
+            <div class="leads-overview-${assignedId} " style="display:none;" >
+           </div>
+            <div class="leads-overview-report-${assignedId}"  style="display:none;">
+            <div class="col-md-6 lead-type-${assignedId}">
+            </div>
+            <div class="col-md-6 lead-source-${assignedId}">
+            
+            </div>
+            <div class="col-md-12 parrent-div " style="margin-top:10px;">
+                     <div class="col-12 text-right" style="margin:5px;">
+                    <button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle hide lead-conversion-button-${assignedId}" data-toggle="button" aria-pressed="false" autocomplete="off">
+                        <div class="handle"></div>
+                    </button>
+                </div>
+                <div class="lead-conversion-${assignedId}">
+               
+                </div>
+                <div class=" conversion-marketing-section-${assignedId} hide col-12 panel-body con_tab lead-marketing-${assignedId} section-hide-show-${assignedId}" style="display:none;">
+                    <h4><b>Marketing Type</b></h4><hr>
+                </div>
+            </div>
+            </div>
+        </div>`;
+
+                                $(".report_list").append(ret);
+                            }
+
                             for (let i = 0; i < assigned.length; i++) {
                                 const assignedId = assigned[i];
                                 // console.log(staff[assignedId]);
@@ -2818,12 +2866,11 @@ $(".leads-overview-report"+assigned).toggle("show");
               onclick="daily_update_count('.leads-overview-${assignedId}', ${assignedId}); return false;">
               <i class="fa fa-bar-chart"></i>
             </a>
-            <button class="btn btn-primary float-right" onclick="show_data(${assignedId})" >Show Data</button>
+            <button class="btn btn-primary float-right btn-xs" onclick="show_data(${assignedId})" >View Report</button>
             </h4>
             <div class="leads-overview-${assignedId} " style="display:none;" >
            </div>
-            <hr>
-            <div class="leads-overview-report-${assignedId}">
+            <div class="leads-overview-report-${assignedId}"  style="display:none;">
             <div class="col-md-6 lead-type-${assignedId}">
             </div>
             <div class="col-md-6 lead-source-${assignedId}">
@@ -2838,7 +2885,7 @@ $(".leads-overview-report"+assigned).toggle("show");
                 <div class="lead-conversion-${assignedId}">
                
                 </div>
-                <div class="col-12 panel-body con_tab lead-marketing-${assignedId}" style="display:none;">
+                <div class="col-12 panel-body con_tab conversion-marketing-section-${assignedId} hide section-hide-show-${assignedId} lead-marketing-${assignedId}" style="display:none;">
                     <h4><b>Marketing Type</b></h4><hr>
                 </div>
             </div>
@@ -3179,7 +3226,7 @@ $(".leads-overview-report"+assigned).toggle("show");
 
         function generate_excel_data(data) {
             console.log("Generating Excel data...");
-excel_data_array =[];
+            excel_data_array = [];
             return new Promise((resolve, reject) => {
                 try {
                     // Check if data and necessary properties exist and are in correct format

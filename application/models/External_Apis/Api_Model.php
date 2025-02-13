@@ -102,7 +102,7 @@ class Api_Model extends CI_Model
                     "status" => 1,
                     "login_datetime" => date('Y-m-d H:i:s')
                 );
-                $this->update_data(db_prefix() . 'login_analytics', ["status" => 0, "expire" => 0], array("staffid" => $user->staffid));
+                $this->update_data(db_prefix() . 'login_analytics', ["status" => 0, "expire_status" => 0], array("staffid" => $user->staffid));
 
                 $login_details = $this->insert_data(db_prefix() . 'login_analytics', $insert_data);
                 if (!empty($login_details["status"]) && $login_details["status"] == 0) {
