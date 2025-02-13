@@ -61,55 +61,62 @@
             <div class="row">
 
                <?php echo form_hidden('default_language', $lead->default_language); ?>
+               <div class="row col-md-12">
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('firstname', 'lead_convert_to_client_firstname', $firstname); ?>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('lastname', 'lead_convert_to_client_lastname', $lastname); ?>
+                  </div>
 
-               <div class="col-lg-4 col-md-6 col-12">
-                  <?php echo render_input('firstname', 'lead_convert_to_client_firstname', $firstname); ?>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('email', 'lead_convert_to_email', $lead->email); ?>
+                  </div>
                </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <?php echo render_input('lastname', 'lead_convert_to_client_lastname', $lastname); ?>
-               </div>
+               <div class="row col-md-12">
 
-               <div class="col-lg-4 col-md-6 col-12">
-                  <?php echo render_input('email', 'lead_convert_to_email', $lead->email); ?>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('phonenumber', 'lead_convert_to_client_phone', $lead->phonenumber, "", ["required" => "required"]); ?>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('city', 'client_city', $lead->city); ?>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <?php echo render_input('state', 'client_state', $lead->state); ?>
+                  </div>
                </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <?php echo render_input('phonenumber', 'lead_convert_to_client_phone', $lead->phonenumber); ?>
-               </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <?php echo render_input('city', 'client_city', $lead->city); ?>
-               </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <?php echo render_input('state', 'client_state', $lead->state); ?>
-               </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <label>University Name</label>
-                  <select name="university_name" id="university_name" onclick="select_university_country(this)" class="form-control">
-                     <option value="">Select university</option>
-                     <?php foreach ($university_list as $uni) {
-                     ?>
-                        <option data-country="<?= $uni["country_name"] ?>" value="<?= $uni['university_name'] ?>"><?= $uni["university_name"] ?> - <?= $uni["country_name"] ?></option>
-                     <?php
-                     }
-                     ?>
+               <div class="row col-md-12">
 
-                  </select>
-               </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <label>Country/Destination Name</label>
-                  <input type="text" name="university_country" id="university_country" class="form-control" readonly placeholder="Country/Destination" value="">
-               </div>
-               <div class="col-lg-4 col-md-6 col-12">
-                  <label>Passport Status</label>
-                  <select name="Passport_status" id="Passport_status" class="form-control">
-                     <option value="">Select Passport</option>
-                     <?php foreach ($passpost_status as $pass) {
-                     ?>
-                        <option value="<?= $pass['id'] ?>"><?= $pass["name"] ?></option>
-                     <?php
-                     }
-                     ?>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label>University Name <small class="text-danger">*</small></label>
+                     <select name="university_name" required id="university_name" class="form-control selectpicker" data-actions-box="true" data-live-search="true" onclick="select_university_country(this)">
+                        <option value="">Select university</option>
+                        <?php foreach ($university_list as $uni) {
+                        ?>
+                           <option data-country="<?= $uni["country_name"] ?>" data-mandatory="<?= $uni["fees_mandatory"] ?>" value="<?= $uni['university_name'] ?>"><?= $uni["university_name"] ?> - <?= $uni["country_name"] ?></option>
+                        <?php
+                        }
+                        ?>
 
-                  </select>
+                     </select>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label>Country/Destination Name <small class="text-danger">*</small></label>
+                     <input type="text" required name="university_country" id="university_country" class="form-control" readonly placeholder="Country/Destination" value="">
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label>Passport Status <small class="text-danger">*</small></label>
+                     <select name="Passport_status" required id="Passport_status" class="form-control">
+                        <option value="">Select Passport</option>
+                        <?php foreach ($passpost_status as $pass) {
+                        ?>
+                           <option value="<?= $pass['id'] ?>"><?= $pass["name"] ?></option>
+                        <?php
+                        }
+                        ?>
+
+                     </select>
+                  </div>
                </div>
                <!-- 
                <div class="col-lg-4 col-md-6 col-12">
@@ -120,7 +127,8 @@
                   echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
                   ?>
                </div> -->
-
+               <div class="clearfix"></div>
+               <br>
                <div class="col-lg-12 col-md-12 col-12">
                   <?php echo render_textarea('address', 'client_address', $lead->address); ?>
                </div>
@@ -175,12 +183,12 @@
 
                      ?>
                         <div class="col-lg-4 col-md-4 col-6">
-                           <label><?= $fees['name'] ?> <?= $mandatry ?></label><br>
+                           <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                               <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
                               <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
                               <div class="input-group-addon currency-symbol-<?= $id ?>">$</div>
-                              <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount" placeholder="0.00" id="inlineFormInputGroup" size="8">
+                              <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="inlineFormInputGroup" size="8">
                               <div class="input-group-addon currency-addon">
 
                                  <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -267,10 +275,31 @@
       $(".currency-symbol-" + id).text(selected.data("symbol"));
    }
 
-   function select_university_country(obj) {
-      let selectedValue = $(obj).val(); // Get selected value
-      let country_name = $(obj).find(":selected").attr("data-country"); // Get selected option's attribute
+   $("#university_name").change(function() {
+      // Remove required attribute and reset classes
+      $(".external_requried_label").closest('div').find("#inlineFormInputGroup-error").remove();
+      $(".external_requried").removeAttr("required").removeClass("external_requried");
+      $(".external_requried_label").removeClass("external_requried_label").html("");
+      $("#inlineFormInputGroup-error").remove();
 
-      $("#university_country").val(country_name);
-   }
+      let selectedOption = $(this).find(":selected");
+      let selectedValue = selectedOption.val(); // Get selected value
+      let countryName = selectedOption.data("country"); // Get selected option's data-country attribute
+      let feesMandatory = selectedOption.data("mandatory"); // Get selected option's data-mandatory attribute
+
+      if (feesMandatory) {
+         let mandatoryArray = feesMandatory.split(',').map(item => item.trim()); // Split and trim values
+
+         mandatoryArray.forEach(item => {
+            let feeElement = $(".fees_" + item);
+            let feeLabel = $(".fees_label_" + item);
+
+            feeElement.addClass("external_requried").attr("required", true);
+            feeLabel.addClass("external_requried_label").html("<small class='text-danger'>*</small>");
+         });
+      }
+
+      $("#university_country").val(countryName || ""); // Set university country value, default to empty string if undefined
+      validate_lead_convert_to_client_form();
+   });
 </script>

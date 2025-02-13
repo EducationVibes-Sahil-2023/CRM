@@ -1112,7 +1112,7 @@ class Leads extends AdminController
         $data["passpost_status"] = get_passport_stages();
         if (!empty($data['lead']->type_name)) {
             $lead_type = !empty($data['lead']->type_name) ? $data['lead']->type_name : '';
-            $data["university_list"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where name='$lead_type'")->result_array();
+            $data["university_list"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,u.id university_id,u.fees_mandatory FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where name='$lead_type'")->result_array();
         }
 
         $this->load->view('admin/leads/convert_to_customer', $data);
@@ -1168,6 +1168,7 @@ class Leads extends AdminController
 
             $data             = $this->input->post();
             $temp_array = $data;
+
             $data['password'] = $this->input->post('password', false);
             $original_lead_email = $data['original_lead_email'];
             unset($data['original_lead_email']);
@@ -1231,9 +1232,9 @@ class Leads extends AdminController
 
             $data['billing_country'] = $data['country'];
             $data['application_text'] = "Registration";
-            $data['applicant_stage'] = "1";
+            $data['applicant_stage'] = REGISTRATION;
             $data['applicant_status'] = "0";
-            $data['applicant_sub_status'] = "1";
+            $data['applicant_sub_status'] = REGISTRATION_PENDING;
             $data['is_primary'] = 1;
             $fees_array = [];
             foreach ($data["applicant_fees"] as $applicant_fee) {
@@ -1332,8 +1333,8 @@ class Leads extends AdminController
                     "university" =>  json_encode(array($temp_array["university_country"] => $temp_array["university_name"])),
                     "created_by"      => get_staff_user_id(),
                     "created_at"    => date('Y-m-d H:i:s'),
-                    "primary_country" => !empty($temp_array["university_country"][0]) ? $temp_array["university_country"][0] : '',
-                    "primary_university" =>   !empty($temp_array["university_name"][$temp_array["university_country"][0]][0]) ? $temp_array["university_name"][$temp_array["university_country"][0]][0] : ''
+                    "primary_country" => !empty($temp_array["university_country"]) ? $temp_array["university_country"] : '',
+                    "primary_university" =>   !empty($temp_array["university_name"]) ? $temp_array["university_name"] : ''
                 ];
 
                 $this->db->where('userid', $id);

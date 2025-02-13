@@ -12,7 +12,17 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
+$staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
+$read_only = "readonly";
+if (is_admin()) {
+    $final_sumbit = 0;
+    $read_only = "";
+}
+if (in_array(get_staff_user_id(), $staff_id)) {
+    $final_sumbit = 0;
+    $read_only = "";
+}
 
 
 $applicant_documents =  get_clients_documents($client_id);
@@ -40,7 +50,7 @@ if ($lead_type_status == 2) {
     $text_danger_mbbs = "<small class='text-danger'>*</small>";
     $text_danger_mbbs_required = "required-check";
 }
-$read_only = "readonly";
+
 ?>
 <style>
     .error-highlight {
@@ -233,7 +243,7 @@ $read_only = "readonly";
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputDateOfBirth">Date Of Birth <small class="text-danger">*</small></label>
-                                                <input type="date" class="form-control" name="dob" required value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' required required-check>
+                                                <input type="date" class="form-control" name="dob" id="dob" required value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' required required-check>
                                             </div>
                                         </div>
                                         <div class="col-lg-3">
@@ -251,12 +261,12 @@ $read_only = "readonly";
                                             <div class="form-group">
                                                 <label for="exampleInputPassword1">Category <small class="text-danger">*</small></label>
                                                 <?php
-                                            array_unshift($caste_category, array("id" => "", "value"=>"","name" => "Select Category"));
-                                            $selected_category[] = !empty($basicdetails->category)?$basicdetails->category:'';
+                                                array_unshift($caste_category, array("id" => "", "value" => "", "name" => "Select Category"));
+                                                $selected_category[] = !empty($basicdetails->category) ? $basicdetails->category : '';
 
-                                            echo render_select('category', $caste_category, array('id', 'name'), "", $selected_category, ["required"=>"required","required-check"=>"required-check"], [], "", "", "", "category");
-                                            ?>
-                                              
+                                                echo render_select('category', $caste_category, array('id', 'name'), "", $selected_category, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "category");
+                                                ?>
+
                                             </div>
                                         </div>
                                         <div class="col-lg-3">
@@ -265,15 +275,15 @@ $read_only = "readonly";
                                                 <input class="form-control" type="text" class="form-group" placeholder="Parents Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
                                             </div>
                                         </div>
-                    </div>
-                    <div class="row">
+                                    </div>
+                                    <div class="row">
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Contact</label>
                                                 <input class="form-control" type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Parents Contact" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
                                             </div>
                                         </div>
-                               
+
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Email</label>
@@ -367,7 +377,17 @@ $read_only = "readonly";
                                     <div class="col-lg-3 passport-div-status <?= !empty($show_passport_details && $show_passport_details == 1) ? '' : 'hide' ?>">
                                         <div class="form-group">
                                             <label for="passport_number">Passport Number <small class="text-danger">*</small></label>
-                                            <input class="form-control passport-info" type="text" class="form-group" placeholder="Enter Passport Number" name="passport_number" value="<?= (isset($passport_info) ? $passport_info->passport_number : '') ?>" required-check>
+                                            <input class="form-control passport-info"
+                                                type="text"
+                                                placeholder="Enter Passport Number"
+                                                name="passport_number"
+                                                id="passport_number"
+                                                pattern="^[A-Z0-9]{6,9}$"
+                                                title="Passport number must be 6 to 9 characters, only uppercase letters (A-Z) and numbers (0-9)."
+                                                maxlength="9" minlength="6"
+                                                value="<?= isset($passport_info) ? htmlspecialchars($passport_info->passport_number) : '' ?>"
+                                                required-check>
+
                                         </div>
                                     </div>
 
@@ -461,7 +481,7 @@ $read_only = "readonly";
                                             <div class="form-group">
                                                 <label for="course">Course <small class="text-danger">*</small></label>
                                                 <input name="course" id="course" type="hidden" class="form-control" value="<?= !empty($admissionpreferences->course) ? $admissionpreferences->course : '' ?>">
-                                                <input type="text" class="form-control" readonly required-check value="<?= !empty($admissionpreferences->course) ? $admissionpreferences->course : '' ?>">
+                                                <input type="text" class="form-control" readonly disabled required-check value="<?= !empty($admissionpreferences->course) ? $admissionpreferences->course : '' ?>">
 
                                             </div>
                                         </div>
@@ -686,7 +706,7 @@ $read_only = "readonly";
                                                 </select>
                                             </div>
                                         </div>
-                                        <div class="twelth_result_status_div">
+                                        <div class="twelth_result_status_div" style="display:<?= ($academicdetails->twelth_result_status == 'Awaited') ? 'none' : '' ?>">
                                             <div class="col-lg-2 border2 border1 " id="twelth_marking_scheme_div">
                                                 <div class="c1">
                                                     <p>Marking Scheme <?= $text_danger_mbbs ?></p>
@@ -760,7 +780,7 @@ $read_only = "readonly";
                                     </div>
                                 </div>
                                 <?php
-                              
+
                                 ?>
                                 <div id="entrance_exam_div" class="row accadmic-education-div ">
                                     <h4>NEET Exam</h4>
@@ -772,7 +792,7 @@ $read_only = "readonly";
                                         <div class="c2">
                                             <input class="form-control" required-check type="text" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
                                         </div>
-                                   
+
                                     </div>
                                     <div class="col-lg-3 border2 border1">
                                         <div class="c1">
@@ -797,9 +817,9 @@ $read_only = "readonly";
 
                                             </select>
                                         </div>
-        
+
                                     </div>
-                                    <div class="col-lg-2 border2 border1 hide_ <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'hide' : '' ?>">
+                                    <div class="col-lg-2 border2 border1 hide_ " style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Marks <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -823,22 +843,22 @@ $read_only = "readonly";
                                             // score_columns
                                             ?>
                                         </div>
-                                 
-                                    </div>
-                                    <div class="col-lg-2 border2 border1 hide_ <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'hide' : '' ?>">
-                                    <div class="form-group">
-                                                <div class="c1">
-                                            <p>Neet Status <?= $text_danger_mbbs ?></p>
-                                        </div>
-                                                <?php
-                                            array_unshift($neet_status, array("id" => "", "value"=>"","name" => "Select Neet Status"));
-                                            $selected_neet_status[] = !empty($academicdetails->neet_status)?$academicdetails->neet_status:'';
 
-                                            echo render_select('neet_status', $neet_status, array('id', 'name'), "", $selected_neet_status, ["required"=>"required","required-check"=>"required-check"], [], "", "", "", "neet_status");
-                                            ?>
-                                              
+                                    </div>
+                                    <div class="col-lg-2 border2 border1 hide_" style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
+                                        <div class="form-group">
+                                            <div class="c1">
+                                                <p>Neet Status <?= $text_danger_mbbs ?></p>
                                             </div>
+                                            <?php
+                                            array_unshift($neet_status, array("id" => "", "value" => "", "name" => "Select Neet Status"));
+                                            $selected_neet_status[] = !empty($academicdetails->neet_status) ? $academicdetails->neet_status : '';
+
+                                            echo render_select('neet_status', $neet_status, array('id', 'name'), "", $selected_neet_status, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "neet_status");
+                                            ?>
+
                                         </div>
+                                    </div>
                                     <?php
                                     foreach ($profile_section["neet_exam_stage"] as $s_stage) {
                                         $doc_type = $s_stage["name"] ?? '';
@@ -852,7 +872,7 @@ $read_only = "readonly";
                                         $required_attr = !empty($file_url) ? "" : $required_attr;
                                     ?>
 
-                                        <div class="col-lg-3 border2 border1 media-files hide_  <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'hide' : '' ?> ">
+                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -930,7 +950,8 @@ $read_only = "readonly";
                                                 $accept = $doc_files["file_type"] ?? '';
                                                 $is_mandatory = !empty($doc_files["mandatry"]);
                                                 $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
-                                                $required_attr = $is_mandatory ? "required required-check" : '';
+                                                $required_attr = "";
+                                                // $required_attr = $is_mandatory ? "required required-check" : '';
                                                 $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
                                                 $required_attr = !empty($file_url) ? "" : $required_attr;
                                             ?>
@@ -1140,8 +1161,9 @@ $read_only = "readonly";
 
 <?php $this->load->view('admin/clients/client_group'); ?>
 <script>
-   var primary_country = "<?=!empty($admissionpreferences->primary_country)?$admissionpreferences->primary_country:0?>";
-   var primary_university = "<?=!empty($admissionpreferences->primary_university)?$admissionpreferences->primary_university:0?>";
+    var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
+    var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
+
     var select_segment_default = "";
     var user_id = "<?= !empty($admissionpreferences->user_id) ? $admissionpreferences->user_id : '' ?>";
     var study_country_selected = <?= !empty(json_encode(explode(",", $admissionpreferences->study_country))) ? json_encode(explode(",", $admissionpreferences->study_country), true) : "" ?>;
@@ -1178,11 +1200,11 @@ $read_only = "readonly";
 
         // Create new option elements
         uniqueCountries.forEach(function(country_name) {
-                // let disabled = '';
-                // console.log(country_name.trim().toLowerCase() + "==" +primary_country.trim().toLowerCase() );
-                // if (country_name.trim().toLowerCase() === primary_country.trim().toLowerCase()) {
-                // disabled = 'disabled not-change';
-                // }
+            // let disabled = '';
+            // console.log(country_name.trim().toLowerCase() + "==" +primary_country.trim().toLowerCase() );
+            // if (country_name.trim().toLowerCase() === primary_country.trim().toLowerCase()) {
+            // disabled = 'disabled not-change';
+            // }
 
             var option = $('<option  value="' + country_name + '">').text(country_name);
             if (study_country_selected.length > 0) {
@@ -1201,36 +1223,33 @@ $read_only = "readonly";
     }
 
 
-    function set_primary_diabled()
-    {
-        $('#study_country option[value="'+primary_country+'"]').prop('disabled', true);
+    function set_primary_diabled() {
+        $('#study_country option[value="' + primary_country + '"]').prop('disabled', true);
         $("#study_country").selectpicker('refresh');
     }
 
-    function set_primary_enabled()
-    {
-        $('#study_country option[value="'+primary_country+'"]').prop('disabled', false);
+    function set_primary_enabled() {
+        $('#study_country option[value="' + primary_country + '"]').prop('disabled', false);
         $("#study_country").selectpicker('refresh');
-    } 
-
-
-    function set_university_diabled()
-    {
-    $(".universities .tag").each(function() {
-    let plainText = $(this).text().replace(/\s+/g, ' ').trim(); // Clean up spaces
-
-    // Remove the last '×' if it exists
-    if (plainText.endsWith('×')) {
-    plainText = plainText.slice(0, -1).trim();
     }
 
-    if (plainText === primary_university.trim()) {
-    console.log(plainText);
-    $(this).addClass('disabled');
-    $(this).find("a").hide();
-    $(this).css('pointer-events', 'none');
-    }
-    });
+
+    function set_university_diabled() {
+        $(".universities .tag").each(function() {
+            let plainText = $(this).text().replace(/\s+/g, ' ').trim(); // Clean up spaces
+
+            // Remove the last '×' if it exists
+            if (plainText.endsWith('×')) {
+                plainText = plainText.slice(0, -1).trim();
+            }
+
+            if (plainText === primary_university.trim()) {
+                console.log(plainText);
+                $(this).addClass('disabled');
+                $(this).find("a").hide();
+                $(this).css('pointer-events', 'none');
+            }
+        });
 
     }
 
@@ -1271,5 +1290,21 @@ $read_only = "readonly";
     document.getElementById("lead_type").addEventListener("change", function() {
         var select_segment = this.options[this.selectedIndex].text.trim().toLowerCase();
         show_country_dropdown(select_segment);
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        let dobInput = document.getElementById("dob");
+        if (dobInput) {
+            let today = new Date();
+            let minAgeDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate());
+            dobInput.setAttribute("max", minAgeDate.toISOString().split("T")[0]);
+        }
+    });
+
+
+
+
+    document.getElementById("passport_number").addEventListener("input", function() {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Convert to uppercase & remove invalid characters
     });
 </script>

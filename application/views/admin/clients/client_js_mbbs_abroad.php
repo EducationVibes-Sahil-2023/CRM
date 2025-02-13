@@ -163,9 +163,9 @@
 
                     if (month !== "02" && month !== "09") {
                         // If not February or September, auto-correct to the nearest allowed month
-                        let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
-                        $(this).val(`${year}-${correctedMonth}`);
-                        alert("Only February and September are allowed.");
+                        // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+                        $(this).val('');
+                        alert_float("danger", "Only February and September are allowed.");
                     }
                 }
             });
@@ -179,11 +179,15 @@
 
             $('#study_country').trigger('change');
 
-            if (final_sumbit == 1) {
+            if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
                 setTimeout(() => {
                     $(".form-disabled").each(function() {
                         $(this).find("input, select,.dropdown-toggle ").attr("disabled", true); // Disable inputs & selects inside .form-disabled
                         $(".btn-save-fun").hide();
+                        setTimeout(() => {
+                            $(".tags-input-wrapper").css("pointer-events", "none");
+                        }, 2000);
+                        $("#save_admission_preferences").attr("disabled", true);
                     });
                 }, 100);
 
@@ -200,7 +204,7 @@
     function save_admission_preferences() {
         var additional_fields = {};
         var form_status = true;
-
+        set_primary_enabled();
         // Iterate through inputs, selects, and date fields
         $("#admission-preferences-form input, #admission-preferences-form select, #admission-preferences-form date").each(function() {
             const value = $(this).val(); // Get the value of the field
@@ -219,6 +223,7 @@
 
         console.log(form_status);
         if (!form_status) {
+            set_primary_diabled();
             appValidateForm($("#admission-preferences-form"), additional_fields);
             return false; // Prevent form submission if validation fails
         }
@@ -259,12 +264,14 @@
                 data: params,
                 dataType: "JSON",
                 success: function(res) {
+                    set_primary_diabled();
                     if (res.resp_id !== undefined) {
                         $('#admissionpreferencesid').val(res.resp_id);
                     }
                     alert_float('success', res.resp_desc);
                 },
                 error: function(err) {
+                    set_primary_diabled();
                     alert_float('danger', "An error occurred during submission.");
                     console.error(err);
                 }
@@ -602,9 +609,14 @@
 
 
     $(".nav-tabs li").on("click", function() {
-        if (final_sumbit != 1) {
+        if (typeof final_sumbit !== "undefined" && final_sumbit != 1) {
             $(".btn-save-fun").show(); // Show the save button
             $(".tab-pane").find("input,select").attr("readonly", false);
+            $(".tab-pane").find("input[type='file']").attr("disabled", false);
+            $(".tab-pane").find("select").attr("disabled", false);
+            $("select").selectpicker('refresh');
+            $(".tags-input-wrapper").css("pointer-events", "");
+            $("#save_admission_preferences").attr("disabled", false);
         }
 
     });
@@ -614,7 +626,12 @@
         setTimeout(() => {
             $(".tab-pane").addClass("active");
             $(".tab-pane").find("input,select").attr("readonly", true);
+            $(".tab-pane").find("input[type='file']").attr("disabled", true);
+            $(".tab-pane").find("select").attr("disabled", true);
+            $("select").selectpicker('refresh');
             $(".btn-save-fun").hide();
+            $(".tags-input-wrapper").css("pointer-events", "none");
+            $("#save_admission_preferences").attr("disabled", true);
         }, 0);
 
     }
@@ -628,8 +645,8 @@
         $("form").each(function() {
             let form = $(this); // Cache the form element
             let formId = form.attr("id");
-            $("#" + formId + " input, #" + formId + " select, #" + formId + " input[type='date']").attr("disabled", false);
-            $("#" + formId + " input, #" + formId + " select, #" + formId + " input[type='date']").each(function() {
+            $("#" + formId + " input:visible, #" + formId + " select:visible, #" + formId + " input[type='date']:visible").attr("disabled", false);
+            $("#" + formId + " input:visible, #" + formId + " select:visible, #" + formId + " input[type='date']:visible").each(function() {
                 let $input = $(this);
                 let value = $input.val();
                 let isRequired = $input.attr("required-check") !== undefined; // Check if 'required-check' exists
@@ -686,6 +703,7 @@
             dataType: "JSON",
             success: function(res) {
                 if (res.resp_code === "RCS") {
+                    window.location.reload();
                     alert_float("success", res.resp_desc);
                 } else {
                     const message = res.resp_desc || "An unknown error occurred.";

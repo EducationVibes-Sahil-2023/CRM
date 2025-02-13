@@ -214,3 +214,21 @@ define('SOCKET_WEB_URL', 'ws://localhost:9000/ws');
 define('TABLEPAGINATION', '500');
 define('PERFORMANCE_ARRAY', '39,40');
 define('LOGIN_CHECK', 'login_202510');
+
+
+define('REGISTRATION', '1');
+define('DOCUMENT', '2');
+define('UNIVERSITY_SHORTLISTING', '3');
+define('ADMISSION', '4');
+define('ENTRANCE_EXAM', '5');
+
+
+define('REGISTRATION_PENDING', '1');
+define('DOCUMENT_PENDING', '2');
+define('DOCUMENT_APPROVAL_PENDING', '3');
+define('UNIVERSITY_SHORTLISTING_PENDING', '4');
+define('UNIVERSITY_DOC_PENDING', '5');
+define('ADMISSION_LETTER_PENDING', '6');
+define('ADMISSION_LETTER_WAITING', '7');
+define('ENTRANCE_EXAM_PENDING', '8');
+

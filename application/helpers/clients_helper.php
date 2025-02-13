@@ -1201,6 +1201,26 @@ function applicant_tracker($lead_type)
 
 }
 
+function applicant_tracker_mbbs($lead_type)
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'applicant_tracker_mbbs')
+        ->where('status', 1);
+
+    if (!empty($lead_type)) {
+        $CI->db->where("FIND_IN_SET('$lead_type',lead_type) >", 0);
+    }
+
+    $CI->db->order_by("orderby", "asc");
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+
+}
+
+
+
 
 
 function get_condition_offer($client_id, $university_id)
@@ -1372,6 +1392,28 @@ function get_applicant_stage()
     }
 }
 
+function get_applicant_stage_mbbs()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $applicant_stages = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'applicant_stages')
+            ->get()
+            ->result_array();
+
+        return $applicant_stages; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
 function get_applicant_sub_stage()
 {
     $CI = &get_instance();
@@ -1382,6 +1424,29 @@ function get_applicant_sub_stage()
             ->select("*")
             ->where(array("status" => 1))
             ->from(db_prefix() . 'application_sub_category')
+            ->get()
+            ->result_array();
+
+        return $applicant_sub_stages; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+
+function get_applicant_sub_stage_mbbs()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $applicant_sub_stages = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'application_sub_category_mbbs')
             ->get()
             ->result_array();
 

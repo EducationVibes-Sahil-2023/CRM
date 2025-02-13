@@ -1,6 +1,9 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
-$applicant_tracker = applicant_tracker($lead_type_status);
+$staff_list              = $this->leads_model->get_staff_list();
+$staff_list = array_column($staff_list, null, "staffid");
+
+$applicant_tracker = applicant_tracker_mbbs($lead_type_status);
 $applicant_status = !empty($client->tracker_id) ? $client->tracker_id : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 $university_partner_names = get_university_partner_names();
@@ -620,7 +623,7 @@ if (empty($customer_admins)) { ?>
                 <?php
                 foreach ($applicant_tracker as $key => $track) {
                 ?>
-                    <li data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
+                    <li data-id="<?= $track['id'] ?>" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
                 <?php
                 }
                 ?>
@@ -647,7 +650,10 @@ if (empty($customer_admins)) { ?>
                                         <th scope="col">S.No</th>
                                         <th scope="col">Document Type</th>
                                         <th scope="col">Stage</th>
-                                        <!-- <th scope="col">Upload</th> -->
+                                        <th scope="col">Upload By</th>
+                                        <th scope="col">Upload Date</th>
+                                        <th scope="col">Approved By</th>
+                                        <th scope="col">Approved Date</th>
                                         <th scope="col">Action</th>
                                     </tr>
                                 </thead>
@@ -683,19 +689,32 @@ if (empty($customer_admins)) { ?>
                                                 <td>
                                                     <?= $doc_files["stage"] ?>
                                                 </td>
+                                                <td>
+                                                    <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
+                                                </td>
+                                                <td>
+                                                    <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
+                                                    ?>
+                                                </td>
+                                                <td class="approved_by_<?= $doc_id ?>">
+
+                                                </td>
+                                                <td class="approved_date_<?= $doc_id ?>">
+
+                                                </td>
                                                 <!-- <td>
                                                         <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                     </td> -->
-                                                <td class="">
+                                                <td class="d-flex">
 
                                                     <?php if (!empty($file_url)) : ?>
-                                                        <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                        <i class="fa fa-download" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                        <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                        <i class="fa fa-download" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
 
                                                         <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                             <div class="action_button_<?= $doc_id ?>">
-                                                                <button class="btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)">Approved</button>
-                                                                <button class="btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)">Reject</button>
+                                                                <button class="btn-xs btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)">Approved</button>
+                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)">Rejected</button>
                                                             </div>
                                                         <?php else :
                                                             $approval_status = $applicant_documents[$doc_id]["approval_status"];
@@ -838,12 +857,12 @@ if (empty($customer_admins)) { ?>
                                             <div class="col-md-12 university_div_application mt-2">
                                                 <div class="col-md-3">
                                                     <label>Country Name <small class='text-danger'>*</small></label>
-                                                    <input type="input" readonly required required-check class="form-control" value="<?= $short_list["country_name"] ?>">
+                                                    <input type="input" name="country_<?= $short_list["id"] ?>" readonly required required-check class="form-control" value="<?= $short_list["country_name"] ?>">
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label>University Name <small class='text-danger'>*</small></label>
                                                     <input type="hidden" name="id" value="<?= $short_list["id"] ?>">
-                                                    <input type="input" class="form-control" required required-check readonly value="<?= $short_list["university_name"] ?>">
+                                                    <input type="input" name="university_<?= $short_list["id"] ?>" class="form-control" required required-check readonly value="<?= $short_list["university_name"] ?>">
                                                 </div>
 
                                                 <div class="col-md-3">
@@ -858,23 +877,44 @@ if (empty($customer_admins)) { ?>
                                                     <label>Application Date <small class='text-danger'>*</small> </label>
                                                     <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" requried required-check value="<?= $short_list["application_date"] ?>">
                                                 </div>
-
+                                                <br>
                                                 <div class="col-md-12">
                                                     <label>Documents Attach <small class='text-danger'>*</small> </label>
                                                     <br>
                                                     <ul class=" list-unstyled">
-                                                        <?php foreach ($documents_type as $doc_ty) { ?>
+                                                        <?php
+                                                        // Ensure $documents_type is an array to prevent errors
+                                                        $documents_type = !empty($documents_type) ? $documents_type : [];
+
+                                                        $doc_selected = !empty($short_list["documents"]) ? explode(",", $short_list["documents"]) : [];
+
+                                                        foreach ($documents_type as $doc_ty) {
+                                                            // Check if the document ID is in the selected list
+                                                            $checked = in_array($doc_ty['id'], $doc_selected) ? 'checked' : '';
+                                                        ?>
                                                             <li class="col-md-3 checkbox-select-doc d-flex align-items-center">
-                                                                <input type="checkbox" id="doc_<?= $doc_ty['id'] ?>" value="<?= $doc_ty['id'] ?>" class="me-2">
-                                                                <label for="doc_<?= $doc_ty['id'] ?>" class="mb-0"><?= $doc_ty['name'] ?></label>
+                                                                <input type="checkbox" name="documents[]" id="doc_<?= $doc_ty['id'] ?>" value="<?= $doc_ty['id'] ?>" class="me-2" <?= $checked ?>>
+                                                                <label for="doc_<?= $doc_ty['id'] ?>" class="mb-0"><?= htmlspecialchars($doc_ty['name']) ?></label>
                                                             </li>
                                                         <?php } ?>
+
                                                     </ul>
 
                                                 </div>
+                                                <div class="col-md-3">
+                                                    <?php
+                                                    $file_url = !empty($short_list["application_file"]) ? $short_list["application_file"] : '';
 
-                                                <div>
+                                                    ?>
+                                                    <label>Admission Letter <small class='text-danger'>*</small> </label>
+                                                    <input type="file" class="form-control" accept=".pdf" name="admission_letter_<?= $short_list["id"] ?>">
+                                                    <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
 
+                                                    <?php
+                                                    if (!empty($file_url)) { ?>
+                                                        <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                        <i class="fa fa-download" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                    <?php } ?>
                                                 </div>
 
 
@@ -937,7 +977,6 @@ if (empty($customer_admins)) { ?>
 <?php init_tail(); ?>
 <!-- /.MultiStep Form -->
 <script>
-    var final_sumbit = <?= !empty($final_sumbit) ? $final_sumbit : 0 ?>;
     var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
 
     //jQuery time
@@ -963,6 +1002,8 @@ if (empty($customer_admins)) { ?>
 
     var document_verification = "<?= !empty($upload_documents[0]["document_status"]) ? $upload_documents[0]["document_status"] : 0 ?>";
     var profile_verification = "<?= !empty($profile_creation_data[0]["profile_status"]) ? $profile_creation_data[0]["profile_status"] : 0 ?>";
+    var university_partner_names = <?= !empty($university_partner_names) ? json_encode($university_partner_names) : '[]'; ?>;
+    var documents_type = <?= !empty($documents_type) ? json_encode(array_values($documents_type)) : '[]'; ?>;
 
 
     var admin_ids = [];
@@ -1019,9 +1060,12 @@ if (empty($customer_admins)) { ?>
                 if (status == 1) {
                     $(".action_button_" + doc_id).html("<span class='text-success'>Approved</span>");
                 } else {
-                    $(".action_button_" + doc_id).html("<span class='text-danger'>Reject</span>");
-
+                    $(".action_button_" + doc_id).html("<span class='text-danger'>Rejected</span>");
                 }
+                let date = new Date();
+                let formattedDate = formatDate(date);
+                $(".approved_by_" + doc_id).text("<?= !empty($staff_list[get_staff_user_id()]["firstname"]) ? $staff_list[get_staff_user_id()]["firstname"] . " " . $staff_list[get_staff_user_id()]["lastname"] : '' ?>");
+                $(".approved_date_" + doc_id).text(formattedDate);
             } else {
                 if (response.resp_code !== undefined) {
                     alert_float("danger", response.resp_desc);
@@ -1036,6 +1080,18 @@ if (empty($customer_admins)) { ?>
         }
     }
 
+
+    // Function to format date as "d-m-Y H:i:s"
+    function formatDate(date) {
+        let d = date.getDate().toString().padStart(2, '0');
+        let m = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+        let y = date.getFullYear();
+        let h = date.getHours().toString().padStart(2, '0');
+        let min = date.getMinutes().toString().padStart(2, '0');
+        let s = date.getSeconds().toString().padStart(2, '0');
+
+        return `${d}-${m}-${y} ${h}:${min}:${s}`;
+    }
 
 
     function reloadNote_list(url) {
@@ -1165,19 +1221,21 @@ if (empty($customer_admins)) { ?>
 
         let upload_data = new FormData();
         try {
+
+            id = $("#progressbar .active").data("id");
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
             upload_data.append("tracker_id", id);
             upload_data.append("lead_type", <?= $lead_type_status ?>);
 
-            if (id == 3) {
+            if (id == 2) {
 
                 await check_university_shortlisting(upload_data);
 
             }
-            if (id == 4) {
+            if (id == 3) {
                 let check = await check_requried_fields("application-form");
-                console.log(check);
+                await check_university_admission(upload_data);
             }
             let response = await $.ajax({
                 url: "<?= base_url("admin/clients/mbbs_tracker") ?>",
@@ -1193,6 +1251,7 @@ if (empty($customer_admins)) { ?>
                 if (id == 3) {
                     set_application(response);
                 }
+
             } else {
                 if (response.resp_code !== undefined) {
                     alert_float("danger", response.resp_desc);
@@ -1253,6 +1312,59 @@ if (empty($customer_admins)) { ?>
             upload_data.append("university_shortlisting", JSON.stringify(university_shortlisting));
             resolve(upload_data);
 
+        });
+    }
+
+    function check_university_admission(upload_data) {
+        return new Promise((resolve, reject) => {
+            try {
+                let admission = [];
+
+                $(".university_div_application").each(function() {
+                    let id = $(this).find("input[name='id']").val();
+                    let university = $(this).find(`select[name='university_${id}']`).val();
+                    let country = $(this).find(`select[name='country_${id}']`).val();
+                    let admission_partner = $(this).find(`select[name='partner_${id}']`).val();
+                    let admission_date = $(this).find(`input[name='date_${id}']`).val();
+                    let addmission_letter_url = $(this).find(`input[name='admission_letter_path_${id}']`).val();
+
+                    let admission_letter_input = $(this).find(`input[name='admission_letter_${id}']`)[0];
+
+                    let admission_letter = admission_letter_input && admission_letter_input.files.length > 0 ? admission_letter_input.files[0] : null;
+                    let admission_docs = $(this).find(`input[name='documents[]']:checked`).map(function() {
+                        return $(this).val();
+                    }).get().join(","); // Collects checked document values as a comma-separated string
+
+                    // console.log("ID:", id);
+                    // console.log("Partner:", admission_partner);
+                    // console.log("Application Date:", admission_date);
+                    // console.log("Documents:", admission_docs);
+                    // console.log("Admission Letter:", admission_letter);
+
+                    // Push admission details to array
+                    admission.push({
+                        id: id,
+                        university: university,
+                        country: country,
+                        partner: admission_partner,
+                        application_date: admission_date,
+                        documents: admission_docs,
+                        addmission_letter_url: addmission_letter_url
+                    });
+
+                    // Append admission letter file if selected
+                    if (admission_letter) {
+                        upload_data.append(`admission_letter_${id}`, admission_letter);
+                    }
+                });
+
+                // Append JSON stringified admission data
+                upload_data.append("admission", JSON.stringify(admission));
+
+                resolve(upload_data); // Return the collected data
+            } catch (error) {
+                reject(error); // Handle errors
+            }
         });
     }
 
@@ -1372,7 +1484,7 @@ if (empty($customer_admins)) { ?>
     function is_validate_application_status(status = 0) {
         if (university_shortlisting != undefined && university_shortlisting.length > 0) {
             // let html = '<h3 class="message-notification">Your University under Processing</h3>';
-            $(".university_approval_message_action").html(html);
+            // $(".university_approval_message_action").html(html);
         }
         return new Promise((resolve) => {
             if ($("#application_div select[name='university_application_status']").length > 0) {
@@ -1401,7 +1513,7 @@ if (empty($customer_admins)) { ?>
                     $("#university_application_status").find("input.next").attr("disabled", true);
                 }
 
-                let html = '';
+                // let html = '';
 
                 if (university_count > 0) {
                     if (university_count_not === 0) {
@@ -1418,14 +1530,14 @@ if (empty($customer_admins)) { ?>
                         }
 
                         if (total_university > 0) {
-                            html += total_university + ' under processing.tab-content';
+                            // html += total_university + ' under processing.tab-content';
                         }
-                        html += '</h3>';
+                        // html += '</h3>';
                     }
                 } else {
                     // html = '<h3 class="message-notification">Your University under Processing</h3>';
                 }
-                $(".university_approval_message_action").html(html);
+                // $(".university_approval_message_action").html(html);
             }
 
             resolve();
@@ -1435,6 +1547,8 @@ if (empty($customer_admins)) { ?>
 
     function set_application(update_university_status) {
         let ids = update_university_status.ids;
+
+        // Update existing university divs with new IDs
         $(".add_university_div_block .university_div").each(function(index) {
             if (ids[index] !== undefined) {
                 $(this).find("input[name='id']").val(ids[index]);
@@ -1442,37 +1556,87 @@ if (empty($customer_admins)) { ?>
         });
 
         let university_list = update_university_status.university_shortlisting;
-        let html = '';
-        for (let i = 0; i < university_list.length; i++) {
-            html += `<div class="col-md-12 university_div_application mt-2">
-                       <div class="col-md-3">
-                            <label>Country Name <small class='text-danger'>*</small></label>
-                            <input type="input" class="form-control" disabled value="` + university_list[i].country_name + `" >
-                        </div> 
-                        <div class="col-md-3">
-                            <label>University Name <small class='text-danger'>*</small></label>
-                            <input type="hidden" name="id" value="` + university_list[i].id + `" >
-                            <input type="input" class="form-control" disabled value="` + university_list[i].university_name + `" >
-                        </div> 
-          
-                        <div class="col-md-3">
-                                                    <label>Partner Name <small class='text-danger'>*</small></label>
-                                                    <?php
-                                                    $selected_value = []; // Define selected values if needed
-                                                    $field_id = 'partner_' . time(); // Generate unique ID
-
-                                                    echo render_select($field_id, $university_partner_names, array('id', 'name'), 'Select Partner', $selected_value);
-                                                    ?>
-
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Application Date <small class='text-danger'>*</small> </label>
-                                                    <input type="date" name="date_` + university_list[i].id + `" class="form-control" requried required-check value="<?= $short_list["application_date"] ?>">
-                                                </div>
-                    </div>`;
-        }
+        let html = ""; // Initialize the HTML variable
         $(".application_div").html(html);
+        for (let i = 0; i < university_list.length; i++) {
+            html = "";
+            let university = university_list[i]; // Assign variable for readability
+            console.log(university)
+            let base_url = "<?= $base_url ?>";
+            let file = university.application_file;
+            let media_view = "";
+            if (file != "") {
+                media_view = `<i class="fa fa-eye" onclick="show_media_files('${base_url}${file}');"></i>&nbsp;
+                                                        <i class="fa fa-download" onclick="download_media_files('${base_url}${file}', '_blank');"></i>`;
+            }
+            html += `<div class="row university_div_application mt-2">
+        <div class="col-md-3">
+            <label>Country Name <small class='text-danger'>*</small></label>
+            <input type="text" name="country_${university.id}" class="form-control" disabled value="${university.country_name}">
+        </div>  
+        <div class="col-md-3">
+            <label>University Name <small class='text-danger'>*</small></label>
+            <input type="hidden" name="id[]" value="${university.id}">
+            <input type="text" name="university_${university.id}" class="form-control" disabled value="${university.university_name}">
+        </div> 
+        <div class="col-md-3">
+            <label>Partner Name <small class='text-danger'>*</small></label>
+            <select name="partner_${university.id}" class="form-control" required-check required>
+                <option value="">Select Partner</option>`;
+
+            // Loop through `university_partner_names` correctly
+            for (let partner of university_partner_names) {
+                let selected = "";
+                if (partner.id == university.partner) {
+                    selected = "selected";
+                }
+                html += `<option ` + selected + ` value="${partner.id}">${partner.name}</option>`;
+            }
+
+            html += `</select>
+        </div>
+        <div class="col-md-3">
+            <label>Application Date <small class='text-danger'>*</small></label>
+            <input type="date" name="date_${university.id}" class="form-control required-check" required value="${university.application_date || ''}">
+        </div>
+        <br>
+        <div class="col-md-12">
+            <label>Documents Attach <small class='text-danger'>*</small></label>
+            <br>
+            <ul class="list-unstyled">`;
+
+            if (!Array.isArray(documents_type)) {
+                console.error("Error: documents_type is not an array!", documents_type);
+            } else {
+
+                let selected_values = university_list[i].documents ? university_list[i].documents.split(",") : [];
+                for (let doc of documents_type) {
+                    let selected = selected_values.includes(doc.id.toString()) ? "checked" : "";
+                    html += `<li class="col-md-3 checkbox-select-doc d-flex align-items-center">
+                <input type="checkbox" ${selected} name="documents[]" name="docs_${university_list[i].id}" id="doc_${doc.id}" value="${doc.id}" class="me-2">
+                <label for="doc_${doc.id}" class="mb-0">${doc.name}</label>
+            </li>`;
+                }
+
+            }
+
+
+            html += `</ul>
+        </div>  
+        <div class="col-md-3">
+          <label>Admission Letter <small class='text-danger'>*</small> </label>
+        <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university_list[i].application_file}">
+        <input type="file" class="form-control" accept=".pdf" name="admission_letter_${university_list[i].id}">
+        ${media_view}
+        </div>
+    </div>`; // Close row div
+            $(".application_div").append(html);
+        }
+
+        // Append the generated HTML
+
     }
+
 
     function check_requried_fields(id = "application-form") {
         return new Promise((resolve, reject) => {
