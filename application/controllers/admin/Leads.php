@@ -1103,10 +1103,17 @@ class Leads extends AdminController
         }
 
         $data['lead'] = $this->leads_model->get($id);
+
         $data['statuses'] = $this->leads_model->get_status();
         $data['type'] = $this->leads_model->get_type();
         $data['members']     = $this->staff_model->get('', ['is_not_staff' => 0, 'active' => 1]);
         $data['sources']  = $this->leads_model->get_source();
+        $data["university_list"] = [];
+        $data["passpost_status"] = get_passport_stages();
+        if (!empty($data['lead']->type_name)) {
+            $lead_type = !empty($data['lead']->type_name) ? $data['lead']->type_name : '';
+            $data["university_list"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where name='$lead_type'")->result_array();
+        }
 
         $this->load->view('admin/leads/convert_to_customer', $data);
     }
@@ -1142,48 +1149,32 @@ class Leads extends AdminController
                 $where["phonenumber"] = $_POST["phonenumber"];
             }
 
-            if (count($where) > 0) {
-                $total = total_rows(db_prefix() . 'clients', $where);
+            // if (count($where) > 0) {
+            //     $total = total_rows(db_prefix() . 'clients', $where);
 
-                if ($total == 1) {
-                    $this->db->where($where);
-                    $lead_details = $this->db->get(db_prefix() . 'clients')->row();
+            //     if ($total == 1) {
+            //         $this->db->where($where);
+            //         $lead_details = $this->db->get(db_prefix() . 'clients')->row();
 
-                    $duplicate_status = false;
-                    set_alert('danger', "Already customer created this phone number ({$_POST["phonenumber"]})");
-                    redirect(admin_url('/leads/index/' . $lead_details->leadid . '?edit=true'));
-                    die;
-                }
-            }
+            //         $duplicate_status = false;
+            //         set_alert('danger', "Already customer created this phone number ({$_POST["phonenumber"]})");
+            //         redirect(admin_url('/leads/index/' . $lead_details->leadid . '?edit=true'));
+            //         die;
+            //     }
+            // }
 
 
             $default_country  = get_option('customer_default_country');
 
             $data             = $this->input->post();
-
-
-
-
-
-
-
+            $temp_array = $data;
             $data['password'] = $this->input->post('password', false);
-
-
-
             $original_lead_email = $data['original_lead_email'];
-
             unset($data['original_lead_email']);
-
-
             if (isset($data['transfer_notes'])) {
-
                 $notes = $this->misc_model->get_notes($data['leadid'], 'lead');
-
                 unset($data['transfer_notes']);
             }
-
-
 
             if (isset($data['transfer_consent'])) {
 
@@ -1260,35 +1251,101 @@ class Leads extends AdminController
                 unset($data[$applicant_fee . "_currency_type"]);
             }
             unset($data["applicant_fees"]);
+            unset($data["university_name"]);
+            unset($data["university_country"]);
+            unset($data["Passport_status"]);
+            unset($data["custom_fields"]["customers"][39]);
 
-            $id                 = $this->clients_model->add($data, true);
+
+            $id = $this->clients_model->add($data, true);
+
 
             if ($id) {
                 // Prepare the fees array for batch insert or update
                 foreach ($fees_array as &$item) {
                     $item["client_id"] = $id;
                 }
+
                 if (!empty($fees_array)) {
-                    $this->db->insert_batch(db_prefix() . 'applicant_fees_details', $fees_array);
+                    // Check existing client IDs
+                    $this->db->where('client_id', $id);
+                    $existing_fees = $this->db->get(db_prefix() . 'applicant_fees_details')->result_array();
+
+                    if (!empty($existing_fees)) {
+                        // If records exist, update them
+                        $this->db->update_batch(db_prefix() . 'applicant_fees_details', $fees_array, 'client_id');
+                    } else {
+                        // If no records exist, insert new ones
+                        $this->db->insert_batch(db_prefix() . 'applicant_fees_details', $fees_array);
+                    }
                 }
 
 
-                $basic_details = [];
+                $basic_details = [
+                    "userid"      => $id,
+                    "first_name"  => $data["firstname"],
+                    "last_name"   => $data["lastname"],
+                    "email"       => $data["email"],
+                    "country" => $temp_array["university_country"],
+                    "university_name" => $temp_array["university_name"],
+                    "mobile"      => $data["phonenumber"],
+                    "gender"      => isset($data["custom_fields"]["customers"][CUSTUMER_GENDER]) ? $data["custom_fields"]["customers"][CUSTUMER_GENDER] : null,
+                    "dob"         => isset($data["custom_fields"]["customers"][CUSTUMER_DOB]) ? $data["custom_fields"]["customers"][CUSTUMER_DOB] : null,
+                    "created_by"  => get_staff_user_id(),
+                    "created_at"  => date('Y-m-d H:i:s')
+                ];
 
-                $basic_details["userid"] = $id;
-                $basic_details["first_name"] = $data["firstname"];
-                $basic_details["last_name"] = $data["lastname"];
-                $basic_details["email"] = $data["email"];
-                $basic_details["mobile"] = $data["phonenumber"];
-                // $basic_details["gender"] = $data["gender"];
-                $basic_details["created_by"] = get_staff_user_id();
-                $basic_details["created_at"] = date('Y-m-d H:i:s');
+                $this->db->where('userid', $id);
+                $exists_basic = $this->db->get(db_prefix() . 'basic_details')->row();
 
-                $this->db->insert(db_prefix() . 'basic_details', $basic_details);
+                if ($exists_basic) {
+                    $this->db->update(db_prefix() . 'basic_details', $basic_details, ['userid' => $id]);
+                } else {
+                    $this->db->insert(db_prefix() . 'basic_details', $basic_details);
+                }
+
 
                 $primary_contact_id = get_primary_contact_user_id($id);
 
+                $passport_details = [
+                    "client_id"       => $id,
+                    "passport_status" => $temp_array["Passport_status"], // You may need a different value here
+                    "created_by"      => get_staff_user_id(),
+                    "created_date"    => date('Y-m-d H:i:s')
+                ];
 
+                $this->db->where('client_id', $id);
+                $exists_passport = $this->db->get(db_prefix() . 'client_passport_details')->row();
+
+                if ($exists_passport) {
+                    $this->db->update(db_prefix() . 'client_passport_details', $passport_details, ['client_id' => $id]);
+                } else {
+                    $this->db->insert(db_prefix() . 'client_passport_details', $passport_details);
+                }
+
+                $admission_pre = [
+                    "userid"       => $id,
+                    "course" => "MBBS", // You may need a different value here
+                    "entrance_exam_given" => "YES", // You may need a different value here
+                    "entrance_exam_details" => "NEET", // You may need a different value here
+                    "study_country" => !empty($temp_array["university_country"]) ? $temp_array["university_country"] : '', // You may need a different value here
+                    "university" =>  json_encode(array($temp_array["university_country"] => $temp_array["university_name"])),
+                    "created_by"      => get_staff_user_id(),
+                    "created_at"    => date('Y-m-d H:i:s'),
+                    "primary_country" => !empty($temp_array["university_country"][0]) ? $temp_array["university_country"][0] : '',
+                    "primary_university" =>   !empty($temp_array["university_name"][$temp_array["university_country"][0]][0]) ? $temp_array["university_name"][$temp_array["university_country"][0]][0] : ''
+                ];
+
+                $this->db->where('userid', $id);
+                $exists_passport = $this->db->get(db_prefix() . 'admission_preferences')->row();
+
+                if ($exists_passport) {
+                    $this->db->update(db_prefix() . 'admission_preferences', $admission_pre, ['userid' => $id]);
+                } else {
+                    $this->db->insert(db_prefix() . 'admission_preferences', $admission_pre);
+                }
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Applicant created successfully created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $id));
 
                 if (isset($notes)) {
 

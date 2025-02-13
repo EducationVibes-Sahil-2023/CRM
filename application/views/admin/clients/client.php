@@ -93,32 +93,16 @@
                   <div>
                      <div class="tab-content">
                         <div class="row col-md-12" style="padding:15px;">
-                           <!-- 
-                           [basic_details_status] => 1
-    [parent_details_status] => 1
-    [address_details_status] => 
-    [academic_details_status] => 1
-    [document_details_status] => 1
-    [declaration_details_status] => 
-    [payment_details_status] => 
-                        -->
+
                            <style>
                               .complete {
                                  color: blue;
                               }
                            </style>
-
-                           <!-- <div class="col-md-2 <?= ($basicDetails->basic_details_status == 1) ? 'complete' : '' ?>" >BASIC DETAILS</div> -->
-                           <!-- <div class="col-md-3 <?= ($basicDetails->admission_preferences_status == 1) ? 'complete' : '' ?>">ADMISSION PREFERENCES</div> -->
-                           <!-- <div class="col-md-3 <?= ($basicDetails->academic_details_status == 1) ? 'complete' : '' ?>">ACADEMIC DETAILS</div> -->
-                           <!-- <div class="col-md-2 <?= ($basicDetails->document_details_status == 1) ? 'complete' : '' ?>">
-                           <a data-group="attachments" href="<?php echo admin_url('clients/client/4?group=attachments'); ?>">
-                              <i class="fa fa-paperclip menu-icon" aria-hidden="true"></i>Documents</a>
-                           
-                           </div> -->
-                           <!-- <div class="col-md-2 <?= ($basicDetails->admission_preferences_status == 1) ? 'complete' : '' ?>">DECLARATION &nbsp;<a href=""><i class="fa fa-file-pdf-o" aria-hidden="true"></i>Print</a></div> -->
                         </div>
-                        <?php $this->load->view((isset($tab) ? $tab['view'] : 'admin/clients/groups/profile')); ?>
+                        <?php
+                        $this->load->view((isset($tab) ? $tab['view'] : 'admin/clients/groups/profile'));
+                        ?>
                      </div>
                   </div>
                </div>
@@ -138,7 +122,10 @@
       });
    </script>
 <?php } ?>
-<?php $this->load->view('admin/clients/client_js'); ?>
+
+<?php //$this->load->view('admin/clients/client_js'); 
+?>
+<?php $this->load->view((isset($tab) ? $tab['js'] : 'admin/clients/client_js')); ?>
 </body>
 
 </html>

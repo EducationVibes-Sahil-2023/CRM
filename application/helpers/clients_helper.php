@@ -1193,13 +1193,12 @@ function applicant_tracker($lead_type)
 
     if (!empty($lead_type)) {
         $CI->db->where("FIND_IN_SET('$lead_type',lead_type) >", 0);
-
     }
 
     $CI->db->order_by("orderby", "asc");
 
     return  $CI->db->get()->result_array(); // Execute and return result
-  
+
 }
 
 
@@ -1240,6 +1239,26 @@ function get_passport_stages()
         ->result_array();
 }
 
+function get_caste_category()
+{
+    $CI = &get_instance();
+    return $caste_category = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'caste_category')
+        ->get()
+        ->result_array();
+}
+
+function get_neet_status()
+{
+    $CI = &get_instance();
+    return $caste_category = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'neet_status')
+        ->get()
+        ->result_array();
+}
+
 function get_currencies()
 {
     $CI = &get_instance();
@@ -1261,23 +1280,30 @@ function get_currencies()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
-function get_documents($lead_type,$selected_country=[],$show_all = 0)
+function get_documents($lead_type, $selected_country = [], $show_all = 0, $stage = "")
 {
 
 
     $CI = &get_instance();
 
     try {
-        $CI->db->select(db_prefix() . "document_upload_type.*, " . db_prefix() . "file_type.type AS file_type")
+        $CI->db->select(db_prefix() . "document_upload_type.*, " . db_prefix() . "file_type.type AS file_type," . db_prefix() . "applicant_stages.name AS stage")
             ->from(db_prefix() . 'document_upload_type')
             ->join(db_prefix() . 'file_type', db_prefix() . 'file_type.id = ' . db_prefix() . 'document_upload_type.file_type', 'left')
-            ->where(db_prefix() . "document_upload_type.lead_type", $lead_type);
-    
+            ->join(db_prefix() . 'applicant_stages', db_prefix() . 'applicant_stages.id = ' . db_prefix() . 'document_upload_type.stages', 'left');
+        if (!empty($lead_type)) {
+            $CI->db->where(db_prefix() . "document_upload_type.lead_type", $lead_type);
+        }
+
+        if (!empty($stage)) {
+            $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
+        }
+
         // Apply additional conditions only if $show_all is set to 0
         if ($show_all == 0) {
             $CI->db->group_start()
                 ->where(db_prefix() . "document_upload_type.comman", 1);
-    
+
             if (!empty($selected_country)) {
                 $CI->db->or_group_start(); // Start OR group for FIND_IN_SET conditions
                 foreach ($selected_country as $country) {
@@ -1285,16 +1311,15 @@ function get_documents($lead_type,$selected_country=[],$show_all = 0)
                 }
                 $CI->db->group_end(); // End OR group
             }
-    
+
             $CI->db->group_end(); // End the main OR group
         }
-    
+
         $document = $CI->db->order_by("sequence", "ASC")
             ->get()
             ->result_array();
-    
-        return $document;
 
+        return $document;
     } catch (Exception $e) {
         // Log the error message if an exception occurs
         log_message('error', 'Error fetching document: ' . $e->getMessage());
@@ -1333,7 +1358,7 @@ function get_applicant_stage()
         // Fetch data from the `document_upload_type` table with a join to the `file_type` table
         $applicant_stages = $CI->db
             ->select("*")
-            ->where(array("status"=>1))
+            ->where(array("status" => 1))
             ->from(db_prefix() . 'applicant_stages')
             ->get()
             ->result_array();
@@ -1355,7 +1380,7 @@ function get_applicant_sub_stage()
         // Fetch data from the `document_upload_type` table with a join to the `file_type` table
         $applicant_sub_stages = $CI->db
             ->select("*")
-            ->where(array("status"=>1))
+            ->where(array("status" => 1))
             ->from(db_prefix() . 'application_sub_category')
             ->get()
             ->result_array();
@@ -1369,4 +1394,24 @@ function get_applicant_sub_stage()
     }
 }
 
+function get_university_partner_names()
+{
+    $CI = &get_instance();
 
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $university_partner = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'university_partner')
+            ->get()
+            ->result_array();
+
+        return $university_partner; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}

@@ -215,19 +215,21 @@
         $select.selectpicker("refresh");
 
         let value = $("#entrance_exam_details").val();
-        value = value.filter(function(element) {
-            return element !== "" && element !== " " && element !== null && element !== undefined;
-        });
-        if (value.length >= 2) {
-            $(`#entrance_exam_details option`).prop('disabled', true);
-            for (let k = 0; k < value.length; k++) {
-                var v = value[k];
-                $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+        if (value != undefined) {
+            value = value.filter(function(element) {
+                return element !== "" && element !== " " && element !== null && element !== undefined;
+            });
+            if (value.length >= 2) {
+                $(`#entrance_exam_details option`).prop('disabled', true);
+                for (let k = 0; k < value.length; k++) {
+                    var v = value[k];
+                    $(`#entrance_exam_details option[value="${v}"]`).prop('disabled', false);
+                }
+            } else {
+                $(this).find('option').prop('disabled', false);
             }
-        } else {
-            $(this).find('option').prop('disabled', false);
+            $(this).selectpicker("refresh")
         }
-        $(this).selectpicker("refresh")
 
     }
 </script>

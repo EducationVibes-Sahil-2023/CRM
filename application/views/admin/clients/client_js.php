@@ -1672,13 +1672,13 @@
         $("#passport_number").val("");
         let status = $("#passport option:selected").attr("data-passport_number_status");
         if (status == 1) {
-            $(".passport_number_div").show();
-            $("#passport_number").attr("required", "true");
-            $("#passport_number").attr("required-check", "true");
+            $(".passport-div-status").show();
+            $(".passport-div-status").removeClass("hide");
         } else {
-            $(".passport_number_div").hide();
-            $("#passport_number").removeAttr("requried");
-            $("#passport_number").removeAttr("required-check");
+            $(".passport-div-status").hide();
+            $(".passport-div-status input").val('');
+            $(".passport-div-status").addClass("hide");
+
 
 
         }

@@ -3,7 +3,7 @@
 $applicant_tracker = applicant_tracker($lead_type_status);
 $applicant_status = !empty($client->applicant_status) ? $client->applicant_status : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
-$documents_type =  get_documents($lead_type_status,[],1);
+$documents_type =  get_documents($lead_type_status, [], 1);
 
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
@@ -842,13 +842,13 @@ if (empty($customer_admins)) { ?>
                                                     ?>
                                                 </select>
                                             </div>
-                                            <div class="col-md-4">
+                                            <!-- <div class="col-md-4">
                                                 <?php
                                                 $selected_vendor = !empty($short_list["vendor_id"]) ? $short_list["vendor_id"] : "";
                                                 echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), "", $selected_vendor);
                                                 ?>
                                                 <input type="hidden" class="university_status_check" value="<?= $short_list["university_status"] ?>">
-                                            </div>
+                                            </div> -->
 
                                             <div class="col-md-2">
                                                 <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
@@ -894,13 +894,14 @@ if (empty($customer_admins)) { ?>
                                                 ?>
                                             </select>
                                         </div>
-                                        <div class="col-md-4">
-                                            <?php
-                                            // echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'), '', "", "", array(), '', '', "", "select_university_vendor");
+                                        <?php if ($lead_type_status != 2) { ?>
+                                            <div class="col-md-4">
 
-                                            echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'));
-                                            ?>
-                                        </div>
+                                                <?php echo render_select('select_university_vendor', $customer_vendors, array('id', 'name'));
+                                                ?>
+                                            </div>
+                                        <?php   }
+                                        ?>
 
                                         <div class="col-md-2">
                                             <!-- <button class="col-md-2 add_document" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button> -->
@@ -1234,7 +1235,7 @@ if (empty($customer_admins)) { ?>
 <!-- /.MultiStep Form -->
 <script>
     //jQuery time
-    let lead_type_status = "<?=$lead_type_status?>";
+    let lead_type_status = "<?= $lead_type_status ?>";
     console.log(lead_type_status);
     let documents_type_dropdown = <?= json_encode($documents_type_dropdown) ?>; // Get your data from PHP
     var applicant_status = "<?= $applicant_status ?>";
@@ -1827,9 +1828,9 @@ if (empty($customer_admins)) { ?>
         $(obj).after(html);
     }
 
-    function set_value(key, value, id,doc_id) {
+    function set_value(key, value, id, doc_id) {
         $("#" + id).val(value);
-        $("#" + id).attr("doc_id",doc_id);
+        $("#" + id).attr("doc_id", doc_id);
         $(".document_upload_files .dropdown-menu").remove();
     }
 
@@ -2467,26 +2468,26 @@ if (empty($customer_admins)) { ?>
             let upload_data = new FormData();
 
             $(".document_upload_files").each(function() {
-    let fileInput = $(this).find("input[name='document_file[]']")[0]; // Get input element
-    let files = fileInput ? fileInput.files : []; // Safely access files
-    let doc_type = $(this).find("input[name='document_label[]']").attr("doc_id") || ''; // Get doc_type safely
-    let doc_name = $(this).find("input[name='document_label[]']").val() || ''; // Get doc_name safely
-    let doc_url = $(this).find("input[name='document_file[]']").attr("data-url") || ''; // Get doc_url safely
+                let fileInput = $(this).find("input[name='document_file[]']")[0]; // Get input element
+                let files = fileInput ? fileInput.files : []; // Safely access files
+                let doc_type = $(this).find("input[name='document_label[]']").attr("doc_id") || ''; // Get doc_type safely
+                let doc_name = $(this).find("input[name='document_label[]']").val() || ''; // Get doc_name safely
+                let doc_url = $(this).find("input[name='document_file[]']").attr("data-url") || ''; // Get doc_url safely
 
-    if (files.length > 0) {
-        // Append each file to FormData
-        for (let i = 0; i < files.length; i++) {
-            upload_data.append("files_" + doc_type, files[i]); // Ensure array notation for multiple files
-        }
-        upload_data.append("doc_type_id[]", doc_type);
-        upload_data.append("doc_type_name[]", doc_name);
-    } else if (doc_url.trim() !== '') {
-        // Handle URLs if no files are uploaded
-        upload_data.append("doc_url[]", doc_url);
-        upload_data.append("doc_type_id[]", doc_type);
-        upload_data.append("doc_type_name[]", doc_name);
-    }
-});
+                if (files.length > 0) {
+                    // Append each file to FormData
+                    for (let i = 0; i < files.length; i++) {
+                        upload_data.append("files_" + doc_type, files[i]); // Ensure array notation for multiple files
+                    }
+                    upload_data.append("doc_type_id[]", doc_type);
+                    upload_data.append("doc_type_name[]", doc_name);
+                } else if (doc_url.trim() !== '') {
+                    // Handle URLs if no files are uploaded
+                    upload_data.append("doc_url[]", doc_url);
+                    upload_data.append("doc_type_id[]", doc_type);
+                    upload_data.append("doc_type_name[]", doc_name);
+                }
+            });
 
 
 
@@ -2826,13 +2827,16 @@ if (empty($customer_admins)) { ?>
                                         }
                                         ?>
                                     </select>
-                                </div>
-                                <div class="col-md-4">
+                                </div>`;
+
+            if (lead_type_status != 2) {
+                html += `<div class="col-md-4">
                                     <?php
                                     echo render_select('select_university_vendor', $customer_vendors, array('id', 'name')); ?>
-                                </div>
+                                </div>`;
+            }
 
-                                <div class="col-md-2">
+            html += `<div class="col-md-2">
                                 <button class="col-md-2 add_document remove_university_btn" type="button" style="display:none;" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                          
                                     
@@ -2865,7 +2869,7 @@ if (empty($customer_admins)) { ?>
                     return;
                 }
 
-                if ((select_university_vendor === undefined || $.trim(select_university_vendor) === "")) {
+                if ((select_university_vendor === undefined || $.trim(select_university_vendor) === "") && lead_type_status != 2) {
                     $(this).find("select[name='select_university_vendor']").focus();
                     alert_float("danger", "Select vendor is requried.");
                     resolve(false);
