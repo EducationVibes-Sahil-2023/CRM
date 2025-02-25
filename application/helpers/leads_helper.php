@@ -1799,6 +1799,10 @@ function get_leads_summary_filter_report($params, $all_status = 0)
     }
     if (!empty($params['assigned'])) {
         $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+
+        if (!empty($params['up_to_date'])) {
+            $sql .= ' AND calls.staffid IN (' . implode(',', $params['assigned']) . ')';
+        }
     } else if ($role == 3) {
         // $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     }
@@ -2045,6 +2049,10 @@ function get_leads_summary_filter_report_($params)
     }
     if (!empty($params['assigned'])) {
         $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
+
+        if (!empty($params['up_to_date'])) {
+            $sql .= ' AND calls.staffid IN (' . implode(',', $params['assigned']) . ')';
+        }
     } else if ($role == 3) {
         // $sql .= ' AND assigned IN (' . implode(',', $params['assigned']) . ')';
     }
@@ -3094,6 +3102,9 @@ function get_status_summary_filter_report($params)
     }
     if (!empty($params['assigned'])) {
         $tids = " AND assigned IN ( " . implode(",", $params['assigned']) . ") ";
+        if (!empty($params['up_to_date'])) {
+            $sql .= ' AND calls.staffid IN (' . implode(',', $params['assigned']) . ')';
+        }
         $sql .= $tids;
     } else {
         if ($role == 3) {
@@ -7815,6 +7826,8 @@ function get_leads_summary_filter_new($params)
         $sql .= 'JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . $tblleads . '.id ';
     }
 
+
+
     // WHERE clause
     $conditions = ['junk = 0', 'lost = 0'];
     if (!$has_permission_view) {
@@ -7973,10 +7986,17 @@ function get_leads_summary_filter_neww($params)
 
     if (!empty($params['up_to_date']) || !empty($params['last_contact_date']) || !empty($params['last_update_date'])) {
         // $sql .= 'LEFT JOIN ' . db_prefix() . 'calls_activity_logs AS calls ON ' . $tblleads . '.phonenumber = calls.contact ';
+
+
     }
 
     if (!empty($params['followup_to_date'])) {
         $sql .= 'JOIN ' . db_prefix() . 'reminders ON ' . db_prefix() . 'reminders.rel_id = ' . $tblleads . '.id ';
+    }
+
+
+    if (!empty($params['location']) || !empty($params['department'])) {
+        $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . $tblleads . '.assigned ';
     }
 
     // WHERE clause
@@ -8055,6 +8075,15 @@ function get_leads_summary_filter_neww($params)
         $conditions[] = " " . $tblleads . ".utm_form_name IN ('" . implode("','", $CI->db->escape_str($params['utm_form_name'])) . "')";
     }
 
+
+    if (!empty($params['department'])) {
+        $conditions[] = " " . db_prefix() . "staff.department IN ('" . implode("','", $CI->db->escape_str($params['department'])) . "')";
+    }
+
+    if (!empty($params['location'])) {
+        $conditions[] = " " . db_prefix() . "staff.office_location IN ('" . implode("','", $CI->db->escape_str($params['location'])) . "')";
+    }
+
     if (!empty($params['up_to_date'])) {
         $up_to_date = $params['up_to_date'];
         $up_from_date   = $params['up_from_date'];
@@ -8076,6 +8105,12 @@ function get_leads_summary_filter_neww($params)
                 $join_type = "RIGHT";
             }
         }
+
+        if (!empty($params['assigned'])) {
+            $where_c .= " AND calls.staffid IN (" . implode(',', $params['assigned']) . ") ";
+        }
+
+        $where_c .= " AND calls.staffid = leads.assigned";
 
         // SQL Queries
         $sql_p1 = " SELECT id 
@@ -8104,6 +8139,10 @@ function get_leads_summary_filter_neww($params)
     // Execute query
     $result = $CI->db->query($sql)->result();
 
+    if (is_admin()) {
+        // echo $sql;
+        // die;
+    }
     // Prepare results
     if (!empty($result)) {
         $result = array_column($result, "total", "status_id");
@@ -8120,4 +8159,32 @@ function get_leads_summary_filter_neww($params)
     $statuses[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads];
 
     return $statuses;
+}
+
+function get_university_list($lead_type)
+{
+    $CI = &get_instance();
+
+    return $CI->s_db->query("SELECT co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where name='$lead_type'")->result_array();
+}
+
+function get_university_exam()
+{
+    $CI = &get_instance();
+
+    return $CI->db->query("SELECT * from " . db_prefix() . "university_exams ")->result_array();
+}
+function get_client_list($university_name)
+{
+    $CI = &get_instance();
+
+    $sql = "SELECT c.userid, CONCAT(b.first_name,' ',b.last_name) as full_name 
+            FROM " . db_prefix() . "clients c 
+            LEFT JOIN " . db_prefix() . "admission_preferences a ON c.userid = a.userid 
+            LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid 
+            WHERE a.course = 'MBBS' 
+            AND a.university LIKE '%$university_name%' 
+            AND c.active = 1";
+
+    return $CI->db->query($sql, ["%$university_name%"])->result_array();
 }

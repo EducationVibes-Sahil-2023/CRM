@@ -3005,7 +3005,7 @@ class Leads_model extends App_Model
 
     public function get_staff_list()
     {
-        $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name');
+        $this->db->select('firstname,lastname,staffid,concat(firstname," ",lastname) staff_name,post_sales');
         return $staff = $this->db->get(db_prefix() . 'staff')->result_array();
     }
 

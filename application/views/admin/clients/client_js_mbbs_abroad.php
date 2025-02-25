@@ -36,6 +36,8 @@
 
     // student js 
     async function save_basic_details() {
+
+        show_loader();
         var additional_fields = {};
         var form_status = true;
 
@@ -54,6 +56,7 @@
 
         if (!form_status) {
             appValidateForm($("#basic-information-form"), additional_fields);
+            hide_loader();
             return false;
         }
 
@@ -73,13 +76,16 @@
             processData: false, // Prevent jQuery from processing data
             dataType: "JSON",
             success: function(res) {
+                hide_loader();
                 if (res.resp_code === "RCS") {
+                    window_reload();
                     alert_float("success", res.resp_desc);
                 } else if (res.resp_code && res.resp_desc) {
                     alert_float("danger", res.resp_desc);
                 }
             },
             error: function(xhr, status, error) {
+                hide_loader();
                 console.error("AJAX Error:", error);
             }
         });
@@ -90,7 +96,7 @@
 
         var additional_fields = {};
         var form_status = true;
-
+        show_loader();
         $("#passport-form input:visible, #passport-form select:visible, #passport-form input[type='date']:visible").each(function() {
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
@@ -106,6 +112,7 @@
 
         if (!form_status) {
             appValidateForm($("#passport-form"), additional_fields);
+            hide_loader();
             return false;
         }
 
@@ -125,13 +132,16 @@
             processData: false, // Prevent jQuery from processing data
             dataType: "JSON",
             success: function(res) {
+                hide_loader();
                 if (res.resp_code === "RCS") {
+                    window_reload();
                     alert_float("success", res.resp_desc);
                 } else if (res.resp_code && res.resp_desc) {
                     alert_float("danger", res.resp_desc);
                 }
             },
             error: function(xhr, status, error) {
+                hide_loader();
                 console.error("AJAX Error:", error);
             }
         });
@@ -154,57 +164,55 @@
     // admission prefrencess 
 
     $(document).ready(function() {
-        $(document).ready(function() {
-            $("#session_intake").on("change", function() {
-                let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
+        $("#session_intake").on("change", function() {
+            let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
 
-                if (selectedDate) {
-                    let [year, month] = selectedDate.split("-"); // Extract year and month
+            if (selectedDate) {
+                let [year, month] = selectedDate.split("-"); // Extract year and month
 
-                    if (month !== "02" && month !== "09") {
-                        // If not February or September, auto-correct to the nearest allowed month
-                        // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
-                        $(this).val('');
-                        alert_float("danger", "Only February and September are allowed.");
-                    }
+                if (month !== "02" && month !== "09") {
+                    // If not February or September, auto-correct to the nearest allowed month
+                    // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+                    $(this).val('');
+                    alert_float("danger", "Only February and September are allowed.");
                 }
-            });
-
-            // Pre-fill with the nearest allowed month on page load
-            let today = new Date();
-            let currentYear = today.getFullYear();
-            let currentMonth = today.getMonth() + 1; // JavaScript months are 0-based
-            let defaultMonth = (currentMonth < 6) ? "02" : "09"; // Before June → February, After → September
-            $("#session_intake").val(`${currentYear}-${defaultMonth}`);
-
-            $('#study_country').trigger('change');
-
-            if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
-                setTimeout(() => {
-                    $(".form-disabled").each(function() {
-                        $(this).find("input, select,.dropdown-toggle ").attr("disabled", true); // Disable inputs & selects inside .form-disabled
-                        $(".btn-save-fun").hide();
-                        setTimeout(() => {
-                            $(".tags-input-wrapper").css("pointer-events", "none");
-                        }, 2000);
-                        $("#save_admission_preferences").attr("disabled", true);
-                    });
-                }, 100);
-
-
-
             }
-
-
-
-
         });
+
+        // Pre-fill with the nearest allowed month on page load
+        let today = new Date();
+        let currentYear = today.getFullYear();
+        let currentMonth = today.getMonth() + 1; // JavaScript months are 0-based
+        let defaultMonth = (currentMonth < 6) ? "02" : "09"; // Before June → February, After → September
+        // $("#session_intake").val(`${currentYear}-${defaultMonth}`);
+
+        $('#study_country').trigger('change');
+
+        if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
+            setTimeout(() => {
+                $(".form-disabled").each(function() {
+                    $(this).find("input, select,.dropdown-toggle ").attr("disabled", true); // Disable inputs & selects inside .form-disabled
+                    $(".btn-save-fun").hide();
+                    setTimeout(() => {
+                        $(".tags-input-wrapper").css("pointer-events", "none");
+                    }, 2000);
+                    $("#save_admission_preferences").attr("disabled", true);
+                });
+            }, 100);
+        }
+
+        setTimeout(function() {
+            $(window).off('beforeunload');
+        }, 100);
+
+
     });
 
     function save_admission_preferences() {
         var additional_fields = {};
         var form_status = true;
         set_primary_enabled();
+        show_loader();
         // Iterate through inputs, selects, and date fields
         $("#admission-preferences-form input, #admission-preferences-form select, #admission-preferences-form date").each(function() {
             const value = $(this).val(); // Get the value of the field
@@ -225,6 +233,7 @@
         if (!form_status) {
             set_primary_diabled();
             appValidateForm($("#admission-preferences-form"), additional_fields);
+            hide_loader();
             return false; // Prevent form submission if validation fails
         }
 
@@ -239,6 +248,8 @@
             admissionPreferencesId: $('#admissionpreferencesid').val(),
             client_id: $('#client_id').val(),
             course_name: $('#course_name').val(),
+            primary_university: $('#primary_university').val(),
+            primary_country: $('#primary_country').val(),
             universities: {}
         };
 
@@ -250,6 +261,7 @@
                     const key = value.replace(" ", "_");
                     params.universities[key] = $(`#university${index}`).val();
                     if (!params.universities[key]) {
+                        hide_loader();
                         alert_float('danger', `Select a university for ${value}.`);
                         throw new Error(`University selection for ${value} is required.`);
                     }
@@ -264,14 +276,17 @@
                 data: params,
                 dataType: "JSON",
                 success: function(res) {
+                    hide_loader();
                     set_primary_diabled();
                     if (res.resp_id !== undefined) {
                         $('#admissionpreferencesid').val(res.resp_id);
                     }
+                    window_reload();
                     alert_float('success', res.resp_desc);
                 },
                 error: function(err) {
                     set_primary_diabled();
+                    hide_loader();
                     alert_float('danger', "An error occurred during submission.");
                     console.error(err);
                 }
@@ -339,25 +354,38 @@
         var form_status = true;
         var formData = new FormData(); // Initialize FormData
 
+        show_loader();
+
         // Iterate through inputs, selects, and date fields
-        $("#admission-details-form input:visible, #admission-details-form select:visible, #admission-details-form date:visible").each(function() {
-            const value = $(this).val();
+        $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
+            const value = $.trim($(this).val()); // Trim spaces
             const isRequired = $(this).attr("required-check") !== undefined;
             const name = $(this).attr("name");
+            console.log(name);
 
-            if (isRequired && name) {
+            if (isRequired) {
                 additional_fields[name] = "required";
-                if ($.trim(value) === "") {
-                    form_status = false;
-                    $(this).addClass("error");
-                }
             }
+
+            // Validate required fields
+            if (isRequired && value === "") {
+                form_status = false;
+            } else {}
         });
+
+        console.log(additional_fields);
 
         if (!form_status) {
             appValidateForm($("#admission-details-form"), additional_fields);
+            hide_loader();
             return false;
         }
+
+
+        // Continue with form submission if valid
+        // Example: formData.append("key", value);
+        // Submit via AJAX or any other method
+
 
         // Collect form data and append to FormData
         $("#admission-details-form div > input, #admission-details-form div > textarea, #admission-details-form div > select").each(function() {
@@ -391,8 +419,10 @@
             processData: false, // Prevent jQuery from processing data
             contentType: false, // Prevent jQuery from setting content type
             success: function(res) {
+                hide_loader();
                 if (res.resp_code == 'RCS') {
                     alert_float('success', res.resp_desc);
+                    window_reload();
                 } else {
                     if (res.resp_code != '' && res.resp_desc != '') {
                         alert_float('danger', res.resp_desc);
@@ -405,27 +435,41 @@
 
     $(document).ready(function() {
         $("#twelth_result_status").on("change", function() {
-            let show = $(this).val() === "Declared";
-            $(".twelth_result_status_div").toggle(show).find("input,select,file").val("").selectpicker("refresh");
-            $(".twelth_result_status_div").toggle(show);
+            let isDeclared = $(this).val() === "Declared";
+            let targetDiv = $(".twelth_result_status_div");
+
+            targetDiv.toggle(isDeclared); // Show/Hide the div
+
+            // Clear values of input, select, and file fields
+            targetDiv.find("input, select, input[type='file']").val("");
+
+            // Refresh select fields using selectpicker (Bootstrap Select)
+            targetDiv.find("select").selectpicker("refresh");
+
+            // Manage required-check attribute
+            if (isDeclared) {
+                targetDiv.find("input, select, input[type='file']").attr("required-check", "required-check");
+            } else {
+                targetDiv.find("input, select, input[type='file']").removeAttr("required-check");
+            }
         });
+
 
         $("#entrance_result_status").on("change", function() {
             let ers = $(this).val();
-            let isAwaited = ers === "Awaited",
-                isNotAppeared = ers === "Not Appeared";
+            let isAwaitedOrNotAppeared = ers === "Awaited" || ers === "Not Appeared" || ers === "";
 
-            // Toggle visibility
-            $(".hide_").toggle(!isAwaited);
+            // Toggle visibility of the elements with class "hide_"
+            $(".hide_").toggle(!isAwaitedOrNotAppeared); // Hide when either "Awaited" or "Not Appeared" is selected
 
-            // Disable and clear fields when "Not Appeared" is selected
-            $("input[name='entrance_roll'], input[name='entrance_year'], input[name='entrance_percentage'], input.multiple_score, #entrance_exam_div input[type='file']")
-                .prop("disabled", isNotAppeared)
-                .val(isNotAppeared ? "" : null)
-                .attr("required-check", isNotAppeared ? null : "required");
+            $("input[name='entrance_roll'], input[name='entrance_year'], input[name='entrance_percentage'], input.multiple_score, #entrance_exam_div input[type='file'],select[name='neet_status']")
+                .val(!isAwaitedOrNotAppeared ? "" : null)
+                .attr("required-check", !isAwaitedOrNotAppeared ? "required-check" : "");
 
+            $("select[name='neet_status']").selectpicker('refresh');
             // Toggle multiple score inputs and labels
-            $("input.multiple_score, .multiple_score_label").toggle(!isAwaited);
+            $("input.multiple_score, .multiple_score_label").toggle(isAwaitedOrNotAppeared); // Show when either "Awaited" or "Not Appeared" is selected
+
         });
 
         setTimeout(() => {
@@ -450,7 +494,7 @@
     function save_documents() {
         var additional_fields = {};
         var form_status = true;
-
+        show_loader();
         // Validate visible input, select, and date fields
         $("#documents-form input:visible, #documents-form select:visible, #documents-form date:visible").each(function() {
             const value = $(this).val(); // Get the value of the field
@@ -473,12 +517,13 @@
         if (!form_status) {
             // Show validation errors
             appValidateForm($("#documents-form"), additional_fields);
+            hide_loader();
             return false; // Prevent form submission
         }
 
         // Initialize FormData object
         let formData = new FormData();
-
+        let file_upload_status = false;
         // Append file inputs to FormData
         $("#documents-form input[type='file']").each(function() {
             let name = $(this).attr("name"); // Get the name of the file input
@@ -490,6 +535,7 @@
 
 
             if (files.length > 0) {
+                file_upload_status = true;
                 // Handle files
                 for (let i = 0; i < files.length; i++) {
                     formData.append("files_" + doc_type, files[i]); // Append file to FormData
@@ -526,6 +572,11 @@
         formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
         formData.append("clientid", $('input[name="clientid"]').val());
 
+        if (!file_upload_status) {
+            // alert_float("danger", "No media found to upload.");
+            // hide_loader();
+            // return false;
+        }
         // AJAX request to upload documents
         $.ajax({
             url: "<?php echo base_url('admin/clients/upload_documents'); ?>",
@@ -535,7 +586,9 @@
             contentType: false, // Ensure correct Content-Type is set for FormData
             dataType: "JSON",
             success: function(res) {
+                hide_loader();
                 if (res.resp_code === "RCS") {
+                    window_reload();
                     alert_float("success", res.resp_desc);
                 } else {
                     const message = res.resp_desc || "An unknown error occurred.";
@@ -544,6 +597,7 @@
             },
             error: function(xhr, status, error) {
                 console.error("Error: ", error);
+                hide_loader();
                 alert_float("danger", "An error occurred while processing the request.");
             },
         });
@@ -552,7 +606,7 @@
     async function save_welcome_info() {
         var additional_fields = {};
         var form_status = true;
-
+        show_loader();
         $("#welcome-information-form input, #welcome-information-form select, #welcome-information-form input[type='date']").each(function() {
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
@@ -568,6 +622,7 @@
 
         if (!form_status) {
             appValidateForm($("#welcome-information-form"), additional_fields);
+            hide_loader();
             return false;
         }
 
@@ -593,7 +648,9 @@
             contentType: false, // Ensure correct Content-Type is set for FormData
             dataType: "JSON",
             success: function(res) {
+                hide_loader();
                 if (res.resp_code === "RCS") {
+                    window_reload();
                     alert_float("success", res.resp_desc);
                 } else {
                     const message = res.resp_desc || "An unknown error occurred.";
@@ -602,6 +659,7 @@
             },
             error: function(xhr, status, error) {
                 console.error("Error: ", error);
+                hide_loader();
                 alert_float("danger", "An error occurred while processing the request.");
             },
         });
@@ -641,7 +699,6 @@
 
         var additional_fields = {};
         var form_status = true;
-
         $("form").each(function() {
             let form = $(this); // Cache the form element
             let formId = form.attr("id");
@@ -665,6 +722,7 @@
             if (!form_status) {
                 alert("First fill all requried fields");
                 appValidateForm("#" + formId, additional_fields);
+
                 return false;
             }
         });
@@ -675,48 +733,137 @@
         }
 
 
+        if (confirm("Are you sure you want to proceed? This action will take you to the Review and Final Submission.")) {
+            show_loader();
+            let formData = new FormData(); // Correct way to initialize FormData
+
+            // Append CSRF token and client ID
+            formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+            formData.append("clientid", $('input[name="clientid"]').val());
+            formData.append("submition_status", 1);
+
+
+            // Function to process media files
+
+
+            //
+
+            // AJAX request to upload documents
+            $.ajax({
+                url: "<?php echo base_url('admin/clients/final_submitted'); ?>",
+                type: "POST",
+                data: formData,
+                processData: false, // Prevent jQuery from transforming FormData
+                contentType: false, // Ensure correct Content-Type is set for FormData
+                dataType: "JSON",
+                success: function(res) {
+                    hide_loader();
+                    if (res.resp_code === "RCS") {
+                        window_reload();
+                        alert_float("success", res.resp_desc);
+                    } else {
+                        const message = res.resp_desc || "An unknown error occurred.";
+                        alert_float("danger", message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hide_loader();
+                    console.error("Error: ", error);
+                    alert_float("danger", "An error occurred while processing the request.");
+                },
+            });
+        } else {
+            hide_loader();
+
+        }
 
 
 
 
 
-        let formData = new FormData(); // Correct way to initialize FormData
-
-        // Append CSRF token and client ID
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
-        formData.append("clientid", $('input[name="clientid"]').val());
-        formData.append("submition_status", 1);
-
-
-        // Function to process media files
-
-
-        //
-
-        // AJAX request to upload documents
-        $.ajax({
-            url: "<?php echo base_url('admin/clients/final_submitted'); ?>",
-            type: "POST",
-            data: formData,
-            processData: false, // Prevent jQuery from transforming FormData
-            contentType: false, // Ensure correct Content-Type is set for FormData
-            dataType: "JSON",
-            success: function(res) {
-                if (res.resp_code === "RCS") {
-                    window.location.reload();
-                    alert_float("success", res.resp_desc);
-                } else {
-                    const message = res.resp_desc || "An unknown error occurred.";
-                    alert_float("danger", message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error: ", error);
-                alert_float("danger", "An error occurred while processing the request.");
-            },
-        });
     }
 
+
+    function window_reload() {
+
+        // Get the href of the active tab (e.g., "tab1", "tab2")
+        var activeTabTarget = $("ul.profile-tabs li.active a").attr("href").replace("#", "");
+
+        // Create a new URL object based on the current window location
+        const url = new URL(window.location);
+
+        // Set the 'tab' query parameter to the active tab's ID
+        url.searchParams.set("tab", activeTabTarget);
+
+        // Check if the next tab exists, and if so, set it in the URL
+        var nextTab = $("ul.profile-tabs li.active").next("li").find("a").attr("href");
+        if (nextTab) {
+            // Get the ID of the next tab
+            var nextTabId = nextTab.replace("#", "");
+            url.searchParams.set("tab", nextTabId); // Optional: Set the next tab in the URL if it exists
+        }
+
+        console.log(url);
+        // Redirect to the new URL with the updated 'tab' and 'nextTab' parameters
+        window.location.href = url.href;
+
+
+    }
+
+
+    function check_primary_university() {
+
+
+        let universitiesArray = {};
+        let countriesArrr = $('#study_country').val();
+        let primary_university = "<?= $admissionpreferences->primary_university ?>"; // Get selected value
+        $("#primary_country").val("");
+        if (countriesArrr) {
+            $.each(countriesArrr, function(index, value) {
+                const key = value.replace(/\s+/g, "_"); // Replace spaces with underscores
+                universitiesArray[key] = $(`#university${index}`).val();
+
+            });
+        }
+
+
+        var $select = $("#primary_university");
+
+        // Clear existing options except the first one
+        $select.find("option:not(:first)").remove();
+
+        // Loop through each country and add universities
+        $.each(universitiesArray, function(country, universities) {
+            var universityList = universities.split(",");
+
+            // Append new university options
+            $.each(universityList, function(index, university) {
+                let trimmedUniversity = university.trim();
+                let isSelected = primary_university === trimmedUniversity ? 'selected' : '';
+                if (isSelected === 'selected') {
+                    $("#primary_country").val(country);
+                }
+                $select.append(
+                    $("<option></option>")
+                    .val(trimmedUniversity)
+                    .text(trimmedUniversity).attr("data-country", country)
+                    .prop("selected", isSelected === 'selected') // Set selected option
+                );
+            });
+        });
+
+        // Refresh selectpicker UI if used
+        if ($select.hasClass("selectpicker")) {
+            $select.selectpicker("refresh");
+        }
+    }
+
+    function select_primary_university(obj) {
+        var country_name = $(obj).find("option:selected").data("country") || ""; // Default to empty if undefined
+        $("#primary_country").val(country_name);
+        // Debugging
+        console.log("Selected Country:", country_name);
+    }
     // set university
     var suggetions_university = [];
     const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
@@ -892,7 +1039,7 @@
         tag.appendChild(closeIcon);
         this.wrapper.insertBefore(tag, this.input);
         this.orignal_input.value = this.arr.join(',');
-
+        check_primary_university();
         return this;
     }
 
@@ -901,6 +1048,7 @@
         tag.remove();
         this.arr.splice(i, 1);
         this.orignal_input.value = this.arr.join(',');
+        check_primary_university();
         return this;
     }
 

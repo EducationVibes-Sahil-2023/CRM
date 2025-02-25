@@ -1302,15 +1302,16 @@ function get_currencies()
 }
 function get_documents($lead_type, $selected_country = [], $show_all = 0, $stage = "")
 {
-
-
     $CI = &get_instance();
 
     try {
-        $CI->db->select(db_prefix() . "document_upload_type.*, " . db_prefix() . "file_type.type AS file_type," . db_prefix() . "applicant_stages.name AS stage")
+        // Fetch documents where country is empty
+        $CI->db->select(db_prefix() . "document_upload_type.*, " . db_prefix() . "file_type.type AS file_type, " . db_prefix() . "applicant_stages.name AS stage")
             ->from(db_prefix() . 'document_upload_type')
             ->join(db_prefix() . 'file_type', db_prefix() . 'file_type.id = ' . db_prefix() . 'document_upload_type.file_type', 'left')
-            ->join(db_prefix() . 'applicant_stages', db_prefix() . 'applicant_stages.id = ' . db_prefix() . 'document_upload_type.stages', 'left');
+            ->join(db_prefix() . 'applicant_stages', db_prefix() . 'applicant_stages.id = ' . db_prefix() . 'document_upload_type.stages', 'left')
+            ->where(db_prefix() . "document_upload_type.country", ""); // Country is empty
+
         if (!empty($lead_type)) {
             $CI->db->where(db_prefix() . "document_upload_type.lead_type", $lead_type);
         }
@@ -1319,34 +1320,46 @@ function get_documents($lead_type, $selected_country = [], $show_all = 0, $stage
             $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
         }
 
-        // Apply additional conditions only if $show_all is set to 0
-        if ($show_all == 0) {
-            $CI->db->group_start()
-                ->where(db_prefix() . "document_upload_type.comman", 1);
-
-            if (!empty($selected_country)) {
-                $CI->db->or_group_start(); // Start OR group for FIND_IN_SET conditions
-                foreach ($selected_country as $country) {
-                    $CI->db->or_where("FIND_IN_SET('$country', " . db_prefix() . "document_upload_type.country) >", 0);
-                }
-                $CI->db->group_end(); // End OR group
-            }
-
-            $CI->db->group_end(); // End the main OR group
-        }
-
         $document = $CI->db->order_by("sequence", "ASC")
             ->get()
             ->result_array();
 
+        // Fetch documents based on selected country
+        $CI->db->select(db_prefix() . "document_upload_type.*, " . db_prefix() . "file_type.type AS file_type, " . db_prefix() . "applicant_stages.name AS stage")
+            ->from(db_prefix() . 'document_upload_type')
+            ->join(db_prefix() . 'file_type', db_prefix() . 'file_type.id = ' . db_prefix() . 'document_upload_type.file_type', 'left')
+            ->join(db_prefix() . 'applicant_stages', db_prefix() . 'applicant_stages.id = ' . db_prefix() . 'document_upload_type.stages', 'left');
+
+        if (!empty($lead_type)) {
+            $CI->db->where(db_prefix() . "document_upload_type.lead_type", $lead_type);
+        }
+
+        if (!empty($stage)) {
+            $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
+        }
+
+        if (!empty($selected_country)) {
+            $CI->db->group_start(); // Start AND group for country filtering
+            foreach ($selected_country as $country) {
+                $CI->db->or_where("FIND_IN_SET('$country', " . db_prefix() . "document_upload_type.country) >", 0);
+            }
+            $CI->db->group_end(); // End group
+        }
+
+        $document_country = $CI->db->order_by("sequence", "ASC")
+            ->get()
+            ->result_array();
+
+        // Merge both document arrays
+        $document = array_merge($document, $document_country);
+
         return $document;
     } catch (Exception $e) {
-        // Log the error message if an exception occurs
         log_message('error', 'Error fetching document: ' . $e->getMessage());
-
-        return []; // Return an empty array to ensure function fails gracefully
+        return []; // Return an empty array in case of an error
     }
 }
+
 
 function get_clients_documents($client_id)
 {
@@ -1479,4 +1492,27 @@ function get_university_partner_names()
 
         return []; // Return an empty array to ensure function fails gracefully
     }
+}
+
+function get_board_dropdown()
+{
+     $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $board_dropdown = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'board')
+            ->get()
+            ->result_array();
+
+        return $board_dropdown; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+    
 }
