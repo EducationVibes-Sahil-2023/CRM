@@ -9,7 +9,8 @@
    <div class="content">
       <div class="row">
 
-         <?php if (!is_admin() && empty($this->session->userdata("staff_department"))) {
+         <?php 
+         if (!is_admin() && empty($this->session->userdata("staff_department"))) {
          ?>
             <div class="col-md-12">
                <div class="panel_s">
@@ -625,6 +626,8 @@ init_tail(); ?>
       });
 
    }
+   
+
 </script>
 </body>
 

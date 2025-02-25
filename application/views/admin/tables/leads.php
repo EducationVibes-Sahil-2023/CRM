@@ -65,6 +65,7 @@ if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
     $where_c  .= " AND {$sTable}.assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
 }
 
+$where_c  .= " AND {$call_table}.staffid = {$sTable}.assigned ";
 
 // $sTable = $call_table;
 
@@ -77,6 +78,11 @@ if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
 )";
 
     $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
+    
+     if(!empty($this->ci->input->post('assigned'))){
+         $where[] = "AND " . $call_table . ".staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+      }
+      
 } 
 
 

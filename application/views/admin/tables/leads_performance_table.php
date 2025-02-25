@@ -140,6 +140,13 @@ if ($this->ci->input->post('status') && count($this->ci->input->post('status')) 
 if ($this->ci->input->post('source')) {
     $where[] = "AND " . $sTable . ".source IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ")";
 }
+if ($this->ci->input->post('department')) {
+    $where[] = "AND " . db_prefix() . "staff.department IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('department'))) . ")";
+}
+
+if ($this->ci->input->post('location')) {
+    $where[] = "AND " . db_prefix() . "staff.office_location IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('location'))) . ")";
+}
 
 if ($this->ci->input->post('lead_type')) {
     $where[] = "AND " . $sTable . ".type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";

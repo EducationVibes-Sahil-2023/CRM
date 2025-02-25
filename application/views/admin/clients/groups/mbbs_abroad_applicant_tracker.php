@@ -9,7 +9,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 $university_partner_names = get_university_partner_names();
 // $documents_type =  get_documents($lead_type_status, [], 1);
 
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : []);
+$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
@@ -22,12 +22,28 @@ if (!empty($applicant_documents[0]["data"])) {
     }
 }
 
+$staff_id = array_column($customer_admins, "staff_id");
+$final_sumbit = $client->submission_status;
+$read_only = "readonly";
+if (is_admin()) {
+    $final_sumbit = 0;
+    $read_only = "";
+}
+if (in_array(get_staff_user_id(), $staff_id)) {
+    $final_sumbit = 0;
+    $read_only = "";
+}
+
 ?>
 <style>
     /*basic reset*/
     * {
         margin: 0;
         padding: 0;
+    }
+
+    .margin-top {
+        margin-top: 10px;
     }
 
     li.col-md-3.checkbox-select-doc.d-flex.align-items-center {
@@ -380,7 +396,11 @@ if (!empty($applicant_documents[0]["data"])) {
         color: white;
     }
 
-    .application_div div.university_div_application {
+    .application_div div.university_div_application,
+    .entrance_exam_university_div,
+    .legalization-item,
+    .feesDeposite-item,
+    .invitation-item {
         margin-top: 10px !important;
         margin-top: 30px !important;
         /* border: 1px solid black; */
@@ -609,13 +629,26 @@ if (!empty($applicant_documents[0]["data"])) {
     .dropdown-menu hr {
         margin: 0;
     }
+
+    table tr th,
+    table tr td {
+        text-wrap: unset !important;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
 
 if (empty($customer_admins)) { ?>
     <h2 class='text-center'><?= _l("no_admin_assign_tracker") ?></h2>
-<?php } else { ?>
+    <?php } else {
+
+    if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
+    ?>
+        <h2 class="text-center">Applicant Tracker - Accessible Only for Post-Sale & Admin</h2>
+    <?php
+        die;
+    }
+    ?>
     <div class="row">
         <div id="msform" class="col-md-12 ">
             <!-- <form id="msform" onsubmit="return false;"> -->
@@ -643,18 +676,19 @@ if (empty($customer_admins)) { ?>
                         <?php } ?>
                     </h2>
                     <?php if ($track["show_div_name"] == "document_div") { ?>
-                        <div id="upload_documents">
+                        <div id="upload_documents" class="table-responsive">
                             <table class="table table-bordered table-striped">
                                 <thead class="thead-dark ">
                                     <tr class="">
                                         <th scope="col">S.No</th>
                                         <th scope="col">Document Type</th>
                                         <th scope="col">Stage</th>
-                                        <th scope="col">Upload By</th>
-                                        <th scope="col">Upload Date</th>
+
                                         <th scope="col">Approved By</th>
                                         <th scope="col">Approved Date</th>
                                         <th scope="col">Action</th>
+                                        <th scope="col">Upload By</th>
+                                        <th scope="col">Upload Date</th>
                                     </tr>
                                 </thead>
                                 <tbody class="document_upload_div">
@@ -689,18 +723,13 @@ if (empty($customer_admins)) { ?>
                                                 <td>
                                                     <?= $doc_files["stage"] ?>
                                                 </td>
-                                                <td>
-                                                    <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
-                                                </td>
-                                                <td>
-                                                    <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
-                                                    ?>
-                                                </td>
-                                                <td class="approved_by_<?= $doc_id ?>">
 
+                                                <td class="approved_by_<?= $doc_id ?>">
+                                                    <?= !empty($staff_list[$applicant_documents[$doc_id]["approval_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["approval_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["approval_by"]]["lastname"] : '' ?>
                                                 </td>
                                                 <td class="approved_date_<?= $doc_id ?>">
-
+                                                    <?= !empty($applicant_documents[$doc_id]["approval_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["approval_date"])) : '';
+                                                    ?>
                                                 </td>
                                                 <!-- <td>
                                                         <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
@@ -708,13 +737,13 @@ if (empty($customer_admins)) { ?>
                                                 <td class="d-flex">
 
                                                     <?php if (!empty($file_url)) : ?>
-                                                        <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                        <i class="fa fa-download" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
+                                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
 
                                                         <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                             <div class="action_button_<?= $doc_id ?>">
-                                                                <button class="btn-xs btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)">Approved</button>
-                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)">Rejected</button>
+                                                                <button class="btn-xs btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)"><i class="fa fa-check"></i></button>
+                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)"><i class="fa fa-times"></i></button>
                                                             </div>
                                                         <?php else :
                                                             $approval_status = $applicant_documents[$doc_id]["approval_status"];
@@ -725,6 +754,13 @@ if (empty($customer_admins)) { ?>
                                                         <?php endif; ?>
                                                     <?php endif; ?>
 
+                                                </td>
+                                                <td>
+                                                    <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
+                                                </td>
+                                                <td>
+                                                    <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
+                                                    ?>
                                                 </td>
                                             </tr>
                                         <?php $index++;
@@ -854,7 +890,7 @@ if (empty($customer_admins)) { ?>
                                         $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
                                         if (!empty($selected_university_application) && $selected_university_application == 1) {
                                 ?>
-                                            <div class="col-md-12 university_div_application mt-2">
+                                            <div class="col-md-12 university_div_application mt-2 d-flex">
                                                 <div class="col-md-3">
                                                     <label>Country Name <small class='text-danger'>*</small></label>
                                                     <input type="input" name="country_<?= $short_list["id"] ?>" readonly required required-check class="form-control" value="<?= $short_list["country_name"] ?>">
@@ -870,36 +906,12 @@ if (empty($customer_admins)) { ?>
                                                     <?php
                                                     $selected_value = [];
                                                     $selected_value[] =  !empty($short_list["partner"]) ? $short_list["partner"] : '';
-                                                    echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value, ["requried" => "requried", "required-check" => "required-check"]);
+                                                    echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value, ["required" => "required", "required-check" => "required-check"]);
                                                     ?>
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label>Application Date <small class='text-danger'>*</small> </label>
-                                                    <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" requried required-check value="<?= $short_list["application_date"] ?>">
-                                                </div>
-                                                <br>
-                                                <div class="col-md-12">
-                                                    <label>Documents Attach <small class='text-danger'>*</small> </label>
-                                                    <br>
-                                                    <ul class=" list-unstyled">
-                                                        <?php
-                                                        // Ensure $documents_type is an array to prevent errors
-                                                        $documents_type = !empty($documents_type) ? $documents_type : [];
-
-                                                        $doc_selected = !empty($short_list["documents"]) ? explode(",", $short_list["documents"]) : [];
-
-                                                        foreach ($documents_type as $doc_ty) {
-                                                            // Check if the document ID is in the selected list
-                                                            $checked = in_array($doc_ty['id'], $doc_selected) ? 'checked' : '';
-                                                        ?>
-                                                            <li class="col-md-3 checkbox-select-doc d-flex align-items-center">
-                                                                <input type="checkbox" name="documents[]" id="doc_<?= $doc_ty['id'] ?>" value="<?= $doc_ty['id'] ?>" class="me-2" <?= $checked ?>>
-                                                                <label for="doc_<?= $doc_ty['id'] ?>" class="mb-0"><?= htmlspecialchars($doc_ty['name']) ?></label>
-                                                            </li>
-                                                        <?php } ?>
-
-                                                    </ul>
-
+                                                    <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" required required-check value="<?= $short_list["application_date"] ?>">
                                                 </div>
                                                 <div class="col-md-3">
                                                     <?php
@@ -912,8 +924,10 @@ if (empty($customer_admins)) { ?>
 
                                                     <?php
                                                     if (!empty($file_url)) { ?>
-                                                        <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                        <i class="fa fa-download" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                        </div>
                                                     <?php } ?>
                                                 </div>
 
@@ -927,15 +941,242 @@ if (empty($customer_admins)) { ?>
                                 <?php } ?>
                             </div>
                         </form>
+                    <?php } else if ($track["show_div_name"] == "entrance_div") { ?>
+                        <form id="entrance-form" class="form-disabled" onsubmit=" return false;">
+                            <div class="entrance_div">
+                                <?php if (!empty($entrance_exams)): ?>
+                                    <?php foreach ($entrance_exams as $university => $exams): ?>
+                                        <div class="entrance_exam_university_div shadow">
+                                            <h4 class="text-left "><?= htmlspecialchars($university) ?></h4>
+                                            <?php foreach ($exams as $exam): ?>
+                                                <div class="row university-entrance-exam">
+
+                                                    <div class="col-md-3">
+                                                        <label>Batch Name</label>
+                                                        <input type="text" value="<?= htmlspecialchars($exam["batch_name"]) ?>" readonly class="form-control">
+
+                                                        <input type="hidden" name="batch_id" value="<?= $exam['batch_id'] ?>" class="form-control">
+                                                        <input type="hidden" name="client_id" value="<?= $exam['client_id'] ?>" class="form-control">
+                                                        <input type="hidden" name="exam_id" value="<?= $exam['exam_id'] ?>" class="form-control">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Exam Name</label>
+                                                        <input type="text" value="<?= htmlspecialchars($exam["exam_name"]) ?>" readonly class="form-control">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Exam Date</label>
+                                                        <input type="date" value="<?= htmlspecialchars($exam["exam_date"]) ?>" readonly class="form-control">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>Status</label>
+
+                                                        <select name="entrance_status" class="selectpicker form-control">
+                                                            <option value="Pending" <?= (strtolower($exam["status"]) == "pending") ? 'selected' : '' ?>>Pending</option>
+                                                            <option value="pass" <?= (strtolower($exam["status"]) == "pass") ? 'selected' : '' ?>>Pass</option>
+                                                            <option value="fail" <?= (strtolower($exam["status"]) == "fail") ? 'selected' : '' ?>>Fail</option>
+                                                            <option value="reschedule" <?= (strtolower($exam["status"]) == "reschedule") ? 'selected' : '' ?>>Re-schedule</option>
+                                                        </select>
+
+                                                    </div>
+                                                </div>
+                                                <br>
+
+                                            <?php endforeach; ?>
+
+                                        </div>
+                                        <hr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+
+                        </form>
+                    <?php } else if ($track["show_div_name"] == "legalization_div") { ?>
+                        <form id="legalization-form" class="form-disabled" onsubmit=" return false;">
+                            <div class="legalization_div">
+                                <?php if (!empty($legalization)) : ?>
+                                    <?php foreach ($legalization as $leg) :
+                                        $mand = "";
+                                        $mand_re = "";
+                                        if ($leg["primary_university"] == 1) {
+                                            $mand = '<small class="text-danger">*</small>';
+                                            $mand_re = "required required-check";
+                                        }
+                                    ?>
+                                        <div class="legalization-item card shadow-sm p-3 mb-3">
+                                            <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?></h4>
+                                            <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                            <?php if (!empty($leg["ministry_document_status"]) && $leg["ministry_document_status"] == 1) : ?>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-6">
+                                                        <p class="form-check-label">&nbsp;</p>
+                                                        <label class="form-check-label">Ministry Order of Documents Received
+                                                            <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <?= $mand ?>
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label>MD Payment Slip <?= $mand ?> </label>
+                                                        <input type="file" class="form-control" <?= empty($leg["ministry_payment"]) ? $mand_re : "" ?> accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                        <?php
+                                                        $file_url = !empty($leg["ministry_payment"]) ? $leg["ministry_payment"] : "";
+                                                        if (!empty($file_url)) { ?>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                            </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                </div>
+                                            <?php else : ?>
+                                                <div class="row mt-2">
+                                                    <div class="col-md-6">
+                                                        <p class="form-check-label">&nbsp;</p>
+                                                        <label class="form-check-label">
+                                                            <input type="checkbox" <?= !empty($leg["contract_signed"]) && $leg["contract_signed"] == 1 ? 'checked' : '' ?> class="form-check-input" <?= $mand_re ?> name="contract_signed_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            Contract Signed <?= $mand ?>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else : ?>
+                                    <p class="text-muted">No legalizations available.</p>
+                                <?php endif; ?>
+                            </div>
+
+
+                        </form>
+                    <?php } else if ($track["show_div_name"] == "fees_deposite_div") {  ?>
+                        <form id="fees-deposite-form" class="form-disabled" onsubmit="return false;">
+                            <div class="fees_deposite_div">
+                                <?php if (!empty($legalization)) : ?>
+                                    <?php foreach ($legalization as $leg) :
+                                        $mand = "";
+                                        $mand_re = "";
+                                        if ($leg["primary_university"] == 1) {
+                                            $mand = '<small class="text-danger">*</small>';
+                                            $mand_re = "required required-check";
+                                        }
+                                        $file_url_payment = !empty($leg["fees_deposite_slip"]) ? $leg["fees_deposite_slip"] : "";
+                                        $file_url_university_payment = !empty($leg["university_fees_payment_slip"]) ? $leg["university_fees_payment_slip"] : "";
+                                    ?>
+                                        <div class="feesDeposite-item card shadow-sm p-3 mb-3">
+                                            <h4 class="university-name">
+                                                <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
+                                            </h4>
+                                            <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                            <div class="row mt-2">
+                                                <div class="col-md-3">
+                                                    <label>Date of Payment <?= $mand ?></label>
+                                                    <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["fees_deposite_date"]) ? $leg["fees_deposite_date"] : '' ?>" name="date_of_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <label>Payment Proof <?= $mand ?></label>
+                                                    <input type="file" <?= empty($file_url_payment) ? $mand_re : '' ?> class="form-control" accept=".pdf,image/*" name="payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                    <?php if (!empty($file_url_payment)) { ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_payment) ?>');"></i>&nbsp;
+                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_payment) ?>', '_blank');"></i>
+                                                        </div>
+                                                    <?php } ?>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <label>Payment Amount <?= $mand ?></label>
+                                                    <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label>University Payment Receipt </label>
+                                                    <input type="file" <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" accept=".pdf,image/*" name="university_payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                    <?php if (!empty($file_url_university_payment)) { ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_university_payment) ?>');"></i>&nbsp;
+                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_university_payment) ?>', '_blank');"></i>
+                                                        </div>
+                                                    <?php } ?>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else : ?>
+                                    <p class="text-muted">No Fees available.</p>
+                                <?php endif; ?>
+                            </div>
+                        </form>
+
+                    <?php } else if ($track["show_div_name"] == "invitation_div") {  ?>
+                        <form id="invitation-form" class="form-disabled" onsubmit="return false;">
+                            <div class="invitation_div">
+                                <?php if (!empty($legalization)) : ?>
+                                    <?php foreach ($legalization as $leg) :
+                                        $mand = "";
+                                        $mand_re = "";
+
+                                        $file_url = !empty($leg["invitation_letter"]) ? $leg["invitation_letter"] : '';
+                                        if ($leg["primary_university"] == 1) {
+                                            $mand = '<small class="text-danger">*</small>';
+                                            $mand_re = "required required-check";
+                                        }
+                                    ?>
+                                        <div class="invitation-item card shadow-sm p-3 mb-3">
+                                            <h4 class="university-name">
+                                                <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
+                                            </h4>
+                                            <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                            <div class="row mt-2">
+                                                <div class="col-md-3">
+                                                    <label>Date of Receiving <?= $mand ?></label>
+                                                    <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["invitation_receiving_date"]) ? $leg["invitation_receiving_date"] : '' ?>" name="invitation_receiving_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <label>Invitation Letter Upload <?= $mand ?></label>
+                                                    <input type="file" <?= !empty($file_url) ? '' : $mand_re ?> class="form-control" accept=".pdf,image/*" name="invitation_letter_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                    <?php
+                                                    if (!empty($file_url)) { ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                        </div>
+                                                    <?php } ?>
+                                                </div>
+                                                <?php if (!empty($leg["telex_status"]) && $leg["telex_status"] == 1) { ?>
+                                                    <div class="col-md-3">
+                                                        <label>Telex No. <?= $mand ?></label>
+                                                        <input type="text" <?= $mand_re ?> class="form-control" name="telex_no_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["telex_no"]) ? $leg["telex_no"] : '' ?>">
+                                                    </div>
+                                                <?php } ?>
+
+                                                <div class="col-md-3">
+                                                    <label>Entry Date <?= $mand ?></label>
+                                                    <input type="date" <?= $mand_re ?> class="form-control" name="entry_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["entry_date"]) ? $leg["entry_date"] : '' ?>">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else : ?>
+                                    <p class="text-muted">No Fees available.</p>
+                                <?php endif; ?>
+                            </div>
+                        </form>
                     <?php } ?>
                     <?php if ($k > 0) { ?>
                         <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
                     <?php } ?>
                     <?php
                     if (($k + 1) < count($applicant_tracker)) { ?>
-                        <input type="button" name="next" class="next text-center action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Save & Next" />
+                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Save & Next" />
+                        <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
+                            <input type="button" name="next" class=" text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
+                        <?php } ?>
                     <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
-                        <input type="button" name="next" class="next text-center action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
+                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
                     <?php } ?>
 
 
@@ -978,7 +1219,7 @@ if (empty($customer_admins)) { ?>
 <!-- /.MultiStep Form -->
 <script>
     var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
-
+    var base_url = "<?= base_url() ?>";
     //jQuery time
     let lead_type_status = "<?= $lead_type_status ?>";
     console.log(lead_type_status);
@@ -1216,53 +1457,95 @@ if (empty($customer_admins)) { ?>
         current_fs.slideUp("slow");
         next_fs.slideDown("slow");
     }
-    async function next_step(id, obj) {
+    async function next_step(id, obj, skip = 0) {
         id = $.trim(id);
-
         let upload_data = new FormData();
-        try {
 
+        try {
+            // Ensure ID is retrieved from the progress bar if not provided
             id = $("#progressbar .active").data("id");
+
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
             upload_data.append("tracker_id", id);
             upload_data.append("lead_type", <?= $lead_type_status ?>);
+            upload_data.append("skip", skip);
 
             if (id == 2) {
-
+                let result = await university_shortlisting_dropdown();
+                if (!result) return false;
                 await check_university_shortlisting(upload_data);
-
             }
+
             if (id == 3) {
-                let check = await check_requried_fields("application-form");
+                let check_validation = await check_required_fields("application-form");
+                if (!check_validation) return false;
                 await check_university_admission(upload_data);
             }
+
+            if (id == 4 && skip == 0) {
+                await check_entrance_exam(upload_data);
+            }
+
+            if (id == 5) {
+                let check_validation = await check_required_fields("legalization-form");
+                if (!check_validation) return false;
+                await check_legalization(upload_data);
+            }
+
+            if (id == 6) {
+                let check_validation = await check_required_fields("fees-deposite-form");
+                if (!check_validation) return false;
+                await check_fees_deposite(upload_data);
+            }
+            if (id == 7) {
+                let check_validation = await check_required_fields("invitation-form");
+                if (!check_validation) return false;
+                await check_invitation_letter(upload_data);
+            }
+            // Perform AJAX request
             let response = await $.ajax({
-                url: "<?= base_url("admin/clients/mbbs_tracker") ?>",
+                url: "<?= base_url('admin/clients/mbbs_tracker') ?>",
                 method: "POST",
                 data: upload_data,
                 contentType: false,
                 processData: false
             });
-            response = JSON.parse(response);
+
+            try {
+                response = JSON.parse(response);
+            } catch (error) {
+                console.error("Error parsing JSON response:", error);
+                alert_float("danger", "Invalid server response.");
+                return false;
+            }
+
             if (response.resp_code === "RCS") {
                 alert_float("success", response.resp_desc);
                 show_next_previous(obj);
-                if (id == 3) {
+
+                if (id == 2) {
                     set_application(response);
                 }
-
-            } else {
-                if (response.resp_code !== undefined) {
-                    alert_float("danger", response.resp_desc);
-                } else {
-                    alert_float("danger", response);
+                if (id == 3 && response.entrance_exams != undefined) {
+                    createEntranceExamList(response.entrance_exams);
                 }
+                if (id == 4 && response.legalization != undefined) {
+
+                    createLegalization(response.legalization);
+                }
+                if (id == 5 && response.fees_deposite != undefined) {
+                    createFeesDeposite(response.fees_deposite);
+                }
+                if (id == 6 && response.invitation != undefined) {
+                    createInvitationLetter(response.invitation);
+                }
+            } else {
+                alert_float("danger", response.resp_desc || "An error occurred.");
             }
         } catch (error) {
-            // Handle the error response from the server
-            console.error(error);
-            reject(error);
+            console.error("Error in next_step:", error);
+            // alert_float("danger", "An unexpected error occurred.");
         }
     }
 
@@ -1275,6 +1558,243 @@ if (empty($customer_admins)) { ?>
         previous_fs.slideDown();
         current_fs.slideUp("slow");
     });
+
+    function createEntranceExamList(data) {
+        const $container = $(".entrance_div");
+        $container.html(""); // Clear the container
+
+        $.each(data, function(university, exams) {
+            const $universityDiv = $("<div>").addClass("entrance_exam_university_div shadow");
+
+            const $title = $("<h4>").addClass("text-left").text(university);
+            $universityDiv.append($title);
+
+            $.each(exams, function(index, exam) {
+                const $examRow = $("<div>").addClass("row university-entrance-exam");
+                console.log(exam.status);
+                $examRow.append(`
+                <div class="col-md-3">
+                    <label>Batch Name</label>
+                    <input type="text" value="${exam.batch_name}" readonly class="form-control">
+                    <input type="hidden" name="batch_id" value="${exam.batch_id}" readonly class="form-control">
+                    <input type="hidden" name="client_id" value="${exam.client_id}" readonly class="form-control">
+                    <input type="hidden" name="exam_id" value="${exam.exam_id}" readonly class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label>Exam Name</label>
+                    <input type="text" value="${exam.exam_name}" readonly class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label>Exam Date</label>
+                    <input type="date" value="${exam.exam_date}" readonly class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label>Status</label>
+                    <select name="entrance_status" class="selectpicker form-control" data-status="${exam.status}">
+                        <option value="Pending" ${exam.status === "Pending" ? "selected" : ""}>Pending</option>
+                        <option value="pass" ${exam.status === "pass" ? "selected" : ""}>Pass</option>
+                        <option value="fail" ${exam.status === "fail" ? "selected" : ""}>Fail</option>
+                        <option value="reschedule" ${exam.status === "reschedule" ? "selected" : ""}>Re-schedule</option>
+                    </select>
+                </div>
+            `);
+
+                $universityDiv.append($examRow);
+                $universityDiv.append("<br>"); // Add spacing
+            });
+
+            $container.append($universityDiv);
+            $container.append("<hr>"); // Divider
+        });
+
+        $(".selectpicker").selectpicker("refresh"); // Refresh bootstrap-select
+    }
+
+    function createLegalization(legalizationData) {
+        let legalizationContainer = $(".legalization_div"); // Target container
+
+        legalizationContainer.html('');
+        if (legalizationData.length > 0) {
+
+
+            legalizationData.forEach((leg) => {
+
+                let mand = "";
+                let mand_re = "";
+
+                if (leg.primary_university == 1) {
+                    mand = '<small class="text-danger">*</small>';
+                    mand_re = "required required-check";
+                }
+
+                let html = `
+                <div class="legalization-item card shadow-sm p-3 mb-3">
+                    <h4 class="university-name">${leg.university_name}</h4>
+                    <input type="hidden" name="id" value="${leg.id}">
+            `;
+
+                if (leg.ministry_document_status && leg.ministry_document_status == 1) {
+                    let check_min_doc = leg.ministry_document_recived == 1 ? 'checked' : '';
+                    let media_view = "";
+                    let file = leg.ministry_payment;
+                    if (file != "") {
+                        media_view = `<div class='margin-top'><i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${base_url}${file}');"></i>&nbsp;
+                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url}${file}', '_blank');"></i></div>`;
+                    }
+                    html += `
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <p class="form-check-label">&nbsp;</p>
+                            <label class="form-check-label">
+                                Ministry Order of Documents Received
+                                <input type="checkbox" class="form-check-input" ${check_min_doc} ${mand_re} name="ministry_doc_received_${(leg.id)}">
+                                ${mand}
+                            </label>
+                        </div>
+                        <div class="col-md-6">
+                            <label>MD Payment slip ${mand} </label>
+                            <input type="file" class="form-control" ${(media_view ?? "") === "" ? mand_re : ""} accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
+                            ${media_view}
+                        </div>
+                    </div>
+                `;
+                } else {
+                    let check_min_doc = leg.contract_signed == 1 ? 'checked' : '';
+                    html += `
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <p class="form-check-label">&nbsp;</p>
+                            <label class="form-check-label">
+                                <input type="checkbox" class="form-check-input" ${check_min_doc} ${mand_re} name="contract_signed_${(leg.id)}">
+                                Contract Signed ${mand}
+                            </label>
+                        </div>
+                    </div>
+                `;
+                }
+
+                html += `</div>`;
+                console.log(html);
+                legalizationContainer.append(html);
+            });
+        } else {
+            legalizationContainer.html('<p class="text-muted">No Fees Data available.</p>');
+        }
+    }
+
+    function createFeesDeposite(legalization) {
+        let feesDepositeDiv = $(".fees_deposite_div");
+        feesDepositeDiv.html(""); // Clear existing content
+
+        if (legalization.length > 0) {
+            legalization.forEach(leg => {
+                let mand = leg.primary_university == 1 ? '<small class="text-danger">*</small>' : '';
+                let mand_re = leg.primary_university == 1 ? 'required required-check' : '';
+
+                let file_url_payment = leg.fees_deposite_slip ? leg.fees_deposite_slip : "";
+                let file_url_university_payment = leg.university_fees_payment_slip ? leg.university_fees_payment_slip : "";
+
+                let itemHtml = `
+                <div class="feesDeposite-item card shadow-sm p-3 mb-3">
+                    <h4 class="university-name">${$("<div>").text(leg.university_name).html()}</h4>
+                    <input type="hidden" name="id" value="${$("<div>").text(leg.id).html()}">
+
+                    <div class="row mt-2">
+                        <div class="col-md-3">
+                            <label>Date of Payment ${mand}</label>
+                            <input type="date" class="form-control" value="${leg.fees_deposite_date}" name="date_of_payment_${leg.id}" ${mand_re}>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label>Payment Proof ${mand}</label>
+                            <input type="file" class="form-control" accept=".pdf,image/*" name="payment_slip_${leg.id}" ${file_url_payment ? "" : mand_re}>
+                            ${file_url_payment ? `
+                                <div class="margin-top">
+                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_payment}');"></i>&nbsp;
+                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file_url_payment}', '_blank');"></i>
+                                </div>` : ""}
+                        </div>
+                        <div class="col-md-3">
+                             <label>Payment Amount ${mand}</label>
+                             <input type="number" value="${leg.payment_amount}" class="form-control" name="payment_amount_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" ${mand_re}>
+                        </div>
+                        <div class="col-md-3">
+                            <label>University Payment Receipt ${mand}</label>
+                            <input type="file" class="form-control" accept=".pdf,image/*" name="university_payment_slip_${leg.id}" ${file_url_university_payment ? "" : mand_re}>
+                            ${file_url_university_payment ? `
+                                <div class="margin-top">
+                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_university_payment}');"></i>&nbsp;
+                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file_url_university_payment}', '_blank');"></i>
+                                </div>` : ""}
+                        </div>
+                    </div>
+                </div>`;
+
+                feesDepositeDiv.append(itemHtml);
+            });
+        } else {
+            feesDepositeDiv.html('<p class="text-muted">No Fees available.</p>');
+        }
+    }
+
+    function createInvitationLetter(legalization) {
+        let container = $(".invitation_div");
+        container.empty(); // Clear previous content
+
+        if (legalization.length > 0) {
+            legalization.forEach(leg => {
+                let mand = leg.primary_university == 1 ? '<small class="text-danger">*</small>' : "";
+                let mandRe = leg.primary_university == 1 ? "required required-check" : "";
+                let telexField = leg.telex_status == 1 ?
+                    `
+                    <div class="col-md-3">
+                        <label>Telex No. ${mand}</label>
+                        <input type="date" class="form-control" ${mandRe} name="telex_no_${leg.id}" value="${leg.telex_no ?? ''}">
+                    </div>
+                ` :
+                    "";
+                let file_url_university_payment = leg.invitation_letter ? leg.invitation_letter : "";
+
+                let card = `
+                <div class="invitation-item card shadow-sm p-3 mb-3">
+                    <h4 class="university-name">${leg.university_name}</h4>
+                    <input type="hidden" name="id" value="${leg.id}">
+
+                    <div class="row mt-2">
+                        <div class="col-md-3">
+                            <label>Date of Receiving ${mand}</label>
+                            <input type="date" class="form-control " ${mandRe}
+                                name="invitation_receiving_date_${leg.id}" 
+                                value="${leg.invitation_receiving_date ?? ''}">
+                        </div>
+
+                        <div class="col-md-3">
+                            <label>Invitation Letter Upload ${mand}</label>
+                            <input type="file" class="form-control " ${file_url_university_payment?'':mandRe}
+                                accept=".pdf,image/*" name="invitation_letter_${leg.id}">
+                                ${file_url_university_payment ? `
+                                <div class="margin-top">
+                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_university_payment}');"></i>&nbsp;
+                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file_url_university_payment}', '_blank');"></i>
+                                </div>` : ""}
+                        </div>
+
+                        ${telexField} <!-- Conditionally inserted -->
+
+                        <div class="col-md-3">
+                            <label>Entry Date ${mand}</label>
+                            <input type="date" class="form-control " ${mandRe} name="entry_date_${leg.id}"  value="${leg.entry_date ?? ''}">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+                container.append(card);
+            });
+        } else {
+            container.text("No Invitation Letter available.");
+        }
+    }
 
     function check_university_shortlisting(upload_data) {
         return new Promise(async (resolve, reject) => {
@@ -1305,7 +1825,7 @@ if (empty($customer_admins)) { ?>
                     "university_name": university_name,
                     "country_name": country_name
                 });
-                console.log(university_shortlisting);
+                // console.log(university_shortlisting);
 
             });
 
@@ -1368,9 +1888,9 @@ if (empty($customer_admins)) { ?>
         });
     }
 
-    window.onbeforeunload = function() {
-        return null;
-    };
+    // window.onbeforeunload = function() {
+    //     return null;
+    // };
 
 
 
@@ -1430,25 +1950,27 @@ if (empty($customer_admins)) { ?>
     function university_shortlisting_dropdown() {
         let check_university_duplicate = [];
         let stop_status = true;
+
         $(".add_university_div_block .university_div").each(function() {
             let university_id = $(this).find("input[name='id']").val();
             let select_university = $(this).find("select[name='select_university']").val();
 
-            const duplicateEntry = check_university_duplicate.find(entry => entry.university === select_university);
-            if (duplicateEntry) {
+            if (check_university_duplicate.some(entry => entry.university === select_university)) {
                 hide_loader();
-                alert_float("danger", "Duplicate entry found: university '" + select_university + "' connected with multiple vendors.");
+                alert_float("danger", `Duplicate entry found: university '${select_university}'.`);
                 stop_status = false;
-                return false;
+                return false; // Stops iteration
             }
-            check_university_duplicate.push({
-                "university": select_university,
-                "university_id": university_id
-            });
 
+            check_university_duplicate.push({
+                university: select_university,
+                university_id: university_id
+            });
         });
 
+        return stop_status;
     }
+
 
     function is_validate_university() {
         return new Promise((resolve, reject) => {
@@ -1457,7 +1979,7 @@ if (empty($customer_admins)) { ?>
                 let select_university_vendor = $(this).find("select[name='select_university_vendor']").val()
                 if (select_university === undefined || $.trim(select_university) === "") {
                     $(this).find("select[name='select_university']").focus();
-                    alert_float("danger", "Select university is requried.");
+                    alert_float("danger", "Select university is required.");
                     resolve(false);
                     return;
                 }
@@ -1566,17 +2088,18 @@ if (empty($customer_admins)) { ?>
             let file = university.application_file;
             let media_view = "";
             if (file != "") {
-                media_view = `<i class="fa fa-eye" onclick="show_media_files('${base_url}${file}');"></i>&nbsp;
-                                                        <i class="fa fa-download" onclick="download_media_files('${base_url}${file}', '_blank');"></i>`;
+                media_view = `<div class='margin-top'><i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${base_url}${file}');"></i>&nbsp;
+                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url}${file}', '_blank');"></i></div>`;
             }
-            html += `<div class="row university_div_application mt-2">
+            html += `<div class="row university_div_application mt-2 d-flex">
         <div class="col-md-3">
+     
             <label>Country Name <small class='text-danger'>*</small></label>
             <input type="text" name="country_${university.id}" class="form-control" disabled value="${university.country_name}">
         </div>  
         <div class="col-md-3">
             <label>University Name <small class='text-danger'>*</small></label>
-            <input type="hidden" name="id[]" value="${university.id}">
+            <input type="hidden" name="id" value="${university.id}">
             <input type="text" name="university_${university.id}" class="form-control" disabled value="${university.university_name}">
         </div> 
         <div class="col-md-3">
@@ -1599,33 +2122,10 @@ if (empty($customer_admins)) { ?>
             <label>Application Date <small class='text-danger'>*</small></label>
             <input type="date" name="date_${university.id}" class="form-control required-check" required value="${university.application_date || ''}">
         </div>
-        <br>
-        <div class="col-md-12">
-            <label>Documents Attach <small class='text-danger'>*</small></label>
-            <br>
-            <ul class="list-unstyled">`;
-
-            if (!Array.isArray(documents_type)) {
-                console.error("Error: documents_type is not an array!", documents_type);
-            } else {
-
-                let selected_values = university_list[i].documents ? university_list[i].documents.split(",") : [];
-                for (let doc of documents_type) {
-                    let selected = selected_values.includes(doc.id.toString()) ? "checked" : "";
-                    html += `<li class="col-md-3 checkbox-select-doc d-flex align-items-center">
-                <input type="checkbox" ${selected} name="documents[]" name="docs_${university_list[i].id}" id="doc_${doc.id}" value="${doc.id}" class="me-2">
-                <label for="doc_${doc.id}" class="mb-0">${doc.name}</label>
-            </li>`;
-                }
-
-            }
-
-
-            html += `</ul>
-        </div>  
+       
         <div class="col-md-3">
           <label>Admission Letter <small class='text-danger'>*</small> </label>
-        <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university_list[i].application_file}">
+        <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university_list[i].id}">
         <input type="file" class="form-control" accept=".pdf" name="admission_letter_${university_list[i].id}">
         ${media_view}
         </div>
@@ -1638,7 +2138,7 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    function check_requried_fields(id = "application-form") {
+    function check_required_fields(id = "application-form") {
         return new Promise((resolve, reject) => {
             let form_status = true;
             let additional_fields = {}; // Ensure additional_fields is defined
@@ -1663,12 +2163,159 @@ if (empty($customer_admins)) { ?>
             console.log(additional_fields);
             if (!form_status) {
                 appValidateForm($("#" + id), additional_fields);
-                $("#application-form").submit()
+                $("#" + id).submit()
 
                 reject(false);
             } else {
                 resolve(true);
             }
+        });
+    }
+
+
+
+    function check_entrance_exam(upload_data) {
+        return new Promise((resolve, reject) => {
+            let entrance_exam_data = [];
+
+            $(".entrance_exam_university_div .university-entrance-exam").each(function() {
+                let batch_id = $(this).find("input[name='batch_id']").val() || "";
+                let client_id = $(this).find("input[name='client_id']").val() || "";
+                let exam_id = $(this).find("input[name='exam_id']").val() || "";
+                let status = $(this).find("select[name='entrance_status']").val() || "";
+
+                // Push only if required fields are present
+                if (batch_id && client_id && exam_id) {
+                    entrance_exam_data.push({
+                        batch_id: batch_id.trim(),
+                        client_id: client_id.trim(),
+                        exam_id: exam_id.trim(),
+                        status: status.trim(),
+                    });
+                }
+            });
+
+            // Append data only if there's valid input
+            if (entrance_exam_data.length > 0) {
+                upload_data.append("entrance_exam", JSON.stringify(entrance_exam_data));
+            }
+
+            resolve(upload_data);
+        });
+    }
+
+    function check_legalization(upload_data) {
+        return new Promise((resolve, reject) => {
+            let legalization = [];
+
+            $(".legalization_div .legalization-item").each(function() {
+                let id = $(this).find("input[name='id']").val() || "";
+                let ministry_doc_received = $(this).find("input[name='ministry_doc_received_" + id + "']").is(":checked") ? 1 : 0;
+                let contract_signed = $(this).find("input[name='contract_signed_" + id + "']").is(":checked") ? 1 : 0;
+
+                let ministryDocPaymentInput = $(this).find("input[name='ministry_doc_payment_" + id + "']")[0];
+                let ministry_doc_payment = ministryDocPaymentInput && ministryDocPaymentInput.files.length > 0 ?
+                    ministryDocPaymentInput.files[0] :
+                    null;
+
+                // Push only if required fields are present
+                if (id) {
+                    let entry = {
+                        id: id.trim(),
+                        ministry_doc_received: ministry_doc_received,
+                        contract_signed: contract_signed
+                    };
+
+                    // Add file separately
+                    if (ministry_doc_payment) {
+                        upload_data.append("ministry_doc_payment_" + id, ministry_doc_payment);
+                    }
+
+                    legalization.push(entry);
+                }
+            });
+
+            // Append legalization data as JSON
+            if (legalization.length > 0) {
+                upload_data.append("legalization", JSON.stringify(legalization));
+            }
+
+            resolve(upload_data);
+        });
+    }
+
+    function check_fees_deposite(upload_data) {
+        return new Promise((resolve, reject) => {
+            let fees_deposite = [];
+
+            $(".fees_deposite_div .feesDeposite-item").each(function() {
+                let id = $(this).find("input[name='id']").val() || "";
+                let date_of_payment = $(this).find("input[name='date_of_payment_" + id + "']").val() || "";
+                let payment_slipInput = $(this).find("input[name='payment_slip_" + id + "']")[0];
+                let payment_amount = $(this).find("input[name='payment_amount_" + id + "']").val() || "";
+                let university_payment_slipInput = $(this).find("input[name='university_payment_slip_" + id + "']")[0];
+
+                // Validate if ID exists
+                if (id.trim()) {
+                    let entry = {
+                        id: id.trim(),
+                        date_of_payment: date_of_payment.trim(),
+                        payment_amount: payment_amount
+                    };
+
+                    // Append files to FormData if available
+                    if (payment_slipInput && payment_slipInput.files.length > 0) {
+                        upload_data.append("payment_slip_" + id, payment_slipInput.files[0]);
+                    }
+                    if (university_payment_slipInput && university_payment_slipInput.files.length > 0) {
+                        upload_data.append("university_payment_slip_" + id, university_payment_slipInput.files[0]);
+                    }
+
+                    fees_deposite.push(entry);
+                }
+            });
+
+            // Append fees_deposite data as JSON
+            if (fees_deposite.length > 0) {
+                upload_data.append("fees_deposite", JSON.stringify(fees_deposite));
+            }
+
+            resolve(upload_data);
+        });
+    }
+
+    function check_invitation_letter(upload_data) {
+        return new Promise((resolve, reject) => {
+            let invitation = [];
+
+            $(".invitation_div .invitation-item").each(function() {
+                let id = $(this).find("input[name='id']").val() || "";
+                let receiving_date = $(this).find("input[name='invitation_receiving_date_" + id + "']").val() || "";
+                let invitation_letter = $(this).find("input[name='invitation_letter_" + id + "']")[0];
+                let entry_date = $(this).find("input[name='entry_date_" + id + "']").val() || "";
+
+                // Validate if ID exists
+                if (id.trim()) {
+                    let entry = {
+                        id: id.trim(),
+                        receiving_date: receiving_date.trim(),
+                        entry_date: entry_date.trim()
+                    };
+
+                    // Append files to FormData if available
+                    if (invitation_letter && invitation_letter.files.length > 0) {
+                        upload_data.append("invitation_letter_" + id, invitation_letter.files[0]);
+                    }
+                    invitation.push(entry);
+                }
+            });
+
+            // Append invitation_letter data as JSON
+            if (invitation.length > 0) {
+                upload_data.append("invitation", JSON.stringify(invitation));
+            }
+
+            resolve(upload_data);
         });
     }
 </script>

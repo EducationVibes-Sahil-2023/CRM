@@ -23,7 +23,7 @@ $staff_list = array_column($staff_list, 'staff_name', "staffid");
 $status_list = $this->leads_model->get_status();
 $status_list_ = array_column($status_list, null, "id");
 $tbllead_performance_column = $this->leads_model->tbllead_performance_column();
-$selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0,5);
+$selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0, 5);
 
 ?>
 
@@ -274,6 +274,8 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
             utm_form_name: "[name='view_form[]']",
             utm_term: "[name='view_term[]']",
             columnNames: "[name='column_show[]']", // Include dynamically generated column names
+            department: "[name='department[]']",
+            location: "[name='location[]']", // Include dynamically generated column names
         };
         // var tbllead_performance_column = <?= json_encode($tbllead_performance_column, true) ?>;
         var tbllead_performance_column = [];

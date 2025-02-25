@@ -13,13 +13,6 @@ class Forms extends ClientsController
         show_404();
     }
 
-    /**
-     * Web to lead form
-     * User no need to see anything like LEAD in the url, this is the reason the method is named wtl
-     * @param  string $key web to lead form key identifier
-     * @return mixed
-     */
-
     public function wtl($key)
     {
         $this->load->model('leads_model');
@@ -36,8 +29,6 @@ class Forms extends ClientsController
             $form->facebook_status = 1;
         }
         $tags = "";
-        // Change the locale so the validation loader function can load
-        // the proper localization file
         $GLOBALS['locale'] = get_locale_key($form->language);
 
         $data['form_fields'] = json_decode($form->form_data);
@@ -54,11 +45,11 @@ class Forms extends ClientsController
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
                 if (!isset($post_data["phonenumber"]) || strlen(trim($post_data["phonenumber"])) != 10) {
                     echo json_encode([
-                        'success' => false, // Set this to false since validation failed
-                        'message' => 'Invalid phone number. It must be exactly 10 digits.', // Custom error message
-                        'redirect_url' => false, // Use the redirect URL if applicable
+                        'success' => false,
+                        'message' => 'Invalid phone number. It must be exactly 10 digits.',
+                        'redirect_url' => false,
                     ]);
-                    return true; // Stop further execution
+                    return true;
                 }
 
                 $call_data = array();
@@ -119,11 +110,6 @@ class Forms extends ClientsController
                         $status_fb_lead_assign = false;
                         if (!empty($assign_staff_id)) {
                             foreach ($assign_staff_id as $fl) {
-                                // if (strpos(strtolower(trim($facebook_lead_name)), strtolower(trim($assign_staff_id["facebook_lead_name"]))) !== false) {
-                                //     $form->responsible = $fl["staffid"];
-                                //     $status_fb_lead_assign = true;
-                                //     break;
-                                // }
                                 if (!empty($fl["facebook_lead_name"])) {
                                     $fb_form_name = explode(",", $fl["facebook_lead_name"]);
                                     if (!empty($fb_form_name)) {
@@ -151,27 +137,11 @@ class Forms extends ClientsController
                             }
                         }
                     }
-
-                    // if (!empty($state_name) && !empty($lead_type)) {
-                    //     $assign_staff_id = $this->leads_model->automatic_assign_staff($state_name, $lead_type);
-                    //     if (!empty($assign_staff_id[0]["staffid"])) {
-                    //         $form->responsible = $assign_staff_id[0]["staffid"];
-                    //     }
-                    // }
-
                 }
 
-                // if ($key == "de34ba611f3853dc13f2596a4ba992ac") {
-                //                                    $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', [177, 176, 181, 179, 154]);
-
-                //              if (!empty($assign_staff_id[0]["staffid"])) {
-                //                $form->responsible = $assign_staff_id[0]["staffid"];
-                //          }
-                //    }
 
 
                 if (!empty($form->auto_assign)) {
-                    // $lead_type = !empty($form->lead_type) ? $form->lead_type : '';
                     $auto_assign = array_filter(explode(",", $form->auto_assign));
                     $assign_staff_id = $this->leads_model->automatic_assign_staff('', '', '', '', $auto_assign);
                     if (!empty($assign_staff_id[0]["staffid"])) {
@@ -310,6 +280,254 @@ class Forms extends ClientsController
 
 
 
+                // if ($form->allow_duplicate == 0) {
+                //     $where = [];
+                //     if (!empty($form->track_duplicate_field) && isset($regular_fields[$form->track_duplicate_field])) {
+                //         $where[$form->track_duplicate_field] = $regular_fields[$form->track_duplicate_field];
+                //     }
+                //     if (!empty($form->track_duplicate_field_and) && isset($regular_fields[$form->track_duplicate_field_and])) {
+                //         $where[$form->track_duplicate_field_and] = $regular_fields[$form->track_duplicate_field_and];
+                //     }
+
+                //     if (count($where) > 0) {
+                //         $total = total_rows(db_prefix() . 'leads', $where);
+
+                //         $duplicateLead = false;
+                //         /**
+                //          * Check if the lead is only 1 time duplicate
+                //          * Because we wont be able to know how user is tracking duplicate and to send the email template for
+                //          * the request
+                //          */
+                //         if ($total == 1) {
+                //             $this->db->where($where);
+                //             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
+                //         }
+
+                //         if ($total > 0) {
+                //             // Success set to true for the response.
+                //             $success      = true;
+                //             $insert_to_db = false;
+
+                //             // convert to fresh lead
+                //             $this->db->where($where);
+                //             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
+                //             $updateStatus = [
+
+                //                 'status' => $form->lead_status,
+                //                 // 'description' => 'Re Query',
+                //                 // 'assigned' => $form->responsible,
+                //                 'last_status_change' => date("Y-m-d"),
+                //                 'lastcontact' => date("Y-m-d h:i:s"),
+                //                 'dateassigned' => date("Y-m-d")
+                //             ];
+
+                //             if (!empty($post_data["website"])) {
+                //                 $updateStatus['website'] = $post_data["website"];
+                //             }
+
+
+                //             $regular_fields = [];
+                //             $custom_fields  = [];
+                //             foreach ($post_data as $name => $val) {
+                //                 if (strpos($name, 'form-cf-') !== false) {
+                //                     array_push($custom_fields, [
+                //                         'name'  => $name,
+                //                         'value' => $val,
+                //                     ]);
+                //                 }
+
+                //                 $custom_fields_build['leads'] = [];
+                //                 foreach ($post_data as $name => $val) {
+                //                     // if (!empty($_POST['form-cf-' . MARKETING_SOURCE_ID])) {
+                //                     //     $custom_fields_build['leads'][MARKETING_SOURCE_ID] = !empty($_POST['form-cf-' . MARKETING_SOURCE_ID]) ? $_POST['form-cf-' . MARKETING_SOURCE_ID] : "";
+                //                     // }
+
+                //                     // if (!empty($_POST['form-cf-' . CALL_TYPE_ID])) {
+                //                     //     $custom_fields_build['leads'][CALL_TYPE_ID] = !empty($_POST['form-cf-' . CALL_TYPE_ID]) ? $_POST['form-cf-' . CALL_TYPE_ID] : "";
+                //                     // }
+                //                     // update web history json 
+                //                     if (!empty($_POST['form-cf-' . WEB_HISTORY_ID])) {
+                //                         $web_activity_log_data = $this->db->select("value")->where(array("fieldid" => WEB_HISTORY_ID, "fieldto" => "leads", "relid" => $duplicateLead->id))->get(db_prefix() . "customfieldsvalues")->row_array();
+
+
+
+                //                         if (empty($web_activity_log_data)) {
+                //                             $custom_fields_build['leads'][WEB_HISTORY_ID] = !empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "";
+                //                         } else {
+                //                             $custom_fields_build['leads'][WEB_HISTORY_ID] = $web_activity_log_data["value"] . "," . (!empty($_POST['form-cf-' . WEB_HISTORY_ID]) ? $_POST['form-cf-' . WEB_HISTORY_ID] : "");
+                //                         }
+                //                     }
+                //                 }
+                //             }
+
+
+
+
+                //             if (!empty($custom_fields_build['leads'])) {
+                //                 handle_custom_fields_post($duplicateLead->id, $custom_fields_build);
+                //             }
+
+                //             if (!empty($form->lead_source)) {
+                //                 $source_data_get = $this->leads_model->get_source($duplicateLead->source);
+                //                 if (!empty($source_data_get->fixed_source) && $source_data_get->fixed_source == 1) {
+                //                 } else {
+                //                     $updateStatus['source'] = $form->lead_source;
+                //                 }
+                //             }
+
+                //             if (!empty($updateStatus['source'])) {
+                //                 $this->leads_model->update_lead_source($updateStatus['source'], $duplicateLead->id);
+                //             }
+
+
+
+                //             if ($post_data['callassignee'] != null) {
+                //                 $updateStatus["assigned"] = $form->responsible;
+                //             }
+
+                //             // $updateStatus["assigned"] = 1;
+
+
+                //             if (!empty($form->assign_previous_lead_alert) && $form->assign_previous_lead_alert == 1) {
+                //                 if (!empty($updateStatus["assigned"]) && !empty($duplicateLead->assigned) && $duplicateLead->assigned != $updateStatus["assigned"]) {
+                //                     $notifiedUsers = [];
+                //                     $notified = add_notification([
+                //                         'description'     => 'lead_assign_previous_lead',
+                //                         'touserid'        => $duplicateLead->assigned,
+                //                         'fromcompany'     => 1,
+                //                         'fromuserid'      => null,
+                //                         'additional_data' => serialize([
+                //                             $duplicateLead->name,
+                //                             // !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
+                //                             get_staff_full_name($updateStatus["assigned"])
+                //                         ])
+                //                     ]);
+                //                     if ($notified) {
+                //                         array_push($notifiedUsers, $duplicateLead->assigned);
+                //                     }
+                //                     pusher_trigger_notification($notifiedUsers);
+                //                     $this->leads_model->log_lead_activity($duplicateLead->id, 'lead_assign_previous_lead', true, serialize([
+                //                         $duplicateLead->name,
+                //                         // !empty($this->leads_model->get_source($duplicateLead->source)->name) ? $this->leads_model->get_source($duplicateLead->source)->name : '',
+                //                         get_staff_full_name($updateStatus["assigned"])
+                //                     ]));
+                //                 }
+                //             }
+                //             $this->db->where('id', $duplicateLead->id);
+                //             $this->db->update(db_prefix() . 'leads', $updateStatus);
+
+
+                //             $notifiedUsers = [];
+                //             $notified = add_notification([
+                //                 'description'     => 'not_lead_imported_from_form',
+                //                 'touserid'        => $form->responsible,
+                //                 'fromcompany'     => 1,
+                //                 'fromuserid'      => null,
+                //                 'additional_data' => serialize([
+                //                     $form->name,
+                //                 ]),
+                //                 'link' => '#leadid=' . $duplicateLead->id,
+                //             ]);
+                //             if ($notified) {
+                //                 array_push($notifiedUsers, $form->responsible);
+                //             }
+
+                //             pusher_trigger_notification($notifiedUsers);
+                //             $this->leads_model->log_lead_activity($duplicateLead->id, 'not_lead_imported_from_form', true, serialize([
+                //                 $form->name,
+                //             ]));
+                //             hooks()->do_action('web_to_lead_form_submitted', [
+                //                 'lead_id' => $duplicateLead->id,
+                //                 'form_id' => $form->id,
+                //                 'task_id' => 0,
+                //             ]);
+
+                //             //end convert to specified status
+
+                //             if ($form->create_task_on_duplicate == 1) {
+                //                 $task_name_from_form_name = false;
+                //                 $task_name                = '';
+                //                 if (isset($regular_fields['name'])) {
+                //                     $task_name = $regular_fields['name'];
+                //                 } elseif (isset($regular_fields['email'])) {
+                //                     $task_name = $regular_fields['email'];
+                //                 } elseif (isset($regular_fields['company'])) {
+                //                     $task_name = $regular_fields['company'];
+                //                 } else {
+                //                     $task_name_from_form_name = true;
+                //                     $task_name                = $form->name;
+                //                 }
+                //                 if ($task_name_from_form_name == false) {
+                //                     $task_name .= ' - ' . $form->name;
+                //                 }
+
+                //                 $description          = '';
+                //                 $custom_fields_parsed = [];
+                //                 foreach ($custom_fields as $key => $field) {
+                //                     $custom_fields_parsed[$field['name']] = $field['value'];
+                //                 }
+
+                //                 $all_fields    = array_merge($regular_fields, $custom_fields_parsed);
+                //                 $fields_labels = [];
+                //                 foreach ($data['form_fields'] as $f) {
+                //                     if ($f->type != 'header' && $f->type != 'paragraph' && $f->type != 'file') {
+                //                         $fields_labels[$f->name] = $f->label;
+                //                     }
+                //                 }
+
+                //                 $description .= $form->name . '<br /><br />';
+                //                 foreach ($all_fields as $name => $val) {
+                //                     if (isset($fields_labels[$name])) {
+                //                         if ($name == 'country' && is_numeric($val)) {
+                //                             $c = get_country($val);
+                //                             if ($c) {
+                //                                 $val = $c->short_name;
+                //                             } else {
+                //                                 $val = 'Unknown';
+                //                             }
+                //                         }
+
+                //                         $description .= $fields_labels[$name] . ': ' . $val . '<br />';
+                //                     }
+                //                 }
+
+                //                 $task_data = [
+                //                     'name'        => $task_name,
+                //                     'priority'    => get_option('default_task_priority'),
+                //                     'dateadded'   => date('Y-m-d H:i:s'),
+                //                     'startdate'   => date('Y-m-d'),
+                //                     'addedfrom'   => $form->responsible,
+                //                     'status'      => 1,
+                //                     'description' => $description,
+                //                 ];
+
+                //                 $task_data = hooks()->apply_filters('before_add_task', $task_data);
+                //                 $this->db->insert(db_prefix() . 'tasks', $task_data);
+                //                 $task_id = $this->db->insert_id();
+                //                 if ($task_id) {
+                //                     $attachment = handle_task_attachments_array($task_id, 'file-input');
+
+                //                     if ($attachment && count($attachment) > 0) {
+                //                         $this->tasks_model->add_attachment_to_database($task_id, $attachment, false, false);
+                //                     }
+
+                //                     $assignee_data = [
+                //                         'taskid'   => $task_id,
+                //                         'assignee' => $form->responsible,
+                //                     ];
+                //                     $this->tasks_model->add_task_assignees($assignee_data, true);
+
+                //                     hooks()->do_action('after_add_task', $task_id);
+                //                     if ($duplicateLead && $duplicateLead->email != '') {
+                //                         send_mail_template('lead_web_form_submitted', $duplicateLead);
+                //                     }
+                //                 }
+                //             }
+                //         }
+                //     }
+                // }
+
+                $where_or = [];
                 if ($form->allow_duplicate == 0) {
                     $where = [];
                     if (!empty($form->track_duplicate_field) && isset($regular_fields[$form->track_duplicate_field])) {
@@ -320,7 +538,22 @@ class Forms extends ClientsController
                     }
 
                     if (count($where) > 0) {
-                        $total = total_rows(db_prefix() . 'leads', $where);
+                        unset($where['phonenumber']);
+                        unset($where['email']);
+                        $where_or = [
+                            'alternative_phonenumber' => $post_data["phonenumber"],
+                            'phonenumber' => $post_data["phonenumber"]
+                        ];
+                        // First query to count total duplicates
+                        if (!empty($where)) {
+                            $this->db->where($where);
+                        }
+                        $this->db->group_start(); // Start OR condition grouping
+                        $this->db->or_where($where_or);
+                        $this->db->group_end(); // End OR condition grouping
+
+                        $total = $this->db->count_all_results(db_prefix() . 'leads');
+                        // $total = total_rows(db_prefix() . 'leads', $where);
 
                         $duplicateLead = false;
                         /**
@@ -328,18 +561,32 @@ class Forms extends ClientsController
                          * Because we wont be able to know how user is tracking duplicate and to send the email template for
                          * the request
                          */
-                        if ($total == 1) {
-                            $this->db->where($where);
-                            $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
-                        }
+                        // if ($total == 1) {
+                        //     if(!empty($where)){
+                        //     $this->db->where($where);
+                        //     }
+
+                        //     $this->db->group_start();
+                        //     $this->db->or_where($where_or);
+                        //     $this->db->group_end();
+                        //     $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
+                        // }
 
                         if ($total > 0) {
                             // Success set to true for the response.
                             $success      = true;
                             $insert_to_db = false;
 
+
                             // convert to fresh lead
-                            $this->db->where($where);
+                            if (!empty($where)) {
+                                $this->db->where($where);
+                            }
+
+                            $this->db->group_start();
+                            $this->db->or_where($where_or);
+                            $this->db->group_end();
+
                             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
                             $updateStatus = [
 
@@ -556,7 +803,6 @@ class Forms extends ClientsController
                         }
                     }
                 }
-
                 if ($insert_to_db == true) {
                     $regular_fields['status'] = $form->lead_status;
                     if ((isset($regular_fields['name']) && empty($regular_fields['name'])) || !isset($regular_fields['name'])) {
@@ -702,51 +948,7 @@ class Forms extends ClientsController
                         'redirect_url' => '',
                     ]);
                 }
-                // if ($key == 'de5f4e08f2c0a817663204d26456673e') {
-                //     $redirect_url = '';
-                // }
 
-                // // if ($key=='4f4b15c43f022e3dc84abea5e294ecae') {
-                // //     $redirect_url = 'https://www.affinityeducation.in/tank-you/';
-                // // }
-                // else if ($key == 'da7820bb0e381bb3270ec82e2529f41c' or $key == 'bcf660b7e492ecee806e758aeed193ae') {
-                //     $redirect_url = 'https://www.getadmissioninfo.com/thank-you/';
-                // } else if ($key == '61fa7a52bd7bc82f5372c92f81b37619') {
-                //     $redirect_url = 'https://www.getadmissioninfo.com/btech/thankyou.html';
-                // } else if ($key == '18ff6be6a5a40b33fa37e1dfae9a602f') {
-                //     $redirect_url = 'https://www.crfu.in/thank-you/';
-                // } else if ($key == '88b27fc010871251f07cd6a6874a2d9b') {
-                //     $redirect_url = 'https://www.chuvsu.in/thank-you/';
-                // } else if ($key == 'e9ae7aa962ce4f41b5124034a06ff5c4') {
-                //     $redirect_url = 'https://www.knmu.in/thank-you/';
-                // } else if ($key == 'f03e0563eb497c3730bcade0a2112911') {
-                //     $redirect_url = 'https://www.perpetualdalta.in/thank-you/';
-                // } else if ($key == 'cab5e3e36baae573612c6713fcd1c14f') {
-                //     $redirect_url = 'https://www.skmakazakhstan.in/thank-you/';
-                // } else if ($key == 'c3836d043422092406ae79dd06d6ffca') {
-                //     $redirect_url = 'https://www.tversmu.in/thank-you/';
-                // } else if ($key == 'c665263e4c5115eea24c75b2fe6a3933') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/MBBSAbroadBrochure.pdf';
-                // } else if ($key == '5b260174df04229b5c4ecf2524aa8399') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/RussiaMBBSFees.pdf';
-                // } else if ($key == '967e3629d1cc69115f302ee770b5ec95') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/UkraineMBBSFees.pdf';
-                // } else if ($key == '9c49df00bcbe750cfb82591e7d1c06a2') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/PhilippinesMBBSFees.pdf';
-                // } else if ($key == '64452629d91a41573059d7412abcd083') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/NepalMBBSFees.pdf';
-                // } else if ($key == '3d9ec1f140fb9e1895445c9ab2f3cb6e') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/KyrgyzstanMBBSFees.pdf';
-                // } else if ($key == 'e23a55ecf17ce313df3ca177156a7bcc') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/KazakhstanMBBSFees.pdf';
-                // } else if ($key == '68a4f8db553b9c5806b5f93b60ad8616') {
-                //     $redirect_url = 'https://www.mbbsadmissionabroad.in/GeorgiaMBBSFees.pdf';
-                // } else if ($key == '87a2c974fae4454e54d369ee88064f7d') {
-                //     $redirect_url = false;
-                // }
-                //  else {
-                //     $redirect_url = false;
-                // }
 
                 if (!empty($call_data)) {
                     $response_call = $this->curl_function($call_data);
@@ -765,8 +967,7 @@ class Forms extends ClientsController
                     'message' => $form->success_submit_msg,
                     'redirect_url' => $redirect_url,
                 ]);
-                //redirect('https://educationvibes.in');
-                //die;
+
                 return true;
             }
         }
@@ -774,12 +975,7 @@ class Forms extends ClientsController
         $data['form'] = $form;
         $this->load->view('forms/web_to_lead', $data);
     }
-    /**
-     * Web to lead form
-     * User no need to see anything like LEAD in the url, this is the reason the method is named eq lead
-     * @param  string $hash lead unique identifier
-     * @return mixed
-     */
+
     public function l($hash)
     {
         if (get_option('gdpr_enable_lead_public_form') == '0') {
@@ -991,76 +1187,6 @@ class Forms extends ClientsController
         $data['form'] = $form;
         $this->load->view('forms/ticket', $data);
     }
-
-
-
-
-    // private function curl_function($post_data)
-    // {
-    //     $data = array("call_data" => json_encode($post_data));
-    //     try {
-    //         $token = JWT_TOKEN;
-    //         header('Content-Type: application/json'); // Specify the type of data
-    //         $ch = curl_init(base_url("external/call_update")); // Initialise cURL
-    //         $authorization = "Authorization: Bearer " . $token; // Prepare the authorisation token
-    //         curl_setopt($ch, CURLOPT_HTTPHEADER, array($authorization)); // Inject the token into the header
-    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    //         curl_setopt($ch, CURLOPT_POST, 1); // Specify the request method as POST
-    //         curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // Set the posted fields
-    //         // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // This will follow any redirects
-    //         $result = curl_exec($ch); // Execute the cURL statement
-    //         curl_close($ch); // Close the cURL connection
-    //     } catch (Exception $e) {
-    //         return true;
-    //     }
-    // }
-
-    //     private function curl_function($post_data)
-    // {
-    //     $data = array("call_data" => json_encode($post_data));
-
-    //     try {
-    //         $token = JWT_TOKEN;
-    //         $url = base_url("external/call_update");
-
-    //         $ch = curl_init($url);
-
-    //         if ($ch === false) {
-    //             throw new Exception('Failed to initialize cURL');
-    //         }
-
-    //         $authorization = "Authorization: Bearer " . $token;
-    //         $headers = array('Content-Type: application/json', $authorization);
-
-    //         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    //         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    //         curl_setopt($ch, CURLOPT_POST, true);
-    //         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));
-
-    //         $result = curl_exec($ch);
-
-    //         if ($result === false) {
-    //             throw new Exception('cURL error: ' . curl_error($ch));
-    //         }
-
-    //         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-    //         if ($http_code !== 200) {
-    //             throw new Exception('HTTP error: ' . $http_code);
-    //         }
-
-    //         curl_close($ch);
-
-    //         // Return the result or handle it as needed.
-    //         return $result;
-    //     } catch (Exception $e) {
-    //         // Handle the error here, e.g., log the error message or take appropriate action.
-    //         // You can also echo or return the error message for debugging purposes.
-    //         echo "Error: " . $e->getMessage();
-    //         return false;
-    //     }
-    // }
-
 
     private function curl_function($post_data)
     {

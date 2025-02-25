@@ -6,7 +6,15 @@ if (!empty($score_value)) {
 $passport_stages = get_passport_stages();
 $caste_category = get_caste_category();
 $neet_status = get_neet_status();
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : []);
+
+$board_dropdown = get_board_dropdown();
+$staff_list              = $this->leads_model->get_staff_list();
+$staff_list = array_column($staff_list, null, "staffid");
+if (!empty($board_dropdown)) {
+    array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
+}
+
+$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
 $profile_section = [];
 foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
@@ -36,6 +44,39 @@ if (!empty($applicant_documents[0]["data"])) {
 }
 
 
+$years_array = [];
+$currentYear = date("Y");
+
+// Generate an array of the last 15 years
+for ($i = 0; $i < 15; $i++) {
+    $years_array[]["year"] = $currentYear - $i;
+}
+array_unshift($years_array, array(""));
+
+
+$markingSchemes = [];
+
+$markingSchemes[]["name"] = "Percentage";
+$markingSchemes[]["name"]  = "CGPA out of 10";
+$markingSchemes[]["name"]  = "CGPA out of 9";
+$markingSchemes[]["name"]  = "CGPA out of 7";
+$markingSchemes[]["name"]  = "CGPA out of 4";
+
+array_unshift($markingSchemes, array(""));
+
+$resultStatus = [];
+
+$resultStatus[]["name"] = "Awaited";
+$resultStatus[]["name"] = "Declared";
+array_unshift($resultStatus, array(""));
+
+$neetResultStatus = [];
+
+$neetResultStatus[]["name"] = "Awaited";
+$neetResultStatus[]["name"] = "Declared";
+$neetResultStatus[]["name"] = "Not Appeared";
+array_unshift($neetResultStatus, array(""));
+
 ?>
 <!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
 <script>
@@ -53,6 +94,10 @@ if ($lead_type_status == 2) {
 
 ?>
 <style>
+    .margin-top {
+        margin-top: 5px;
+    }
+
     .error-highlight {
         border: 2px solid red;
         background-color: #ffe6e6;
@@ -151,7 +196,7 @@ if ($lead_type_status == 2) {
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
 
-
+    <input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
     <div class="additional"></div>
     <div class="col-md-12">
         <div class="horizontal-scrollable-tabs">
@@ -174,17 +219,9 @@ if ($lead_type_status == 2) {
                     <li role="presentation">
                         <a href="#documents" aria-controls="documents" role="tab" data-toggle="tab">Documents</a>
                     </li>
-                    <!-- <li role="presentation">
-                        <a href="#declaration" aria-controls="declaration" role="tab" data-toggle="tab">Declaration</a>
-                    </li> -->
                     <li role="presentation">
                         <a href="#welcome_message" aria-controls="welcome_message" role="tab" data-toggle="tab">Welcome Message</a>
                     </li>
-                    <!-- <li role="presentation">
-                        <a href="#billing_and_shipping" aria-controls="billing_and_shipping" role="tab" data-toggle="tab">
-                            <?php echo _l('billing_shipping'); ?>
-                        </a>
-                    </li> -->
                     <?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
                     <?php if (isset($client)) { ?>
                         <li role="presentation">
@@ -194,12 +231,13 @@ if ($lead_type_status == 2) {
                         </li>
                         <?php hooks()->do_action('after_customer_admins_tab', $client); ?>
                     <?php } ?>
-
-                    <li role="presentation" onclick="show_all_data()">
-                        <a href="#preview" aria-controls="preview" role="tab" data-toggle="tab">
-                            Preview
-                        </a>
-                    </li>
+                    <?php if (!empty($client->submission_status) && $client->submission_status != 1) { ?>
+                        <li role="presentation" onclick="show_all_data()">
+                            <a href="#preview" aria-controls="preview" role="tab" data-toggle="tab">
+                                Preview
+                            </a>
+                        </li>
+                    <?php } ?>
                 </ul>
             </div>
         </div>
@@ -271,16 +309,16 @@ if ($lead_type_status == 2) {
                                         </div>
                                         <div class="col-lg-3">
                                             <div class="form-group">
-                                                <label for="exampleInputMobileNumber">Parent's Name</label>
-                                                <input class="form-control" type="text" class="form-group" placeholder="Parents Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
+                                                <label for="exampleInputMobileNumber">Parent's Name <small class="text-danger">*</small></label>
+                                                <input class="form-control" required required-check type="text" class="form-group" placeholder="Parents Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-lg-3">
                                             <div class="form-group">
-                                                <label for="exampleInputMobileNumber">Parent's Contact</label>
-                                                <input class="form-control" type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Parents Contact" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
+                                                <label for="exampleInputMobileNumber">Parent's Contact <small class="text-danger">*</small></label>
+                                                <input class="form-control" required required-check type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Parents Contact" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
                                             </div>
                                         </div>
 
@@ -305,7 +343,7 @@ if ($lead_type_status == 2) {
                                         ?>
                                             <div class="col-lg-3 media-files">
                                                 <div class="form-group">
-                                                    <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text ?> <?php if (!empty($info)) : ?>
+                                                    <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                             &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                         <?php endif; ?></label>
                                                     <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
@@ -315,8 +353,10 @@ if ($lead_type_status == 2) {
                                                     <?php
                                                     if (!empty($file_url)) {
                                                     ?>
-                                                        <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                        <i class="fa fa-download" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                            <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        </div>
                                                     <?php
                                                     }
                                                     ?>
@@ -420,7 +460,7 @@ if ($lead_type_status == 2) {
                                     ?>
                                         <div class="col-lg-3 media-files passport-div-status <?= !empty($show_passport_details && $show_passport_details == 1) ? '' : 'hide' ?>">
                                             <div class="form-group">
-                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text ?> <?php if (!empty($info)) : ?>
+                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                     <?php endif; ?></label>
                                                 <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
@@ -430,8 +470,10 @@ if ($lead_type_status == 2) {
                                                 <?php
                                                 if (!empty($file_url)) {
                                                 ?>
-                                                    <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                    <i class="fa fa-download" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    <div class="margin-top">
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    </div>
                                                 <?php
                                                 }
                                                 ?>
@@ -488,7 +530,9 @@ if ($lead_type_status == 2) {
                                         <div class="col-lg-4">
                                             <div class="form-group">
                                                 <label for="session_intake">Session Intake <small class="text-danger">*</small></label>
-                                                <input type="month" class="form-control" required-check id="session_intake" name="session_intake" value="<?= !empty($admissionpreferences->session_intake) ? $admissionpreferences->session_intake : '' ?>" placeholder="Select Month and Year">
+                                                <input type="month" class="form-control" required-check id="session_intake" name="session_intake"
+                                                    value="<?= !empty($admissionpreferences->session_intake) ? date('Y-m', strtotime($admissionpreferences->session_intake)) : '' ?>"
+                                                    placeholder="Select Month and Year">
                                             </div>
                                         </div>
                                         <div class="col-lg-4">
@@ -522,11 +566,41 @@ if ($lead_type_status == 2) {
                                             <div class="form-group">
                                                 <input type="hidden" name="countries" id="countries">
                                                 <label for="study_country">Where would you like to study? <small class="text-danger">*</small></label>
-                                                <select class="form-control selectpicker" required required-check name="study_country" id="study_country" multiple required>
+                                                <select class="form-control selectpicker  required required-check" required required-check name="study_country" id="study_country" multiple required>
                                                     <option value="">Select country </option>
                                                 </select>
                                             </div>
                                         </div>
+
+                                        <?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) { ?>
+                                            <div class="col-lg-4">
+                                                <div class="form-group">
+                                                    <label for="primary_university">Primary University<small class="text-danger">*</small></label>
+                                                    <select class="form-control selectpicker" required-check name="primary_university" onchange="select_primary_university(this)" id="primary_university" required>
+                                                        <option value="">Select University</option>
+                                                        <?php
+                                                        $university_p = json_decode($admissionpreferences->university, true);
+
+                                                        if (!empty($university_p)) {
+                                                            foreach ($university_p as $key => $country) {
+                                                                $universities = array_filter(explode(",", $country)); // Remove empty values
+                                                                foreach ($universities as $uni) { ?>
+                                                                    <option data-country="<?= $key ?>" <?= ($admissionpreferences->primary_university == $uni) ? 'selected' : '' ?> value="<?= htmlspecialchars($uni) ?>"><?= htmlspecialchars($uni) ?></option>
+                                                        <?php }
+                                                            }
+                                                        }
+                                                        ?>
+                                                    </select>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-4 hide">
+                                                <div class="form-group">
+                                                    <label for="primary_university">Primary Country<small class="text-danger">*</small></label>
+                                                    <input type="text" class="form-control" id="primary_country" name="primary_country" value="<?= $admissionpreferences->primary_country ?>">
+                                                </div>
+                                            </div>
+                                        <?php } ?>
 
                                     </div>
                                     <div class="universities row">
@@ -537,7 +611,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-md-12 text-right  btn-save-fun">
                                         &nbsp; <button type="submit" onclick="save_admission_preferences()" class="btn btn-primary button-22">Save changes</button>
                                         &nbsp;
-                                        <button type="button" id="freeze_admission_preferences" class="btn btn-warning button-22"><?php echo $admissionpreferences->freeze == 0 ? 'Freeze' : 'Unfreeze'; ?></button> &nbsp;
+                                        <!-- <button type="button" id="freeze_admission_preferences" class="btn btn-warning button-22"><?php echo $admissionpreferences->freeze == 0 ? 'Freeze' : 'Unfreeze'; ?></button> -->
                                     </div>
                                 </div>
                             </form>
@@ -558,54 +632,38 @@ if ($lead_type_status == 2) {
                                     <hr>
                                     <div class="col-lg-4 border2 border1">
                                         <div class="c1">
-                                            <p>School Name <?= $text_danger_mbbs ?></p>
-                                        </div>
-                                        <div class="c2">
-                                            <input type="hidden" name="academicDetailsId" value="<?= $academicdetails->id; ?>">
-                                            <input class="form-control" type="text" <?= $text_danger_mbbs_required ?> class="form-group" placeholder="Enter School Name" name="tenth_school_name" value="<?= $academicdetails->tenth_school_name; ?>" required>
-
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 border2 border1">
-                                        <div class="c1">
                                             <p>Board <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <input class="form-control" type="text" placeholder="Enter Board Name" name="tenth_board" <?= $text_danger_mbbs_required ?> value="<?= $academicdetails->tenth_board; ?>" required>
+                                            <?php
+                                            $selected = [];
+                                            $selected[] = $academicdetails->tenth_board;
+                                            echo render_select('tenth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_board"); ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 border2 border1">
+                                    <div class="col-lg-3 border2 border1">
                                         <div class="c1">
                                             <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <!-- <input class="form-control tenth_passing_year" type="text" placeholder="YYYY" name="tenth_passing_year" id="tenth_passing_year" value="<?= $academicdetails->tenth_passing_year; ?>"> -->
-                                            <select class="form-control" <?= $text_danger_mbbs_required ?> name="tenth_passing_year" id="tenth_passing_year">
-                                                <option value="">Select</option>
-                                                <?php for ($i = 0; $i < 15; $i++) : ?>
-                                                    <option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->tenth_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
-                                                <?php endfor; ?>
-
-                                            </select>
+                                            <?php
+                                            $selected = [];
+                                            $selected[] = $academicdetails->tenth_passing_year;
+                                            echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_passing_year"); ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 border2 border1">
+                                    <div class="col-lg-3 border2 border1">
                                         <div class="c1">
                                             <p>Marking Scheme <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <!-- <input class="form-control" type="text" class="form-group" placeholder="Enter Marking Scheme" name="tenth_marking_scheme" value=""> -->
-                                            <select class="form-control" name="tenth_marking_scheme" <?= $text_danger_mbbs_required ?>>
-                                                <option value="">Select</option>
-                                                <option value="Percentage" <?= ($academicdetails->tenth_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
-                                                <option value="CGPA out of 10" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
-                                                <option value="CGPA out of 9" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
-                                                <option value="CGPA out of 7" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
-                                                <option value="CGPA out of 4" <?= ($academicdetails->tenth_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
-                                            </select>
+                                            <?php
+                                            $selected = [];
+                                            $selected[] = $academicdetails->tenth_marking_scheme;
+                                            echo render_select('tenth_marking_scheme', $markingSchemes, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_marking_scheme"); ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 border2 border1">
+                                    <div class="col-lg-2 border2 border1">
                                         <div class="c1">
                                             <p>Percentage / CGPA <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -628,7 +686,7 @@ if ($lead_type_status == 2) {
                                     ?>
                                         <div class="col-lg-4 media-files  ">
                                             <div class="form-group">
-                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text ?> <?php if (!empty($info)) : ?>
+                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                     <?php endif; ?></label>
                                                 <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
@@ -638,8 +696,10 @@ if ($lead_type_status == 2) {
                                                 <?php
                                                 if (!empty($file_url)) {
                                                 ?>
-                                                    <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                    <i class="fa fa-download" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    <div class="margin-top">
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    </div>
                                                 <?php
                                                 }
                                                 ?>
@@ -660,33 +720,24 @@ if ($lead_type_status == 2) {
 
                                         <div class="col-lg-4 border2 border1">
                                             <div class="c1">
-                                                <p>School Name <?= $text_danger_mbbs ?></p>
-                                            </div>
-                                            <div class="c2">
-                                                <input class="form-control" type="text" class="form-group" placeholder="Enter 12th School Name" name="twelth_school_name" value="<?= $academicdetails->twelth_school_name; ?>" <?= $text_danger_mbbs_required ?>>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-4 border2 border1">
-                                            <div class="c1">
                                                 <p>Board / University <?= $text_danger_mbbs ?></p>
                                             </div>
                                             <div class="c2">
-                                                <input class="form-control" type="text" class="form-group" placeholder="Enter Board Name" name="twelth_board" <?= $text_danger_mbbs_required ?> value="<?= $academicdetails->twelth_board; ?>">
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->twelth_board;
+                                                echo render_select('twelth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_board"); ?>
                                             </div>
                                         </div>
-                                        <div class="col-lg-4 border2 border1">
+                                        <div class="col-lg-3 border2 border1">
                                             <div class="c1">
                                                 <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                             </div>
                                             <div class="c2">
-                                                <!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="twelth_passing_year" id="twelth_passing_year" value="<?= $academicdetails->twelth_passing_year; ?>"> -->
-                                                <select class="form-control" <?= $text_danger_mbbs_required ?> name="twelth_passing_year" id="twelth_passing_year">
-                                                    <option value="">Select</option>
-                                                    <?php for ($i = 0; $i < 15; $i++) : ?>
-                                                        <option value="<?= date("Y") - $i; ?>" <?= ((date("Y") - $i) == $academicdetails->twelth_passing_year) ? 'selected' : '' ?>><?= date("Y") - $i; ?></option>
-                                                    <?php endfor; ?>
-
-                                                </select>
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->twelth_passing_year;
+                                                echo render_select('twelth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_passing_year"); ?>
 
                                             </div>
                                         </div>
@@ -696,32 +747,39 @@ if ($lead_type_status == 2) {
 
                                             </div>
                                             <div class="c2">
-                                                <select class="form-control selectpicker" <?= $text_danger_mbbs_required ?> name="twelth_result_status" id="twelth_result_status">
-                                                    <option value="">Select</option>
-                                                    <option value="Awaited" <?= ($academicdetails->twelth_result_status == 'Awaited') ? 'selected' : ''; ?>>Awaited</option>
-                                                    <option value="Declared" <?= ($academicdetails->twelth_result_status == 'Declared') ? 'selected' : ''; ?>>Declared</option>
-                                                    <!-- <option value="Not Appeared" <?= ($academicdetails->twelth_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option> -->
-
-
-                                                </select>
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->twelth_result_status;
+                                                echo render_select('twelth_result_status', $resultStatus, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_result_status"); ?>
                                             </div>
                                         </div>
                                         <div class="twelth_result_status_div" style="display:<?= ($academicdetails->twelth_result_status == 'Awaited') ? 'none' : '' ?>">
-                                            <div class="col-lg-2 border2 border1 " id="twelth_marking_scheme_div">
+                                            <div class="col-lg-3 border2 border1 " id="twelth_marking_scheme_div">
                                                 <div class="c1">
                                                     <p>Marking Scheme <?= $text_danger_mbbs ?></p>
                                                 </div>
                                                 <div class="c2">
-                                                    <!-- <input class="form-control" type="text" placeholder="CGPA / Percentage" name="twelth_marking_scheme" id="twelth_marking_scheme" value="<?= $academicdetails->twelth_marking_scheme; ?>"> -->
-                                                    <select class="form-control" <?= $text_danger_mbbs_required ?> name="twelth_marking_scheme">
-                                                        <option value="">Select</option>
-                                                        <option value="Percentage" <?= ($academicdetails->twelth_marking_scheme == 'Percentage') ? 'selected' : ''; ?>>Percentage</option>
-                                                        <option value="CGPA out of 10" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 10') ? 'selected' : ''; ?>>CGPA out of 10</option>
-                                                        <option value="CGPA out of 9" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 9') ? 'selected' : ''; ?>>CGPA out of 9</option>
-                                                        <option value="CGPA out of 7" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 7') ? 'selected' : ''; ?>>CGPA out of 7</option>
-                                                        <option value="CGPA out of 4" <?= ($academicdetails->twelth_marking_scheme == 'CGPA out of 4') ? 'selected' : ''; ?>>CGPA out of 4</option>
-                                                    </select>
-
+                                                    <?php
+                                                    $selected = [$academicdetails->twelth_marking_scheme];
+                                                    // Correcting the attribute array handling
+                                                    $attributes = [];
+                                                    if ($academicdetails->twelth_result_status == 'Declared') {
+                                                        $attributes["required-check"] = "required-check";
+                                                    }
+                                                    echo render_select(
+                                                        'twelth_marking_scheme',
+                                                        $markingSchemes,
+                                                        ['name', 'name'],
+                                                        "",
+                                                        $selected,
+                                                        $attributes,
+                                                        [],
+                                                        "",
+                                                        "",
+                                                        "",
+                                                        "twelth_marking_scheme"
+                                                    );
+                                                    ?>
 
                                                 </div>
                                             </div>
@@ -755,7 +813,7 @@ if ($lead_type_status == 2) {
                                             ?>
                                                 <div class="col-lg-4 border2 media-files  ">
                                                     <div class="form-group">
-                                                        <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text ?> <?php if (!empty($info)) : ?>
+                                                        <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                                 &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                             <?php endif; ?></label>
                                                         <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
@@ -765,8 +823,10 @@ if ($lead_type_status == 2) {
                                                         <?php
                                                         if (!empty($file_url)) {
                                                         ?>
-                                                            <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                            <i class="fa fa-download" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                                <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                            </div>
                                                         <?php
                                                         }
                                                         ?>
@@ -785,16 +845,30 @@ if ($lead_type_status == 2) {
                                 <div id="entrance_exam_div" class="row accadmic-education-div ">
                                     <h4>NEET Exam</h4>
                                     <hr>
-                                    <div class="col-lg-3 border2 border1 ">
+
+                                    <div class="col-lg-2 border2 border1">
                                         <div class="c1">
-                                            <p>Roll No. / Registration No. <?= $text_danger_mbbs ?></p>
+                                            <p>Result Status <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <input class="form-control" required-check type="text" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+                                            <?php
+                                            $selected = [];
+                                            $selected[] = $academicdetails->entrance_result_status;
+                                            echo render_select('entrance_result_status', $neetResultStatus, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "entrance_result_status"); ?>
                                         </div>
 
                                     </div>
-                                    <div class="col-lg-3 border2 border1">
+
+                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                        <div class="c1">
+                                            <p>Roll No. / Application No. <?= $text_danger_mbbs ?></p>
+                                        </div>
+                                        <div class="c2">
+                                            <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="[0-9]{10}" maxlength="15" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+                                        </div>
+
+                                    </div>
+                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Year <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -804,27 +878,13 @@ if ($lead_type_status == 2) {
                                         </div>
 
                                     </div>
-                                    <div class="col-lg-2 border2 border1">
-                                        <div class="c1">
-                                            <p>Result Status <?= $text_danger_mbbs ?></p>
-                                        </div>
-                                        <div class="c2">
-                                            <select class="form-control" required-check name="entrance_result_status" id="entrance_result_status">
-                                                <option value="">Select</option>
-                                                <option value="Awaited" <?= ($academicdetails->entrance_result_status == 'Awaited') ? 'selected' : '' ?>>Awaited</option>
-                                                <option value="Declared" <?= ($academicdetails->entrance_result_status == 'Declared') ? 'selected' : '' ?>>Declared</option>
-                                                <option value="Not Appeared" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'selected' : ''; ?>>Not Appeared</option>
 
-                                            </select>
-                                        </div>
-
-                                    </div>
-                                    <div class="col-lg-2 border2 border1 hide_ " style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Marks <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2 ">
-                                            <input type="text" required-check <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-control" placeholder="Marks" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+                                            <input type="number" required-check <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-control" placeholder="Marks" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 
                                             <?php
 
@@ -845,19 +905,40 @@ if ($lead_type_status == 2) {
                                         </div>
 
                                     </div>
-                                    <div class="col-lg-2 border2 border1 hide_" style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
-                                        <div class="form-group">
-                                            <div class="c1">
-                                                <p>Neet Status <?= $text_danger_mbbs ?></p>
-                                            </div>
-                                            <?php
-                                            array_unshift($neet_status, array("id" => "", "value" => "", "name" => "Select Neet Status"));
-                                            $selected_neet_status[] = !empty($academicdetails->neet_status) ? $academicdetails->neet_status : '';
 
-                                            echo render_select('neet_status', $neet_status, array('id', 'name'), "", $selected_neet_status, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "neet_status");
-                                            ?>
-
+                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                        <div class="c1">
+                                            <p>Neet Status <?= $text_danger_mbbs ?></p>
                                         </div>
+                                        <?php
+                                        // Add "Select Neet Status" as the first option
+                                        array_unshift($neet_status, ["id" => "", "value" => "", "name" => "Select Neet Status"]);
+
+                                        // Set the selected value
+                                        $selected_neet_status = !empty($academicdetails->neet_status) ? [$academicdetails->neet_status] : [''];
+
+                                        // Handle the "required-check" attribute conditionally
+                                        $attributes = [];
+                                        if (in_array($academicdetails->entrance_result_status, ['Declared'])) {
+                                            $attributes["required-check"] = "required-check";
+                                        }
+
+                                        // Render the select field
+                                        echo render_select(
+                                            'neet_status',
+                                            $neet_status,
+                                            ['id', 'name'],
+                                            "",
+                                            $selected_neet_status,
+                                            $attributes,
+                                            [],
+                                            "",
+                                            "",
+                                            "",
+                                            "neet_status"
+                                        );
+                                        ?>
+
                                     </div>
                                     <?php
                                     foreach ($profile_section["neet_exam_stage"] as $s_stage) {
@@ -866,6 +947,7 @@ if ($lead_type_status == 2) {
                                         $info = $s_stage["info"] ?? '';
                                         $accept = $s_stage["file_type"] ?? '';
                                         $is_mandatory = !empty($s_stage["mandatry"]);
+                                        $required_attr = $is_mandatory ? "required-check" : '';
                                         $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
                                         $required_attr = $is_mandatory ? "required required-check" : '';
                                         $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
@@ -874,7 +956,7 @@ if ($lead_type_status == 2) {
 
                                         <div class="col-lg-3 border2 border1 media-files hide_ " style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
                                             <div class="form-group">
-                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text ?> <?php if (!empty($info)) : ?>
+                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                     <?php endif; ?></label>
                                                 <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
@@ -884,9 +966,11 @@ if ($lead_type_status == 2) {
                                                 <?php
                                                 if (!empty($file_url)) {
                                                 ?>
-                                                    <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                    <div class="margin-top">
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
 
-                                                    <i class="fa fa-download" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    </div>
                                                 <?php
                                                 }
                                                 ?>
@@ -963,7 +1047,7 @@ if ($lead_type_status == 2) {
                                                         <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
 
 
-                                                        <?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') . ' ' . $mandatry_text ?>
+                                                        <?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') . ' ' . $mandatry_text  . "  (" . $doc_files["file_type"] . ")" ?>
                                                         <?php if (!empty($info)) : ?>
                                                             &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
                                                         <?php endif; ?>
@@ -978,8 +1062,10 @@ if ($lead_type_status == 2) {
                                                         <?php
                                                         if (!empty($file_url)) {
                                                         ?>
-                                                            <i class="fa fa-eye" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                            <i class="fa fa-download" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                                <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                            </div>
                                                         <?php
                                                         }
                                                         ?>
@@ -1028,12 +1114,14 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-4">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Quotation <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" name="quotation" value="">
+                                            <input <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="quotation" value="">
                                             <?php
                                             if (!empty($client->quotation)) {
                                             ?>
-                                                <i class="fa fa-eye" onclick="show_media_files('<?= base_url($client->quotation) ?>');"></i>
-                                                <i class="fa fa-download" onclick="download_media_files(`<?= base_url($client->quotation) ?>`, '_blank');"></i>
+                                                <div class="margin-top">
+                                                    <i class="fa fa-eye btn btn-primary btn-xs m-2" onclick="show_media_files('<?= base_url($client->quotation) ?>');"></i>
+                                                    <i class="fa fa-download btn btn-primary btn-xs m-2" onclick="download_media_files(`<?= base_url($client->quotation) ?>`, '_blank');"></i>
+                                                </div>
                                             <?php
                                             }
                                             ?>
@@ -1042,12 +1130,14 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-4">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Registration Slip <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" name="registration_slip" value="">
+                                            <input <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="registration_slip" value="">
                                             <?php
                                             if (!empty($client->registration_slip)) {
                                             ?>
-                                                <i onclick="show_media_files('<?= base_url($client->registration_slip) ?>');" class="fa fa-eye"></i>
-                                                <i class="fa fa-download" onclick="download_media_files(`<?= base_url($client->quotation) ?>`, '_blank');"></i>
+                                                <div class="margin-top">
+                                                    <i onclick="show_media_files('<?= base_url($client->registration_slip) ?>');" class="fa fa-eye btn btn-xs btn-primary"></i>
+                                                    <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($client->quotation) ?>`, '_blank');"></i>
+                                                </div>
                                             <?php
                                             }
                                             ?>
@@ -1068,39 +1158,41 @@ if ($lead_type_status == 2) {
 
             <?php if (isset($client)) { ?>
                 <div role="tabpanel" class="tab-pane" id="customer_admins">
-                    <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-                        <a href="#" data-toggle="modal" data-target="#customer_admins_assign" class="btn btn-info mbot30"><?php echo _l('assign_admin'); ?></a>
-                    <?php } ?>
-                    <table class="table dt-table">
-                        <thead>
-                            <tr>
-                                <th><?php echo _l('staff_member'); ?></th>
-                                <th><?php echo _l('customer_admin_date_assigned'); ?></th>
-                                <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-                                    <th><?php echo _l('options'); ?></th>
-                                <?php } ?>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($customer_admins as $c_admin) { ?>
+                    <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit') && (isset($final_sumbit) && $final_sumbit == 0)) { ?>
+                        <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
+                            <a href="#" data-toggle="modal" data-target="#customer_admins_assign" class="btn btn-info mbot30"><?php echo _l('assign_admin'); ?></a>
+                        <?php } ?>
+                        <table class="table dt-table">
+                            <thead>
                                 <tr>
-                                    <td><a href="<?php echo admin_url('profile/' . $c_admin['staff_id']); ?>">
-                                            <?php echo staff_profile_image($c_admin['staff_id'], array(
-                                                'staff-profile-image-small',
-                                                'mright5'
-                                            ));
-                                            echo get_staff_full_name($c_admin['staff_id']); ?></a>
-                                    </td>
-                                    <td data-order="<?php echo $c_admin['date_assigned']; ?>"><?php echo _dt($c_admin['date_assigned']); ?></td>
+                                    <th><?php echo _l('staff_member'); ?></th>
+                                    <th><?php echo _l('customer_admin_date_assigned'); ?></th>
                                     <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-                                        <td>
-                                            <a href="<?php echo admin_url('clients/delete_customer_admin/' . $client->userid . '/' . $c_admin['staff_id']); ?>" class="btn btn-danger _delete btn-icon"><i class="fa fa-remove"></i></a>
-                                        </td>
+                                        <th><?php echo _l('options'); ?></th>
                                     <?php } ?>
                                 </tr>
-                            <?php } ?>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($customer_admins as $c_admin) { ?>
+                                    <tr>
+                                        <td><a href="<?php echo admin_url('profile/' . $c_admin['staff_id']); ?>">
+                                                <?php echo staff_profile_image($c_admin['staff_id'], array(
+                                                    'staff-profile-image-small',
+                                                    'mright5'
+                                                ));
+                                                echo get_staff_full_name($c_admin['staff_id']); ?></a>
+                                        </td>
+                                        <td data-order="<?php echo $c_admin['date_assigned']; ?>"><?php echo _dt($c_admin['date_assigned']); ?></td>
+                                        <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
+                                            <td>
+                                                <a href="<?php echo admin_url('clients/delete_customer_admin/' . $client->userid . '/' . $c_admin['staff_id']); ?>" class="btn btn-danger _delete btn-icon"><i class="fa fa-remove"></i></a>
+                                            </td>
+                                        <?php } ?>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    <?php } ?>
                 </div>
             <?php } ?>
             <div role="tabpanel" class="tab-pane" id="final-form">
@@ -1127,7 +1219,7 @@ if ($lead_type_status == 2) {
 </div>
 <?php if (isset($client)) { ?>
     <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-        <div class="modal fade" id="customer_admins_assign" tabindex="-1" role="dialog">
+        <div class="modal fade" id="customer_admins_assign" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
             <div class="modal-dialog">
                 <input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
 

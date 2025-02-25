@@ -549,6 +549,13 @@ function app_init_admin_sidebar_menu_items()
                   ]);*/
         }
 
+        if (has_permission('exam_batch', '', 'view')) {
+                $CI->app_menu->add_setup_menu_item('exam_batch', [
+                        'href'     => admin_url('exam_batch'),
+                        'name'     => "Exam Batch",
+                        'position' => 199,
+                ]);
+        }
         if (has_permission('settings', '', 'view')) {
                 $CI->app_menu->add_setup_menu_item('settings', [
                         'href'     => admin_url('settings'),

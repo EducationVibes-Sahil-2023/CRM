@@ -106,6 +106,16 @@ $lang['contract_list_subject']    = 'Subject';
 $lang['contract_list_start_date'] = 'Start Date';
 $lang['contract_list_end_date']   = 'End Date';
 
+# Exam Batch 
+$lang['exam_batch']                = 'Exam Batch';
+$lang['new_exam_batch']             = 'New Batch';
+$lang['university_name']             = 'University Name';
+$lang['batch_exam_name']             = 'Exam Name';
+$lang['batch_exam_date']             = 'Exam Date';
+$lang['batch_exam_student']             = 'Students';
+$lang['batch_exam_created']             = 'Created';
+$lang['batch_exam_created_by']             = 'Created By';
+
 # Currencies
 $lang['currencies']                    = 'Currencies';
 $lang['currency']                      = 'Currency';
@@ -882,6 +892,9 @@ $lang['ptp']      = 'Total Service Charge';
 $lang['ev_hostel']      = 'EV Hostel';
 $lang['ev_mesh']      = 'EV Mesh';
 $lang['medical_insurance']      = 'Medical Insurance';
+
+
+$lang['alternative_phonenumber_exists']             = 'Alternative Phone number already exists';
 
 
 # Invoices

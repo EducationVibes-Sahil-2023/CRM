@@ -3252,7 +3252,7 @@ if (empty($customer_admins)) { ?>
     }
 
 
-    window.onbeforeunload = function() {
-        return null;
-    };
+    // window.onbeforeunload = function() {
+    //     return null;
+    // };
 </script>

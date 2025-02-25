@@ -1112,7 +1112,7 @@ class Leads extends AdminController
         $data["passpost_status"] = get_passport_stages();
         if (!empty($data['lead']->type_name)) {
             $lead_type = !empty($data['lead']->type_name) ? $data['lead']->type_name : '';
-            $data["university_list"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,u.id university_id,u.fees_mandatory FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where name='$lead_type'")->result_array();
+            $data["university_list"] = get_university_list($lead_type);
         }
 
         $this->load->view('admin/leads/convert_to_customer', $data);
@@ -2895,42 +2895,38 @@ class Leads extends AdminController
 
 
     public function validate_unique_field()
-
     {
-
         if ($this->input->post()) {
-
-
-
-            // First we need to check if the field is the same
-
+            // Get input values
             $lead_id = $this->input->post('lead_id');
-
             $field   = $this->input->post('field');
-
             $value   = $this->input->post($field);
-
-
-
-            if ($lead_id != '') {
-
+    
+            // Check if field value is unchanged
+            if (!empty($lead_id)) {
                 $this->db->select($field);
-
                 $this->db->where('id', $lead_id);
-
                 $row = $this->db->get(db_prefix() . 'leads')->row();
-
-                if ($row->{$field} == $value) {
-
+                
+                if ($row && $row->{$field} == $value) {
                     echo json_encode(true);
-
                     die();
                 }
             }
-
-
-
-            echo total_rows(db_prefix() . 'leads', [$field => $value]) > 0 ? 'false' : 'true';
+    
+            // Check if the field is 'alternative_phonenumber' or 'phonenumber'
+            if (in_array($field, ['alternative_phonenumber', 'phonenumber'])) {
+                $this->db->where('phonenumber', $value);
+                $this->db->or_where('alternative_phonenumber', $value);
+                $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
+    
+                echo json_encode(!$exists);
+                die();
+            }
+    
+            // Default response for invalid field
+            echo json_encode(true);
+            die();
         }
     }
 

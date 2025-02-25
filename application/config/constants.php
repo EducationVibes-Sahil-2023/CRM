@@ -221,6 +221,10 @@ define('DOCUMENT', '2');
 define('UNIVERSITY_SHORTLISTING', '3');
 define('ADMISSION', '4');
 define('ENTRANCE_EXAM', '5');
+define('LEGALIZATION', '6');
+define('FEES_DEPOSITE', '6');
+define('INVITATION', '7');
+define('THIRD_PAYMENT', '8');
 
 
 define('REGISTRATION_PENDING', '1');
@@ -231,4 +235,7 @@ define('UNIVERSITY_DOC_PENDING', '5');
 define('ADMISSION_LETTER_PENDING', '6');
 define('ADMISSION_LETTER_WAITING', '7');
 define('ENTRANCE_EXAM_PENDING', '8');
-
+define('LEGALIZATION_PENDING', '9');
+define('FEES_DEPOSITE_PENDING', '10');
+define('INVITATION_PENDING', '11');
+define('THIRD_PAYMENT_PENDING', '12');

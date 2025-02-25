@@ -1769,13 +1769,41 @@ class Clients_model extends App_Model
     }
     function university_shortlisting($client_id)
     {
-        $this->db->select('us.*,cv.name vendor_name');
-        $this->db->from(db_prefix() . 'client_university_shortlisting us');
-        $this->db->join(db_prefix() . 'profile_creater_vendor cv', "cv.id = us.vendor_id","LEFT");
-        $this->db->where('us.client_id', $client_id);
-        $this->db->where('us.status', 1);
-        $this->db->order_by('us.id', "asc");
-        return $client_university_shortlisting = $this->db->get()->result_array();
+        // Fetch shortlisted universities with vendor details
+        $result = $this->db->select('us.*, cv.name AS vendor_name,if(us.country_name = a.primary_country AND us.university_name = a.primary_university,1,0) primary_university')
+            ->from(db_prefix() . 'client_university_shortlisting us')
+            ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'LEFT')
+            ->join(db_prefix() . 'admission_preferences a', "us.client_id = a.userid", "LEFT")
+            ->where(['us.client_id' => $client_id, 'us.status' => 1])
+            ->order_by('us.id', 'ASC')
+            ->get()
+            ->result_array();
+
+        if (empty($result)) return [];
+
+        // Extract unique country names
+        $country_names = array_unique(array_column($result, 'country_name'));
+
+        // Fetch country-related data if available
+        $country_data_check = [];
+        if (!empty($country_names)) {
+            $country_data = $this->s_db->select('country_name, telex_status')
+                ->from('countries')
+                ->where('segment_id', 7)
+                ->where_in('country_name', $country_names)
+                ->get()
+                ->result_array();
+
+            $country_data_check = array_column($country_data, 'telex_status', 'country_name');
+        }
+
+        // Assign telex_status to results
+        foreach ($result as &$row) {
+            $row['telex_status'] = $country_data_check[$row['country_name']] ?? null;
+        }
+        unset($row); // Remove reference
+
+        return $result;
     }
 
     function profile_verification_button()
@@ -1922,5 +1950,111 @@ class Clients_model extends App_Model
         $this->db->from(db_prefix() . 'vendor_accommodation');
         $this->db->where("status", 1);
         return $document = $this->db->get()->result_array();
+    }
+
+    public function university_exams($university_names)
+    {
+        $this->s_db->select('exam,university_name');
+        $this->s_db->where_in('university_name', $university_names);
+        return $this->s_db->get('universities')->result_array();
+    }
+
+    public function entrance_exams($id)
+    {
+        $this->db->select([
+            db_prefix() . "clients_exam.*",
+            db_prefix() . "university_exams.name AS exam_name",
+            db_prefix() . "exam_batch.name AS batch_name",
+            db_prefix() . "exam_batch.university_name",
+            db_prefix() . "clients_exam_status.status AS status"
+        ]);
+
+        $this->db->from(db_prefix() . 'clients_exam');
+        $this->db->join(db_prefix() . 'exam_batch', db_prefix() . 'exam_batch.id = ' . db_prefix() . 'clients_exam.batch_id', "left");
+        $this->db->join(db_prefix() . 'university_exams', db_prefix() . 'university_exams.id = ' . db_prefix() . 'clients_exam.exam_id', "left");
+        $this->db->join(
+            db_prefix() . 'clients_exam_status',
+            db_prefix() . 'clients_exam_status.batch_id = ' . db_prefix() . 'clients_exam.batch_id AND ' .
+                db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
+                db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id',
+            "left"
+        );
+
+        $this->db->where(db_prefix() . "clients_exam.client_id", $id);
+        $this->db->group_by(db_prefix() . "clients_exam.id");
+
+        return $this->db->get()->result_array();
+    }
+
+    public function get_university_data($university = [])
+    {
+        $this->s_db->cache_off();
+
+        if (empty($university) || !is_array($university)) {
+            return []; // Return empty array if input is invalid
+        }
+
+        $this->s_db->select('u.university_name,co.country_name,co.*');
+        $this->s_db->from('universities u');
+        $this->s_db->join('countries co', 'co.id = u.country_id', 'inner');
+        $this->s_db->join('course c', 'co.segment_id = c.id', 'inner');
+        $this->s_db->where('c.id', 7);
+        $this->s_db->where_in("u.university_name", $university); // Use where_in for array values
+        $this->s_db->group_by(["c.id", "co.id", "u.id"]);
+
+        $query = $this->s_db->get();
+
+        if (!$query) {
+            return []; // Return empty array if query fails
+        }
+
+        return $query->result_array();
+    }
+
+    public function legalization_data($id)
+    {
+        if (empty($id)) {
+            return [];
+        }
+
+        $this->db->select('us.*,if(us.country_name = a.primary_country AND us.university_name = a.primary_university,1,0) primary_university');
+        $this->db->from(db_prefix() . 'client_university_shortlisting us');
+        $this->db->join(db_prefix() . 'admission_preferences a', "us.client_id = a.userid", "LEFT");
+        $this->db->where('us.client_id', $id);
+        $this->db->where('us.status', 1);
+        $this->db->order_by('us.id', "asc");
+
+        $query = $this->db->get();
+
+        if (!$query) {
+            return [];
+        }
+
+        $client_university_shortlisting = $query->result_array();
+
+        $university_array = [];
+
+        if (!empty($client_university_shortlisting)) {
+            $university_array = array_column($client_university_shortlisting, "university_name");
+        }
+
+
+        if (!empty($university_array)) {
+            $country_university_data = $this->get_university_data($university_array);
+            $country_university_data = array_column($country_university_data, null, "university_name");
+
+
+            if (empty($country_university_data)) {
+                return [];
+            }
+            foreach ($client_university_shortlisting as $key => $s) {
+
+                $client_university_shortlisting[$key]["ministry_document_status"] = !empty($country_university_data[$s["university_name"]]["ministry_document_status"]) ? $country_university_data[$s["university_name"]]["ministry_document_status"] : 0;
+            }
+
+            return $client_university_shortlisting;
+        } else {
+            return [];
+        }
     }
 }

@@ -164,6 +164,8 @@
             <?php
             $get_clients_fees = get_clients_fees((isset($lead) ? $lead->type : ''));
             $get_currencies = get_currencies();
+             $get_currencies = array_column($get_currencies,null,'id');
+           
 
             if (!empty($get_clients_fees) && !empty($get_currencies)) {
             ?>
@@ -187,14 +189,15 @@
                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                               <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
                               <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
-                              <div class="input-group-addon currency-symbol-<?= $id ?>">$</div>
+                 
+                              <div class="input-group-addon currency-symbol-<?= $id ?>"><?=!empty($get_currencies[$fees["default_currency"]]["symbol"])? $get_currencies[$fees["default_currency"]]["symbol"]:'$'?></div>
                               <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="inlineFormInputGroup" size="8">
                               <div class="input-group-addon currency-addon">
 
                                  <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
                                     <?php foreach ($get_currencies as $c) {
                                     ?>
-                                       <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($c["isdefault"]) ? "" : "selected" ?>><?= $c["name"] ?></option>
+                                       <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($fees["default_currency"]) && $fees["default_currency"] == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
                                     <?php
                                     }
                                     ?>
