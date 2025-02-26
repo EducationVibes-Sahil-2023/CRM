@@ -2,6 +2,7 @@
 ob_start();
 // $all_leads =  json_encode(get_all_leads(), true);
 $all_leads =  [];
+$role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 ?>
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" /> -->
 
@@ -158,22 +159,22 @@ ob_end_clean();
 
 
 
-   <div class="modal fade " id="mediaPreviewModal" tabindex="-1" aria-labelledby="mediaPreviewLabel" aria-hidden="true">
+<div class="modal fade " id="mediaPreviewModal" tabindex="-1" aria-labelledby="mediaPreviewLabel" aria-hidden="true">
    <div class="modal-dialog modal-lg" role="document">
-   <div class="modal-content">
-   <div class="modal-header">
-   <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-   <h4 class="modal-title">Media Preview</h4>
-   </div>
-   <div class="modal-body" id="mediaPreviewContent">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title">Media Preview</h4>
+         </div>
+         <div class="modal-body" id="mediaPreviewContent">
 
-   </div>
+         </div>
 
-   </div>
-   <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-content -->
    </div>
    <!-- /.modal-dialog -->
-   </div>
+</div>
 
 
 <?php if (has_permission('whatsapp', '', 'chat') && 1 == 2) { ?>
@@ -243,11 +244,13 @@ ob_end_clean();
 </style>
 
 <script>
-var isAdmin = <?=is_admin();?>;
-var TablePagination = <?=TABLEPAGINATION?>;
+   var isAdmin = <?= is_admin() ? 1 : 0 ?>;
+   var TablePagination = <?= is_admin() ? TABLEPAGINATION : (!empty($role) && $role == 3 ? TABLEPAGINATIONTEAMLEAD : "''") ?>;
+   console.log(isAdmin);
+   console.log(TablePagination);
    var WebURL = "<?= WHATSAPP_WEB_URL ?>";
    var WebSOCKETURL = "<?= SOCKET_WEB_URL ?>";
-   var phoneNumber = <?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>;
+   var phoneNumber = "<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>";
    var whatsapp_permission_view = "<?= has_permission('whatsapp', '', 'view') ?>";
    if (1 == 1) {
       whatsapp_permission_view = 0;

@@ -629,11 +629,6 @@ if (in_array(get_staff_user_id(), $staff_id)) {
     .dropdown-menu hr {
         margin: 0;
     }
-
-    table tr th,
-    table tr td {
-        text-wrap: unset !important;
-    }
 </style>
 <!-- MultiStep Form -->
 <?php
@@ -1719,8 +1714,8 @@ if (empty($customer_admins)) { ?>
                              <input type="number" value="${leg.payment_amount}" class="form-control" name="payment_amount_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" ${mand_re}>
                         </div>
                         <div class="col-md-3">
-                            <label>University Payment Receipt ${mand}</label>
-                            <input type="file" class="form-control" accept=".pdf,image/*" name="university_payment_slip_${leg.id}" ${file_url_university_payment ? "" : mand_re}>
+                            <label>University Payment Receipt </label>
+                            <input type="file" class="form-control" accept=".pdf,image/*" name="university_payment_slip_${leg.id}" ${file_url_university_payment ? "" : ""}>
                             ${file_url_university_payment ? `
                                 <div class="margin-top">
                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_university_payment}');"></i>&nbsp;

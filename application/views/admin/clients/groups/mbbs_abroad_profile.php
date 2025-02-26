@@ -231,7 +231,7 @@ if ($lead_type_status == 2) {
                         </li>
                         <?php hooks()->do_action('after_customer_admins_tab', $client); ?>
                     <?php } ?>
-                    <?php if (!empty($client->submission_status) && $client->submission_status != 1) { ?>
+                    <?php if (empty($client->submission_status) && $client->submission_status == 0) { ?>
                         <li role="presentation" onclick="show_all_data()">
                             <a href="#preview" aria-controls="preview" role="tab" data-toggle="tab">
                                 Preview

@@ -307,7 +307,10 @@ class Clients extends AdminController
                 $data['university_status_submit'] = $this->clients_model->university_status_submit();
                 $data['documents'] =  $this->clients_model->get_documents($id);
                 $university_names = array_column($data['university_shortlisting'], "university_name");
-                $data['university_exams'] = $this->clients_model->university_exams($university_names);
+                $data['university_exams'] = [];
+                if (!empty($university_names)) {
+                    $data['university_exams'] = $this->clients_model->university_exams($university_names);
+                }
                 $data['exams_array'] = array_column(get_university_exam(), null, "id");
                 $data['entrance_exams'] =  $this->clients_model->entrance_exams($id);
                 $data['entrance_exams'] = array_reduce($data['entrance_exams'], function ($acc, $row) {
@@ -1261,8 +1264,10 @@ class Clients extends AdminController
 
             $admissionPreferencesId = $this->clients_model->addAdmissionPreferences($dataArr, $params['admissionPreferencesId']);
 
-            $update = $this->db->where("userid", $client_id);
-            $this->db->update(db_prefix() . 'admission_preferences', array("primary_university" => $primary_university, "primary_country" => $primary_country));
+            if (!empty($primary_university) && !empty($primary_country)) {
+                $update = $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'admission_preferences', array("primary_university" => $primary_university, "primary_country" => $primary_country));
+            }
 
             $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING, "tracker_id" => 1));
 
@@ -2721,7 +2726,7 @@ class Clients extends AdminController
 
 
                 if ($rows_affected) {
-                    if (!empty($media_upload_data["doc_type"][0])) {
+                    if (!empty($media_upload_data["doc_type"])) {
                         $this->media_upload($media_upload_data, $_FILES);
                     }
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);

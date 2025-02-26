@@ -40,6 +40,7 @@ class Exam_Batch extends AdminController
         $data['university_list'] = get_university_list("MBBS Abroad");
         $data['exams'] = get_university_exam();
 
+        
         $this->load->view('admin/exam/create', $data);
     }
 
