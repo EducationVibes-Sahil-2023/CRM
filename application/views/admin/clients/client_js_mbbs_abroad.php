@@ -248,10 +248,19 @@
             admissionPreferencesId: $('#admissionpreferencesid').val(),
             client_id: $('#client_id').val(),
             course_name: $('#course_name').val(),
-            primary_university: $('#primary_university').val(),
-            primary_country: $('#primary_country').val(),
             universities: {}
         };
+
+        // Conditionally add properties if they have values
+        const primaryUniversity = $('#primary_university').val();
+        if (primaryUniversity) {
+            params.primary_university = primaryUniversity;
+        }
+
+        const primaryCountry = $('#primary_country').val();
+        if (primaryCountry) {
+            params.primary_country = primaryCountry;
+        }
 
         try {
             // Validate selected universities for each country
