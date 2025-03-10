@@ -1349,6 +1349,12 @@ class Clients extends AdminController
                     $doc_name = $documents_type[$doc_id]["name"];
                     $status_name =  !empty($status) && $status == 1 ? 'Approved' : 'Reject';
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "{$doc_name} document {$status_name} by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+                    $client = $this->clients_model->getBasicDetails($client_id);
+
+                    if (!empty($client->email)) {
+                        send_mail_template('Applicant_document_reject', $client->email, $client_id, get_staff_user_id(), get_staff_user_id(), $doc_id);
+                    }
                 }
 
                 $update = $this->db->where("id", $check_->id);
@@ -1575,6 +1581,30 @@ class Clients extends AdminController
                     "staffid" => get_staff_user_id(),
                     "client_id" => $client_id
                 ));
+
+                $client = $this->clients_model->getBasicDetails($client_id);
+
+                $this->registration_slip_preview($client_id);
+                if (!empty($client->email)) {
+                    send_mail_template('Applicant_new_registration', $client->email, $client_id, ADMISSION_EMAIL_ID);
+                }
+
+                $template_id = 1;
+                if (!empty($template_id) && $template_id == 1) {
+                    $attachments = $this->clients_model->registration_attachments($client_id, 1);
+
+                    if (empty($attachments["registration_slip_invoice"])) {
+                        http_response_code(400); // Bad Request
+                        echo json_encode([
+                            'success' => false,
+                            'message' => "Registration slip is not generated."
+                        ]);
+                        return;
+                    }
+                }
+
+                // Attempt to send WhatsApp message
+                $whatsapp_sent = whatsapp_message_send($client_id, $template_id, $attachments);
             } catch (Exception $e) {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
@@ -3249,40 +3279,96 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    public function pdf_preview()
+    public function registration_slip_preview($client_id = 560)
     {
         try {
+            $data = [];
+            $client = $this->clients_model->get($client_id);
+            $client_basic = $this->clients_model->getBasicDetails($client_id);
+            $get_clients_fees = get_clients_fees_details(2, $client_id);
+            $admission_prefrences = $this->clients_model->getAdmissionPreferences($client_id);
+            $fees_amount = !empty($get_clients_fees[0]["total_amount"]) ? array_column($get_clients_fees, null, 'id') : [];
+            $registration_amount = $fees_amount[REGISTRATION_AMOUNT_ID]["total_amount"];
+            $total_amount = $fees_amount[TOTAL_AMOUNT_ID]["total_amount"];
+            $pending_amount = $fees_amount[REGISTRATION_AMOUNT_ID]["amount"] - $fees_amount[TOTAL_AMOUNT_ID]["amount"];
 
-            stream_context_set_default(array('ssl' => array('verify_peer' => false, 'verify_peer_name' => false)));
-            $is_default = 1;
-            $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+            // Prepare Data for PDF
+            $data["student_name"] = $client_basic->first_name . " " . $client_basic->last_name;
+            $data["university_name"] = $client_basic->university_name;
+            $data["country"] = $client_basic->country;
+            $data["total_amount"] = $total_amount;
+            $data["registration_amount"] = $registration_amount;
+            $data["pending_amount"] = $pending_amount;
+            $data["address"] = $client->billing_street;
+            $data["date_of_payment"] = $client->date_of_payment;
+            $data["acadmic_year"] = $admission_prefrences->acadmic_year;
+            $data["invoice_number"] = "BRCM-00" . $client_id;
+            $data["invoice_no"] = str_pad($client_id, 6, '0', STR_PAD_LEFT);
+
+            // Disable SSL verification
+            stream_context_set_default(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+
+            // Initialize TCPDF
+            $pdf = new TCPDF('L', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
             $pdf->setPrintHeader(false);
             $pdf->setPrintFooter(false);
-            $pdf->SetMargins(20, 20, 20, 20); // Left: 50px, Top: 50px, Right: 50px
-            $pdf->SetHeaderMargin(0);
-            $pdf->SetFooterMargin(0);
-            $pdf->SetAutoPageBreak(true, 50); // Enable auto page break with a 50px bottom margin
-
+            $pdf->SetMargins(10, 10, 10, 10);
             $pdf->AddPage();
-            $font_style = new TCPDF_FONTS();
+
+            // Load Fonts
             $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';
             $path_book_antiqua = APPPATH . 'libraries/tcpdf/fonts/book-antiqua-bold.ttf';
             $path_Cambria_Math = APPPATH . 'libraries/tcpdf/fonts/Cambria Math.ttf';
             $path_Cambria = APPPATH . 'libraries/tcpdf/fonts/Cambria/Cambria Bold 700.ttf';
+
             $data["gillsansmt"] = TCPDF_FONTS::addTTFfont($path_gill_sans_mt, 'TrueTypeUnicode', '', 15);
             $data["book_antiqua"] = TCPDF_FONTS::addTTFfont($path_book_antiqua, 'TrueTypeUnicode', '', 15);
             $data["Cambria_Math"] = TCPDF_FONTS::addTTFfont($path_Cambria_Math, 'TrueTypeUnicode', '', 15);
             $data["Cambria"] = TCPDF_FONTS::addTTFfont($path_Cambria, 'TrueTypeUnicode', '', 15);
-            $pdf->setImageScale(1.5);
-            $html = $this->load->view('admin/pdf/registration', $data, true);
-            // $pdf->writeHTMLCell(0, 0, 0, 0, $html, 0, 0, false, true, 'J', true);
-            $pdf->writeHTML($html, true, false, true, false, '');
-            $pdf->Output('example.pdf', 'I');
-        } catch (Exception $e) {
 
-            header('Location: ' . $_SERVER['REQUEST_URI']);
+            $pdf->setImageScale(1.7);
+
+            // Load HTML Template
+            $html = $this->load->view('admin/pdf/registration', $data, true);
+            $pdf->writeHTML($html, true, false, true, false, '');
+
+            // Define File Path
+            $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/";
+
+            // Ensure directory exists and is writable
+            if (!is_dir($upload_dir)) {
+                if (!mkdir($upload_dir, 0777, true) && !is_dir($upload_dir)) {
+                    return json_encode(["status" => "error", "message" => "Failed to create upload directory."]);
+                }
+            }
+
+            $file_name = 'Registration_Slip_' . time() . '.pdf'; // Unique file name
+            $file_path = $upload_dir . $file_name;
+
+            // Remove previous file if it exists
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+
+            // Save the new PDF file on the server
+            $pdf->Output($file_path, 'D');
+
+            // Verify if the file was created successfully
+            if (!file_exists($file_path)) {
+                return json_encode(["status" => "error", "message" => "Failed to generate PDF file."]);
+            }
+
+            // File URL
+            $file_url = base_url($upload_dir . $file_name);
+
+            return json_encode(["status" => "success", "pdf_url" => $file_url]);
+        } catch (Exception $e) {
+            return json_encode(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+
+
+
 
     public function mbbs_tracker()
     {
@@ -4180,5 +4266,141 @@ class Clients extends AdminController
             }
         }
         return false; // Not found
+    }
+    function email_send_trigger()
+    {
+        // Validate if client_id and type are set
+        if (!isset($_POST["client_id"]) || !isset($_POST["type"])) {
+            http_response_code(400); // Bad Request
+            echo json_encode([
+                'success' => false,
+                'message' => 'Missing required parameters.'
+            ]);
+            return;
+        }
+
+        $client_id = $_POST["client_id"];
+        $type = $_POST["type"];
+        $university_id = !empty($_POST["s_university_id"]) ? $_POST["s_university_id"] : 0;
+        $university_name = !empty($_POST["s_university_name"]) ? $_POST["s_university_name"] : "";
+
+        // Fetch client details
+        $client = $this->clients_model->getBasicDetails($client_id);
+
+        if (!$client || empty($client->email)) {
+            http_response_code(404); // Not Found
+            echo json_encode([
+                'success' => false,
+                'message' => 'Client email not found.'
+            ]);
+            return;
+        }
+
+        // Define email templates based on type
+        $email_templates = [
+            1 => 'Applicant_documentation_notification',
+            2 => 'Applicant_entrance_exam',
+            3 => 'Applicant_invitation_notification',
+            4 => 'Applicant_visa_notification'
+        ];
+
+        // Validate email type
+        if (!array_key_exists($type, $email_templates)) {
+            http_response_code(400); // Bad Request
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid email type provided.'
+            ]);
+            return;
+        }
+
+        // Attempt to send the email
+        try {
+            $email_sent = send_mail_template($email_templates[$type], $client->email, $client_id, ADMISSION_EMAIL_ID, $university_id, $university_name);
+
+            if ($email_sent) {
+                http_response_code(200); // OK
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Email sent successfully.'
+                ]);
+            } else {
+                http_response_code(500); // Internal Server Error
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to send email. Please try again later.'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500); // Internal Server Error
+            echo json_encode([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function whatsapp_message_send()
+    {
+        try {
+            // Validate required POST parameters
+            if (!isset($_POST["client_id"], $_POST["type"])) {
+                http_response_code(400); // Bad Request
+                echo json_encode([
+                    'success' => false,
+                    'message' => "Missing required parameters."
+                ]);
+                return;
+            }
+
+            // Retrieve and sanitize inputs
+            $client_id = trim($_POST["client_id"]);
+            $template_id = trim($_POST["type"]);
+            $university_id = !empty($_POST["s_university_id"]) ? trim($_POST["s_university_id"]) : 0;
+            $university_name = !empty($_POST["s_university_name"]) ? trim($_POST["s_university_name"]) : "";
+
+            $attachments = [];
+
+            // Check for required type and its related attachments
+            if (!empty($template_id) && $template_id == 1) {
+                $attachments = $this->clients_model->registration_attachments($client_id, 1);
+
+                if (empty($attachments["registration_slip_invoice"])) {
+                    http_response_code(400); // Bad Request
+                    echo json_encode([
+                        'success' => false,
+                        'message' => "Registration slip is not generated."
+                    ]);
+                    return;
+                }
+            }
+
+            // Attempt to send WhatsApp message
+            $whatsapp_sent = whatsapp_message_send($client_id, $template_id, $attachments);
+
+            if ($whatsapp_sent) {
+                http_response_code(200); // OK
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'WhatsApp message sent successfully.'
+                ]);
+            } else {
+                http_response_code(500); // Internal Server Error
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to send WhatsApp message. Please try again later.'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(500); // Internal Server Error
+
+            // Log the error if a logging system is in place
+            error_log("WhatsApp Message Send Error: " . $e->getMessage());
+
+            echo json_encode([
+                'success' => false,
+                'message' => 'An unexpected error occurred. Please try again later.'
+            ]);
+        }
     }
 }

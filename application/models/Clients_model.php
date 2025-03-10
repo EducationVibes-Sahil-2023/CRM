@@ -2057,4 +2057,80 @@ class Clients_model extends App_Model
             return [];
         }
     }
+
+
+    public function registration_attachments($client_id, $whatsapp_status = 0)
+    {
+
+
+        if ($whatsapp_status == 1) {
+
+            return $attachments = $this->db->select("registration_slip_invoice")
+                ->from(db_prefix() . "clients")
+                ->where("userid", $client_id)
+                ->get()
+                ->row_array(); // Fetch a single row
+            die;
+        }
+
+        $attachments = $this->db->select("quotation, registration_slip_invoice")
+            ->from(db_prefix() . "clients")
+            ->where("userid", $client_id)
+            ->get()
+            ->row_array(); // Fetch a single row
+
+        $attachments_data = [];
+        if (!empty($attachments)) {
+            foreach (["quotation", "registration_slip_invoice"] as $key) {
+                if (!empty($attachments[$key])) {
+                    $file_path = base_url() . $attachments[$key];
+                    $file_extension = pathinfo($attachments[$key], PATHINFO_EXTENSION); // Extract file extension
+                    $formatted_name = ucwords(str_replace("_", " ", $key)); // Capitalize first letter of each word
+
+                    $file_name = $formatted_name . "." . $file_extension; // Append correct extension
+
+                    $attachments_data[] = [
+                        "attachment" => $file_path,
+                        "filename" => $file_name,
+                        "read" => true,
+                        "type" => mime_content_type(FCPATH . $attachments[$key]) // Get MIME type
+                    ];
+                }
+            }
+        }
+
+        return $attachments_data;
+    }
+
+    public function invitation_attachments($id, $client_id)
+    {
+        $attachments = $this->db->select("invitation_letter")
+            ->from(db_prefix() . "client_university_shortlisting")
+            ->where("client_id", $client_id)
+            ->where("id", $id)
+            ->get()
+            ->row_array(); // Fetch a single row
+
+        $attachments_data = [];
+        if (!empty($attachments)) {
+            foreach (["invitation_letter"] as $key) {
+                if (!empty($attachments[$key])) {
+                    $file_path = base_url() . $attachments[$key];
+                    $file_extension = pathinfo($attachments[$key], PATHINFO_EXTENSION); // Extract file extension
+                    $formatted_name = ucwords(str_replace("_", " ", $key)); // Capitalize first letter of each word
+
+                    $file_name = $formatted_name . "." . $file_extension; // Append correct extension
+
+                    $attachments_data[] = [
+                        "attachment" => $file_path,
+                        "filename" => $file_name,
+                        "read" => true,
+                        "type" => mime_content_type(FCPATH . $attachments[$key]) // Get MIME type
+                    ];
+                }
+            }
+        }
+
+        return $attachments_data;
+    }
 }

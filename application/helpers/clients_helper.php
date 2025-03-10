@@ -1515,4 +1515,5 @@ function get_board_dropdown()
         return []; // Return an empty array to ensure function fails gracefully
     }
     
+    
 }

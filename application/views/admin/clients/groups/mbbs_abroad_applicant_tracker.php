@@ -942,7 +942,15 @@ if (empty($customer_admins)) { ?>
                                 <?php if (!empty($entrance_exams)): ?>
                                     <?php foreach ($entrance_exams as $university => $exams): ?>
                                         <div class="entrance_exam_university_div shadow">
-                                            <h4 class="text-left "><?= htmlspecialchars($university) ?></h4>
+                                            <h4 class="text-left "><?= htmlspecialchars($university) ?>
+                                            </h4>
+                                            <?php if (!empty($entrance_exams)): ?>
+                                                <div class="text-right">
+                                                    <button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
+                                                    <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope"></i> </button>
+                                                </div>
+                                            <?php endif; ?>
+
                                             <?php foreach ($exams as $exam): ?>
                                                 <div class="row university-entrance-exam">
 
@@ -1105,6 +1113,7 @@ if (empty($customer_admins)) { ?>
 
                     <?php } else if ($track["show_div_name"] == "invitation_div") {  ?>
                         <form id="invitation-form" class="form-disabled" onsubmit="return false;">
+
                             <div class="invitation_div">
                                 <?php if (!empty($legalization)) : ?>
                                     <?php foreach ($legalization as $leg) :
@@ -1120,7 +1129,12 @@ if (empty($customer_admins)) { ?>
                                         <div class="invitation-item card shadow-sm p-3 mb-3">
                                             <h4 class="university-name">
                                                 <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
+
                                             </h4>
+                                            <div class="text-right">
+                                                <button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
+                                                <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope"></i></button>
+                                            </div>
                                             <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
                                             <div class="row mt-2">
@@ -1560,9 +1574,10 @@ if (empty($customer_admins)) { ?>
 
         $.each(data, function(university, exams) {
             const $universityDiv = $("<div>").addClass("entrance_exam_university_div shadow");
-
+            let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(${client_id}, 3,'','${university}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id}, 2,'','${university}')"><i class="fa fa-envelope"></i></button> </div>`;
             const $title = $("<h4>").addClass("text-left").text(university);
             $universityDiv.append($title);
+            $universityDiv.append(email_button);
 
             $.each(exams, function(index, exam) {
                 const $examRow = $("<div>").addClass("row university-entrance-exam");
@@ -1749,10 +1764,11 @@ if (empty($customer_admins)) { ?>
                 ` :
                     "";
                 let file_url_university_payment = leg.invitation_letter ? leg.invitation_letter : "";
-
+                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(${client_id}, 4,'','${university}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope"></i></button> </div>`;
                 let card = `
                 <div class="invitation-item card shadow-sm p-3 mb-3">
                     <h4 class="university-name">${leg.university_name}</h4>
+            ${email_button}
                     <input type="hidden" name="id" value="${leg.id}">
 
                     <div class="row mt-2">
@@ -2312,5 +2328,89 @@ if (empty($customer_admins)) { ?>
 
             resolve(upload_data);
         });
+    }
+
+
+
+    async function email_send(client_id, type, s_university_id = "", s_university_name = "") {
+        show_loader();
+
+        let upload_data = new FormData();
+        upload_data.append("client_id", client_id);
+        upload_data.append("type", type);
+        upload_data.append("s_university_id", s_university_id);
+        upload_data.append("s_university_name", s_university_name);
+        upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+
+
+        try {
+            let response = await $.ajax({
+                url: "<?= base_url('admin/clients/email_send_trigger') ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false
+            });
+
+            let uploadResponse = JSON.parse(response);
+
+            if (uploadResponse.success) {
+                alert_float("success", uploadResponse.message || "Email sent successfully!");
+            } else {
+                alert_float("danger", uploadResponse.message || "Failed to send email.");
+            }
+
+            return uploadResponse;
+        } catch (error) {
+            console.error("Email send error:", error);
+            alert_float("danger", "An error occurred while sending the email.");
+            return {
+                success: false,
+                message: "An error occurred while sending the email."
+            };
+        } finally {
+            hide_loader();
+        }
+    }
+
+    async function whatsapp_message_send(client_id, type, s_university_id = "", s_university_name = "") {
+        show_loader();
+
+        let upload_data = new FormData();
+        upload_data.append("client_id", client_id);
+        upload_data.append("type", type);
+        upload_data.append("s_university_id", s_university_id);
+        upload_data.append("s_university_name", s_university_name);
+        upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+
+
+        try {
+            let response = await $.ajax({
+                url: "<?= base_url('admin/clients/whatsapp_message_send') ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false
+            });
+
+            let uploadResponse = JSON.parse(response);
+
+            if (uploadResponse.success) {
+                alert_float("success", uploadResponse.message || "Email sent successfully!");
+            } else {
+                alert_float("danger", uploadResponse.message || "Failed to send email.");
+            }
+
+            return uploadResponse;
+        } catch (error) {
+            console.error("Email send error:", error);
+            alert_float("danger", "An error occurred while sending the email.");
+            return {
+                success: false,
+                message: "An error occurred while sending the email."
+            };
+        } finally {
+            hide_loader();
+        }
     }
 </script>
