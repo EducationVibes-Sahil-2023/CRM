@@ -1269,7 +1269,19 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'admission_preferences', array("primary_university" => $primary_university, "primary_country" => $primary_country));
             }
 
-            $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING, "tracker_id" => 1));
+            $check_client = $this->db->select('tracker_id')
+                ->where('userid', $client_id)
+                ->get(db_prefix() . 'clients')
+                ->row();
+
+
+
+
+            if (empty($check_client->tracker_id) && $check_client->tracker_id == 0) {
+            } else {
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING, "tracker_id" => 1));
+            }
+
 
             if ($admissionPreferencesId) {
                 if (!empty($params['admissionPreferencesId'])) {
@@ -1451,12 +1463,19 @@ class Clients extends AdminController
                 if (isset($applicant_status)) {
                     // $this->db->where("userid", $client_id);
                     // $this->db->update(db_prefix() . 'clients', array("applicant_status" => $applicant_status, "applicant_stage" => 2, "applicant_sub_status" => 6));
-                    get_applicant_status($applicant_status, $client_id);
+                    // get_applicant_status($applicant_status, $client_id);
                 }
                 if ($rows_affected > 0) {
                     $this->db->where("userid", $client_id);
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => DOCUMENT, "applicant_sub_status" => DOCUMENT_APPROVAL_PENDING, "tracker_id" => 0));
+
+
+
+
+                    // $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => DOCUMENT, "applicant_sub_status" => DOCUMENT_APPROVAL_PENDING, "tracker_id" => 0));
+
+
+
 
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_document_successfully', _l('client'));
@@ -1531,7 +1550,8 @@ class Clients extends AdminController
 
 
                 $_update["date_of_payment"] = !empty($_POST["date_of_payment"]) ? $_POST["date_of_payment"] : '';
-
+                $_update["registration_slip_cash_status"] = !empty($_POST["registration_slip_cash_status"]) ? $_POST["registration_slip_cash_status"] : '';
+                $_update["payment_recevied_from"] = !empty($_POST["payment_recevied_from"]) ? $_POST["payment_recevied_from"] : '';
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $_update);
 
@@ -2608,9 +2628,9 @@ class Clients extends AdminController
             return false;
             die;
         }
-        $doc_ids = $data["doc_type_id"];
-        $doc_names = $data["doc_type_name"];
-        $document_url = $data["doc_url"];
+        $doc_ids = isset($data["doc_type_id"]) ? $data["doc_type_id"] : [];
+        $doc_names = isset($data["doc_type_name"]) ? $data["doc_type_name"] : [];
+        $document_url = isset($data["doc_url"]) ? $data["doc_url"] : [];
         $update_array = [];
         $client_id = $data["clientid"];
 
@@ -2680,7 +2700,6 @@ class Clients extends AdminController
             $update_array = isset($update_array) && is_array($update_array) ? $update_array : [];
 
             $update_array = array_merge($update_array, $new_array_update);
-
 
 
             $_update_data = array(
@@ -3395,7 +3414,50 @@ class Clients extends AdminController
             return;
         }
 
+        $check_client = $this->db->select('tracker_id')
+            ->where('userid', $client_id)
+            ->get(db_prefix() . 'clients')
+            ->row();
+
         if (!empty($skip_status) && $skip_status == 1) {
+            if ($tracker_id == 6) {
+                $check_documents = $this->check_documents(8);
+                if (!empty($check_documents)) {
+                    // If required documents are missing
+                    $doc_names = implode(", ", $check_documents);
+                    $message = "{$doc_names} are mandatory to proceed to the next step.";
+
+                    $data = [
+                        'resp_code'               => 'ERR',
+                        'resp_desc'               => "Document requried " . $message,
+                    ];
+
+                    set_alert('danger', "Document requried " . $message);
+
+                    echo json_encode($data);
+                    return;
+                }
+
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => INVITATION,
+                    "applicant_sub_status" => INVITATION_PENDING,
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            }
+            if ($tracker_id == 4) {
+
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => LEGALIZATION,
+                    "applicant_sub_status" => LEGALIZATION_PENDING,
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            }
             $this->update_applicant_tracker_stages($client_id, $tracker_id);
             $legalization =  $this->clients_model->legalization_data($client_id);
             $data =  [
@@ -3410,8 +3472,13 @@ class Clients extends AdminController
 
         if ($tracker_id == 1) {
             $data = $this->document_verification($post_data);
-            $this->db->where("userid", $client_id);
-            $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
+
+            if (empty($check_client->tracker_id) && $check_client->tracker_id == 0) {
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
+            } else {
+                $data["pass_stage"] = $check_client->tracker_id;
+            }
         } else if ($tracker_id == 2) {
             $data = $this->university_shortlisting($post_data);
         } else if ($tracker_id == 3) {
@@ -3458,7 +3525,14 @@ class Clients extends AdminController
         ));
         $rows_affected = $this->db->affected_rows();
         if ($rows_affected) {
-            $this->update_applicant_tracker_stages($client_id, $tracker_id);
+
+            $check_client = $this->db->select('tracker_id')
+                ->where('userid', $client_id)
+                ->get(db_prefix() . 'clients')
+                ->row();
+            if (empty($check_client->tracker_id) && $check_client->tracker_id == 0) {
+                $this->update_applicant_tracker_stages($client_id, $tracker_id);
+            }
         }
         $data = [];
         if ($rows_affected) {
@@ -3499,6 +3573,21 @@ class Clients extends AdminController
                 }
             }
 
+            $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
+
+            $check_primary_university_exist = $this->checkUniversityExists($university_shortlisting, $admissionpreferences->primary_university, $admissionpreferences->primary_country);
+            if ($check_primary_university_exist === false) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Primary University Selection is Mandatory.';
+                return $data;
+                die;
+            }
+            if (empty($admissionpreferences->primary_university) ||  empty($admissionpreferences->primary_country)) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Something wrong check primary country & university.';
+                return $data;
+                die;
+            }
             $update_university = "";
             if (!empty($university_shortlisting_insert_arr) || !empty($university_shortlisting_update_arr)) {
                 if (!empty($university_shortlisting_insert_arr)) {
@@ -3566,7 +3655,7 @@ class Clients extends AdminController
                 } else {
                     // Handle university update failure
                     $data = [
-                        'resp_code' => 'RCS',
+                        'resp_code' => 'ERR',
                         'resp_desc' => _l('update_customer_failed_successfully', _l('client'))
                     ];
 
@@ -3684,6 +3773,8 @@ class Clients extends AdminController
                 die;
             } else {
                 if (empty($check_primary_university_exist["application_file"])) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_WAITING));
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = "The primary university application letter for '" . $check_primary_university_exist["university_name"] . "' is mandatory to proceed to the next step.";
                     return $data;
@@ -3691,7 +3782,8 @@ class Clients extends AdminController
                 }
             }
             if (!empty($_FILES) || !empty($admission_letter)) {
-
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ENTRANCE_EXAM, "applicant_sub_status" => ENTRANCE_EXAM_PENDING));
                 $entrance_exams =  $this->clients_model->entrance_exams($client_id);
                 $entrance_exams = array_reduce($entrance_exams, function ($acc, $row) {
                     $acc[$row['university_name']] = ($acc[$row['university_name']] ?? []);

@@ -147,6 +147,16 @@ function get_available_staff_permissions($data = [])
             'name'         => _l('Whatsapp Integration'),
             'capabilities' => ['view' => _l('permission_view_own')]
         ],
+        'exam_batch' => [
+            'name'         => "Exam batch",
+            'capabilities' => [
+                'view_own' => _l('permission_view_own'),
+                'view'     => $viewGlobalName,
+                'edit'     => _l('permission_edit'),
+                'create' => _l('permission_create'),
+                'delete' => _l('permission_delete'),
+            ],
+        ],
     ];
 
     $addLeadsPermission = true;

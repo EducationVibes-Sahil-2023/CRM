@@ -190,14 +190,20 @@
 
         if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
             setTimeout(() => {
-                $(".form-disabled").each(function() {
-                    $(this).find("input, select,.dropdown-toggle ").attr("disabled", true); // Disable inputs & selects inside .form-disabled
-                    $(".btn-save-fun").hide();
-                    setTimeout(() => {
-                        $(".tags-input-wrapper").css("pointer-events", "none");
-                    }, 2000);
-                    $("#save_admission_preferences").attr("disabled", true);
+                $(".tab-pane").each(function() {
+                    if (!$(this).hasClass("disabled-form")) {
+                        $(this).find(".form-disabled").each(function() {
+                            $(this).find("input, select, .dropdown-toggle").attr("disabled", true);
+                        });
+                        $(this).find(".btn-save-fun").hide();
+                    }
                 });
+
+
+                $("#save_admission_preferences").attr("disabled", true);
+
+                // Directly applying instead of using another setTimeout
+                $(".tags-input-wrapper").css("pointer-events", "none");
             }, 100);
         }
 
@@ -441,6 +447,15 @@
         })
     }
 
+    function check_registration_cash_status(element, className) {
+        if ($(element).is(":checked")) {
+            $("." + className).hide();
+            $(element).val(1); // Show elements if checkbox is checked
+        } else {
+            $("." + className).show(); // Hide elements if checkbox is unchecked
+            $(element).val(0);
+        }
+    }
 
     $(document).ready(function() {
         $("#twelth_result_status").on("change", function() {
@@ -450,7 +465,7 @@
             targetDiv.toggle(isDeclared); // Show/Hide the div
 
             // Clear values of input, select, and file fields
-            targetDiv.find("input, select, input[type='file']").val("");
+            targetDiv.find("input:not([type='hidden']), select, input[type='file']").val("");
 
             // Refresh select fields using selectpicker (Bootstrap Select)
             targetDiv.find("select").selectpicker("refresh");
@@ -616,7 +631,7 @@
         var additional_fields = {};
         var form_status = true;
         show_loader();
-        $("#welcome-information-form input, #welcome-information-form select, #welcome-information-form input[type='date']").each(function() {
+        $("#welcome-information-form input:visible, #welcome-information-form select:visible, #welcome-information-form input[type='date']:visible").each(function() {
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
             const name = $(this).attr("name"); // Get name attribute
@@ -674,18 +689,19 @@
         });
     }
 
-
     $(".nav-tabs li").on("click", function() {
         if (typeof final_sumbit !== "undefined" && final_sumbit != 1) {
             $(".btn-save-fun").show(); // Show the save button
             $(".tab-pane").find("input,select").attr("readonly", false);
             $(".tab-pane").find("input[type='file']").attr("disabled", false);
+            $(".tab-pane").find("input[type='checkbox']").attr("disabled", false);
             $(".tab-pane").find("select").attr("disabled", false);
             $("select").selectpicker('refresh');
             $(".tags-input-wrapper").css("pointer-events", "");
             $("#save_admission_preferences").attr("disabled", false);
         }
 
+        if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {}
     });
 
 
@@ -695,6 +711,7 @@
             $(".tab-pane").find("input,select").attr("readonly", true);
             $(".tab-pane").find("input[type='file']").attr("disabled", true);
             $(".tab-pane").find("select").attr("disabled", true);
+            $(".tab-pane").find("input[type='checkbox']").attr("disabled", true);
             $("select").selectpicker('refresh');
             $(".btn-save-fun").hide();
             $(".tags-input-wrapper").css("pointer-events", "none");
@@ -702,6 +719,7 @@
         }, 0);
 
     }
+
 
     // final subbition
     function final_submission() {

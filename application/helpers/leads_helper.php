@@ -6220,13 +6220,13 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 
     if ($conversion_status) {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY assigned,l.source,c.id';
+            $sql .= '  GROUP BY l.source,c.id';
         } else {
             $sql .= '  GROUP BY assigned,l.source,c.id ';
         }
     } else {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY assigned, ls.id, s.id, c.id, m.id';
+            $sql .= '  GROUP BY ls.id, s.id, c.id, m.id';
         } else {
             $sql .= '  GROUP BY  assigned, ls.id, s.id, c.id, m.id ';
         }
@@ -6261,13 +6261,13 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
 
     if ($conversion_status) {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY tt.assigned,tt.source_id,tt.conversion_id';
+            $sql .= '  GROUP BY tt.source_id,tt.conversion_id';
         } else {
             $sql .= '  GROUP BY tt.assigned,tt.source_id,tt.conversion_id ';
         }
     } else {
         if (!empty($params["total_status"]) && $params["total_status"] == 1) {
-            $sql .= '  GROUP BY tt.assigned, tt.status_id, tt.source_id, tt.conversion_id, tt.marketing_id';
+            $sql .= '  GROUP BY  tt.status_id, tt.source_id, tt.conversion_id, tt.marketing_id';
         } else {
             $sql .= '  GROUP BY  tt.assigned, tt.status_id, tt.source_id, tt.conversion_id, tt.marketing_id ';
         }
@@ -7201,6 +7201,12 @@ function get_type()
 {
     $CI = &get_instance();
     return $CI->leads_model->get_type();
+}
+
+function get_source()
+{
+    $CI = &get_instance();
+    return $CI->leads_model->get_source();
 }
 
 
@@ -8165,7 +8171,7 @@ function get_university_list($lead_type)
 {
     $CI = &get_instance();
 
-    return $CI->s_db->query("SELECT co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where name='$lead_type'")->result_array();
+    return $CI->s_db->query("SELECT co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type'")->result_array();
 }
 
 function get_university_exam()
@@ -8355,23 +8361,11 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
 }
 
 
-function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
-{
-    $CI = &get_instance();
-    $CI->db->select("c.symbol,d.amount,CONCAT(c.symbol,'',d.amount) as total_amount,f.id")
-        ->from(db_prefix() . 'applicant_fees f')
-        ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id")
-        ->join(db_prefix() . 'currencies c', "c.id = d.currency_id")
-        ->where('lead_type', $lead_type)
-        ->where('client_id', $client_id);
-
-    if (!empty($fees_id)) {
-        $CI->db->where('f.id', $fees_id);
+function extractYear($date) {
+    if (strpos($date, '-') !== false) {
+        // If the date contains a hyphen, it's in YYYY-MM format
+        list($year, $month) = explode('-', $date);
+        return $year; // Return only the year
     }
-
-    $client_fees = $CI->db->order_by("sequence", "asc")
-        ->get()
-        ->result_array();
-
-    return $client_fees;
+    return $date; // Already in YYYY format
 }

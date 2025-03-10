@@ -57,8 +57,7 @@ class Import_leads extends App_import
                     $row[$i] = $this->countryValue($row[$i]);
                 } elseif ($databaseFields[$i] == 'phonenumber') { //get last 10 digit from string.
                     $row[$i] = substr(trim($row[$i]), -10);
-                }
-                elseif ($databaseFields[$i] == 'alternative_phonenumber') { //get last 10 digit from string.
+                } elseif ($databaseFields[$i] == 'alternative_phonenumber') { //get last 10 digit from string.
                     $row[$i] = substr(trim($row[$i]), -10);
                 }
 
@@ -68,9 +67,17 @@ class Import_leads extends App_import
                 $insert = $this->trimInsertValues($insert);
 
                 if (count($insert) > 0) {
-                    if ($this->isDuplicateLead($insert)) {
+
+                    if (
+                        $this->isDuplicateLead($insert) ||
+                        (!empty($insert["phonenumber"]) &&
+                            !empty($insert["alternative_phonenumber"]) &&
+                            $insert["phonenumber"] === $insert["alternative_phonenumber"])
+                    ) {
                         continue;
                     }
+
+
 
                     $this->incrementImported();
 
@@ -158,57 +165,57 @@ class Import_leads extends App_import
 
     //     return false;
     // }
-    
-  public function isDuplicateLead($data)
-{
-    $where = [];
 
-    // Build the WHERE condition dynamically
-    foreach ($this->uniqueValidationFields as $field) {
-        if (isset($data[$field]) && $data[$field] !== '') {
-            $where[$field] = $data[$field];
+    public function isDuplicateLead($data)
+    {
+        $where = [];
+
+        // Build the WHERE condition dynamically
+        foreach ($this->uniqueValidationFields as $field) {
+            if (isset($data[$field]) && $data[$field] !== '') {
+                $where[$field] = $data[$field];
+            }
         }
+
+        // Ensure 'phonenumber' is not in the AND condition
+        if (!empty($where)) {
+            unset($where["phonenumber"]);
+            unset($where["email"]);
+            unset($where["alternative_phonenumber"]); // Exclude alternative_phonenumber as well
+        }
+
+        // Check if phonenumber exists
+        if (empty($data["phonenumber"]) && empty($data["alternative_phonenumber"])) {
+            return false; // Prevent errors if both numbers are missing
+        }
+
+        // OR condition for phonenumber and alternative_phonenumber
+        $where_or = [];
+
+        if (!empty($data["phonenumber"])) {
+            $where_or[] = "(phonenumber = " . $this->ci->db->escape($data["phonenumber"]) . " OR alternative_phonenumber = " . $this->ci->db->escape($data["phonenumber"]) . ")";
+        }
+        if (!empty($data["alternative_phonenumber"])) {
+            $where_or[] = "(phonenumber = " . $this->ci->db->escape($data["alternative_phonenumber"]) . " OR alternative_phonenumber = " . $this->ci->db->escape($data["alternative_phonenumber"]) . ")";
+        }
+
+        // Start Query
+        $this->ci->db->from(db_prefix() . 'leads');
+
+        if (!empty($where)) {
+            $this->ci->db->where($where);
+        }
+
+        if (!empty($where_or)) {
+            $this->ci->db->where("(" . implode(" OR ", $where_or) . ")", null, false);
+        }
+
+        // Get count of matching records
+        $total = $this->ci->db->count_all_results();
+
+
+        return ($total > 0); // Returns `true` if a duplicate exists, otherwise `false`
     }
-
-    // Ensure 'phonenumber' is not in the AND condition
-    if (!empty($where)) {
-        unset($where["phonenumber"]);
-         unset($where["email"]);
-        unset($where["alternative_phonenumber"]); // Exclude alternative_phonenumber as well
-    }
-
-    // Check if phonenumber exists
-    if (empty($data["phonenumber"]) && empty($data["alternative_phonenumber"])) {
-        return false; // Prevent errors if both numbers are missing
-    }
-
-    // OR condition for phonenumber and alternative_phonenumber
-    $where_or = [];
-
-    if (!empty($data["phonenumber"])) {
-        $where_or[] = "(phonenumber = " . $this->ci->db->escape($data["phonenumber"]) . " OR alternative_phonenumber = " . $this->ci->db->escape($data["phonenumber"]) . ")";
-    }
-    if (!empty($data["alternative_phonenumber"])) {
-        $where_or[] = "(phonenumber = " . $this->ci->db->escape($data["alternative_phonenumber"]) . " OR alternative_phonenumber = " . $this->ci->db->escape($data["alternative_phonenumber"]) . ")";
-    }
-
-    // Start Query
-    $this->ci->db->from(db_prefix() . 'leads');
-
-    if (!empty($where)) {
-        $this->ci->db->where($where);
-    }
-
-    if (!empty($where_or)) {
-        $this->ci->db->where("(" . implode(" OR ", $where_or) . ")", null, false);
-    }
-
-    // Get count of matching records
-    $total = $this->ci->db->count_all_results();
-
-
-    return ($total > 0); // Returns `true` if a duplicate exists, otherwise `false`
-}
 
 
     private function formatValuesForSimulation($values)
@@ -270,7 +277,7 @@ class Import_leads extends App_import
                     // Set default values
                     $insert['dateadded'] = !empty($insert['dateadded']) ? $insert['dateadded'] : date('Y-m-d H:i:s');
                     $insert['addedfrom'] = get_staff_user_id();
-                    
+
                     $insert['dateassigned'] = date('Y-m-d H:i:s');
 
                     // Handle tags

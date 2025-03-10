@@ -1496,7 +1496,7 @@ function get_university_partner_names()
 
 function get_board_dropdown()
 {
-     $CI = &get_instance();
+    $CI = &get_instance();
 
     try {
         // Fetch data from the `document_upload_type` table with a join to the `file_type` table
@@ -1514,6 +1514,27 @@ function get_board_dropdown()
 
         return []; // Return an empty array to ensure function fails gracefully
     }
-    
-    
+}
+
+
+
+function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
+{
+    $CI = &get_instance();
+    $CI->db->select("c.symbol,d.amount,CONCAT(c.symbol,' ',d.amount) as total_amount")
+        ->from(db_prefix() . 'applicant_fees f')
+        ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id")
+        ->join(db_prefix() . 'currencies c', "c.id = d.currency_id")
+        ->where('lead_type', $lead_type)
+        ->where('client_id', $client_id);
+
+    if (!empty($fees_id)) {
+        $CI->db->where('f.id', $fees_id);
+    }
+
+    $client_fees = $CI->db->order_by("sequence", "asc")
+        ->get()
+        ->result_array();
+
+    return $client_fees;
 }

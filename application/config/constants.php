@@ -223,9 +223,9 @@ define('UNIVERSITY_SHORTLISTING', '3');
 define('ADMISSION', '4');
 define('ENTRANCE_EXAM', '5');
 define('LEGALIZATION', '6');
-define('FEES_DEPOSITE', '6');
-define('INVITATION', '7');
-define('THIRD_PAYMENT', '8');
+define('FEES_DEPOSITE', '7');
+define('INVITATION', '8');
+define('THIRD_PAYMENT', '9');
 
 
 define('REGISTRATION_PENDING', '1');

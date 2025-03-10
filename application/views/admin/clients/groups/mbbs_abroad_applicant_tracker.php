@@ -633,32 +633,35 @@ if (in_array(get_staff_user_id(), $staff_id)) {
 <!-- MultiStep Form -->
 <?php
 
-if (empty($customer_admins)) { ?>
-    <h2 class='text-center'><?= _l("no_admin_assign_tracker") ?></h2>
-    <?php } else {
+// if (empty($customer_admins)  && !is_admin()) { 
+?>
+<!--<h2 class='text-center'><?= _l("no_admin_assign_tracker") ?></h2>-->
+<?php
 
-    if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
-    ?>
-        <h2 class="text-center">Applicant Tracker - Accessible Only for Post-Sale & Admin</h2>
-    <?php
-        die;
-    }
-    ?>
-    <div class="row">
-        <div id="msform" class="col-md-12 ">
-            <!-- <form id="msform" onsubmit="return false;"> -->
-            <ul id="progressbar" class="d-flex justify-content-center">
-                <?php
-                foreach ($applicant_tracker as $key => $track) {
-                ?>
-                    <li data-id="<?= $track['id'] ?>" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
-                <?php
-                }
-                ?>
-            </ul>
+// } else {
+
+if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
+?>
+    <h2 class="text-center">Applicant Tracker - Accessible Only for Post-Sale & Admin</h2>
+<?php
+
+}
+?>
+<div class="row">
+    <div id="msform" class="col-md-12 ">
+        <!-- <form id="msform" onsubmit="return false;"> -->
+        <ul id="progressbar" class="d-flex justify-content-center">
+            <?php
+            foreach ($applicant_tracker as $key => $track) {
+            ?>
+                <li data-id="<?= $track['id'] ?>" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
+            <?php
+            }
+            ?>
+        </ul>
 
 
-
+        <section style="display:<?= (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) ? 'none' : 'block' ?>">
             <?php
             foreach ($applicant_tracker as $k => $track) {
             ?>
@@ -884,36 +887,49 @@ if (empty($customer_admins)) { ?>
                                     foreach ($university_shortlisting as $key_u => $short_list) {
                                         $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
                                         if (!empty($selected_university_application) && $selected_university_application == 1) {
+
+                                            $mand = "";
+                                            $mand_re = "";
+                                            if ($short_list["primary_university"] == 1) {
+                                                $mand = '<small class="text-danger">*</small>';
+                                                $mand_re = "required required-check";
+                                            }
+
                                 ?>
                                             <div class="col-md-12 university_div_application mt-2 d-flex">
                                                 <div class="col-md-3">
-                                                    <label>Country Name <small class='text-danger'>*</small></label>
-                                                    <input type="input" name="country_<?= $short_list["id"] ?>" readonly required required-check class="form-control" value="<?= $short_list["country_name"] ?>">
+                                                    <label>Country Name <?= $mand ?></label>
+                                                    <input type="input" name="country_<?= $short_list["id"] ?>" readonly <?= $mand_re ?> class="form-control" value="<?= $short_list["country_name"] ?>">
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <label>University Name <small class='text-danger'>*</small></label>
+                                                    <label>University Name <?= $mand ?></label>
                                                     <input type="hidden" name="id" value="<?= $short_list["id"] ?>">
-                                                    <input type="input" name="university_<?= $short_list["id"] ?>" class="form-control" required required-check readonly value="<?= $short_list["university_name"] ?>">
+                                                    <input type="input" name="university_<?= $short_list["id"] ?>" class="form-control" <?= $mand_re ?> readonly value="<?= $short_list["university_name"] ?>">
                                                 </div>
 
                                                 <div class="col-md-3">
-                                                    <label>Partner Name <small class='text-danger'>*</small></label>
+                                                    <label>Partner Name <?= $mand ?></label>
                                                     <?php
                                                     $selected_value = [];
                                                     $selected_value[] =  !empty($short_list["partner"]) ? $short_list["partner"] : '';
-                                                    echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value, ["required" => "required", "required-check" => "required-check"]);
+                                                    if (!empty($mand)) {
+                                                        echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value, ["required" => "required", "required-check" => "required-check"]);
+                                                    } else {
+                                                        echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value);
+                                                    }
+
                                                     ?>
                                                 </div>
                                                 <div class="col-md-3">
-                                                    <label>Application Date <small class='text-danger'>*</small> </label>
-                                                    <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" required required-check value="<?= $short_list["application_date"] ?>">
+                                                    <label>Application Date <?= $mand ?> </label>
+                                                    <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" <?= $mand_re ?> value="<?= $short_list["application_date"] ?>">
                                                 </div>
                                                 <div class="col-md-3">
                                                     <?php
                                                     $file_url = !empty($short_list["application_file"]) ? $short_list["application_file"] : '';
 
                                                     ?>
-                                                    <label>Admission Letter <small class='text-danger'>*</small> </label>
+                                                    <label>Admission Letter <?= $mand ?> </label>
                                                     <input type="file" class="form-control" accept=".pdf" name="admission_letter_<?= $short_list["id"] ?>">
                                                     <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
 
@@ -1018,7 +1034,7 @@ if (empty($customer_admins)) { ?>
                                                         </label>
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label>MD Payment Slip <?= $mand ?> </label>
+                                                        <label>MD Payment Proof <?= $mand ?> </label>
                                                         <input type="file" class="form-control" <?= empty($leg["ministry_payment"]) ? $mand_re : "" ?> accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                         <?php
                                                         $file_url = !empty($leg["ministry_payment"]) ? $leg["ministry_payment"] : "";
@@ -1035,8 +1051,9 @@ if (empty($customer_admins)) { ?>
                                                     <div class="col-md-6">
                                                         <p class="form-check-label">&nbsp;</p>
                                                         <label class="form-check-label">
-                                                            <input type="checkbox" <?= !empty($leg["contract_signed"]) && $leg["contract_signed"] == 1 ? 'checked' : '' ?> class="form-check-input" <?= $mand_re ?> name="contract_signed_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                             Contract Signed <?= $mand ?>
+                                                            <input type="checkbox" <?= !empty($leg["contract_signed"]) && $leg["contract_signed"] == 1 ? 'checked' : '' ?> class="form-check-input" <?= $mand_re ?> name="contract_signed_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
                                                         </label>
                                                     </div>
                                                 </div>
@@ -1163,8 +1180,8 @@ if (empty($customer_admins)) { ?>
                                                 <?php } ?>
 
                                                 <div class="col-md-3">
-                                                    <label>Entry Date <?= $mand ?></label>
-                                                    <input type="date" <?= $mand_re ?> class="form-control" name="entry_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["entry_date"]) ? $leg["entry_date"] : '' ?>">
+                                                    <label>Entry Date </label>
+                                                    <input type="date" class="form-control" name="entry_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["entry_date"]) ? $leg["entry_date"] : '' ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -1193,41 +1210,44 @@ if (empty($customer_admins)) { ?>
             <?php
             }
             ?>
+        </section>
 
-            <!-- </form> -->
+        <!-- </form> -->
 
-            <section class="note_activity_section mt-5">
-                <div class="col-12 text-right" style="margin:25px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
-                        <div class="handle"></div>
-                    </button></div>
-                <div class="note_section">
-                    <div class="parrent-div">
-                        <div class="panel-body">
-                            <div class="create_notes row" style="margin-bottom:30px;">
-                                <input type="hidden" id="notes_id">
-                                <div class="col-md-9"><textarea id="note_data" class="form-control"></textarea></div>
-                                <div class="col-md-3"><button class="btn btn-primary" onclick="create_notes()">Update Notes</button></div>
-                            </div>
-                            <h4>Notes</h4>
-                            <div class="media lead-note">
-
-                            </div>
+        <section class="note_activity_section mt-5">
+            <div class="col-12 text-right" style="margin:25px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
+                    <div class="handle"></div>
+                </button></div>
+            <div class="note_section">
+                <div class="parrent-div">
+                    <div class="panel-body">
+                        <div class="create_notes row" style="margin-bottom:30px;">
+                            <input type="hidden" id="notes_id">
+                            <div class="col-md-9"><textarea id="note_data" class="form-control"></textarea></div>
+                            <div class="col-md-3"><button class="btn btn-primary" onclick="create_notes()">Update Notes</button></div>
                         </div>
-                        <div class="panel-body lead-modal" style="display:none;">
-                            <h4>Activity</h4>
-                            <div class="media lead-activity activity-feed">
-                            </div>
+                        <h4>Notes</h4>
+                        <div class="media lead-note">
+
+                        </div>
+                    </div>
+                    <div class="panel-body lead-modal" style="display:none;">
+                        <h4>Activity</h4>
+                        <div class="media lead-activity activity-feed">
                         </div>
                     </div>
                 </div>
-            </section>
-        </div>
+            </div>
+        </section>
     </div>
-<?php } ?>
+</div>
+<?php
+// }
+?>
 <?php init_tail(); ?>
 <!-- /.MultiStep Form -->
 <script>
-    var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
+    var admissionpreferences_freeze = 0;
     var base_url = "<?= base_url() ?>";
     //jQuery time
     let lead_type_status = "<?= $lead_type_status ?>";
@@ -1242,7 +1262,7 @@ if (empty($customer_admins)) { ?>
     var csrfToken = "<?= $this->security->get_csrf_hash() ?>"; // Replace with the actual CSRF token value
     var step_stage = 0;
 
-    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : "" ?>;
+    var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : [] ?>;
     var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : "" ?>;
     var upload_documents = <?= !empty($upload_documents[0]) ? json_encode($upload_documents[0], true) : '0' ?>;
     var staff_id = "<?= get_staff_user_id() ?>";
@@ -1466,6 +1486,27 @@ if (empty($customer_admins)) { ?>
         current_fs.slideUp("slow");
         next_fs.slideDown("slow");
     }
+
+
+    function show_next_stage(index = 5) {
+        let current_fs = $("fieldset:visible"); // Get the currently visible fieldset
+        let next_fs = $("fieldset").eq(index); // Get the target fieldset by index
+
+        if (next_fs.length === 0) {
+            return; // Stop if the index is out of bounds
+        }
+
+        // Activate next step on progress bar
+        $("#progressbar li").removeClass("active").addClass("inactive");
+        $("#progressbar li").eq(index).addClass("active").removeClass("inactive").removeClass("previous");
+        $("#progressbar li").eq(index).prevAll().addClass("previous").removeClass("active").removeClass("inactive");
+
+        hide_loader(); // Hide the loader (assuming this is defined)
+
+        current_fs.slideUp("slow");
+        next_fs.slideDown("slow");
+    }
+
     async function next_step(id, obj, skip = 0) {
         id = $.trim(id);
         let upload_data = new FormData();
@@ -1502,7 +1543,7 @@ if (empty($customer_admins)) { ?>
                 await check_legalization(upload_data);
             }
 
-            if (id == 6) {
+            if (id == 6 && skip == 0) {
                 let check_validation = await check_required_fields("fees-deposite-form");
                 if (!check_validation) return false;
                 await check_fees_deposite(upload_data);
@@ -1531,8 +1572,14 @@ if (empty($customer_admins)) { ?>
 
             if (response.resp_code === "RCS") {
                 alert_float("success", response.resp_desc);
-                show_next_previous(obj);
 
+
+
+                if (response.pass_stage != undefined) {
+                    show_next_stage(response.pass_stage);
+                } else {
+                    show_next_previous(obj);
+                }
                 if (id == 2) {
                     set_application(response);
                 }
@@ -1631,6 +1678,7 @@ if (empty($customer_admins)) { ?>
 
                 let mand = "";
                 let mand_re = "";
+                let base_url = "<?= base_url() ?>";
 
                 if (leg.primary_university == 1) {
                     mand = '<small class="text-danger">*</small>';
@@ -1661,8 +1709,8 @@ if (empty($customer_admins)) { ?>
                                 ${mand}
                             </label>
                         </div>
-                        <div class="col-md-6">
-                            <label>MD Payment slip ${mand} </label>
+                         <div class="col-md-6">
+                            <label>MD Payment Proof ${mand} </label>
                             <input type="file" class="form-control" ${(media_view ?? "") === "" ? mand_re : ""} accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
                             ${media_view}
                         </div>
@@ -1675,8 +1723,9 @@ if (empty($customer_admins)) { ?>
                         <div class="col-md-6">
                             <p class="form-check-label">&nbsp;</p>
                             <label class="form-check-label">
+                            Contract Signed ${mand}
                                 <input type="checkbox" class="form-check-input" ${check_min_doc} ${mand_re} name="contract_signed_${(leg.id)}">
-                                Contract Signed ${mand}
+                                
                             </label>
                         </div>
                     </div>
@@ -1700,9 +1749,9 @@ if (empty($customer_admins)) { ?>
             legalization.forEach(leg => {
                 let mand = leg.primary_university == 1 ? '<small class="text-danger">*</small>' : '';
                 let mand_re = leg.primary_university == 1 ? 'required required-check' : '';
-
-                let file_url_payment = leg.fees_deposite_slip ? leg.fees_deposite_slip : "";
-                let file_url_university_payment = leg.university_fees_payment_slip ? leg.university_fees_payment_slip : "";
+                let base_url = "<?= base_url() ?>";
+                let file_url_payment = leg.fees_deposite_slip ? base_url + leg.fees_deposite_slip : "";
+                let file_url_university_payment = leg.university_fees_payment_slip ? base_url + leg.university_fees_payment_slip : "";
 
                 let itemHtml = `
                 <div class="feesDeposite-item card shadow-sm p-3 mb-3">
@@ -1793,8 +1842,8 @@ if (empty($customer_admins)) { ?>
                         ${telexField} <!-- Conditionally inserted -->
 
                         <div class="col-md-3">
-                            <label>Entry Date ${mand}</label>
-                            <input type="date" class="form-control " ${mandRe} name="entry_date_${leg.id}"  value="${leg.entry_date ?? ''}">
+                            <label>Entry Date </label>
+                            <input type="date" class="form-control "  name="entry_date_${leg.id}"  value="${leg.entry_date ?? ''}">
                         </div>
                     </div>
                 </div>
@@ -2093,60 +2142,63 @@ if (empty($customer_admins)) { ?>
         $(".application_div").html(html);
         for (let i = 0; i < university_list.length; i++) {
             html = "";
-            let university = university_list[i]; // Assign variable for readability
-            console.log(university)
-            let base_url = "<?= $base_url ?>";
-            let file = university.application_file;
+            let university = university_list[i];
+            let base_url = "<?= base_url() ?>";
+            let file = university.application_file ? base_url + university.application_file : '';
+
+            let mand = "";
+            let mand_re = "";
+            if (university.primary_university == 1) {
+                mand = '<small class="text-danger">*</small>';
+                mand_re = "required required-check";
+            }
+
+
             let media_view = "";
             if (file != "") {
-                media_view = `<div class='margin-top'><i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${base_url}${file}');"></i>&nbsp;
-                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url}${file}', '_blank');"></i></div>`;
+                media_view = `<div class='margin-top'><i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file}');"></i>&nbsp;
+                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file}', '_blank');"></i></div>`;
             }
-            html += `<div class="row university_div_application mt-2 d-flex">
+            html = `<div class="row university_div_application mt-2 d-flex">
         <div class="col-md-3">
-     
-            <label>Country Name <small class='text-danger'>*</small></label>
+            <label>Country Name ${mand}</label>
             <input type="text" name="country_${university.id}" class="form-control" disabled value="${university.country_name}">
         </div>  
         <div class="col-md-3">
-            <label>University Name <small class='text-danger'>*</small></label>
+            <label>University Name ${mand}</label>
             <input type="hidden" name="id" value="${university.id}">
             <input type="text" name="university_${university.id}" class="form-control" disabled value="${university.university_name}">
         </div> 
         <div class="col-md-3">
-            <label>Partner Name <small class='text-danger'>*</small></label>
-            <select name="partner_${university.id}" class="form-control" required-check required>
+            <label>Partner Name ${mand}</label>
+            <select name="partner_${university.id}" class="form-control" ${mand_re}>
                 <option value="">Select Partner</option>`;
 
-            // Loop through `university_partner_names` correctly
             for (let partner of university_partner_names) {
-                let selected = "";
-                if (partner.id == university.partner) {
-                    selected = "selected";
-                }
-                html += `<option ` + selected + ` value="${partner.id}">${partner.name}</option>`;
+                let selected = partner.id == university.partner ? "selected" : "";
+                html += `<option value="${partner.id}" ${selected}>${partner.name}</option>`;
             }
 
             html += `</select>
         </div>
         <div class="col-md-3">
-            <label>Application Date <small class='text-danger'>*</small></label>
-            <input type="date" name="date_${university.id}" class="form-control required-check" required value="${university.application_date || ''}">
+            <label>Application Date ${mand}</label>
+            <input type="date" name="date_${university.id}" class="form-control ${mand_re}" value="${university.application_date || ''}" ${mand_re}>
         </div>
-       
         <div class="col-md-3">
-          <label>Admission Letter <small class='text-danger'>*</small> </label>
-        <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university_list[i].id}">
-        <input type="file" class="form-control" accept=".pdf" name="admission_letter_${university_list[i].id}">
-        ${media_view}
+            <label>Admission Letter ${mand}</label>
+            <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university.id}">
+            <input type="file" class="form-control" accept=".pdf" name="admission_letter_${university.id}">
+            ${media_view}
         </div>
-    </div>`; // Close row div
+    </div>`;
             $(".application_div").append(html);
         }
 
         // Append the generated HTML
 
     }
+
 
 
     function check_required_fields(id = "application-form") {
@@ -2159,7 +2211,16 @@ if (empty($customer_admins)) { ?>
                 const value = $(this).val(); // Get the value of the field
                 const isRequired = $(this).attr("required-check") !== undefined; // Check for 'required-check' attribute
                 const name = $(this).attr("name"); // Get the name attribute
-                console.log(name);
+
+                if ($(this).is(":checkbox")) {
+                    if (!$(this).is(":checked")) { // Check if checkbox is NOT checked
+                        form_status = false;
+                        $(this).addClass("error"); // Highlight the checkbox
+                    } else {
+                        $(this).removeClass("error"); // Remove error highlight if checked
+                    }
+                }
+
                 if (isRequired && name) {
                     additional_fields[name] = "required";
 

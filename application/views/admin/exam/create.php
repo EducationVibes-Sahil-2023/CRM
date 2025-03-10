@@ -148,17 +148,20 @@ if (!empty($batch_data["client_ids"])) {
             get_client_list(selectedValue);
         }
 
-        if (examMandatory && typeof examMandatory === "string") {
-            let mandatoryArray = examMandatory.split(',').map(item => item.trim()); // Convert string to array
+        if (examMandatory) {
+    let mandatoryArray = Array.isArray(examMandatory) 
+        ? examMandatory.map(item => String(item).trim())  // Ensure array elements are strings
+        : String(examMandatory).split(',').map(item => item.trim()); // Convert string to array
 
-            if (Array.isArray(exam_array)) { // Ensure `exam_array` is defined
-                exam_array.forEach(function(exam) {
-                    if (mandatoryArray.includes(String(exam.id))) { // Compare as a string
-                        $("#exam_name").append(`<option value="${exam.id}">${exam.name}</option>`); // Add options dynamically
-                    }
-                });
+    if (Array.isArray(exam_array)) { // Ensure `exam_array` is defined
+        exam_array.forEach(function(exam) {
+            if (mandatoryArray.includes(String(exam.id))) { // Compare as a string
+                $("#exam_name").append(`<option value="${exam.id}">${exam.name}</option>`); // Add options dynamically
             }
-        }
+        });
+    }
+}
+
 
         $("#exam_name").selectpicker('refresh');
     }
@@ -199,7 +202,7 @@ if (!empty($batch_data["client_ids"])) {
         }
 
         let formData = new FormData();
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("university_name", university_name);
 
         // AJAX request to fetch student list
@@ -250,7 +253,7 @@ if (!empty($batch_data["client_ids"])) {
 
 
         let formData = new FormData();
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name",csrfData.hash);
         formData.append("batch_id", batch_id);
         formData.append("university_name", university_name);
         formData.append("exam_name", exam_name);

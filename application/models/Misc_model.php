@@ -149,7 +149,7 @@ class Misc_model extends App_Model
         if (isset($attachment[0]['contact_id'])) {
             $data['contact_id']          = $attachment[0]['contact_id'];
             $data['visible_to_customer'] = 1;
-            $data['doctype'] = ($attachment[0]['doctype'])?$attachment[0]['doctype']:'';
+            $data['doctype'] = ($attachment[0]['doctype']) ? $attachment[0]['doctype'] : '';
             if (isset($data['staffid'])) {
                 unset($data['staffid']);
             }
@@ -161,7 +161,6 @@ class Misc_model extends App_Model
             $data['file_name'] = $attachment[0]['file_name'];
             $data['filetype']  = $attachment[0]['filetype'];
             $data['doctype']  = $attachment[0]['doctype'];
-
         } else {
             $path_parts            = pathinfo($attachment[0]['name']);
             $data['file_name']     = $attachment[0]['name'];
@@ -232,7 +231,7 @@ class Misc_model extends App_Model
         else {
             $data['notify_by_email'] = 0;
         }
-		$data['dateadded']   = date('Y-m-d H:i:s');
+        $data['dateadded']   = date('Y-m-d H:i:s');
         $data['date']        = to_sql_date($data['date'], true);
         $data['description'] = nl2br($data['description']);
         $data['creator']     = get_staff_user_id();
@@ -244,7 +243,7 @@ class Misc_model extends App_Model
                 $this->leads_model->log_lead_activity($data['rel_id'], 'not_activity_new_reminder_created', false, serialize([
                     get_staff_full_name($data['staff']),
                     _dt($data['date']),
-                    ]));
+                ]));
             }
             log_activity('New Reminder Added [' . ucfirst($data['rel_type']) . 'ID: ' . $data['rel_id'] . ' Description: ' . $data['description'] . ']');
 
@@ -887,6 +886,7 @@ class Misc_model extends App_Model
                     OR address LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
                     OR email LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
                     OR phonenumber LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+                    OR alternative_phonenumber LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
                     )');
             } else {
                 $this->db->where('id IN

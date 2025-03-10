@@ -30,8 +30,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    }
 
    .lead-transfer-table .table-responsive {
-      overflow: unset !important;
-      overflow-x: unset !important;
+      /*overflow: unset !important;*/
+      /*overflow-x: unset !important;*/
    }
 
    .dropup .dropdown-menu {
@@ -450,10 +450,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  <br>
                                  <br>
                                  <?php
-                                 if (is_admin()) {
-                                    render_datatable(array(_l('Raised by'), _l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                   if (is_admin()) {
+                                    render_datatable(array(_l('Raised by'), _l('Lead Type'),"Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'),"New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
                                  } else {
-                                    render_datatable(array(_l('Lead Type'), _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                    render_datatable(array(_l('Lead Type'),"Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
                                  }
                                  ?>
                                  <hr class="hr-panel-heading" />
