@@ -462,7 +462,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               <br>
                               <br>
                            </div>
-
+                       
                            <div class="col-md-12">
                               <a href="#" data-toggle="modal" data-table=".table-leads" data-target="#leads_bulk_actions" class="hide bulk-actions-btn table-btn"><?php echo _l('bulk_actions'); ?></a>
                               <div class="modal fade bulk_actions" id="leads_bulk_actions" tabindex="-1" role="dialog">

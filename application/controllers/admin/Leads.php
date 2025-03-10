@@ -3639,4 +3639,12 @@ class Leads extends AdminController
             echo json_encode(array('status' => '0', 'message' => $e->getMessage()));
         }
     }
+    public function lead_visitor_request()
+    {
+        $data['title']    = "Lead Visitor Request";
+
+        // in case accesed the url leads/index/ directly with id - used in search
+
+        $this->load->view('admin/leads/visitor', $data);
+    }
 }
