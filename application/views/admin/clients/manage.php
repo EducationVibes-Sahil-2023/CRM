@@ -9,7 +9,7 @@
    <div class="content">
       <div class="row">
 
-         <?php if (!is_admin() && empty($this->session->userdata("staff_department"))) {
+         <?php if (!is_admin() && (has_permission('customers', '', 'customers_view') && has_permission('customers', '', 'customers_view_own'))) {
          ?>
             <div class="col-md-12">
                <div class="panel_s">

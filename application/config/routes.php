@@ -132,6 +132,8 @@ $route['knowledge-base/article/(:any)']  = 'knowledge_base/article/$1';
 $route['knowledge-base/category']        = 'knowledge_base/index';
 $route['knowledge-base/category/(:any)'] = 'knowledge_base/category/$1';
 
+$route['exam_batch']                 = 'exam_batch/index';
+
 
 $route['whatsapp']                 = 'Whatsapp/index';
 

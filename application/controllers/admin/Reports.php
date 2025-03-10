@@ -1213,6 +1213,15 @@ class Reports extends AdminController
         }
 
         $_POST["assigned"] = !empty($_POST["assigned"]) ? array_unique($_POST["assigned"]) : [];
+
+        if (empty($_POST["assigned"]) && (isset($_POST["total_status"]) && $_POST["total_status"] == 0)) {
+
+
+            echo json_encode(["no_data_found" => 1]);
+            die;
+        }
+
+
         if (!empty($_POST["excel_status"]) && $_POST["excel_status"] == 1) {
             $excel_data = get_leads_summary_filter_excel_report($_POST);
             $status_summary_conversion = get_status_summary_filter_performance($_POST, 1);
@@ -1291,6 +1300,7 @@ class Reports extends AdminController
             echo json_encode(["update_count_filter" => $updateCount_filter, "update_count_filter_min" => $updateCount_filter_min]);
             die;
         }
+
 
 
         if (!empty($_POST["assigned"]) && empty($return_status) && (!empty($_POST["show_data"]) && !empty($_POST["show_data"]) == 1)) {

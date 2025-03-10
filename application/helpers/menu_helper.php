@@ -164,12 +164,25 @@ function app_init_admin_sidebar_menu_items()
                 'position' => 30,
         ]);
 
+
+
+
+
         $CI->app_menu->add_sidebar_menu_item('tasks', [
                 'name'     => _l('als_tasks'),
                 'href'     => admin_url('tasks'),
                 'icon'     => 'fa fa-tasks',
                 'position' => 35,
         ]);
+
+        if (has_permission('exam_batch', '', 'view_own') || has_permission('exam_batch', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('exam_batch', [
+                        'href'     => admin_url('exam_batch'),
+                        'name'     => "Exam Batch",
+                        'icon'     => 'fa fa-file',
+                        'position' => 199,
+                ]);
+        }
 
         if ((!is_staff_member() && get_option('access_tickets_to_none_staff_members') == 1) || is_staff_member()) {
                 $CI->app_menu->add_sidebar_menu_item('support', [
@@ -549,13 +562,7 @@ function app_init_admin_sidebar_menu_items()
                   ]);*/
         }
 
-        if (has_permission('exam_batch', '', 'view')) {
-                $CI->app_menu->add_setup_menu_item('exam_batch', [
-                        'href'     => admin_url('exam_batch'),
-                        'name'     => "Exam Batch",
-                        'position' => 199,
-                ]);
-        }
+
         if (has_permission('settings', '', 'view')) {
                 $CI->app_menu->add_setup_menu_item('settings', [
                         'href'     => admin_url('settings'),
@@ -571,11 +578,4 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 40,
                 ]);
         }
-        // if (has_permission('whatsapp_templates', '', 'view') || is_Admin()) {
-        //         $CI->app_menu->add_setup_menu_item('whatsapp-templates', [
-        //                 'href'     => admin_url('whatsapp'),
-        //                 'name'     => _l('acs_whatsapp_templates'),
-        //                 'position' => 39,
-        //         ]);
-        // }
 }

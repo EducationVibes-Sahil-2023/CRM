@@ -3753,3 +3753,6 @@ $lang['app_config']                = 'App Config';
 $lang['create_client_config']                = 'Add Client Config';
 $lang['client_app_config_edit_heading']                = 'Edit New Client Config';
 $lang['client_app_config_add_heading']                = 'Add New Client Config';
+
+$lang['update_customer_failed_successfully'] = "Customer failed Update Data";
+

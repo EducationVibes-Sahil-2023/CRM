@@ -23,14 +23,19 @@ foreach ($documents_type as $documents) {
 $staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
 $read_only = "readonly";
-if (is_admin()) {
+
+$admin_status = 0;
+
+if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
     $final_sumbit = 0;
     $read_only = "";
+    $admin_status = 1;
 }
-if (in_array(get_staff_user_id(), $staff_id)) {
-    $final_sumbit = 0;
-    $read_only = "";
-}
+// if (in_array(get_staff_user_id(), $staff_id)) {
+//     $final_sumbit = 0;
+//     $read_only = "";
+//     $admin_status = 1;
+// }
 
 
 $applicant_documents =  get_clients_documents($client_id);
@@ -52,6 +57,21 @@ for ($i = 0; $i < 15; $i++) {
     $years_array[]["year"] = $currentYear - $i;
 }
 array_unshift($years_array, array(""));
+
+
+$years_array_entrance = [];
+$currentYear = date("Y");
+$startYear = 2020;
+$endYear = $currentYear + 4; // 4 years greater than current year
+
+// Generate an array of years from 2020 to (current year + 4)
+for ($i = $startYear; $i <= $endYear; $i++) {
+    $years_array_entrance[]["year"] = $i;
+}
+
+// Add an empty first element
+array_unshift($years_array_entrance, ["year" => ""]);
+
 
 
 $markingSchemes = [];
@@ -81,6 +101,7 @@ array_unshift($neetResultStatus, array(""));
 <!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
 <script>
     var final_sumbit = <?= !empty($final_sumbit) ? $final_sumbit : 0 ?>;
+    var admin_status = <?= $admin_status ?>;
     console.log("final_sumbit", final_sumbit);
     var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
 </script>
@@ -224,11 +245,11 @@ if ($lead_type_status == 2) {
                     </li>
                     <?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
                     <?php if (isset($client)) { ?>
-                        <li role="presentation">
-                            <a href="#customer_admins" aria-controls="customer_admins" role="tab" data-toggle="tab">
-                                <?php echo _l('customer_admins'); ?>
-                            </a>
-                        </li>
+                        <!--<li role="presentation">-->
+                        <!--    <a href="#customer_admins" aria-controls="customer_admins" role="tab" data-toggle="tab">-->
+                        <!--        <?php echo _l('customer_admins'); ?>-->
+                        <!--    </a>-->
+                        <!--</li>-->
                         <?php hooks()->do_action('after_customer_admins_tab', $client); ?>
                     <?php } ?>
                     <?php if (empty($client->submission_status) && $client->submission_status == 0) { ?>
@@ -382,7 +403,7 @@ if ($lead_type_status == 2) {
                 </div>
             </div>
 
-            <div role="tabpanel" class="tab-pane student-data-div" id="passport">
+            <div role="tabpanel" class="tab-pane student-data-div disabled-form" id="passport">
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card">
@@ -620,7 +641,7 @@ if ($lead_type_status == 2) {
                 </div>
             </div>
 
-            <div role="tabpanel" class="tab-pane" id="academic_details">
+            <div role="tabpanel" class="tab-pane disabled-form" id="academic_details">
                 <form id="admission-details-form" class="form-disabled" onsubmit="return false;">
                     <div class="row">
                         <div class="col-md-12">
@@ -861,7 +882,7 @@ if ($lead_type_status == 2) {
 
                                     <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
                                         <div class="c1">
-                                            <p>Roll No. / Application No. <?= $text_danger_mbbs ?></p>
+                                            <p>Roll No. <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
                                             <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="[0-9]{10}" maxlength="15" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
@@ -874,7 +895,14 @@ if ($lead_type_status == 2) {
                                         </div>
                                         <div class="c2">
                                             <!-- <input class="form-control" type="text" placeholder="Enter Entrance Year" name="entrance_year" value="<?= $academicdetails->entrance_year; ?>"> -->
-                                            <input type="month" required-check name="entrance_year" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> id="entrance_year" class="form-control" value="<?= ($academicdetails->entrance_year) ? $academicdetails->entrance_year : '' ?>" placeholder="Select Month and Year">
+                                            <!--<input type="number" required-check name="entrance_year" min="2000" max="2025" step="1" placeholder="YYYY"  id="entrance_year" class="form-control" value="<?= ($academicdetails->entrance_year) ? $academicdetails->entrance_year : '' ?>" placeholder="Select Month and Year">-->
+
+
+                                            <?php
+                                            $selected = [];
+                                            $selected[] = ($academicdetails->entrance_year) ? extractYear($academicdetails->entrance_year) : '';
+                                            echo render_select('entrance_year', $years_array_entrance, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check", "readonly" => "<?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'true' : 'false'; ?>"], [], "", "", "", "entrance_year");
+                                            ?>
                                         </div>
 
                                     </div>
@@ -954,7 +982,7 @@ if ($lead_type_status == 2) {
                                         $required_attr = !empty($file_url) ? "" : $required_attr;
                                     ?>
 
-                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display:<?= ($academicdetails->entrance_result_status == 'Awaited') ? 'none' : '' ?>">
+                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -1020,14 +1048,18 @@ if ($lead_type_status == 2) {
                                             <th scope="col">S.No</th>
                                             <th scope="col">Document Type</th>
                                             <th scope="col">Stage</th>
+                                            <th scope="col">Status</th>
                                             <th scope="col">Upload</th>
                                             <th scope="col">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody class="document_upload_div">
 
-                                        <?php if (!empty($documents_type)) : ?>
+                                        <?php
+
+                                        if (!empty($documents_type)) : ?>
                                             <?php foreach ($documents_type as $key => $doc_files) :
+
                                                 $doc_type = $doc_files["name"] ?? '';
                                                 $doc_id = $doc_files["id"] ?? '';
                                                 $info = $doc_files["info"] ?? '';
@@ -1054,6 +1086,21 @@ if ($lead_type_status == 2) {
                                                     </td>
                                                     <td>
                                                         <?= $doc_files["stage"] ?>
+                                                    </td>
+                                                    <td>
+                                                        <?php
+                                                        $status = isset($applicant_documents[$doc_id]["approval_status"])
+                                                            ? ($applicant_documents[$doc_id]["approval_status"] == 1 ? 'Approved' : 'Rejected')
+                                                            : (!empty($file_url) ? 'Pending' : '');
+
+                                                        $class = $status === 'Approved' ? 'text-success'
+                                                            : ($status === 'Rejected' ? 'text-danger'
+                                                                : ($status === 'Pending' ? 'text-warning' : ''));
+
+                                                        ?>
+
+                                                        <span class="<?= $class; ?>"><?= $status; ?></span>
+
                                                     </td>
                                                     <td>
                                                         <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
@@ -1087,7 +1134,7 @@ if ($lead_type_status == 2) {
                             </div>
                             <div class="row ">
                                 <div class="col-md-12">
-                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn">Save changes</button>
                                 </div>
                             </div>
                         </form>
@@ -1103,15 +1150,41 @@ if ($lead_type_status == 2) {
                             <h4>Welcome Message</h4>
                             <hr>
                             <form id="welcome-information-form" class="form-disabled" onsubmit=" return false;">
+                                <?php
+
+                                $get_clients_fees = get_clients_fees_details($lead_type_status, $client_id, REGISTRATION_AMOUNT_ID);
+                                $registration_amount = !empty($get_clients_fees[0]["total_amount"]) ? $get_clients_fees[0]["total_amount"] : 0;
+                                ?>
 
                                 <div class="row">
                                     <div class="col-lg-4">
+                                        <label class="form-check-label">Registration Amount Cash Deposite
+                                            <input type="checkbox" value="<?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 1 : 0 ?>" class="form-check-input" onclick="check_registration_cash_status(this,'hide-show-regi')" <?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 'checked' : '' ?> name="registration_slip_cash_status" <?= !empty($client->registration_slip_cash_status && $client->registration_slip_cash_status == 1) ? 'checked' : '' ?>>
+
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Date of payment <small class="text-danger">*</small></label>
                                             <input <?= $text_danger_mbbs_required ?> class="form-control" type="date" name="date_of_payment" value="<?= $client->date_of_payment ?>">
                                         </div>
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-2">
+                                        <div class="form-group">
+                                            <label for="exampleInputMiddleName">Regisration amount <small class="text-danger">*</small> </label>
+                                            <input class="form-control" disabled <?= $text_danger_mbbs_required ?> type="text" value="<?= $registration_amount ?>">
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <div class="form-group">
+                                            <label for="exampleInputMiddleName">Payment received from <small class="text-danger">*</small></label>
+                                            <input class="form-control" type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Quotation <small class="text-danger">*</small></label>
                                             <input <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="quotation" value="">
@@ -1127,9 +1200,9 @@ if ($lead_type_status == 2) {
                                             ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-3 hide-show-regi" style="display: <?= !empty($client->registration_slip_cash_status) ? 'none' : 'block' ?>;">
                                         <div class="form-group">
-                                            <label for="exampleInputMiddleName">Registration Slip <small class="text-danger">*</small></label>
+                                            <label for="exampleInputMiddleName">Registration Proof <small class="text-danger">*</small></label>
                                             <input <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="registration_slip" value="">
                                             <?php
                                             if (!empty($client->registration_slip)) {
@@ -1157,7 +1230,7 @@ if ($lead_type_status == 2) {
 
 
             <?php if (isset($client)) { ?>
-                <div role="tabpanel" class="tab-pane" id="customer_admins">
+                <div role="tabpanel" class="tab-pane hide" id="customer_admins">
                     <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit') && (isset($final_sumbit) && $final_sumbit == 0)) { ?>
                         <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
                             <a href="#" data-toggle="modal" data-target="#customer_admins_assign" class="btn btn-info mbot30"><?php echo _l('assign_admin'); ?></a>
@@ -1315,10 +1388,14 @@ if ($lead_type_status == 2) {
     }
 
 
+
     function set_primary_diabled() {
-        $('#study_country option[value="' + primary_country + '"]').prop('disabled', true);
-        $("#study_country").selectpicker('refresh');
+        if (admin_status == 0) {
+            $('#study_country option[value="' + primary_country + '"]').prop('disabled', true);
+            $("#study_country").selectpicker('refresh');
+        }
     }
+
 
     function set_primary_enabled() {
         $('#study_country option[value="' + primary_country + '"]').prop('disabled', false);
@@ -1327,23 +1404,26 @@ if ($lead_type_status == 2) {
 
 
     function set_university_diabled() {
-        $(".universities .tag").each(function() {
-            let plainText = $(this).text().replace(/\s+/g, ' ').trim(); // Clean up spaces
+        if (admin_status == 0) {
+            $(".universities .tag").each(function() {
+                let plainText = $(this).text().replace(/\s+/g, ' ').trim(); // Clean up spaces
 
-            // Remove the last '×' if it exists
-            if (plainText.endsWith('×')) {
-                plainText = plainText.slice(0, -1).trim();
-            }
+                // Remove the last '×' if it exists
+                if (plainText.endsWith('×')) {
+                    plainText = plainText.slice(0, -1).trim();
+                }
 
-            if (plainText === primary_university.trim()) {
-                console.log(plainText);
-                $(this).addClass('disabled');
-                $(this).find("a").hide();
-                $(this).css('pointer-events', 'none');
-            }
-        });
+                if (plainText === primary_university.trim()) {
+                    console.log(plainText);
+                    $(this).addClass('disabled');
+                    $(this).find("a").hide();
+                    $(this).css('pointer-events', 'none');
+                }
+            });
+        }
 
     }
+
 
 
 
@@ -1392,6 +1472,8 @@ if ($lead_type_status == 2) {
             dobInput.setAttribute("max", minAgeDate.toISOString().split("T")[0]);
         }
     });
+
+
 
 
 
