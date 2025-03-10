@@ -2065,7 +2065,7 @@ class Clients_model extends App_Model
 
         if ($whatsapp_status == 1) {
 
-            return $attachments = $this->db->select("registration_slip_invoice")
+            return $attachments = $this->db->select("registration_slip_invoice as url")
                 ->from(db_prefix() . "clients")
                 ->where("userid", $client_id)
                 ->get()

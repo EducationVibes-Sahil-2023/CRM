@@ -8222,7 +8222,7 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
     $toNumber = "0091" . getLast10Digits($client->mobile);
 
     // Fetch WhatsApp template
-    $whatsapp = $CI->db->query("SELECT * FROM " . db_prefix() . "whatsapptemplates WHERE id = ?", [$whatsapp_template_id])->row();
+    $whatsapp = $CI->db->query("SELECT * FROM " . db_prefix() . "whatsapptemplates WHERE status= 1 AND id = ?", [$whatsapp_template_id])->row();
     if (!$whatsapp) {
         log_message('error', "WhatsApp template not found: ID $whatsapp_template_id");
         return json_encode(["error" => "Template not found."]);
@@ -8361,7 +8361,8 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
 }
 
 
-function extractYear($date) {
+function extractYear($date)
+{
     if (strpos($date, '-') !== false) {
         // If the date contains a hyphen, it's in YYYY-MM format
         list($year, $month) = explode('-', $date);

@@ -1604,27 +1604,31 @@ class Clients extends AdminController
 
                 $client = $this->clients_model->getBasicDetails($client_id);
 
-                $this->registration_slip_preview($client_id);
-                if (!empty($client->email)) {
-                    send_mail_template('Applicant_new_registration', $client->email, $client_id, ADMISSION_EMAIL_ID);
-                }
+                $generate_registration_slip =  $this->registration_slip_preview($client_id);
 
-                $template_id = 1;
-                if (!empty($template_id) && $template_id == 1) {
-                    $attachments = $this->clients_model->registration_attachments($client_id, 1);
-
-                    if (empty($attachments["registration_slip_invoice"])) {
-                        http_response_code(400); // Bad Request
-                        echo json_encode([
-                            'success' => false,
-                            'message' => "Registration slip is not generated."
-                        ]);
-                        return;
+                if ($generate_registration_slip["status"] == "success") {
+                    if (!empty($client->email)) {
+                        $email =  send_mail_template('Applicant_new_registration', $client->email, $client_id, ADMISSION_EMAIL_ID);
                     }
-                }
 
-                // Attempt to send WhatsApp message
-                $whatsapp_sent = whatsapp_message_send($client_id, $template_id, $attachments);
+                    $template_id = 1;
+                    if (!empty($template_id) && $template_id == 1) {
+                        $attachments = $this->clients_model->registration_attachments($client_id, 1);
+                        if (empty($attachments["url"])) {
+                            http_response_code(400); // Bad Request
+                            echo json_encode([
+                                'success' => false,
+                                'message' => "Registration slip is not generated."
+                            ]);
+                            return;
+                        }
+                    }
+
+                    // Attempt to send WhatsApp message
+                    $whatsapp_sent = whatsapp_message_send($client_id, $template_id, $attachments);
+                } else {
+                    $data['resp_desc'] =  $data['resp_desc'] . "." . $generate_registration_slip["message"];
+                }
             } catch (Exception $e) {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
@@ -3298,7 +3302,7 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
-    public function registration_slip_preview($client_id = 560)
+    public function registration_slip_preview($client_id)
     {
         try {
             $data = [];
@@ -3323,6 +3327,7 @@ class Clients extends AdminController
             $data["acadmic_year"] = $admission_prefrences->acadmic_year;
             $data["invoice_number"] = "BRCM-00" . $client_id;
             $data["invoice_no"] = str_pad($client_id, 6, '0', STR_PAD_LEFT);
+            $data["payment_recevied_from"] = $client->payment_recevied_from;
 
             // Disable SSL verification
             stream_context_set_default(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
@@ -3351,13 +3356,16 @@ class Clients extends AdminController
             $html = $this->load->view('admin/pdf/registration', $data, true);
             $pdf->writeHTML($html, true, false, true, false, '');
 
+            // $pdf->Output('Registration_Slip.pdf', 'I'); // Display in browser
+
+            // die;
             // Define File Path
             $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/";
 
             // Ensure directory exists and is writable
             if (!is_dir($upload_dir)) {
                 if (!mkdir($upload_dir, 0777, true) && !is_dir($upload_dir)) {
-                    return json_encode(["status" => "error", "message" => "Failed to create upload directory."]);
+                    return ["status" => "error", "message" => "Failed to create upload directory."];
                 }
             }
 
@@ -3370,19 +3378,24 @@ class Clients extends AdminController
             }
 
             // Save the new PDF file on the server
-            $pdf->Output($file_path, 'D');
+            $pdf->Output($file_path, 'F');
 
             // Verify if the file was created successfully
             if (!file_exists($file_path)) {
-                return json_encode(["status" => "error", "message" => "Failed to generate PDF file."]);
+                return ["status" => "error", "message" => "Failed to generate PDF file."];
             }
 
             // File URL
-            $file_url = base_url($upload_dir . $file_name);
+            $file_url = $upload_dir . $file_name;
 
-            return json_encode(["status" => "success", "pdf_url" => $file_url]);
+            $update_client_data = [];
+
+            $update_client_data["registration_slip_invoice"] = $file_url;
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
+            return ["status" => "success", "pdf_url" => $file_url];
         } catch (Exception $e) {
-            return json_encode(["status" => "error", "message" => $e->getMessage()]);
+            return ["status" => "error", "message" => $e->getMessage()];
         }
     }
 

@@ -22,11 +22,11 @@
 
 
         table {
-            font-size: 18px;
+            font-size: 16px;
         }
 
         .company-info {
-            font-size: 16px;
+            font-size: 13px;
             color: grey;
         }
 
@@ -79,33 +79,30 @@
     ?>
 
     <div class="container" cellspacing="15">
-        <table cellpadding="0" cellspacing="0" style="margin:10px; padding:10px;">
+        <table cellpadding="5" cellspacing="0" style="margin:10px; padding:10px;">
             <tbody>
                 <tr>
-                    <td>
-                        <div class="company-info">
-                            <div><img style="height:70px;" src="<?= base_url() ?>uploads/pdf_include/Brightroute_Logo_.png"></div>
-                            <span>First Floor, Office No 37, 38 and 39, 1184/4,
-                                Shreenath Plaza, F C Road,
-                                Shivaji Nagar, Pune, Maharashtra, 411005</span>
-                        </div>
+                    <td class="company-info">
+                        <img style="height:70px;" src="<?= base_url() ?>uploads/pdf_include/Brightroute_Logo_.png">
+                        <br>
+                        First Floor, Office No 37, 38 and 39, 1184/4,<br>
+                        Shreenath Plaza, F C Road,<br>
+                        Shivaji Nagar, Pune, Maharashtra, 411005
                     </td>
                     <td></td>
-                    <td>
-                        <div style="text-align:right;">
-                            <div><img style="height:120px;" src="<?= base_url() ?>uploads/pdf_include/eduvibe_logo.png"></div>
-                        </div>
+                    <td style="text-align:right;">
+                        <img style="height:120px;" src="<?= base_url() ?>uploads/pdf_include/eduvibe_logo.png">
                     </td>
                 </tr>
-
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
                 <tr>
                     <td class="text-blue">Receipt</td>
                     <td></td>
                     <td><span class="text-blue">Invoice No</span>: <?= $invoice_number ?></td>
                 </tr>
-                <tr>
-                    <td><br></td> <!-- Creates spacing -->
-                </tr>
+
                 <tr>
                     <td><span class="text-pink">Date of Payment</span></td>
                     <td></td>
@@ -117,7 +114,7 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td><br></td> <!-- Creates spacing -->
+                    <td colspan="3"></td>
                 </tr>
                 <tr>
                     <td><strong>Student Name</strong></td>
@@ -126,11 +123,11 @@
                 </tr>
                 <tr>
                     <td><?= !empty($student_name) ? ucwords($student_name) : '' ?></td>
-                    <td>Alisha Ashfaque Shah Rajguru</td>
+                    <td><?= !empty($payment_recevied_from) ? ucwords($payment_recevied_from) : '' ?></td>
                     <td><?= !empty($acadmic_year) ? $acadmic_year : '' ?></td>
                 </tr>
                 <tr>
-                    <td><br></td> <!-- Creates spacing -->
+                    <td colspan="3"></td>
                 </tr>
                 <tr>
                     <td><strong>Residence Address</strong></td>
@@ -144,7 +141,7 @@
                 </tr>
 
                 <tr>
-                    <td><br><br></td> <!-- Creates spacing -->
+                    <td colspan="3"></td>
                 </tr>
 
                 <tr class="bordered-row">
@@ -161,7 +158,7 @@
                 </tr>
 
                 <tr>
-                    <td></td>
+                    <td colspan="3"></td>
                 </tr>
                 <tr class="bordered-row">
                     <td colspan="2" style="border-left: 3px solid black;">
