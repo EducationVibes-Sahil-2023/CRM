@@ -15,6 +15,8 @@ class Forms extends ClientsController
 
     public function wtl($key)
     {
+        $generate_lead_transfer_request = "";
+        $generate_lead_transfer_request_array = [];
         $this->load->model('leads_model');
         $form = $this->leads_model->get_form([
             'form_key' => $key,
@@ -588,6 +590,74 @@ class Forms extends ClientsController
                             $this->db->group_end();
 
                             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
+
+
+                            if (!empty($form->lead_source)) {
+
+                                $source_data_get = $this->leads_model->get_source($duplicateLead->source);
+                                $source_data_get_ = $this->leads_model->get_source($form->lead_source);
+
+                                if (!empty($source_data_get->fixed_source) && $source_data_get->fixed_source == 1) {
+                                } else {
+                                    $updateStatus['source'] = $form->lead_source;
+                                }
+
+                                if (!empty($source_data_get_->lead_transfer_status) && $source_data_get_->lead_transfer_status == 1) {
+                                    $generate_lead_transfer_request = 1;
+                                }
+                            }
+
+
+
+                            if ($generate_lead_transfer_request && $generate_lead_transfer_request == 1) {
+
+                                if (!empty($call_data)) {
+                                    $response_call = $this->curl_function($call_data);
+                                    $response_call = json_decode($response_call);
+                                    if (isset($response_call[0]->status) && $response_call[0]->status == 0) {
+                                        echo json_encode([
+                                            'success' => 0,
+                                            'message' => $response_call[0]->message
+                                        ]);
+                                    }
+                                }
+                                if ($form->responsible == $duplicateLead->assigned) {
+                                    echo json_encode(['success' => true, 'message' => "Lead Transfer Request Generate successfully"]);
+                                    die;
+                                }
+                                $generate_lead_transfer_request_array = [];
+                                $generate_lead_transfer_request_array["lead_id"] = $duplicateLead->id;
+                                $generate_lead_transfer_request_array["transfer_lead_type"] = $lead_type;
+                                $generate_lead_transfer_request_array["transfer_source_type"] = !empty($updateStatus['source']) ? $updateStatus['source'] : $duplicateLead->source;
+                                $generate_lead_transfer_request_array["transfer_lead_assign"] = !empty($form->responsible) ? $form->responsible : 1;
+                                $generate_lead_transfer_request_array["reason"] = "Automatic Lead transfer request.";
+                                $generate_lead_transfer_request_array["auto_genrate_lead_transfer"] = 1;
+
+
+
+
+                                if (!empty($generate_lead_transfer_request_array)) {
+
+                                    $response_trnasferRequest = $this->add_lead_transfer_request($generate_lead_transfer_request_array, $duplicateLead->assigned);
+
+
+                                    if (isset($response_trnasferRequest["success"]) && $response_trnasferRequest["success"] == 0) {
+                                        echo json_encode([
+                                            'success' => 0,
+                                            'message' => $response_trnasferRequest["message"]
+                                        ]);
+                                        die;
+                                    } else {
+                                        echo json_encode([
+                                            'success' => $success,
+                                            'message' => $form->success_submit_msg,
+                                            'redirect_url' => false,
+                                        ]);
+                                        die;
+                                    }
+                                }
+                            }
+
                             $updateStatus = [
 
                                 'status' => $form->lead_status,
@@ -974,6 +1044,89 @@ class Forms extends ClientsController
 
         $data['form'] = $form;
         $this->load->view('forms/web_to_lead', $data);
+    }
+
+
+    private function add_lead_transfer_request($postData, $raised_by)
+    {
+        $this->load->model('leads_model');
+
+        try {
+            // Validate required fields
+            if (empty($postData['lead_id'])) {
+                throw new Exception('Lead ID is required.');
+            }
+
+            // Extract values from $postData
+            $lead_id = $postData['lead_id'];
+            $type = $postData['transfer_lead_type'] ?? null;
+            $assigned = $postData['transfer_lead_assign'] ?? null;
+            $reason = $postData['reason'] ?? null;
+            $source = $postData['transfer_source_type'] ?? null;
+            $auto_genrate_lead_transfer = !empty($postData['auto_genrate_lead_transfer']) ? 1 : 0;
+
+            // Check if a lead transfer request already exists
+            $check_lead_transfer_request = $this->leads_model->get_lead_transfer_request_exist($lead_id);
+
+            // Prepare lead transfer request data
+            $data = [];
+            if (!empty($type)) {
+                $data["lead_type"] = $type;
+            }
+            if (!empty($assigned)) {
+                $data["assign"] = $assigned;
+            }
+            if (!empty($reason)) {
+                $data["reason"] = $reason;
+            }
+            if (!empty($source)) {
+                $data["lead_source"] = $source;
+            }
+
+
+            // If a request already exists OR auto-generate is enabled
+            if (!empty($check_lead_transfer_request->id) || $auto_genrate_lead_transfer) {
+                // Delete existing lead transfer request (if any)
+                if (!empty($check_lead_transfer_request->id)) {
+                    $this->db->where('id', $check_lead_transfer_request->id);
+                    $this->db->delete(db_prefix() . 'lead_transfer_request');
+                }
+
+
+                // Add new lead transfer request
+                $data = array_merge($data, [
+                    "leadid" => $lead_id,
+                    "status" => 3,
+                    "automatic" => 1,
+                    "created_by" => !empty($raised_by) ? $raised_by : 1,
+                    "created_at" => date('Y-m-d H:i:s')
+                ]);
+
+                $insert_ = $this->db->insert(db_prefix() . 'lead_transfer_request', $data);
+
+                if (!$insert_) {
+                    throw new Exception("Failed to submit lead transfer request.");
+                }
+
+                return [
+                    'success' => true,
+                    'message' => "Lead transfer request submitted successfully.",
+                    'lead_id' => $lead_id
+                ];
+            }
+
+            // If no existing request & auto-generate is not enabled, return failure
+            return [
+                'success' => false,
+                'message' => "No existing lead transfer request found, and auto-generate is disabled.",
+                'lead_id' => $lead_id
+            ];
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
     }
 
     public function l($hash)

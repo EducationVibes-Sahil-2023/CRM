@@ -578,7 +578,11 @@ $last_lead_request = last_lead_request($lead->id);
                                                 $button_text = !empty($last_lead_request->id)
                                                    ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
                                                    : _l('Request NOW');
-                                                ?> <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
+                                                ?>
+                        <?php if (empty($last_lead_request->automatic) || is_admin() || has_permission('leads', '', 'approval')) { ?>
+                           <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
+                        <?php } ?>
+
 
                      </div>
 

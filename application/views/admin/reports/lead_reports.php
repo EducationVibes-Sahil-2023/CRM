@@ -2755,6 +2755,13 @@ function show_data_(classid)
                         $(".leads-overview-calls-daily").attr("style", "display:none");
                     }
 
+
+                         if(data.no_data_found != undefined && data.no_data_found == 1)
+                        {
+                            $(".leadSum.report_list").html(`<div class="col-md-12 report-data mt-3 panel_s row row-flex panel-body ">
+            <h4 class='text-center'><b>No data Found.</b></h4></div>`);
+                            return false;
+                        }
                     if (data.update_count_daily_data != undefined) {
                         let html_update = "<div class='row scroll-div col-12'>";
                         for (i = 0; i < (data.update_count_daily_data).length; i++) {

@@ -13,13 +13,119 @@ class Emails extends AdminController
     /* List all email templates */
     public function index()
     {
-        if (!has_permission('whatsapp_templates', '', 'view')) {
-            access_denied('whatsapp_templates');
+        if (!has_permission('email_templates', '', 'view')) {
+            access_denied('email_templates');
         }
-        $data['title'] = _l('whatsapp_templates');
-        $this->load->view('admin/whatsapp/whatsapp_templates', $data);
-    }
+        $langCheckings = get_option('email_templates_language_checks');
+        if ($langCheckings == '') {
+            $langCheckings = [];
+        } else {
+            $langCheckings = unserialize($langCheckings);
+        }
 
+
+        $this->db->where('language', 'english');
+        $email_templates_english = $this->db->get(db_prefix() . 'emailtemplates')->result_array();
+        foreach ($this->app->get_available_languages() as $avLanguage) {
+            if ($avLanguage != 'english') {
+                foreach ($email_templates_english as $template) {
+
+                    // Result is cached and stored in database
+                    // This page may perform 1000 queries per request
+                    if (isset($langCheckings[$template['slug'] . '-' . $avLanguage])) {
+                        continue;
+                    }
+
+                    $notExists = total_rows(db_prefix() . 'emailtemplates', [
+                        'slug'     => $template['slug'],
+                        'language' => $avLanguage,
+                    ]) == 0;
+
+                    $langCheckings[$template['slug'] . '-' . $avLanguage] = 1;
+
+                    if ($notExists) {
+                        $data              = [];
+                        $data['slug']      = $template['slug'];
+                        $data['type']      = $template['type'];
+                        $data['language']  = $avLanguage;
+                        $data['name']      = $template['name'] . ' [' . $avLanguage . ']';
+                        $data['subject']   = $template['subject'];
+                        $data['message']   = '';
+                        $data['fromname']  = $template['fromname'];
+                        $data['plaintext'] = $template['plaintext'];
+                        $data['active']    = $template['active'];
+                        $data['order']     = $template['order'];
+                        $this->db->insert(db_prefix() . 'emailtemplates', $data);
+                    }
+                }
+            }
+        }
+
+        update_option('email_templates_language_checks', serialize($langCheckings));
+
+        $data['staff'] = $this->emails_model->get([
+            'type'     => 'staff',
+            'language' => 'english',
+        ]);
+
+        $data['credit_notes'] = $this->emails_model->get([
+            'type'     => 'credit_note',
+            'language' => 'english',
+        ]);
+
+        $data['tasks'] = $this->emails_model->get([
+            'type'     => 'tasks',
+            'language' => 'english',
+        ]);
+        $data['client'] = $this->emails_model->get([
+            'type'     => 'client',
+            'language' => 'english',
+        ]);
+        $data['tickets'] = $this->emails_model->get([
+            'type'     => 'ticket',
+            'language' => 'english',
+        ]);
+        $data['invoice'] = $this->emails_model->get([
+            'type'     => 'invoice',
+            'language' => 'english',
+        ]);
+        $data['estimate'] = $this->emails_model->get([
+            'type'     => 'estimate',
+            'language' => 'english',
+        ]);
+        $data['contracts'] = $this->emails_model->get([
+            'type'     => 'contract',
+            'language' => 'english',
+        ]);
+        $data['proposals'] = $this->emails_model->get([
+            'type'     => 'proposals',
+            'language' => 'english',
+        ]);
+        $data['projects'] = $this->emails_model->get([
+            'type'     => 'project',
+            'language' => 'english',
+        ]);
+        $data['leads'] = $this->emails_model->get([
+            'type'     => 'leads',
+            'language' => 'english',
+        ]);
+
+        $data['gdpr'] = $this->emails_model->get([
+            'type'     => 'gdpr',
+            'language' => 'english',
+        ]);
+
+        $data['subscriptions'] = $this->emails_model->get([
+            'type'     => 'subscriptions',
+            'language' => 'english',
+        ]);
+
+        $data['title'] = _l('email_templates');
+
+        $data['hasPermissionEdit'] = has_permission('email_templates', '', 'edit');
+
+        $this->load->view('admin/emails/email_templates', $data);
+    }
     /* Edit email template */
     public function email_template($id)
     {

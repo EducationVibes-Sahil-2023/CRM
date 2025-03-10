@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Exam_Batch extends AdminController
+class Exam_batch extends AdminController
 {
     public function __construct()
     {
@@ -32,15 +32,14 @@ class Exam_Batch extends AdminController
         $data['batch_data'] = [];
         if (!empty($id)) {
             $result = $this->exam_model->get_exam_batch($id);
-            if(!empty($result))
-            {
+            if (!empty($result)) {
                 $data['batch_data'] = $result;
             }
         }
         $data['university_list'] = get_university_list("MBBS Abroad");
         $data['exams'] = get_university_exam();
 
-        
+
         $this->load->view('admin/exam/create', $data);
     }
 
@@ -81,6 +80,8 @@ class Exam_Batch extends AdminController
 
     public function create_batch()
     {
+
+
         try {
             // Decode client list JSON safely
             $client_list = !empty($_POST["client_list"]) ? json_decode($_POST["client_list"], true) : [];
@@ -92,6 +93,38 @@ class Exam_Batch extends AdminController
                 echo json_encode($data);
                 die;
             }
+
+
+            $where = array(
+                "university_name" => trim($_POST["university_name"] ?? ''),
+                "exam_id" => trim($_POST["exam_name"] ?? ''),
+                "name" => trim($_POST["batch_name"] ?? ''),
+                "exam_date" => !empty($_POST["batch_date"]) ? trim($_POST["batch_date"]) : '0000-00-00'
+            );
+
+            // Add "id!=" condition if "id" is provided
+            if (!empty($_POST["batch_id"])) {
+                $where["id !="] = trim($_POST["batch_id"]);
+            }
+
+
+
+
+
+            $check_exist = $this->exam_model->check_batch($where);
+
+
+            if ($check_exist) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = "Batch Already Exist";
+                echo json_encode($data);
+                die;
+            }
+
+
+
+            // Continue with further execution if the record does not exist
+
             // Prepare data
             $postData = [
                 'id'              => !empty($_POST["batch_id"]) ? intval($_POST["batch_id"]) : 0,

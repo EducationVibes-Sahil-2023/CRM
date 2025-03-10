@@ -419,12 +419,24 @@ class Leads extends AdminController
 
         if ($this->input->post()) {
 
+            if (isset($_POST["phonenumber"], $_POST["alternative_phonenumber"]) && trim($_POST["phonenumber"]) === trim($_POST["alternative_phonenumber"])) {
+                echo json_encode([
+                    'success'  => true, // Set success to false since it's an error
+                    'id'       => $id ? $id : "",  // No valid ID since insertion should not happen
+                    'message'  => 'Phone number and alternative phone number cannot be the same.', // Clear error message
+                    'leadView' => [], // No lead data should be returned
+                    // 'proposal_warning' => false
+                ]);
+                exit; // Stop further execution
+            }
+
             if ($id == '') {
+
+
 
                 $id      = $this->leads_model->add($this->input->post());
 
                 $message = $id ? _l('added_successfully', _l('lead')) : '';
-
 
 
                 echo json_encode([
@@ -1169,7 +1181,8 @@ class Leads extends AdminController
             $data             = $this->input->post();
             $temp_array = $data;
 
-            $data['password'] = $this->input->post('password', false);
+            // $data['password'] = $this->input->post('password', false);
+            $data['password'] = "123456";
             $original_lead_email = $data['original_lead_email'];
             unset($data['original_lead_email']);
             if (isset($data['transfer_notes'])) {
@@ -2901,29 +2914,29 @@ class Leads extends AdminController
             $lead_id = $this->input->post('lead_id');
             $field   = $this->input->post('field');
             $value   = $this->input->post($field);
-    
+
             // Check if field value is unchanged
             if (!empty($lead_id)) {
                 $this->db->select($field);
                 $this->db->where('id', $lead_id);
                 $row = $this->db->get(db_prefix() . 'leads')->row();
-                
+
                 if ($row && $row->{$field} == $value) {
                     echo json_encode(true);
                     die();
                 }
             }
-    
+
             // Check if the field is 'alternative_phonenumber' or 'phonenumber'
             if (in_array($field, ['alternative_phonenumber', 'phonenumber'])) {
                 $this->db->where('phonenumber', $value);
                 $this->db->or_where('alternative_phonenumber', $value);
                 $exists = $this->db->count_all_results(db_prefix() . 'leads') > 0;
-    
+
                 echo json_encode(!$exists);
                 die();
             }
-    
+
             // Default response for invalid field
             echo json_encode(true);
             die();
@@ -3448,6 +3461,7 @@ class Leads extends AdminController
             $status = $this->input->post('status');
             $lead_type = $this->input->post('type');
             $assigned = $this->input->post('assigned');
+            $source = $this->input->post('source');
 
             // Validate required fields
             if (empty($lead_id) || empty($id) || empty($status) || empty($lead_type)) {
@@ -3485,6 +3499,9 @@ class Leads extends AdminController
                     "type" => $lead_type,
                     "status" => 2
                 ];
+                if (!empty($source)) {
+                    $update_array["source"] =  $source;
+                }
                 $this->db->where(array("id" => $lead_id));
                 $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
                 if (!empty($assigned) && !empty($duplicateLead->assigned) && $duplicateLead->assigned != $assigned) {

@@ -25,14 +25,20 @@ class Exam_model extends App_Model
                 $where = [
                     "university_name" => $data["university_name"],
                     "exam_id" => $data["exam_id"],
-                    "name" => $data["name"]
+                    "name" => $data["name"],
+                    "exam_date" => !empty($data["batch_date"]) ? $data["batch_date"] : '0000-00-00'
                 ];
 
+
+
+
                 $existingBatch = $this->check_batch($where);
+
                 if (!empty($existingBatch[0]["id"])) {
                     $data["id"] = !empty($existingBatch[0]["id"]) ? $existingBatch[0]["id"] : "";
                 }
-                if (!empty($existingBatch)) {
+
+                if (!empty($existingBatch[0]["id"])) {
                     // If record exists, update it
                     return $this->update_batch($data);
                 } else {

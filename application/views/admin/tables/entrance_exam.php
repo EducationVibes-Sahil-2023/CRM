@@ -37,7 +37,7 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow["university_name"];
     $row[] = $aRow["exam_name"];
     $row[] = !empty($exam_names[$aRow["exam_id"]]) ? $exam_names[$aRow["exam_id"]] : '';
-    $row[] = $aRow["exam_date"];
+    $row[] = !empty( $aRow["exam_date"] && $aRow["exam_date"] !='0000-00-00')?$aRow["exam_date"]:'';
     $row[] = $aRow["student_count"];
     $row[] = $aRow["created_at"];
     $row[] = $aRow["created_by"];

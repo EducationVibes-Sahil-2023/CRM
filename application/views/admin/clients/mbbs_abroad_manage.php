@@ -9,8 +9,7 @@
    <div class="content">
       <div class="row">
 
-         <?php 
-         if (!is_admin() && empty($this->session->userdata("staff_department"))) {
+         <?php if (!is_admin() && (has_permission('customers', '', 'customers_view') && has_permission('customers', '', 'customers_view_own'))) {
          ?>
             <div class="col-md-12">
                <div class="panel_s">
@@ -349,7 +348,7 @@
                                  ?>
                               </div>
 
-                   
+
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
@@ -626,8 +625,6 @@ init_tail(); ?>
       });
 
    }
-   
-
 </script>
 </body>
 

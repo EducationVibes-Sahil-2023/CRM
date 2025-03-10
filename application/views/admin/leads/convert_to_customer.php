@@ -164,8 +164,8 @@
             <?php
             $get_clients_fees = get_clients_fees((isset($lead) ? $lead->type : ''));
             $get_currencies = get_currencies();
-             $get_currencies = array_column($get_currencies,null,'id');
-           
+            $get_currencies = array_column($get_currencies, null, 'id');
+
 
             if (!empty($get_clients_fees) && !empty($get_currencies)) {
             ?>
@@ -189,9 +189,9 @@
                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                               <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
                               <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
-                 
-                              <div class="input-group-addon currency-symbol-<?= $id ?>"><?=!empty($get_currencies[$fees["default_currency"]]["symbol"])? $get_currencies[$fees["default_currency"]]["symbol"]:'$'?></div>
-                              <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="inlineFormInputGroup" size="8">
+
+                              <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["default_currency"]]["symbol"]) ? $get_currencies[$fees["default_currency"]]["symbol"] : '$' ?></div>
+                              <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
                               <div class="input-group-addon currency-addon">
 
                                  <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -220,45 +220,45 @@
 
             <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
             <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
-            <input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />
+            <!--<input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />-->
 
-            <div class="client_password_set_wrapper">
-               <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>
-               <div class="input-group">
-                  <input type="password" class="form-control password" name="password" autocomplete="off">
-                  <span class="input-group-addon">
-                     <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>
-                  </span>
-                  <span class="input-group-addon">
-                     <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>
-                  </span>
-               </div>
-            </div>
+            <!--<div class="client_password_set_wrapper">-->
+            <!--   <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>-->
+            <!--   <div class="input-group">-->
+            <!--      <input type="password" class="form-control password" name="password" autocomplete="off">-->
+            <!--      <span class="input-group-addon">-->
+            <!--         <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>-->
+            <!--      </span>-->
+            <!--      <span class="input-group-addon">-->
+            <!--         <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>-->
+            <!--      </span>-->
+            <!--   </div>-->
+            <!--</div>-->
             <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="send_set_password_email" id="send_set_password_email">
-                  <label for="send_set_password_email">
-                     <?php echo _l('client_send_set_password_email'); ?>
-                  </label>
-               </div>
+               <!--<div class="checkbox checkbox-primary">-->
+               <!--   <input type="checkbox" name="send_set_password_email" id="send_set_password_email">-->
+               <!--   <label for="send_set_password_email">-->
+               <!--      <?php echo _l('client_send_set_password_email'); ?>-->
+               <!--   </label>-->
+               <!--</div>-->
             <?php } ?>
             <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
-               <div class="checkbox checkbox-primary hide">
-                  <input type="checkbox" checked name="donotsendwelcomeemail" id="donotsendwelcomeemail">
-                  <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>
-               </div>
+               <!--<div class="checkbox checkbox-primary hide">-->
+               <!--   <input type="checkbox" checked name="donotsendwelcomeemail" id="donotsendwelcomeemail">-->
+               <!--   <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>-->
+               <!--</div>-->
             <?php } ?>
             <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="transfer_notes" id="transfer_notes">
-                  <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>
-               </div>
+               <!--<div class="checkbox checkbox-primary">-->
+               <!--   <input type="checkbox" name="transfer_notes" id="transfer_notes">-->
+               <!--   <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>-->
+               <!--</div>-->
             <?php } ?>
             <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
-               <div class="checkbox checkbox-primary">
-                  <input type="checkbox" name="transfer_consent" id="transfer_consent">
-                  <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>
-               </div>
+               <!--<div class="checkbox checkbox-primary">-->
+               <!--   <input type="checkbox" name="transfer_consent" id="transfer_consent">-->
+               <!--   <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>-->
+               <!--</div>-->
             <?php } ?>
          </div>
          <div class="modal-footer">
