@@ -1608,7 +1608,7 @@ class Clients extends AdminController
 
                 if ($generate_registration_slip["status"] == "success") {
                     if (!empty($client->email)) {
-                        $email =  send_mail_template('Applicant_new_registration', $client->email, $client_id, ADMISSION_EMAIL_ID);
+                        $email =  send_mail_template('Applicant_new_registration', $client->email, $client_id, get_staff_user_id());
                     }
 
                     $template_id = 1;
@@ -4421,7 +4421,7 @@ class Clients extends AdminController
 
         // Attempt to send the email
         try {
-            $email_sent = send_mail_template($email_templates[$type], $client->email, $client_id, ADMISSION_EMAIL_ID, $university_id, $university_name);
+            $email_sent = send_mail_template($email_templates[$type], $client->email, $client_id, get_staff_user_id(), $university_id, $university_name);
 
             if ($email_sent) {
                 http_response_code(200); // OK
