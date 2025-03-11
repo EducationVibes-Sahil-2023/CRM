@@ -969,8 +969,8 @@ class Staff_model extends App_Model
     {
         return $this->db->where(["post_sales" => 1, "active" => 1])->get(db_prefix() . 'staff')->result_array();
     }
-    
-       public function office_location($id="")
+
+    public function office_location($id = "")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
@@ -981,7 +981,7 @@ class Staff_model extends App_Model
         return $this->db->get(db_prefix() . 'office_location')->result_array();
     }
 
-    public function staff_department($id="")
+    public function staff_department($id = "")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
@@ -990,5 +990,11 @@ class Staff_model extends App_Model
         $this->db->where('status', 1);
 
         return $this->db->get(db_prefix() . 'staff_department')->result_array();
+    }
+
+    public function visitor_type()
+    {
+        $this->db->where('status', 1);
+        return $this->db->get(db_prefix() . 'visitor_type')->result_array();
     }
 }

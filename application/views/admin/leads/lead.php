@@ -76,30 +76,30 @@ $last_lead_request = last_lead_request($lead->id);
                         <?php } ?>
 
                         <!-- sms -->
-                        <li role="presentation">
+                        <!-- <li role="presentation">
                            <a href="#tab_sms_leads" onclick="initDataTable('.table-sms-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_leads" role="tab" data-toggle="tab">
                               <?php echo _l('SMS'); ?>
                            </a>
-                        </li>
+                        </li> -->
                         <!--end sms-->
                         <?php if (has_permission('whatsapp', '', 'view') && 1 == 2) { ?>
-                           <li role="presentation">
+                           <!-- <li role="presentation">
                               <a id="tab_proposals_whatsapp_li" href="#tab_proposals_whatsapp" onclick="get_whatsapp_message(<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>,<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>);" aria-controls="tab_proposals_whatsapp" role="tab" data-toggle="tab">
                                  <?php echo _l('Whatsapp'); ?>
                               </a>
-                           </li>
+                           </li> -->
                         <?php } ?>
 
-                        <li role="presentation">
+                        <!-- <li role="presentation">
                            <a href="#tab_proposals_leads" onclick="initDataTable('.table-proposals-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_leads" role="tab" data-toggle="tab">
                               <?php echo _l('proposals'); ?>
                            </a>
-                        </li>
-                        <li role="presentation">
+                        </li> -->
+                        <!-- <li role="presentation">
                            <a href="#tab_tasks_leads" onclick="init_rel_tasks_table(<?php echo $lead->id; ?>,'lead','.table-rel-tasks-leads');" aria-controls="tab_tasks_leads" role="tab" data-toggle="tab">
                               <?php echo _l('tasks'); ?>
                            </a>
-                        </li>
+                        </li> -->
                         <li role="presentation">
                            <a href="#attachments" aria-controls="attachments" role="tab" data-toggle="tab">
                               <?php echo _l('lead_attachments'); ?>
@@ -152,6 +152,11 @@ $last_lead_request = last_lead_request($lead->id);
                         <li role="presentation">
                            <a href="#lead_transfer_lead_request" id="show_transfer_lead_div" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
                               <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
+                           </a>
+                        </li>
+                        <li role="presentation">
+                           <a href="#lead_visitor_lead_request" id="show_visitor_lead_div" aria-controls="lead_visitor_lead_request" role="tab" data-toggle="tab">
+                              <?php echo _l('Lead Visitor Request'); ?>
                            </a>
                         </li>
                         <?php if (is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1')) { ?>
@@ -584,6 +589,52 @@ $last_lead_request = last_lead_request($lead->id);
                         <?php } ?>
 
 
+                     </div>
+
+                  </div>
+                  <?php echo form_close(); ?>
+                  <div class="clearfix"></div>
+                  <hr />
+               </div>
+
+               <div role="tabpanel" class="tab-pane" id="lead_visitor_lead_request">
+                  <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-visitor')); ?>
+                  <input type="hidden" id="visitor_lead_id" name="visitor_lead_id" value="<?= !empty($visitor_request->id) ? $visitor_request->id : '' ?>">
+                  <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
+                  <div class='row'>
+                     <div class="form-group col-md-3">
+                        <?php echo render_input('date_of_visit', 'Date of Visit', '', 'date', array('placeholder' => _l('Date of visitor')), array(), 'no-margin') ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+                        echo render_select('transfer_lead_type', $type, array('id', 'name'), 'Lead Type <span class="text-danger">*</span>', [$visitor_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'transfer_lead_type');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+                        echo render_select('visitor_lead_type', $type, array('id', 'name'), 'Lead Type <span class="text-danger">*</span>', [$visitor_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'visitor_lead_type');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+                        $assigned_attrs = array();
+                        $selected = [];
+                        echo render_select('transfer_lead_assign', [], array('staffid', array('firstname', 'lastname')), 'Assigned <span class="text-danger">*</span>', [$visitor_request->assign], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                        ?>
+                     </div>
+
+                     <div class="form-group col-md-3">
+                        <label>Reason <span class='text-danger'>*</span></label>
+                        <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $visitor_request->reason ?></textarea>
+                     </div>
+
+                     <div class="form-group col-md-2">
+                        <label> &nbsp;</label> <?php
+                                                $button_text = !empty($visitor_request->id)
+                                                   ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
+                                                   : _l('Request NOW');
+                                                ?>
+                        <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
                      </div>
 
                   </div>

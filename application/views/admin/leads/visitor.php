@@ -10,7 +10,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                 <div class="panel_s">
                     <div class="panel-body">
                         <?php
-                        render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                        render_datatable(array(_l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), _l('Comment')), 'lead-visitor-table');
                         ?>
                     </div>
                 </div>
@@ -19,3 +19,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
     </div>
 </div>
 <?php init_tail(); ?>
+
+<script>
+    initDataTable('.table-lead-visitor-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+</script>

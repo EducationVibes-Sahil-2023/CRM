@@ -3642,9 +3642,20 @@ class Leads extends AdminController
     public function lead_visitor_request()
     {
         $data['title']    = "Lead Visitor Request";
+        $data['location'] = $this->staff_model->office_location();
+        $data['visitor_type'] = $this->staff_model->visitor_type();
 
         // in case accesed the url leads/index/ directly with id - used in search
 
         $this->load->view('admin/leads/visitor', $data);
+    }
+
+    public function table_lead_visitor($rel_id = "", $type = "", $action = "")
+    {
+        $this->app->get_table_data('lead_visitor', [
+            'rel_id'   => $rel_id,
+            'type' => $type,
+            'action' => $action
+        ]);
     }
 }

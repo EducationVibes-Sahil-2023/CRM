@@ -49,8 +49,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       width: auto !important;
       min-width: 30px !important;
    }
-   .dropdown-menu-right
-   {
+
+   .dropdown-menu-right {
       bottom: unset !important;
    }
 </style>
@@ -450,10 +450,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  <br>
                                  <br>
                                  <?php
-                                   if (is_admin()) {
-                                    render_datatable(array(_l('Raised by'), _l('Lead Type'),"Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'),"New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                 if (is_admin()) {
+                                    render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
                                  } else {
-                                    render_datatable(array(_l('Lead Type'),"Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                    render_datatable(array(_l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
                                  }
                                  ?>
                                  <hr class="hr-panel-heading" />
@@ -462,7 +462,31 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               <br>
                               <br>
                            </div>
-                       
+
+                           <div class="clearfix"></div>
+                           <div class="col-md-12">
+                              <div>
+                                 <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Visitor Request'); ?>" onclick="show_lead_request_visitor()" data-placement="bottom">Lead Visitor Request</button>
+                              </div>
+                              <hr>
+
+                              <div class="lead-visitor-table hide">
+                                 <br>
+                                 <br>
+                                 <?php
+                                 if (is_admin()) {
+                                    render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                 } else {
+                                    render_datatable(array(_l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                                 }
+                                 ?>
+                                 <hr class="hr-panel-heading" />
+
+                              </div>
+                              <br>
+                              <br>
+                           </div>
+
                            <div class="col-md-12">
                               <a href="#" data-toggle="modal" data-table=".table-leads" data-target="#leads_bulk_actions" class="hide bulk-actions-btn table-btn"><?php echo _l('bulk_actions'); ?></a>
                               <div class="modal fade bulk_actions" id="leads_bulk_actions" tabindex="-1" role="dialog">
@@ -1300,6 +1324,22 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                $('.table-lead-transfer-table').DataTable().destroy();
             }
             initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
+            return false;
+         }
+      }, 1000);
+
+
+   }
+
+   function show_lead_request_visitor() {
+
+      slideToggle('.lead-visitor-table');
+      setTimeout(() => {
+         if ($(".lead-visitor-table").length > 0 && $(".lead-visitor-table").is(':visible')) {
+            if ($.fn.DataTable.isDataTable('.table-lead-visitor-table')) {
+               $('.table-lead-visitor-table').DataTable().destroy();
+            }
+            initDataTable('.table-lead-visitor-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
             return false;
          }
       }, 1000);
