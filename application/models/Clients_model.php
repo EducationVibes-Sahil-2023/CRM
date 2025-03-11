@@ -2133,4 +2133,14 @@ class Clients_model extends App_Model
 
         return $attachments_data;
     }
+
+    public function client_assign($client_id)
+    {
+       return $this->db->select("email")
+            ->from(db_prefix() . "clients c")
+            ->join(db_prefix() . "staff s", "c.addedfrom = s.staffid")
+            ->where("userid", $client_id)
+            ->get()
+            ->row_array(); // Fetch a single row
+    }
 }

@@ -11,6 +11,8 @@ class Applicant_entrance_exam extends App_mail_template
     protected $client_id;
 
     protected $staffid;
+    protected $university_id;
+    protected $university_name;
 
     public $slug = 'client-entrance-exam';
 
@@ -23,11 +25,14 @@ class Applicant_entrance_exam extends App_mail_template
         $this->staff_email = $staff_email;
         $this->client_id   = $client_id;
         $this->staffid    = $staffid;
+        $this->university_id    = $university_id;
+        $this->university_name    = $university_name;
     }
 
     public function build()
     {
         $primary_contact_id = get_primary_contact_user_id($this->client_id);
+        $bcc_email =  $this->ci->clients_model->client_assign($this->client_id);
 
         // $attachments = $this->ci->clients_model->registration_attachments($this->client_id);
         // if (!empty($attachments)) {
@@ -35,8 +40,8 @@ class Applicant_entrance_exam extends App_mail_template
         //         $this->add_attachment($attachment);
         //     }
         // }
-        $this->to($this->staff_email)
+        $this->to($this->staff_email)->cc($bcc_email["email"])
             ->set_rel_id($this->staffid)
-            ->set_merge_fields('client_merge_fields', $this->client_id, $primary_contact_id);
+            ->set_merge_fields('client_merge_fields', $this->client_id, $primary_contact_id, "", "", "", $this->university_id, $this->university_name);
     }
 }

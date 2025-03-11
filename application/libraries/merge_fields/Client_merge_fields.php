@@ -108,6 +108,17 @@ class Client_merge_fields extends App_merge_fields
                 ],
 
             ],
+            [
+                'name'      => 'Entrance Exam Details',
+                'key'       => '{entrance_exam_details}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-entrance-exam',
+                ],
+
+            ],
 
             [
                 'name'      => 'Post sale counselor Name',
@@ -511,7 +522,7 @@ class Client_merge_fields extends App_merge_fields
      * @param  string $password   password is used when sending welcome email, only 1 time
      * @return array
      */
-    public function format($client_id, $contact_id = '', $password = '', $staff_id = "", $document_id = "")
+    public function format($client_id, $contact_id = '', $password = '', $staff_id = "", $document_id = "", $university_id = "", $university_name = "")
     {
 
         $fields = [];
@@ -623,6 +634,17 @@ class Client_merge_fields extends App_merge_fields
             $fields['{primary_country}']        = $admission_preferences->primary_country;
         }
 
+        if (!empty($university_name) && !empty($client_id)) {
+            $this->ci->db->select('ce.exam_date,eb.name as batch_name,eb.university_name,ue.name as exam_name');
+            $this->ci->db->from(db_prefix() . 'clients_exam ce');
+            $this->ci->db->join(db_prefix() . 'exam_batch eb', 'ce.batch_id = eb.id', 'left');
+            $this->ci->db->join(db_prefix() . 'university_exams ue', 'eb.exam_id = ue.id', 'left');
+            $this->ci->db->where('ce.client_id', $client_id);
+            $this->ci->db->where('eb.university_name', $university_name);
+            $entrance_exam_data = $this->ci->db->get()->result_array();
+        }
+
+
         if (!empty($client->vat)) {
             $fields['{client_vat_number}'] = $client->vat;
         }
@@ -637,6 +659,20 @@ class Client_merge_fields extends App_merge_fields
         $fields['{client_address}']                    = $client->address;
         $fields['{client_id}']                         = $client_id;
 
+        $entrance_data_text = "";
+        if (!empty($entrance_exam_data)) {
+            foreach ($entrance_exam_data as $entrance) {
+                if (!empty($entrance["exam_name"]) && !empty($entrance["exam_date"]) && $entrance["exam_date"] != "0000-00-00") {
+                    // Format the date
+                    $formatted_date = date("F d, Y", strtotime($entrance["exam_date"]));
+                    $entrance_data_text .= $entrance["exam_name"] . " exam on " . $formatted_date . "<br>";
+                }
+            }
+        }
+
+        if ($entrance_data_text != '') {
+            $fields['{entrance_exam_details}'] = $entrance_data_text;
+        }
 
         if ($password != '') {
             $fields['{password}'] = htmlentities($password);

@@ -7,7 +7,6 @@ class Clients extends AdminController
     /* List all clients */
     public function index()
     {
-
         $lastSegment = $this->uri->segment($this->uri->total_segments());
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
@@ -3352,13 +3351,11 @@ class Clients extends AdminController
 
             $pdf->setImageScale(1.7);
 
+
             // Load HTML Template
             $html = $this->load->view('admin/pdf/registration', $data, true);
             $pdf->writeHTML($html, true, false, true, false, '');
 
-            // $pdf->Output('Registration_Slip.pdf', 'I'); // Display in browser
-
-            // die;
             // Define File Path
             $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/";
 
@@ -4421,7 +4418,7 @@ class Clients extends AdminController
 
         // Attempt to send the email
         try {
-            $email_sent = send_mail_template($email_templates[$type], $client->email, $client_id, get_staff_user_id(), $university_id, $university_name);
+            $email_sent = send_mail_template($email_templates[$type], $client->email, $client_id, get_staff_user_id(), "", $university_id, $university_name);
 
             if ($email_sent) {
                 http_response_code(200); // OK

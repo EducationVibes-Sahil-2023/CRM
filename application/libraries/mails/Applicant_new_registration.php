@@ -29,13 +29,15 @@ class Applicant_new_registration extends App_mail_template
     {
         $primary_contact_id = get_primary_contact_user_id($this->client_id);
 
+        $bcc_email =  $this->ci->clients_model->client_assign($this->client_id);
+
         $attachments = $this->ci->clients_model->registration_attachments($this->client_id);
         if (!empty($attachments)) {
             foreach ($attachments as $attachment) {
                 $this->add_attachment($attachment);
             }
         }
-        $this->to($this->staff_email)
+        $this->to($this->staff_email)->cc($bcc_email["email"])
             ->set_rel_id($this->staffid)
             ->set_merge_fields('client_merge_fields', $this->client_id, $primary_contact_id);
     }

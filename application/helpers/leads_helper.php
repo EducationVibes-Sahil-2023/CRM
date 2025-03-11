@@ -8210,6 +8210,24 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
 
     // Fetch client details
     $client = $CI->db->where('userid', $client_id)->get(db_prefix() . 'basic_details')->row();
+
+    $CI->db->where('userid', $client_id);
+    $basic_details = $CI->db->get(db_prefix() . 'basic_details')->row();
+
+    if (!empty($client->addedfrom)) {
+        $CI->db->select("email,firstname,lastname,phonenumber");
+        $CI->db->where('staffid', $client->addedfrom);
+        $assigned_counselor = $CI->db->get(db_prefix() . 'staff')->row();
+    }
+
+    if (!empty($staff_id)) {
+         $CI->db->select("email,firstname,lastname,phonenumber");
+         $CI->db->where('staffid', $staff_id);
+        $assigned_post_sale_counselor =  $CI->db->get(db_prefix() . 'staff')->row();
+    }
+
+      $CI->db->where('userid', $client_id);
+        $admission_preferences = $CI->db->get(db_prefix() . 'admission_preferences')->row();
     if (!$client) {
         log_message('error', "Client not found: ID $client_id");
         return json_encode(["error" => "Client not found."]);
@@ -8249,7 +8267,7 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
     // Replace variables in template
     $applicant_name = trim($client->first_name . " " . $client->last_name);
     $variables = str_replace(
-        ["{applicant_name}", "{counsellor_phonennumber}"],
+        ["{applicant_name}", "{counsellor_phonennumber}", "{primary_country}", "{primary_university}", "{registration_amount}", "{acadmic_year}", "{entrance_exam_details}", "{counsellor_name}"],
         [$applicant_name, $staff_data->phonenumber],
         $whatsapp->variables_name
     );

@@ -30,6 +30,7 @@ class Applicant_invitation_notification extends App_mail_template
     public function build()
     {
         $primary_contact_id = get_primary_contact_user_id($this->client_id);
+        $bcc_email =  $this->ci->clients_model->client_assign($this->client_id);
 
         $attachments = $this->ci->clients_model->invitation_attachments($this->university_shortlisting_id, $this->client_id);
         if (!empty($attachments)) {
@@ -39,7 +40,7 @@ class Applicant_invitation_notification extends App_mail_template
         }
 
         if (!empty($attachments)) {
-            $this->to($this->staff_email)
+            $this->to($this->staff_email)->cc($bcc_email["email"])
                 ->set_rel_id($this->staffid)
                 ->set_merge_fields('client_merge_fields', $this->client_id, $primary_contact_id);
         }
