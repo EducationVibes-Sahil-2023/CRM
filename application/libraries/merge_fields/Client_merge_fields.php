@@ -7,369 +7,512 @@ class Client_merge_fields extends App_merge_fields
     public function build()
     {
         return [
-                [
-                    'name'      => 'Contact Firstname',
-                    'key'       => '{contact_firstname}',
-                    'available' => [
-                        'client',
-                        'ticket',
-                        'invoice',
-                        'estimate',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                       'templates' => [
-                        'gdpr-removal-request',
-                        'contract-expiration',
-                         'send-contract',
-                          'contract-comment-to-client',
-                         'task-added-attachment-to-contacts',
-                         'task-commented-to-contacts',
-                         'task-status-change-to-contacts',
+            [
+                'name'      => 'Applicant Firstname',
+                'key'       => '{applicant_firstname}',
+                'available' => [
+                    'client'
+                ],
 
-                    ],
+            ],
+            [
+                'name'      => 'Applicant Lastname',
+                'key'       => '{applicant_lastname}',
+                'available' => [
+                    'client'
                 ],
-                [
-                    'name'      => 'Contact Lastname',
-                    'key'       => '{contact_lastname}',
-                    'available' => [
-                        'client',
-                        'ticket',
-                        'invoice',
-                        'estimate',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                          'templates' => [
-                        'gdpr-removal-request',
-                         'contract-expiration',
-                          'send-contract',
-                           'contract-comment-to-client',
-                           'task-added-attachment-to-contacts',
-                           'task-commented-to-contacts',
-                           'task-status-change-to-contacts',
-                    ],
-                ],
-                [
-                    'name'      => 'Contact Phone Number',
-                    'key'       => '{contact_phonenumber}',
-                    'available' => [
-                        'client',
-                        'ticket',
-                        'invoice',
-                        'estimate',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                        'templates' => [
-                        'gdpr-removal-request',
-                        'contract-expiration',
-                         'send-contract',
-                          'contract-comment-to-client',
-                    ],
-                ],
-                [
-                    'name'      => 'Contact Title',
-                    'key'       => '{contact_title}',
-                    'available' => [
-                        'client',
-                        'ticket',
-                        'invoice',
-                        'estimate',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                        'templates' => [
-                        'contract-expiration',
-                        'send-contract',
-                        'contract-comment-to-client',
-                    ],
-                ],
-                [
-                    'name'      => 'Contact Email',
-                    'key'       => '{contact_email}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                       'templates' => [
-                        'gdpr-removal-request',
-                        'contract-expiration',
-                         'send-contract',
-                          'contract-comment-to-client',
-                    ],
-                ],
-                   [
-                    'name'      => 'Set New Password URL',
-                    'key'       => '{set_password_url}',
-                    'available' => [
-                    ],
-                    'templates' => [
-                        'contact-set-password',
-                    ],
-                ],
-                [
-                    'name'      => 'Email Verification URL',
-                    'key'       => '{email_verification_url}',
-                    'available' => [
-                    ],
-                    'templates' => [
-                        'contact-verification-email',
-                    ],
-                ],
-                [
-                    'name'      => 'Reset Password URL',
-                    'key'       => '{reset_password_url}',
-                    'available' => [
-                    ],
-                    'templates' => [
-                        'contact-forgot-password',
-                    ],
-                ],
-                [
-                    'name'      => is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' ? 'Contact Public Consent URL' : '',
-                    'key'       => is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' ? '{contact_public_consent_url}' : '',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                          'templates' => [
-                        'gdpr-removal-request',
-                        'contract-expiration',
-                        'send-contract',
-                         'contract-comment-to-client',
 
-                    ],
+            ],
+            [
+                'name'      => 'Primary University',
+                'key'       => '{primary_university}',
+                'available' => [
+                    'client'
                 ],
-                [
-                    'name'      => 'Client Company',
-                    'key'       => '{client_company}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                          'templates' => [
-                        'gdpr-removal-request',
-                    ],
-                ],
-                [
-                    'name'      => 'Client Phone Number',
-                    'key'       => '{client_phonenumber}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                          'templates' => [
-                        'gdpr-removal-request',
-                    ],
-                ],
-                [
-                    'name'      => 'Client Country',
-                    'key'       => '{client_country}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                          'templates' => [
-                        'gdpr-removal-request',
-                    ],
-                ],
-                [
-                    'name'      => 'Client City',
-                    'key'       => '{client_city}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                ],
-                [
-                    'name'      => 'Client Zip',
-                    'key'       => '{client_zip}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                ],
-                [
-                    'name'      => 'Client State',
-                    'key'       => '{client_state}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                ],
-                [
-                    'name'      => 'Client Address',
-                    'key'       => '{client_address}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                ],
-                [
-                    'name'      => 'Client Vat Number',
-                    'key'       => '{client_vat_number}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                ],
-                [
-                    'name'      => 'Client ID',
-                    'key'       => '{client_id}',
-                    'available' => [
-                        'client',
-                        'invoice',
-                        'estimate',
-                        'ticket',
-                        'contract',
-                        'project',
-                        'credit_note',
-                        'subscriptions',
-                    ],
-                ],
-                [
-                    'name'      => 'Password',
-                    'key'       => '{password}',
-                    'available' => [
-                    ],
-                    'templates' => [
-                        'new-client-created',
-                    ],
-                ],
-                [
-                    'name'      => 'Statement From',
-                    'key'       => '{statement_from}',
-                    'available' => [
 
-                    ],
-                    'templates' => [
-                        'client-statement',
-                    ],
+            ],
+            [
+                'name'      => 'Primary Country',
+                'key'       => '{primary_country}',
+                'available' => [
+                    'client'
                 ],
-                [
-                    'name'      => 'Statement To',
-                    'key'       => '{statement_to}',
-                    'available' => [
 
-                    ],
-                    'templates' => [
-                        'client-statement',
-                    ],
-                ],
-                [
-                    'name'      => 'Statement Balance Due',
-                    'key'       => '{statement_balance_due}',
-                    'available' => [
+            ],
 
-                    ],
-                    'templates' => [
-                        'client-statement',
-                    ],
+            [
+                'name'      => 'Counselor Firstname',
+                'key'       => '{counselor_firstname}',
+                'available' => [
+                    'client'
                 ],
-                [
-                    'name'      => 'Statement Amount Paid',
-                    'key'       => '{statement_amount_paid}',
-                    'available' => [
 
-                    ],
-                    'templates' => [
-                        'client-statement',
-                    ],
-                ],
-                [
-                    'name'      => 'Statement Invoiced Amount',
-                    'key'       => '{statement_invoiced_amount}',
-                    'available' => [
+            ],
 
-                    ],
-                    'templates' => [
-                        'client-statement',
-                    ],
+            [
+                'name'      => 'Counselor Lastname',
+                'key'       => '{counselor_lastname}',
+                'available' => [
+                    'client'
                 ],
-                [
-                    'name'      => 'Statement Beginning Balance',
-                    'key'       => '{statement_beginning_balance}',
-                    'available' => [
 
-                    ],
-                    'templates' => [
-                        'client-statement',
-                    ],
-                ],
-                [
-                    'name'      => 'Customer Files Admin Link',
-                    'key'       => '{customer_profile_files_admin_link}',
-                    'available' => [
+            ],
 
-                    ],
-                    'templates' => [
-                        'new-customer-profile-file-uploaded-to-staff',
-                    ],
+            [
+                'name'      => 'Counselor Name',
+                'key'       => '{counselor_name}',
+                'available' => [
+                    'client'
                 ],
-            ];
+
+            ],
+
+            [
+                'name'      => 'Counselor Email',
+                'key'       => '{counselor_email}',
+                'available' => [
+                    'client'
+                ],
+
+            ],
+
+
+            [
+                'name'      => 'Counselor Phonenumber',
+                'key'       => '{counselor_phonenumber}',
+                'available' => [
+                    'client'
+                ],
+
+            ],
+            [
+                'name'      => 'Post sale counselor Firstname',
+                'key'       => '{post_sale_counselor_firstname}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-document-reject',
+                ],
+
+            ],
+
+            [
+                'name'      => 'Post sale counselor Lastname',
+                'key'       => '{post_sale_counselor_lastname}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-document-reject',
+                ],
+
+            ],
+            [
+                'name'      => 'Entrance Exam Details',
+                'key'       => '{entrance_exam_details}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-entrance-exam',
+                ],
+
+            ],
+
+            [
+                'name'      => 'Post sale counselor Name',
+                'key'       => '{post_sale_counselor_name}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-document-reject',
+                ],
+
+            ],
+
+            [
+                'name'      => 'Post sale counselor Email',
+                'key'       => '{post_sale_counselor_email}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-document-reject',
+                ],
+
+            ],
+
+
+            [
+                'name'      => 'Post sale counselor Phonenumber',
+                'key'       => '{post_sale_counselor_phonenumber}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-document-reject',
+                ],
+
+            ],
+
+            [
+                'name'      => 'Document Name',
+                'key'       => '{document_name}',
+                'available' => [
+                    'client'
+                ],
+                'templates' => [
+                    'client-document-reject',
+                ],
+
+            ],
+            [
+                'name'      => 'Contact Firstname',
+                'key'       => '{contact_firstname}',
+                'available' => [
+                    'client',
+                    'ticket',
+                    'invoice',
+                    'estimate',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                    'contract-expiration',
+                    'send-contract',
+                    'contract-comment-to-client',
+                    'task-added-attachment-to-contacts',
+                    'task-commented-to-contacts',
+                    'task-status-change-to-contacts',
+
+                ],
+            ],
+            [
+                'name'      => 'Contact Lastname',
+                'key'       => '{contact_lastname}',
+                'available' => [
+                    'client',
+                    'ticket',
+                    'invoice',
+                    'estimate',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                    'contract-expiration',
+                    'send-contract',
+                    'contract-comment-to-client',
+                    'task-added-attachment-to-contacts',
+                    'task-commented-to-contacts',
+                    'task-status-change-to-contacts',
+                ],
+            ],
+            [
+                'name'      => 'Contact Phone Number',
+                'key'       => '{contact_phonenumber}',
+                'available' => [
+                    'client',
+                    'ticket',
+                    'invoice',
+                    'estimate',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                    'contract-expiration',
+                    'send-contract',
+                    'contract-comment-to-client',
+                ],
+            ],
+            [
+                'name'      => 'Contact Title',
+                'key'       => '{contact_title}',
+                'available' => [
+                    'client',
+                    'ticket',
+                    'invoice',
+                    'estimate',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'contract-expiration',
+                    'send-contract',
+                    'contract-comment-to-client',
+                ],
+            ],
+            [
+                'name'      => 'Contact Email',
+                'key'       => '{contact_email}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                    'contract-expiration',
+                    'send-contract',
+                    'contract-comment-to-client',
+                ],
+            ],
+            [
+                'name'      => 'Set New Password URL',
+                'key'       => '{set_password_url}',
+                'available' => [],
+                'templates' => [
+                    'contact-set-password',
+                ],
+            ],
+            [
+                'name'      => 'Email Verification URL',
+                'key'       => '{email_verification_url}',
+                'available' => [],
+                'templates' => [
+                    'contact-verification-email',
+                ],
+            ],
+            [
+                'name'      => 'Reset Password URL',
+                'key'       => '{reset_password_url}',
+                'available' => [],
+                'templates' => [
+                    'contact-forgot-password',
+                ],
+            ],
+            [
+                'name'      => is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' ? 'Contact Public Consent URL' : '',
+                'key'       => is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' ? '{contact_public_consent_url}' : '',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                    'contract-expiration',
+                    'send-contract',
+                    'contract-comment-to-client',
+
+                ],
+            ],
+            [
+                'name'      => 'Client Company',
+                'key'       => '{client_company}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                ],
+            ],
+            [
+                'name'      => 'Client Phone Number',
+                'key'       => '{client_phonenumber}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                ],
+            ],
+            [
+                'name'      => 'Client Country',
+                'key'       => '{client_country}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+                'templates' => [
+                    'gdpr-removal-request',
+                ],
+            ],
+            [
+                'name'      => 'Client City',
+                'key'       => '{client_city}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+            ],
+            [
+                'name'      => 'Client Zip',
+                'key'       => '{client_zip}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+            ],
+            [
+                'name'      => 'Client State',
+                'key'       => '{client_state}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+            ],
+            [
+                'name'      => 'Client Address',
+                'key'       => '{client_address}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+            ],
+            [
+                'name'      => 'Client Vat Number',
+                'key'       => '{client_vat_number}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+            ],
+            [
+                'name'      => 'Client ID',
+                'key'       => '{client_id}',
+                'available' => [
+                    'client',
+                    'invoice',
+                    'estimate',
+                    'ticket',
+                    'contract',
+                    'project',
+                    'credit_note',
+                    'subscriptions',
+                ],
+            ],
+            [
+                'name'      => 'Password',
+                'key'       => '{password}',
+                'available' => [],
+                'templates' => [
+                    'new-client-created',
+                ],
+            ],
+            [
+                'name'      => 'Statement From',
+                'key'       => '{statement_from}',
+                'available' => [],
+                'templates' => [
+                    'client-statement',
+                ],
+            ],
+            [
+                'name'      => 'Statement To',
+                'key'       => '{statement_to}',
+                'available' => [],
+                'templates' => [
+                    'client-statement',
+                ],
+            ],
+            [
+                'name'      => 'Statement Balance Due',
+                'key'       => '{statement_balance_due}',
+                'available' => [],
+                'templates' => [
+                    'client-statement',
+                ],
+            ],
+            [
+                'name'      => 'Statement Amount Paid',
+                'key'       => '{statement_amount_paid}',
+                'available' => [],
+                'templates' => [
+                    'client-statement',
+                ],
+            ],
+            [
+                'name'      => 'Statement Invoiced Amount',
+                'key'       => '{statement_invoiced_amount}',
+                'available' => [],
+                'templates' => [
+                    'client-statement',
+                ],
+            ],
+            [
+                'name'      => 'Statement Beginning Balance',
+                'key'       => '{statement_beginning_balance}',
+                'available' => [],
+                'templates' => [
+                    'client-statement',
+                ],
+            ],
+            [
+                'name'      => 'Customer Files Admin Link',
+                'key'       => '{customer_profile_files_admin_link}',
+                'available' => [],
+                'templates' => [
+                    'new-customer-profile-file-uploaded-to-staff',
+                ],
+            ],
+        ];
     }
 
     /**
@@ -379,8 +522,9 @@ class Client_merge_fields extends App_merge_fields
      * @param  string $password   password is used when sending welcome email, only 1 time
      * @return array
      */
-    public function format($client_id, $contact_id = '', $password = '')
+    public function format($client_id, $contact_id = '', $password = '', $staff_id = "", $document_id = "", $university_id = "", $university_name = "")
     {
+
         $fields = [];
 
         if ($contact_id == '') {
@@ -405,6 +549,7 @@ class Client_merge_fields extends App_merge_fields
         $fields['{email_verification_url}']            = '';
         $fields['{customer_profile_files_admin_link}'] = '';
 
+
         if ($client_id == '') {
             return $fields;
         }
@@ -419,6 +564,24 @@ class Client_merge_fields extends App_merge_fields
         $this->ci->db->where('id', $contact_id);
         $contact = $this->ci->db->get(db_prefix() . 'contacts')->row();
 
+
+        if (!empty($client->addedfrom)) {
+            $this->ci->db->select("email,firstname,lastname,phonenumber");
+            $this->ci->db->where('staffid', $client->addedfrom);
+            $assigned_counselor = $this->ci->db->get(db_prefix() . 'staff')->row();
+        }
+
+
+        if ($assigned_counselor) {
+            $fields['{counselor_email}']       = $assigned_counselor->email;
+            $fields['{counselor_firstname}']   = $assigned_counselor->firstname;
+            $fields['{counselor_lastname}']    = $assigned_counselor->lastname;
+            $fields['{counselor_name}']    = $assigned_counselor->firstname . " " . $assigned_counselor->lastname;
+            $fields['{counselor_phonenumber}'] = $assigned_counselor->phonenumber;
+        }
+
+
+
         if ($contact) {
             $fields['{contact_firstname}']          = $contact->firstname;
             $fields['{contact_lastname}']           = $contact->lastname;
@@ -428,6 +591,59 @@ class Client_merge_fields extends App_merge_fields
             $fields['{contact_public_consent_url}'] = contact_consent_url($contact->id);
             $fields['{email_verification_url}']     = site_url('verification/verify/' . $contact->id . '/' . $contact->email_verification_key);
         }
+
+        $this->ci->db->where('userid', $client_id);
+        $basic_details = $this->ci->db->get(db_prefix() . 'basic_details')->row();
+        if ($basic_details) {
+            $fields['{applicant_firstname}']          = $basic_details->first_name;
+            $fields['{applicant_lastname}']           = $basic_details->last_name;
+        }
+
+
+        if (!empty($staff_id)) {
+            $this->ci->db->select("email,firstname,lastname,phonenumber");
+            $this->ci->db->where('staffid', $staff_id);
+            $assigned_post_sale_counselor = $this->ci->db->get(db_prefix() . 'staff')->row();
+        }
+
+
+        if ($assigned_post_sale_counselor) {
+            $fields['{post_sale_counselor_email}']       = $assigned_post_sale_counselor->email;
+            $fields['{post_sale_counselor_firstname}']   = $assigned_post_sale_counselor->firstname;
+            $fields['{post_sale_counselor_lastname}']    = $assigned_post_sale_counselor->lastname;
+            $fields['{post_sale_counselor_name}']    = $assigned_post_sale_counselor->firstname . " " . $assigned_post_sale_counselor->lastname;
+            $fields['{post_sale_counselor_phonenumber}'] = $assigned_post_sale_counselor->phonenumber;
+        }
+
+        if (!empty($document_id)) {
+            $this->ci->db->select("name");
+            $this->ci->db->where('id', $document_id);
+            $document_type = $this->ci->db->get(db_prefix() . 'document_upload_type')->row();
+        }
+
+        if ($document_type) {
+            $fields['{document_name}']       = $document_type->name;
+        }
+
+        $this->ci->db->where('userid', $client_id);
+        $admission_preferences = $this->ci->db->get(db_prefix() . 'admission_preferences')->row();
+
+
+        if ($admission_preferences) {
+            $fields['{primary_university}']              = $admission_preferences->primary_university;
+            $fields['{primary_country}']        = $admission_preferences->primary_country;
+        }
+
+        if (!empty($university_name) && !empty($client_id)) {
+            $this->ci->db->select('ce.exam_date,eb.name as batch_name,eb.university_name,ue.name as exam_name');
+            $this->ci->db->from(db_prefix() . 'clients_exam ce');
+            $this->ci->db->join(db_prefix() . 'exam_batch eb', 'ce.batch_id = eb.id', 'left');
+            $this->ci->db->join(db_prefix() . 'university_exams ue', 'eb.exam_id = ue.id', 'left');
+            $this->ci->db->where('ce.client_id', $client_id);
+            $this->ci->db->where('eb.university_name', $university_name);
+            $entrance_exam_data = $this->ci->db->get()->result_array();
+        }
+
 
         if (!empty($client->vat)) {
             $fields['{client_vat_number}'] = $client->vat;
@@ -443,6 +659,21 @@ class Client_merge_fields extends App_merge_fields
         $fields['{client_address}']                    = $client->address;
         $fields['{client_id}']                         = $client_id;
 
+        $entrance_data_text = "";
+        if (!empty($entrance_exam_data)) {
+            foreach ($entrance_exam_data as $entrance) {
+                if (!empty($entrance["exam_name"]) && !empty($entrance["exam_date"]) && $entrance["exam_date"] != "0000-00-00") {
+                    // Format the date
+                    $formatted_date = date("F d, Y", strtotime($entrance["exam_date"]));
+                    $entrance_data_text .= $entrance["exam_name"] . " exam on " . $formatted_date . "<br>";
+                }
+            }
+        }
+
+        if ($entrance_data_text != '') {
+            $fields['{entrance_exam_details}'] = $entrance_data_text;
+        }
+
         if ($password != '') {
             $fields['{password}'] = htmlentities($password);
         }
@@ -457,19 +688,20 @@ class Client_merge_fields extends App_merge_fields
             $fields['{' . $field['slug'] . '}'] = get_custom_field_value($contact_id, $field['id'], 'contacts');
         }
 
+
         return hooks()->apply_filters('client_contact_merge_fields', $fields, [
             'customer_id' => $client_id,
             'contact_id'  => $contact_id,
             'customer'    => $client,
             'contact'     => $contact,
-    ]);
+        ]);
     }
 
     /**
- * Statement merge fields
- * @param  array $statement
- * @return array
- */
+     * Statement merge fields
+     * @param  array $statement
+     * @return array
+     */
     public function statement($statement)
     {
         $fields = [];
@@ -483,7 +715,7 @@ class Client_merge_fields extends App_merge_fields
 
         return hooks()->apply_filters('client_statement_merge_fields', $fields, [
             'statement' => $statement,
-         ]);
+        ]);
     }
 
     /**

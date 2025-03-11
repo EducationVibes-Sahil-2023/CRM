@@ -8,170 +8,186 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 50px;
-            font-size: 14px;
+        }
+
+        .text-blue {
+            color: #273991;
+            font-weight: bold;
+        }
+
+        .text-pink {
+            color: #e11285;
+            font-weight: bold;
+        }
+
+
+        table {
+            font-size: 16px;
+        }
+
+        .company-info {
+            font-size: 13px;
+            color: grey;
         }
 
         .container {
-            max-width: 800px;
-            margin: auto;
-            padding: 20px;
-            border: 2px solid #000;
+            border-top: 3px solid #1569a4;
+            border-bottom: 3px solid black;
+            border-left: 3px solid black;
+            border-right: 3px solid black;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header .company-info {
-            width: 48% !important;
-        }
-
-        .header logo {
-            font-size: 18px;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .receipt-title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            margin-top: 20px;
-            padding: 10px;
-            background: #f8f8f8;
-            border-bottom: 2px solid #000;
-        }
-
-        .payment-details {
-            margin-top: 15px;
-        }
-
-        h3 {
-            margin: 10px 0;
-            font-size: 16px;
-            color: #333;
-        }
-
-        p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .balance-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .balance-table th,
-        .balance-table td {
-            border: 1px solid #000;
-            padding: 8px;
-            text-align: left;
-        }
-
-        .balance-table th {
-            background: #f0f0f0;
-        }
-
-        .important-note {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #d32f2f;
-            font-weight: bold;
-        }
-
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #666;
+        .bordered-row td {
+            border-top: 3px solid black;
+            border-bottom: 3px solid black;
         }
     </style>
+
 </head>
 
 <body>
-    <div class="container">
-        <!-- Header -->
-        <table>
+
+    <?php
+    function formatCurrency($amount)
+    {
+        if (!empty($amount) && preg_match('/^(\D*)(\d[\d,.]*)$/', $amount, $matches)) {
+            $currency_symbol = $matches[1]; // Captures "$", "₹", "€", etc.
+            $numeric_amount = floatval(str_replace(',', '', $matches[2])); // Removes commas & converts to float
+            return $currency_symbol . number_format($numeric_amount, 2, '.', ','); // Formats to 2 decimal places
+        }
+        return !empty($amount) ? $amount : '';
+    }
+
+    function formatCurrency_($amount)
+    {
+        if (!empty($amount) && preg_match('/^(\D*)(\d[\d,.]*)$/', $amount, $matches)) {
+            $currency_symbol = $matches[1]; // Captures "$", "₹", "€", etc.
+            $numeric_amount = floatval(str_replace(',', '', $matches[2])); // Removes commas & converts to float
+            return [$currency_symbol, $numeric_amount]; // Returns symbol and numeric value separately
+        }
+        return ['', 0]; // Default empty symbol and zero value
+    }
+
+
+    list($currency_symbol, $total_value) = formatCurrency_($total_amount);
+    list(, $registration_value) = formatCurrency_($registration_amount);
+    $total_value;
+    $registration_value;
+    // Calculate difference
+    $difference = $total_value - $registration_value;
+
+    ?>
+
+    <div class="container" cellspacing="15">
+        <table cellpadding="5" cellspacing="0" style="margin:10px; padding:10px;">
             <tbody>
                 <tr>
-                    <td>
-                        <div class="company-info">
-                            <logo>BrightRoute</logo>
-                            <p>First Floor, Office No 37, 38 and 39, 1184/4,Shreenath Plaza, F C Road,Shivaji Nagar, Pune, Maharashtra, 411005</p>
-                        </div>
+                    <td class="company-info">
+                        <img style="height:70px;" src="<?= base_url() ?>uploads/pdf_include/Brightroute_Logo_.png">
+                        <br>
+                        First Floor, Office No 37, 38 and 39, 1184/4,<br>
+                        Shreenath Plaza, F C Road,<br>
+                        Shivaji Nagar, Pune, Maharashtra, 411005
                     </td>
-                    <td>
-                        <div class="company-info">
-                            <logo>Education Vibes</logo>
-                            <p>A Unit of Brightroute Consulting</p>
-                        </div>
+                    <td></td>
+                    <td style="text-align:right;">
+                        <img style="height:120px;" src="<?= base_url() ?>uploads/pdf_include/eduvibe_logo.png">
                     </td>
                 </tr>
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <td class="text-blue">Receipt</td>
+                    <td></td>
+                    <td><span class="text-blue">Invoice No</span>: <?= $invoice_number ?></td>
+                </tr>
+
+                <tr>
+                    <td><span class="text-pink">Date of Payment</span></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td><?= !empty($date_of_payment) ? date("d/m/Y", strtotime($date_of_payment)) : '' ?></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <td><strong>Student Name</strong></td>
+                    <td><strong>Payment Received From</strong></td>
+                    <td><strong>Academic Year</strong></td>
+                </tr>
+                <tr>
+                    <td><?= !empty($student_name) ? ucwords($student_name) : '' ?></td>
+                    <td><?= !empty($payment_recevied_from) ? ucwords($payment_recevied_from) : '' ?></td>
+                    <td><?= !empty($acadmic_year) ? $acadmic_year : '' ?></td>
+                </tr>
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
+                <tr>
+                    <td><strong>Residence Address</strong></td>
+                    <td><strong>University Name</strong></td>
+                    <td><strong>Country</strong></td>
+                </tr>
+                <tr>
+                    <td><?= !empty($address) ? $address : '' ?></td>
+                    <td><?= !empty($university_name) ? ucwords($university_name) : '' ?></td>
+                    <td><?= !empty($country) ? ucwords($country) : '' ?></td>
+                </tr>
+
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
+
+                <tr class="bordered-row">
+                    <td colspan="2" style="border-left: 3px solid black;">
+                        <span class="text-blue">Payment Description</span>
+                        <br>
+                        Payment Received
+                    </td>
+                    <td style="padding: 10px;" style="text-align:right; border-right: 3px solid black;">
+                        <span class="text-blue">Total Payment &nbsp; &nbsp;</span><br>
+                        <?= !empty($registration_amount) ? formatCurrency($registration_amount) : '' ?>
+                        &nbsp; &nbsp;
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3"></td>
+                </tr>
+                <tr class="bordered-row">
+                    <td colspan="2" style="border-left: 3px solid black;">
+                        <span class="text-blue">Balance Details</span><br>
+                        Total Service Charge<br>
+                        Total Service Charged Received till date<br>
+                        <span class="text-pink">Balance Due</span>
+                    </td>
+                    <td style="text-align: right; border-right: 3px solid black;">
+                        <span class="text-blue">Amount &nbsp; &nbsp;</span><br>
+                        <?= !empty($total_amount) ? formatCurrency($total_amount) : '' ?> &nbsp; &nbsp;<br>
+                        <?= !empty($registration_amount) ? formatCurrency($registration_amount) : '' ?> &nbsp; &nbsp;<br>
+                        <span class="text-pink"><?= !empty($pending_amount) ? $currency_symbol . number_format($difference, 2, '.', ',') : '' ?> &nbsp; &nbsp;</span>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="3" style="text-align: center; font-size:xx-small;">
+                        <br>
+                        <br>
+                        *This is a computer generated Receipt and doesn't require signature or any company seal. If you have any questions about this invoice, please contact on<br>
+                        admission@educationvibes.in or Call 8956992592*<br>
+                        **18% GST Will be Applicable on the Total Service Charge at the time of Total Payment Completion**
+                    </td>
+                </tr>
+
             </tbody>
         </table>
+    </div>
+</body>
 
-        <table>
-            <tr>
-                <td>Receipt</td>
-                <td>Invoice No</td>
-            </tr>
-            <tr>
-                <td>Date of Payment</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>22/08/2024</td>
-                <td></td>
-            </tr>
-        </table>
-        <br>
-        <br>
-        <table>
-            <tr>
-                <td>Student Name</td>
-                <td>Payment Received From</td>
-                <td>Acadmic year</td>
-            </tr>
-            <tr>
-                <td>Alisha Ashfaque Shah Rajguru</td>
-                <td>Alisha Ashfaque Shah Rajguru</td>
-                <td>2024 - 2025</td>
-            </tr>
-        </table>
-        <br>
-        <br>
-        <table>
-            <tr>
-                <td>Residence Address</td>
-                <td>University Name</td>
-                <td>Country</td>
-            </tr>
-            <tr>
-                <td>Alisha Ashfaque Shah Rajguru</td>
-                <td>Alisha Ashfaque Shah Rajguru</td>
-                <td>Uzbekistan</td>
-            </tr>
-        </table>
-
-
-
-       
-
-        <!-- Balance Details Table -->
-        <h3>Balance Details</h3>
-        <table class="balance-table">
-            <tr>
-                <th>Total Service Charge</th>
-                <th>Amount</th>
-            </tr>
-            <tr>
-                <td>Total Service Charge received till date</td>
-                <td>₹90,000.00</td>
-                </
+</html>
