@@ -2083,7 +2083,7 @@ class Clients_model extends App_Model
         if (!empty($attachments)) {
             foreach (["quotation", "registration_slip_invoice"] as $key) {
                 if (!empty($attachments[$key])) {
-                    $file_path = base_url() . $attachments[$key];
+                    $file_path = FCPATH. $attachments[$key];
                     $file_extension = pathinfo($attachments[$key], PATHINFO_EXTENSION); // Extract file extension
                     $formatted_name = ucwords(str_replace("_", " ", $key)); // Capitalize first letter of each word
 

@@ -335,8 +335,7 @@ class Clients extends AdminController
                 $data["accommodation_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'accommodation')->result_array();
                 $data["flight_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'flight')->result_array();
             }
-
-
+            $data["client_infomation"] = $this->clients_model->get($id);
 
 
             // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
@@ -1604,30 +1603,6 @@ class Clients extends AdminController
                 $client = $this->clients_model->getBasicDetails($client_id);
 
                 $generate_registration_slip =  $this->registration_slip_preview($client_id);
-
-                if ($generate_registration_slip["status"] == "success") {
-                    if (!empty($client->email)) {
-                        $email =  send_mail_template('Applicant_new_registration', $client->email, $client_id, get_staff_user_id());
-                    }
-
-                    $template_id = 1;
-                    if (!empty($template_id) && $template_id == 1) {
-                        $attachments = $this->clients_model->registration_attachments($client_id, 1);
-                        if (empty($attachments["url"])) {
-                            http_response_code(400); // Bad Request
-                            echo json_encode([
-                                'success' => false,
-                                'message' => "Registration slip is not generated."
-                            ]);
-                            return;
-                        }
-                    }
-
-                    // Attempt to send WhatsApp message
-                    $whatsapp_sent = whatsapp_message_send($client_id, $template_id, $attachments);
-                } else {
-                    $data['resp_desc'] =  $data['resp_desc'] . "." . $generate_registration_slip["message"];
-                }
             } catch (Exception $e) {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
@@ -3308,8 +3283,9 @@ class Clients extends AdminController
             $client = $this->clients_model->get($client_id);
             $client_basic = $this->clients_model->getBasicDetails($client_id);
             $get_clients_fees = get_clients_fees_details(2, $client_id);
+
             $admission_prefrences = $this->clients_model->getAdmissionPreferences($client_id);
-            $fees_amount = !empty($get_clients_fees[0]["total_amount"]) ? array_column($get_clients_fees, null, 'id') : [];
+            $fees_amount = !empty($get_clients_fees) ? array_column($get_clients_fees, null, 'id') : [];
             $registration_amount = $fees_amount[REGISTRATION_AMOUNT_ID]["total_amount"];
             $total_amount = $fees_amount[TOTAL_AMOUNT_ID]["total_amount"];
             $pending_amount = $fees_amount[REGISTRATION_AMOUNT_ID]["amount"] - $fees_amount[TOTAL_AMOUNT_ID]["amount"];
@@ -3356,6 +3332,7 @@ class Clients extends AdminController
             $html = $this->load->view('admin/pdf/registration', $data, true);
             $pdf->writeHTML($html, true, false, true, false, '');
 
+
             // Define File Path
             $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/";
 
@@ -3387,7 +3364,7 @@ class Clients extends AdminController
 
             $update_client_data = [];
 
-            $update_client_data["registration_slip_invoice"] = $file_url;
+            $update_client_data["registration_slip_invoice"] =  APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/" . $file_name;
             $this->db->where("userid", $client_id);
             $this->db->update(db_prefix() . 'clients', $update_client_data);
             return ["status" => "success", "pdf_url" => $file_url];
@@ -4504,5 +4481,106 @@ class Clients extends AdminController
                 'message' => 'An unexpected error occurred. Please try again later.'
             ]);
         }
+    }
+
+    public function generate_registration_slip()
+    {
+        $client_id = $_POST["client_id"] ?? '';
+        $slip_generate = $_POST["slip_generate"] ?? '0';
+        $email_send = $_POST["email_send"] ?? '0';
+        $whatsapp_send = $_POST["whatsapp_send"] ?? '0';
+
+        if (empty($client_id)) {
+            http_response_code(400);
+            echo json_encode([
+                "resp_code" => "RCS",
+                "resp_desc" => "Client ID is required."
+            ]);
+            return;
+        }
+
+        $client = $this->clients_model->getBasicDetails($client_id);
+        if (!$client) {
+            http_response_code(404);
+            echo json_encode([
+                "resp_code" => "RCS",
+                "resp_desc" => "Client not found"
+            ]);
+            return;
+        }
+
+        if ($slip_generate == 1) {
+            $generate_registration_slip = $this->registration_slip_preview($client_id);
+
+            if ($generate_registration_slip["status"] !== "success") {
+                http_response_code(500);
+                echo json_encode([
+                    "resp_code" => "ERR",
+                    "resp_desc" => "Failed to generate registration slip. " . $generate_registration_slip["message"] ?? ''
+                ]);
+                return;
+            }
+
+            $response = [
+                "resp_code" => "RCS",
+                "resp_desc" => "Registration Slip generate successfully.",
+            ];
+            $response["slip_generate"] = 1;
+            $response["slip_data"]["url"] = $generate_registration_slip["pdf_url"];
+
+            echo json_encode($response);
+            return;
+        }
+
+
+        $response = [
+            "resp_code" => "RCS",
+            "resp_desc" => "Registration slip generated successfully.",
+        ];
+
+        // Send email if required
+        if (!empty($client->email) && $email_send == 1) {
+            $email_status = send_mail_template('Applicant_new_registration', $client->email, $client_id, get_staff_user_id());
+            if (!$email_status) {
+                $response = [
+                    "resp_code" => "ERR",
+                    "resp_desc" => "Failed to send email.",
+                ];
+            } else {
+                $response = [
+                    "resp_code" => "RCS",
+                    "resp_desc" => "Registration Email sent successfully.",
+                ];
+            }
+            echo json_encode($response);
+            return;
+        }
+
+        // Send WhatsApp message if required
+        if ($whatsapp_send == 1) {
+            $template_id = 1;
+            if (!empty($template_id) && $template_id == 1) {
+                $attachments = $this->clients_model->registration_attachments($client_id, 1);
+                if (empty($attachments["url"])) {
+                    http_response_code(400);
+
+                    $response = [
+                        "resp_code" => "ERR",
+                        "resp_desc" => "Registration slip is not generated.",
+                    ];
+                    echo json_encode($response);
+                    return;
+                }
+                $whatsapp_sent = whatsapp_message_send($client_id, $template_id, $attachments);
+
+                $response = [
+                    "resp_code" => "RCS",
+                    "resp_desc" => "WhatsApp message sent successfully.",
+                ];
+            }
+        }
+
+
+        echo json_encode($response);
     }
 }

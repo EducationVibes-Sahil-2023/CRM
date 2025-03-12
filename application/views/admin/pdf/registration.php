@@ -150,7 +150,7 @@
                         <br>
                         Payment Received
                     </td>
-                    <td style="padding: 10px;" style="text-align:right; border-right: 3px solid black;">
+                    <td style="padding: 10px;" style="text-align:right; border-right: 3px solid black; font-family:dejavusans;" >
                         <span class="text-blue">Total Payment &nbsp; &nbsp;</span><br>
                         <?= !empty($registration_amount) ? formatCurrency($registration_amount) : '' ?>
                         &nbsp; &nbsp;
@@ -167,7 +167,7 @@
                         Total Service Charged Received till date<br>
                         <span class="text-pink">Balance Due</span>
                     </td>
-                    <td style="text-align: right; border-right: 3px solid black;">
+                    <td style="text-align: right; border-right: 3px solid black; font-family:dejavusans;">
                         <span class="text-blue">Amount &nbsp; &nbsp;</span><br>
                         <?= !empty($total_amount) ? formatCurrency($total_amount) : '' ?> &nbsp; &nbsp;<br>
                         <?= !empty($registration_amount) ? formatCurrency($registration_amount) : '' ?> &nbsp; &nbsp;<br>

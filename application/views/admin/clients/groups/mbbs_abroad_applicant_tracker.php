@@ -674,6 +674,21 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <?php } ?>
                     </h2>
                     <?php if ($track["show_div_name"] == "document_div") { ?>
+
+                        <div class="text-right">
+
+                            <div class="registration-slip-invoice">
+                                <?php if (!empty($client_infomation->registration_slip_invoice)) { ?>
+                                    <label>Registration Slip</label>
+                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() . $client_infomation->registration_slip_invoice ?>');"></i>&nbsp;
+                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() . $client_infomation->registration_slip_invoice ?>', '_blank');"></i>
+                                <?php } ?>
+                            </div>
+
+                            <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,1)">Generate Registration Slip </button>
+                            <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp"></i> </button>
+                            <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope"></i> </button>
+                        </div>
                         <div id="upload_documents" class="table-responsive">
                             <table class="table table-bordered table-striped">
                                 <thead class="thead-dark ">
@@ -962,8 +977,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             </h4>
                                             <?php if (!empty($entrance_exams)): ?>
                                                 <div class="text-right">
-                                                    <button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
-                                                    <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope"></i> </button>
+                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
+                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope"></i> </button>
                                                 </div>
                                             <?php endif; ?>
 
@@ -1149,8 +1164,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                             </h4>
                                             <div class="text-right">
-                                                <button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
-                                                <button type="button" class="btn btn-primary btn-xs" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope"></i></button>
+                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
+                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope"></i></button>
                                             </div>
                                             <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
@@ -1621,7 +1636,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
         $.each(data, function(university, exams) {
             const $universityDiv = $("<div>").addClass("entrance_exam_university_div shadow");
-            let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(${client_id}, 3,'','${university}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id}, 2,'','${university}')"><i class="fa fa-envelope"></i></button> </div>`;
+            let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 3,'','${university}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 2,'','${university}')"><i class="fa fa-envelope"></i></button> </div>`;
             const $title = $("<h4>").addClass("text-left").text(university);
             $universityDiv.append($title);
             $universityDiv.append(email_button);
@@ -1799,7 +1814,6 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     function createInvitationLetter(legalization) {
         let container = $(".invitation_div");
         container.empty(); // Clear previous content
-
         if (legalization.length > 0) {
             legalization.forEach(leg => {
                 let mand = leg.primary_university == 1 ? '<small class="text-danger">*</small>' : "";
@@ -1813,7 +1827,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 ` :
                     "";
                 let file_url_university_payment = leg.invitation_letter ? leg.invitation_letter : "";
-                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs" onclick="whatsapp_message_send(${client_id}, 4,'','${university}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope"></i></button> </div>`;
+                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope"></i></button> </div>`;
                 let card = `
                 <div class="invitation-item card shadow-sm p-3 mb-3">
                     <h4 class="university-name">${leg.university_name}</h4>
@@ -2469,6 +2483,55 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             return {
                 success: false,
                 message: "An error occurred while sending the email."
+            };
+        } finally {
+            hide_loader();
+        }
+    }
+
+
+    async function registration_slip_generate(client_id, slip = 0, whatsapp = 0, email = 0) {
+        show_loader();
+
+        let upload_data = new FormData();
+        upload_data.append("client_id", client_id);
+        upload_data.append("slip_generate", slip);
+        upload_data.append("whatsapp_send", whatsapp);
+        upload_data.append("email_send", email);
+        upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+
+        try {
+            let response = await $.ajax({
+                url: "<?= base_url('admin/clients/generate_registration_slip') ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false,
+            });
+
+            let uploadResponse = typeof response === "string" ? JSON.parse(response) : response;
+
+            if (uploadResponse.resp_code == "RCS") {
+                let slip_data = uploadResponse.slip_data;
+                if (uploadResponse.generate == 1 && slip_data && slip_data.url) {
+                    let html = `<label>Registration Slip</label>
+                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() ?>${slip_data.url}');"></i>&nbsp;
+                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() ?>${slip_data.url}', '_blank');"></i>`;
+                    // Assuming you need to display the generated HTML somewhere
+                    $(".registration-slip-invoice").html(html);
+                }
+                alert_float("success", uploadResponse.resp_desc || "Email sent successfully!");
+            } else {
+                alert_float("danger", uploadResponse.resp_desc || "Failed to send email.");
+            }
+
+            return uploadResponse;
+        } catch (error) {
+            console.error("Email send error:", error);
+            alert_float("danger", "An error occurred while sending the email.");
+            return {
+                success: false,
+                message: "An error occurred while sending the email.",
             };
         } finally {
             hide_loader();
