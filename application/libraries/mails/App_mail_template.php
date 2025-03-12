@@ -261,10 +261,8 @@ class App_mail_template
 
                     $temp_path = sys_get_temp_dir() . '/' . $filename; // Temporary file path
 
-                    print_r(file_get_contents($attachment["attachment"]));
                     // Download and save the file locally
                     if (file_put_contents($temp_path, file_get_contents($attachment["attachment"]))) {
-                        echo "attach";
                         $this->ci->email->attach($temp_path, 'attachment', $filename, mime_content_type($temp_path));
                     }
                 } elseif (is_array($attachment)) {

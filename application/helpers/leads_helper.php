@@ -8263,14 +8263,34 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
         log_message('error', "Staff data not found for user ID " . get_staff_user_id());
         return json_encode(["error" => "Staff details not found."]);
     }
+   
 
     // Replace variables in template
     $applicant_name = trim($client->first_name . " " . $client->last_name);
     $variables = str_replace(
-        ["{applicant_name}", "{counsellor_phonennumber}", "{primary_country}", "{primary_university}", "{registration_amount}", "{acadmic_year}", "{entrance_exam_details}", "{counsellor_name}"],
-        [$applicant_name, $staff_data->phonenumber],
-        $whatsapp->variables_name
-    );
+    [
+        "{applicant_name}", 
+        "{counsellor_phonennumber}", 
+        "{primary_country}", 
+        "{primary_university}", 
+        "{registration_amount}", 
+        "{acadmic_year}", 
+        "{entrance_exam_details}", 
+        "{counsellor_name}"
+    ],
+    [
+        $applicant_name ?? "", 
+        !empty($staff_data->phonenumber)?$staff_data->phonenumber:"7217219100", 
+        $primary_country ?? "", 
+        $primary_university ?? "", 
+        $registration_amount ?? "", 
+        $academic_year ?? "", 
+        $entrance_exam_details ?? "", 
+        $counsellor_name ?? ""
+    ],
+    $whatsapp->variables_name ?? ""
+);
+
 
     // Prepare parameters
     $parameters = [];
@@ -8325,7 +8345,7 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
                     "type" => "document",
                     "media" => [
                         "mediaName" => $documentName,
-                        "mediaUri" => $documentURL,
+                        "mediaUri" => base_url().$documentURL,
                         "mimeType" => $mimeType
                     ]
                 ]
@@ -8340,6 +8360,7 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
             "parameters" => $parameters
         ];
     }
+
 
     // Initialize cURL
     $curl = curl_init();

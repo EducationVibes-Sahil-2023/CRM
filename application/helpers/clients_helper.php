@@ -1521,7 +1521,7 @@ function get_board_dropdown()
 function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
 {
     $CI = &get_instance();
-    $CI->db->select("TRIM(c.symbol) AS symbol, TRIM(d.amount) AS amount, CONCAT(TRIM(c.symbol), TRIM(d.amount)) AS total_amount")
+    $CI->db->select("TRIM(c.symbol) AS symbol, TRIM(d.amount) AS amount, CONCAT(TRIM(c.symbol), TRIM(d.amount)) AS total_amount,f.id")
         ->from(db_prefix() . 'applicant_fees f')
         ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id")
         ->join(db_prefix() . 'currencies c', "c.id = d.currency_id")
