@@ -1121,7 +1121,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                                 <div class="col-md-3">
                                                     <label>Payment Amount <?= $mand ?></label>
-                                                    <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
+                                                    <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
                                                 </div>
                                                 <div class="col-md-3">
                                                     <label>University Payment Receipt </label>
@@ -1790,7 +1790,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         </div>
                         <div class="col-md-3">
                              <label>Payment Amount ${mand}</label>
-                             <input type="number" value="${leg.payment_amount}" class="form-control" name="payment_amount_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" ${mand_re}>
+                             <input type="number" value="${leg.payment_amount}" class="form-control" name="payment_amount_${leg.id}" ${mand_re}>
                         </div>
                         <div class="col-md-3">
                             <label>University Payment Receipt </label>
