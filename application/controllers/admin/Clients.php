@@ -3367,7 +3367,7 @@ class Clients extends AdminController
             $update_client_data["registration_slip_invoice"] =  APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/" . $file_name;
             $this->db->where("userid", $client_id);
             $this->db->update(db_prefix() . 'clients', $update_client_data);
-            return ["status" => "success", "pdf_url" => $file_url];
+            return ["status" => "success", "pdf_url" => APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/" . $file_name];
         } catch (Exception $e) {
             return ["status" => "error", "message" => $e->getMessage()];
         }
