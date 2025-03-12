@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
 <?php
+
 $required = "";
 $batch_id = "";
 $batch_name = "";
@@ -26,6 +27,7 @@ if (!empty($batch_data["exam_id"])) {
 if (!empty($batch_data["client_ids"])) {
     $selected_client_ids = explode(",", $batch_data["client_ids"]);
 }
+array_unshift($exams, array("id" => "", "name" => "Select Exam"))
 ?>
 <style>
     #client_list {
@@ -75,10 +77,8 @@ if (!empty($batch_data["client_ids"])) {
                         </div>
 
                         <div class="form-group col-md-3">
-                            <?php
-                            $selected_exam_list = [];
-                            ?>
-                            <?= render_select('exam_name', [], array('id', 'name'), 'Exam Name ', $selected_exam_list, array('data-width' => '100%', 'data-none-selected-text' => 'Select Exam Name', 'data-actions-box' => true), array(), 'no-mbot', '', false, "exam_name"); ?>
+
+                            <?= render_select('exam_name', $exams, array('id', 'name'), 'Exam Name ', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select Exam Name', 'data-actions-box' => true), array(), 'no-mbot', '', false, "exam_name"); ?>
                         </div>
 
                         <div class="form-group col-md-3">
@@ -110,7 +110,7 @@ if (!empty($batch_data["client_ids"])) {
     var exam_array = <?= !empty($exams) ? json_encode($exams, true) : [] ?>;
     var selected_university = "<?= $selected_university ?>";
     var selected_exam = "<?= $selected_exam ?>";
-    var selected_client_ids = <?= json_encode($selected_client_ids,true) ?>;
+    var selected_client_ids = <?= json_encode($selected_client_ids, true) ?>;
     if (selected_university !== "") {
         $("select[name='university_name']").val(selected_university).trigger("change");
     }
@@ -136,8 +136,8 @@ if (!empty($batch_data["client_ids"])) {
 
     function select_university_exam(obj) {
 
-        $("#exam_name").empty().selectpicker('refresh'); // Clear the select options properly
-        $("#exam_name").append(`<option value="">Select Exam Name</option>`);
+        // $("#exam_name").empty().selectpicker('refresh'); // Clear the select options properly
+        // $("#exam_name").append(`<option value="">Select Exam Name</option>`);
         set_client_list([]);
         let selectedOption = $(obj).find(":selected");
         let selectedValue = selectedOption.val(); // Get selected value
@@ -148,22 +148,22 @@ if (!empty($batch_data["client_ids"])) {
             get_client_list(selectedValue);
         }
 
-        if (examMandatory) {
-    let mandatoryArray = Array.isArray(examMandatory) 
-        ? examMandatory.map(item => String(item).trim())  // Ensure array elements are strings
-        : String(examMandatory).split(',').map(item => item.trim()); // Convert string to array
+        //         if (examMandatory) {
+        //     let mandatoryArray = Array.isArray(examMandatory) 
+        //         ? examMandatory.map(item => String(item).trim())  // Ensure array elements are strings
+        //         : String(examMandatory).split(',').map(item => item.trim()); // Convert string to array
 
-    if (Array.isArray(exam_array)) { // Ensure `exam_array` is defined
-        exam_array.forEach(function(exam) {
-            if (mandatoryArray.includes(String(exam.id))) { // Compare as a string
-                $("#exam_name").append(`<option value="${exam.id}">${exam.name}</option>`); // Add options dynamically
-            }
-        });
-    }
-}
+        //     if (Array.isArray(exam_array)) { // Ensure `exam_array` is defined
+        //         exam_array.forEach(function(exam) {
+        //             if (mandatoryArray.includes(String(exam.id))) { // Compare as a string
+        //                 $("#exam_name").append(`<option value="${exam.id}">${exam.name}</option>`); // Add options dynamically
+        //             }
+        //         });
+        //     }
+        // }
 
 
-        $("#exam_name").selectpicker('refresh');
+        //         $("#exam_name").selectpicker('refresh');
     }
 
     function set_client_list(client_list) {
@@ -253,7 +253,7 @@ if (!empty($batch_data["client_ids"])) {
 
 
         let formData = new FormData();
-        formData.append("csrf_token_name",csrfData.hash);
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("batch_id", batch_id);
         formData.append("university_name", university_name);
         formData.append("exam_name", exam_name);
