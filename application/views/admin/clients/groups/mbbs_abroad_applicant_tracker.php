@@ -2513,7 +2513,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
             if (uploadResponse.resp_code == "RCS") {
                 let slip_data = uploadResponse.slip_data;
-                if (uploadResponse.generate == 1 && slip_data && slip_data.url) {
+                if (uploadResponse.slip_generate == 1 && slip_data && slip_data.url) {
                     let html = `<label>Registration Slip</label>
                             <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() ?>${slip_data.url}');"></i>&nbsp;
                             <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() ?>${slip_data.url}', '_blank');"></i>`;
