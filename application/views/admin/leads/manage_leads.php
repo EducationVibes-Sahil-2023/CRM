@@ -464,7 +464,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                            </div>
 
                            <div class="clearfix"></div>
-                           <div class="col-md-12">
+                           <div class="col-md-12 hide">
                               <div>
                                  <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Visitor Request'); ?>" onclick="show_lead_request_visitor()" data-placement="bottom">Lead Visitor Request</button>
                               </div>
