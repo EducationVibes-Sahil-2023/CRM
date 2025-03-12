@@ -4,146 +4,99 @@ defined('BASEPATH') or exit('No direct script access allowed');
 $lead_data = array_column(get_type(), null, 'id');
 $lead_source = array_column(get_source(), null, 'id');
 $staff_data = array_column(get_all_staff(), null, 'staffid');
-
+$get_staff_user_id = get_staff_user_id();
 $aColumns = [
-    db_prefix() . 'lead_transfer_request.id as lead_transfer_id',
-    db_prefix() . 'lead_transfer_request.created_at as created_date',
-    db_prefix() . 'lead_transfer_request.approved_date as approved_date',
-    db_prefix() . 'lead_transfer_request.reason as reason',
-    db_prefix() . 'lead_transfer_request.approval_text as approval_text',
-    db_prefix() . 'lead_transfer_request.assign as assign',
-    db_prefix() . 'lead_transfer_request.lead_type as lead_type',
-    db_prefix() . 'lead_transfer_request.lead_source as lead_source',
-    db_prefix() . 'lead_transfer_request.leadid as leadid',
-    db_prefix() . 'lead_transfer_request.status as status',
-    db_prefix() . 'lead_transfer_request.created_by as created_by',
-    db_prefix() . 'lead_transfer_request.approved_by as approved_by',
-    db_prefix() . 'lead_transfer_request.assign as assign',
+    db_prefix() . 'visitor_status.name as status',
+    db_prefix() . 'visitor_request.date_of_visit as date_of_visit',
+    db_prefix() . 'leads.name as student_name',
     db_prefix() . 'leads.phonenumber as phonenumber',
-    db_prefix() . 'leads.type as old_lead_type',
-    db_prefix() . 'leads.source as old_lead_source',
-    db_prefix() . 'lead_transfer_request.automatic as automatic',
-    "CASE 
-        WHEN " . db_prefix() . "lead_transfer_request.status = 1 THEN 'Approved'
-        WHEN " . db_prefix() . "lead_transfer_request.status = 2 THEN 'Rejected'
-        WHEN " . db_prefix() . "lead_transfer_request.status = 3 THEN 'Pending'
-        ELSE 'Not defined'
-    END AS status_name",
-    "CASE 
-        WHEN " . db_prefix() . "lead_transfer_request.status = 1 THEN 'success'
-        WHEN " . db_prefix() . "lead_transfer_request.status = 2 THEN 'danger'
-        WHEN " . db_prefix() . "lead_transfer_request.status = 3 THEN 'warning'
-        ELSE ''
-    END AS status_color"
+    db_prefix() . 'office_location.name as location',
+    db_prefix() . 'visitor_type.name as visitor_type',
+    db_prefix() . 'visitor_request.assigned as assigned',
+    db_prefix() . 'leads.type as lead_type',
+    db_prefix() . 'visitor_request.created_at as created_at',
+    db_prefix() . 'visitor_request.created_by as created_by',
+    db_prefix() . 'visitor_request.updated_at as updated_at',
+    db_prefix() . 'visitor_request.updated_by as updated_by',
+    db_prefix() . 'visitor_request.id as id',
+    db_prefix() . 'visitor_request.lead_id as lead_id',
+    db_prefix() . 'visitor_request.status as status_id',
+    db_prefix() . 'visitor_status.color as color',
+
+
 ];
 
 
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'lead_transfer_request';
+$sTable       = db_prefix() . 'visitor_request';
 
 $where  = [];
 $filter = [];
 
 $join          = [];
-array_push($join, 'JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'lead_transfer_request.leadid');
+array_push($join, 'JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'visitor_request.lead_id');
+array_push($join, 'JOIN ' . db_prefix() . 'visitor_status ON ' . db_prefix() . 'visitor_status.id = ' . db_prefix() . 'visitor_request.status');
+array_push($join, 'JOIN ' . db_prefix() . 'office_location ON ' . db_prefix() . 'office_location.id = ' . db_prefix() . 'visitor_request.location');
+array_push($join, 'JOIN ' . db_prefix() . 'visitor_type ON ' . db_prefix() . 'visitor_type.id = ' . db_prefix() . 'visitor_request.visitor_type');
 
-if (!empty($params["rel_id"]) && $params["rel_id"] != "") {
-    array_push($where, " AND " . db_prefix() . "lead_transfer_request.leadid = " . $params["rel_id"]);
+
+
+$role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+if ($role == 3) {
+    $sid = $get_staff_user_id;
+    $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+    $this->ci->db->close();
+    $this->ci->db->initialize();
+    $idsarr = array_column($teamids, 'staffid');
+    $sids = implode(",", $idsarr);
+    $where[] = !empty($sids) ? "AND " . $sTable . ".assigned IN ({$sid}, {$sids})" : "AND " . $sTable . ".assigned = {$sid}";
 }
 
-
-if (!empty($params["action"]) && $params["action"] == 1) {
-    array_push($where, " AND " . db_prefix() . "lead_transfer_request.status = 3 ");
+if (!empty($this->ci->input->post('lead_type'))) {
+    $where[] = "AND " . db_prefix() . "leads.type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";
 }
 
-if (is_admin()) {
-} else {
-
-    array_push($where, " AND " . db_prefix() . "lead_transfer_request.created_by = " . get_staff_user_id());
+if (!empty($this->ci->input->post('attendee'))) {
+    $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('attendee'))) . ")";
 }
 
+if (!empty($this->ci->input->post('type'))) {
+    $where[] = "AND " . $sTable . ".visitor_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('type'))) . ")";
+}
+
+if (!empty($this->ci->input->post('location'))) {
+    $where[] = "AND " . $sTable . ".location IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('location'))) . ")";
+}
+
+if (!empty($this->ci->input->post('status'))) {
+    $where[] = "AND " . $sTable . ".status IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('status'))) . ")";
+}
+
+if (!empty($this->ci->input->post('to_date'))) {
+    $from_date = $this->ci->input->post('from_date');
+    $to_date   = $this->ci->input->post('to_date');
+    $where[]   = "AND DATE(" . $sTable . ".date_of_visit) BETWEEN '{$this->ci->db->escape_str($from_date)}' AND '{$this->ci->db->escape_str($to_date)}'";
+}
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, []);
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
-if (!empty($params["type"]) && $params["type"] == "counsellor") {
-    foreach ($rResult as $aRow) {
-        $row = [];
-        $reason = !empty($aRow['reason']) ? addslashes($aRow['reason']) : '';
-        $lead_transfer_id = !empty($aRow['lead_transfer_id']) ? $aRow['lead_transfer_id'] : '';
-        $assign = !empty($aRow['assign']) ? $aRow['assign'] : '';
-        $lead_type = !empty($aRow['lead_type']) ? $aRow['lead_type'] : '';
-        $leadid = !empty($aRow['leadid']) ? $aRow['leadid'] : '';
-        $edit_btn = "<i class='fa fa-edit btn btn-default' onclick=' edit_lead_request(" . $leadid . ")'></i>";
-        $row[] = $lead_data[$aRow["lead_type"]]["name"];
-        $row[] = $lead_source[$aRow["lead_source"]]["name"];
-        $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : "";
-        $row[] = !empty($aRow['phonenumber']) ? ($aRow['phonenumber']) : '';
-        $row[] = !empty($aRow['reason']) ? ($aRow['reason']) : '';
-        $row[] = !empty($aRow['status_name']) ? '<span class="text-' . $aRow['status_color'] . '">' . $aRow['status_name'] . '</span>' : 'Not defined';
-        $row[] = !empty($staff_data[$aRow["created_by"]]["full_name"]) ? $staff_data[$aRow["created_by"]]["full_name"] : '';
-        $row[] = !empty($aRow['created_date']) ? _d($aRow['created_date']) : '';
-        if (is_admin() || has_permission('leads', '', 'approval')) {
-            if ($aRow['status'] == '3') {
-
-                $edit_btn = "<i class='fa fa-edit btn btn-default' onclick='edit_lead_request(" . $aRow['leadid'] . ")'></i>";
-
-                $row[] = $edit_btn . '&nbsp;<button class="btn btn-success" onclick="update_lead_transfer(' . $aRow['leadid'] . ', ' . $aRow['lead_type'] . ', ' . $aRow['lead_transfer_id'] . ', ' . $aRow['assign'] . ', 1)">Approved</button>';
-            } else {
-                $row[] = "";
-            }
-        } else {
-            if ($aRow['status'] == '3' && $aRow['automatic'] == 0) {
-                $row[] = "";
-            } else {
-                $row[] = "";
-            }
-        }
-
-
-        $row['DT_RowClass'] = 'has-row-options';
-
-        $output['aaData'][] = $row;
+foreach ($rResult as $aRow) {
+    $row = [];
+    $edit_btn = '';
+    if (in_array($aRow["status_id"], [1, 3])) {
+        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`)'>" . _l('view') . "</a></div>";
     }
-} else if (!empty($params["type"]) && $params["type"] == "admin") {
-
-    foreach ($rResult as $aRow) {
-        $row = [];
-        $reason = !empty($aRow['reason']) ? addslashes($aRow['reason']) : '';
-        $lead_transfer_id = !empty($aRow['lead_transfer_id']) ? $aRow['lead_transfer_id'] : '';
-        $assign = !empty($aRow['assign']) ? $aRow['assign'] : '';
-        $lead_type = !empty($aRow['lead_type']) ? $aRow['lead_type'] : '';
-        $leadid = !empty($aRow['leadid']) ? $aRow['leadid'] : '';
-        $edit_btn = "<i class='fa fa-edit btn btn-default' onclick=' edit_lead_request(" . $leadid . ")'></i>";
-        $row[] = !empty($staff_data[$aRow["created_by"]]["full_name"]) ? $staff_data[$aRow["created_by"]]["full_name"] : '';
-        $row[] = !empty($lead_data[$aRow["old_lead_type"]]["name"]) ? $lead_data[$aRow["old_lead_type"]]["name"] : '';
-        $row[] = !empty($lead_source[$aRow["old_lead_source"]]["name"]) ? $lead_source[$aRow["old_lead_source"]]["name"] : '';
-        $row[] = !empty($staff_data[$aRow["assign"]]["full_name"]) ? $staff_data[$aRow["assign"]]["full_name"] : "";
-        $row[] = !empty($aRow['phonenumber']) ? ($aRow['phonenumber']) : '';
-        $row[] = $lead_data[$aRow["lead_type"]]["name"];
-        $row[] = $lead_source[$aRow["lead_source"]]["name"];
-        $row[] = !empty($aRow['reason']) ? ($aRow['reason']) : '';
-        $row[] = !empty($aRow['status_name']) ? '<span class="text-' . $aRow['status_color'] . '">' . $aRow['status_name'] . '</span>' : 'Not defined';
-        $row[] = !empty($aRow['created_date']) ? _d($aRow['created_date']) : '';
-        if (is_admin() || has_permission('leads', '', 'approval')) {
-            if ($aRow['status'] == '3') {
-
-                $edit_btn = "<i class='fa fa-edit btn btn-default' onclick='init_lead(" . $aRow['leadid'] . ", true,`#show_transfer_lead_div`)'></i>";
-
-                $row[] = $edit_btn . '&nbsp;<button class="btn btn-success" onclick="update_lead_transfer(' . $aRow['leadid'] . ', ' . $aRow['lead_type'] . ', ' . $aRow['lead_transfer_id'] . ', ' . $aRow['assign'] . ', 1, ' . $aRow['lead_source'] . ')">Approved</button>';
-            } else {
-                $row[] = "";
-            }
-        } else {
-            if ($aRow['status'] == '3' && $aRow['automatic'] != 1) {
-                $row[] = $edit_btn;
-            } else {
-                $row[] = "";
-            }
-        }
-
-        $row['DT_RowClass'] = 'has-row-options';
-        $output['aaData'][] = $row;
-    }
+    $row[] = $aRow["status"];
+    $row[] = $aRow["date_of_visit"];
+    $row[] = $aRow["student_name"] . "<br>" . $edit_btn;
+    $row[] = $aRow["phonenumber"];
+    $row[] = $aRow["location"];
+    $row[] = $aRow["visitor_type"];
+    $row[] = !empty($staff_data[$aRow["assigned"]]["full_name"]) ? $staff_data[$aRow["assigned"]]["full_name"] : "";
+    $row[] = !empty($staff_data[$aRow["created_by"]]["full_name"]) ? $staff_data[$aRow["created_by"]]["full_name"] : "";
+    $row[] = !empty($lead_data[$aRow["lead_type"]]["name"]) ? $lead_data[$aRow["lead_type"]]["name"] : '';
+    $row['DT_RowClass'] = 'has-row-options ' . " " . !empty($aRow["color"]) ? $aRow["color"] : 'pending';
+    $output['aaData'][] = $row;
 }

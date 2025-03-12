@@ -4,6 +4,9 @@ $staff_members     = get_all_staff();
 $whatsapp_template = get_whatsapp_template();
 array_unshift($staff_members, array());
 array_unshift($type, array());
+array_unshift($visitor_type, array());
+array_unshift($location, array());
+
 $last_lead_request = last_lead_request($lead->id);
 
 
@@ -155,7 +158,7 @@ $last_lead_request = last_lead_request($lead->id);
                            </a>
                         </li>
                         <li role="presentation">
-                           <a href="#lead_visitor_lead_request" id="show_visitor_lead_div" aria-controls="lead_visitor_lead_request" role="tab" data-toggle="tab">
+                           <a href="#lead_visitor_lead_request" id="show_visitor_lead_div" onclick="set_validation_form()" aria-controls="lead_visitor_lead_request" role="tab" data-toggle="tab">
                               <?php echo _l('Lead Visitor Request'); ?>
                            </a>
                         </li>
@@ -598,37 +601,53 @@ $last_lead_request = last_lead_request($lead->id);
                </div>
 
                <div role="tabpanel" class="tab-pane" id="lead_visitor_lead_request">
-                  <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-visitor')); ?>
+
+                  <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-visitor', "onsubmit" => "return false;")); ?>
                   <input type="hidden" id="visitor_lead_id" name="visitor_lead_id" value="<?= !empty($visitor_request->id) ? $visitor_request->id : '' ?>">
                   <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
                   <div class='row'>
                      <div class="form-group col-md-3">
-                        <?php echo render_input('date_of_visit', 'Date of Visit', '', 'date', array('placeholder' => _l('Date of visitor')), array(), 'no-margin') ?>
+                        <?php
+                        echo render_input('date_of_visit', '<small class="req text-danger">* </small> Date of Visit', !empty($visitor_request->date_of_visit) ? $visitor_request->date_of_visit : '', 'datetime-local', array('placeholder' => _l('Date of visitor')), array(), 'no-margin') ?>
                      </div>
                      <div class="form-group col-md-3">
                         <?php
-                        echo render_select('transfer_lead_type', $type, array('id', 'name'), 'Lead Type <span class="text-danger">*</span>', [$visitor_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'transfer_lead_type');
-                        ?>
-                     </div>
-                     <div class="form-group col-md-3">
-                        <?php
-                        echo render_select('visitor_lead_type', $type, array('id', 'name'), 'Lead Type <span class="text-danger">*</span>', [$visitor_request->lead_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type')), array(), 'no-mbot', '', false,  'visitor_lead_type');
-                        ?>
-                     </div>
-                     <div class="form-group col-md-3">
-                        <?php
-                        $assigned_attrs = array();
-                        $selected = [];
-                        echo render_select('transfer_lead_assign', [], array('staffid', array('firstname', 'lastname')), 'Assigned <span class="text-danger">*</span>', [$visitor_request->assign], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                        echo render_select('visitor_location', $location, array('id', 'name'), '<small class="req text-danger">* </small> Location ', [$visitor_request->location], array('data-width' => '100%', 'data-none-selected-text' => _l('Location')), array(), 'no-mbot', '', false,  'visitor_location');
                         ?>
                      </div>
 
+
+
                      <div class="form-group col-md-3">
-                        <label>Reason <span class='text-danger'>*</span></label>
-                        <textarea id="reason" name="reason" class='form-control' placeholder="reason"><?= $visitor_request->reason ?></textarea>
+                        <?php
+                        echo render_select('visitor_type', $visitor_type, array('id', 'name'), '<small class="req text-danger">* </small> Visitor Type ', [$visitor_request->location], array('data-width' => '100%', 'data-none-selected-text' => _l('Visitor Type')), array(), 'no-mbot', '', false,  'visitor_type');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+
+                        echo render_select('visitor_lead_assign', $staff_members, array('staffid', array('firstname', 'lastname')), '<small class="req text-danger">* </small> Attendee ', [$visitor_request->assigned], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-4">
+                        <label><small class="req text-danger">* </small> Address </label>
+                        <textarea id="address" name="address" class='form-control' placeholder="address"><?= $visitor_request->address ?></textarea>
                      </div>
 
-                     <div class="form-group col-md-2">
+                     <div class="form-group col-md-5">
+                        <label><small class="req text-danger">* </small> Description </label>
+                        <textarea id="reason" name="reason" col="4" class='form-control' placeholder="description"><?= $visitor_request->description ?></textarea>
+                     </div>
+
+                     <?php if (!empty($visitor_request->id)) { ?>
+                        <div class="form-group col-md-3">
+                           <?php
+                           echo render_select('visitor_lead_status', $visitor_status, array('id', 'name'), '<small class="req text-danger">* </small> Status ', [$visitor_request->status], array('data-width' => '100%', 'data-none-selected-text' => _l('Status select')), array(), 'no-mbot', '', false, 'visitor_lead_status');
+                           ?>
+                        </div>
+                     <?php } ?>
+
+                     <div class="form-group col-md-12 text-right">
                         <label> &nbsp;</label> <?php
                                                 $button_text = !empty($visitor_request->id)
                                                    ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
@@ -906,4 +925,86 @@ $last_lead_request = last_lead_request($lead->id);
          // $(selector).val(message); // Decode and set the base64 encoded message
       }
    }
+
+   function validation_set(form_id) {
+      return new Promise((resolve, reject) => {
+         let form_status = true;
+         let additional_fields = {};
+
+         $("#" + form_id + " input:visible, #" + form_id + " select:visible, #" + form_id + " textarea:visible").each(function() {
+            const value = $(this).val()?.trim(); // Get trimmed value
+            const name = $(this).attr("name"); // Get name attribute
+            const isRequired = 1; // Assuming all fields are required
+
+            if (isRequired && name) {
+               additional_fields[name] = "required";
+               if (!value) {
+                  form_status = false;
+               }
+            }
+         });
+
+         if (!form_status) {
+            appValidateForm($("#" + form_id), additional_fields);
+            reject("Form validation failed."); // Reject the promise if validation fails
+         } else {
+            resolve("Form validation passed."); // Resolve if all fields are valid
+         }
+      });
+   }
+
+   var set_validation = false;
+
+   function set_validation_form() {
+      if (set_validation == false) {
+         console.log("start");
+         setTimeout(async () => {
+            await validation_set("lead-visitor");
+            set_validation = true;
+         }, 200);
+
+      }
+   }
+
+   function create_visitor_request() {
+      let formData = new FormData(document.getElementById('lead-visitor')); // Correct way to initialize FormData
+      // Append CSRF token and client ID
+      formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+
+      // AJAX request to upload documents
+      $.ajax({
+         url: "<?php echo base_url('admin/leads/visitor_request'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false, // Prevent jQuery from transforming FormData
+         contentType: false, // Ensure correct Content-Type is set for FormData
+         dataType: "JSON",
+         success: function(res) {
+            hide_loader();
+            if (res.success) {
+               alert_float("success", res.message);
+            } else {
+               const message = res.message || "An unknown error occurred.";
+               alert_float("danger", message);
+            }
+         },
+         error: function(xhr, status, error) {
+            console.error("Error: ", error);
+            hide_loader();
+            alert_float("danger", "An error occurred while processing the request.");
+         },
+      });
+   }
+
+
+   $("#lead-visitor").submit(async function(e) {
+      try {
+         let response = await validation_set("lead-visitor");
+         if (response) {
+            create_visitor_request();
+         }
+      } catch (error) {
+         console.log(error); // Log validation failure
+      }
+   });
 </script>

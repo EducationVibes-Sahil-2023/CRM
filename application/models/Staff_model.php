@@ -997,4 +997,10 @@ class Staff_model extends App_Model
         $this->db->where('status', 1);
         return $this->db->get(db_prefix() . 'visitor_type')->result_array();
     }
+
+    public function visitor_status()
+    {
+        $this->db->where('status', 1);
+        return $this->db->get(db_prefix() . 'visitor_status')->result_array();
+    }
 }

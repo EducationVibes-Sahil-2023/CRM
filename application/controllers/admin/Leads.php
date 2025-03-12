@@ -578,7 +578,10 @@ class Leads extends AdminController
             $data['activity_log']  = $this->leads_model->get_lead_activity_log($id);
             $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
             $data['lead_transfer_request']  = $this->leads_model->get_lead_transfer_request($id);
-
+            $data['visitor_request']  = $this->leads_model->get_lead_visitor_request($id);
+            $data['location'] = $this->staff_model->office_location();
+            $data['visitor_type'] = $this->staff_model->visitor_type();
+            $data['visitor_status'] = $this->staff_model->visitor_status();
 
             if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
 
@@ -3644,7 +3647,10 @@ class Leads extends AdminController
         $data['title']    = "Lead Visitor Request";
         $data['location'] = $this->staff_model->office_location();
         $data['visitor_type'] = $this->staff_model->visitor_type();
-
+        $data['visitor_status'] = $this->staff_model->visitor_status();
+        $data['type']  = $this->leads_model->get_type();
+        $data['staff'] = $this->staff_model->get('staffid,firstname,lastname', []);
+        $data['lead_type'] = $this->leads_model->get_type();
         // in case accesed the url leads/index/ directly with id - used in search
 
         $this->load->view('admin/leads/visitor', $data);
@@ -3657,5 +3663,113 @@ class Leads extends AdminController
             'type' => $type,
             'action' => $action
         ]);
+    }
+
+
+    public function lead_visitor_notification($lead_id, $status = '')
+    {
+        $check_lead_visitor_request = $this->leads_model->get_lead_visitor_request_exist($lead_id);
+        if ($status == 1) {
+            $created_by = $check_lead_visitor_request->created_by;
+            $message_des = 'lead_visitor_request_successfully_create';
+        } else if ($status == 2) {
+            $created_by = $check_lead_visitor_request->updated_by;
+            $message_des = 'lead_visitor_request_successfully_update';
+        } else {
+            return false;
+        }
+        if (!empty(get_staff_user_id()) && !(is_admin())) {
+            $notifiedUsers = [];
+            $notified = add_notification([
+                'description'     => $message_des,
+                'touserid'        => 1,
+                'fromcompany'     => 1,
+                'fromuserid'      => get_staff_user_id(),
+                'additional_data' => serialize([
+                    get_staff_user_name()
+                ]),
+                'link' => '#leadid=' . $lead_id,
+            ]);
+            if ($notified) {
+                array_push($notifiedUsers, 1);
+            }
+            pusher_trigger_notification($notifiedUsers);
+        }
+    }
+
+    public function visitor_request()
+    {
+        try {
+            $data_insert_update = [];
+
+            // Get input values
+            $lead_id = $this->input->post('lead_id');
+            $data_insert_update["lead_id"] = $lead_id;
+            $data_insert_update["assigned"] = $this->input->post('visitor_lead_assign');
+            $data_insert_update["description"] = $this->input->post('reason');
+            $data_insert_update["id"] = $this->input->post('visitor_lead_id');
+            $data_insert_update["date_of_visit"] = $this->input->post('date_of_visit');
+            $data_insert_update["location"] = $this->input->post('visitor_location');
+            $data_insert_update["address"] = $this->input->post('address');
+            $data_insert_update["visitor_type"] = $this->input->post('visitor_type');
+            if (!empty($this->input->post('visitor_lead_status'))) {
+                $data_insert_update["status"] = $this->input->post('visitor_lead_status');
+            }
+
+            // Validate lead_id
+            if (empty($lead_id)) {
+                throw new Exception('Lead ID is required.');
+            }
+
+            $check_lead_visitor_request = $this->leads_model->get_lead_visitor_request_exist($lead_id);
+
+            if (!$check_lead_visitor_request) {
+                // Insert new visitor request
+                $data_insert_update["status"] = 1;
+                $data_insert_update["created_by"] = get_staff_user_id();
+                $data_insert_update["created_at"] = date('Y-m-d H:i:s');
+
+                $insert_ = $this->db->insert(db_prefix() . 'visitor_request', $data_insert_update);
+                $this->lead_visitor_notification($lead_id, 1);
+
+                if ($insert_) {
+                    $message = "Lead visitor request submitted successfully.";
+                    $success = true;
+                } else {
+                    throw new Exception("Failed to submit lead visitor request.");
+                }
+            } else {
+                if (!empty($data_insert_update["id"])) {
+                    // Update existing visitor request
+                    $data_insert_update["updated_by"] = get_staff_user_id();
+                    $data_insert_update["updated_at"] = date('Y-m-d H:i:s');
+
+                    $update_transfer = $this->db->update(db_prefix() . 'visitor_request', $data_insert_update, ["id" => $data_insert_update["id"]]);
+
+                    $this->lead_visitor_notification($lead_id, 2);
+
+                    if ($update_transfer) {
+                        $message = "Lead visitor request updated successfully.";
+                        $success = true;
+                    } else {
+                        throw new Exception("Failed to update lead visitor request.");
+                    }
+                } else {
+                    $message = "Your lead visitor request is already created.";
+                    $success = false;
+                }
+            }
+
+            echo json_encode([
+                'success' => $success,
+                'message' => $message,
+                'lead_id' => $lead_id
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }
