@@ -608,7 +608,7 @@ $last_lead_request = last_lead_request($lead->id);
                   <div class='row'>
                      <div class="form-group col-md-3">
                         <?php
-                        echo render_input('date_of_visit', '<small class="req text-danger">* </small> Date of Visit', !empty($visitor_request->date_of_visit) ? $visitor_request->date_of_visit : '', 'datetime-local', array('placeholder' => _l('Date of visitor')), array(), 'no-margin') ?>
+                        echo render_input('date_of_visit', '<small class="req text-danger">* </small> Date of Visit', !empty($visitor_request->date_of_visit) ? $visitor_request->date_of_visit : '', 'datetime-local', array('placeholder' => _l('Date of visitor')), array(), 'no-mbot', '', false) ?>
                      </div>
                      <div class="form-group col-md-3">
                         <?php
