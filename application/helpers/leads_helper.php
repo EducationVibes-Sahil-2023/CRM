@@ -8195,7 +8195,213 @@ function get_client_list($university_name)
     return $CI->db->query($sql, ["%$university_name%"])->result_array();
 }
 
-function extractYear($date) {
+function getLast10Digits($phoneNumber)
+{
+    // Remove non-numeric characters
+    $digits = preg_replace('/\D/', '', $phoneNumber);
+
+    // Get last 10 digits
+    return substr($digits, -10);
+}
+
+function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data = [])
+{
+    $CI = &get_instance();
+
+    // Fetch client details
+    $client = $CI->db->where('userid', $client_id)->get(db_prefix() . 'basic_details')->row();
+
+    $CI->db->where('userid', $client_id);
+    $basic_details = $CI->db->get(db_prefix() . 'basic_details')->row();
+
+    if (!empty($client->addedfrom)) {
+        $CI->db->select("email,firstname,lastname,phonenumber");
+        $CI->db->where('staffid', $client->addedfrom);
+        $assigned_counselor = $CI->db->get(db_prefix() . 'staff')->row();
+    }
+
+    if (!empty($staff_id)) {
+         $CI->db->select("email,firstname,lastname,phonenumber");
+         $CI->db->where('staffid', $staff_id);
+        $assigned_post_sale_counselor =  $CI->db->get(db_prefix() . 'staff')->row();
+    }
+
+      $CI->db->where('userid', $client_id);
+        $admission_preferences = $CI->db->get(db_prefix() . 'admission_preferences')->row();
+    if (!$client) {
+        log_message('error', "Client not found: ID $client_id");
+        return json_encode(["error" => "Client not found."]);
+    }
+
+    // Define authentication token and sender number
+    $productToken = WHATSAAP_PRODUCT_KEY;
+    $fromNumber = WHATSAAP_FROM_NUMBER;
+    $templateNamespace = WHATSAAP_NAMESPACE;
+    $toNumber = "0091" . getLast10Digits($client->mobile);
+
+    // Fetch WhatsApp template
+    $whatsapp = $CI->db->query("SELECT * FROM " . db_prefix() . "whatsapptemplates WHERE status= 1 AND id = ?", [$whatsapp_template_id])->row();
+    if (!$whatsapp) {
+        log_message('error', "WhatsApp template not found: ID $whatsapp_template_id");
+        return json_encode(["error" => "Template not found."]);
+    }
+
+    // Extract template details
+    $templateName = $whatsapp->template_name;
+    $languageCode = $whatsapp->languageCode ?? "en"; // Default to English if not set
+    $documentName = $whatsapp->documentName ?? "";
+    $documentURL = $document_data["url"] ?? "";
+    $mimeType = $whatsapp->mimeType ?? "application/pdf";
+
+    // Fetch counsellor details
+    $staff_data = $CI->db->select("CONCAT(firstname,' ',lastname) as name, phonenumber")
+        ->where('staffid', get_staff_user_id())
+        ->get(db_prefix() . 'staff')
+        ->row();
+
+    if (!$staff_data) {
+        log_message('error', "Staff data not found for user ID " . get_staff_user_id());
+        return json_encode(["error" => "Staff details not found."]);
+    }
+   
+
+    // Replace variables in template
+    $applicant_name = trim($client->first_name . " " . $client->last_name);
+    $variables = str_replace(
+    [
+        "{applicant_name}", 
+        "{counsellor_phonennumber}", 
+        "{primary_country}", 
+        "{primary_university}", 
+        "{registration_amount}", 
+        "{acadmic_year}", 
+        "{entrance_exam_details}", 
+        "{counsellor_name}"
+    ],
+    [
+        $applicant_name ?? "", 
+        !empty($staff_data->phonenumber)?$staff_data->phonenumber:"7217219100", 
+        $primary_country ?? "", 
+        $primary_university ?? "", 
+        $registration_amount ?? "", 
+        $academic_year ?? "", 
+        $entrance_exam_details ?? "", 
+        $counsellor_name ?? ""
+    ],
+    $whatsapp->variables_name ?? ""
+);
+
+
+    // Prepare parameters
+    $parameters = [];
+    if (!empty($variables)) {
+        $variables_array = array_map('trim', explode(",", $variables));
+        foreach ($variables_array as $data) {
+            $parameters[] = ["type" => "text", "text" => $data];
+        }
+    }
+
+    // Construct JSON payload
+    $data = [
+        "messages" => [
+            "authentication" => ["producttoken" => $productToken],
+            "msg" => [
+                [
+                    "from" => $fromNumber,
+                    "to" => [["number" => $toNumber]],
+                    "body" => [
+                        "type" => "auto",
+                        "content" => $templateName
+                    ],
+                    "allowedChannels" => ["WhatsApp"],
+                    "richContent" => [
+                        "conversation" => [
+                            [
+                                "template" => [
+                                    "whatsapp" => [
+                                        "namespace" => $templateNamespace,
+                                        "element_name" => $templateName,
+                                        "language" => [
+                                            "policy" => "deterministic",
+                                            "code" => $languageCode
+                                        ],
+                                        "components" => []
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    // Add document attachment if URL exists
+    if (!empty($documentURL)) {
+        $data["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+            "type" => "header",
+            "parameters" => [
+                [
+                    "type" => "document",
+                    "media" => [
+                        "mediaName" => $documentName,
+                        "mediaUri" => base_url().$documentURL,
+                        "mimeType" => $mimeType
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    // Add body parameters if they exist
+    if (!empty($parameters)) {
+        $data["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+            "type" => "body",
+            "parameters" => $parameters
+        ];
+    }
+
+
+    // Initialize cURL
+    $curl = curl_init();
+    curl_setopt_array($curl, [
+        CURLOPT_URL => 'https://gw.messaging.cm.com/v1.0/message',
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 10, // Set timeout to prevent hanging
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => 'POST',
+        CURLOPT_POSTFIELDS => json_encode($data),
+        CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    ]);
+
+    // Execute cURL request
+    $response = curl_exec($curl);
+    $curlError = curl_error($curl);
+
+    curl_close($curl);
+
+    // Handle cURL errors
+    if ($curlError) {
+        log_message('error', "WhatsApp API cURL error: " . $curlError);
+        return json_encode(["error" => "Failed to send message. API request error."]);
+    }
+
+    // Decode API response and check for errors
+    $responseArray = json_decode($response, true);
+    if (!$responseArray || isset($responseArray['error'])) {
+        log_message('error', "WhatsApp API response error: " . $response);
+        return json_encode(["error" => "WhatsApp API error", "details" => $responseArray]);
+    }
+
+    return json_encode(["success" => "Message sent successfully.", "response" => $responseArray]);
+}
+
+
+function extractYear($date)
+{
     if (strpos($date, '-') !== false) {
         // If the date contains a hyphen, it's in YYYY-MM format
         list($year, $month) = explode('-', $date);

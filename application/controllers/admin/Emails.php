@@ -126,6 +126,7 @@ class Emails extends AdminController
 
         $this->load->view('admin/emails/email_templates', $data);
     }
+
     /* Edit email template */
     public function email_template($id)
     {

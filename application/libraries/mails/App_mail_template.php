@@ -121,10 +121,10 @@ class App_mail_template
          */
         if (!$this->validate()) {
             hooks()->do_action('failed_to_send_email_template', [
-                 'template'     => $this->template,
-                 'send_to'      => $this->send_to,
-                 'merge_fields' => $this->merge_fields,
-               ]);
+                'template'     => $this->template,
+                'send_to'      => $this->send_to,
+                'merge_fields' => $this->merge_fields,
+            ]);
 
             $this->clear();
 
@@ -157,8 +157,8 @@ class App_mail_template
         $hook_data['attachments'] = $this->attachments;
 
         $hook_data['template']->message = $this->template->plaintext != 1
-        ? check_for_links($hook_data['template']->message)
-        : $hook_data['template']->message;
+            ? check_for_links($hook_data['template']->message)
+            : $hook_data['template']->message;
 
         $hook_data = hooks()->apply_filters('before_email_template_send', $hook_data);
 
@@ -253,12 +253,32 @@ class App_mail_template
     {
         if (count($this->attachments) > 0) {
             foreach ($this->attachments as $attachment) {
-                !isset($attachment['read'])
-                ? $this->ci->email->attach($attachment['attachment'], 'attachment', $attachment['filename'], $attachment['type'])
-                : $this->ci->email->attach($attachment['attachment'], '', $attachment['filename']);
+                // Check if the attachment is a URL
+                if (filter_var($attachment["attachment"], FILTER_VALIDATE_URL)) {
+                    $filename = !empty($attachment["filename"])
+                        ? $attachment["filename"]
+                        : basename(parse_url($attachment["attachment"], PHP_URL_PATH)); // Extract filename
+
+                    $temp_path = sys_get_temp_dir() . '/' . $filename; // Temporary file path
+
+                    // Download and save the file locally
+                    if (file_put_contents($temp_path, file_get_contents($attachment["attachment"]))) {
+                        $this->ci->email->attach($temp_path, 'attachment', $filename, mime_content_type($temp_path));
+                    }
+                } elseif (is_array($attachment)) {
+                    // Handle normal local file attachments
+                    $filename = !empty($attachment["filename"]) ? $attachment["filename"] : basename($attachment["attachment"]);
+
+                    !isset($attachment['read'])
+                        ? $this->ci->email->attach($attachment['attachment'], 'attachment', $filename, $attachment['type'])
+                        : $this->ci->email->attach($attachment['attachment'], '', $filename);
+                }
             }
         }
     }
+
+
+
 
     /**
      * Get template subject
@@ -304,9 +324,9 @@ class App_mail_template
         }
 
         return hooks()->apply_filters('email_template_from_headers', [
-                'fromemail' => get_option('smtp_email'),
-                'fromname'  => $this->template->fromname != '' ? $this->template->fromname : get_option('companyname'),
-            ], $this->template);
+            'fromemail' => get_option('smtp_email'),
+            'fromname'  => $this->template->fromname != '' ? $this->template->fromname : get_option('companyname'),
+        ], $this->template);
     }
 
     /**
@@ -496,7 +516,7 @@ class App_mail_template
             $proposal = $this->ci->db->get(db_prefix() . 'proposals')->row();
             if ($proposal && $proposal->rel_type == 'lead') {
                 $this->ci->db->select('default_language')
-                ->where('id', $proposal->rel_id);
+                    ->where('id', $proposal->rel_id);
 
                 $lead = $this->ci->db->get(db_prefix() . 'leads')->row();
             } elseif ($proposal && $proposal->rel_type == 'customer') {

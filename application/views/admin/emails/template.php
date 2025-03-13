@@ -113,7 +113,7 @@
                               $mergeLooped = array();
                               foreach($available_merge_fields as $field){
                                foreach($field as $key => $val){
-                                echo '<div class="col-md-6 merge_fields_col">';
+                                echo '<div class="col-md-12 merge_fields_col">';
                                 echo '<h5 class="bold">'.ucfirst($key).'</h5>';
                                 foreach($val as $_field){
                                   if(count($_field['available']) == 0

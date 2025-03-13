@@ -1134,7 +1134,7 @@ if ($lead_type_status == 2) {
                             </div>
                             <div class="row ">
                                 <div class="col-md-12">
-                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn">Save changes</button>
+                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn btn-save-fun">Save changes</button>
                                 </div>
                             </div>
                         </form>
@@ -1209,7 +1209,7 @@ if ($lead_type_status == 2) {
                                             ?>
                                                 <div class="margin-top">
                                                     <i onclick="show_media_files('<?= base_url($client->registration_slip) ?>');" class="fa fa-eye btn btn-xs btn-primary"></i>
-                                                    <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($client->quotation) ?>`, '_blank');"></i>
+                                                    <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($client->registration_slip) ?>`, '_blank');"></i>
                                                 </div>
                                             <?php
                                             }
