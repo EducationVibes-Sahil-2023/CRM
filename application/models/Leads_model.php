@@ -3073,7 +3073,7 @@ class Leads_model extends App_Model
 
     public function get_lead_visitor_request_exist($lead_id)
     {
-        $this->db->select('id');
+        $this->db->select('id,assigned,created_by');
         $this->db->where_in("status", [1, 3]);
         $this->db->where(array("lead_id" => $lead_id));
         $staff = $this->db->get(db_prefix() . 'visitor_request')->row();
@@ -3084,5 +3084,23 @@ class Leads_model extends App_Model
     {
         $sql = "SELECT * FROM  " . db_prefix() . "visitor_request where status in (1,3) and lead_id=" . $lead_id . " ";
         return $this->db->query($sql)->row();
+    }
+
+
+    public function get_lead_visitor_activity_log($id)
+
+    {
+
+        $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'DESC');
+
+
+
+        $this->db->where('lead_id', $id);
+
+        $this->db->order_by('date', $sorting);
+
+
+
+        return $this->db->get(db_prefix() . 'visitor_activity_log')->result_array();
     }
 }

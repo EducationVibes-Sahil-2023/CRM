@@ -1041,3 +1041,14 @@ function get_client_config_data()
         return [];
     }
 }
+
+
+function get_staff_user_name_by_id($id)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('CONCAT(' . db_prefix() . 'staff.firstname, " ", ' . db_prefix() . 'staff.lastname) AS staffname')
+        ->where('staffid', $id);
+    $query = $CI->db->get(db_prefix() . 'staff');
+    return $query->row()->staffname;
+}

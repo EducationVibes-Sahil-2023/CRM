@@ -576,6 +576,7 @@ class Leads extends AdminController
             $data['notes']         = $this->misc_model->get_notes($id, 'lead');
 
             $data['activity_log']  = $this->leads_model->get_lead_activity_log($id);
+            $data['activity_log_visitor']  = $this->leads_model->get_lead_visitor_activity_log($id);
             $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
             $data['lead_transfer_request']  = $this->leads_model->get_lead_transfer_request($id);
             $data['visitor_request']  = $this->leads_model->get_lead_visitor_request($id);
@@ -3649,7 +3650,7 @@ class Leads extends AdminController
         $data['visitor_type'] = $this->staff_model->visitor_type();
         $data['visitor_status'] = $this->staff_model->visitor_status();
         $data['type']  = $this->leads_model->get_type();
-        $data['staff'] = $this->staff_model->get('staffid,firstname,lastname', []);
+        $data['staff'] = $this->staff_model->get('', [], 1);
         $data['lead_type'] = $this->leads_model->get_type();
         // in case accesed the url leads/index/ directly with id - used in search
 
@@ -3666,8 +3667,10 @@ class Leads extends AdminController
     }
 
 
-    public function lead_visitor_notification($lead_id, $status = '')
+    public function lead_visitor_notification($lead_id, $status = '', $to_user_id = "", $from_user_id = "")
     {
+
+
         $check_lead_visitor_request = $this->leads_model->get_lead_visitor_request_exist($lead_id);
         if ($status == 1) {
             $created_by = $check_lead_visitor_request->created_by;
@@ -3678,11 +3681,11 @@ class Leads extends AdminController
         } else {
             return false;
         }
-        if (!empty(get_staff_user_id()) && !(is_admin())) {
+        if (!empty(get_staff_user_id())) {
             $notifiedUsers = [];
             $notified = add_notification([
                 'description'     => $message_des,
-                'touserid'        => 1,
+                'touserid'        => $to_user_id,
                 'fromcompany'     => 1,
                 'fromuserid'      => get_staff_user_id(),
                 'additional_data' => serialize([
@@ -3701,7 +3704,9 @@ class Leads extends AdminController
     {
         try {
             $data_insert_update = [];
-
+            $staff_list = array_column($this->staff_model->get('', [], 1), "full_name", "staffid");
+            $location = array_column($this->staff_model->office_location(), "name", "id");
+            $visitor_type = array_column($this->staff_model->visitor_type(), "name", "id");
             // Get input values
             $lead_id = $this->input->post('lead_id');
             $data_insert_update["lead_id"] = $lead_id;
@@ -3723,6 +3728,9 @@ class Leads extends AdminController
 
             $check_lead_visitor_request = $this->leads_model->get_lead_visitor_request_exist($lead_id);
 
+
+
+
             if (!$check_lead_visitor_request) {
                 // Insert new visitor request
                 $data_insert_update["status"] = 1;
@@ -3730,7 +3738,14 @@ class Leads extends AdminController
                 $data_insert_update["created_at"] = date('Y-m-d H:i:s');
 
                 $insert_ = $this->db->insert(db_prefix() . 'visitor_request', $data_insert_update);
-                $this->lead_visitor_notification($lead_id, 1);
+
+                $to_user_id = $data_insert_update["assigned"];
+
+                $this->lead_visitor_notification($lead_id, 1, $to_user_id);
+
+                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]] . ". Created by - ";
+
+                $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
 
                 if ($insert_) {
                     $message = "Lead visitor request submitted successfully.";
@@ -3746,7 +3761,16 @@ class Leads extends AdminController
 
                     $update_transfer = $this->db->update(db_prefix() . 'visitor_request', $data_insert_update, ["id" => $data_insert_update["id"]]);
 
-                    $this->lead_visitor_notification($lead_id, 2);
+                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]] . ". Updated by - ";
+
+                    $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
+
+                    $to_user_id = $data_insert_update["assigned"];
+                    if ($data_insert_update["assigned"] == get_staff_user_id()) {
+                        $to_user_id = $check_lead_visitor_request->created_by;
+                    }
+
+                    $this->lead_visitor_notification($lead_id, 2, $to_user_id);
 
                     if ($update_transfer) {
                         $message = "Lead visitor request updated successfully.";

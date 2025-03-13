@@ -650,7 +650,7 @@ $last_lead_request = last_lead_request($lead->id);
                      <div class="form-group col-md-12 text-right">
                         <label> &nbsp;</label> <?php
                                                 $button_text = !empty($visitor_request->id)
-                                                   ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
+                                                   ? (is_admin() ? _l('Update NOW') : _l('Update NOW'))
                                                    : _l('Request NOW');
                                                 ?>
                         <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
@@ -659,6 +659,30 @@ $last_lead_request = last_lead_request($lead->id);
                   </div>
                   <?php echo form_close(); ?>
                   <div class="clearfix"></div>
+                  <div class="activity-feed">
+                     <?php foreach ($activity_log_visitor as $log) { ?>
+                        <div class="feed-item">
+                           <div class="date">
+                              <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['date']); ?>">
+                                 <?php echo time_ago($log['date']); ?>
+                              </span>
+                           </div>
+                           <div class="text">
+                              <?php if ($log['staffid'] != 0) { ?>
+                                 <a href="<?php echo admin_url('profile/' . $log["staffid"]); ?>">
+                                    <?php echo staff_profile_image($log['staffid'], array('staff-profile-xs-image pull-left mright5'));
+                                    ?>
+                                 </a>
+                              <?php
+                              }
+
+                              echo  get_staff_user_name_by_id($log['staffid']) . ' - ' . $log['description'] . get_staff_user_name($log['staffid']);
+
+                              ?>
+                           </div>
+                        </div>
+                     <?php } ?>
+                  </div>
                   <hr />
                </div>
 
@@ -983,6 +1007,7 @@ $last_lead_request = last_lead_request($lead->id);
             hide_loader();
             if (res.success) {
                alert_float("success", res.message);
+               init_lead(res.lead_id);
             } else {
                const message = res.message || "An unknown error occurred.";
                alert_float("danger", message);

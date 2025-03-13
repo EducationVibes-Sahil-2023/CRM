@@ -89,7 +89,7 @@ foreach ($rResult as $aRow) {
         $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`)'>" . _l('view') . "</a></div>";
     }
     $row[] = $aRow["status"];
-    $row[] = $aRow["date_of_visit"];
+    $row[] = date('l, F j, Y H:i A', strtotime($aRow["date_of_visit"]));
     $row[] = $aRow["student_name"] . "<br>" . $edit_btn;
     $row[] = $aRow["phonenumber"];
     $row[] = $aRow["location"];
