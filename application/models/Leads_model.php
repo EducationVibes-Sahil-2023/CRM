@@ -2797,7 +2797,6 @@ class Leads_model extends App_Model
         }
         $sql .= " group by st.staffid,last_lead.dateassigned order by last_lead.dateassigned asc ";
         if (!empty($facebook_lead)) {
-            
         } else {
             $sql .= " limit 1 ";
         }
@@ -3016,7 +3015,6 @@ class Leads_model extends App_Model
         return $this->db->query($sql)->result_array();
     }
 
-
     public function get_lead_transfer_request_exist($lead_id)
     {
         $this->db->select('id');
@@ -3071,5 +3069,38 @@ class Leads_model extends App_Model
     WHERE utm_campaign_name != ''
     GROUP BY " . db_prefix() . "leads.source
 ")->result_array();
+    }
+
+    public function get_lead_visitor_request_exist($lead_id)
+    {
+        $this->db->select('id,assigned,created_by');
+        $this->db->where_in("status", [1, 3]);
+        $this->db->where(array("lead_id" => $lead_id));
+        $staff = $this->db->get(db_prefix() . 'visitor_request')->row();
+        return $staff;
+    }
+
+    public function get_lead_visitor_request($lead_id)
+    {
+        $sql = "SELECT * FROM  " . db_prefix() . "visitor_request where status in (1,3) and lead_id=" . $lead_id . " ";
+        return $this->db->query($sql)->row();
+    }
+
+
+    public function get_lead_visitor_activity_log($id)
+
+    {
+
+        $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'DESC');
+
+
+
+        $this->db->where('lead_id', $id);
+
+        $this->db->order_by('date', $sorting);
+
+
+
+        return $this->db->get(db_prefix() . 'visitor_activity_log')->result_array();
     }
 }

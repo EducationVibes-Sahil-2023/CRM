@@ -4,6 +4,9 @@ $staff_members     = get_all_staff();
 $whatsapp_template = get_whatsapp_template();
 array_unshift($staff_members, array());
 array_unshift($type, array());
+array_unshift($visitor_type, array());
+array_unshift($location, array());
+
 $last_lead_request = last_lead_request($lead->id);
 
 
@@ -76,30 +79,30 @@ $last_lead_request = last_lead_request($lead->id);
                         <?php } ?>
 
                         <!-- sms -->
-                        <li role="presentation">
+                        <!-- <li role="presentation">
                            <a href="#tab_sms_leads" onclick="initDataTable('.table-sms-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_leads" role="tab" data-toggle="tab">
                               <?php echo _l('SMS'); ?>
                            </a>
-                        </li>
+                        </li> -->
                         <!--end sms-->
                         <?php if (has_permission('whatsapp', '', 'view') && 1 == 2) { ?>
-                           <li role="presentation">
+                           <!-- <li role="presentation">
                               <a id="tab_proposals_whatsapp_li" href="#tab_proposals_whatsapp" onclick="get_whatsapp_message(<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>,<?= (isset($lead) && $lead->phonenumber != '' ? $lead->phonenumber : '') ?>);" aria-controls="tab_proposals_whatsapp" role="tab" data-toggle="tab">
                                  <?php echo _l('Whatsapp'); ?>
                               </a>
-                           </li>
+                           </li> -->
                         <?php } ?>
 
-                        <li role="presentation">
+                        <!-- <li role="presentation">
                            <a href="#tab_proposals_leads" onclick="initDataTable('.table-proposals-lead', admin_url + 'proposals/proposal_relations/' + <?php echo $lead->id; ?> + '/lead','undefined', 'undefined','undefined',[6,'desc']);" aria-controls="tab_proposals_leads" role="tab" data-toggle="tab">
                               <?php echo _l('proposals'); ?>
                            </a>
-                        </li>
-                        <li role="presentation">
+                        </li> -->
+                        <!-- <li role="presentation">
                            <a href="#tab_tasks_leads" onclick="init_rel_tasks_table(<?php echo $lead->id; ?>,'lead','.table-rel-tasks-leads');" aria-controls="tab_tasks_leads" role="tab" data-toggle="tab">
                               <?php echo _l('tasks'); ?>
                            </a>
-                        </li>
+                        </li> -->
                         <li role="presentation">
                            <a href="#attachments" aria-controls="attachments" role="tab" data-toggle="tab">
                               <?php echo _l('lead_attachments'); ?>
@@ -152,6 +155,11 @@ $last_lead_request = last_lead_request($lead->id);
                         <li role="presentation">
                            <a href="#lead_transfer_lead_request" id="show_transfer_lead_div" aria-controls="lead_transfer_lead_request" role="tab" data-toggle="tab">
                               <?php echo _l('lead_add_edit_lead_transfer_request'); ?>
+                           </a>
+                        </li>
+                        <li role="presentation">
+                           <a href="#lead_visitor_lead_request" id="show_visitor_lead_div" onclick="set_validation_form()" aria-controls="lead_visitor_lead_request" role="tab" data-toggle="tab">
+                              <?php echo _l('Lead Visitor Request'); ?>
                            </a>
                         </li>
                         <?php if (is_gdpr() && (get_option('gdpr_enable_lead_public_form') == '1' || get_option('gdpr_enable_consent_for_leads') == '1')) { ?>
@@ -592,6 +600,92 @@ $last_lead_request = last_lead_request($lead->id);
                   <hr />
                </div>
 
+               <div role="tabpanel" class="tab-pane" id="lead_visitor_lead_request">
+
+                  <?php echo form_open(admin_url('leads/add_lead_transfer_request'), array('id' => 'lead-visitor', "onsubmit" => "return false;")); ?>
+                  <input type="hidden" id="visitor_lead_id" name="visitor_lead_id" value="<?= !empty($visitor_request->id) ? $visitor_request->id : '' ?>">
+                  <input type="hidden" name="lead_id" value="<?= $lead->id ?>">
+                  <div class='row'>
+                     <div class="form-group col-md-3">
+                        <?php
+                        echo render_input('date_of_visit', '<small class="req text-danger">* </small> Date of Visit', !empty($visitor_request->date_of_visit) ? $visitor_request->date_of_visit : '', 'datetime-local', array('placeholder' => _l('Date of visitor')), array(), 'no-margin') ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+                        echo render_select('visitor_location', $location, array('id', 'name'), '<small class="req text-danger">* </small> Location ', [$visitor_request->location], array('data-width' => '100%', 'data-none-selected-text' => _l('Location')), array(), 'no-mbot', '', false,  'visitor_location');
+                        ?>
+                     </div>
+
+
+
+                     <div class="form-group col-md-3">
+                        <?php
+                        echo render_select('visitor_type', $visitor_type, array('id', 'name'), '<small class="req text-danger">* </small> Visitor Type ', [$visitor_request->location], array('data-width' => '100%', 'data-none-selected-text' => _l('Visitor Type')), array(), 'no-mbot', '', false,  'visitor_type');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-3">
+                        <?php
+
+                        echo render_select('visitor_lead_assign', $staff_members, array('staffid', array('firstname', 'lastname')), '<small class="req text-danger">* </small> Attendee ', [$visitor_request->assigned], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'transfer_lead_assign');
+                        ?>
+                     </div>
+                     <div class="form-group col-md-4">
+                        <label><small class="req text-danger">* </small> Address </label>
+                        <textarea id="address" name="address" class='form-control' placeholder="address"><?= $visitor_request->address ?></textarea>
+                     </div>
+
+                     <div class="form-group col-md-5">
+                        <label><small class="req text-danger">* </small> Description </label>
+                        <textarea id="reason" name="reason" col="4" class='form-control' placeholder="description"><?= $visitor_request->description ?></textarea>
+                     </div>
+
+                     <?php if (!empty($visitor_request->id)) { ?>
+                        <div class="form-group col-md-3">
+                           <?php
+                           echo render_select('visitor_lead_status', $visitor_status, array('id', 'name'), '<small class="req text-danger">* </small> Status ', [$visitor_request->status], array('data-width' => '100%', 'data-none-selected-text' => _l('Status select')), array(), 'no-mbot', '', false, 'visitor_lead_status');
+                           ?>
+                        </div>
+                     <?php } ?>
+
+                     <div class="form-group col-md-12 text-right">
+                        <label> &nbsp;</label> <?php
+                                                $button_text = !empty($visitor_request->id)
+                                                   ? (is_admin() ? _l('Update NOW') : _l('Update NOW'))
+                                                   : _l('Request NOW');
+                                                ?>
+                        <button type="submit" class="btn btn-info pull-right"><?= $button_text ?></button>
+                     </div>
+
+                  </div>
+                  <?php echo form_close(); ?>
+                  <div class="clearfix"></div>
+                  <div class="activity-feed">
+                     <?php foreach ($activity_log_visitor as $log) { ?>
+                        <div class="feed-item">
+                           <div class="date">
+                              <span class="text-has-action" data-toggle="tooltip" data-title="<?php echo _dt($log['date']); ?>">
+                                 <?php echo time_ago($log['date']); ?>
+                              </span>
+                           </div>
+                           <div class="text">
+                              <?php if ($log['staffid'] != 0) { ?>
+                                 <a href="<?php echo admin_url('profile/' . $log["staffid"]); ?>">
+                                    <?php echo staff_profile_image($log['staffid'], array('staff-profile-xs-image pull-left mright5'));
+                                    ?>
+                                 </a>
+                              <?php
+                              }
+
+                              echo  get_staff_user_name_by_id($log['staffid']) . ' - ' . $log['description'] . get_staff_user_name($log['staffid']);
+
+                              ?>
+                           </div>
+                        </div>
+                     <?php } ?>
+                  </div>
+                  <hr />
+               </div>
+
                <div role="tabpanel" class="tab-pane" id="tab_proposals_leads">
                   <?php if (has_permission('proposals', '', 'create')) { ?>
                      <a href="<?php echo admin_url('proposals/proposal?rel_type=lead&rel_id=' . $lead->id); ?>" class="btn btn-info mbot25"><?php echo _l('new_proposal'); ?></a>
@@ -855,4 +949,87 @@ $last_lead_request = last_lead_request($lead->id);
          // $(selector).val(message); // Decode and set the base64 encoded message
       }
    }
+
+   function validation_set(form_id) {
+      return new Promise((resolve, reject) => {
+         let form_status = true;
+         let additional_fields = {};
+
+         $("#" + form_id + " input:visible, #" + form_id + " select:visible, #" + form_id + " textarea:visible").each(function() {
+            const value = $(this).val()?.trim(); // Get trimmed value
+            const name = $(this).attr("name"); // Get name attribute
+            const isRequired = 1; // Assuming all fields are required
+
+            if (isRequired && name) {
+               additional_fields[name] = "required";
+               if (!value) {
+                  form_status = false;
+               }
+            }
+         });
+
+         if (!form_status) {
+            appValidateForm($("#" + form_id), additional_fields);
+            reject("Form validation failed."); // Reject the promise if validation fails
+         } else {
+            resolve("Form validation passed."); // Resolve if all fields are valid
+         }
+      });
+   }
+
+   var set_validation = false;
+
+   function set_validation_form() {
+      if (set_validation == false) {
+         console.log("start");
+         setTimeout(async () => {
+            await validation_set("lead-visitor");
+            set_validation = true;
+         }, 200);
+
+      }
+   }
+
+   function create_visitor_request() {
+      let formData = new FormData(document.getElementById('lead-visitor')); // Correct way to initialize FormData
+      // Append CSRF token and client ID
+      formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+
+      // AJAX request to upload documents
+      $.ajax({
+         url: "<?php echo base_url('admin/leads/visitor_request'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false, // Prevent jQuery from transforming FormData
+         contentType: false, // Ensure correct Content-Type is set for FormData
+         dataType: "JSON",
+         success: function(res) {
+            hide_loader();
+            if (res.success) {
+               alert_float("success", res.message);
+               init_lead(res.lead_id);
+            } else {
+               const message = res.message || "An unknown error occurred.";
+               alert_float("danger", message);
+            }
+         },
+         error: function(xhr, status, error) {
+            console.error("Error: ", error);
+            hide_loader();
+            alert_float("danger", "An error occurred while processing the request.");
+         },
+      });
+   }
+
+
+   $("#lead-visitor").submit(async function(e) {
+      try {
+         let response = await validation_set("lead-visitor");
+         if (response) {
+            create_visitor_request();
+         }
+      } catch (error) {
+         console.log(error); // Log validation failure
+      }
+   });
 </script>

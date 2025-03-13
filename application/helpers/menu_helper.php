@@ -201,6 +201,14 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 45,
                 ]);
         }
+        if (is_staff_member()) {
+                $CI->app_menu->add_sidebar_menu_item('visitor_leads', [
+                        'name'     => _l('Leads (Visitor)'),
+                        'href'     => admin_url('leads/lead_visitor_request'),
+                        'icon'     => 'fa fa-tty',
+                        'position' => 40,
+                ]);
+        }
 
         if (has_permission('knowledge_base', '', 'view') || has_permission('knowledge_base', '', 'view_own') || staff_has_assigned_knowledge_base()) {
                 $CI->app_menu->add_sidebar_menu_item('knowledge-base', [
