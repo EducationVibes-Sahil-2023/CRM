@@ -3717,6 +3717,7 @@ class Leads extends AdminController
             $data_insert_update["location"] = $this->input->post('visitor_location');
             $data_insert_update["address"] = $this->input->post('address');
             $data_insert_update["visitor_type"] = $this->input->post('visitor_type');
+            $data_insert_update["comment"] = $this->input->post('visitor_comment');
             if (!empty($this->input->post('visitor_lead_status'))) {
                 $data_insert_update["status"] = $this->input->post('visitor_lead_status');
             }
@@ -3745,6 +3746,17 @@ class Leads extends AdminController
 
                 $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]] . ". Created by - ";
 
+                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
+
+                // Check if comment exists and is not empty
+                $comment = trim($data_insert_update["comment"]);
+                if (!empty($comment)) {
+                    $message .= " <br> Additional comment: " . $comment . ".";
+                }
+
+                echo $message;
+
+
                 $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
 
                 if ($insert_) {
@@ -3761,7 +3773,12 @@ class Leads extends AdminController
 
                     $update_transfer = $this->db->update(db_prefix() . 'visitor_request', $data_insert_update, ["id" => $data_insert_update["id"]]);
 
-                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]] . ". Updated by - ";
+                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
+                    // Check if comment exists and is not empty
+                    $comment = trim($data_insert_update["comment"]);
+                    if (!empty($comment)) {
+                        $message .= " <br> Additional comment: " . $comment . ".";
+                    }
 
                     $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
 
