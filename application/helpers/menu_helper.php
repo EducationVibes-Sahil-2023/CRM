@@ -203,7 +203,7 @@ function app_init_admin_sidebar_menu_items()
         }
         if (is_staff_member()) {
                 $CI->app_menu->add_sidebar_menu_item('visitor_leads', [
-                        'name'     => _l('Leads (Visitor)'),
+                        'name'     => _l('Visit Logs'),
                         'href'     => admin_url('leads/lead_visitor_request'),
                         'icon'     => 'fa fa-tty',
                         'position' => 40,
