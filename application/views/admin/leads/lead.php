@@ -635,17 +635,24 @@ $last_lead_request = last_lead_request($lead->id);
                      </div>
 
                      <div class="form-group col-md-5">
-                        <label><small class="req text-danger">* </small> Description </label>
-                        <textarea id="reason" name="reason" col="4" class='form-control' placeholder="description"><?= $visitor_request->description ?></textarea>
+                        <label><small class="req text-danger">* </small> Purpose </label>
+                        <textarea id="reason" name="reason" col="4" class='form-control' placeholder="Write your purpose"><?= $visitor_request->description ?></textarea>
                      </div>
+
 
                      <?php if (!empty($visitor_request->id)) { ?>
                         <div class="form-group col-md-3">
                            <?php
-                           echo render_select('visitor_lead_status', $visitor_status, array('id', 'name'), '<small class="req text-danger">* </small> Status ', [$visitor_request->status], array('data-width' => '100%', 'data-none-selected-text' => _l('Status select')), array(), 'no-mbot', '', false, 'visitor_lead_status');
+                           echo render_select('visitor_lead_status', $visitor_status, array('id', 'name'), '<small class="req text-danger">* </small> Status ', [$visitor_request->status], array('data-width' => '100%', 'data-none-selected-text' => _l('Status select'), "onchange" => "change_comment()"), array(), 'no-mbot', '', false, 'visitor_lead_status');
                            ?>
                         </div>
                      <?php } ?>
+
+                     <div class="form-group col-md-12 comment-box" style="display:none;">
+                        <label><small class="req text-danger">* </small> Comment </label>
+                        <textarea id="visitor_comment" name="visitor_comment" col="4" class='form-control' placeholder="Write your comment"></textarea>
+                     </div>
+
 
                      <div class="form-group col-md-12 text-right">
                         <label> &nbsp;</label> <?php
@@ -676,7 +683,7 @@ $last_lead_request = last_lead_request($lead->id);
                               <?php
                               }
 
-                              echo  get_staff_user_name_by_id($log['staffid']) . ' - ' . $log['description'] . get_staff_user_name($log['staffid']);
+                              echo  get_staff_user_name_by_id($log['staffid']) . ' - ' . $log['description'];
 
                               ?>
                            </div>
@@ -1032,4 +1039,16 @@ $last_lead_request = last_lead_request($lead->id);
          console.log(error); // Log validation failure
       }
    });
+
+   function change_comment() {
+      $(".comment-box").hide();
+      $(".comment-box").find("textarea").val("");
+
+      <?php if (!empty($visitor_request->status)) : ?>
+         let status = $("#visitor_lead_status").val();
+         if ("<?= $visitor_request->status ?>" != status) {
+            $(".comment-box").show();
+         }
+      <?php endif; ?>
+   }
 </script>
