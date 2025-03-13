@@ -525,7 +525,9 @@ class Leads extends AdminController
 
         $data['base_currency'] = get_base_currency();
 
-
+        $data['location'] = $this->staff_model->office_location();
+        $data['visitor_type'] = $this->staff_model->visitor_type();
+        $data['visitor_status'] = $this->staff_model->visitor_status();
 
         if (is_numeric($id)) {
 
@@ -580,9 +582,7 @@ class Leads extends AdminController
             $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
             $data['lead_transfer_request']  = $this->leads_model->get_lead_transfer_request($id);
             $data['visitor_request']  = $this->leads_model->get_lead_visitor_request($id);
-            $data['location'] = $this->staff_model->office_location();
-            $data['visitor_type'] = $this->staff_model->visitor_type();
-            $data['visitor_status'] = $this->staff_model->visitor_status();
+
 
             if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
 
