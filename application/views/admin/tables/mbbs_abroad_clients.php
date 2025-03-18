@@ -25,24 +25,40 @@ $custom_fields = get_table_custom_fields('customers');
 $tblma_applicant_tracker = $this->ci->leads_model->tblma_applicant_tracker($this->ci->input->post('columnNames'));
 
 $tblma_applicant_tracker = array_column($tblma_applicant_tracker, null, "tbl_column_name");
-
+$fees_data = get_clients_fees(2);
+// $fees_details = get_clients_fees_details_ids(2);
 
 $this->ci->db->query("SET sql_mode = ''");
 
-if (!empty($tblma_applicant_tracker)) {
-    foreach ($tblma_applicant_tracker as $key => $value) {
 
-        if (!empty($value["sql_condition"])) {
-            $key = $value["sql_condition"];
-        }
-        $aColumns[] = $key . " as " . str_replace(" ", "_", strtolower($value["label_name"]));
-    }
-}
+
 $sIndexColumn = 'userid';
 $sTable       = db_prefix() . 'clients';
 $where        = [];
 // Add blank where all filter can be stored
 $filter = [];
+
+
+$aColumns = [];
+$aColumns_count = 0;
+if (!empty($tblma_applicant_tracker)) {
+    foreach ($tblma_applicant_tracker as $key => $value) {
+        if (in_array($value["column_name"], ["fees"])) {
+            foreach ($fees_data as $fees) {
+                $aColumns[] = "MAX(CASE WHEN " . db_prefix() . "applicant_fees_details.fees_id = {$fees['id']} AND " . db_prefix() . "applicant_fees_details.client_id = {$sTable}.userid THEN CONCAT(" . db_prefix() . "currencies.symbol,'',ifnull(" . db_prefix() . "applicant_fees_details.amount,0)) END) as " . str_replace(" ", "_", strtolower($fees["name"]));
+                $aColumns_count++;
+            }
+            continue;
+        }
+
+        // Use sql_condition if available
+        $column_key = !empty($value["sql_condition"]) ? $value["sql_condition"] : $key;
+
+        // Add column name to array
+        $aColumns[] = "$column_key as " . str_replace(" ", "_", strtolower($value["label_name"]));
+        $aColumns_count++;
+    }
+}
 
 $join = [
     'LEFT JOIN ' . db_prefix() . 'contacts ON ' . db_prefix() . 'contacts.userid=' . db_prefix() . 'clients.userid AND ' . db_prefix() . 'contacts.is_primary=1',
@@ -59,6 +75,7 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'admission_preferences ON ' . db_prefix() . 'admission_preferences.userid = ' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'applicant_fees_details ON ' . db_prefix() . 'applicant_fees_details.client_id = ' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'applicant_fees ON ' . db_prefix() . 'applicant_fees.id = ' . db_prefix() . 'applicant_fees_details.fees_id',
+    'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'applicant_fees_details.currency_id',
 
 ];
 
@@ -249,6 +266,7 @@ $result = data_tables_init(array_merge($aColumns, [
     db_prefix() . 'clients.userid as userid',
 ]), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid');
 
+// die;
 $output  = $result['output'];
 $rResult = $result['rResult'];
 
@@ -284,7 +302,7 @@ foreach ($rResult as $aRow) {
     }
 
 
-    $row = array_values(array_slice($aRow, 0,count($this->ci->input->post('columnNames'))));
- 
+    $row = array_values(array_slice($aRow, 0, $aColumns_count));
+
     $output['aaData'][] = $row;
 }

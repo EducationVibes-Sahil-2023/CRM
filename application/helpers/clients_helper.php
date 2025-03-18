@@ -1538,3 +1538,30 @@ function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
 
     return $client_fees;
 }
+
+function get_clients_fees_details_ids($lead_type, $client_id = [], $fees_id = "")
+{
+    $CI = &get_instance();
+    $CI->db->select("CONCAT(client_id,'-',f.id) fees_id,TRIM(c.symbol) AS symbol, TRIM(d.amount) AS amount, CONCAT(TRIM(c.symbol), TRIM(d.amount)) AS total_amount,f.id")
+        ->from(db_prefix() . 'applicant_fees f')
+        ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id")
+        ->join(db_prefix() . 'currencies c', "c.id = d.currency_id")
+        ->where('lead_type', $lead_type);
+
+    if (!empty($client_id)) {
+        $CI->db->where_in('client_id', $client_id);
+    }
+
+    if (!empty($fees_id)) {
+        $CI->db->where('f.id', $fees_id);
+    }
+
+    $client_fees = $CI->db->order_by("sequence", "asc")
+        ->get()
+        ->result_array();
+    if (!empty($client_fees)) {
+        $client_fees = array_column($client_fees, "total_amount", "fees_id");
+    }
+
+    return $client_fees;
+}

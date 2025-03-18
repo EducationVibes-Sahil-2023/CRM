@@ -2,6 +2,8 @@
 <?php init_head();
 $tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
 $selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0, 5);
+$fees_data = get_clients_fees(2);
+
 ?>
 <div id="wrapper">
    <style>
@@ -366,9 +368,9 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
                                     <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-4 margin-top leads-filter-column">
+                              <div class="col-md-4 margin-top ">
                                  <div class="form-group">
-                                    <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                    <button type="button" class="btn btn-primary" id="apply_filter_">Apply Filter</button>
 
                                     <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                     <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
@@ -402,6 +404,7 @@ init_tail(); ?>
    var sub_category = <?= !empty($application_sub_stage) ? json_encode($application_sub_stage) : [] ?>;
    var columnHeaders = [];
    var column_names = {}; // Object to store column name mappings
+   var fees_array = <?= !empty($fees_data) ? json_encode($fees_data, JSON_UNESCAPED_UNICODE) : '[]' ?>;
 
    var tbllead_performance_column = [];
    $("#column_show").on("change", function() {
@@ -416,15 +419,27 @@ init_tail(); ?>
          selectedValues.forEach((value) => {
             // Find the corresponding label/text for the current value
             const selectedLabel = $(this).find(`option[value="${value}"]`).text();
+            console.log(selectedLabel);
+            if (selectedLabel == "Fees") {
+               fees_array.forEach((fees) => {
+                  const columnObject = {
+                     tbl_column_name: fees.name, // Set the column name
+                     label_name: fees.name // Set the label name
+                  };
 
-            // Construct the object for the current selection
-            const columnObject = {
-               tbl_column_name: value, // Set the column name
-               label_name: selectedLabel // Set the label name
-            };
+                  // Add the constructed object to the array
+                  tbllead_performance_column.push(columnObject);
+               })
+            } else {
+               // Construct the object for the current selection
+               const columnObject = {
+                  tbl_column_name: value, // Set the column name
+                  label_name: selectedLabel // Set the label name
+               };
 
-            // Add the constructed object to the array
-            tbllead_performance_column.push(columnObject);
+               // Add the constructed object to the array
+               tbllead_performance_column.push(columnObject);
+            }
          });
 
          // Log the array of created objects
@@ -626,7 +641,7 @@ init_tail(); ?>
 
 
    var filter_data;
-   $('#apply_filter').on('click', async function() {
+   $('#apply_filter_').on('click', async function() {
 
       var selectedValues = $("#column_show").selectpicker('val');
       if (selectedValues.length < 3) {
