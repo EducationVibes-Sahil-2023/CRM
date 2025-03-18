@@ -173,7 +173,10 @@ class Settings_model extends App_Model
             }
         } else if (in_array('_leads_performance_settings', $all_settings_looped)) {
             $update_data = $data["columns_data"];
-            $this->db->update_batch('tblperformance_columns', $update_data, 'id'); // 'id' is the key
+            $this->db->update_batch(db_prefix() . 'performance_columns', $update_data, 'id'); // 'id' is the key
+        } else if (in_array('ma_applicant_tracker', $all_settings_looped)) {
+            $update_data = $data["columns_data"];
+            $this->db->update_batch(db_prefix() . 'ma_applicant_tracker', $update_data, 'id'); // 'id' is the key
         }
 
 

@@ -1,5 +1,8 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php init_head(); ?>
+<?php init_head();
+$tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
+$selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0, 5);
+?>
 <div id="wrapper">
    <style>
       .margin-top {
@@ -304,6 +307,10 @@
                               <div class="col-md-12">
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
+                              <div class="col-md-2  margin-top leads-filter-column filter_reset ">
+                                 <?php echo render_select('column_show[]', $tbllead_performance_column, array('id', 'label_name'), '', $selected_performance_column, array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show'); ?>
+                              </div>
+
                               <?php if (has_permission('leads', '', 'view')) { ?>
                                  <div class="col-md-2  margin-top leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
@@ -372,126 +379,16 @@
                      </div>
                   </div>
                   <div class="clearfix mtop20"></div>
-                  <?php
-                  $table_data = array();
-                  $_table_data = array(
-                     '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>',
-                     //   array(
-                     //     'name'=>_l('the_number_sign'),
-                     //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-number')
-                     //    ),
-                     //     array(
-                     //     'name'=>_l('clients_list_company'),
-                     //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-company')
-                     //    ),
-                     array(
-                        'name' => _l('Student Name'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-primary-contact')
-                     ),
-                     array(
-                        'name' => _l('company_primary_email'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-primary-contact-email')
-                     ),
-                     array(
-                        'name' => _l('clients_list_phone'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-phone')
-                     ),
-                     array(
-                        'name' => _l('customer_active'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-active')
-                     ),
-                     // array(
-                     //    'name' => _l('customer_groups'),
-                     //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     // ),
-                     array(
-                        'name' => _l('applicant_name_table'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('applicant_status_table'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('applicant_updated_table'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('OnBoarding Date'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-                     array(
-                        'name' => _l('Assignee'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('leads_dt_status'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-                     array(
-                        'name' => _l('Lead Type'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-                     array(
-                        'name' => _l('leads_source'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-
-                  );
-
-                  foreach ($_table_data as $_t) {
-                     array_push($table_data, $_t);
-                  }
-
-                  $custom_fields = get_custom_fields('customers', array('show_on_table' => 1));
-
-                  foreach ($custom_fields as $field) {
-                     $showField = true;
-
-                     // if (!empty($user_lead_type)) {
-                     //    if (is_admin()) {
-                     //       // Do nothing; all fields are included for admin.
-                     //    } else {
-                     //       // Check conditions based on the user_lead_type.
-                     //       if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                     //          $showField = false;
-                     //       } elseif ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
-                     //          $showField = false;
-                     //       } elseif ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
-                     //          $showField = false;
-                     //       }
-                     //    }
-                     // } else {
-                     //    if (!is_admin() && !empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                     //       $showField = false;
-                     //    }
-
-
-                     if (!is_admin()) {
-                        $showField = false;
-                        if (!empty($user_lead_type) && !empty($field['show_lead_type'])) {
-                           if (in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
-                              $showField = true;
-                           } else {
-                              $showField = false;
-                           }
-                        }
-                     }
-                     // }
-
-                     if ($showField) {
-                        array_push($table_data, $field['name']);
-                     }
-                  }
-
-                  $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
-
-
-                  render_datatable($table_data, 'clients', [], [
-                     'data-last-order-identifier' => 'customers',
-                     'data-default-order'         => get_table_last_order('customers'),
-                  ]);
-                  ?>
+                  <div class="col-md-12 row">
+                     <div class="panel_s">
+                        <div class="panel-body">
+                           <table id="dynamicTable" class="table table-clients" style="width:100%">
+                              <thead></thead>
+                              <tbody></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
@@ -503,13 +400,124 @@ init_tail(); ?>
 <script>
    var tAPI = "";
    var sub_category = <?= !empty($application_sub_stage) ? json_encode($application_sub_stage) : [] ?>;
+   var columnHeaders = [];
+   var column_names = {}; // Object to store column name mappings
+
+   var tbllead_performance_column = [];
+   $("#column_show").on("change", function() {
+      tbllead_performance_column = [];
+      // Get the selected values using `selectpicker`
+      var selectedValues = $(this).selectpicker('val');
+
+      if (selectedValues && selectedValues.length > 0) {
+         // Initialize an array to hold the objects for each selected value
+
+         // Iterate over the selected values
+         selectedValues.forEach((value) => {
+            // Find the corresponding label/text for the current value
+            const selectedLabel = $(this).find(`option[value="${value}"]`).text();
+
+            // Construct the object for the current selection
+            const columnObject = {
+               tbl_column_name: value, // Set the column name
+               label_name: selectedLabel // Set the label name
+            };
+
+            // Add the constructed object to the array
+            tbllead_performance_column.push(columnObject);
+         });
+
+         // Log the array of created objects
+         console.log("Created Objects:", tbllead_performance_column);
+
+         // Use `tbllead_performance_column` as needed (e.g., send via AJAX or update the UI)
+      } else {
+         console.log("No value selected.");
+      }
+   });
+
+   $("#column_show").each(function() {
+      // Ensure the element is processed correctly
+      if ($(this).is(":input")) {
+         // Get the selected values using `selectpicker`
+         var selectedValues = $(this).selectpicker('val');
+
+         if (selectedValues && selectedValues.length > 0) {
+            // Initialize an array to hold the objects for each selected value
+
+            // Iterate over the selected values
+            selectedValues.forEach((value) => {
+               // Find the corresponding label/text for the current value
+               const selectedLabel = $(this).find(`option[value="${value}"]`).text();
+
+               // Construct the object for the current selection
+               const columnObject = {
+                  tbl_column_name: value, // Set the column name
+                  label_name: selectedLabel // Set the label name
+               };
+
+               // Add the constructed object to the array
+               tbllead_performance_column.push(columnObject);
+            });
+
+            // Log the array of created objects
+            console.log("Created Objects:", tbllead_performance_column);
+
+            // Use `tbllead_performance_column` as needed (e.g., send via AJAX or update the UI)
+         } else {
+            console.log("No value selected.");
+         }
+      }
+   });
+
+
+   function set_column_table() {
+
+      if (Array.isArray(tbllead_performance_column) && tbllead_performance_column.length > 0) {
+
+         tbllead_performance_column.forEach(column => {
+            // Get the label, fallback to column name if label is empty
+            let label = column.label_name && column.label_name.trim() !== "" ?
+               column.label_name :
+               column.tbl_column_name.replace(".", "_");
+
+            // Add to column_names object
+            column_names[column.tbl_column_name] = label.replace(/ /g, "_");
+
+            // Add to columnHeaders array
+            columnHeaders.push({
+               title: label,
+               data: label.toLowerCase().replace(/ /g, "_") // Assuming lowercase data keys
+            });
+         });
+      }
+
+      // Populate the <thead> of the table only if columnHeaders has entries
+      if (columnHeaders.length > 0) {
+         let thead = "<tr>";
+         columnHeaders.forEach(header => {
+            thead += "<th>" + header.title + "</th>";
+         });
+         thead += "</tr>";
+         $("#dynamicTable thead").html(thead); // Add the generated HTML to the table's <thead>
+      } else {
+         console.warn("No column headers available to populate the table.");
+      }
+
+
+   }
+
+   set_column_table();
+   // Define configuration object
+   var CustomersServerParams = {};
 
    $(function() {
-      var CustomersServerParams = {};
+
       $.each($('._hidden_inputs._filters input'), function() {
          CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
       });
       CustomersServerParams['exclude_inactive'] = '[name="exclude_inactive"]:checked';
+      CustomersServerParams['columnNames'] = "[name='column_show[]']";
       CustomersServerParams['assigned'] = "[name='view_assigned[]']";
       CustomersServerParams['source'] = "[name='view_source[]']";
       CustomersServerParams['lead_type'] = "[name='lead_type[]']";
@@ -590,7 +598,50 @@ init_tail(); ?>
       }
    }
 
-   $('#apply_filter').on('click', function() {
+   // $('#apply_filter').on('click', function() {
+
+   //    var from_date = document.getElementById("from_date").value;
+   //    var to_date = document.getElementById("to_date").value;
+
+
+   //    if (to_date != '') {
+   //       if (from_date == '') {
+   //          $("#from_date").focus();
+   //          return false;
+   //       }
+   //    }
+
+   //    if (from_date != '') {
+   //       if (to_date == '') {
+   //          $("#to_date").focus();
+   //          return false;
+   //       }
+   //    }
+
+
+   //    show_loader("apply_filter");
+   //    periodFilter();
+   //    // summary();
+   // });
+
+
+   var filter_data;
+   $('#apply_filter').on('click', async function() {
+
+      var selectedValues = $("#column_show").selectpicker('val');
+      if (selectedValues.length < 3) {
+         alert("Select min 3 columns");
+         return false;
+      }
+      $('.table-clients').DataTable().destroy();
+      $('.table-clients tbody').empty();
+
+      columnHeaders = [];
+      column_names = [];
+      await set_column_table();
+      filter_data = CustomersServerParams;
+      $("#leadSum").html('');
+      $(".leads-overview").hide();
 
       var from_date = document.getElementById("from_date").value;
       var to_date = document.getElementById("to_date").value;
@@ -612,19 +663,13 @@ init_tail(); ?>
 
 
       show_loader("apply_filter");
-      periodFilter();
-      // summary();
-   });
-
-   function periodFilter() {
-      // $(".table-clients").DataTable().ajax.reload(null, false).on('draw.dt', function() {
-      //    hide_loader("apply_filter");
-      // });
-      tAPI.ajax.reload(null, false).on('draw.dt', function() {
-         hide_loader("apply_filter");
+      tAPI = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
+      $('input[name="exclude_inactive"]').on('change', function() {
+         tAPI.ajax.reload();
       });
+      hide_loader("apply_filter");
 
-   }
+   });
 </script>
 </body>
 
