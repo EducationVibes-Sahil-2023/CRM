@@ -19,11 +19,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     <div class="col-md-12">
                                         <p class="bold"><?php echo _l('filter_by'); ?></p>
                                     </div>
+
+
                                     <div class="col-md-2 leads-filter-column">
                                         <?php
                                         echo render_select('status[]', $visitor_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Status'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
+
                                     <div class="col-md-2 leads-filter-column">
                                         <?php
                                         echo render_select('location[]', $location, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Location'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
@@ -39,6 +42,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                         echo render_select('attendee[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Attendee'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
+
+
                                     <div class="col-md-2 leads-filter-column">
                                         <?php
                                         echo render_select('lead_type[]', $lead_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
@@ -54,8 +59,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                             <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Visitor Date" autocomplete="off">
                                         </div>
                                     </div>
+                                    <?php if (has_permission('leads', '', 'view')) { ?>
+                                        <div class="col-md-2 leads-filter-column mb-5">
+                                            <?php echo render_select('assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'assigned'); ?>
+                                        </div>
+                                    <?php } ?>
 
-                                    <div class="col-md-3 text-center leads-filter-column">
+
+                                    <div class="col-md-4 text-center leads-filter-column">
                                         <div class="form-group">
                                             <button type="button" class="btn btn-primary" onclick="filter_data();" id="apply_filter">Apply Filter</button>
 
@@ -67,13 +78,20 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                 </div>
                             </div>
                         </div>
-
-
+                        <h4>Request Generate</h4>
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type')), 'lead-visitor-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type')), 'lead-visitor-genrate-table');
                         ?>
+                        <?php if (!is_admin()) { ?>
+                            <h4>Request Received</h4>
+                            <hr>
+
+                            <?php
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type')), 'lead-visitor-request-table');
+                            ?>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
@@ -91,18 +109,26 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         lead_type: "[name='lead_type[]']",
         from_date: "[name='from_date']",
         to_date: "[name='to_date']",
+        assigned: "[name='assigned[]']",
 
     };
     $(document).ready(function() {
-        initDataTable('.table-lead-visitor-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', r, [0, 'desc']);
+        initDataTable('.table-lead-visitor-genrate-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', r, [0, 'desc']);
+        <?php if (!is_admin()) { ?>
+            initDataTable('.table-lead-visitor-request-table', admin_url + 'leads/table_lead_visitor/1', 'undefined', 'undefined', r, [0, 'desc']);
+        <?php } ?>
 
     })
 
     function filter_data() {
-        console.log("okkkkkk");
-        $('.table-lead-visitor-table').DataTable().destroy();
-        $('.table-lead-visitor-table tbody').empty();
-        initDataTable('.table-lead-visitor-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', r, [0, 'desc']);
+        $('.table-lead-visitor-genrate-table').DataTable().destroy();
+        $('.table-lead-visitor-genrate-table tbody').empty();
+        initDataTable('.table-lead-visitor-genrate-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', r, [0, 'desc']);
+        <?php if (!is_admin()) { ?>
+            $('.table-lead-visitor-request-table').DataTable().destroy();
+            $('.table-lead-visitor-request-table tbody').empty();
+            initDataTable('.table-lead-visitor-request-table', admin_url + 'leads/table_lead_visitor/1', 'undefined', 'undefined', r, [0, 'desc']);
+        <?php } ?>
 
     }
 </script>

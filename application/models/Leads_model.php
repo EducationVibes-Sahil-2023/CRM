@@ -2138,6 +2138,12 @@ class Leads_model extends App_Model
         }
 
 
+        if (total_rows(db_prefix() . 'visitor_request', 'lead_id="' . $CI->db->escape_str($id) . '" AND (assigned=' . $CI->db->escape_str($staff_id) . ' OR created_by=' . $CI->db->escape_str($staff_id) . ')') > 0) {
+
+            return true;
+        }
+
+
 
         return false;
     }
@@ -3053,6 +3059,9 @@ class Leads_model extends App_Model
 
     public function performance_related_dropdown()
     {
+
+                // $this->db->query("SET SESSION group_concat_max_len = 1000000000");
+
         return $this->db->query("
     SELECT 
         source,

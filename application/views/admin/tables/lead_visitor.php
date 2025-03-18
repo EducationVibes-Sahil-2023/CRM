@@ -5,12 +5,13 @@ $lead_data = array_column(get_type(), null, 'id');
 $lead_source = array_column(get_source(), null, 'id');
 $staff_data = array_column(get_all_staff(), null, 'staffid');
 $get_staff_user_id = get_staff_user_id();
+
 $aColumns = [
     db_prefix() . 'visitor_status.name as status',
     db_prefix() . 'visitor_request.date_of_visit as date_of_visit',
     db_prefix() . 'leads.name as student_name',
     db_prefix() . 'leads.phonenumber as phonenumber',
-    db_prefix() . 'office_location.name as location',
+    db_prefix() . 'cities_.name as location',
     db_prefix() . 'visitor_type.name as visitor_type',
     db_prefix() . 'visitor_request.assigned as assigned',
     db_prefix() . 'leads.type as lead_type',
@@ -34,23 +35,61 @@ $where  = [];
 $filter = [];
 
 $join          = [];
-array_push($join, 'JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'visitor_request.lead_id');
-array_push($join, 'JOIN ' . db_prefix() . 'visitor_status ON ' . db_prefix() . 'visitor_status.id = ' . db_prefix() . 'visitor_request.status');
-array_push($join, 'JOIN ' . db_prefix() . 'office_location ON ' . db_prefix() . 'office_location.id = ' . db_prefix() . 'visitor_request.location');
-array_push($join, 'JOIN ' . db_prefix() . 'visitor_type ON ' . db_prefix() . 'visitor_type.id = ' . db_prefix() . 'visitor_request.visitor_type');
+array_push($join, 'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'visitor_request.lead_id');
+array_push($join, 'LEFT JOIN ' . db_prefix() . 'visitor_status ON ' . db_prefix() . 'visitor_status.id = ' . db_prefix() . 'visitor_request.status');
+array_push($join, 'LEFT JOIN ' . db_prefix() . 'cities_ ON ' . db_prefix() . 'cities_.id = ' . db_prefix() . 'visitor_request.location');
+array_push($join, 'LEFT JOIN ' . db_prefix() . 'visitor_type ON ' . db_prefix() . 'visitor_type.id = ' . db_prefix() . 'visitor_request.visitor_type');
 
 
 
-$role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
-if ($role == 3) {
-    $sid = $get_staff_user_id;
-    $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
-    $this->ci->db->close();
-    $this->ci->db->initialize();
-    $idsarr = array_column($teamids, 'staffid');
-    $sids = implode(",", $idsarr);
-    $where[] = !empty($sids) ? "AND " . $sTable . ".assigned IN ({$sid}, {$sids})" : "AND " . $sTable . ".assigned = {$sid}";
+if (!empty($params["request_type"]) && $params["request_type"] == 1) {
+
+    $role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+    if ($role == 3) {
+        $sid = $get_staff_user_id;
+        $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $this->ci->db->close();
+        $this->ci->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        $where[] = !empty($sids) ? "AND " . $sTable . ".assigned IN ({$sid}, {$sids})" : "AND " . $sTable . ".assigned = {$sid}";
+    } else {
+        if ($this->ci->input->post('assigned')) {
+            $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+        } else {
+            if (is_admin()) {
+            } else {
+                $_POST['assigned'][] = $get_staff_user_id;
+                $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+            }
+        }
+    }
+} else {
+    $role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
+    if ($role == 3) {
+        $sid = $get_staff_user_id;
+        $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $this->ci->db->close();
+        $this->ci->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        $where[] = !empty($sids) ? "AND " . $sTable . ".created_by IN ({$sid}, {$sids})" : "AND " . $sTable . ".created_by = {$sid}";
+    } else {
+
+        // Apply filters based on input parameters
+        if ($this->ci->input->post('assigned')) {
+            $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+        } else {
+            if (is_admin()) {
+            } else {
+                $_POST['assigned'][] = $get_staff_user_id;
+                $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+            }
+        }
+    }
 }
+
+
 
 if (!empty($this->ci->input->post('lead_type'))) {
     $where[] = "AND " . db_prefix() . "leads.type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";
@@ -86,7 +125,7 @@ foreach ($rResult as $aRow) {
     $row = [];
     $edit_btn = '';
     if (in_array($aRow["status_id"], [1, 3])) {
-        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`)'>" . _l('view') . "</a></div>";
+        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`,1)'>" . _l('view') . "</a></div>";
     }
     $row[] = $aRow["status"];
     $row[] = date('l, F j, Y H:i A', strtotime($aRow["date_of_visit"]));

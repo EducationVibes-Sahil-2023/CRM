@@ -11,7 +11,27 @@ $last_lead_request = last_lead_request($lead->id);
 
 
 ?>
+<style>
+   ul#suggestion-list {
+      display: block;
+      border: 1px solid rgb(204, 204, 204);
+      padding: 5px 10px;
+      position: absolute;
+      background: white;
+      top: 72px;
+      left: 15px;
+      width: 90%;
+      font-size: 14px;
+      line-height: 25px;
+      z-index: 99999;
+      border-radius: 10px;
+      box-shadow: 2px 3px 10px 0px lightgray;
+   }
 
+   ul#suggestion-list li:hover {
+      background: lightgray;
+   }
+</style>
 <div class="modal-header">
    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
    <h4 class="modal-title">
@@ -103,11 +123,11 @@ $last_lead_request = last_lead_request($lead->id);
                               <?php echo _l('tasks'); ?>
                            </a>
                         </li> -->
-                        <li role="presentation">
+                        <!-- <li role="presentation">
                            <a href="#attachments" aria-controls="attachments" role="tab" data-toggle="tab">
                               <?php echo _l('lead_attachments'); ?>
                            </a>
-                        </li>
+                        </li> -->
                         <li role="presentation">
                            <a href="#lead_reminders" onclick="initDataTable('.table-reminders-leads', admin_url + 'misc/get_reminders/' + <?php echo $lead->id; ?> + '/' + 'lead', undefined, undefined,undefined,[1, 'asc']);" aria-controls="lead_reminders" role="tab" data-toggle="tab">
                               <?php echo _l('leads_reminders_tab'); ?> &
@@ -620,7 +640,7 @@ $last_lead_request = last_lead_request($lead->id);
 
                      <div class="form-group col-md-3">
                         <?php
-                        echo render_select('visitor_type', $visitor_type, array('id', 'name'), '<small class="req text-danger">* </small> Visitor Type ', [$visitor_request->location], array('data-width' => '100%', 'data-none-selected-text' => _l('Visitor Type')), array(), 'no-mbot', '', false,  'visitor_type');
+                        echo render_select('visitor_type', $visitor_type, array('id', 'name'), '<small class="req text-danger">* </small> Visitor Type ', [$visitor_request->visitor_type], array('data-width' => '100%', 'data-none-selected-text' => _l('Visitor Type')), array(), 'no-mbot', '', false,  'visitor_type');
                         ?>
                      </div>
                      <div class="form-group col-md-3">
@@ -632,6 +652,8 @@ $last_lead_request = last_lead_request($lead->id);
                      <div class="form-group col-md-4">
                         <label><small class="req text-danger">* </small> Address </label>
                         <textarea id="address" name="address" class='form-control' placeholder="address"><?= $visitor_request->address ?></textarea>
+                        <ul id="suggestion-list" style="display:none; border: 1px solid #ccc; padding: 5px; position: absolute; background: white;"></ul>
+
                      </div>
 
                      <div class="form-group col-md-5">
@@ -887,10 +909,33 @@ $last_lead_request = last_lead_request($lead->id);
 <?php hooks()->do_action('lead_modal_profile_bottom', (isset($lead) ? $lead->id : '')); ?>
 <script>
    // init_editor('#template_message');
+   var visitorStatus = <?= !empty($visitorStatus) ? $visitorStatus : 0 ?>;
 
    var staff_members = <?= json_encode($staff_members, true) ?>;
    var last_lead_request_assign = "<?= !empty($last_lead_request->assign) ? $last_lead_request->assign : '' ?>";
-   console.log(staff_members);
+
+   $(document).ready(function() {
+      console.log(visitorStatus);
+      if (visitorStatus == 1) {
+         const intervalId = setInterval(() => {
+            if ($("#lead-modal").is(":visible")) {
+               $("#show_visitor_lead_div").trigger("click");
+               if (visitorStatus == 1) {
+                  // $(".horizontal-tabs ul.nav-tabs-horizontal li").not(".active").remove();
+                  $(".horizontal-tabs ul.nav-tabs-horizontal li").not(".active").addClass("disabled").css("pointer-events", "none");
+
+               }
+               clearInterval(intervalId);
+               clearTimeout(timeoutId); // Clear the timeout if the interval is cleared first
+            }
+         }, 500);
+
+         // Set a timeout to clear the interval after 30 seconds
+         const timeoutId = setTimeout(() => {
+            clearInterval(intervalId);
+         }, 30000); // 30000 milliseconds = 30 seconds
+      }
+   });
 
    function set_staff_dropdown() {
       let lead_type = $("#transfer_lead_type").val();
@@ -990,11 +1035,59 @@ $last_lead_request = last_lead_request($lead->id);
       if (set_validation == false) {
          console.log("start");
          setTimeout(async () => {
-            await validation_set("lead-visitor");
+
             set_validation = true;
+            set_search_cities();
+            await validation_set("lead-visitor");
+
+
+
          }, 200);
 
       }
+   }
+
+   function set_search_cities() {
+
+      // Bind event to search input ONLY inside #visitor_location selectpicker
+      $('#visitor_location').parent().find('.bs-searchbox input').on('input', function() {
+         let searchQuery = $(this).val();
+
+         if (searchQuery.length > 2) { // Start AJAX after 3+ characters
+            let formData = new FormData(document.getElementById('lead-visitor')); // Correct FormData initialization
+
+            formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+            formData.append("value", searchQuery); // Corrected `.val()` issue
+
+            $.ajax({
+               url: "<?php echo base_url('admin/leads/search_cities'); ?>", // Replace with actual API URL
+               method: "POST", // FormData requires POST (not GET)
+               data: formData,
+               processData: false, // Prevent jQuery from transforming FormData
+               contentType: false, // Ensure correct Content-Type is set for FormData
+               dataType: "JSON",
+               success: function(response) { // 'data' is already parsed as JSON
+
+                  $('#visitor_location').empty(); // Clear old options
+                  let data = response.data;
+                  if (data.length > 0) {
+                     $.each(data, function(index, item) {
+                        $('#visitor_location').append(`<option value="${item.id}">${item.name}</option>`);
+                     });
+                  } else {
+                     $('#visitor_location').append('<option disabled>No results found</option>'); // Handle no results case
+                  }
+
+                  $('#visitor_location').selectpicker('refresh'); // Refresh selectpicker
+               },
+               error: function(xhr, status, error) {
+                  console.error("AJAX Error: ", error);
+               }
+            });
+
+         }
+      });
+
    }
 
    function create_visitor_request() {
@@ -1051,4 +1144,47 @@ $last_lead_request = last_lead_request($lead->id);
          }
       <?php endif; ?>
    }
+</script>
+
+<script>
+   const suggestions = ["Office no 37/38/39 B wing, First floor,Shreenath plaza, Dyaneshwar Paduka Chownk FC Road Shivaji Nagar Pune - 411005.", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "Tower A, ithum IT park, 208A, Plot-A40, Sector 62, Noida, Uttar Pradesh 201301", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082"];
+
+   const textarea = document.getElementById("address");
+   const suggestionList = document.getElementById("suggestion-list");
+
+   textarea.addEventListener("input", function() {
+      let query = this.value.toLowerCase();
+      suggestionList.innerHTML = "";
+
+      if (query.length > 0) {
+         let filtered = suggestions.filter(item => item.toLowerCase().includes(query));
+
+         if (filtered.length) {
+            suggestionList.style.display = "block";
+            suggestionList.style.top = textarea.offsetTop + textarea.offsetHeight + "px";
+            suggestionList.style.left = textarea.offsetLeft + "px";
+
+            filtered.forEach(item => {
+               let li = document.createElement("li");
+               li.textContent = item;
+               li.style.cursor = "pointer";
+               li.onclick = () => {
+                  textarea.value = item;
+                  suggestionList.style.display = "none";
+               };
+               suggestionList.appendChild(li);
+            });
+         } else {
+            suggestionList.style.display = "none";
+         }
+      } else {
+         suggestionList.style.display = "none";
+      }
+   });
+
+   document.addEventListener("click", function(e) {
+      if (!suggestionList.contains(e.target) && e.target !== textarea) {
+         suggestionList.style.display = "none";
+      }
+   });
 </script>
