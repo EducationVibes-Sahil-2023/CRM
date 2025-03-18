@@ -2138,6 +2138,12 @@ class Leads_model extends App_Model
         }
 
 
+        if (total_rows(db_prefix() . 'visitor_request', 'lead_id="' . $CI->db->escape_str($id) . '" AND (assigned=' . $CI->db->escape_str($staff_id) . ' OR created_by=' . $CI->db->escape_str($staff_id) . ')') > 0) {
+
+            return true;
+        }
+
+
 
         return false;
     }
