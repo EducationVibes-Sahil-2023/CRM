@@ -230,13 +230,34 @@ class Leads extends AdminController
         if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
             $statusHtml = '';
             $summary = get_leads_summary_filter_neww($_POST);
+            $marketing_data = [];
+            $total_leads = 0;
             foreach ($summary as $status) {
+
+                if (!empty($status["conversion_type_name"])) {
+                    $marketing_data[$status["conversion_type"]]["name"] = $status["conversion_type_name"];
+                    $marketing_data[$status["conversion_type"]]["total"] += $status["total"];
+                    $marketing_data[$status["conversion_type"]]["color"] = $status["color"];
+                    $total_leads += $status["total"];
+                }
+
                 $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
                 $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
         <h3 class='bold'>{$percent}</h3>
         <span style='color: {$status['color']}'>{$status['name']}</span>
-        </div>";
+        ";
             }
+
+            // $marketing_data[$status["conversion_type"]]["name"] = "total";
+            // $marketing_data[$status["conversion_type"]]["total"] = $total_leads;
+            // $marketing_data[$status["conversion_type"]]["color"] = "black";
+            // $statusHtml .= '</div><div class="col-12 panel-body"><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Performance Marketing</span></h3></div>';
+            // foreach ($marketing_data as $mar) {
+
+            //     $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type border-right"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . (($mar['total'] / $total_leads) * 100) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div>';
+            // }
+            // $statusHtml .= "</div>";
+
 
             echo json_encode([
                 'status' => $statusHtml,
@@ -407,8 +428,8 @@ class Leads extends AdminController
     /* Add or update lead */
 
     public function lead($id = '', $visitorStatus = 0)
-
     {
+        $visitorStatus = 0;
         if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id))) {
 
             ajax_access_denied();

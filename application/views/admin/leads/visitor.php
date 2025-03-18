@@ -85,7 +85,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                         render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type')), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
-                            <h4>Request Recived</h4>
+                            <h4>Request Received</h4>
                             <hr>
 
                             <?php
