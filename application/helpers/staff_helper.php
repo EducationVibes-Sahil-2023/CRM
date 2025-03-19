@@ -104,6 +104,13 @@ function get_available_staff_permissions($data = [])
                 'view'     => _l('permission_view_own'),
             ],
         ],
+        'visit_leads' => [
+            'name'         => _l('Leads Visit'),
+            'capabilities' => [
+                // 'view_own' => _l('permission_view_own'),
+                'delete' => _l('permission_delete'),
+            ],
+        ],
         'roles' => [
             'name'         => _l('roles'),
             'capabilities' => $withoutViewOwnPermissionsArray,

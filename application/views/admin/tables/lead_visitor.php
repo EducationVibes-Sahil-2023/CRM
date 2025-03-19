@@ -5,6 +5,7 @@ $lead_data = array_column(get_type(), null, 'id');
 $lead_source = array_column(get_source(), null, 'id');
 $staff_data = array_column(get_all_staff(), null, 'staffid');
 $get_staff_user_id = get_staff_user_id();
+$has_permission_delete = has_permission('visit_leads', '', 'delete');
 
 $aColumns = [
     db_prefix() . 'visitor_status.name as status',
@@ -124,8 +125,14 @@ $rResult = $result['rResult'];
 foreach ($rResult as $aRow) {
     $row = [];
     $edit_btn = '';
-    if (in_array($aRow["status_id"], [1, 3])) {
-        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`,1)'>" . _l('view') . "</a></div>";
+    if (in_array($aRow["status_id"], [1, 3]) || $has_permission_delete) {
+        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`,1)'>" . _l('view') . "</a>";
+
+        if ($aRow['created_by'] == $get_staff_user_id || $has_permission_delete) {
+            $edit_btn .= ' | <a href="javascript:void(0)" onclick="delete_visit(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
+        }
+
+        $edit_btn .= "</div>";
     }
     $row[] = $aRow["status"];
     $row[] = date('l, F j, Y H:i A', strtotime($aRow["date_of_visit"]));

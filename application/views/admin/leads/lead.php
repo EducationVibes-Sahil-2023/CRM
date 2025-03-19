@@ -1038,8 +1038,9 @@ $last_lead_request = last_lead_request($lead->id);
 
             set_validation = true;
             set_search_cities();
-            await validation_set("lead-visitor");
+            set_search_location();
 
+            await validation_set("lead-visitor");
 
 
          }, 200);
@@ -1144,47 +1145,47 @@ $last_lead_request = last_lead_request($lead->id);
          }
       <?php endif; ?>
    }
-</script>
 
-<script>
-   const suggestions = ["Office no 37/38/39 B wing, First floor,Shreenath plaza, Dyaneshwar Paduka Chownk FC Road Shivaji Nagar Pune - 411005.", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "Tower A, ithum IT park, 208A, Plot-A40, Sector 62, Noida, Uttar Pradesh 201301", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082"];
+   function set_search_location() {
+      const suggestions = ["Office no 37/38/39 B wing, First floor,Shreenath plaza, Dyaneshwar Paduka Chownk FC Road Shivaji Nagar Pune - 411005.", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "Tower A, ithum IT park, 208A, Plot-A40, Sector 62, Noida, Uttar Pradesh 201301", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082"];
 
-   const textarea = document.getElementById("address");
-   const suggestionList = document.getElementById("suggestion-list");
+      const textarea = document.getElementById("address");
+      const suggestionList = document.getElementById("suggestion-list");
 
-   textarea.addEventListener("input", function() {
-      let query = this.value.toLowerCase();
-      suggestionList.innerHTML = "";
+      textarea.addEventListener("input", function() {
+         let query = this.value.toLowerCase();
+         suggestionList.innerHTML = "";
 
-      if (query.length > 0) {
-         let filtered = suggestions.filter(item => item.toLowerCase().includes(query));
+         if (query.length > 0) {
+            let filtered = suggestions.filter(item => item.toLowerCase().includes(query));
 
-         if (filtered.length) {
-            suggestionList.style.display = "block";
-            suggestionList.style.top = textarea.offsetTop + textarea.offsetHeight + "px";
-            suggestionList.style.left = textarea.offsetLeft + "px";
+            if (filtered.length) {
+               suggestionList.style.display = "block";
+               suggestionList.style.top = textarea.offsetTop + textarea.offsetHeight + "px";
+               suggestionList.style.left = textarea.offsetLeft + "px";
 
-            filtered.forEach(item => {
-               let li = document.createElement("li");
-               li.textContent = item;
-               li.style.cursor = "pointer";
-               li.onclick = () => {
-                  textarea.value = item;
-                  suggestionList.style.display = "none";
-               };
-               suggestionList.appendChild(li);
-            });
+               filtered.forEach(item => {
+                  let li = document.createElement("li");
+                  li.textContent = item;
+                  li.style.cursor = "pointer";
+                  li.onclick = () => {
+                     textarea.value = item;
+                     suggestionList.style.display = "none";
+                  };
+                  suggestionList.appendChild(li);
+               });
+            } else {
+               suggestionList.style.display = "none";
+            }
          } else {
             suggestionList.style.display = "none";
          }
-      } else {
-         suggestionList.style.display = "none";
-      }
-   });
+      });
 
-   document.addEventListener("click", function(e) {
-      if (!suggestionList.contains(e.target) && e.target !== textarea) {
-         suggestionList.style.display = "none";
-      }
-   });
+      document.addEventListener("click", function(e) {
+         if (!suggestionList.contains(e.target) && e.target !== textarea) {
+            suggestionList.style.display = "none";
+         }
+      });
+   }
 </script>

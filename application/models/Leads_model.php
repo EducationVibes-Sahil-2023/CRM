@@ -3060,7 +3060,7 @@ class Leads_model extends App_Model
     public function performance_related_dropdown()
     {
 
-                // $this->db->query("SET SESSION group_concat_max_len = 1000000000");
+        // $this->db->query("SET SESSION group_concat_max_len = 1000000000");
 
         return $this->db->query("
     SELECT 
@@ -3111,5 +3111,20 @@ class Leads_model extends App_Model
 
 
         return $this->db->get(db_prefix() . 'visitor_activity_log')->result_array();
+    }
+
+    public function delete_visit($id)
+    {
+        $this->db->where('visit_id', $id);
+        $this->db->delete(db_prefix() . 'visitor_activity_log');
+
+        $this->db->where('id', $id);
+        $this->db->delete(db_prefix() . 'visitor_request');
+
+
+        if ($this->db->affected_rows() > 0) {
+            return true;
+        }
+        return false;
     }
 }
