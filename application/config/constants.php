@@ -241,6 +241,3 @@ define('FEES_DEPOSITE_PENDING', '10');
 define('INVITATION_PENDING', '11');
 define('THIRD_PAYMENT_PENDING', '12');
 
-
-
-define('OFFICE_LOCATIONS', ["Office no 37/38/39 B wing, First floor,Shreenath plaza, Dyaneshwar Paduka Chownk FC Road Shivaji Nagar Pune - 411005.", "Office No. 303, 4th Floor, Sapphire Twins, AB Rd, opposite C21 Mall, Vijay Nagar, Scheme No 54, Indore, Madhya Pradesh 452011", "Tower A, ithum IT park, 208A, Plot-A40, Sector 62, Noida, Uttar Pradesh 201301", "9th floor, Rajhans Helix, 901, 3, Lal Bahadur Shastri Marg, near Shreyas, Ghatkopar West, Mumbai, Maharashtra 400086", "Office no 1, Shivling smriti, opposite Udyog Bhavan, near urban co-op Bank Ltd, Shivaji Nagar, Narayan Nagar, Latur, Maharashtra 413531", "EducationVibes, Office no 408, Vishwakarma Sankul, near Gold City Hospital, The Co-operative Housieng Society, Jalgaon, Maharashtra 425001", "4th floor, Central Plaza, Door no. 6, 3-902/A, Raj Bhavan Rd, Somajiguda, Hyderabad, Telangana 500082"]);
