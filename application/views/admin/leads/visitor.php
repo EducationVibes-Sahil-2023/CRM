@@ -60,11 +60,9 @@ array_unshift($location, array());
                                             <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Visitor Date" autocomplete="off">
                                         </div>
                                     </div>
-                                    <?php if (has_permission('leads', '', 'view')) { ?>
-                                        <div class="col-md-2 leads-filter-column mb-5">
-                                            <?php echo render_select('assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'assigned'); ?>
-                                        </div>
-                                    <?php } ?>
+                                    <div class="col-md-2 leads-filter-column mb-5">
+                                        <?php echo render_select('assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'assigned'); ?>
+                                    </div>
 
 
                                     <div class="col-md-4 text-center leads-filter-column">
