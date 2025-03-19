@@ -1108,7 +1108,13 @@ $last_lead_request = last_lead_request($lead->id);
             hide_loader();
             if (res.success) {
                alert_float("success", res.message);
-               init_lead(res.lead_id, "#show_visitor_lead_div", 1);
+               $(".lead-modal").modal("hide");
+               setTimeout(() => {
+                  init_lead(res.lead_id, "", "#show_visitor_lead_div", 1);
+               }, 200);
+               if (window.filter_data) {
+                  filter_data();
+               }
             } else {
                const message = res.message || "An unknown error occurred.";
                alert_float("danger", message);

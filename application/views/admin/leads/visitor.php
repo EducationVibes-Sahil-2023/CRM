@@ -112,11 +112,16 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         assigned: "[name='assigned[]']",
 
     };
-    $(document).ready(function() {
+
+    function refresh_visitor_table() {
         initDataTable('.table-lead-visitor-genrate-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', r, [0, 'desc']);
         <?php if (!is_admin()) { ?>
             initDataTable('.table-lead-visitor-request-table', admin_url + 'leads/table_lead_visitor/1', 'undefined', 'undefined', r, [0, 'desc']);
         <?php } ?>
+    }
+
+    $(document).ready(function() {
+        refresh_visitor_table();
 
     })
 
