@@ -54,6 +54,10 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
         $where[] = !empty($sids) ? "AND " . $sTable . ".assigned IN ({$sid}, {$sids})" : "AND " . $sTable . ".assigned = {$sid}";
+
+        if ($this->ci->input->post('assigned')) {
+            $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+        }
     } else {
         if ($this->ci->input->post('assigned')) {
             $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
@@ -75,6 +79,10 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
         $where[] = !empty($sids) ? "AND " . $sTable . ".created_by IN ({$sid}, {$sids})" : "AND " . $sTable . ".created_by = {$sid}";
+
+        if ($this->ci->input->post('assigned')) {
+            $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+        }
     } else {
 
         // Apply filters based on input parameters

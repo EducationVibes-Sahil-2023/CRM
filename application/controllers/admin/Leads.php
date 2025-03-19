@@ -431,11 +431,15 @@ class Leads extends AdminController
 
     public function lead($id = '', $visitorStatus = 0)
     {
-        if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id))) {
+        // if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id))) {
+
+        //     ajax_access_denied();
+        // }
+
+        if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id) && !$this->leads_model->get_lead_visitor_request_exist($id))) {
 
             ajax_access_denied();
         }
-
 
 
         if ($this->input->post()) {
@@ -554,9 +558,19 @@ class Leads extends AdminController
 
             if ((!empty($_REQUEST["visitorStatus"]) && $_REQUEST["visitorStatus"] == 1) || $visitorStatus == 1) {
                 $leadWhere = (has_permission('leads', '', 'view') ? [] : []);
+
+                $check_lead_transfer_request = $this->leads_model->get_lead_visitor_request_exist($id);
+                //  print_r($check_lead_transfer_request); die;
+                if (empty($check_lead_transfer_request->created_by)) {
+                    header('HTTP/1.0 404 Not Found');
+
+                    echo "Visit Request not found";
+                    die;
+                }
             } else {
                 $leadWhere = (has_permission('leads', '', 'view') ? [] : '(assigned = ' . get_staff_user_id() . ' OR addedfrom=' . get_staff_user_id() . ' OR is_public=1)');
             }
+
             $lead = $this->leads_model->get($id, $leadWhere);
 
 
@@ -3671,7 +3685,7 @@ class Leads extends AdminController
     public function lead_visitor_request()
     {
         $data['title']    = "Lead Visitor Request";
-        $data['location'] = $this->staff_model->office_location();
+        $data['location'] = $this->staff_model->cities("");
         $data['visitor_type'] = $this->staff_model->visitor_type();
         $data['visitor_status'] = $this->staff_model->visitor_status();
         $data['type']  = $this->leads_model->get_type();

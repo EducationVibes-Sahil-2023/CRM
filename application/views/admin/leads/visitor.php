@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head();
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+array_unshift($location, array());
 ?>
 <style>
     a {
@@ -29,7 +30,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
                                     <div class="col-md-2 leads-filter-column">
                                         <?php
-                                        echo render_select('location[]', $location, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Location'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
+                                        echo render_select('location[]', $location, array('id', 'name'), '', [], array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => _l('Location'), 'data-actions-box' => true), array(), 'no-mbot', '', false,  'location');
                                         ?>
                                     </div>
                                     <div class="col-md-2 leads-filter-column">
@@ -122,10 +123,26 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
     $(document).ready(function() {
         refresh_visitor_table();
-
+        set_search_cities();
     })
 
     function filter_data() {
+
+        let fromDate = $("input[name='from_date']").val().trim();
+        let toDate = $("input[name='to_date']").val().trim();
+        if (fromDate === "" && toDate === "") {} else {
+            if (fromDate === "" || toDate === "") {
+                if (fromDate === "") {
+                    $("input[name='from_date']").focus();
+                }
+                if (toDate === "") {
+                    $("input[name='to_date']").focus();
+                }
+                alert_float("danger", "Both From Date and To Date are required.");
+                return false;
+            }
+        }
+
         $('.table-lead-visitor-genrate-table').DataTable().destroy();
         $('.table-lead-visitor-genrate-table tbody').empty();
         initDataTable('.table-lead-visitor-genrate-table', admin_url + 'leads/table_lead_visitor', 'undefined', 'undefined', r, [0, 'desc']);
@@ -160,5 +177,48 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             }
         }); // you have missed this bracket
         return false;
+    }
+
+    function set_search_cities() {
+
+        // Bind event to search input ONLY inside #visitor_location selectpicker
+        $('#location').parent().find('.bs-searchbox input').on('input', function() {
+            let searchQuery = $(this).val();
+
+            if (searchQuery.length > 2) { // Start AJAX after 3+ characters
+                let formData = new FormData(); // Correct FormData initialization
+
+                formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+                formData.append("value", searchQuery); // Corrected `.val()` issue
+
+                $.ajax({
+                    url: "<?php echo base_url('admin/leads/search_cities'); ?>", // Replace with actual API URL
+                    method: "POST", // FormData requires POST (not GET)
+                    data: formData,
+                    processData: false, // Prevent jQuery from transforming FormData
+                    contentType: false, // Ensure correct Content-Type is set for FormData
+                    dataType: "JSON",
+                    success: function(response) { // 'data' is already parsed as JSON
+
+                        $('#location').empty(); // Clear old options
+                        let data = response.data;
+                        if (data.length > 0) {
+                            $.each(data, function(index, item) {
+                                $('#location').append(`<option value="${item.id}">${item.name}</option>`);
+                            });
+                        } else {
+                            $('#location').append('<option disabled>No results found</option>'); // Handle no results case
+                        }
+
+                        $('#location').selectpicker('refresh'); // Refresh selectpicker
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX Error: ", error);
+                    }
+                });
+
+            }
+        });
+
     }
 </script>
