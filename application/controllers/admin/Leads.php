@@ -3769,9 +3769,7 @@ class Leads extends AdminController
 
                 $this->lead_visitor_notification($lead_id, 1, $to_user_id);
 
-                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]] . ". Created by - ";
-
-                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
+                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('j F Y, h:i A, l', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
 
                 // Check if comment exists and is not empty
                 $comment = trim($data_insert_update["comment"]);
@@ -3796,7 +3794,7 @@ class Leads extends AdminController
 
                     $update_transfer = $this->db->update(db_prefix() . 'visitor_request', $data_insert_update, ["id" => $data_insert_update["id"]]);
 
-                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
+                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('j F Y, h:i A, l', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
                     // Check if comment exists and is not empty
                     $comment = trim($data_insert_update["comment"]);
                     if (!empty($comment)) {
