@@ -131,4 +131,29 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
         <?php } ?>
 
     }
+
+
+    function delete_visit(id) {
+        show_loader();
+        $.ajax({
+            type: "POST",
+            url: admin_url + "leads/delete_visit",
+            data: {
+                id: id
+            },
+            dataType: "JSON",
+            cache: false,
+            success: function(data) {
+                hide_loader();
+                if (data.success) {
+                    alert_float('success', data.message);
+                    filter_data();
+                } else {
+                    alert_float('danger', data.message);
+                }
+
+            }
+        }); // you have missed this bracket
+        return false;
+    }
 </script>

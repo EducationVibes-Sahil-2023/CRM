@@ -228,13 +228,13 @@ class Leads extends AdminController
 
 
         if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
-            $statusHtml = '';
+            $statusHtml = '<div>';
             $summary = get_leads_summary_filter_neww($_POST);
             $marketing_data = [];
             $total_leads = 0;
             foreach ($summary as $status) {
 
-                if (!empty($status["conversion_type_name"])) {
+                if (!empty($status["conversion_type_name"]) && !empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
                     $marketing_data[$status["conversion_type"]]["name"] = $status["conversion_type_name"];
                     $marketing_data[$status["conversion_type"]]["total"] += $status["total"];
                     $marketing_data[$status["conversion_type"]]["color"] = $status["color"];
@@ -243,20 +243,22 @@ class Leads extends AdminController
 
                 $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
                 $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
-        <h3 class='bold'>{$percent}</h3>
-        <span style='color: {$status['color']}'>{$status['name']}</span>
-        ";
+                <h3 class='bold'>{$percent}</h3>
+                <span style='color: {$status['color']}'>{$status['name']}</span></div>";
             }
+            $statusHtml .= "</div>";
 
-            // $marketing_data[$status["conversion_type"]]["name"] = "total";
-            // $marketing_data[$status["conversion_type"]]["total"] = $total_leads;
-            // $marketing_data[$status["conversion_type"]]["color"] = "black";
-            // $statusHtml .= '</div><div class="col-12 panel-body"><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Performance Marketing</span></h3></div>';
-            // foreach ($marketing_data as $mar) {
+            if (!empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
+                $marketing_data[$status["conversion_type"]]["name"] = "total";
+                $marketing_data[$status["conversion_type"]]["total"] = $total_leads;
+                $marketing_data[$status["conversion_type"]]["color"] = "black";
+                $statusHtml .= '<br><br><hr><div><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Performance Marketing</span></h3></div>';
+                foreach ($marketing_data as $mar) {
 
-            //     $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type border-right"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . (($mar['total'] / $total_leads) * 100) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div>';
-            // }
-            // $statusHtml .= "</div>";
+                    $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type border-right"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . number_format((($mar['total'] / $total_leads) * 100), 2) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div>';
+                }
+                $statusHtml .= "</div>";
+            }
 
 
             echo json_encode([
@@ -429,7 +431,6 @@ class Leads extends AdminController
 
     public function lead($id = '', $visitorStatus = 0)
     {
-        $visitorStatus = 0;
         if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id))) {
 
             ajax_access_denied();
@@ -907,7 +908,7 @@ class Leads extends AdminController
 
         if (!is_lead_creator($id) && !has_permission('leads', '', 'delete')) {
 
-            access_denied('Delte Lead');
+            access_denied('Delete Lead');
         }
         // $lead_data = $this->leads_model->get($id);
         $response = $this->leads_model->delete($id);
@@ -3762,8 +3763,9 @@ class Leads extends AdminController
                 $data_insert_update["created_at"] = date('Y-m-d H:i:s');
 
                 $insert_ = $this->db->insert(db_prefix() . 'visitor_request', $data_insert_update);
-
+                $visit_id = $this->db->insert_id();
                 $to_user_id = $data_insert_update["assigned"];
+
 
                 $this->lead_visitor_notification($lead_id, 1, $to_user_id);
 
@@ -3778,7 +3780,7 @@ class Leads extends AdminController
                 }
 
 
-                $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
+                $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id, "visit_id" => $visit_id));
 
                 if ($insert_) {
                     $message = "Lead visitor request submitted successfully.";
@@ -3801,7 +3803,7 @@ class Leads extends AdminController
                         $message .= " <br> Additional comment: " . $comment . ".";
                     }
 
-                    $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
+                    $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id, "visit_id" => $data_insert_update["id"]));
 
                     $to_user_id = $data_insert_update["assigned"];
                     if ($data_insert_update["assigned"] == get_staff_user_id()) {
@@ -3844,5 +3846,31 @@ class Leads extends AdminController
             'success' => true,
             'data' => $data,
         ]);
+    }
+
+
+    public function delete_visit()
+    {
+        $id = $_POST["id"];
+        $has_permission_delete = has_permission('visit_leads', '', 'delete');
+
+        if ($has_permission_delete) {
+            $success = $this->leads_model->delete_visit($id);
+
+            if ($success) {
+                set_alert('success', _l('deleted', _l('Visit Lead')));
+                $message = "Visit lead deleted successfully.";
+            } else {
+                set_alert('warning', _l('problem_deleting', _l('Visit Lead')));
+                $message = "Failed to delete visit lead.";
+            }
+
+            echo json_encode([
+                'success' => $success,
+                'message' => $message,
+            ]);
+        } else {
+            access_denied('Delete Visit Lead');
+        }
     }
 }

@@ -48,7 +48,7 @@ if (!empty($this->ci->input->post('up_to_date'))) {
     $length = intval($length);
     $where_c = "";
     $join_type = "";
-    $sql_p1 ="";
+    $sql_p1 = "";
     if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
 
         $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
@@ -61,15 +61,15 @@ if (!empty($this->ci->input->post('up_to_date'))) {
         }
     }
 
-if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
-    $where_c  .= " AND {$sTable}.assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
-}
+    if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
+        $where_c  .= " AND {$sTable}.assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+    }
 
-$where_c  .= " AND {$call_table}.staffid = {$sTable}.assigned ";
+    $where_c  .= " AND {$call_table}.staffid = {$sTable}.assigned ";
 
-// $sTable = $call_table;
+    // $sTable = $call_table;
 
-  $join[] = " JOIN " . db_prefix() . "leads ON (
+    $join[] = " JOIN " . db_prefix() . "leads ON (
    {$call_table}.contact IN (
         REPLACE(TRIM(REPLACE(phonenumber, '+91', '')), ' ', ''),
         REPLACE(TRIM(REPLACE(alternative_phonenumber, '+91', '')), ' ', '')
@@ -78,12 +78,11 @@ $where_c  .= " AND {$call_table}.staffid = {$sTable}.assigned ";
 )";
 
     $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
-    
-     if(!empty($this->ci->input->post('assigned'))){
-         $where[] = "AND " . $call_table . ".staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
-      }
-      
-} 
+
+    if (!empty($this->ci->input->post('assigned'))) {
+        $where[] = "AND " . $call_table . ".staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+    }
+}
 
 
 if (!empty($_POST["search"]["value"])) {
@@ -162,7 +161,6 @@ if ($this->ci->input->post('last_update_date') || $this->ci->input->post('last_c
         $last_update_date = $this->ci->db->escape_str($this->ci->input->post('last_update_date'));
         array_push($where, ' AND lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '"');
     }
-
 }
 
 if ($this->ci->input->post('show_update_counts') && $this->ci->input->post('show_update_counts') == 1) {
@@ -188,30 +186,28 @@ if (is_gdpr() && $consentLeads == '1') {
     $aColumns[] = '1';
 }
 if ($is_admin) {
-$aColumns = array_merge($aColumns, [
-     "IFNULL({$sTable}.update_count,0) as update_count",
-    "IFNULL({$sTable}.call_duration,0) as call_duration",
-     $sTable .'.lastconnect_date as lastcontact_date',
-    $sTable . '.dateadded as dateadded',
-    $sTable .'.lastupdate_date as lastupdate_date',
-    $sTable . '.name as name',
-    $sTable . '.phonenumber as phonenumber',
-    $sTable . '.status as status',
+    $aColumns = array_merge($aColumns, [
+        "IFNULL({$sTable}.update_count,0) as update_count",
+        "IFNULL({$sTable}.call_duration,0) as call_duration",
+        $sTable . '.lastconnect_date as lastcontact_date',
+        $sTable . '.dateadded as dateadded',
+        $sTable . '.lastupdate_date as lastupdate_date',
+        $sTable . '.name as name',
+        $sTable . '.phonenumber as phonenumber',
+        $sTable . '.status as status',
 
-]);
-}
-else
-{
-   $aColumns = array_merge($aColumns, [
-     "IFNULL({$sTable}.update_count,0) as update_count",
-    "IFNULL({$sTable}.call_duration,0) as call_duration",
-     $sTable .'.lastconnect_date as lastcontact_date',
-    $sTable . '.dateadded as dateadded',
-    $sTable . '.name as name',
-    $sTable . '.phonenumber as phonenumber',
-    $sTable . '.status as status',
+    ]);
+} else {
+    $aColumns = array_merge($aColumns, [
+        "IFNULL({$sTable}.update_count,0) as update_count",
+        "IFNULL({$sTable}.call_duration,0) as call_duration",
+        $sTable . '.lastconnect_date as lastcontact_date',
+        $sTable . '.dateadded as dateadded',
+        $sTable . '.name as name',
+        $sTable . '.phonenumber as phonenumber',
+        $sTable . '.status as status',
 
-]); 
+    ]);
 }
 
 if ($is_admin) {
@@ -268,7 +264,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
-     $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name',"alternative_phonenumber"];
+    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber"];
 }
 
 $having_ = "";
@@ -279,23 +275,18 @@ $group_by = ' Group By ' . $sTable . '.id ' . $having . " ";
 
 // Execute final query with applied filters and joins
 
-if(is_admin()){
-if(!empty($_POST["order"][0]["column"]) && ($_POST["order"][0]["column"] == 5))
-{
-   $_POST["order"][0]["column"] =0;
-}
-}
-else
-{
-   if(!empty($_POST["order"][0]["column"]))
-{
-//   $_POST["order"][0]["column"] =0;
-} 
+if (is_admin()) {
+    if (!empty($_POST["order"][0]["column"]) && ($_POST["order"][0]["column"] == 5)) {
+        $_POST["order"][0]["column"] = 0;
+    }
+} else {
+    if (!empty($_POST["order"][0]["column"])) {
+        //   $_POST["order"][0]["column"] =0;
+    }
 }
 
 if (!empty($this->ci->input->post('up_to_date'))) {
     $sTable = $call_table;
- 
 }
 
 $result = data_tables_init_($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
@@ -357,13 +348,14 @@ foreach ($rResult as $aRow) {
     $row[]    = $col;
 
 
-    $updatecount = !empty($aRow['update_count'])?$aRow['update_count']:0;
+    $updatecount = !empty($aRow['update_count']) ? $aRow['update_count'] : 0;
 
     $row[]    = $updatecount;
     $call_duration = 0;
     $last_call_update = "";
     $row[] = !empty($aRow['call_duration'])
-        ? convertToHMS($aRow['call_duration'],
+        ? convertToHMS(
+            $aRow['call_duration'],
             1
         )
         : convertToHMS($call_duration, 1);
@@ -475,9 +467,9 @@ foreach ($rResult as $aRow) {
     $outputLeadType .= '</span>';
 
     $row[] = $outputLeadType;
- if ($is_admin) {
-    $row[] = $aRow['website'];
- }
+    if ($is_admin) {
+        $row[] = $aRow['website'];
+    }
 
     $row[] = $aRow['source_name'];
     if ($role != 1) {
@@ -496,7 +488,7 @@ foreach ($rResult as $aRow) {
         $row[] = $assignedOutput;
     }
 
-    $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned']))."<br>". date("H:i:s", strtotime($aRow['dateassigned'])). '</span>');
+    $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned'])) . "<br>" . date("H:i:s", strtotime($aRow['dateassigned'])) . '</span>');
     $row[] = $aRow['city'];
     $row[] = $aRow['state'];
     $row[] .= render_tags($aRow['tags']);

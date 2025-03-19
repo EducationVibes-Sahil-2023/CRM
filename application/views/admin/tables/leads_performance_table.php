@@ -28,8 +28,8 @@ $type = array_column($type, null, "id");
 $source = array_column($source, null, "id");
 $staff_list = array_column($staff_list, null, "staffid");
 
-$tbllead_performance_column = $this->ci->leads_model->tbllead_performance_column($this->ci->input->post('columnNames'));
-$tbllead_performance_column = array_column($tbllead_performance_column, null, "tbl_column_name");
+$tbllead_performance_column_ = $this->ci->leads_model->tbllead_performance_column($this->ci->input->post('columnNames'));
+$tbllead_performance_column = array_column($tbllead_performance_column_, null, "tbl_column_name");
 
 
 $sTable  =  db_prefix() . "leads";
@@ -302,7 +302,7 @@ if (!empty($tbllead_performance_column)) {
 
 // $aColumns = hooks()->apply_filters('leads_table_sql_columns', $aColumns);
 
-$additionalColumns = [];
+$additionalColumns = [$sTable . '.id as id '];
 // $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql', [
 //     'lead_value',
 //     'company',
@@ -398,6 +398,24 @@ $rResult = $result['rResult'];
 
 foreach ($rResult as $aRow) {
     $row = [];
+    // $first_column = str_replace(" ", "_", strtolower($tbllead_performance_column_[0]["label_name"]));
+    // $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
+
+    // $nameRow = '<a ' . $hrefAttr . '>' . $aRow[$first_column] . '</a>';
+    // $nameRow .= '<div class="row-options">';
+    // $nameRow .= '<a ' . $hrefAttr . '>' . _l('view') . '</a>';
+    // $locked = false;
+    // if ($aRow['is_converted'] > 0) {
+    //     $locked = ((!$is_admin && $lockAfterConvert == 1) ? true : false);
+    // }
+    // if (!$locked) {
+    //     // $nameRow .= ' | <a href="' . admin_url('leads/index/' . $aRow['id'] . '?edit=true') . '" onclick="init_lead(' . $aRow['id'] . ', true);return false;">' . _l('edit') . '</a>';
+    // }
+    // if ($aRow['addedfrom'] == $get_staff_user_id || $has_permission_delete) {
+    //     // $nameRow .= ' | <a href="javascript:void(0)" onclick="delete_leads(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
+    // }
+    // $nameRow .= '</div>';
+    // $aRow[$first_column] = $nameRow;
     $row =  array_values($aRow);
     $output['aaData'][] = $row;
 }
