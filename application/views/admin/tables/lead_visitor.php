@@ -135,7 +135,7 @@ foreach ($rResult as $aRow) {
         $edit_btn .= "</div>";
     }
     $row[] = $aRow["status"];
-    $row[] = date('l, F j, Y H:i A', strtotime($aRow["date_of_visit"]));
+    $row[] = date('j F Y, h:i A <\b\r> l', strtotime($aRow["date_of_visit"]));
     $row[] = $aRow["student_name"] . "<br>" . $edit_btn;
     $row[] = $aRow["phonenumber"];
     $row[] = $aRow["location"];
