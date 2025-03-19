@@ -3080,12 +3080,48 @@ class Leads_model extends App_Model
 ")->result_array();
     }
 
+    // public function get_lead_visitor_request_exist($lead_id)
+    // {
+    //     $this->db->select('id,assigned,created_by');
+    //     $this->db->where_in("status", [1, 3]);
+    //     $this->db->where(array("lead_id" => $lead_id));
+    //     $staff = $this->db->get(db_prefix() . 'visitor_request')->row();
+    //     return $staff;
+    // }
+
+
     public function get_lead_visitor_request_exist($lead_id)
     {
+        $sid = get_staff_user_id();
+
+        // Get reporting persons
+        $query = $this->db->query('CALL GetReportingPersons(?)', array($sid));
+        $teamids = $query->result_array();
+
+        // Close and reinitialize DB after calling a stored procedure
+        $this->db->close();
+        $this->db->initialize();
+
+        // Extract staff IDs and include the current staff ID
+        $idsarr = array_column($teamids, 'staffid');
+        array_push($idsarr, $sid);  // Fix push_array() issue
+
+        // Select required fields
         $this->db->select('id,assigned,created_by');
+
+        // Filter conditions
         $this->db->where_in("status", [1, 3]);
         $this->db->where(array("lead_id" => $lead_id));
+
+        // Use where_in and or_where_in properly
+        $this->db->group_start();
+        $this->db->where_in("created_by", $idsarr);
+        $this->db->or_where_in("assigned", $idsarr);
+        $this->db->group_end();
+
+        // Fetch the result
         $staff = $this->db->get(db_prefix() . 'visitor_request')->row();
+
         return $staff;
     }
 
