@@ -126,9 +126,9 @@ foreach ($rResult as $aRow) {
     $row = [];
     $edit_btn = '';
     if (in_array($aRow["status_id"], [1, 3]) || $has_permission_delete) {
-        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ", true,`#show_visitor_lead_div`,1)'>" . _l('view') . "</a>";
+        $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ",``,`#show_visitor_lead_div`,1)'>" . _l('view') . "</a>";
 
-        if ($aRow['created_by'] == $get_staff_user_id || $has_permission_delete) {
+        if ($has_permission_delete) {
             $edit_btn .= ' | <a href="javascript:void(0)" onclick="delete_visit(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
         }
 
