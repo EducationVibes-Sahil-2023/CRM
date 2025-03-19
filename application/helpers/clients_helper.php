@@ -315,12 +315,19 @@ function app_init_customer_profile_tabs()
         'view'     => 'admin/clients/groups/map',
         'position' => 95,
     ]);
+    $CI->app_tabs->add_customer_profile_tab('orignal_document', [
+        'name'     => _l('Orignal Documents'),
+        'icon'     => 'fa fa-map-marker',
+        'view'     => 'admin/clients/groups/orignal_documents',
+        'position' => 95,
+    ]);
     $CI->app_tabs->add_customer_profile_tab('tracker', [
         'name'     => _l('customer_tracker'),
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/applicant_tracker',
         'position' => 95,
     ]);
+
 
     $post_staff = array_column($CI->staff_model->post_sale_get(), "staffid");
 
@@ -1564,4 +1571,21 @@ function get_clients_fees_details_ids($lead_type, $client_id = [], $fees_id = ""
     }
 
     return $client_fees;
+}
+
+function get_orignal_document_data($client_id)
+{
+    $CI = &get_instance();
+    $CI->db->select("o.*")
+        ->from(db_prefix() . 'orignal_documents o')
+        ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT");
+    return $CI->db->order_by("id", "asc")->get()->result_array();
+}
+
+function orignal_document_status()
+{
+    $CI = &get_instance();
+    $CI->db->select("o.*")
+        ->from(db_prefix() . 'orignal_document_status o');
+    return $CI->db->order_by("id", "asc")->get()->result_array();
 }
