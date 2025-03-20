@@ -554,14 +554,12 @@ class Leads extends AdminController
 
         if (is_numeric($id)) {
 
-
-
             if ((!empty($_REQUEST["visitorStatus"]) && $_REQUEST["visitorStatus"] == 1) || $visitorStatus == 1) {
                 $leadWhere = (has_permission('leads', '', 'view') ? [] : []);
 
                 $check_lead_transfer_request = $this->leads_model->get_lead_visitor_request_exist($id);
                 //  print_r($check_lead_transfer_request); die;
-                if (empty($check_lead_transfer_request->created_by)) {
+                if (empty($check_lead_transfer_request->created_by) && !is_admin() ) {
                     header('HTTP/1.0 404 Not Found');
 
                     echo "Visit Request not found";

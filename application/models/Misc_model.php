@@ -874,6 +874,14 @@ class Misc_model extends App_Model
 
             if (!$has_permission_view) {
                 $this->db->where('(assigned = ' . get_staff_user_id() . ' OR addedfrom = ' . get_staff_user_id() . ' OR is_public=1)');
+            } else {
+                // $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+                // if ($role == 3) {
+                //     // $this->load->database();
+                //     $sid = get_staff_user_id(); //48;//get_staff_user_id();
+
+                //     $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+                // }
             }
 
             if (!startsWith($q, '#')) {

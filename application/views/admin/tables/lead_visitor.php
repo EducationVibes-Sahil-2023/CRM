@@ -47,7 +47,9 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
 
     $role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
     if ($role == 3) {
-        $sid = $get_staff_user_id;
+       
+    
+             $sid = $get_staff_user_id;
         $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
         $this->ci->db->close();
         $this->ci->db->initialize();
@@ -58,9 +60,10 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
         if ($this->ci->input->post('assigned')) {
             $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
         }
+        
     } else {
         if ($this->ci->input->post('assigned')) {
-            $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
+            $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
         } else {
             if (is_admin()) {
             } else {
@@ -69,20 +72,28 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
             }
         }
     }
+    
+    if (!empty($this->ci->input->post('attendee'))) {
+    $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('attendee'))) . ")";
+}
 } else {
     $role = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->role;
     if ($role == 3) {
-        $sid = $get_staff_user_id;
+     
+
+   
+               $sid = $get_staff_user_id;
         $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
         $this->ci->db->close();
         $this->ci->db->initialize();
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
         $where[] = !empty($sids) ? "AND " . $sTable . ".created_by IN ({$sid}, {$sids})" : "AND " . $sTable . ".created_by = {$sid}";
-
-        if ($this->ci->input->post('assigned')) {
+        
+         if ($this->ci->input->post('assigned')) {
             $where[] = "AND " . $sTable . ".created_by IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
         }
+        
     } else {
 
         // Apply filters based on input parameters
@@ -96,17 +107,19 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
             }
         }
     }
+    
+    
+if (!empty($this->ci->input->post('attendee'))) {
+    $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('attendee'))) . ")";
+}
 }
 
-
+// print_r($where);
 
 if (!empty($this->ci->input->post('lead_type'))) {
     $where[] = "AND " . db_prefix() . "leads.type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";
 }
 
-if (!empty($this->ci->input->post('attendee'))) {
-    $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('attendee'))) . ")";
-}
 
 if (!empty($this->ci->input->post('type'))) {
     $where[] = "AND " . $sTable . ".visitor_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('type'))) . ")";
