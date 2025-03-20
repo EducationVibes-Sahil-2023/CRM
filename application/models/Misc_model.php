@@ -924,8 +924,10 @@ class Misc_model extends App_Model
                     AND ' . db_prefix() . 'taggables.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
                     ');
             }
-         
-            $this->db->where($where);
+
+            if (!empty($where)) {
+                $this->db->where($where);
+            }
 
             if ($limit != 0) {
                 $this->db->limit($limit);
