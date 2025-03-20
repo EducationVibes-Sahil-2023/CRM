@@ -2083,7 +2083,7 @@ class Clients_model extends App_Model
         if (!empty($attachments)) {
             foreach (["quotation", "registration_slip_invoice"] as $key) {
                 if (!empty($attachments[$key])) {
-                    $file_path = FCPATH. $attachments[$key];
+                    $file_path = FCPATH . $attachments[$key];
                     $file_extension = pathinfo($attachments[$key], PATHINFO_EXTENSION); // Extract file extension
                     $formatted_name = ucwords(str_replace("_", " ", $key)); // Capitalize first letter of each word
 
@@ -2136,11 +2136,45 @@ class Clients_model extends App_Model
 
     public function client_assign($client_id)
     {
-       return $this->db->select("email")
+        return $this->db->select("email")
             ->from(db_prefix() . "clients c")
             ->join(db_prefix() . "staff s", "c.addedfrom = s.staffid")
             ->where("userid", $client_id)
             ->get()
             ->row_array(); // Fetch a single row
     }
+
+
+    // function update_documents($data, $id)
+    // {
+    //     $update_client_data["orignal_document_status"] = !empty($data["status"]) ? $data["status"] : 1;
+    //     $this->db->where('userid', $id);
+    //     $this->db->update(db_prefix() . 'clients', $update_client_data);
+
+    //     $update_client_orignal_document_received = [];
+    //     $doc_ids = $data["doc_ids"];
+    //     $locations = $data["location"];
+
+    //     foreach ($doc_ids as $key => $ids) {
+    //         $update_client_orignal_document_received["doc_id"] = $ids;
+    //         $update_client_orignal_document_received["userid"] = $id;
+    //         $update_client_orignal_document_received["received_by"] = get_staff_user_id();
+    //         $update_client_orignal_document_received["userid"] = date('Y-m-d H:i:s');
+    //         $update_client_orignal_document_received["location_id"] = $locations[$key];
+    //     }
+
+    //     if (!empty($update_client_orignal_document_received)) {
+    //         $this->document_update_insert($update_client_orignal_document_received, $id);
+    //     }
+
+    //     $update_document_activity = 
+    // }
+
+
+    // private function document_update_insert($data, $id)
+    // {
+
+    //     // $this->db->where('userid', $id);
+    //     // $this->db->update(db_prefix() . 'orignal_documents_received', $data);
+    // }
 }

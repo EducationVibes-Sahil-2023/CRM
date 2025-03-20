@@ -103,6 +103,7 @@ class Clients extends AdminController
     public function client($id = '')
     {
         // $database_secondary = $this->load->database('database_secondary', TRUE);
+
         $this->load->model('leads_model');
         $data['lead_type'] = $this->leads_model->get_type();
         $client = "";
@@ -158,6 +159,20 @@ class Clients extends AdminController
                         // access_denied('customers');
                     }
                 }
+
+                if (!empty($_POST["doc_ids"])) {
+
+
+                    $success = $this->clients_model->update_documents($this->input->post(), $id);
+                    if ($success == true) {
+                        set_alert('success', _l('updated_successfully', _l('client')," Orignal documents"));
+                    }
+                    redirect(admin_url('clients/client/' . $id));
+
+                    die;
+                }
+
+
                 $success = $this->clients_model->update($this->input->post(), $id);
                 if ($success == true) {
                     set_alert('success', _l('updated_successfully', _l('client')));

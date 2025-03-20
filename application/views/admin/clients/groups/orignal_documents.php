@@ -1,8 +1,10 @@
-<!-- <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
 $orignal_document  = get_orignal_document_data($client_id);
 $orignal_document_status  = orignal_document_status();
-
+$location  = orignal_document_status();
+$office_location  = $this->staff_model->office_location();
+array_unshift($office_location, array());
 ?>
 <div class="row">
     <div class="col-md-12">
@@ -10,6 +12,8 @@ $orignal_document_status  = orignal_document_status();
             <h4 class="fs-title">Orignal Documents</h4>
             <hr>
             <form method="post" id="orignal-document-form">
+                <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
+
                 <div id="orignal_documents" class="table-responsive">
                     <table class="table table-bordered table-striped">
                         <thead class="thead-dark ">
@@ -35,7 +39,8 @@ $orignal_document_status  = orignal_document_status();
                                         <td><?= $doc["name"] ?></td>
                                         <td></td>
                                         <td></td>
-                                        <td></td>
+                                        <td><?= render_select('location[]', $office_location, array('id', 'name'), 'Office Location', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select Office Location'), array(), 'no-mbot', '', false, "office_location");
+                                            ?></td>
                                     </tr>
                                 <?php $index++;
                                 endforeach; ?>
@@ -56,7 +61,7 @@ $orignal_document_status  = orignal_document_status();
                     </div>
                     <div class="col-md-3 pull-right">
                         <?php
-                        $selected_value = [];
+                        $selected_value = [1];
                         echo render_select('status', $orignal_document_status, array('id', 'name'), "", $selected_value);
 
                         ?>
@@ -69,12 +74,31 @@ $orignal_document_status  = orignal_document_status();
 <?php init_tail(); ?>
 <script>
     function check_update() {
-        // Check if at least one checkbox is checked
-        if ($("input[type='checkbox']:checked").length > 0) {
+        let isValid = true;
+
+        $(".document_upload_div tr").each(function() {
+            let checkbox = $(this).find("input[type='checkbox']");
+            if (checkbox.is(":checked")) {
+                let locationInput = $(this).find("select[name='location[]']");
+                console.log(locationInput.val());
+                if (locationInput.val() === "") {
+                    isValid = false;
+                    $(this).find("select[name='location']").focus();
+                    alert_float("danger", "Please enter a location for the selected document.");
+                    return false; // Exit loop early if validation fails
+                }
+            }
+        });
+
+        if (!isValid) {
+            return false; // Stop form submission
+        }
+
+        if ($(".document_upload_div tr input[type='checkbox']:checked").length > 0) {
             $("#orignal-document-form").submit();
         } else {
-            alert_float("danger", "Please check at least one checkbox before saving!"); // Error message
-            return false; // Prevent form submission or data saving
+            alert_float("danger", "Please check at least one checkbox before saving!");
+            return false;
         }
     }
-</script> -->
+</script>
