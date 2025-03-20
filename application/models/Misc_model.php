@@ -554,6 +554,20 @@ class Misc_model extends App_Model
         $limit                          = get_option('limit_top_search_bar_results_to');
         $have_assigned_customers        = have_assigned_customers();
         $have_permission_customers_view = has_permission('customers', '', 'view');
+
+
+        $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+        $idsarr = [];
+        $sid = get_staff_user_id();
+        if ($role == 3) {
+            $teamids = $this->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+            $this->db->close();
+            $this->db->initialize();
+            $idsarr = array_column($teamids, 'staffid');
+        }
+        $idsarr[] = $sid;
+        $idsarr = implode(",", $idsarr);
+
         if ($have_assigned_customers || $have_permission_customers_view) {
 
             // Clients
@@ -563,7 +577,10 @@ class Misc_model extends App_Model
             $this->db->join(db_prefix() . 'contacts', db_prefix() . 'contacts.userid = ' . db_prefix() . 'clients.userid AND is_primary = 1', 'left');
             $this->db->from(db_prefix() . 'clients');
             if ($have_assigned_customers && !$have_permission_customers_view) {
-                $this->db->where(db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')');
+                $this->db->where(db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id = ' . $sid . ')');
+            }
+            if ($role == 3) {
+                $this->db->where(db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id IN (' . $idsarr . '))');
             }
 
             $this->db->where('(company LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
@@ -601,6 +618,10 @@ class Misc_model extends App_Model
         if ($have_assigned_customers && !$have_permission_customers_view) {
             $where_contacts = db_prefix() . 'contacts.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')';
         }
+        if ($role == 3) {
+            $where_contacts = db_prefix() . 'contacts.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id IN (' . $idsarr . '))';
+        }
+
 
 
         $contacts_search = $this->_search_contacts($q, $limit, $where_contacts);
@@ -608,139 +629,147 @@ class Misc_model extends App_Model
             $result[] = $contacts_search;
         }
 
-        $tickets_search = $this->_search_tickets($q, $limit);
-        if (count($tickets_search['result']) > 0) {
-            $result[] = $tickets_search;
+        $where_leads = "";
+        if ($role == 3) {
+            $where_leads = '(assigned IN (' . $idsarr . ') OR addedfrom IN (' . $idsarr . ') OR is_public=1)';
         }
 
-        $leads_search = $this->_search_leads($q, $limit);
+
+        $leads_search = $this->_search_leads($q, $limit, $where_leads);
         if (count($leads_search['result']) > 0) {
             $result[] = $leads_search;
         }
 
-        $proposals_search = $this->_search_proposals($q, $limit);
-        if (count($proposals_search['result']) > 0) {
-            $result[] = $proposals_search;
-        }
-
-        $invoices_search = $this->_search_invoices($q, $limit);
-        if (count($invoices_search['result']) > 0) {
-            $result[] = $invoices_search;
-        }
-
-        $credit_notes_search = $this->_search_credit_notes($q, $limit);
-        if (count($credit_notes_search['result']) > 0) {
-            $result[] = $credit_notes_search;
-        }
-
-        $estimates_search = $this->_search_estimates($q, $limit);
-        if (count($estimates_search['result']) > 0) {
-            $result[] = $estimates_search;
-        }
-
-        $expenses_search = $this->_search_expenses($q, $limit);
-        if (count($expenses_search['result']) > 0) {
-            $result[] = $expenses_search;
-        }
-
-        $projects_search = $this->_search_projects($q, $limit);
-        if (count($projects_search['result']) > 0) {
-            $result[] = $projects_search;
-        }
-
-        $contracts_search = $this->_search_contracts($q, $limit);
-        if (count($contracts_search['result']) > 0) {
-            $result[] = $contracts_search;
-        }
+        // $tickets_search = $this->_search_tickets($q, $limit);
+        // if (count($tickets_search['result']) > 0) {
+        //     $result[] = $tickets_search;
+        // }
 
 
-        if (has_permission('knowledge_base', '', 'view')) {
-            // Knowledge base articles
-            $this->db->select()->from(db_prefix() . 'knowledge_base')->like('subject', $q)->or_like('description', $q)->or_like('slug', $q)->limit($limit);
 
-            $this->db->order_by('subject', 'ASC');
+        // $proposals_search = $this->_search_proposals($q, $limit);
+        // if (count($proposals_search['result']) > 0) {
+        //     $result[] = $proposals_search;
+        // }
 
-            $result[] = [
-                'result'         => $this->db->get()->result_array(),
-                'type'           => 'knowledge_base_articles',
-                'search_heading' => _l('kb_string'),
-            ];
-        }
+        // $invoices_search = $this->_search_invoices($q, $limit);
+        // if (count($invoices_search['result']) > 0) {
+        //     $result[] = $invoices_search;
+        // }
+
+        // $credit_notes_search = $this->_search_credit_notes($q, $limit);
+        // if (count($credit_notes_search['result']) > 0) {
+        //     $result[] = $credit_notes_search;
+        // }
+
+        // $estimates_search = $this->_search_estimates($q, $limit);
+        // if (count($estimates_search['result']) > 0) {
+        //     $result[] = $estimates_search;
+        // }
+
+        // $expenses_search = $this->_search_expenses($q, $limit);
+        // if (count($expenses_search['result']) > 0) {
+        //     $result[] = $expenses_search;
+        // }
+
+        // $projects_search = $this->_search_projects($q, $limit);
+        // if (count($projects_search['result']) > 0) {
+        //     $result[] = $projects_search;
+        // }
+
+        // $contracts_search = $this->_search_contracts($q, $limit);
+        // if (count($contracts_search['result']) > 0) {
+        //     $result[] = $contracts_search;
+        // }
+
+
+        // if (has_permission('knowledge_base', '', 'view')) {
+        //     // Knowledge base articles
+        //     $this->db->select()->from(db_prefix() . 'knowledge_base')->like('subject', $q)->or_like('description', $q)->or_like('slug', $q)->limit($limit);
+
+        //     $this->db->order_by('subject', 'ASC');
+
+        //     $result[] = [
+        //         'result'         => $this->db->get()->result_array(),
+        //         'type'           => 'knowledge_base_articles',
+        //         'search_heading' => _l('kb_string'),
+        //     ];
+        // }
 
         // Tasks Search
-        $tasks = has_permission('tasks', '', 'view');
-        // Staff tasks
-        $this->db->select();
-        $this->db->from(db_prefix() . 'tasks');
-        if (!$is_admin) {
-            if (!$tasks) {
-                $where = '(id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid = ' . get_staff_user_id() . ') OR id IN (SELECT taskid FROM ' . db_prefix() . 'task_followers WHERE staffid = ' . get_staff_user_id() . ') OR (addedfrom=' . get_staff_user_id() . ' AND is_added_from_contact=0) ';
-                if (get_option('show_all_tasks_for_project_member') == 1) {
-                    $where .= ' OR (rel_type="project" AND rel_id IN (SELECT project_id FROM ' . db_prefix() . 'project_members WHERE staff_id=' . get_staff_user_id() . '))';
-                }
-                $where .= ' OR is_public = 1)';
-                $this->db->where($where);
-            } //!$tasks
-        } //!$is_admin
-        if (!startsWith($q, '#')) {
-            $this->db->where('(name LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\' OR description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\')');
-        } else {
-            $this->db->where('id IN
-                (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
-                (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . $this->db->escape_str(strafter($q, '#')) . '")
-                AND ' . db_prefix() . 'taggables.rel_type=\'task\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
-                ');
-        }
+        // $tasks = has_permission('tasks', '', 'view');
+        // // Staff tasks
+        // $this->db->select();
+        // $this->db->from(db_prefix() . 'tasks');
+        // if (!$is_admin) {
+        //     if (!$tasks) {
+        //         $where = '(id IN (SELECT taskid FROM ' . db_prefix() . 'task_assigned WHERE staffid = ' . get_staff_user_id() . ') OR id IN (SELECT taskid FROM ' . db_prefix() . 'task_followers WHERE staffid = ' . get_staff_user_id() . ') OR (addedfrom=' . get_staff_user_id() . ' AND is_added_from_contact=0) ';
+        //         if (get_option('show_all_tasks_for_project_member') == 1) {
+        //             $where .= ' OR (rel_type="project" AND rel_id IN (SELECT project_id FROM ' . db_prefix() . 'project_members WHERE staff_id=' . get_staff_user_id() . '))';
+        //         }
+        //         $where .= ' OR is_public = 1)';
+        //         $this->db->where($where);
+        //     } //!$tasks
+        // } //!$is_admin
+        // if (!startsWith($q, '#')) {
+        //     $this->db->where('(name LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\' OR description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\')');
+        // } else {
+        //     $this->db->where('id IN
+        //         (SELECT rel_id FROM ' . db_prefix() . 'taggables WHERE tag_id IN
+        //         (SELECT id FROM ' . db_prefix() . 'tags WHERE name="' . $this->db->escape_str(strafter($q, '#')) . '")
+        //         AND ' . db_prefix() . 'taggables.rel_type=\'task\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
+        //         ');
+        // }
 
-        $this->db->limit($limit);
-        $this->db->order_by('name', 'ASC');
+        // $this->db->limit($limit);
+        // $this->db->order_by('name', 'ASC');
 
-        $result[] = [
-            'result'         => $this->db->get()->result_array(),
-            'type'           => 'tasks',
-            'search_heading' => _l('tasks'),
-        ];
+        // $result[] = [
+        //     'result'         => $this->db->get()->result_array(),
+        //     'type'           => 'tasks',
+        //     'search_heading' => _l('tasks'),
+        // ];
 
 
         // Payments search
         $has_permission_view_payments     = has_permission('payments', '', 'view');
         $has_permission_view_invoices_own = has_permission('invoices', '', 'view_own');
 
-        if (has_permission('payments', '', 'view') || $has_permission_view_invoices_own || get_option('allow_staff_view_invoices_assigned') == '1') {
-            if (is_numeric($q)) {
-                $q = trim($q);
-                $q = ltrim($q, '0');
-            } elseif (startsWith($q, get_option('invoice_prefix'))) {
-                $q = strafter($q, get_option('invoice_prefix'));
-                $q = trim($q);
-                $q = ltrim($q, '0');
-            }
-            $noPermissionQuery = get_invoices_where_sql_for_staff(get_staff_user_id());
-            // Invoice payment records
-            $this->db->select('*,' . db_prefix() . 'invoicepaymentrecords.id as paymentid');
-            $this->db->from(db_prefix() . 'invoicepaymentrecords');
-            $this->db->join(db_prefix() . 'payment_modes', '' . db_prefix() . 'invoicepaymentrecords.paymentmode = ' . db_prefix() . 'payment_modes.id', 'LEFT');
-            $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
+        // if (has_permission('payments', '', 'view') || $has_permission_view_invoices_own || get_option('allow_staff_view_invoices_assigned') == '1') {
+        //     if (is_numeric($q)) {
+        //         $q = trim($q);
+        //         $q = ltrim($q, '0');
+        //     } elseif (startsWith($q, get_option('invoice_prefix'))) {
+        //         $q = strafter($q, get_option('invoice_prefix'));
+        //         $q = trim($q);
+        //         $q = ltrim($q, '0');
+        //     }
+        //     $noPermissionQuery = get_invoices_where_sql_for_staff(get_staff_user_id());
+        //     // Invoice payment records
+        //     $this->db->select('*,' . db_prefix() . 'invoicepaymentrecords.id as paymentid');
+        //     $this->db->from(db_prefix() . 'invoicepaymentrecords');
+        //     $this->db->join(db_prefix() . 'payment_modes', '' . db_prefix() . 'invoicepaymentrecords.paymentmode = ' . db_prefix() . 'payment_modes.id', 'LEFT');
+        //     $this->db->join(db_prefix() . 'invoices', '' . db_prefix() . 'invoices.id = ' . db_prefix() . 'invoicepaymentrecords.invoiceid');
 
-            if (!$has_permission_view_payments) {
-                $this->db->where('invoiceid IN (select id from ' . db_prefix() . 'invoices where ' . $noPermissionQuery . ')');
-            }
+        //     if (!$has_permission_view_payments) {
+        //         $this->db->where('invoiceid IN (select id from ' . db_prefix() . 'invoices where ' . $noPermissionQuery . ')');
+        //     }
 
-            $this->db->where('(' . db_prefix() . 'invoicepaymentrecords.id LIKE "' . $this->db->escape_like_str($q) . '"
-                OR paymentmode LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                OR ' . db_prefix() . 'payment_modes.name LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                OR ' . db_prefix() . 'invoicepaymentrecords.note LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
-                OR number LIKE "' . $this->db->escape_like_str($q) . ' ESCAPE \'!\'"
-                )');
+        //     $this->db->where('(' . db_prefix() . 'invoicepaymentrecords.id LIKE "' . $this->db->escape_like_str($q) . '"
+        //         OR paymentmode LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+        //         OR ' . db_prefix() . 'payment_modes.name LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+        //         OR ' . db_prefix() . 'invoicepaymentrecords.note LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\'
+        //         OR number LIKE "' . $this->db->escape_like_str($q) . ' ESCAPE \'!\'"
+        //         )');
 
-            $this->db->order_by(db_prefix() . 'invoicepaymentrecords.date', 'ASC');
+        //     $this->db->order_by(db_prefix() . 'invoicepaymentrecords.date', 'ASC');
 
-            $result[] = [
-                'result'         => $this->db->get()->result_array(),
-                'type'           => 'invoice_payment_records',
-                'search_heading' => _l('payments'),
-            ];
-        }
+        //     $result[] = [
+        //         'result'         => $this->db->get()->result_array(),
+        //         'type'           => 'invoice_payment_records',
+        //         'search_heading' => _l('payments'),
+        //     ];
+        // }
 
         // Custom fields only admins
         if ($is_admin) {
@@ -757,47 +786,47 @@ class Misc_model extends App_Model
         $has_permission_view_invoices_own   = has_permission('invoices', '', 'view_own');
         $allow_staff_view_invoices_assigned = get_option('allow_staff_view_invoices_assigned');
 
-        if ($has_permission_view_invoices || $has_permission_view_invoices_own || $allow_staff_view_invoices_assigned == '1') {
-            $noPermissionQuery = get_invoices_where_sql_for_staff(get_staff_user_id());
-            $this->db->select()->from(db_prefix() . 'itemable');
-            $this->db->where('rel_type', 'invoice');
-            $this->db->where('(description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\' OR long_description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\')');
+        // if ($has_permission_view_invoices || $has_permission_view_invoices_own || $allow_staff_view_invoices_assigned == '1') {
+        //     $noPermissionQuery = get_invoices_where_sql_for_staff(get_staff_user_id());
+        //     $this->db->select()->from(db_prefix() . 'itemable');
+        //     $this->db->where('rel_type', 'invoice');
+        //     $this->db->where('(description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\' OR long_description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\')');
 
-            if (!$has_permission_view_invoices) {
-                $this->db->where('rel_id IN (select id from ' . db_prefix() . 'invoices where ' . $noPermissionQuery . ')');
-            }
+        //     if (!$has_permission_view_invoices) {
+        //         $this->db->where('rel_id IN (select id from ' . db_prefix() . 'invoices where ' . $noPermissionQuery . ')');
+        //     }
 
-            $this->db->order_by('description', 'ASC');
-            $result[] = [
-                'result'         => $this->db->get()->result_array(),
-                'type'           => 'invoice_items',
-                'search_heading' => _l('invoice_items'),
-            ];
-        }
+        //     $this->db->order_by('description', 'ASC');
+        //     $result[] = [
+        //         'result'         => $this->db->get()->result_array(),
+        //         'type'           => 'invoice_items',
+        //         'search_heading' => _l('invoice_items'),
+        //     ];
+        // }
 
         // Estimate Items Search
         $has_permission_view_estimates       = has_permission('estimates', '', 'view');
         $has_permission_view_estimates_own   = has_permission('estimates', '', 'view_own');
         $allow_staff_view_estimates_assigned = get_option('allow_staff_view_estimates_assigned');
-        if ($has_permission_view_estimates || $has_permission_view_estimates_own || $allow_staff_view_estimates_assigned) {
-            $noPermissionQuery = get_estimates_where_sql_for_staff(get_staff_user_id());
+        // if ($has_permission_view_estimates || $has_permission_view_estimates_own || $allow_staff_view_estimates_assigned) {
+        //     $noPermissionQuery = get_estimates_where_sql_for_staff(get_staff_user_id());
 
-            $this->db->select()->from(db_prefix() . 'itemable');
-            $this->db->where('rel_type', 'estimate');
+        //     $this->db->select()->from(db_prefix() . 'itemable');
+        //     $this->db->where('rel_type', 'estimate');
 
-            if (!$has_permission_view_estimates) {
-                $this->db->where('rel_id IN (select id from ' . db_prefix() . 'estimates where ' . $noPermissionQuery . ')');
-            }
-            $this->db->where('(description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\' OR long_description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\')');
-            $this->db->order_by('description', 'ASC');
-            $result[] = [
-                'result'         => $this->db->get()->result_array(),
-                'type'           => 'estimate_items',
-                'search_heading' => _l('estimate_items'),
-            ];
-        }
+        //     if (!$has_permission_view_estimates) {
+        //         $this->db->where('rel_id IN (select id from ' . db_prefix() . 'estimates where ' . $noPermissionQuery . ')');
+        //     }
+        //     $this->db->where('(description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\' OR long_description LIKE "%' . $this->db->escape_like_str($q) . '%" ESCAPE \'!\')');
+        //     $this->db->order_by('description', 'ASC');
+        //     $result[] = [
+        //         'result'         => $this->db->get()->result_array(),
+        //         'type'           => 'estimate_items',
+        //         'search_heading' => _l('estimate_items'),
+        //     ];
+        // }
 
-        $result = hooks()->apply_filters('global_search_result_query', $result, $q, $limit);
+        // $result = hooks()->apply_filters('global_search_result_query', $result, $q, $limit);
 
         return $result;
     }
@@ -857,7 +886,7 @@ class Misc_model extends App_Model
         return $result;
     }
 
-    public function _search_leads($q, $limit = 0, $where = [])
+    public function _search_leads($q, $limit = 0, $where = "")
     {
         $result = [
             'result'         => [],
@@ -874,14 +903,6 @@ class Misc_model extends App_Model
 
             if (!$has_permission_view) {
                 $this->db->where('(assigned = ' . get_staff_user_id() . ' OR addedfrom = ' . get_staff_user_id() . ' OR is_public=1)');
-            } else {
-                // $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-                // if ($role == 3) {
-                //     // $this->load->database();
-                //     $sid = get_staff_user_id(); //48;//get_staff_user_id();
-
-                //     $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
-                // }
             }
 
             if (!startsWith($q, '#')) {
@@ -903,8 +924,7 @@ class Misc_model extends App_Model
                     AND ' . db_prefix() . 'taggables.rel_type=\'lead\' GROUP BY rel_id HAVING COUNT(tag_id) = 1)
                     ');
             }
-
-
+         
             $this->db->where($where);
 
             if ($limit != 0) {
