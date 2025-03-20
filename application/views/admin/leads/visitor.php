@@ -186,7 +186,7 @@ array_unshift($location, array());
             if (searchQuery.length > 2) { // Start AJAX after 3+ characters
                 let formData = new FormData(); // Correct FormData initialization
 
-                formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+                formData.append("csrf_token_name", csrfData.hash);
                 formData.append("value", searchQuery); // Corrected `.val()` issue
 
                 $.ajax({

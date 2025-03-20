@@ -5,6 +5,10 @@ $whatsapp_template = get_whatsapp_template();
 array_unshift($staff_members, array());
 array_unshift($type, array());
 array_unshift($visitor_type, array());
+if(empty($location))
+{
+    $location =[];
+}
 array_unshift($location, array());
 
 $last_lead_request = last_lead_request($lead->id);
