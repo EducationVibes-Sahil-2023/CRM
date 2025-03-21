@@ -3060,7 +3060,7 @@ class Leads_model extends App_Model
     public function performance_related_dropdown()
     {
 
-        // $this->db->query("SET SESSION group_concat_max_len = 1000000000");
+        $this->db->query("SET SESSION group_concat_max_len = 1000000000");
 
         return $this->db->query("
     SELECT 
