@@ -2144,37 +2144,90 @@ class Clients_model extends App_Model
             ->row_array(); // Fetch a single row
     }
 
+    public function update_documents($data, $id)
+    {
+        try {
+            $doc_names = $data["document_name"];
+            $loc_names = $data["locations_name"];
+            $doc_ids = $data["document_ids"];
+            $locations = $data["locations"];
+            $status_text = !empty($data["status_text"]) ? $data["status_text"] : "Pending";
+            $received_id = $data["received_id"];
 
-    // function update_documents($data, $id)
-    // {
-    //     $update_client_data["orignal_document_status"] = !empty($data["status"]) ? $data["status"] : 1;
-    //     $this->db->where('userid', $id);
-    //     $this->db->update(db_prefix() . 'clients', $update_client_data);
+            // Update client document status
+            $update_client_data = [
+                "orignal_document_status" => !empty($data["status"]) ? $data["status"] : 1
+            ];
+            $this->db->where('userid', $id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
 
-    //     $update_client_orignal_document_received = [];
-    //     $doc_ids = $data["doc_ids"];
-    //     $locations = $data["location"];
+            // Prepare received document data
+            $update_client_orignal_document_received = [];
+            $insert_client_orignal_document_received = [];
 
-    //     foreach ($doc_ids as $key => $ids) {
-    //         $update_client_orignal_document_received["doc_id"] = $ids;
-    //         $update_client_orignal_document_received["userid"] = $id;
-    //         $update_client_orignal_document_received["received_by"] = get_staff_user_id();
-    //         $update_client_orignal_document_received["userid"] = date('Y-m-d H:i:s');
-    //         $update_client_orignal_document_received["location_id"] = $locations[$key];
-    //     }
+            foreach ($doc_ids as $key => $doc_id) {
+                if (!empty($received_id[$key])) {
+                    $update_client_orignal_document_received[] = [
+                        "id" => $received_id[$key], // Corrected batch update key
+                        "doc_id" => $doc_id,
+                        "userid" => $id,
+                        "received_by" => get_staff_user_id(),
+                        "received_date" => date('Y-m-d H:i:s'),
+                        "location_id" => $locations[$key]
+                    ];
+                } else {
+                    $insert_client_orignal_document_received[] = [
+                        "doc_id" => $doc_id,
+                        "userid" => $id,
+                        "received_by" => get_staff_user_id(),
+                        "received_date" => date('Y-m-d H:i:s'),
+                        "location_id" => $locations[$key]
+                    ];
+                }
+            }
 
-    //     if (!empty($update_client_orignal_document_received)) {
-    //         $this->document_update_insert($update_client_orignal_document_received, $id);
-    //     }
+            // Insert or update received documents
+            if (!empty($insert_client_orignal_document_received) || !empty($update_client_orignal_document_received)) {
+                $this->document_update_insert($insert_client_orignal_document_received, $update_client_orignal_document_received);
+            }
 
-    //     $update_document_activity = 
-    // }
+            // Create activity message
+            $messages = [];
+            foreach ($doc_names as $key => $doc) {
+                $messages[] = "{$doc} has been received at location {$loc_names[$key]}";
+            }
 
+            if (empty($messages)) {
+                $message = "Orignal Document status is {$status_text}.";
+            } else {
+                $message = implode(", ", $messages) . ". All documents were received on " . date('Y-m-d H:i:s') . " and the status is {$status_text}.";
+            }
+            // Insert document activity log
+            $activity_data = [
+                "date" => date('Y-m-d H:i:s'),
+                "staffid" => get_staff_user_id(),
+                "client_id" => $id,
+                "description" => $message
+            ];
+            $this->db->insert(db_prefix() . 'orignal_document_activity', $activity_data);
 
-    // private function document_update_insert($data, $id)
-    // {
+            return ["success" => true, "message" => "Documents updated successfully."];
+        } catch (Exception $e) {
+            return ["success" => false, "message" => "Error updating documents: " . $e->getMessage()];
+        }
+    }
 
-    //     // $this->db->where('userid', $id);
-    //     // $this->db->update(db_prefix() . 'orignal_documents_received', $data);
-    // }
+    /**
+     * Function to insert or update received documents.
+     */
+    private function document_update_insert($data_insert = [], $data_update = [])
+    {
+        if (!empty($data_insert)) {
+            $this->db->insert_batch(db_prefix() . 'orignal_documents_received', $data_insert);
+        }
+
+        if (!empty($data_update)) {
+            $this->db->update_batch(db_prefix() . 'orignal_documents_received', $data_update, "id"); // Corrected update key
+        }
+    }
 }

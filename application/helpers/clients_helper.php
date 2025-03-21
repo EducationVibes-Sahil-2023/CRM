@@ -1576,9 +1576,11 @@ function get_clients_fees_details_ids($lead_type, $client_id = [], $fees_id = ""
 function get_orignal_document_data($client_id)
 {
     $CI = &get_instance();
-    $CI->db->select("o.*")
+    $CI->db->select("o.*,r.received_date,CONCAT(firstname,' ',lastname) as received_by,r.id as received_id,l.name received_location")
         ->from(db_prefix() . 'orignal_documents o')
-        ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT");
+        ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
+        ->join(db_prefix() . 'staff s', "s.staffid = r.received_by ", "LEFT")
+        ->join(db_prefix() . 'office_location l', "l.id = r.location_id ", "LEFT");
     return $CI->db->order_by("id", "asc")->get()->result_array();
 }
 
@@ -1588,4 +1590,13 @@ function orignal_document_status()
     $CI->db->select("o.*")
         ->from(db_prefix() . 'orignal_document_status o');
     return $CI->db->order_by("id", "asc")->get()->result_array();
+}
+
+function activity_orignal_document($id)
+{
+    $CI = &get_instance();
+    $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'DESC');
+    $CI->db->where('client_id', $id);
+    $CI->db->order_by('date', $sorting);
+    return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }

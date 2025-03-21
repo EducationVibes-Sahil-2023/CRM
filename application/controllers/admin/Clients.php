@@ -159,20 +159,6 @@ class Clients extends AdminController
                         // access_denied('customers');
                     }
                 }
-
-                if (!empty($_POST["doc_ids"])) {
-
-
-                    $success = $this->clients_model->update_documents($this->input->post(), $id);
-                    if ($success == true) {
-                        set_alert('success', _l('updated_successfully', _l('client')," Orignal documents"));
-                    }
-                    redirect(admin_url('clients/client/' . $id));
-
-                    die;
-                }
-
-
                 $success = $this->clients_model->update($this->input->post(), $id);
                 if ($success == true) {
                     set_alert('success', _l('updated_successfully', _l('client')));
@@ -4596,6 +4582,14 @@ class Clients extends AdminController
         }
 
 
+        echo json_encode($response);
+    }
+
+    public function orignal_document()
+    {
+        $data = $_POST;
+        $client_id = $_POST["client_id"];
+        $response = $this->clients_model->update_documents($data, $client_id);
         echo json_encode($response);
     }
 }
