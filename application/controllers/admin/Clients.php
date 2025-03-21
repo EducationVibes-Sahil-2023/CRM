@@ -764,11 +764,13 @@ class Clients extends AdminController
     /* Delete client */
     public function delete($id)
     {
+
+
         if (!has_permission('customers', '', 'delete')) {
             access_denied('customers');
         }
         if (!$id) {
-            redirect(admin_url('clients'));
+            redirect($_SERVER['HTTP_REFERER']);
         }
         $response = $this->clients_model->delete($id);
         if (is_array($response) && isset($response['referenced'])) {
@@ -778,7 +780,7 @@ class Clients extends AdminController
         } else {
             set_alert('warning', _l('problem_deleting', _l('client_lowercase')));
         }
-        redirect(admin_url('clients'));
+        redirect($_SERVER['HTTP_REFERER']);
     }
 
     /* Staff can login as client */
