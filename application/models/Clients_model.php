@@ -943,6 +943,14 @@ class Clients_model extends App_Model
             $this->db->where('client_id', $id);
             $this->db->delete(db_prefix() . 'orignal_document_activity');
 
+            //passport logs
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'client_passport_details');
+
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'client_university_shortlisting');
+
             $path = APPLICANT_UPLOAD_DOCUMENT . $id . '/';
             $this->deleteFolder($path);
         }
