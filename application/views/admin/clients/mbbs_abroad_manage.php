@@ -713,6 +713,19 @@ init_tail(); ?>
             enabled_column();
             refreshApplicantTable();
          });
+
+         enabled_column();
+         // When the dropdown is opened, disable selected options
+         $('[name="column_show[]"]').on('show.bs.select', function() {
+            console.log("show");
+            disabled_column();
+         });
+
+         // When the dropdown is closed, enable previously disabled options
+         $('[name="column_show[]"]').on('hidden.bs.select', function() {
+            console.log("hide");
+            enabled_column();
+         });
       }, 3000);
 
    });
