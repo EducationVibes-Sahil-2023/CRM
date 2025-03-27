@@ -125,7 +125,9 @@
 
 <?php //$this->load->view('admin/clients/client_js'); 
 ?>
-<?php $this->load->view((isset($tab) ? $tab['js'] : 'admin/clients/client_js')); ?>
+<?php 
+// $this->load->view((isset($tab) ? $tab['js'] : 'admin/clients/client_js'));
+ ?>
 </body>
 
 </html>

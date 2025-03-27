@@ -177,8 +177,8 @@ if ($this->ci->input->post('status_')) {
 
 if ($this->ci->input->post('minor_status')) {
     $minor = $this->ci->input->post('minor_status');
-    array_push($where, "AND (TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 AND 'Yes' = '{$minor}')
-    OR (TIMESTAMPDIFF(YEAR, dob, CURDATE()) >= 18 AND 'No' = '{$minor}')");
+    array_push($where, "AND ((TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 AND 'Yes' = '{$minor}')
+    OR (TIMESTAMPDIFF(YEAR, dob, CURDATE()) >= 18 AND 'No' = '{$minor}'))");
 }
 
 if ($this->ci->input->post('passport_status')) {
