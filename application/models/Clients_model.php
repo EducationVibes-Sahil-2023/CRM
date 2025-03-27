@@ -2205,14 +2205,14 @@ class Clients_model extends App_Model
 
             // Create activity message
             $messages = [];
-            $doc_names = [];
+            $doc_names_ = [];
             foreach ($doc_names as $key => $doc) {
-                $doc_names[] = $loc_names[$key];
+                $doc_names_[] = $loc_names[$key];
                 $messages[] = "{$doc} has been received at location {$loc_names[$key]}";
             }
 
             if ($in_transit == "true") {
-                $message = "All Original Documents " . implode(", ", (array) $doc_names) .
+                $message = "All Original Documents " . implode(", ", (array) $doc_names_) .
                     " transit location from " . (!empty($transit_location) ? $transit_location : "Unknown Location") .
                     " on " . date('Y-m-d H:i:s');
             } else {
