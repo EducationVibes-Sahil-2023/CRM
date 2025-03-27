@@ -51,9 +51,10 @@ class Settings extends AdminController
             if (isset($post_data['settings']['_leads_performance_settings'])) {
                 $post_data['settings']['_leads_performance_settings'] = $tmpData['settings']['_leads_performance_settings'];
             }
+            if (isset($post_data['settings']['ma_applicant_tracker'])) {
+                $post_data['settings']['ma_applicant_tracker'] = $tmpData['settings']['ma_applicant_tracker'];
+            }
 
-            echo "<pre";
-            // print_r($_POST);
 
             $ids = isset($_POST['id']) ? $_POST['id'] : [];
             $show_column = isset($_POST['show_column']) ? $_POST['show_column'] : [];
@@ -75,7 +76,7 @@ class Settings extends AdminController
                 ];
             }
             $post_data["columns_data"] = $columns_data;
- 
+
             $success = $this->settings_model->update($post_data);
 
             if ($success > 0) {

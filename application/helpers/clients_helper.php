@@ -315,12 +315,19 @@ function app_init_customer_profile_tabs()
         'view'     => 'admin/clients/groups/map',
         'position' => 95,
     ]);
+    $CI->app_tabs->add_customer_profile_tab('orignal_document', [
+        'name'     => _l('Orignal Documents'),
+        'icon'     => 'fa fa-map-marker',
+        'view'     => 'admin/clients/groups/orignal_documents',
+        'position' => 95,
+    ]);
     $CI->app_tabs->add_customer_profile_tab('tracker', [
         'name'     => _l('customer_tracker'),
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/applicant_tracker',
         'position' => 95,
     ]);
+
 
     $post_staff = array_column($CI->staff_model->post_sale_get(), "staffid");
 
@@ -575,6 +582,26 @@ function get_company_name($userid, $prevent_empty_company = false)
         ->row();
     if ($client) {
         return $client->company;
+    }
+
+    return '';
+}
+
+function get_client_name($userid, $prevent_empty_company = false)
+{
+    $_userid = get_client_user_id();
+    if ($userid !== '') {
+        $_userid = $userid;
+    }
+    $CI = &get_instance();
+
+    $client = $CI->db->select("CONCAT(first_name,' ',last_name) as clientName")
+        ->where('userid', $_userid)
+        ->from(db_prefix() . 'basic_details')
+        ->get()
+        ->row();
+    if ($client) {
+        return $client->clientName;
     }
 
     return '';
@@ -1537,4 +1564,129 @@ function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
         ->result_array();
 
     return $client_fees;
+}
+
+function get_clients_fees_details_ids($lead_type, $client_id = [], $fees_id = "")
+{
+    $CI = &get_instance();
+    $CI->db->select("CONCAT(client_id,'-',f.id) fees_id,TRIM(c.symbol) AS symbol, TRIM(d.amount) AS amount, CONCAT(TRIM(c.symbol), TRIM(d.amount)) AS total_amount,f.id")
+        ->from(db_prefix() . 'applicant_fees f')
+        ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id")
+        ->join(db_prefix() . 'currencies c', "c.id = d.currency_id")
+        ->where('lead_type', $lead_type);
+
+    if (!empty($client_id)) {
+        $CI->db->where_in('client_id', $client_id);
+    }
+
+    if (!empty($fees_id)) {
+        $CI->db->where('f.id', $fees_id);
+    }
+
+    $client_fees = $CI->db->order_by("sequence", "asc")
+        ->get()
+        ->result_array();
+    if (!empty($client_fees)) {
+        $client_fees = array_column($client_fees, "total_amount", "fees_id");
+    }
+
+    return $client_fees;
+}
+
+function get_orignal_document_data($client_id)
+{
+    $CI = &get_instance();
+    $CI->db->select("o.*,r.received_date,CONCAT(firstname,' ',lastname) as received_by,r.id as received_id,l.name received_location,r.in_transit")
+        ->from(db_prefix() . 'orignal_documents o')
+        ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
+        ->join(db_prefix() . 'staff s', "s.staffid = r.received_by ", "LEFT")
+        ->join(db_prefix() . 'office_location l', "l.id = r.location_id ", "LEFT");
+    return $CI->db->order_by("id", "asc")->get()->result_array();
+}
+
+function orignal_document_status()
+{
+    $CI = &get_instance();
+    $CI->db->select("o.*")
+        ->from(db_prefix() . 'orignal_document_status o');
+    return $CI->db->order_by("id", "asc")->get()->result_array();
+}
+
+function activity_orignal_document($id)
+{
+    $CI = &get_instance();
+    $sorting = hooks()->apply_filters('lead_activity_log_default_sort', 'DESC');
+    $CI->db->where('client_id', $id);
+    $CI->db->order_by('date', $sorting);
+    return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
+}
+
+function get_orignal_document_list()
+{
+    $CI = &get_instance();
+    $CI->db->select("*")
+        ->from(db_prefix() . 'orignal_documents o');
+    return $CI->db->order_by("id", "asc")->get()->result_array();
+}
+
+
+function get_applicant_statuses($id = "")
+{
+    $CI = &get_instance();
+    $CI->db->select("*")
+        ->from(db_prefix() . 'applicant_status o');
+    if (!empty($id)) {
+        $CI->db->where('id', $id);
+    }
+    if (!empty($id)) {
+        return $CI->db->order_by("id", "asc")->get()->row();
+    } else {
+        return $CI->db->order_by("id", "asc")->get()->result_array();
+    }
+}
+
+function get_orignal_document_data_list($client_ids_array = [])
+{
+    $client_ids = implode(",", $client_ids_array);
+    $CI = &get_instance();
+    $CI->db->select("r.userid,group_concat(o.id) document_ids,group_concat(o.name) document_names,group_concat(r.id) received_id")
+        ->from(db_prefix() . 'orignal_documents_received r')
+        ->join(db_prefix() . 'orignal_documents o', "o.id = r.doc_id AND r.userid IN ({$client_ids})")
+        ->join(db_prefix() . 'office_location l', "l.id = r.location_id ", "LEFT");
+    $CI->db->group_by("r.userid");
+    $result = $CI->db->order_by("r.userid", "asc")->get()->result_array();
+
+    // Find users without documents
+    $missing_users = [];
+    $client_id_array = explode(",", $client_ids); // Convert back to an array for checking
+
+    if (!empty($result)) {
+        $found_users = array_column($result, "userid");
+
+        foreach ($client_id_array as $client_id) {
+            if (!in_array($client_id, $found_users)) {
+                $missing_users[] = $client_id; // Collect users with missing documents
+                return [
+                    "error" => true,
+                    "message" => "No documents found for user: " . get_client_name($client_id)
+                ];
+            }
+        }
+    } else {
+        return [
+            "error" => true,
+            "message" => "No documents found for user: " . get_client_name($client_ids_array[0])
+        ];
+    }
+
+    return array_column($result, null, "userid");
+}
+
+function applicant_last_update($client_id)
+{
+    $CI = &get_instance();
+    $data = [];
+    $data["last_update"] = date('Y-m-d H:i:s');
+    $CI->db->where('userid', $client_id);
+    $CI->db->update(db_prefix() . 'clients', $data);
 }

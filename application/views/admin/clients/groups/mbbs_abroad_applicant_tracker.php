@@ -632,10 +632,15 @@ if (in_array(get_staff_user_id(), $staff_id)) {
 </style>
 <!-- MultiStep Form -->
 <?php
-
+if ($client->submission_status != 1) {
+?>
+    <h2 class='text-center'>No final submission from counselor.</h2>
+<?php
+    die;
+}
 // if (empty($customer_admins)  && !is_admin()) { 
 ?>
-<!--<h2 class='text-center'><?= _l("no_admin_assign_tracker") ?></h2>-->
+<!--<h2 class='text-center'></h2>-->
 <?php
 
 // } else {
@@ -2448,46 +2453,6 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }
     }
 
-    async function whatsapp_message_send(client_id, type, s_university_id = "", s_university_name = "") {
-        show_loader();
-
-        let upload_data = new FormData();
-        upload_data.append("client_id", client_id);
-        upload_data.append("type", type);
-        upload_data.append("s_university_id", s_university_id);
-        upload_data.append("s_university_name", s_university_name);
-        upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
-
-
-        try {
-            let response = await $.ajax({
-                url: "<?= base_url('admin/clients/whatsapp_message_send') ?>",
-                method: "POST",
-                data: upload_data,
-                contentType: false,
-                processData: false
-            });
-
-            let uploadResponse = JSON.parse(response);
-
-            if (uploadResponse.success) {
-                alert_float("success", uploadResponse.message || "Email sent successfully!");
-            } else {
-                alert_float("danger", uploadResponse.message || "Failed to send email.");
-            }
-
-            return uploadResponse;
-        } catch (error) {
-            console.error("Email send error:", error);
-            alert_float("danger", "An error occurred while sending the email.");
-            return {
-                success: false,
-                message: "An error occurred while sending the email."
-            };
-        } finally {
-            hide_loader();
-        }
-    }
 
 
     async function registration_slip_generate(client_id, slip = 0, whatsapp = 0, email = 0) {

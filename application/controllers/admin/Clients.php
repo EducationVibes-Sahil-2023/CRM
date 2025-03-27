@@ -18,6 +18,9 @@ class Clients extends AdminController
         if (!empty($user_lead_type->lead_type)) {
             $data["user_lead_type"] = $user_lead_type->lead_type;
         }
+        if ($lastSegment == "clients") {
+            redirect(admin_url());
+        }
 
         $this->load->model('contracts_model');
         $this->load->model('leads_model');
@@ -41,6 +44,7 @@ class Clients extends AdminController
         // $data['application_stage'] = $this->clients_model->get_application_stage();
         $data['application_stage'] = get_applicant_stage();
         $data['application_sub_stage'] = $this->clients_model->get_application_sub_stage();
+        $data['application_sub_stage_mbbs'] = $this->clients_model->get_application_sub_stage_mbbs();
 
         $whereContactsLoggedIn = '';
         if (!has_permission('customers', '', 'view')) {
@@ -103,6 +107,7 @@ class Clients extends AdminController
     public function client($id = '')
     {
         // $database_secondary = $this->load->database('database_secondary', TRUE);
+
         $this->load->model('leads_model');
         $data['lead_type'] = $this->leads_model->get_type();
         $client = "";
@@ -1025,32 +1030,101 @@ class Clients extends AdminController
 
     public function bulk_action()
     {
-        hooks()->do_action('before_do_bulk_action_for_customers');
-        $total_deleted = 0;
-        if ($this->input->post()) {
-            $ids    = $this->input->post('ids');
-            $groups = $this->input->post('groups');
 
-            if (is_array($ids)) {
+        hooks()->do_action('before_do_bulk_action_for_customers');
+
+        $total_deleted = 0;
+        $data = [
+            'resp_code' => 'ERR',
+            'resp_desc' => 'No valid action performed',
+        ];
+
+        if ($this->input->post()) {
+            $ids = $this->input->post('ids');
+
+            // Validate if IDs are present
+            if (empty($ids) || !is_array($ids)) {
+
+                $data = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "No valid IDs selected.",
+                ];
+                echo json_encode($data);
+                die;
+            }
+
+            // Handle Mass Delete
+            if ($this->input->post('mass_delete') === true) {
+
                 foreach ($ids as $id) {
-                    if ($this->input->post('mass_delete')) {
-                        if ($this->clients_model->delete($id)) {
-                            $total_deleted++;
-                        }
-                    } else {
-                        if (!is_array($groups)) {
-                            $groups = false;
-                        }
-                        $this->client_groups_model->sync_customer_groups($id, $groups);
+                    if ($this->clients_model->delete($id)) {
+                        $total_deleted++;
                     }
                 }
+                $data = [
+                    'resp_code' => 'RCS',
+                    'resp_desc' => _l('total_clients_deleted', $total_deleted),
+                ];
+                set_alert('success', _l('total_clients_deleted', $total_deleted));
+                echo json_encode($data);
+                die;
+            }
+
+            // Handle In-Transit
+            if (
+                ($this->input->post('in_transit') === true ||
+                    (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
+                (!empty($this->input->post('office_location')) && !empty($this->input->post('document_status')))
+            ) {
+
+                $get_data_from_document = get_orignal_document_data_list($ids);
+
+
+
+                if (!empty($get_data_from_document["error"]) && $get_data_from_document["error"] === true) {
+                    $data['resp_desc'] = $get_data_from_document["message"];
+                    $data['resp_code'] = "ERR";
+                    set_alert('danger', $get_data_from_document["message"]);
+                } else {
+
+                    foreach ($get_data_from_document as $document) {
+                        $update_data = [];
+                        $count = count(explode(",", $document["document_ids"]));
+
+                        $update_data["userid"] = $document["userid"];
+                        $update_data["document_ids"] = explode(",", $document["document_ids"]);
+                        $update_data["document_name"] = explode(",", $document["document_names"]);
+                        $update_data["received_id"] = explode(",", $document["received_id"]);
+                        $update_data["status_text"] = $this->input->post('status_text');
+                        $update_data["in_transit"] = $this->input->post('in_transit');
+                        $update_data["transit_location"] = $this->input->post('from_location') . " - " . $this->input->post('to_location');
+
+                        // Get locations and locations_name from input
+                        $location = $this->input->post('office_location');
+                        $location_name = $this->input->post('locations_name');
+
+                        // Repeat locations and locations_name to match document count
+                        $update_data["locations"] = array_fill(0, $count, $location);
+                        $update_data["locations_name"] = array_fill(0, $count, $location_name);
+
+
+                        $response =  $this->clients_model->update_documents($update_data, $document["userid"]);
+                    }
+
+                    $data = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => 'Original document bulk update successfully',
+                    ];
+                    set_alert('success', "Original document bulk update successfully");
+                }
+                echo json_encode($data);
+                die;
             }
         }
 
-        if ($this->input->post('mass_delete')) {
-            set_alert('success', _l('total_clients_deleted', $total_deleted));
-        }
+        echo json_encode($data);
     }
+
 
     public function vault_entry_create($customer_id)
     {
@@ -1289,6 +1363,7 @@ class Clients extends AdminController
                 } else {
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Admission Preferences Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
+                applicant_last_update($client_id);
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'Admission Preferences successfully updated';
                 $data['resp_id'] = $admissionPreferencesId;
@@ -1373,6 +1448,7 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'client_documents', array("data" => json_encode($already_data, true)));
                 $rows_affected = $this->db->affected_rows();
                 if ($rows_affected > 0) {
+                    applicant_last_update($client_id);
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = "Document update successfully";
                     set_alert('success', "Document update successfully");
@@ -1476,7 +1552,7 @@ class Clients extends AdminController
 
 
 
-
+                    applicant_last_update($client_id);
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = _l('update_client_document_successfully', _l('client'));
                     set_alert('success', _l('update_client_document_successfully', _l('client')));
@@ -1556,6 +1632,7 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'clients', $_update);
 
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Welcome message data updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                applicant_last_update($client_id);
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = "Welcome Information update successfully";
                 set_alert('success', "Welcome Information update successfully");
@@ -1602,8 +1679,8 @@ class Clients extends AdminController
                     "client_id" => $client_id
                 ));
 
-                $client = $this->clients_model->getBasicDetails($client_id);
-
+                // $client = $this->clients_model->getBasicDetails($client_id);
+                applicant_last_update($client_id);
                 $generate_registration_slip =  $this->registration_slip_preview($client_id);
             } catch (Exception $e) {
                 $data['resp_code'] = 'ERR';
@@ -2759,6 +2836,7 @@ class Clients extends AdminController
                         $this->media_upload($media_upload_data, $_FILES);
                     }
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    applicant_last_update($client_id);
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = "Basic information update successfully.";
                     set_alert('success', "Basic information update successfully.");
@@ -2832,6 +2910,7 @@ class Clients extends AdminController
                         $this->media_upload($media_upload_data, $_FILES);
                     }
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                    applicant_last_update($client_id);
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = "Passport information update successfully.";
                     set_alert('success', "Passport information update successfully.");
@@ -2940,6 +3019,7 @@ class Clients extends AdminController
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     // $this->db->where("userid", $client_id);
                     // $this->db->update(db_prefix() . 'clients', array("applicant_stage" => 2, "applicant_sub_status" => 5));
+                    applicant_last_update($client_id);
                     $data['resp_code'] = 'RCS';
                     $data['resp_desc'] = "Academic information update successfully.";
                     set_alert('success', "Academic information update successfully.");
@@ -3491,7 +3571,7 @@ class Clients extends AdminController
         }
 
 
-
+        applicant_last_update($client_id);
         echo json_encode($data);
     }
 
@@ -4584,5 +4664,22 @@ class Clients extends AdminController
 
 
         echo json_encode($response);
+    }
+
+    public function orignal_document()
+    {
+        $data = $_POST;
+        $client_id = $_POST["client_id"];
+        $response = $this->clients_model->update_documents($data, $client_id);
+        applicant_last_update($client_id);
+        echo json_encode($response);
+    }
+
+    public function update_client_status()
+    {
+        if ($this->input->post() && $this->input->is_ajax_request()) {
+
+            $this->clients_model->update_client_status($this->input->post());
+        }
     }
 }

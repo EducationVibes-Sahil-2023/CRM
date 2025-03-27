@@ -198,6 +198,12 @@ function app_init_settings_tabs()
         'position' => 55,
     ]);
 
+    $CI->app_tabs->add_settings_tab('ma_applicant_tracker', [
+        'name'     => 'Ma Applicant Tracker',
+        'view'     => 'admin/settings/includes/ma_applicant_tracker',
+        'position' => 55,
+    ]);
+
     $CI->app_tabs->add_settings_tab('calendar', [
         'name'     => _l('settings_calendar'),
         'view'     => 'admin/settings/includes/calendar',
@@ -280,7 +286,13 @@ function tbl_columns_leads_performance()
     //     }
     // }
 
-    return $CI->db->select("id,columnid as name,label_name,show_column,sql_condition,sequence,tbl,column_name as column")->where("status",1)->order_by("tbl_sequence","asc")->get(db_prefix() . "performance_columns")->result_array();
+    return $CI->db->select("id,columnid as name,label_name,show_column,sql_condition,sequence,tbl,column_name as column")->where("status", 1)->order_by("tbl_sequence", "asc")->get(db_prefix() . "performance_columns")->result_array();
 
     // return $columns; // Return structured array with table-wise column details
+}
+
+function tbl_columns_ma_applicant_tracker()
+{
+    $CI = &get_instance();
+    return $CI->db->select("id,columnid as name,label_name,show_column,sql_condition,sequence,tbl,column_name as column")->where("status", 1)->order_by("tbl_sequence", "asc")->get(db_prefix() . "ma_applicant_tracker")->result_array();
 }

@@ -39,7 +39,14 @@ class Client_merge_fields extends App_merge_fields
                 ],
 
             ],
+            [
+                'name'      => 'Acadmic Year',
+                'key'       => '{acadmic_year}',
+                'available' => [
+                    'client'
+                ],
 
+            ],
             [
                 'name'      => 'Counselor Firstname',
                 'key'       => '{counselor_firstname}',
@@ -96,10 +103,16 @@ class Client_merge_fields extends App_merge_fields
                 ],
 
             ],
-
             [
-                'name'      => 'Post sale counselor Lastname',
-                'key'       => '{post_sale_counselor_lastname}',
+                'name'      => 'Post sale counselor Firstname',
+                'key'       => '{post_sale_counselor_firstname}',
+                'available' => [
+                    'client'
+                ],
+            ],
+            [
+                'name'      => 'Orignal Documents Received',
+                'key'       => '{orignal_documents_received}',
                 'available' => [
                     'client'
                 ],
@@ -564,6 +577,8 @@ class Client_merge_fields extends App_merge_fields
         $this->ci->db->where('id', $contact_id);
         $contact = $this->ci->db->get(db_prefix() . 'contacts')->row();
 
+        $documents_list = get_orignal_document_data_list(array($client_id));
+        $documents_name_list = $documents_list[$client_id]["document_names"];
 
         if (!empty($client->addedfrom)) {
             $this->ci->db->select("email,firstname,lastname,phonenumber");
@@ -625,6 +640,10 @@ class Client_merge_fields extends App_merge_fields
             $fields['{document_name}']       = $document_type->name;
         }
 
+        if (!empty($documents_name_list)) {
+            $fields['{orignal_documents_received}']       = $documents_name_list;
+        }
+
         $this->ci->db->where('userid', $client_id);
         $admission_preferences = $this->ci->db->get(db_prefix() . 'admission_preferences')->row();
 
@@ -632,6 +651,7 @@ class Client_merge_fields extends App_merge_fields
         if ($admission_preferences) {
             $fields['{primary_university}']              = $admission_preferences->primary_university;
             $fields['{primary_country}']        = $admission_preferences->primary_country;
+            $fields['{acadmic_year}']        =  $admission_preferences->acadmic_year;
         }
 
         if (!empty($university_name) && !empty($client_id)) {
