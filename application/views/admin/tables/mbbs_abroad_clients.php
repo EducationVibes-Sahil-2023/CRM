@@ -211,6 +211,12 @@ if ($this->ci->input->post('to_date')) {
     array_push($where, 'AND DATE(' . db_prefix() . 'clients.datecreated) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
 }
 
+if ($this->ci->input->post('last_to_date')) {
+    $from_date = $this->ci->input->post('last_from_date');
+    $to_date = $this->ci->input->post('last_to_date');
+    array_push($where, 'AND DATE(' . db_prefix() . 'clients.last_update) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+}
+
 $additional_array = [
     db_prefix() . 'contacts.id as contact_id',
     db_prefix() . 'clients.zip as zip',

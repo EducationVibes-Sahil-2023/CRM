@@ -400,7 +400,16 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
-
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="last_from_date" id="last_from_date" placeholder="From Last Update Date" autocomplete="off">
+                                 </div>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="last_to_date" id="last_to_date" placeholder="To Last Update Date" autocomplete="off">
+                                 </div>
+                              </div>
                               <!-- <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
@@ -584,11 +593,11 @@ init_tail(); ?>
          });
 
          // Log the array of created objects
-         console.log("Created Objects:", tbllead_performance_column);
+         //  console.log("Created Objects:", tbllead_performance_column);
 
          // Use `tbllead_performance_column` as needed (e.g., send via AJAX or update the UI)
       } else {
-         console.log("No value selected.");
+         //  console.log("No value selected.");
       }
       disabled_column();
    });
@@ -625,11 +634,11 @@ init_tail(); ?>
             });
 
             // Log the array of created objects
-            console.log("Created Objects:", tbllead_performance_column);
+            //  console.log("Created Objects:", tbllead_performance_column);
 
             // Use `tbllead_performance_column` as needed (e.g., send via AJAX or update the UI)
          } else {
-            console.log("No value selected.");
+            //  console.log("No value selected.");
          }
       }
 
@@ -687,8 +696,8 @@ init_tail(); ?>
       CustomersServerParams['assigned'] = "[name='view_assigned[]']";
       CustomersServerParams['source'] = "[name='view_source[]']";
       CustomersServerParams['lead_type'] = "[name='lead_type[]']";
-      CustomersServerParams['from_date'] = "[name='from_date']";
-      CustomersServerParams['to_date'] = "[name='to_date']";
+      CustomersServerParams['last_from_date'] = "[name='last_from_date']";
+      CustomersServerParams['last_to_date'] = "[name='last_to_date']";
       CustomersServerParams['application_stage'] = "[name='view_application_stage']";
       CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
       CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
@@ -714,7 +723,7 @@ init_tail(); ?>
 
       setTimeout(() => {
          $('.btn-dt-reload').on('click', function() {
-            console.log("refresh");
+            //  console.log("refresh");
             enabled_column();
             refreshApplicantTable();
          });
@@ -722,13 +731,13 @@ init_tail(); ?>
          enabled_column();
          // When the dropdown is opened, disable selected options
          $('[name="column_show[]"]').on('show.bs.select', function() {
-            console.log("show");
+            //  console.log("show");
             disabled_column();
          });
 
          // When the dropdown is closed, enable previously disabled options
          $('[name="column_show[]"]').on('hidden.bs.select', function() {
-            console.log("hide");
+            //  console.log("hide");
             enabled_column();
          });
       }, 3000);
@@ -871,14 +880,14 @@ init_tail(); ?>
       $("#leadSum").html('');
       $(".leads-overview").hide();
 
-      var from_date = document.getElementById("from_date").value;
-      var to_date = document.getElementById("to_date").value;
+      var from_date = document.getElementById("last_from_date").value;
+      var to_date = document.getElementById("last_to_date").value;
 
 
 
       if (to_date != '') {
          if (from_date == '') {
-            $("#from_date").focus();
+            $("#last_from_date").focus();
             disabled_column();
             return false;
 
@@ -887,13 +896,11 @@ init_tail(); ?>
 
       if (from_date != '') {
          if (to_date == '') {
-            $("#to_date").focus();
+            $("#last_to_date").focus();
             disabled_column();
             return false;
          }
       }
-
-      console.log(CustomersServerParams);
       show_loader("apply_filter");
       applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
       disabled_column();
@@ -902,7 +909,7 @@ init_tail(); ?>
    }
 
    function change_transit(obj) {
-      console.log("change");
+      //  console.log("change");
       let transitInfo = document.getElementById("transit_info");
       $(".is_transist_location").toggle().find("select").val("").selectpicker("refresh");
       $(".no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
