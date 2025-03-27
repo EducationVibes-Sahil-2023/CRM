@@ -48,8 +48,8 @@ array_unshift($office_location, array());
                                             </div>
                                         </td>
                                         <td><?= $doc["name"] ?></td>
-                                        <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
+                                        <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>
                                         <td><?= !empty($doc["in_transit"]) ? $doc["in_transit"] : '' ?></td>
                                         <td><?= render_select('location', $office_location, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select Office Location'), array(), 'no-mbot', '', false, "office_location");

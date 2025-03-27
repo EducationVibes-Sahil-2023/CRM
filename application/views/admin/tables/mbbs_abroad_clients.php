@@ -219,6 +219,7 @@ $additional_array = [
     db_prefix() . 'applicant_tracker.id as applicant_stage_id',
     db_prefix() . 'clients.userid as userid',
     db_prefix() . 'clients.active as status_id',
+    db_prefix() . 'applicant_status.color as color',
 ];
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid');
 

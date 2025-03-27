@@ -30,6 +30,11 @@ array_unshift($office_location, array());
       .margin-top {
          margin-top: 20px;
       }
+
+      .table>tbody>tr>td,
+      .table>tfoot>tr>td {
+         text-wrap: auto !important;
+      }
    </style>
    <div class="content">
       <div class="row">
@@ -445,10 +450,10 @@ array_unshift($office_location, array());
          </div>
          <div class="modal-body">
             <?php if (has_permission('customers', '', 'delete')) { ?>
-               <div class="checkbox checkbox-danger">
+               <!-- <div class="checkbox checkbox-danger">
                   <input type="checkbox" name="mass_delete" id="mass_delete">
                   <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
-               </div>
+               </div> -->
                <hr class="mass_delete_separator" />
             <?php }
             array_unshift($orignal_document_status, array()); ?>
@@ -907,6 +912,9 @@ init_tail(); ?>
    $('#customers_bulk_action').on('show.bs.modal', function() {
       $(".document_status_update").find("select").val("").selectpicker('refresh');
       $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+      $(".is_transist_location").hide();
+      $(".no_is_transist_location").show();
 
    });
 
