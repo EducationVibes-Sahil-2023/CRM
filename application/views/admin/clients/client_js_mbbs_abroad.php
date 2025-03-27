@@ -943,7 +943,7 @@
                         var tagInput1 = new TagsInput({
                             selector: `university${count2}`,
                             duplicate: false,
-                            max: 5,
+                            max: <?=MAX_UNIVERSITY_MBBS_ABROAD?>,
                             suggestions: university_list
                         });
 
@@ -1277,7 +1277,7 @@
                     var tagInput1 = new TagsInput({
                         selector: `university${set_count}`,
                         duplicate: false,
-                        max: 5,
+                        max: <?=MAX_UNIVERSITY_MBBS_ABROAD?>,
                         suggestions: university_list
                     });
 

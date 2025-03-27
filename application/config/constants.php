@@ -241,3 +241,7 @@ define('FEES_DEPOSITE_PENDING', '10');
 define('INVITATION_PENDING', '11');
 define('THIRD_PAYMENT_PENDING', '12');
 
+
+
+
+define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
