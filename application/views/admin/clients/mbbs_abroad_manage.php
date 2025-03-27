@@ -506,7 +506,9 @@ init_tail(); ?>
 
    $(document).ready(async function() {
       enabled_column();
+
    });
+
 
    function enabled_column() {
       $("[name='column_show[]'] option:selected").prop("disabled", false);
@@ -671,9 +673,7 @@ init_tail(); ?>
    var CustomersServerParams = {};
 
    $(function() {
-      console.log("okkkk dlkfnaklfn");
       enabled_column();
-      console.log("okkkk dlkfnaklfn");
       $.each($('._hidden_inputs._filters input'), function() {
          CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
       });
@@ -706,6 +706,14 @@ init_tail(); ?>
          // Populate the child dropdown with the data for the selected parent
          populateChildDropdown(selectedValue);
       });
+
+      setTimeout(() => {
+         $('.btn-dt-reload').on('click', function() {
+            console.log("refresh");
+            enabled_column();
+            refreshApplicantTable();
+         });
+      }, 3000);
 
    });
 
@@ -888,6 +896,12 @@ init_tail(); ?>
       $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
 
    });
+
+   function refreshApplicantTable() {
+      applicant_table.ajax.reload(function() {
+         disabled_column();
+      }, false);
+   }
 </script>
 </body>
 
