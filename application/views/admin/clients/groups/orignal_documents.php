@@ -19,7 +19,9 @@ array_unshift($office_location, array());
         <div class="form-container">
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
-                <button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
+                <?php if ($client_infomation->orignal_document_status == 3) { ?>
+                    <button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
+                <?php } ?>
             </div>
             <hr>
 
