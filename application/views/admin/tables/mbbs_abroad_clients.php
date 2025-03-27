@@ -108,6 +108,8 @@ $join = [
 ];
 
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+$post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
+
 if ($role == 3) {
     $sid = get_staff_user_id();
     $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
@@ -118,12 +120,12 @@ if ($role == 3) {
     $sids = implode(",", $idsarr);
 }
 
-if (!has_permission('customers', '', 'view')) {
+if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
     array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned = ' . get_staff_user_id() . ')');
 }
 
 if (!is_admin()) {
-    if (has_permission('customers', '', 'view')) {
+    if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
         array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned IN ( ' . $sids . '))');
     }
 }
