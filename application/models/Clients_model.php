@@ -773,6 +773,7 @@ class Clients_model extends App_Model
             $this->db->where('rel_type', 'customer');
             $this->db->delete(db_prefix() . 'notes');
 
+
             if (is_gdpr() && get_option('gdpr_on_forgotten_remove_invoices_credit_notes') == '1') {
                 $this->load->model('invoices_model');
                 $this->db->where('clientid', $id);
@@ -909,6 +910,49 @@ class Clients_model extends App_Model
             foreach ($projects as $project) {
                 $this->projects_model->delete($project['id']);
             }
+
+            // exam delete
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'clients_exam');
+
+            //basis details
+            $this->db->where('userid', $id);
+            $this->db->delete(db_prefix() . 'basic_details');
+
+            // acadmic details
+            $this->db->where('userid', $id);
+            $this->db->delete(db_prefix() . 'academic_details');
+
+            //admission prefrences
+            $this->db->where('userid', $id);
+            $this->db->delete(db_prefix() . 'admission_preferences');
+
+            //admission prefrences
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'client_documents');
+
+            //orignal document receive
+            $this->db->where('userid', $id);
+            $this->db->delete(db_prefix() . 'orignal_documents_received');
+
+            //activity logs
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'application_activity_log');
+
+            //activity logs
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'orignal_document_activity');
+
+            //passport logs
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'client_passport_details');
+
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'client_university_shortlisting');
+
+            $path = APPLICANT_UPLOAD_DOCUMENT . $id . '/';
+            $this->deleteFolder($path);
         }
         if ($affectedRows > 0) {
             hooks()->do_action('after_client_deleted', $id);
@@ -925,6 +969,27 @@ class Clients_model extends App_Model
         }
 
         return false;
+    }
+
+
+    public function deleteFolder($folderPath)
+    {
+        if (!is_dir($folderPath)) {
+            return false; // Folder does not exist
+        }
+
+        $files = array_diff(scandir($folderPath), ['.', '..']);
+
+        foreach ($files as $file) {
+            $filePath = $folderPath . DIRECTORY_SEPARATOR . $file;
+            if (is_dir($filePath)) {
+                $this->deleteFolder($filePath); // Recursively delete subfolders
+            } else {
+                unlink($filePath); // Delete file
+            }
+        }
+
+        return rmdir($folderPath); // Remove empty folder
     }
 
     /**
@@ -2331,7 +2396,4 @@ class Clients_model extends App_Model
 
         return false;
     }
-
-
- 
 }
