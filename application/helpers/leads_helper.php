@@ -8170,8 +8170,14 @@ function get_leads_summary_filter_neww($params)
 function get_university_list($lead_type)
 {
     $CI = &get_instance();
-
     return $CI->s_db->query("SELECT co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type'")->result_array();
+}
+
+function get_country_list($segment_id)
+{
+    $CI = &get_instance();
+
+    return $CI->s_db->query("SELECT c.id,c.country_name FROM  countries c where c.segment_id='{$segment_id}' ")->result_array();
 }
 
 function get_university_exam()
@@ -8204,6 +8210,7 @@ function getLast10Digits($phoneNumber)
     return substr($digits, -10);
 }
 
+
 function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data = [])
 {
     $CI = &get_instance();
@@ -8214,6 +8221,10 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
     $CI->db->where('userid', $client_id);
     $basic_details = $CI->db->get(db_prefix() . 'basic_details')->row();
 
+
+    $documents_list = get_orignal_document_data_list(array($client_id));
+    $documents_name_list = $documents_list[$client_id]["document_names"];
+
     if (!empty($client->addedfrom)) {
         $CI->db->select("email,firstname,lastname,phonenumber");
         $CI->db->where('staffid', $client->addedfrom);
@@ -8221,13 +8232,13 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
     }
 
     if (!empty($staff_id)) {
-         $CI->db->select("email,firstname,lastname,phonenumber");
-         $CI->db->where('staffid', $staff_id);
+        $CI->db->select("email,firstname,lastname,phonenumber");
+        $CI->db->where('staffid', $staff_id);
         $assigned_post_sale_counselor =  $CI->db->get(db_prefix() . 'staff')->row();
     }
 
-      $CI->db->where('userid', $client_id);
-        $admission_preferences = $CI->db->get(db_prefix() . 'admission_preferences')->row();
+    $CI->db->where('userid', $client_id);
+    $admission_preferences = $CI->db->get(db_prefix() . 'admission_preferences')->row();
     if (!$client) {
         log_message('error', "Client not found: ID $client_id");
         return json_encode(["error" => "Client not found."]);
@@ -8263,40 +8274,46 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
         log_message('error', "Staff data not found for user ID " . get_staff_user_id());
         return json_encode(["error" => "Staff details not found."]);
     }
-   
 
+    $amount_details = get_clients_fees_details(2, $client_id, REGISTRATION_AMOUNT_ID);
     // Replace variables in template
     $applicant_name = trim($client->first_name . " " . $client->last_name);
     $variables = str_replace(
-    [
-        "{applicant_name}", 
-        "{counsellor_phonennumber}", 
-        "{primary_country}", 
-        "{primary_university}", 
-        "{registration_amount}", 
-        "{acadmic_year}", 
-        "{entrance_exam_details}", 
-        "{counsellor_name}"
-    ],
-    [
-        $applicant_name ?? "", 
-        !empty($staff_data->phonenumber)?$staff_data->phonenumber:"7217219100", 
-        $primary_country ?? "", 
-        $primary_university ?? "", 
-        $registration_amount ?? "", 
-        $academic_year ?? "", 
-        $entrance_exam_details ?? "", 
-        $counsellor_name ?? ""
-    ],
-    $whatsapp->variables_name ?? ""
-);
-
+        [
+            "{applicant_name}",
+            "{counsellor_phonennumber}",
+            "{primary_country}",
+            "{primary_university}",
+            "{registration_amount}",
+            "{acadmic_year}",
+            "{entrance_exam_details}",
+            "{counsellor_name}",
+            "{orignal_documents_received}"
+        ],
+        [
+            $applicant_name ?? "",
+            !empty($staff_data->phonenumber) ? $staff_data->phonenumber : "7217219100",
+            $admission_preferences->primary_country ?? "",
+            $admission_preferences->primary_university ?? "",
+            $amount_details[0]["total_amount"] ?? "",
+            $admission_preferences->acadmic_year ?? "",
+            $entrance_exam_details ?? "",
+            $counsellor_name ?? "",
+            "*" . str_replace(",", "#@", $documents_name_list) . "*" ?? ""
+        ],
+        $whatsapp->variables_name ?? ""
+    );
 
     // Prepare parameters
     $parameters = [];
     if (!empty($variables)) {
         $variables_array = array_map('trim', explode(",", $variables));
         foreach ($variables_array as $data) {
+            if (empty($data)) {
+                log_message('error', "Whatsapp parameter not found");
+                return json_encode(["error" => "Whatsapp parameter not found"]);
+            }
+            $data =   str_replace("#@", ",", $data) ?? "";
             $parameters[] = ["type" => "text", "text" => $data];
         }
     }
@@ -8345,7 +8362,7 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
                     "type" => "document",
                     "media" => [
                         "mediaName" => $documentName,
-                        "mediaUri" => base_url().$documentURL,
+                        "mediaUri" => base_url() . $documentURL,
                         "mimeType" => $mimeType
                     ]
                 ]
@@ -8360,6 +8377,8 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
             "parameters" => $parameters
         ];
     }
+
+
 
 
     // Initialize cURL
@@ -8398,6 +8417,8 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
 
     return json_encode(["success" => "Message sent successfully.", "response" => $responseArray]);
 }
+
+
 
 
 function extractYear($date)

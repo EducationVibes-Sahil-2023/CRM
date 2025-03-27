@@ -12,7 +12,11 @@ array_unshift($office_location, array());
     <div class="col-md-12">
         <div class="form-container">
             <h4 class="fs-title">Orignal Documents</h4>
+            <div class="text-right">
+                <button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
+            </div>
             <hr>
+
             <form method="post" id="orignal-document-form">
                 <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
 
@@ -25,6 +29,7 @@ array_unshift($office_location, array());
                                 <th scope="col">Received By</th>
                                 <th scope="col">Received Date</th>
                                 <th scope="col">Received Location</th>
+                                <th scope="col">Transit Location</th>
                                 <th scope="col">Location</th>
                             </tr>
                         </thead>
@@ -46,7 +51,8 @@ array_unshift($office_location, array());
                                         <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
                                         <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>
-                                        <td><?= render_select('location', $office_location, array('id', 'name'), 'Office Location', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select Office Location'), array(), 'no-mbot', '', false, "office_location");
+                                        <td><?= !empty($doc["in_transit"]) ? $doc["in_transit"] : '' ?></td>
+                                        <td><?= render_select('location', $office_location, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select Office Location'), array(), 'no-mbot', '', false, "office_location");
                                             ?></td>
                                     </tr>
                                 <?php $index++;

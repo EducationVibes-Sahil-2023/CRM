@@ -240,6 +240,12 @@ if (!has_permission('customers', '', 'view')) {
     array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned = ' . get_staff_user_id() . ')');
 }
 
+if (!is_admin()) {
+    if (has_permission('customers', '', 'view')) {
+        array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned IN ( ' . $sids . '))');
+    }
+}
+
 if ($this->ci->input->post('exclude_inactive')) {
     array_push($where, 'AND (' . db_prefix() . 'clients.active = 1 OR ' . db_prefix() . 'clients.active=0 AND registration_confirmed = 0)');
 }

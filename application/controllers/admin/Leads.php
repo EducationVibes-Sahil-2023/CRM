@@ -228,15 +228,38 @@ class Leads extends AdminController
 
 
         if (!empty($_POST["show_lead_status"]) && $_POST["show_lead_status"] == 1) {
-            $statusHtml = '';
+            $statusHtml = '<div>';
             $summary = get_leads_summary_filter_neww($_POST);
+            $marketing_data = [];
+            $total_leads = 0;
             foreach ($summary as $status) {
+
+                if (!empty($status["conversion_type_name"]) && !empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
+                    $marketing_data[$status["conversion_type"]]["name"] = $status["conversion_type_name"];
+                    $marketing_data[$status["conversion_type"]]["total"] += $status["total"];
+                    $marketing_data[$status["conversion_type"]]["color"] = $status["color"];
+                    $total_leads += $status["total"];
+                }
+
                 $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
                 $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
-        <h3 class='bold'>{$percent}</h3>
-        <span style='color: {$status['color']}'>{$status['name']}</span>
-        </div>";
+                <h3 class='bold'>{$percent}</h3>
+                <span style='color: {$status['color']}'>{$status['name']}</span></div>";
             }
+            $statusHtml .= "</div>";
+
+            if (!empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
+                $marketing_data[$status["conversion_type"]]["name"] = "total";
+                $marketing_data[$status["conversion_type"]]["total"] = $total_leads;
+                $marketing_data[$status["conversion_type"]]["color"] = "black";
+                $statusHtml .= '<br><br><hr><div><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Performance Marketing</span></h3></div>';
+                foreach ($marketing_data as $mar) {
+
+                    $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type border-right"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . number_format((($mar['total'] / $total_leads) * 100), 2) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div>';
+                }
+                $statusHtml .= "</div>";
+            }
+
 
             echo json_encode([
                 'status' => $statusHtml,
@@ -406,15 +429,17 @@ class Leads extends AdminController
 
     /* Add or update lead */
 
-    public function lead($id = '')
-
+    public function lead($id = '', $visitorStatus = 0)
     {
+        // if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id))) {
 
-        if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id))) {
+        //     ajax_access_denied();
+        // }
+
+        if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id) && !$this->leads_model->get_lead_visitor_request_exist($id))) {
 
             ajax_access_denied();
         }
-
 
 
         if ($this->input->post()) {
@@ -498,18 +523,16 @@ class Leads extends AdminController
             die;
         }
 
-
-
         echo json_encode([
 
-            'leadView' => $this->_get_lead_data($id),
+            'leadView' => $this->_get_lead_data($id, $visitorStatus),
 
         ]);
     }
 
 
 
-    private function _get_lead_data($id = '')
+    private function _get_lead_data($id = '', $visitorStatus = 0)
 
     {
 
@@ -525,17 +548,29 @@ class Leads extends AdminController
 
         $data['base_currency'] = get_base_currency();
 
-        $data['location'] = $this->staff_model->office_location();
+        // $data['location'] = $this->staff_model->cities();
         $data['visitor_type'] = $this->staff_model->visitor_type();
         $data['visitor_status'] = $this->staff_model->visitor_status();
 
         if (is_numeric($id)) {
 
-            $leadWhere = (has_permission('leads', '', 'view') ? [] : '(assigned = ' . get_staff_user_id() . ' OR addedfrom=' . get_staff_user_id() . ' OR is_public=1)');
+            if ((!empty($_REQUEST["visitorStatus"]) && $_REQUEST["visitorStatus"] == 1) || $visitorStatus == 1) {
+                $leadWhere = (has_permission('leads', '', 'view') ? [] : []);
 
+                $check_lead_transfer_request = $this->leads_model->get_lead_visitor_request_exist($id);
+                //  print_r($check_lead_transfer_request); die;
+                if (empty($check_lead_transfer_request->created_by) && !is_admin() ) {
+                    header('HTTP/1.0 404 Not Found');
 
+                    echo "Visit Request not found";
+                    die;
+                }
+            } else {
+                $leadWhere = (has_permission('leads', '', 'view') ? [] : '(assigned = ' . get_staff_user_id() . ' OR addedfrom=' . get_staff_user_id() . ' OR is_public=1)');
+            }
 
             $lead = $this->leads_model->get($id, $leadWhere);
+
 
 
 
@@ -572,6 +607,7 @@ class Leads extends AdminController
 
 
             $data['lead']          = $lead;
+            $data['visitorStatus']          = $visitorStatus;
 
             $data['mail_activity'] = $this->leads_model->get_mail_activity($id);
 
@@ -582,6 +618,7 @@ class Leads extends AdminController
             $data['call_activity_log']  = $this->leads_model->get_lead_call_activity_log($id);
             $data['lead_transfer_request']  = $this->leads_model->get_lead_transfer_request($id);
             $data['visitor_request']  = $this->leads_model->get_lead_visitor_request($id);
+            $data['location'] = $this->staff_model->cities("", $data['visitor_request']->location);
 
 
             if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
@@ -883,7 +920,7 @@ class Leads extends AdminController
 
         if (!is_lead_creator($id) && !has_permission('leads', '', 'delete')) {
 
-            access_denied('Delte Lead');
+            access_denied('Delete Lead');
         }
         // $lead_data = $this->leads_model->get($id);
         $response = $this->leads_model->delete($id);
@@ -3646,7 +3683,7 @@ class Leads extends AdminController
     public function lead_visitor_request()
     {
         $data['title']    = "Lead Visitor Request";
-        $data['location'] = $this->staff_model->office_location();
+        $data['location'] = $this->staff_model->cities("");
         $data['visitor_type'] = $this->staff_model->visitor_type();
         $data['visitor_status'] = $this->staff_model->visitor_status();
         $data['type']  = $this->leads_model->get_type();
@@ -3657,12 +3694,11 @@ class Leads extends AdminController
         $this->load->view('admin/leads/visitor', $data);
     }
 
-    public function table_lead_visitor($rel_id = "", $type = "", $action = "")
+    public function table_lead_visitor($request_type = "")
     {
+
         $this->app->get_table_data('lead_visitor', [
-            'rel_id'   => $rel_id,
-            'type' => $type,
-            'action' => $action
+            'request_type'   => $request_type
         ]);
     }
 
@@ -3691,7 +3727,7 @@ class Leads extends AdminController
                 'additional_data' => serialize([
                     get_staff_user_name()
                 ]),
-                'link' => '#leadid=' . $lead_id,
+                'link' => '#leadid=' . $lead_id . "/1",
             ]);
             if ($notified) {
                 array_push($notifiedUsers, 1);
@@ -3705,7 +3741,7 @@ class Leads extends AdminController
         try {
             $data_insert_update = [];
             $staff_list = array_column($this->staff_model->get('', [], 1), "full_name", "staffid");
-            $location = array_column($this->staff_model->office_location(), "name", "id");
+            $location = array_column($this->staff_model->cities("", $this->input->post('visitor_location')), "name", "id");
             $visitor_type = array_column($this->staff_model->visitor_type(), "name", "id");
             // Get input values
             $lead_id = $this->input->post('lead_id');
@@ -3739,14 +3775,13 @@ class Leads extends AdminController
                 $data_insert_update["created_at"] = date('Y-m-d H:i:s');
 
                 $insert_ = $this->db->insert(db_prefix() . 'visitor_request', $data_insert_update);
-
+                $visit_id = $this->db->insert_id();
                 $to_user_id = $data_insert_update["assigned"];
+
 
                 $this->lead_visitor_notification($lead_id, 1, $to_user_id);
 
-                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]] . ". Created by - ";
-
-                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
+                $message = "A new visitor request has been successfully created for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('j F Y, h:i A, l', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
 
                 // Check if comment exists and is not empty
                 $comment = trim($data_insert_update["comment"]);
@@ -3754,10 +3789,8 @@ class Leads extends AdminController
                     $message .= " <br> Additional comment: " . $comment . ".";
                 }
 
-                echo $message;
 
-
-                $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
+                $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id, "visit_id" => $visit_id));
 
                 if ($insert_) {
                     $message = "Lead visitor request submitted successfully.";
@@ -3773,14 +3806,14 @@ class Leads extends AdminController
 
                     $update_transfer = $this->db->update(db_prefix() . 'visitor_request', $data_insert_update, ["id" => $data_insert_update["id"]]);
 
-                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('l, F j, Y H:i A', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
+                    $message = "A new visitor request has been successfully updated for Lead ID " . $data_insert_update["lead_id"] . ". The attendee is " . $staff_list[$data_insert_update["assigned"]] . ". The visit is scheduled for " . date('j F Y, h:i A, l', strtotime($data_insert_update["date_of_visit"])) . " at " . $location[$data_insert_update["location"]] . " ( " . $data_insert_update["address"] . " ). Visitor type: " . $visitor_type[$data_insert_update["visitor_type"]];
                     // Check if comment exists and is not empty
                     $comment = trim($data_insert_update["comment"]);
                     if (!empty($comment)) {
                         $message .= " <br> Additional comment: " . $comment . ".";
                     }
 
-                    $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id));
+                    $this->db->insert(db_prefix() . 'visitor_activity_log', array("description" => $message, "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "lead_id" => $lead_id, "visit_id" => $data_insert_update["id"]));
 
                     $to_user_id = $data_insert_update["assigned"];
                     if ($data_insert_update["assigned"] == get_staff_user_id()) {
@@ -3811,6 +3844,43 @@ class Leads extends AdminController
                 'success' => false,
                 'message' => $e->getMessage(),
             ]);
+        }
+    }
+
+    public function search_cities()
+    {
+        $search = $_POST["value"];
+        $data =  $this->staff_model->cities($search);
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+
+    public function delete_visit()
+    {
+        $id = $_POST["id"];
+        $has_permission_delete = has_permission('visit_leads', '', 'delete');
+
+        if ($has_permission_delete) {
+            $success = $this->leads_model->delete_visit($id);
+
+            if ($success) {
+                set_alert('success', _l('deleted', _l('Visit Lead')));
+                $message = "Visit lead deleted successfully.";
+            } else {
+                set_alert('warning', _l('problem_deleting', _l('Visit Lead')));
+                $message = "Failed to delete visit lead.";
+            }
+
+            echo json_encode([
+                'success' => $success,
+                'message' => $message,
+            ]);
+        } else {
+            access_denied('Delete Visit Lead');
         }
     }
 }

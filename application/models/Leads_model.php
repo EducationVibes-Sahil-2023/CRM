@@ -2138,6 +2138,12 @@ class Leads_model extends App_Model
         }
 
 
+        if (total_rows(db_prefix() . 'visitor_request', 'lead_id="' . $CI->db->escape_str($id) . '" AND (assigned=' . $CI->db->escape_str($staff_id) . ' OR created_by=' . $CI->db->escape_str($staff_id) . ')') > 0) {
+
+            return true;
+        }
+
+
 
         return false;
     }
@@ -3053,6 +3059,9 @@ class Leads_model extends App_Model
 
     public function performance_related_dropdown()
     {
+
+        $this->db->query("SET SESSION group_concat_max_len = 1000000000");
+
         return $this->db->query("
     SELECT 
         source,
@@ -3071,12 +3080,48 @@ class Leads_model extends App_Model
 ")->result_array();
     }
 
+    // public function get_lead_visitor_request_exist($lead_id)
+    // {
+    //     $this->db->select('id,assigned,created_by');
+    //     $this->db->where_in("status", [1, 3]);
+    //     $this->db->where(array("lead_id" => $lead_id));
+    //     $staff = $this->db->get(db_prefix() . 'visitor_request')->row();
+    //     return $staff;
+    // }
+
+
     public function get_lead_visitor_request_exist($lead_id)
     {
+        $sid = get_staff_user_id();
+
+        // Get reporting persons
+        $query = $this->db->query('CALL GetReportingPersons(?)', array($sid));
+        $teamids = $query->result_array();
+
+        // Close and reinitialize DB after calling a stored procedure
+        $this->db->close();
+        $this->db->initialize();
+
+        // Extract staff IDs and include the current staff ID
+        $idsarr = array_column($teamids, 'staffid');
+        array_push($idsarr, $sid);  // Fix push_array() issue
+
+        // Select required fields
         $this->db->select('id,assigned,created_by');
+
+        // Filter conditions
         $this->db->where_in("status", [1, 3]);
         $this->db->where(array("lead_id" => $lead_id));
+
+        // Use where_in and or_where_in properly
+        $this->db->group_start();
+        $this->db->where_in("created_by", $idsarr);
+        $this->db->or_where_in("assigned", $idsarr);
+        $this->db->group_end();
+
+        // Fetch the result
         $staff = $this->db->get(db_prefix() . 'visitor_request')->row();
+
         return $staff;
     }
 
@@ -3105,7 +3150,7 @@ class Leads_model extends App_Model
     }
 
 
-    public function tblma_applicant_tracker()
+    public function tblma_applicant_tracker($ids = [])
     {
         $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
         $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
@@ -3116,6 +3161,20 @@ class Leads_model extends App_Model
         $column = $this->db->get(db_prefix() . 'ma_applicant_tracker')->result_array();
         // Execute the query on the table prefixed with 'performance_columns' and get the results as an array.
         return $column; // Return the resulting array.
+    }
 
+    public function delete_visit($id)
+    {
+        $this->db->where('visit_id', $id);
+        $this->db->delete(db_prefix() . 'visitor_activity_log');
+
+        $this->db->where('id', $id);
+        $this->db->delete(db_prefix() . 'visitor_request');
+
+
+        if ($this->db->affected_rows() > 0) {
+            return true;
+        }
+        return false;
     }
 }

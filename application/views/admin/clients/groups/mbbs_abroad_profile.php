@@ -77,10 +77,7 @@ array_unshift($years_array_entrance, ["year" => ""]);
 $markingSchemes = [];
 
 $markingSchemes[]["name"] = "Percentage";
-$markingSchemes[]["name"]  = "CGPA out of 10";
-$markingSchemes[]["name"]  = "CGPA out of 9";
-$markingSchemes[]["name"]  = "CGPA out of 7";
-$markingSchemes[]["name"]  = "CGPA out of 4";
+$markingSchemes[]["name"]  = "CGPA";
 
 array_unshift($markingSchemes, array(""));
 
@@ -1134,7 +1131,7 @@ if ($lead_type_status == 2) {
                             </div>
                             <div class="row ">
                                 <div class="col-md-12">
-                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn btn-save-fun">Save changes</button>
+                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn">Save changes</button>
                                 </div>
                             </div>
                         </form>

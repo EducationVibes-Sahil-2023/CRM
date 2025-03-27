@@ -26,7 +26,12 @@ $tbllead_performance_column = $this->leads_model->tbllead_performance_column();
 $selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0, 5);
 
 ?>
-
+<style>
+    span.show-persentage {
+        float: right;
+        font-size: 15px;
+    }
+</style>
 
 
 <div id="wrapper">
@@ -644,6 +649,8 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
 
             ajax_data["show_lead_status"] = 1;
             ajax_data["utm_status"] = 1;
+            ajax_data["show_marketing_status"] = 1;
+
 
             if (xhr != null) {
                 xhr.abort();

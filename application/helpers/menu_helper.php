@@ -40,7 +40,7 @@ function app_init_admin_sidebar_menu_items()
         }
 
         $CI->app_menu->add_sidebar_children_item('customers', [
-                // 'slug'     => 'proposals',
+                'slug'     => 'mbbs_abroad',
                 'icon'     => 'fa fa-user-o',
                 'name'     => "MA Applicant",
                 'href'     => admin_url('clients/mbbs_abroad'),
@@ -48,7 +48,7 @@ function app_init_admin_sidebar_menu_items()
         ]);
 
         $CI->app_menu->add_sidebar_children_item('customers', [
-                // 'slug'     => 'proposals',
+                'slug'     => 'study_abroad',
                 'icon'     => 'fa fa-user-o',
                 'name'     => "SA Applicant",
                 'href'     => admin_url('clients/study_abroad'),

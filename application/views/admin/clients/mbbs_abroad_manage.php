@@ -1,9 +1,29 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head();
 $tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
-$selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0, 5);
-$fees_data = get_clients_fees(2);
+// Filter out columns where the value is 1
+$filtered_columns = array_filter($tbllead_performance_column, function ($row) {
+   return isset($row['selected']) && $row['selected'] == 1;
+});
 
+// Extract the 'id' column and limit to 5 results
+$selected_performance_column = array_column($filtered_columns, "id");
+$fees_data = get_clients_fees(2);
+$orignal_document_list = get_orignal_document_list();
+$office_location  = $this->staff_model->office_location();
+$orignal_document_status  = orignal_document_status();
+$university_list = get_university_list("mbbs abroad");
+$country_list = get_country_list(7);
+$statuses = get_applicant_statuses();
+$passport_stages = get_passport_stages();
+
+$yes_no_status = [
+   ["id" => "", "name" => ""],
+   ["id" => "Yes", "name" => "Yes"],
+   ["id" => "No", "name" => "No"]
+];
+
+array_unshift($office_location, array());
 ?>
 <div id="wrapper">
    <style>
@@ -67,9 +87,9 @@ $fees_data = get_clients_fees(2);
                         <a href="<?php echo admin_url('clients/import'); ?>" class="btn btn-info pull-left display-block mright5 hidden-xs">
                            <?php echo _l('import_customers'); ?></a>
                      <?php } ?>
-                     <a href="<?php echo admin_url('clients/all_contacts'); ?>" class="btn btn-info pull-left display-block mright5">
-                        <?php echo _l('customer_contacts'); ?></a>
-                     <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('customers_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
+                     <!-- <a href="<?php echo admin_url('clients/all_contacts'); ?>" class="btn btn-info pull-left display-block mright5">
+                        <?php echo _l('customer_contacts'); ?></a> -->
+                     <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('customers_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                      <div class="visible-xs">
                         <div class="clearfix"></div>
                      </div>
@@ -263,35 +283,7 @@ $fees_data = get_clients_fees(2);
                   <?php } ?>
                   <hr class="hr-panel-heading" />
                   <a href="#" data-toggle="modal" data-target="#customers_bulk_action" class="bulk-actions-btn table-btn hide" data-table=".table-clients"><?php echo _l('bulk_actions'); ?></a>
-                  <div class="modal fade bulk_actions" id="customers_bulk_action" tabindex="-1" role="dialog">
-                     <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                           <div class="modal-header">
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                              <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
-                           </div>
-                           <div class="modal-body">
-                              <?php if (has_permission('customers', '', 'delete')) { ?>
-                                 <div class="checkbox checkbox-danger">
-                                    <input type="checkbox" name="mass_delete" id="mass_delete">
-                                    <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
-                                 </div>
-                                 <hr class="mass_delete_separator" />
-                              <?php } ?>
-                              <div id="bulk_change">
-                                 <?php echo render_select('move_to_groups_customers_bulk[]', $groups, array('id', 'name'), 'customer_groups', '', array('multiple' => true), array(), '', '', false); ?>
-                                 <p class="text-danger"><?php echo _l('bulk_action_customers_groups_warning'); ?></p>
-                              </div>
-                           </div>
-                           <div class="modal-footer">
-                              <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
-                              <a href="#" class="btn btn-info" onclick="customers_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
-                           </div>
-                        </div>
-                        <!-- /.modal-content -->
-                     </div>
-                     <!-- /.modal-dialog -->
-                  </div>
+
                   <!-- /.modal -->
                   <!-- <div class="checkbox">
                      <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
@@ -299,11 +291,11 @@ $fees_data = get_clients_fees(2);
                   </div> -->
                   <div class="tab-content">
                      <div class="" id="leads-table ">
-                        <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p>
-                        <div class="checkbox">
+                        <!-- <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p> -->
+                        <!-- <div class="checkbox">
                            <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
                            <label for="exclude_inactive"><?php echo _l('exclude_inactive'); ?> <?php echo _l('clients'); ?></label>
-                        </div>
+                        </div> -->
                         <div id="filterArea" class=" hidden-xs">
                            <div class="row">
                               <div class="col-md-12">
@@ -340,6 +332,52 @@ $fees_data = get_clients_fees(2);
                                  ?>
                               </div>
 
+                              <div class="col-md-2 margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('university[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "university");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('country[]', $country_list, array('country_name', 'country_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Country", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "country");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <div class="col-md-2 margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('doc_status[]', $orignal_document_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Document status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "doc_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2 margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('minor', $yes_no_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Minor", 'data-actions-box' => true), array(), 'no-mbot', '', false, "minor");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2 margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('passport_status[]', $passport_stages, array('id', 'name'), '', '', array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => "Passport status", 'data-actions-box' => true), array(), 'no-mbot', '', false, "passport_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  array_unshift($application_stage, array());
@@ -352,13 +390,13 @@ $fees_data = get_clients_fees(2);
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Stage'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
 
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <!-- <div class="col-md-2  margin-top leads-filter-column">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
                                  </div>
@@ -367,7 +405,7 @@ $fees_data = get_clients_fees(2);
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
                                  </div>
-                              </div>
+                              </div> -->
                               <div class="col-md-4 margin-top ">
                                  <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter_">Apply Filter</button>
@@ -397,18 +435,104 @@ $fees_data = get_clients_fees(2);
       </div>
    </div>
 </div>
+
+<div class="modal fade bulk_actions" id="customers_bulk_action" tabindex="-1" role="dialog">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
+         </div>
+         <div class="modal-body">
+            <?php if (has_permission('customers', '', 'delete')) { ?>
+               <div class="checkbox checkbox-danger">
+                  <input type="checkbox" name="mass_delete" id="mass_delete">
+                  <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
+               </div>
+               <hr class="mass_delete_separator" />
+            <?php }
+            array_unshift($orignal_document_status, array()); ?>
+            <div class="document_status_update">
+               <div class="checkbox checkbox-danger">
+                  <input type="checkbox" name="in_transit" id="in_transit" onchange="change_transit(this)">
+                  <label for="in_transit">In-Transit</label>
+               </div>
+               <div class="is_transist_location row" style="display:none;">
+                  <div class="col-md-4">
+                     <label>From Location <span class='text-danger'>*</span></label>
+                     <?php echo render_select('from_location', $office_location, array('name', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'From Location', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'from_location'); ?>
+                  </div>
+                  <div class="col-md-4">
+                     <label>To Location <span class='text-danger'>*</span></label>
+                     <?php echo render_select('to_location', $office_location, array('name', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'To Location', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'to_location'); ?>
+                  </div>
+               </div>
+               <div class="no_is_transist_location row">
+                  <div class="col-md-4">
+                     <label>Location <span class='text-danger'>*</span></label>
+                     <?php echo render_select('office_location', $office_location, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Location', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'office_location'); ?>
+                  </div>
+                  <div class="col-md-4">
+                     <label>Status <span class='text-danger'>*</span></label>
+                     <?php echo render_select('document_status', $orignal_document_status, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Status', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'document_status'); ?>
+                  </div>
+               </div>
+            </div>
+            <!-- <hr class="mass_delete_separator" /> -->
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
+            <a href="#" class="btn btn-info" onclick="customers_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
+         </div>
+      </div>
+      <!-- /.modal-content -->
+   </div>
+   <!-- /.modal-dialog -->
+</div>
 <?php
 init_tail(); ?>
 <script>
    var tAPI = "";
-   var sub_category = <?= !empty($application_sub_stage) ? json_encode($application_sub_stage) : [] ?>;
+   var applicant_table = "";
+   var sub_category = <?= !empty($application_sub_stage_mbbs) ? json_encode($application_sub_stage_mbbs) : [] ?>;
    var columnHeaders = [];
    var column_names = {}; // Object to store column name mappings
    var fees_array = <?= !empty($fees_data) ? json_encode($fees_data, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_list = <?= !empty($orignal_document_list) ? json_encode($orignal_document_list, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
 
    var tbllead_performance_column = [];
+
+
+   $(document).ready(async function() {
+      enabled_column();
+   });
+
+   function enabled_column() {
+      $("[name='column_show[]'] option:selected").prop("disabled", false);
+      $("[name='column_show[]']").selectpicker("refresh");
+   }
+
+   // Example usage
+
+
+   function disabled_column() {
+      $("[name='column_show[]'] option").each(function() {
+         $(this).prop("disabled", selected_performance_column.includes($(this).val()));
+      });
+      $("[name='column_show[]']").selectpicker("refresh");
+   }
+
    $("#column_show").on("change", function() {
+      enabled_column();
       tbllead_performance_column = [];
+      const columnObject = {
+         tbl_column_name: " ", // Set the column name
+         label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>' // Set the label name
+      };
+
+      // Add the constructed object to the array
+      tbllead_performance_column.push(columnObject);
       // Get the selected values using `selectpicker`
       var selectedValues = $(this).selectpicker('val');
 
@@ -419,12 +543,22 @@ init_tail(); ?>
          selectedValues.forEach((value) => {
             // Find the corresponding label/text for the current value
             const selectedLabel = $(this).find(`option[value="${value}"]`).text();
-            console.log(selectedLabel);
+
             if (selectedLabel == "Fees") {
                fees_array.forEach((fees) => {
                   const columnObject = {
                      tbl_column_name: fees.name, // Set the column name
                      label_name: fees.name // Set the label name
+                  };
+
+                  // Add the constructed object to the array
+                  tbllead_performance_column.push(columnObject);
+               })
+            } else if (selectedLabel == "Original Documents") {
+               orignal_document_list.forEach((document) => {
+                  const columnObject = {
+                     tbl_column_name: document.short_name, // Set the column name
+                     label_name: document.short_name // Set the label name
                   };
 
                   // Add the constructed object to the array
@@ -449,14 +583,22 @@ init_tail(); ?>
       } else {
          console.log("No value selected.");
       }
+      disabled_column();
    });
 
-   $("#column_show").each(function() {
+   $("#column_show").each(async function() {
       // Ensure the element is processed correctly
+      enabled_column();
       if ($(this).is(":input")) {
          // Get the selected values using `selectpicker`
          var selectedValues = $(this).selectpicker('val');
+         const columnObject = {
+            tbl_column_name: " ", // Set the column name
+            label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>' // Set the label name
+         };
 
+         // Add the constructed object to the array
+         tbllead_performance_column.push(columnObject);
          if (selectedValues && selectedValues.length > 0) {
             // Initialize an array to hold the objects for each selected value
 
@@ -483,6 +625,8 @@ init_tail(); ?>
             console.log("No value selected.");
          }
       }
+
+      disabled_column();
    });
 
 
@@ -527,7 +671,9 @@ init_tail(); ?>
    var CustomersServerParams = {};
 
    $(function() {
-
+      console.log("okkkk dlkfnaklfn");
+      enabled_column();
+      console.log("okkkk dlkfnaklfn");
       $.each($('._hidden_inputs._filters input'), function() {
          CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
       });
@@ -541,13 +687,18 @@ init_tail(); ?>
       CustomersServerParams['application_stage'] = "[name='view_application_stage']";
       CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
       CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
+      CustomersServerParams['university'] = "[name='university[]']";
+      CustomersServerParams['country'] = "[name='country[]']";
+      CustomersServerParams['status'] = "[name='status_[]']";
+      CustomersServerParams['doc_status'] = "[name='doc_status[]']";
+      CustomersServerParams['passport_status'] = "[name='passport_status[]']";
+      CustomersServerParams['minor_status'] = "[name='minor']";
 
 
-      tAPI = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
-      $('input[name="exclude_inactive"]').on('change', function() {
-         tAPI.ajax.reload();
-      });
 
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
+
+      disabled_column();
 
 
       $('#view_application_stage').on('changed.bs.select', function(event, clickedIndex, newValue, oldValue) {
@@ -557,6 +708,8 @@ init_tail(); ?>
       });
 
    });
+
+
 
    function populateChildDropdown(parentValue) {
       let childDropdown = $('#view_application_sub_stage');
@@ -569,7 +722,7 @@ init_tail(); ?>
       if (childOptions && childOptions.length > 0) {
          childOptions.forEach(option => {
             childDropdown.append($('<option>', {
-               value: option.name,
+               value: option.id,
                text: option.name
             }));
          });
@@ -580,70 +733,104 @@ init_tail(); ?>
       childDropdown.selectpicker('refresh');
    }
 
+   $('#mass_delete').change(function() {
+
+      $(".document_status_update").find("select").val("").trigger("change");
+      $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+      $(".document_status_update").toggle();
+
+   })
+
    function customers_bulk_action(event) {
       var r = confirm(app.lang.confirm_action_prompt);
-      if (r == false) {
+      if (!r) {
          return false;
-      } else {
-         var mass_delete = $('#mass_delete').prop('checked');
-         var ids = [];
-         var data = {};
-         if (mass_delete == false || typeof(mass_delete) == 'undefined') {
-            data.groups = $('select[name="move_to_groups_customers_bulk[]"]').selectpicker('val');
-            if (data.groups.length == 0) {
-               data.groups = 'remove_all';
-            }
-         } else {
-            data.mass_delete = true;
-         }
-         var rows = $('.table-clients').find('tbody tr');
-         $.each(rows, function() {
-            var checkbox = $($(this).find('td').eq(0)).find('input');
-            if (checkbox.prop('checked') == true) {
-               ids.push(checkbox.val());
-            }
-         });
-         data.ids = ids;
-         $(event).addClass('disabled');
-         setTimeout(function() {
-            $.post(admin_url + 'clients/bulk_action', data).done(function() {
-               window.location.reload();
-            });
-         }, 50);
       }
+
+      var mass_delete = $('#mass_delete').prop('checked');
+      var transit = $('#in_transit').prop('checked');
+      var from_location = $('#from_location').val();
+      var to_location = $('#to_location').val();
+      var office_location = $('#office_location').val();
+      var document_status = $('#document_status').val();
+      var status_text = $("#document_status  option:selected").text();
+      var locations_name = $("#office_location option:selected").text();
+
+      var ids = [];
+      var data = {};
+
+      // Collect selected IDs from the table
+      $('.table-clients tbody tr').each(function() {
+         var checkbox = $(this).find('td').eq(0).find('input[type="checkbox"]');
+         if (checkbox.prop('checked')) {
+            ids.push(checkbox.val());
+         }
+      });
+
+      // Validate if at least one ID is selected
+      if (ids.length === 0) {
+         alert("Please select at least one customer.");
+         return false;
+      }
+
+      data.ids = ids;
+      data.mass_delete = mass_delete;
+      data.in_transit = transit;
+      data.from_location = from_location;
+      data.to_location = to_location;
+      data.office_location = office_location;
+      data.document_status = document_status;
+      data.status_text = status_text;
+      data.locations_name = locations_name;
+
+      // Disable button to prevent multiple clicks
+      $(event).prop('disabled', true);
+
+      setTimeout(function() {
+         $.post(admin_url + 'clients/bulk_action', data)
+            .done(function(response) {
+               try {
+                  var res = JSON.parse(response);
+                  if (res.resp_code === "ERR") {
+                     alert_float("danger", res.resp_desc);
+                  } else {
+                     alert_float("success", res.resp_desc);
+                     $("#customers_bulk_action").modal('hide');
+                     applicant_reload();
+                  }
+               } catch (e) {
+                  alert_float("danger", "Unexpected error occurred.");
+               }
+            })
+            .fail(function() {
+               alert_float("danger", "Failed to process the request.");
+            })
+            .always(function() {
+               $(event).prop('disabled', false);
+               // Reload after request completion
+            });
+      }, 50);
    }
 
-   // $('#apply_filter').on('click', function() {
-
-   //    var from_date = document.getElementById("from_date").value;
-   //    var to_date = document.getElementById("to_date").value;
-
-
-   //    if (to_date != '') {
-   //       if (from_date == '') {
-   //          $("#from_date").focus();
-   //          return false;
-   //       }
-   //    }
-
-   //    if (from_date != '') {
-   //       if (to_date == '') {
-   //          $("#to_date").focus();
-   //          return false;
-   //       }
-   //    }
-
-
-   //    show_loader("apply_filter");
-   //    periodFilter();
-   //    // summary();
-   // });
 
 
    var filter_data;
    $('#apply_filter_').on('click', async function() {
 
+      applicant_reload()
+
+   });
+
+
+
+
+   async function applicant_reload() {
+
+      enabled_column();
+
       var selectedValues = $("#column_show").selectpicker('val');
+
+
       if (selectedValues.length < 3) {
          alert("Select min 3 columns");
          return false;
@@ -662,27 +849,43 @@ init_tail(); ?>
       var to_date = document.getElementById("to_date").value;
 
 
+
       if (to_date != '') {
          if (from_date == '') {
             $("#from_date").focus();
+            disabled_column();
             return false;
+
          }
       }
 
       if (from_date != '') {
          if (to_date == '') {
             $("#to_date").focus();
+            disabled_column();
             return false;
          }
       }
 
-
+      console.log(CustomersServerParams);
       show_loader("apply_filter");
-      tAPI = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
-      $('input[name="exclude_inactive"]').on('change', function() {
-         tAPI.ajax.reload();
-      });
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
+      disabled_column();
+
       hide_loader("apply_filter");
+   }
+
+   function change_transit(obj) {
+      console.log("change");
+      let transitInfo = document.getElementById("transit_info");
+      $(".is_transist_location").toggle().find("select").val("").selectpicker("refresh");
+      $(".no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
+
+   }
+
+   $('#customers_bulk_action').on('show.bs.modal', function() {
+      $(".document_status_update").find("select").val("").selectpicker('refresh');
+      $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
 
    });
 </script>

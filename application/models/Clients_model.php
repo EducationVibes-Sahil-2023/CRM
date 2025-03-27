@@ -2153,6 +2153,8 @@ class Clients_model extends App_Model
             $locations = $data["locations"];
             $status_text = !empty($data["status_text"]) ? $data["status_text"] : "Pending";
             $received_id = $data["received_id"];
+            $in_transit = $data["in_transit"];
+            $transit_location = $data["transit_location"];
 
             // Update client document status
             $update_client_data = [
@@ -2166,15 +2168,25 @@ class Clients_model extends App_Model
             $insert_client_orignal_document_received = [];
 
             foreach ($doc_ids as $key => $doc_id) {
+
                 if (!empty($received_id[$key])) {
-                    $update_client_orignal_document_received[] = [
-                        "id" => $received_id[$key], // Corrected batch update key
-                        "doc_id" => $doc_id,
-                        "userid" => $id,
-                        "received_by" => get_staff_user_id(),
-                        "received_date" => date('Y-m-d H:i:s'),
-                        "location_id" => $locations[$key]
-                    ];
+
+                    if ($in_transit == "true") {
+                        $update_client_orignal_document_received[] = [
+                            "id" => $received_id[$key], // Corrected batch update key
+                            "in_transit" => $transit_location
+                        ];
+                    } else {
+                        $update_client_orignal_document_received[] = [
+                            "id" => $received_id[$key], // Corrected batch update key
+                            "doc_id" => $doc_id,
+                            "userid" => $id,
+                            "received_by" => get_staff_user_id(),
+                            "received_date" => date('Y-m-d H:i:s'),
+                            "location_id" => $locations[$key],
+                            "in_transit" => "",
+                        ];
+                    }
                 } else {
                     $insert_client_orignal_document_received[] = [
                         "doc_id" => $doc_id,
@@ -2193,14 +2205,22 @@ class Clients_model extends App_Model
 
             // Create activity message
             $messages = [];
+            $doc_names = [];
             foreach ($doc_names as $key => $doc) {
+                $doc_names[] = $loc_names[$key];
                 $messages[] = "{$doc} has been received at location {$loc_names[$key]}";
             }
 
-            if (empty($messages)) {
-                $message = "Orignal Document status is {$status_text}.";
+            if ($in_transit == "true") {
+                $message = "All Original Documents " . implode(", ", (array) $doc_names) .
+                    " transit location from " . (!empty($transit_location) ? $transit_location : "Unknown Location") .
+                    " on " . date('Y-m-d H:i:s');
             } else {
-                $message = implode(", ", $messages) . ". All documents were received on " . date('Y-m-d H:i:s') . " and the status is {$status_text}.";
+                if (empty($messages)) {
+                    $message = "Orignal Document status is {$status_text}.";
+                } else {
+                    $message = implode(", ", $messages) . ". All documents were received on " . date('Y-m-d H:i:s') . " and the status is {$status_text}.";
+                }
             }
             // Insert document activity log
             $activity_data = [
@@ -2230,4 +2250,88 @@ class Clients_model extends App_Model
             $this->db->update_batch(db_prefix() . 'orignal_documents_received', $data_update, "id"); // Corrected update key
         }
     }
+
+    function get_application_sub_stage_mbbs()
+    {
+        $this->db->select("ts.*");
+        $this->db->from(db_prefix() . 'application_sub_category_mbbs ts');
+        $this->db->where("ts.status", 1);
+        $this->db->order_by('ts.sequence', 'asc');
+        return $get_application_sub_stage = $this->db->get()->result_array();
+    }
+
+    function update_client_status($data = [])
+    {
+
+        $client_id = $data["userid"];
+        $this->db->select('active');
+
+        $this->db->where('userid', $data['userid']);
+
+        $_old = $this->db->get(db_prefix() . 'clients')->row();
+
+
+
+        $old_status = '';
+
+
+
+        if ($_old) {
+
+            $old_status = get_applicant_statuses($_old->active);
+
+
+            if ($old_status) {
+
+                $old_status = $old_status->name;
+            }
+        }
+
+        $affectedRows   = 0;
+
+        $current_status = get_applicant_statuses($data['status']);
+
+        $this->db->where('userid', $data['userid']);
+
+        $this->db->update(db_prefix() . 'clients', [
+
+            'active' => $data['status'],
+
+        ]);
+
+
+
+        $_log_message = '';
+
+        if ($this->db->affected_rows() > 0) {
+
+            $affectedRows++;
+
+            if ($current_status != $old_status && $old_status != '') {
+                $_log_message    = 'not_lead_activity_status_updated';
+            }
+        }
+
+
+
+        if ($affectedRows > 0) {
+
+            if ($_log_message == '') {
+
+                return true;
+            }
+
+            $this->db->insert(db_prefix() . 'application_activity_log', array("description" => " {$current_status->name} Status Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+
+            return true;
+        }
+
+
+
+        return false;
+    }
+
+
+ 
 }

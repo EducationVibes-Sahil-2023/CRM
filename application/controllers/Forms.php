@@ -1093,6 +1093,13 @@ class Forms extends ClientsController
                 }
 
 
+                // handle automatic lead transfer to admin 
+                // $update_array = [
+                //     'assigned' => 1,
+                //     // "status" => 2
+                // ];
+                // $success = $this->leads_model->update_leads($update_array, $lead_id);
+
                 // Add new lead transfer request
                 $data = array_merge($data, [
                     "leadid" => $lead_id,
