@@ -125,7 +125,7 @@ if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
 }
 
 if (!is_admin()) {
-    if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
+    if (has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
         array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned IN ( ' . $sids . '))');
     }
 }
