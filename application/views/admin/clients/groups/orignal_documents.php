@@ -8,6 +8,12 @@ $activity_orignal_document = activity_orignal_document($client_id);
 
 array_unshift($office_location, array());
 ?>
+<style>
+    .table>tbody>tr>td,
+    .table>tfoot>tr>td {
+        text-wrap: auto !important;
+    }
+</style>
 <div class="row">
     <div class="col-md-12">
         <div class="form-container">
@@ -67,6 +73,9 @@ array_unshift($office_location, array());
                         </tbody>
                     </table>
                 </div>
+                <br>
+                <br>
+                <br>
                 <div class="col-md-12 text-right">
 
                     <div class="pull-right">
