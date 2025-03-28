@@ -254,6 +254,23 @@ function is_admin($staffid = '')
     return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
 }
 
+function is_postSale($staffid = '')
+{
+    /**
+     * Checking for current user?
+     */
+    if (!is_numeric($staffid)) {
+        $staffid = get_staff_user_id();
+    }
+
+    $CI = & get_instance();
+    $CI->db->select('1')
+    ->where('post_sales', 1)
+    ->where('staffid', (int)$staffid);
+
+    return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
+}
+
 function admin_body_class($class = '')
 {
     echo 'class="' . join(' ', get_admin_body_class($class)) . '"';
