@@ -627,6 +627,67 @@
         });
     }
 
+    function fees_details() {
+        var additional_fields = {};
+        var form_status = true;
+        show_loader();
+        $("#fees-details-form input:visible, #fees-details-form select:visible, #fees-details-form input[type='date']:visible").each(function() {
+            const value = $(this).val()?.trim(); // Get trimmed value
+            const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
+            const name = $(this).attr("name"); // Get name attribute
+            console.log(isRequired);
+            if (isRequired && name) {
+                additional_fields[name] = "required";
+                if (!value) {
+                    form_status = false;
+                }
+            }
+        });
+
+        if (!form_status) {
+            appValidateForm($("#fees-details-form"), additional_fields);
+            hide_loader();
+            return false;
+        }
+
+        let formData = new FormData(document.getElementById('fees-details-form')); // Correct way to initialize FormData
+
+        // Append CSRF token and client ID
+        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("clientid", $('input[name="clientid"]').val());
+
+
+        // Function to process media files
+
+
+        //
+
+        // AJAX request to upload documents
+        $.ajax({
+            url: "<?php echo base_url('admin/clients/fees_details'); ?>",
+            type: "POST",
+            data: formData,
+            processData: false, // Prevent jQuery from transforming FormData
+            contentType: false, // Ensure correct Content-Type is set for FormData
+            dataType: "JSON",
+            success: function(res) {
+                hide_loader();
+                if (res.resp_code === "RCS") {
+                    window_reload();
+                    alert_float("success", res.resp_desc);
+                } else {
+                    const message = res.resp_desc || "An unknown error occurred.";
+                    alert_float("danger", message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: ", error);
+                hide_loader();
+                alert_float("danger", "An error occurred while processing the request.");
+            },
+        });
+    }
+
     async function save_welcome_info() {
         var additional_fields = {};
         var form_status = true;
@@ -699,6 +760,7 @@
             $("select").selectpicker('refresh');
             $(".tags-input-wrapper").css("pointer-events", "");
             $("#save_admission_preferences").attr("disabled", false);
+            $(".btn-save-funn").show();
         }
 
         if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {}
@@ -714,6 +776,7 @@
             $(".tab-pane").find("input[type='checkbox']").attr("disabled", true);
             $("select").selectpicker('refresh');
             $(".btn-save-fun").hide();
+            $(".btn-save-funn").hide();
             $(".tags-input-wrapper").css("pointer-events", "none");
             $("#save_admission_preferences").attr("disabled", true);
         }, 0);
@@ -943,7 +1006,7 @@
                         var tagInput1 = new TagsInput({
                             selector: `university${count2}`,
                             duplicate: false,
-                            max: <?=MAX_UNIVERSITY_MBBS_ABROAD?>,
+                            max: <?= MAX_UNIVERSITY_MBBS_ABROAD ?>,
                             suggestions: university_list
                         });
 
@@ -1277,7 +1340,7 @@
                     var tagInput1 = new TagsInput({
                         selector: `university${set_count}`,
                         duplicate: false,
-                        max: <?=MAX_UNIVERSITY_MBBS_ABROAD?>,
+                        max: <?= MAX_UNIVERSITY_MBBS_ABROAD ?>,
                         suggestions: university_list
                     });
 

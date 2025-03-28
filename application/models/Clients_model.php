@@ -2138,7 +2138,7 @@ class Clients_model extends App_Model
             die;
         }
 
-        $attachments = $this->db->select("quotation, registration_slip_invoice")
+        $attachments = $this->db->select("fees_structure, registration_slip_invoice")
             ->from(db_prefix() . "clients")
             ->where("userid", $client_id)
             ->get()
@@ -2146,7 +2146,7 @@ class Clients_model extends App_Model
 
         $attachments_data = [];
         if (!empty($attachments)) {
-            foreach (["quotation", "registration_slip_invoice"] as $key) {
+            foreach (["fees_structure", "registration_slip_invoice"] as $key) {
                 if (!empty($attachments[$key])) {
                     $file_path = FCPATH . $attachments[$key];
                     $file_extension = pathinfo($attachments[$key], PATHINFO_EXTENSION); // Extract file extension
@@ -2272,7 +2272,7 @@ class Clients_model extends App_Model
             $messages = [];
             $doc_names_ = [];
             foreach ($doc_names as $key => $doc) {
-                $doc_names_[] = $loc_names[$key];
+                $doc_names_[] = $doc;
                 $messages[] = "{$doc} has been received at location {$loc_names[$key]}";
             }
 
