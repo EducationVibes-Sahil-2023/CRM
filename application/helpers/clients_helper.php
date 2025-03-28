@@ -130,12 +130,17 @@ function filter_client_visible_tabs($tabs)
     foreach ($tabs as $key => $tab) {
 
         // Check visibility from settings too
-        if ($key != 'profile' && $key != 'contacts' && $appliedSettings) {
+        // if ($key != 'profile' && $key != 'contacts' && $appliedSettings) {
+        //     if (array_key_exists($key, $visible) && $visible[$key] == false) {
+        //         continue;
+        //     }
+        // }
+
+        if ($key != 'profile' && $appliedSettings) {
             if (array_key_exists($key, $visible) && $visible[$key] == false) {
                 continue;
             }
         }
-
         $newTabs[$key] = $tab;
     }
 
