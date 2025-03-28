@@ -40,9 +40,6 @@ $filter = [];
 $aColumns = [];
 $aColumns_count = 0;
 if (!empty($tblma_applicant_tracker)) {
-    // echo "<pre>";
-    // print_r($tblma_applicant_tracker);
-    // die;
     foreach ($tblma_applicant_tracker as $key => $value) {
 
         if (in_array($value["column_name"], ["fees", "original_documents"])) {
@@ -85,7 +82,7 @@ if (!empty($tblma_applicant_tracker)) {
 $join = [
     'LEFT JOIN ' . db_prefix() . 'basic_details ON ' . db_prefix() . 'basic_details.userid=' . db_prefix() . 'clients.userid ',
     'LEFT JOIN ' . db_prefix() . 'applicant_status ON ' . db_prefix() . 'applicant_status.id=' . db_prefix() . 'clients.active ',
-   ' JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
+    ' JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
 AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')',
     'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'leads.assigned=' . db_prefix() . 'staff.staffid ',
     'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
@@ -264,7 +261,9 @@ foreach ($rResult as $aRow) {
 
     $selection = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
 
-    array_unshift($aRow, $selection);
+    if (is_admin() || is_postSale()) {
+        array_unshift($aRow, $selection);
+    }
 
     if (!empty($aRow["status"])) {
         $outputStatus = '<span class="inline-block text-' . $aRow['color'] . ' lead-status-' . $aRow['status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['status'];
@@ -273,17 +272,21 @@ foreach ($rResult as $aRow) {
             $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
             $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
             $outputStatus .= '</a>';
-            $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['id'] . '">';
-            foreach ($statuses as $leadChangeStatus) {
-                if ($aRow['status_id'] != $leadChangeStatus['id']) {
-                    $outputStatus .= '<li>
+            if (is_admin() || is_postSale()) {
+                $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['id'] . '">';
+
+                foreach ($statuses as $leadChangeStatus) {
+                    if ($aRow['status_id'] != $leadChangeStatus['id']) {
+                        $outputStatus .= '<li>
               <a href="#" onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . '); return false;">
                  ' . $leadChangeStatus['name'] . '
               </a>
           </li>';
+                    }
                 }
+                $outputStatus .= '</ul>';
             }
-            $outputStatus .= '</ul>';
+
             $outputStatus .= '</div>';
         }
         $outputStatus .= '</span>';
@@ -306,7 +309,7 @@ foreach ($rResult as $aRow) {
     }
 
 
-    $row = array_values(array_slice($aRow, 0, ($aColumns_count + 1)));
+    $row = array_values(array_slice($aRow, 0, $aColumns_count + ((is_admin() || is_postSale()) ? 1 : 0)));
 
     $output['aaData'][] = $row;
 }

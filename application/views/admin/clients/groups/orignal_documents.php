@@ -4,6 +4,7 @@ $orignal_document  = get_orignal_document_data($client_id);
 $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location();
 $activity_orignal_document = activity_orignal_document($client_id);
+
 // $client = $this->clients_model->get($id);
 
 array_unshift($office_location, array());
@@ -14,6 +15,15 @@ array_unshift($office_location, array());
         text-wrap: auto !important;
     }
 </style>
+
+<?php
+if (!is_postSale() && !is_admin()) {
+?>
+    <h2 class="text-center">Orignal Document - Accessible Only for Post-Sale & Admin</h2>
+<?php
+die;
+}
+?>
 <div class="row">
     <div class="col-md-12">
         <div class="form-container">

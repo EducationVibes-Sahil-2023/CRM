@@ -287,8 +287,9 @@ array_unshift($office_location, array());
                      </div>
                   <?php } ?>
                   <hr class="hr-panel-heading" />
-                  <a href="#" data-toggle="modal" data-target="#customers_bulk_action" class="bulk-actions-btn table-btn hide" data-table=".table-clients"><?php echo _l('bulk_actions'); ?></a>
-
+                  <?php if (is_admin() || is_postSale()) { ?>
+                     <a href="#" data-toggle="modal" data-target="#customers_bulk_action" class="bulk-actions-btn table-btn hide" data-table=".table-clients"><?php echo _l('bulk_actions'); ?></a>
+                  <?php } ?>
                   <!-- /.modal -->
                   <!-- <div class="checkbox">
                      <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
@@ -548,7 +549,9 @@ init_tail(); ?>
       };
 
       // Add the constructed object to the array
-      tbllead_performance_column.push(columnObject);
+      <?php if (is_postSale() || is_admin()) { ?>
+         tbllead_performance_column.push(columnObject);
+      <?php } ?>
       // Get the selected values using `selectpicker`
       var selectedValues = $(this).selectpicker('val');
 
@@ -612,9 +615,9 @@ init_tail(); ?>
             tbl_column_name: " ", // Set the column name
             label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>' // Set the label name
          };
-
-         // Add the constructed object to the array
+         <?php if (is_postSale() || is_admin()) { ?>
          tbllead_performance_column.push(columnObject);
+      <?php } ?>
          if (selectedValues && selectedValues.length > 0) {
             // Initialize an array to hold the objects for each selected value
 
