@@ -4682,4 +4682,88 @@ class Clients extends AdminController
             $this->clients_model->update_client_status($this->input->post());
         }
     }
+
+    public function fees_details()
+    {
+        try {
+            $data = $this->input->post();
+
+            // Validate required fields
+            if (empty($data["clientid"]) || empty($data["applicant_fees"])) {
+
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "Missing required data"
+                ]);
+                die;
+            }
+
+            $fees_array = [];
+            $fees_array_update = [];
+
+            foreach ($data["applicant_fees"] as $applicant_fee) {
+                // Ensure required values exist
+                if (!isset($data[$applicant_fee]) || !isset($data[$applicant_fee . "_id"]) || !isset($data[$applicant_fee . "_currency_type"])) {
+                    continue;
+                }
+
+                $fee_data = [
+                    "client_id"   => $data["clientid"],
+                    "amount"      => $data[$applicant_fee],
+                    "fees_id"     => $data[$applicant_fee . "_id"],
+                    "currency_id" => $data[$applicant_fee . "_currency_type"],
+                    "created_by"  => get_staff_user_id(),
+                    "created_at"  => date('Y-m-d H:i:s')
+                ];
+
+                // Corrected detail_id validation
+                $detail_id_key = $applicant_fee . "_detail_id_" . $data[$applicant_fee . "_id"];
+                if (!empty($data[$detail_id_key])) {
+                    $fee_data["id"] = $data[$detail_id_key];
+                    $fees_array_update[] = $fee_data;
+                } else {
+                    if (!empty($data[$applicant_fee])) {
+                        $fees_array[] = $fee_data;
+                    }
+                }
+            }
+
+            // Database transaction start
+            $this->db->trans_start();
+
+            // Insert new records
+            if (!empty($fees_array)) {
+                $this->db->insert_batch(db_prefix() . 'applicant_fees_details', $fees_array);
+            }
+
+            // Update existing records
+            if (!empty($fees_array_update)) {
+                $this->db->update_batch(db_prefix() . 'applicant_fees_details', $fees_array_update, 'id');
+            }
+
+            // Commit transaction
+            $this->db->trans_complete();
+
+            if ($this->db->trans_status() === FALSE) {
+                throw new Exception("Database transaction failed.", 500);
+            }
+
+            // Return success response
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => "Fees details updated successfully."
+            ]);
+            exit;
+        } catch (Exception $e) {
+            // Rollback if any error occurs
+            $this->db->trans_rollback();
+
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage(),
+                'error_code' => $e->getCode()
+            ]);
+            exit;
+        }
+    }
 }

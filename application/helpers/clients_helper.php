@@ -1263,17 +1263,30 @@ function get_condition_offer($client_id, $university_id)
         ->result_array();
 }
 
-function get_clients_fees($lead_type)
+function get_clients_fees($lead_type, $client_id = "")
 {
     $CI = &get_instance();
-    return $client_fees = $CI->db->select("*")
-        ->where('status', 1)
-        ->where('lead_type', $lead_type)
-        ->from(db_prefix() . 'applicant_fees')
-        ->order_by("sequence", "asc")
-        ->get()
-        ->result_array();
+
+    // Select base columns from applicant_fees
+    $CI->db->select("f.*")
+        ->from(db_prefix() . 'applicant_fees f')
+        ->where('f.status', 1)
+        ->where('f.lead_type', $lead_type);
+
+    // Conditionally join applicant_fees_details if client_id is provided
+    if (!empty($client_id)) {
+        $CI->db->select("d.amount, d.currency_id, d.fees_id, d.id as detail_id")
+            ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id AND d.client_id = {$client_id}", "LEFT");
+    }
+
+    $CI->db->order_by("f.sequence", "asc");
+
+    $client_fees = $CI->db->get()->result_array();
+
+    return $client_fees;
 }
+
+
 
 function get_passport_stages()
 {
