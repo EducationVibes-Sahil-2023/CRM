@@ -401,12 +401,12 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="last_from_date" id="last_from_date" placeholder="From Last Update Date" autocomplete="off">
                                  </div>
                               </div>
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="last_to_date" id="last_to_date" placeholder="To Last Update Date" autocomplete="off">
                                  </div>
@@ -616,8 +616,8 @@ init_tail(); ?>
             label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>' // Set the label name
          };
          <?php if (is_postSale() || is_admin()) { ?>
-         tbllead_performance_column.push(columnObject);
-      <?php } ?>
+            tbllead_performance_column.push(columnObject);
+         <?php } ?>
          if (selectedValues && selectedValues.length > 0) {
             // Initialize an array to hold the objects for each selected value
 

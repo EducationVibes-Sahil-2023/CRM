@@ -210,6 +210,46 @@ if ($lead_type_status == 2) {
     }
 </style>
 
+<style>
+    .currency-selector {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        padding-left: .5rem;
+        border: 0;
+        background: transparent;
+
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+
+        background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1024' height='640'><path d='M1017 68L541 626q-11 12-26 12t-26-12L13 68Q-3 49 6 24.5T39 0h952q24 0 33 24.5t-7 43.5z'></path></svg>") 90%/12px 6px no-repeat;
+
+        font-family: inherit;
+        color: inherit;
+    }
+
+    .currency-amount {
+        text-align: right;
+    }
+
+    .currency-addon {
+        width: 6em;
+        text-align: left;
+        position: relative;
+    }
+
+    #applicant_fees .dropdown.bootstrap-select {
+        width: 100%;
+        padding: 0px;
+    }
+
+    #applicant_fees .bootstrap-select>.dropdown-toggle {
+        /* border: 0px !important; */
+    }
+</style>
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
@@ -239,6 +279,9 @@ if ($lead_type_status == 2) {
                     </li>
                     <li role="presentation">
                         <a href="#welcome_message" aria-controls="welcome_message" role="tab" data-toggle="tab">Welcome Message</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#fees_details" aria-controls="fees_details" role="tab" data-toggle="tab">Fees Details</a>
                     </li>
                     <?php hooks()->do_action('after_customer_billing_and_shipping_tab', isset($client) ? $client : false); ?>
                     <?php if (isset($client)) { ?>
@@ -643,50 +686,50 @@ if ($lead_type_status == 2) {
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card">
-                                <h4>Academic Details <small class="text-danger">*</small></h4>
+                                <h4>Academic Details </h4>
                                 <hr>
                                 <div class="row accadmic-education-div">
-                                    <h4> 10<sup>th</sup> Academic Details <small class="text-danger">*</small></h4>
+                                    <h4> 10<sup>th</sup> Academic Details </h4>
                                     <hr>
                                     <div class="col-lg-4 border2 border1">
                                         <div class="c1">
-                                            <p>Board <?= $text_danger_mbbs ?></p>
+                                            <p>Board </p>
                                         </div>
                                         <div class="c2">
                                             <?php
                                             $selected = [];
                                             $selected[] = $academicdetails->tenth_board;
-                                            echo render_select('tenth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_board"); ?>
+                                            echo render_select('tenth_board', $board_dropdown, array('id', 'name'), "", $selected, [], [], "", "", "", "tenth_board"); ?>
                                         </div>
                                     </div>
                                     <div class="col-lg-3 border2 border1">
                                         <div class="c1">
-                                            <p>Year of Passing <?= $text_danger_mbbs ?></p>
+                                            <p>Year of Passing </p>
                                         </div>
                                         <div class="c2">
                                             <?php
                                             $selected = [];
                                             $selected[] = $academicdetails->tenth_passing_year;
-                                            echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_passing_year"); ?>
+                                            echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, [], [], "", "", "", "tenth_passing_year"); ?>
                                         </div>
                                     </div>
                                     <div class="col-lg-3 border2 border1">
                                         <div class="c1">
-                                            <p>Marking Scheme <?= $text_danger_mbbs ?></p>
+                                            <p>Marking Scheme </p>
                                         </div>
                                         <div class="c2">
                                             <?php
                                             $selected = [];
                                             $selected[] = $academicdetails->tenth_marking_scheme;
-                                            echo render_select('tenth_marking_scheme', $markingSchemes, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_marking_scheme"); ?>
+                                            echo render_select('tenth_marking_scheme', $markingSchemes, array('name', 'name'), "", $selected, [], [], "", "", "", "tenth_marking_scheme"); ?>
                                         </div>
                                     </div>
                                     <div class="col-lg-2 border2 border1">
                                         <div class="c1">
-                                            <p>Percentage / CGPA <?= $text_danger_mbbs ?></p>
+                                            <p>Percentage / CGPA </p>
                                         </div>
                                         <div class="c2">
-                                            <input class="form-control" type="float" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" value="<?= $academicdetails->tenth_percentage; ?>" <?= $text_danger_mbbs_required ?>>
+                                            <input class="form-control" type="float" class="form-group" placeholder="Enter Percentage / CGPA" name="tenth_percentage" value="<?= $academicdetails->tenth_percentage; ?>">
                                         </div>
                                     </div>
                                     <?php
@@ -1131,7 +1174,7 @@ if ($lead_type_status == 2) {
                             </div>
                             <div class="row ">
                                 <div class="col-md-12">
-                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn">Save changes</button>
+                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn btn-save-funn">Save changes</button>
                                 </div>
                             </div>
                         </form>
@@ -1174,7 +1217,7 @@ if ($lead_type_status == 2) {
                                             <input class="form-control" disabled <?= $text_danger_mbbs_required ?> type="text" value="<?= $registration_amount ?>">
                                         </div>
                                     </div>
-                                    <div class="col-lg-3">
+                                    <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Payment received from <small class="text-danger">*</small></label>
                                             <input class="form-control" type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
@@ -1197,7 +1240,24 @@ if ($lead_type_status == 2) {
                                             ?>
                                         </div>
                                     </div>
-                                    <div class="col-lg-3 hide-show-regi" style="display: <?= !empty($client->registration_slip_cash_status) ? 'none' : 'block' ?>;">
+
+                                    <div class="col-lg-2">
+                                        <div class="form-group">
+                                            <label for="exampleInputMiddleName">Fees Structure <small class="text-danger">*</small></label>
+                                            <input <?= !empty($client->fees_structure) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="fees_structure" value="">
+                                            <?php
+                                            if (!empty($client->fees_structure)) {
+                                            ?>
+                                                <div class="margin-top">
+                                                    <i class="fa fa-eye btn btn-primary btn-xs m-2" onclick="show_media_files('<?= base_url($client->fees_structure) ?>');"></i>
+                                                    <i class="fa fa-download btn btn-primary btn-xs m-2" onclick="download_media_files(`<?= base_url($client->fees_structure) ?>`, '_blank');"></i>
+                                                </div>
+                                            <?php
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-2 hide-show-regi" style="display: <?= !empty($client->registration_slip_cash_status) ? 'none' : 'block' ?>;">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Registration Proof <small class="text-danger">*</small></label>
                                             <input <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="registration_slip" value="">
@@ -1221,6 +1281,83 @@ if ($lead_type_status == 2) {
                                 </div>
                             </form>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div role="tabpanel" class="tab-pane hide" id="fees_details">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form id="fees-details-form" class="form-disabled" onsubmit=" return false;">
+
+                            <div class="card">
+                                <h4>Fees Details</h4>
+                                <hr>
+
+                                <?php
+                                $get_clients_fees = get_clients_fees((isset($lead_type_status) ? $lead_type_status : ''), $client_id);
+                                $get_currencies = get_currencies();
+                                $get_currencies = array_column($get_currencies, null, 'id');
+
+
+
+
+                                if (!empty($get_clients_fees) && !empty($get_currencies)) {
+                                ?>
+                                    <div id="applicant_fees">
+
+                                        <div class="row">
+                                            <?php
+                                            foreach ($get_clients_fees as $fees) {
+                                                $id = $fees["id"];
+                                                $amount = $fees["amount"];
+                                                // Prepare the field name by replacing spaces with underscores and converting to lowercase
+                                                $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
+                                                // Set the required attribute based on the "mandatry" field
+                                                $required = !empty($fees["mandatry"]) ? "required" : "false";
+                                                $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
+
+
+                                            ?>
+                                                <div class="col-lg-4 col-md-4 col-6">
+                                                    <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
+                                                    <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                        <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
+                                                        <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
+                                                        <input type="hidden" value="<?= $fees['detail_id'] ?>" name="<?= $field_name ?>_detail_id_<?= $fees['id'] ?>">
+
+                                                        <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["currency_id"]]["symbol"]) ? $get_currencies[$fees["currency_id"]]["symbol"] : '$' ?></div>
+                                                        <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
+                                                        <div class="input-group-addon currency-addon">
+
+                                                            <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                                                <?php foreach ($get_currencies as $c) {
+                                                                ?>
+                                                                    <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($fees["default_currency"]) && $fees["default_currency"] == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
+                                                                <?php
+                                                                }
+                                                                ?>
+
+                                                            </select>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+
+
+                                <?php } ?>
+                            </div>
+                            <div class="row btn-save-fun">
+                                <div class="col-md-12 ">
+                                    <button type="submit" onclick="fees_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1478,4 +1615,9 @@ if ($lead_type_status == 2) {
     document.getElementById("passport_number").addEventListener("input", function() {
         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Convert to uppercase & remove invalid characters
     });
+
+    function updateSymbol(id) {
+        var selected = $(".currency-selector-" + id + " option:selected");
+        $(".currency-symbol-" + id).text(selected.data("symbol"));
+    }
 </script>
