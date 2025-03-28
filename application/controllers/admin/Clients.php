@@ -231,14 +231,14 @@ class Clients extends AdminController
             if (!$data['tab']) {
                 show_404();
             }
-
+            $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
             $title          = $data["basicdetails"]->first_name . " " . $data["basicdetails"]->last_name;
 
             // Fetch data based on groups
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
+
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
