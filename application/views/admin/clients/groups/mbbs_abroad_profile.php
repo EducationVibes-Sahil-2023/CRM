@@ -1285,7 +1285,7 @@ if ($lead_type_status == 2) {
                 </div>
             </div>
 
-            <div role="tabpanel" class="tab-pane hide" id="fees_details">
+            <div role="tabpanel" class="tab-pane" id="fees_details">
                 <div class="row">
                     <div class="col-md-12">
                         <form id="fees-details-form" class="form-disabled" onsubmit=" return false;">
