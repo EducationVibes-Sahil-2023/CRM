@@ -42,7 +42,7 @@
                      <h4 class="bold">
                         #<?php echo $client->userid . ' ' . $title; ?>
                         <?php if (has_permission('customers', '', 'delete') || is_admin()) { ?>
-                           <div class="btn-group">
+                           <!-- <div class="btn-group">
                               <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                  <span class="caret"></span>
                               </a>
@@ -61,15 +61,15 @@
                                     </li>
                                  <?php } ?>
                               </ul>
-                           </div>
+                           </div> -->
                         <?php } ?>
                         <?php if (isset($client) && $client->leadid != NULL) { ?>
                            <br />
                            <small>
-                              <b><?php echo _l('customer_from_lead', _l('lead')); ?></b>
-                              <a href="<?php echo admin_url('leads/index/' . $client->leadid); ?>" onclick="init_lead(<?php echo $client->leadid; ?>); return false;">
+                              <!-- <b><?php echo _l('customer_from_lead', _l('lead')); ?></b> -->
+                              <!-- <a href="<?php echo admin_url('leads/index/' . $client->leadid); ?>" onclick="init_lead(<?php echo $client->leadid; ?>); return false;">
                                  - <?php echo _l('view'); ?>
-                              </a>
+                              </a> -->
                            </small>
                         <?php } ?>
                      </h4>

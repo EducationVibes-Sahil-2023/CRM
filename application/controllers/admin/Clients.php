@@ -360,7 +360,8 @@ class Clients extends AdminController
             ;
 
             $data['client'] = $client;
-            $title          = $client->company;
+            // $title          = $client->company;
+            $title          = $data["basicdetails"]->first_name . " " . $data["basicdetails"]->last_name;
 
             // Get all active staff members (used to add reminder)
             $data['members'] = $data['staff'];
