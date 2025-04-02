@@ -336,6 +336,14 @@ if ($lead_type_status == 2) {
                                                 <input class="form-control " <?= $read_only ?> type="tel" class="form-group" required-check required placeholder="Mobile Number" name="mobile" pattern="[0-9]{10}" maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
                                             </div>
                                         </div>
+                                        <?php if ($lead_data->source == REFERENCE_ID) { ?>
+                                            <div class="col-lg-3 hide">
+                                                <div class="form-group">
+                                                    <label for="exampleInputDateOfBirth">Refrence Name <small class="text-danger">*</small></label>
+                                                    <input type="text" <?= $read_only ?> class="form-control" name="reference_name" id="reference_name" required value='<?php echo ($client->reference_name != '') ? $client->reference_name : ''; ?>' required required-check>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
                                     </div>
                                     <div class="row">
 
@@ -345,6 +353,8 @@ if ($lead_type_status == 2) {
                                                 <input type="date" class="form-control" name="dob" id="dob" required value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' required required-check>
                                             </div>
                                         </div>
+
+
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputPassword1">Gender <small class="text-danger">*</small></label>
@@ -1319,7 +1329,7 @@ if ($lead_type_status == 2) {
 
 
                                             ?>
-                                                <div class="col-lg-4 col-md-4 col-6">
+                                                <div class="col-lg-4 col-md-4 col-6 fees-block-<?=$id?>">
                                                     <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
                                                     <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                                                         <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
@@ -1476,6 +1486,17 @@ if ($lead_type_status == 2) {
     // console.log(dropdown_country_university_selection);
 
 
+    $(document).ready(function() {
+        let feesMandatory_single = "";
+        <?php if ($lead_data->source == REFERENCE_ID) { ?>
+            feesMandatory_single = "<?= REFERENCE_AMOUNT_ID ?>"; // Concatenating the value
+        <?php } else {
+        ?>
+            $(".fees-block-<?= REFERENCE_AMOUNT_ID ?>").hide();
+
+        <?php
+        } ?>
+    })
 
     function show_country_dropdown(select_segment) {
         select_segment_default = select_segment;
