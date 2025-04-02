@@ -706,7 +706,7 @@ init_tail(); ?>
       CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
       CustomersServerParams['university'] = "[name='university[]']";
       CustomersServerParams['country'] = "[name='country[]']";
-      CustomersServerParams['status'] = "[name='status_[]']";
+      CustomersServerParams['status_'] = "[name='status_[]']";
       CustomersServerParams['doc_status'] = "[name='doc_status[]']";
       CustomersServerParams['passport_status'] = "[name='passport_status[]']";
       CustomersServerParams['minor_status'] = "[name='minor']";
