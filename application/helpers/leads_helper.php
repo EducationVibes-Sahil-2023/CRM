@@ -7209,6 +7209,12 @@ function get_source()
     return $CI->leads_model->get_source();
 }
 
+function get_status()
+{
+    $CI = &get_instance();
+    return $CI->leads_model->get_status();
+}
+
 
 function last_lead_request($lead_id)
 {
