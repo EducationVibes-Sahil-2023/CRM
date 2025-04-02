@@ -118,6 +118,12 @@
                      </select>
                   </div>
                </div>
+               <?php if ($lead->source == REFERENCE_ID) { ?>
+                  <div class="col-lg-4 col-md-6 col-12">
+                     <label></label>
+                     <?php echo render_input('reference_name', 'Reference Name', '', '', ["required" => "required", "placeholder" => "reference Name"]); ?>
+                  </div>
+               <?php } ?>
                <!-- 
                <div class="col-lg-4 col-md-6 col-12">
                   <?php
@@ -184,7 +190,7 @@
 
 
                      ?>
-                        <div class="col-lg-4 col-md-4 col-6">
+                        <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
                            <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                               <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
@@ -273,6 +279,31 @@
    validate_lead_convert_to_client_form();
    init_selectpicker();
 
+   $(document).ready(function() {
+      let feesMandatory_single = "";
+      <?php if ($lead->source == REFERENCE_ID) { ?>
+         feesMandatory_single = "<?= REFERENCE_AMOUNT_ID ?>"; // Concatenating the value
+      <?php } else {
+      ?>
+         $(".fees-block-<?= REFERENCE_AMOUNT_ID ?>").hide();
+
+      <?php
+      } ?>
+      console.log(feesMandatory_single);
+      if (feesMandatory_single != "") {
+         let mandatoryArray = feesMandatory_single.split(',').map(item => item.trim()); // Split and trim values
+
+         mandatoryArray.forEach(item => {
+            let feeElement = $(".fees_" + item);
+            let feeLabel = $(".fees_label_" + item);
+
+            feeElement.addClass("external_requried").attr("required", true);
+            feeLabel.addClass("external_requried_label").html("<small class='text-danger'>*</small>");
+         });
+         validate_lead_convert_to_client_form();
+      }
+   })
+
    function updateSymbol(id) {
       var selected = $(".currency-selector-" + id + " option:selected");
       $(".currency-symbol-" + id).text(selected.data("symbol"));
@@ -289,6 +320,10 @@
       let selectedValue = selectedOption.val(); // Get selected value
       let countryName = selectedOption.data("country"); // Get selected option's data-country attribute
       let feesMandatory = selectedOption.data("mandatory"); // Get selected option's data-mandatory attribute
+
+      <?php if ($lead->source == REFERENCE_ID) { ?>
+         feesMandatory += ",<?= REFERENCE_AMOUNT_ID ?>"; // Concatenating the value
+      <?php } ?>
 
       if (feesMandatory) {
          let mandatoryArray = feesMandatory.split(',').map(item => item.trim()); // Split and trim values

@@ -245,3 +245,5 @@ define('THIRD_PAYMENT_PENDING', '12');
 
 
 define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
+define('REFERENCE_ID', '1');
+define('REFERENCE_AMOUNT_ID', '8');

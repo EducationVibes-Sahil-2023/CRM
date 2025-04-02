@@ -86,7 +86,7 @@
             },
             error: function(xhr, status, error) {
                 hide_loader();
-                console.error("AJAX Error:", error);
+                // console.error("AJAX Error:", error);
             }
         });
     }
@@ -142,7 +142,7 @@
             },
             error: function(xhr, status, error) {
                 hide_loader();
-                console.error("AJAX Error:", error);
+                // console.error("AJAX Error:", error);
             }
         });
 
@@ -235,7 +235,7 @@
             }
         });
 
-        console.log(form_status);
+        // console.log(form_status);
         if (!form_status) {
             set_primary_diabled();
             appValidateForm($("#admission-preferences-form"), additional_fields);
@@ -303,11 +303,11 @@
                     set_primary_diabled();
                     hide_loader();
                     alert_float('danger', "An error occurred during submission.");
-                    console.error(err);
+                    // console.error(err);
                 }
             });
         } catch (error) {
-            console.error(error.message);
+            // console.error(error.message);
         }
     }
 
@@ -376,7 +376,7 @@
             const value = $.trim($(this).val()); // Trim spaces
             const isRequired = $(this).attr("required-check") !== undefined;
             const name = $(this).attr("name");
-            console.log(name);
+            // console.log(name);
 
             if (isRequired) {
                 additional_fields[name] = "required";
@@ -388,7 +388,7 @@
             } else {}
         });
 
-        console.log(additional_fields);
+        // console.log(additional_fields);
 
         if (!form_status) {
             appValidateForm($("#admission-details-form"), additional_fields);
@@ -500,13 +500,13 @@
             if (typeof set_primary_diabled === "function") {
                 set_primary_diabled();
             } else {
-                console.warn("set_primary_diabled function does not exist.");
+                // console.warn("set_primary_diabled function does not exist.");
             }
 
             if (typeof set_university_diabled === "function") {
                 set_university_diabled();
             } else {
-                console.warn("set_university_diabled function does not exist.");
+                // console.warn("set_university_diabled function does not exist.");
             }
         }, 100);
 
@@ -620,7 +620,7 @@
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error: ", error);
+                // console.error("Error: ", error);
                 hide_loader();
                 alert_float("danger", "An error occurred while processing the request.");
             },
@@ -635,7 +635,7 @@
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
             const name = $(this).attr("name"); // Get name attribute
-            console.log(isRequired);
+            // console.log(isRequired);
             if (isRequired && name) {
                 additional_fields[name] = "required";
                 if (!value) {
@@ -681,7 +681,7 @@
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error: ", error);
+                // console.error("Error: ", error);
                 hide_loader();
                 alert_float("danger", "An error occurred while processing the request.");
             },
@@ -696,7 +696,7 @@
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
             const name = $(this).attr("name"); // Get name attribute
-            console.log(isRequired);
+            // console.log(isRequired);
             if (isRequired && name) {
                 additional_fields[name] = "required";
                 if (!value) {
@@ -743,7 +743,7 @@
                 }
             },
             error: function(xhr, status, error) {
-                console.error("Error: ", error);
+                // console.error("Error: ", error);
                 hide_loader();
                 alert_float("danger", "An error occurred while processing the request.");
             },
@@ -802,7 +802,7 @@
                 if (isRequired && name) {
                     additional_fields[name] = "required";
                     if (!value) {
-                        console.log(name);
+                        // console.log(name);
                         form_status = false;
                     }
                 }
@@ -858,7 +858,7 @@
                 },
                 error: function(xhr, status, error) {
                     hide_loader();
-                    console.error("Error: ", error);
+                    // console.error("Error: ", error);
                     alert_float("danger", "An error occurred while processing the request.");
                 },
             });
@@ -893,7 +893,7 @@
             url.searchParams.set("tab", nextTabId); // Optional: Set the next tab in the URL if it exists
         }
 
-        console.log(url);
+        // console.log(url);
         // Redirect to the new URL with the updated 'tab' and 'nextTab' parameters
         window.location.href = url.href;
 
@@ -952,7 +952,7 @@
         var country_name = $(obj).find("option:selected").data("country") || ""; // Default to empty if undefined
         $("#primary_country").val(country_name);
         // Debugging
-        console.log("Selected Country:", country_name);
+        // console.log("Selected Country:", country_name);
     }
     // set university
     var suggetions_university = [];
@@ -992,17 +992,17 @@
                 $('.universities').html(str);
 
                 if (Object.keys(selectedUniversityArr).length > 0) {
-                    // console.log(selectedUniversityArr);
+                    // // console.log(selectedUniversityArr);
                     var count2 = 0;
 
                     for (const k in selectedUniversityArr) {
                         const v = selectedUniversityArr[k];
                         var countryName = k.search("_") != -1 ? k.replace("_", " ") : k;
-                        // console.log(countryName);
+                        // // console.log(countryName);
 
                         let university_list = await show_university_dropdown(select_segment_default, k);
-                        //console.log(university_list);
-                        //console.log(university_list);
+                        //// console.log(university_list);
+                        //// console.log(university_list);
                         var tagInput1 = new TagsInput({
                             selector: `university${count2}`,
                             duplicate: false,
@@ -1011,7 +1011,7 @@
                         });
 
                         if (v !== '') {
-                            //console.log(v);
+                            //// console.log(v);
                             if (typeof v !== 'undefined') {
                                 var defaultVal = v.split(",");
                                 defaultVal.forEach(function(k1, v1) {
@@ -1025,12 +1025,12 @@
                 } else {
                     for (let k = 0; k < value.length; k++) {
                         var v = value[k];
-                        //console.log(value);
+                        //// console.log(value);
                         let university_list = await show_university_dropdown(select_segment_default, v);
-                        //console.log(university_list);
+                        //// console.log(university_list);
                         var countryName = v.search("_") != -1 ? v.replace("_", " ") : v;
 
-                        //console.log(university_list);
+                        //// console.log(university_list);
                         var tagInput1 = new TagsInput({
                             selector: `university${k}`,
                             duplicate: false,
@@ -1082,9 +1082,9 @@
 
         if (this.initialized)
             this.destroy();
-        //console.log(this)
+        //// console.log(this)
         if (!(this.orignal_input = document.getElementById(this.options.selector))) {
-            console.error("tags-input couldn't find an element with the specified ID");
+            // console.error("tags-input couldn't find an element with the specified ID");
             return this;
         }
 
@@ -1267,7 +1267,7 @@
             suggestionItem.addEventListener('click', function() {
                 var selectedSuggestion = this.innerText;
                 let u_id = $(this).closest(".suggestions-container").attr("data-university");
-                //console.log(country_name);
+                //// console.log(country_name);
 
                 tags.addTag(selectedSuggestion);
                 let country_name = $("#" + u_id).attr("data-country-name");
@@ -1334,7 +1334,7 @@
 
             for (const k in universityArr) {
                 let university_list = await show_university_dropdown(selectedValue, k);
-                //console.log(university_list);
+                //// console.log(university_list);
                 var countryName = k.search("_") != -1 ? k.replace("_", " ") : k;
                 if (universityArr.hasOwnProperty(k)) {
                     var tagInput1 = new TagsInput({
@@ -1357,7 +1357,7 @@
             }
 
         } catch (error) {
-            console.error("An error occurred during university setup:", error);
+            // console.error("An error occurred during university setup:", error);
         }
     }
 </script>

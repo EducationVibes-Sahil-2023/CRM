@@ -3689,6 +3689,7 @@ class Leads extends AdminController
         $data['type']  = $this->leads_model->get_type();
         $data['staff'] = $this->staff_model->get('', [], 1);
         $data['lead_type'] = $this->leads_model->get_type();
+        $data['statuses'] = $this->leads_model->get_status();
         // in case accesed the url leads/index/ directly with id - used in search
 
         $this->load->view('admin/leads/visitor', $data);

@@ -296,12 +296,12 @@ $last_lead_request = last_lead_request($lead->id);
                            </div>
                         <?php } ?>
                      </div>
-                     <div class="col-md-12">
+                     <!-- <div class="col-md-12">
                         <?php echo render_textarea('lead_activity_textarea', '', '', array('placeholder' => _l('enter_activity')), array(), 'mtop15'); ?>
                         <div class="text-right">
                            <button id="lead_enter_activity" class="btn btn-info"><?php echo _l('submit'); ?></button>
                         </div>
-                     </div>
+                     </div> -->
                      <div class="clearfix"></div>
                   </div>
                </div>
