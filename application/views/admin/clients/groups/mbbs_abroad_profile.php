@@ -1470,7 +1470,7 @@ if ($lead_type_status == 2) {
 
 <?php //$this->load->view('admin/clients/client_group'); 
 ?>
-]
+
 <script>
     var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
