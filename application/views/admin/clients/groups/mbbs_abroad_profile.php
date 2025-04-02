@@ -1329,7 +1329,7 @@ if ($lead_type_status == 2) {
 
 
                                             ?>
-                                                <div class="col-lg-4 col-md-4 col-6 fees-block-<?=$id?>">
+                                                <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
                                                     <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
                                                     <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                                                         <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
@@ -1469,6 +1469,7 @@ if ($lead_type_status == 2) {
 <?php } ?>
 
 <?php $this->load->view('admin/clients/client_group'); ?>
+<?php init_tail(); ?>
 <script>
     var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
