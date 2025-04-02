@@ -245,3 +245,6 @@ define('THIRD_PAYMENT_PENDING', '12');
 
 
 define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
+
+define('ORG_REST', 'rest');
+define('ORG_GEORGIA', 'georgia');

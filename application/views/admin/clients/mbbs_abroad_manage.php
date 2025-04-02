@@ -7,15 +7,18 @@ $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
 });
 
 // Extract the 'id' column and limit to 5 results
-$selected_performance_column = array_column($filtered_columns, "id");
+$selected_performance_column = [];
 $fees_data = get_clients_fees(2);
 $orignal_document_list = get_orignal_document_list();
+$orignal_document_list_rest = get_orignal_document_list(1);
+$orignal_document_list_georgia = get_orignal_document_list(0, 1);
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
 $university_list = get_university_list("mbbs abroad");
 $country_list = get_country_list(7);
 $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
+$table_view = array_column(get_view_columns(), null, "id");
 
 $yes_no_status = [
    ["id" => "", "name" => ""],
@@ -308,7 +311,11 @@ array_unshift($office_location, array());
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column filter_reset ">
-                                 <?php echo render_select('column_show[]', $tbllead_performance_column, array('id', 'label_name'), '', $selected_performance_column, array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show'); ?>
+                                 <?php echo render_select('table_view[]', $table_view, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Table View'), array(), 'no-mbot', '', false, 'table_view'); ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter_reset ">
+                                 <?php echo render_select('column_show[]', [], array('id', 'label_name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show'); ?>
                               </div>
 
                               <?php if (has_permission('leads', '', 'view')) { ?>
@@ -466,7 +473,14 @@ array_unshift($office_location, array());
                </div> -->
                <hr class="mass_delete_separator" />
             <?php }
+
             array_unshift($orignal_document_status, array()); ?>
+            <div class="apostile_update">
+               <div class="checkbox checkbox-danger">
+                  <input type="checkbox" name="apostile_status" id="apostile_status" onchange="Update_apostile(this)">
+                  <label for="apostile">Apostile</label>
+               </div>
+            </div>
             <div class="document_status_update">
                <div class="checkbox checkbox-danger">
                   <input type="checkbox" name="in_transit" id="in_transit" onchange="change_transit(this)">
@@ -509,255 +523,271 @@ init_tail(); ?>
 <script>
    var tAPI = "";
    var applicant_table = "";
-   var sub_category = <?= !empty($application_sub_stage_mbbs) ? json_encode($application_sub_stage_mbbs) : [] ?>;
+   var sub_category = <?= !empty($application_sub_stage_mbbs) ? json_encode($application_sub_stage_mbbs) : '[]' ?>;
    var columnHeaders = [];
-   var column_names = {}; // Object to store column name mappings
+   var column_names = {};
    var fees_array = <?= !empty($fees_data) ? json_encode($fees_data, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list = <?= !empty($orignal_document_list) ? json_encode($orignal_document_list, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_list_rest = <?= !empty($orignal_document_list_rest) ? json_encode($orignal_document_list_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
-
    var tbllead_performance_column = [];
+   var tbllead_performance_column_array = <?= !empty($table_view) ? json_encode($table_view, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var selected_view = $("#table_view option:selected").val() || 0;
+   var show_column_array = [];
+   var selected_column_array = [];
+   var default_columns = <?= !empty($tbllead_performance_column) ? json_encode(array_column($tbllead_performance_column, null, "id"), JSON_UNESCAPED_UNICODE) : '[]' ?>;
 
-
-   $(document).ready(async function() {
-      enabled_column();
-
+   $(document).ready(function() {
+      if (tbllead_performance_column_array[selected_view]) {
+         show_column_array = (tbllead_performance_column_array[selected_view].column_ids || "").split(",");
+         selected_column_array = (tbllead_performance_column_array[selected_view].selected_ids || "").split(",");
+         selected_performance_column = selected_column_array;
+      } else {
+         //console.warn("No table view data found for selected view:", selected_view);
+      }
+      column_name_update();
+      $("#column_show").each(function() {
+         if ($(this).is(":input")) {
+            updateColumns($(this));
+         }
+      });
+      setTimeout(() => {
+         set_column_table();
+         set_table();
+      }, 500);
    });
 
+   // Update column name dropdown
+   function column_name_update() {
+      let columnSelect = $("[name='column_show[]']");
+
+      if (columnSelect.length === 0) {
+         //console.warn("Column select element not found.");
+         return;
+      }
+
+      columnSelect.empty();
+      //console.log(selected_column_array);
+      show_column_array.forEach(id => {
+         let value = default_columns[id];
+         // if (show_column_array.includes(value.id)) {
+         let isDisabled = selected_column_array.includes(String(value.id));
+         //console.log(isDisabled);
+         let option = `<option value="${value.id}" ${isDisabled ? 'disabled Selected' : ''} >${value.label_name}</option>`;
+         columnSelect.append(option);
+         // }
+      });
+
+      columnSelect.selectpicker("refresh");
+
+   }
+
+   // Event Listener for Table View Change
+   $("#table_view").change(function() {
+      let select_view = $("#table_view option:selected").val() || 0;
+      if (tbllead_performance_column_array[select_view]) {
+         selected_performance_column = [];
+         show_column_array = (tbllead_performance_column_array[select_view].column_ids || "").split(",");
+         selected_column_array = (tbllead_performance_column_array[select_view].selected_ids || "").split(",");
+         selected_performance_column = selected_column_array;
+      }
+      column_name_update();
+      $("#column_show").each(function() {
+         if ($(this).is(":input")) {
+            updateColumns($(this));
+         }
+      });
+      setTimeout(() => {
+         set_column_table();
+         set_table();
+      }, 500);
+   });
 
    function enabled_column() {
-      $("[name='column_show[]'] option:selected").prop("disabled", false);
-      $("[name='column_show[]']").selectpicker("refresh");
+      let columnSelect = $("[name='column_show[]']");
+      if (columnSelect.length === 0) return;
+      columnSelect.find("option").prop("disabled", false);
+      columnSelect.selectpicker("refresh");
    }
-
-   // Example usage
-
 
    function disabled_column() {
-      $("[name='column_show[]'] option").each(function() {
+      let columnSelect = $("[name='column_show[]']");
+      if (columnSelect.length === 0) return;
+      columnSelect.find("option").each(function() {
          $(this).prop("disabled", selected_performance_column.includes($(this).val()));
       });
-      $("[name='column_show[]']").selectpicker("refresh");
+
+      columnSelect.selectpicker("refresh");
    }
 
-   $("#column_show").on("change", function() {
+   // Listen for column selection change
+   // $("#column_show").on("change", function() {
+   //    updateColumns($(this));
+   // });
+
+   function updateColumns(element) {
       enabled_column();
       tbllead_performance_column = [];
-      const columnObject = {
-         tbl_column_name: " ", // Set the column name
-         label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>' // Set the label name
-      };
 
-      // Add the constructed object to the array
       <?php if (is_postSale() || is_admin()) { ?>
-         tbllead_performance_column.push(columnObject);
-      <?php } ?>
-      // Get the selected values using `selectpicker`
-      var selectedValues = $(this).selectpicker('val');
-
-      if (selectedValues && selectedValues.length > 0) {
-         // Initialize an array to hold the objects for each selected value
-
-         // Iterate over the selected values
-         selectedValues.forEach((value) => {
-            // Find the corresponding label/text for the current value
-            const selectedLabel = $(this).find(`option[value="${value}"]`).text();
-
-            if (selectedLabel == "Fees") {
-               fees_array.forEach((fees) => {
-                  const columnObject = {
-                     tbl_column_name: fees.name, // Set the column name
-                     label_name: fees.name // Set the label name
-                  };
-
-                  // Add the constructed object to the array
-                  tbllead_performance_column.push(columnObject);
-               })
-            } else if (selectedLabel == "Original Documents") {
-               orignal_document_list.forEach((document) => {
-                  const columnObject = {
-                     tbl_column_name: document.short_name, // Set the column name
-                     label_name: document.short_name // Set the label name
-                  };
-
-                  // Add the constructed object to the array
-                  tbllead_performance_column.push(columnObject);
-               })
-            } else {
-               // Construct the object for the current selection
-               const columnObject = {
-                  tbl_column_name: value, // Set the column name
-                  label_name: selectedLabel // Set the label name
-               };
-
-               // Add the constructed object to the array
-               tbllead_performance_column.push(columnObject);
-            }
+         tbllead_performance_column.push({
+            tbl_column_name: " ",
+            label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>'
          });
+      <?php } ?>
 
-         // Log the array of created objects
-         //  console.log("Created Objects:", tbllead_performance_column);
+      let selectedValues = element.selectpicker('val') || [];
+      let addedColumns = new Set();
+      selectedValues.forEach(value => {
+         // if (!show_column_array.includes(String(value))) return;
 
-         // Use `tbllead_performance_column` as needed (e.g., send via AJAX or update the UI)
-      } else {
-         //  console.log("No value selected.");
-      }
-      disabled_column();
-   });
+         let selectedLabel = element.find(`option[value="${value}"]`).text();
 
-   $("#column_show").each(async function() {
-      // Ensure the element is processed correctly
-      enabled_column();
-      if ($(this).is(":input")) {
-         // Get the selected values using `selectpicker`
-         var selectedValues = $(this).selectpicker('val');
-         const columnObject = {
-            tbl_column_name: " ", // Set the column name
-            label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>' // Set the label name
-         };
-         <?php if (is_postSale() || is_admin()) { ?>
-            tbllead_performance_column.push(columnObject);
-         <?php } ?>
-         if (selectedValues && selectedValues.length > 0) {
-            // Initialize an array to hold the objects for each selected value
-
-            // Iterate over the selected values
-            selectedValues.forEach((value) => {
-               // Find the corresponding label/text for the current value
-               const selectedLabel = $(this).find(`option[value="${value}"]`).text();
-
-               // Construct the object for the current selection
-               const columnObject = {
-                  tbl_column_name: value, // Set the column name
-                  label_name: selectedLabel // Set the label name
-               };
-
-               // Add the constructed object to the array
-               tbllead_performance_column.push(columnObject);
+         if (selectedLabel.toLowerCase() === "fees") {
+            fees_array.forEach(fees => addColumn(fees.name, fees.name));
+         } else if (selectedLabel === "Original Documents") {
+            orignal_document_list.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
             });
-
-            // Log the array of created objects
-            //  console.log("Created Objects:", tbllead_performance_column);
-
-            // Use `tbllead_performance_column` as needed (e.g., send via AJAX or update the UI)
+         } else if (selectedLabel.toLowerCase().includes("<?= ORG_REST ?>".toLowerCase())) {
+            orignal_document_list_rest.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (selectedLabel.toLowerCase().includes("<?= ORG_GEORGIA ?>".toLowerCase())) {
+            orignal_document_list_georgia.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
          } else {
-            //  console.log("No value selected.");
+            addColumn(value, selectedLabel);
          }
-      }
-
+      });
       disabled_column();
-   });
 
+   }
+
+   function addColumn(tbl_column_name, label_name) {
+      tbllead_performance_column.push({
+         tbl_column_name,
+         label_name
+      });
+   }
 
    function set_column_table() {
+      columnHeaders = [];
 
-      if (Array.isArray(tbllead_performance_column) && tbllead_performance_column.length > 0) {
-
-         tbllead_performance_column.forEach(column => {
-            // Get the label, fallback to column name if label is empty
-            let label = column.label_name && column.label_name.trim() !== "" ?
-               column.label_name :
-               column.tbl_column_name.replace(".", "_");
-
-            // Add to column_names object
-            column_names[column.tbl_column_name] = label.replace(/ /g, "_");
-
-            // Add to columnHeaders array
-            columnHeaders.push({
-               title: label,
-               data: label.toLowerCase().replace(/ /g, "_") // Assuming lowercase data keys
-            });
-         });
+      if (!Array.isArray(tbllead_performance_column) || tbllead_performance_column.length === 0) {
+         //console.warn("No column data available to set the table.");
+         return;
       }
 
-      // Populate the <thead> of the table only if columnHeaders has entries
+      tbllead_performance_column.forEach(column => {
+         let label = column.label_name && column.label_name.trim() !== "" ? column.label_name : column.tbl_column_name.replace(".", "_");
+
+         column_names[column.tbl_column_name] = label.replace(/ /g, "_");
+
+         columnHeaders.push({
+            title: label,
+            data: label.toLowerCase().replace(/ /g, "_")
+         });
+      });
+
       if (columnHeaders.length > 0) {
          let thead = "<tr>";
          columnHeaders.forEach(header => {
             thead += "<th>" + header.title + "</th>";
          });
          thead += "</tr>";
-         $("#dynamicTable thead").html(thead); // Add the generated HTML to the table's <thead>
+         $("#dynamicTable thead").html(thead);
       } else {
-         console.warn("No column headers available to populate the table.");
+         //console.warn("No column headers available to populate the table.");
       }
-
-
    }
-
-   set_column_table();
    // Define configuration object
    var CustomersServerParams = {};
 
-   $(function() {
-      enabled_column();
-      $.each($('._hidden_inputs._filters input'), function() {
+   function set_table() {
+
+      // Destroy existing DataTable instance
+      if ($.fn.DataTable.isDataTable('.table-clients')) {
+         $('.table-clients').DataTable().clear().destroy();
+      }
+
+      $('.table-clients tbody').empty();
+
+      // Populate CustomersServerParams dynamically
+      $('._hidden_inputs._filters input').each(function() {
          CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
       });
-      CustomersServerParams['exclude_inactive'] = '[name="exclude_inactive"]:checked';
-      CustomersServerParams['columnNames'] = "[name='column_show[]']";
-      CustomersServerParams['assigned'] = "[name='view_assigned[]']";
-      CustomersServerParams['source'] = "[name='view_source[]']";
-      CustomersServerParams['lead_type'] = "[name='lead_type[]']";
-      CustomersServerParams['last_from_date'] = "[name='last_from_date']";
-      CustomersServerParams['last_to_date'] = "[name='last_to_date']";
-      CustomersServerParams['application_stage'] = "[name='view_application_stage']";
-      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
-      CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
-      CustomersServerParams['university'] = "[name='university[]']";
-      CustomersServerParams['country'] = "[name='country[]']";
-      CustomersServerParams['status'] = "[name='status_[]']";
-      CustomersServerParams['doc_status'] = "[name='doc_status[]']";
-      CustomersServerParams['passport_status'] = "[name='passport_status[]']";
-      CustomersServerParams['minor_status'] = "[name='minor']";
+
+      Object.assign(CustomersServerParams, {
+         'exclude_inactive': '[name="exclude_inactive"]:checked',
+         'columnNames': "[name='column_show[]']",
+         'assigned': "[name='view_assigned[]']",
+         'source': "[name='view_source[]']",
+         'lead_type': "[name='lead_type[]']",
+         'last_from_date': "[name='last_from_date']",
+         'last_to_date': "[name='last_to_date']",
+         'application_stage': "[name='view_application_stage']",
+         'application_sub_stage': "[name='view_application_sub_stage']",
+         'vendor_type': "[name='vendor_type[]']",
+         'university': "[name='university[]']",
+         'country': "[name='country[]']",
+         'status': "[name='status_[]']",
+         'doc_status': "[name='doc_status[]']",
+         'passport_status': "[name='passport_status[]']",
+         'minor_status': "[name='minor']"
+      });
+
+      applicant_table = initDataTable(
+         '.table-clients',
+         admin_url + 'clients/table/2',
+         [0],
+         [0],
+         CustomersServerParams, {
+            fixedHeader: true, // Enables fixed header
+            scrollY: "400px", // Enables vertical scrolling
+            scrollCollapse: true
+         }
+      );
 
 
-
-      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
-
-      disabled_column();
-
-
-      $('#view_application_stage').on('changed.bs.select', function(event, clickedIndex, newValue, oldValue) {
+      $('#view_application_stage').on('changed.bs.select', function() {
          let selectedValue = $(this).val();
-         // Populate the child dropdown with the data for the selected parent
          populateChildDropdown(selectedValue);
       });
 
       setTimeout(() => {
          $('.btn-dt-reload').on('click', function() {
-            //  console.log("refresh");
             enabled_column();
             refreshApplicantTable();
          });
 
-         enabled_column();
-         // When the dropdown is opened, disable selected options
-         $('[name="column_show[]"]').on('show.bs.select', function() {
-            //  console.log("show");
-            disabled_column();
-         });
-
-         // When the dropdown is closed, enable previously disabled options
-         $('[name="column_show[]"]').on('hidden.bs.select', function() {
-            //  console.log("hide");
-            enabled_column();
-         });
+         $('[name="column_show[]"]').on('show.bs.select', disabled_column);
+         $('[name="column_show[]"]').on('hidden.bs.select', enabled_column);
       }, 3000);
 
-   });
 
-
+   }
 
    function populateChildDropdown(parentValue) {
       let childDropdown = $('#view_application_sub_stage');
-      childDropdown.empty();
-      let childOptions = sub_category.filter(item => item.application_tracker === parentValue);;
-      childDropdown.append($('<option>', {
+      childDropdown.empty().append($('<option>', {
          value: '',
          text: ''
       }));
-      if (childOptions && childOptions.length > 0) {
+
+      let childOptions = sub_category.filter(item => item.application_tracker === parentValue);
+      if (childOptions.length > 0) {
          childOptions.forEach(option => {
             childDropdown.append($('<option>', {
                value: option.id,
@@ -766,22 +796,33 @@ init_tail(); ?>
          });
       }
 
-
-      // Refresh the Bootstrap SelectPicker to update the UI
       childDropdown.selectpicker('refresh');
    }
 
    $('#mass_delete').change(function() {
+      let documentStatusUpdate = $('.document_status_update');
+      documentStatusUpdate.find("select").val("").trigger("change");
+      documentStatusUpdate.find("input[type=checkbox]").prop("checked", false);
+      documentStatusUpdate.toggle();
+   });
 
-      $(".document_status_update").find("select").val("").trigger("change");
-      $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
-      $(".document_status_update").toggle();
+   function Update_apostile(obj) {
+      // Check if the checkbox is checked
+      if ($(obj).prop('checked')) {
+         // Hide elements related to document status update
+         $('.document_status_update').hide();
+         $(".document_status_update").find("select").val("").selectpicker('refresh');
+         $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
 
-   })
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+      }
+   }
+
 
    function customers_bulk_action(event) {
-      var r = confirm(app.lang.confirm_action_prompt);
-      if (!r) {
+      if (!confirm(app.lang.confirm_action_prompt)) {
          return false;
       }
 
@@ -791,8 +832,9 @@ init_tail(); ?>
       var to_location = $('#to_location').val();
       var office_location = $('#office_location').val();
       var document_status = $('#document_status').val();
-      var status_text = $("#document_status  option:selected").text();
+      var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
+      var apostile_status = $("#apostile_status").prop('checked');
 
       var ids = [];
       var data = {};
@@ -805,26 +847,27 @@ init_tail(); ?>
          }
       });
 
-      // Validate if at least one ID is selected
       if (ids.length === 0) {
          alert("Please select at least one customer.");
          return false;
       }
 
-      data.ids = ids;
-      data.mass_delete = mass_delete;
-      data.in_transit = transit;
-      data.from_location = from_location;
-      data.to_location = to_location;
-      data.office_location = office_location;
-      data.document_status = document_status;
-      data.status_text = status_text;
-      data.locations_name = locations_name;
+      Object.assign(data, {
+         ids,
+         mass_delete,
+         in_transit: transit,
+         from_location,
+         to_location,
+         office_location,
+         document_status,
+         status_text,
+         locations_name,
+         apostile_status
+      });
 
-      // Disable button to prevent multiple clicks
-      $(event).prop('disabled', true);
+      $(event.target).prop('disabled', true);
 
-      setTimeout(function() {
+      setTimeout(() => {
          $.post(admin_url + 'clients/bulk_action', data)
             .done(function(response) {
                try {
@@ -840,39 +883,31 @@ init_tail(); ?>
                   alert_float("danger", "Unexpected error occurred.");
                }
             })
-            .fail(function() {
-               alert_float("danger", "Failed to process the request.");
-            })
-            .always(function() {
-               $(event).prop('disabled', false);
-               // Reload after request completion
-            });
+            .fail(() => alert_float("danger", "Failed to process the request."))
+            .always(() => $(event.target).prop('disabled', false));
       }, 50);
    }
 
-
-
-   var filter_data;
+   // Apply filter click event
    $('#apply_filter_').on('click', async function() {
-
-      applicant_reload()
-
+      enabled_column();
+      $("#column_show").each(function() {
+         if ($(this).is(":input")) {
+            updateColumns($(this));
+         }
+      });
+      await applicant_reload();
    });
 
-
-
-
    async function applicant_reload() {
-
       enabled_column();
-
       var selectedValues = $("#column_show").selectpicker('val');
 
-
       if (selectedValues.length < 3) {
-         alert("Select min 3 columns");
+         alert("Select at least 3 columns");
          return false;
       }
+
       $('.table-clients').DataTable().destroy();
       $('.table-clients tbody').empty();
 
@@ -880,58 +915,48 @@ init_tail(); ?>
       column_names = [];
       await set_column_table();
       filter_data = CustomersServerParams;
+
       $("#leadSum").html('');
       $(".leads-overview").hide();
 
-      var from_date = document.getElementById("last_from_date").value;
-      var to_date = document.getElementById("last_to_date").value;
+      var from_date = $("#last_from_date").val();
+      var to_date = $("#last_to_date").val();
 
-
-
-      if (to_date != '') {
-         if (from_date == '') {
-            $("#last_from_date").focus();
-            disabled_column();
-            return false;
-
-         }
+      if (to_date && !from_date) {
+         $("#last_from_date").focus();
+         return false;
       }
 
-      if (from_date != '') {
-         if (to_date == '') {
-            $("#last_to_date").focus();
-            disabled_column();
-            return false;
-         }
+      if (from_date && !to_date) {
+         $("#last_to_date").focus();
+         return false;
       }
+
       show_loader("apply_filter");
-      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
-      disabled_column();
-
+      applicant_table = initDataTable(
+         '.table-clients',
+         admin_url + 'clients/table/2',
+         [0], [0],
+         CustomersServerParams,
+         <?php echo hooks()->apply_filters('customers_table_default_order', json_encode([2, 'asc'])); ?>
+      );
       hide_loader("apply_filter");
+      disabled_column();
    }
 
    function change_transit(obj) {
-      //  console.log("change");
-      let transitInfo = document.getElementById("transit_info");
-      $(".is_transist_location").toggle().find("select").val("").selectpicker("refresh");
-      $(".no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
-
+      $(".is_transist_location, .no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
    }
 
    $('#customers_bulk_action').on('show.bs.modal', function() {
       $(".document_status_update").find("select").val("").selectpicker('refresh');
       $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
-
       $(".is_transist_location").hide();
       $(".no_is_transist_location").show();
-
    });
 
    function refreshApplicantTable() {
-      applicant_table.ajax.reload(function() {
-         disabled_column();
-      }, false);
+      applicant_table.ajax.reload(null, false);
    }
 </script>
 </body>

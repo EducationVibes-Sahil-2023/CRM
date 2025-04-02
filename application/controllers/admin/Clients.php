@@ -1072,9 +1072,20 @@ class Clients extends AdminController
                 die;
             }
 
+            // Handle Apostile
+            if ($this->input->post('apostile_status') == true) {
+                echo "okk";
+                $get_data_from_document = get_orignal_document_data_list_apostile($ids);
+                print_r($get_data_from_document);
+            }
+            echo "<pre>";
+            print_r($_REQUEST);
+            die;
+
+
             // Handle In-Transit
             if (
-                ($this->input->post('in_transit') === true ||
+                ($this->input->post('in_transit') == true ||
                     (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
                 (!empty($this->input->post('office_location')) && !empty($this->input->post('document_status')))
             ) {

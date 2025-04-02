@@ -204,6 +204,12 @@ function app_init_settings_tabs()
         'position' => 55,
     ]);
 
+    $CI->app_tabs->add_settings_tab('ma_table_view', [
+        'name'     => 'Ma Table View',
+        'view'     => 'admin/settings/includes/ma_table_view',
+        'position' => 55,
+    ]);
+
     $CI->app_tabs->add_settings_tab('calendar', [
         'name'     => _l('settings_calendar'),
         'view'     => 'admin/settings/includes/calendar',

@@ -1639,11 +1639,17 @@ function activity_orignal_document($id)
     return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }
 
-function get_orignal_document_list()
+function get_orignal_document_list($rest = 0, $georgia = 0)
 {
     $CI = &get_instance();
     $CI->db->select("*")
         ->from(db_prefix() . 'orignal_documents o');
+    if (!empty($rest)) {
+        $CI->db->where("rest", 1);
+    }
+    if (!empty($georgia)) {
+        $CI->db->where("georgia", 1);
+    }
     return $CI->db->order_by("id", "asc")->get()->result_array();
 }
 
@@ -1707,4 +1713,83 @@ function applicant_last_update($client_id)
     $data["last_update"] = date('Y-m-d H:i:s');
     $CI->db->where('userid', $client_id);
     $CI->db->update(db_prefix() . 'clients', $data);
+}
+
+
+function get_view_columns()
+{
+    $CI = &get_instance();
+    return $passport_stages = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'ma_applicant_view')
+        ->get()
+        ->result_array();
+}
+
+function get_orignal_document_data_list_apostile($client_ids_array = [])
+{
+    $client_ids = implode(",", $client_ids_array);  // Ensure $client_ids_array is an array of integers
+
+    $CI = &get_instance();
+
+    $mandatry_documents_apostile = $CI->db
+        ->select("name,")
+        ->from(db_prefix() . 'orignal_documents')
+        ->where(array("apostile_status" => 1, "status" => 1))
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
+
+    // Output the result for debugging
+    print_r($mandatry_documents_apostile);
+    die;
+
+    // $CI->db->select("r.userid, 
+    //                 group_concat(o.id) AS document_ids, 
+    //                 group_concat(o.name) AS document_names, 
+    //                 group_concat(r.id) AS received_id, 
+    //                 group_concat(o.minor_status) AS minor_status, 
+    //                 o.apostile_country,
+    //                 p.primary_country")
+    //     ->from(db_prefix() . 'orignal_documents o')
+    //     ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid IN ({$client_ids})", "LEFT")
+    //     ->join(db_prefix() . 'admission_preferences p', "p.userid = r.userid", "LEFT")
+    //     ->where("(o.apostile_status = 1 
+    //               OR o.apostile_country LIKE CONCAT('%', p.primary_country, '%') 
+    //               OR o.minor_status = 1)")
+    //     // ->group_by("r.userid")
+    //     ->order_by("r.userid", "asc");
+
+    // $result = $CI->db->get()->result_array();
+
+    // Output the result for debugging
+    print_r($result);
+    die;
+
+
+
+    // Find users without documents
+    $missing_users = [];
+    $client_id_array = explode(",", $client_ids); // Convert back to an array for checking
+
+    if (!empty($result)) {
+        $found_users = array_column($result, "userid");
+
+        foreach ($client_id_array as $client_id) {
+            if (!in_array($client_id, $found_users)) {
+                $missing_users[] = $client_id; // Collect users with missing documents
+                return [
+                    "error" => true,
+                    "message" => "No documents found for user: " . get_client_name($client_id)
+                ];
+            }
+        }
+    } else {
+        return [
+            "error" => true,
+            "message" => "No documents found for user: " . get_client_name($client_ids_array[0])
+        ];
+    }
+
+    return array_column($result, null, "userid");
 }
