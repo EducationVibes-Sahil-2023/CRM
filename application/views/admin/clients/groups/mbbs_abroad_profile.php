@@ -1468,8 +1468,9 @@ if ($lead_type_status == 2) {
     <?php } ?>
 <?php } ?>
 
-<?php $this->load->view('admin/clients/client_group'); ?>
-<?php init_tail(); ?>
+<?php //$this->load->view('admin/clients/client_group'); 
+?>
+]
 <script>
     var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
     var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
@@ -1487,17 +1488,19 @@ if ($lead_type_status == 2) {
     // console.log(dropdown_country_university_selection);
 
 
-    $(document).ready(function() {
+    document.addEventListener("DOMContentLoaded", function() {
         let feesMandatory_single = "";
-        <?php if ($lead_data->source == REFERENCE_ID) { ?>
-            feesMandatory_single = "<?= REFERENCE_AMOUNT_ID ?>"; // Concatenating the value
-        <?php } else {
-        ?>
-            $(".fees-block-<?= REFERENCE_AMOUNT_ID ?>").hide();
 
-        <?php
-        } ?>
-    })
+        <?php if ($lead_data->source == REFERENCE_ID) { ?>
+            feesMandatory_single = "<?= REFERENCE_AMOUNT_ID ?>"; // Assigning the value
+        <?php } else { ?>
+            let feeBlock = document.querySelector(".fees-block-<?= REFERENCE_AMOUNT_ID ?>");
+            if (feeBlock) {
+                feeBlock.style.display = "none"; // Hiding the element
+            }
+        <?php } ?>
+    });
+
 
     function show_country_dropdown(select_segment) {
         select_segment_default = select_segment;
