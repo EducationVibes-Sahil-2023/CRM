@@ -624,13 +624,17 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     'name' => _l('Connected'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
-                                 array(
-                                    'name' => _l('leads_dt_datecreated'),
-                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                                 ),
+                                 // array(
+                                 //    'name' => _l('leads_dt_datecreated'),
+                                 //    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                                 // ),
                                  array(
                                     'name' => _l('Updated'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                                 ),
+                                 array(
+                                    'name' => _l('tags'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
                                  ),
                                  array(
                                     'name' => _l('leads_dt_name'),
