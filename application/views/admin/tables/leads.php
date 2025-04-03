@@ -358,9 +358,12 @@ foreach ($rResult as $aRow) {
         $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
     }
     $row[]    = $col;
-
+    if ($role != 1) {
+        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
+    }
 
     $updatecount = !empty($aRow['update_count']) ? $aRow['update_count'] : 0;
+
 
     $row[]    = $updatecount;
     $call_duration = 0;
@@ -372,18 +375,33 @@ foreach ($rResult as $aRow) {
         )
         : convertToHMS($call_duration, 1);
 
-
+    // if ($role != 1) {
+    //     if (empty($latest_update_date)) {
+    //         $row[] = "";
+    //     } else {
+    //         $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
+    //     }
+    // }
     $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
 
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    // if ($role != 1) {
+    //     if (empty($latest_update_date)) {
+    //         $row[] = "";
+    //     } else {
+    //         $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
+    //     }
+    // }
+
     if ($role != 1) {
-        if (empty($latest_update_date)) {
+        if (empty($aRow['lastupdate_date'])) {
             $row[] = "";
         } else {
-            $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
+            $row[] = (($aRow['lastupdate_date'] == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($aRow['lastupdate_date']) . '" class="text-has-action is-date">' .  $aRow['lastupdate_date'] . '</span>');
         }
     }
+
 
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 
@@ -507,9 +525,7 @@ foreach ($rResult as $aRow) {
     $row[] .= render_tags($aRow['tags']);
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
 
-    if ($role != 1) {
-        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
-    }
+
 
     $row['DT_RowId'] = 'lead_' . $aRow['id'];
 
