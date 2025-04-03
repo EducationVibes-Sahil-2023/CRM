@@ -359,7 +359,7 @@ foreach ($rResult as $aRow) {
     }
     $row[]    = $col;
     if ($role != 1) {
-        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
+        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['followup'])) . "<br>" . date("H:i:s", strtotime($aRow['followup'])) . '</span>');
     }
 
     $updatecount = !empty($aRow['update_count']) ? $aRow['update_count'] : 0;
