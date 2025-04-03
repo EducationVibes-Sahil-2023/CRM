@@ -385,7 +385,7 @@ foreach ($rResult as $aRow) {
     $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
 
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
-    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     // if ($role != 1) {
     //     if (empty($latest_update_date)) {
     //         $row[] = "";
@@ -402,7 +402,7 @@ foreach ($rResult as $aRow) {
         }
     }
 
-
+    $row[] .= render_tags($aRow['tags']);
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
 
     $nameRow = '<a ' . $hrefAttr . '>' . $aRow['name'] . '</a>';
@@ -522,8 +522,8 @@ foreach ($rResult as $aRow) {
     $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned'])) . "<br>" . date("H:i:s", strtotime($aRow['dateassigned'])) . '</span>');
     $row[] = $aRow['city'];
     $row[] = $aRow['state'];
-    $row[] .= render_tags($aRow['tags']);
-    // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    // $row[] .= render_tags($aRow['tags']);
+    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
 
 
 
