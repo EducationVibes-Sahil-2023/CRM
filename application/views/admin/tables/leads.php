@@ -394,13 +394,13 @@ foreach ($rResult as $aRow) {
     //     }
     // }
 
-    if ($role != 1) {
-        if (empty($aRow['lastupdate_date'])) {
-            $row[] = "";
-        } else {
-            $row[] = (($aRow['lastupdate_date'] == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($aRow['lastupdate_date']) . '" class="text-has-action is-date">' .  $aRow['lastupdate_date'] . '</span>');
-        }
+    // if ($role != 1) {
+    if (empty($aRow['lastupdate_date'])) {
+        $row[] = "";
+    } else {
+        $row[] = (($aRow['lastupdate_date'] == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($aRow['lastupdate_date']) . '" class="text-has-action is-date">' .  $aRow['lastupdate_date'] . '</span>');
     }
+    // }
 
     $row[] .= render_tags($aRow['tags']);
     $hrefAttr = 'href="' . admin_url('leads/index/' . $aRow['id']) . '" onclick="init_lead(' . $aRow['id'] . ');return false;"';
