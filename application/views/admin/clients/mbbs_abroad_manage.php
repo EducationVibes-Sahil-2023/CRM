@@ -20,6 +20,12 @@ $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
 $table_view = array_column(get_view_columns(), null, "id");
 
+$apostile_vendors = get_vendor_list(1);
+$apostile_documents = get_orignal_document_list(0, 0, 1);
+
+
+
+
 $yes_no_status = [
    ["id" => "", "name" => ""],
    ["id" => "Yes", "name" => "Yes"],
@@ -480,6 +486,33 @@ array_unshift($office_location, array());
                   <input type="checkbox" name="apostile_status" id="apostile_status" onchange="Update_apostile(this)">
                   <label for="apostile">Apostile</label>
                </div>
+               <div class="apostile_status_update">
+                  <div class="col-md-4">
+                     <label>Apostile Vendor</label>
+                     <?php echo render_select('apostile_vendor', $apostile_vendors, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Vendor', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'apostile_vendor'); ?>
+                  </div>
+                  <div class="col-md-4">
+                     <label>Apostile Documents</label>
+                     <?php echo render_select('apostile_document[]', $apostile_documents, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Documents', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'apostile_document'); ?>
+                  </div>
+                  <div class="col-md-4">
+                     <label>Courier Date</label>
+                     <?php echo render_input('apostile_date', '', '', 'date'); ?>
+                  </div>
+
+                  <div class="col-md-4">
+                     <label>Apostile Received</label>
+                     <?php echo render_input('apostile_receiving_date', '', '', 'date'); ?>
+                  </div>
+                  <div class="col-md-4">
+                     <label>Apostile Cost</label>
+                     <?php echo render_input('apostile_cost', '', '', 'number'); ?>
+                  </div>
+                  <div class="col-md-4">
+                     <label>Payment Date</label>
+                     <?php echo render_input('apostile_payment_date', '', '', 'date'); ?>
+                  </div>
+               </div>
             </div>
             <div class="document_status_update">
                <div class="checkbox checkbox-danger">
@@ -742,7 +775,7 @@ init_tail(); ?>
          'vendor_type': "[name='vendor_type[]']",
          'university': "[name='university[]']",
          'country': "[name='country[]']",
-         'status': "[name='status_[]']",
+         'status_': "[name='status_[]']",
          'doc_status': "[name='doc_status[]']",
          'passport_status': "[name='passport_status[]']",
          'minor_status': "[name='minor']"
@@ -759,6 +792,7 @@ init_tail(); ?>
             scrollCollapse: true
          }
       );
+
 
 
       $('#view_application_stage').on('changed.bs.select', function() {
@@ -813,6 +847,14 @@ init_tail(); ?>
          $('.document_status_update').hide();
          $(".document_status_update").find("select").val("").selectpicker('refresh');
          $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+      } else {
+         // Hide elements related to document status update
+         $('.document_status_update').show();
+
 
          // Toggle visibility of transition location elements
          $(".is_transist_location").hide();

@@ -248,3 +248,5 @@ define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
 
 define('ORG_REST', 'rest');
 define('ORG_GEORGIA', 'georgia');
+define('REFERENCE_ID', '1');
+define('REFERENCE_AMOUNT_ID', '8');

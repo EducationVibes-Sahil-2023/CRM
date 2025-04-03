@@ -400,11 +400,66 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
         var filter_data;
         $('#apply_filter').on('click', async function() {
 
+
             var selectedValues = $("#column_show").selectpicker('val');
             if (selectedValues.length < 3) {
                 alert("Select min 3 columns");
                 return false;
             }
+
+
+            var from_date = document.getElementById("from_date").value;
+            var to_date = document.getElementById("to_date").value;
+            var assign_from_date = document.getElementById("assign_from_date").value;
+            var assign_to_date = document.getElementById("assign_to_date").value;
+            var up_from_date = document.getElementById("up_from_date").value;
+            var up_to_date = document.getElementById("up_to_date").value;
+
+            if (to_date != '') {
+                if (from_date == '') {
+                    $("#from_date").focus();
+                    return false;
+                }
+            }
+
+            if (from_date != '') {
+                if (to_date == '') {
+                    $("#to_date").focus();
+                    return false;
+                }
+            }
+
+            if (assign_to_date != '') {
+                if (assign_from_date == '') {
+                    $("#assign_from_date").focus();
+                    return false;
+                }
+            }
+
+            if (assign_from_date != '') {
+                if (assign_to_date == '') {
+                    $("#assign_to_date").focus();
+                    return false;
+                }
+            }
+
+
+            if (up_to_date != '') {
+                if (up_from_date == '') {
+                    $("#up_from_date").focus();
+                    return false;
+                }
+            }
+
+            if (up_from_date != '') {
+                if (up_to_date == '') {
+                    $("#up_to_date").focus();
+                    return false;
+                }
+            }
+
+
+
             $('.table-lead-performance-table').DataTable().destroy();
             $('.table-lead-performance-table tbody').empty();
 

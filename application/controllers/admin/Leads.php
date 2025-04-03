@@ -559,7 +559,7 @@ class Leads extends AdminController
 
                 $check_lead_transfer_request = $this->leads_model->get_lead_visitor_request_exist($id);
                 //  print_r($check_lead_transfer_request); die;
-                if (empty($check_lead_transfer_request->created_by) && !is_admin() ) {
+                if (empty($check_lead_transfer_request->created_by) && !is_admin()) {
                     header('HTTP/1.0 404 Not Found');
 
                     echo "Visit Request not found";
@@ -3689,6 +3689,7 @@ class Leads extends AdminController
         $data['type']  = $this->leads_model->get_type();
         $data['staff'] = $this->staff_model->get('', [], 1);
         $data['lead_type'] = $this->leads_model->get_type();
+        $data['statuses'] = $this->leads_model->get_status();
         // in case accesed the url leads/index/ directly with id - used in search
 
         $this->load->view('admin/leads/visitor', $data);

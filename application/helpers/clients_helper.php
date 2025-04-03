@@ -1639,7 +1639,7 @@ function activity_orignal_document($id)
     return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }
 
-function get_orignal_document_list($rest = 0, $georgia = 0)
+function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0)
 {
     $CI = &get_instance();
     $CI->db->select("*")
@@ -1649,6 +1649,9 @@ function get_orignal_document_list($rest = 0, $georgia = 0)
     }
     if (!empty($georgia)) {
         $CI->db->where("georgia", 1);
+    }
+    if (!empty($georgia)) {
+        $CI->db->where("apostile_status", 1);
     }
     return $CI->db->order_by("id", "asc")->get()->result_array();
 }
@@ -1792,4 +1795,20 @@ function get_orignal_document_data_list_apostile($client_ids_array = [])
     }
 
     return array_column($result, null, "userid");
+}
+
+
+function get_vendor_list($vendor_type = "")
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'vendor_list')
+        ->where('status', 1);
+
+    if (!empty($vendor_type)) {
+        $CI->db->where_in("vendor_type", $vendor_type);
+    }
+
+    return  $CI->db->get()->result_array(); // Execute and return result
 }

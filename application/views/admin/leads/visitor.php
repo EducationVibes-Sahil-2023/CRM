@@ -7,6 +7,10 @@ array_unshift($location, array());
     a {
         cursor: pointer;
     }
+
+    .margin-top {
+        margin-top: 10px;
+    }
 </style>
 <div id="wrapper">
     <div class="content">
@@ -22,50 +26,61 @@ array_unshift($location, array());
                                     </div>
 
 
-                                    <div class="col-md-2 leads-filter-column">
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('status[]', $visitor_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Status'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
 
-                                    <div class="col-md-2 leads-filter-column">
+
+
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('location[]', $location, array('id', 'name'), '', [], array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => _l('Location'), 'data-actions-box' => true), array(), 'no-mbot', '', false,  'location');
                                         ?>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column">
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('type[]', $visitor_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column">
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('attendee[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Attendee'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
 
+                                    <div class="col-md-2 leads-filter-column margin-top">
+                                        <?php
+                                        echo render_select('view_status[]', $statuses, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Lead status', 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, '');
+                                        ?>
+                                    </div>
 
-                                    <div class="col-md-2 leads-filter-column">
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
                                         echo render_select('lead_type[]', $lead_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Lead Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column">
+
+
+
+
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <div class="form-group">
                                             <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Visitor Date" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column">
+                                    <div class="col-md-2 leads-filter-column margin-top">
                                         <div class="form-group">
                                             <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Visitor Date" autocomplete="off">
                                         </div>
                                     </div>
-                                    <div class="col-md-2 leads-filter-column mb-5">
+                                    <div class="col-md-2 leads-filter-column margin-top mb-5">
                                         <?php echo render_select('assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'assigned'); ?>
                                     </div>
 
 
-                                    <div class="col-md-4 text-center leads-filter-column">
+                                    <div class="col-md-4 text-center leads-filter-column margin-top">
                                         <div class="form-group">
                                             <button type="button" class="btn btn-primary" onclick="filter_data();" id="apply_filter">Apply Filter</button>
 
@@ -81,14 +96,14 @@ array_unshift($location, array());
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type')), 'lead-visitor-genrate-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
                             <hr>
 
                             <?php
-                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type')), 'lead-visitor-request-table');
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-request-table');
                             ?>
                         <?php } ?>
                     </div>
@@ -106,6 +121,7 @@ array_unshift($location, array());
         type: "[name='type[]']",
         attendee: "[name='attendee[]']",
         lead_type: "[name='lead_type[]']",
+        lead_status: "[name='view_status[]']",
         from_date: "[name='from_date']",
         to_date: "[name='to_date']",
         assigned: "[name='assigned[]']",

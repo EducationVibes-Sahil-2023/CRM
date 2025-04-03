@@ -1012,7 +1012,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    function periodFilter() {
       return new Promise((resolve, reject) => {
          try {
-            table_leads.DataTable().ajax.reload(null, false).on('draw.dt', function() {
+            table_leads.DataTable().page(0).draw(false).ajax.reload(null, false).on('draw.dt', function() {
                hide_loader("apply_filter");
                $("#leadSum").innerHTML = "";
                $("#leadSum").html('')

@@ -324,6 +324,18 @@ if ($is_admin) {
 
 foreach ($rResult as $aRow) {
 
+    $dates = [];
+
+    if (!empty($aRow['notesdate']) && $aRow['notesdate'] !== "0000-00-00") {
+        $dates[] = date("Y-m-d", strtotime($aRow['notesdate']));
+    }
+
+    if (!empty($aRow['lastupdate_date']) && $aRow['lastupdate_date'] !== "0000-00-00") {
+        $dates[] = date("Y-m-d", strtotime($aRow['lastupdate_date']));
+    }
+
+    $latest_update_date = !empty($dates) ? max($dates) : null; // Get the latest valid date
+
     $aRow['status_name'] = isset($statuses[$aRow['status']]["name"]) ? $statuses[$aRow['status']]["name"] : '';
     $aRow['color'] = isset($statuses[$aRow['status']]["color"]) ? $statuses[$aRow['status']]["color"] : '';
     $aRow['type_name'] = isset($type[$aRow['type']]["name"]) ? $type[$aRow['type']]["name"] : '';
@@ -338,7 +350,7 @@ foreach ($rResult as $aRow) {
 
     // echo $aRow['followup']  ;
     $curdate = date("Y-m-d");
-    $date1 = !empty($aRow['notesdate']) ? date("Y-m-d", strtotime($aRow['notesdate'])) : '';
+    $date1 = !empty($latest_update_date) ? date("Y-m-d", strtotime($latest_update_date)) : '';
     $date2 = !empty($aRow['followup']) ? date("Y-m-d", strtotime($aRow['followup'])) : '';
     if ($date1 >= $date2) {
         $col = '<span style="color:#0f970f;font-size: 16px;"><i class="fa fa-check-circle"></i></span>';
@@ -363,12 +375,13 @@ foreach ($rResult as $aRow) {
 
     $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
 
+    // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     if ($role != 1) {
-        if (empty($aRow['lastupdate_date'])) {
+        if (empty($latest_update_date)) {
             $row[] = "";
         } else {
-            $row[] = (($aRow['lastupdate_date'] == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($aRow['lastupdate_date']) . '" class="text-has-action is-date">' . $aRow['lastupdate_date'] . '</span>');
+            $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
         }
     }
 
@@ -492,6 +505,8 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['city'];
     $row[] = $aRow['state'];
     $row[] .= render_tags($aRow['tags']);
+    // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+
     if ($role != 1) {
         $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
     }

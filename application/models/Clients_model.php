@@ -128,7 +128,6 @@ class Clients_model extends App_Model
         if (is_staff_logged_in()) {
             $data['addedfrom'] = get_staff_user_id();
         }
-
         // New filter action
         $data = hooks()->apply_filters('before_client_added', $data);
         $this->db->insert(db_prefix() . 'clients', $data);
