@@ -593,68 +593,54 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               <!-- /.modal -->
                               <?php
                               $table_data = array();
+                              $_table_data = array(
+                                 '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap">
+                                     <input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label>
+                                 </div>',
+                                 array(
+                                    'name' => _l('Flag'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 )
+                              );
+
                               if ($role != 1) {
-                                 $_table_data = array(
-                                    '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
-                                    array(
-                                       'name' => _l('Flag'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('Count'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('Durations'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('Connected'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('leads_dt_datecreated'),
-                                       'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                                    ),
-                                    array(
-                                       'name' => _l('Updated'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
-                                    ),
-                                    array(
-                                       'name' => _l('leads_dt_name'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
-                                    ),
-                                 );
-                              } else {
-                                 $_table_data = array(
-                                    '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label></div>',
-                                    array(
-                                       'name' => _l('Flag'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('Count'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('Durations'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('Connected'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                    ),
-                                    array(
-                                       'name' => _l('leads_dt_datecreated'),
-                                       'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                                    ),
-                                    array(
-                                       'name' => _l('leads_dt_name'),
-                                       'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
-                                    ),
+                                 $_table_data[] = array(
+                                    'name' => _l('Followup Date'),
+                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
                                  );
                               }
 
+                              // Common columns for both roles
+                              $_table_data = array_merge($_table_data, array(
+                                 array(
+                                    'name' => _l('Count'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Durations'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Last Updated'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('Connected'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                                 ),
+                                 array(
+                                    'name' => _l('leads_dt_datecreated'),
+                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                                 ),
+                                 array(
+                                    'name' => _l('Call Updated'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                                 ),
+                                 array(
+                                    'name' => _l('leads_dt_name'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
+                                 )
+                              ));
                               if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
                                  $_table_data[] = array(
                                     'name' => _l('gdpr_consent') . ' (' . _l('gdpr_short') . ')',
@@ -672,36 +658,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               );
 
                               $custom_fields = get_custom_fields('leads', array('show_on_table' => 1));
-                              //          foreach($custom_fields as $field){
-                              //   if($field['name'] == 'Degree'){
-                              //          array_push($_table_data,$field['name']);
-                              //   }
-                              //          } 
-                              // foreach ($custom_fields as $field) {
-                              //    if ($field['name'] == 'NEET Score') {
-                              //       array_push($_table_data, $field['name']);
-                              //    }
-                              // }
-                              // foreach ($custom_fields as $field) {
-                              //    if ($field['name'] == 'Intake') {
-                              //       array_push($_table_data, $field['name']);
-                              //    }
-                              // }
-                              // foreach ($custom_fields as $field) {
-                              //    if ($field['name'] == 'Course') {
-                              //       array_push($_table_data, $field['name']);
-                              //    }
-                              // }
+
                               if (is_admin()) {
                                  foreach ($custom_fields as $key => $field) {
                                     array_push($_table_data, $field['name']);
                                  }
                               }
-                              //   foreach($custom_fields as $field){
-                              //          if($field['name'] == 'Course'){
-                              //          array_push($_table_data,$field['name']);
-                              //   }
-                              //          }
+
                               $_table_data[] = array(
                                  'name' => _l('Lead Type'),
 
@@ -720,56 +683,22 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  'name' => _l('leads_source'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')
                               );
-                              // $_table_data[] = array(
-                              //    'name' => _l('leads_dt_datecreated'),
-                              //    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                              // );
+
                               if ($role != 1) {
-                                 // $_table_data[] = array(
-                                 //    'name' => _l('Last Updated Date'),
-                                 //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
-                                 // );
 
                                  $_table_data[] =   array(
                                     'name' => _l('leads_dt_email'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-email')
                                  );
-
-                                 // foreach ($custom_fields as $field) {
-                                 //    if ($field['name'] == 'Call Type') {
-                                 //       array_push($_table_data, $field['name']);
-                                 //    }
-                                 // }
-
                                  $_table_data[] = array(
                                     'name' => _l('leads_dt_assigned'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-assigned')
                                  );
                               }
-
                               $_table_data[] = array(
                                  'name' => _l('Assigned Date'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-dateassigned')
                               );
-
-
-
-
-
-
-                              // foreach($custom_fields as $field){
-                              //          if($field['name'] == 'Gender'){
-                              //          array_push($_table_data,$field['name']);
-                              //   }
-                              //          }
-
-                              ///////////////////////////////////////////////////////////////////////////////////
-                              // foreach ($custom_fields as $field) {
-                              //    if ($field['name'] == 'Destination') {
-                              //       array_push($_table_data, $field['name']);
-                              //    }
-                              // }
-
                               $_table_data[] = array(
                                  'name' => _l('lead_city'),
 
@@ -782,29 +711,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-state')
 
                               );
-
-                              /*
-                              <?php echo _l('lead_website'); ?>
-                              $_table_data[] =  array(
-                                 'name'=>_l('leads_dt_lead_value'),
-                                 'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-lead-value')
-                                );
-                              */
                               $_table_data[] =  array(
                                  'name' => _l('tags'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
                               );
-
-
-
-
-                              if ($role != 1) {
-
-                                 $_table_data[] = array(
-                                    'name' => _l('Followup Date'),
-                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
-                                 );
-                              }
                               foreach ($_table_data as $_t) {
                                  array_push($table_data, $_t);
                               }
