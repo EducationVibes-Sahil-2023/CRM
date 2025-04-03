@@ -621,20 +621,21 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
                                  array(
-                                    'name' => _l('Last Updated'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
                                     'name' => _l('Connected'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
+                                 // array(
+                                 //    'name' => _l('leads_dt_datecreated'),
+                                 //    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                                 // ),
+
                                  array(
-                                    'name' => _l('leads_dt_datecreated'),
-                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                                    'name' => _l('Updated'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
                                  ),
                                  array(
-                                    'name' => _l('Call Updated'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                                    'name' => _l('tags'),
+                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
                                  ),
                                  array(
                                     'name' => _l('leads_dt_name'),
@@ -711,9 +712,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-state')
 
                               );
-                              $_table_data[] =  array(
-                                 'name' => _l('tags'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
+                              // $_table_data[] =  array(
+                              //    'name' => _l('tags'),
+                              //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
+                              // );
+
+                              $_table_data[] =   array(
+                                 'name' => _l('leads_dt_datecreated'),
+                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
                               );
                               foreach ($_table_data as $_t) {
                                  array_push($table_data, $_t);

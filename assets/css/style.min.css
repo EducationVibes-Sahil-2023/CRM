@@ -7819,11 +7819,13 @@ ul.tagit li.tagit-choice:hover {
 
 table .tags-labels {
     float: left;
-    display: inline-block;
+    /* display: inline-block; */
     max-width: 180px;
     word-wrap: break-word;
     word-break: break-word;
-    min-width: 100%
+    min-width: 100%;
+    display: grid;
+
 }
 
 .kanban-tags .tags-labels .label-tag,

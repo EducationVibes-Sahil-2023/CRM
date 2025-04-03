@@ -375,13 +375,13 @@ foreach ($rResult as $aRow) {
         )
         : convertToHMS($call_duration, 1);
 
-    if ($role != 1) {
-        if (empty($latest_update_date)) {
-            $row[] = "";
-        } else {
-            $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
-        }
-    }
+    // if ($role != 1) {
+    //     if (empty($latest_update_date)) {
+    //         $row[] = "";
+    //     } else {
+    //         $row[] = (($latest_update_date == '0000-00-00') ? '' : '<span data-toggle="tooltip" data-title="' . ($latest_update_date) . '" class="text-has-action is-date">' . $latest_update_date . '</span>');
+    //     }
+    // }
     $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
 
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
