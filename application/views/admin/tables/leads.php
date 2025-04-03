@@ -324,10 +324,17 @@ if ($is_admin) {
 
 foreach ($rResult as $aRow) {
 
-    $latest_update_date = max(
-        !empty($aRow['notesdate']) ? date("Y-m-d", strtotime($aRow['notesdate'])) : null,
-        !empty($aRow['lastupdate_date']) ? date("Y-m-d", strtotime($aRow['lastupdate_date'])) : null
-    );
+    $dates = [];
+
+    if (!empty($aRow['notesdate']) && $aRow['notesdate'] !== "0000-00-00") {
+        $dates[] = date("Y-m-d", strtotime($aRow['notesdate']));
+    }
+
+    if (!empty($aRow['lastupdate_date']) && $aRow['lastupdate_date'] !== "0000-00-00") {
+        $dates[] = date("Y-m-d", strtotime($aRow['lastupdate_date']));
+    }
+
+    $latest_update_date = !empty($dates) ? max($dates) : null; // Get the latest valid date
 
     $aRow['status_name'] = isset($statuses[$aRow['status']]["name"]) ? $statuses[$aRow['status']]["name"] : '';
     $aRow['color'] = isset($statuses[$aRow['status']]["color"]) ? $statuses[$aRow['status']]["color"] : '';
@@ -497,8 +504,8 @@ foreach ($rResult as $aRow) {
     $row[] = ($aRow['dateassigned'] == '0000-00-00 00:00:00' || !is_date($aRow['dateassigned']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['dateassigned']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['dateassigned'])) . "<br>" . date("H:i:s", strtotime($aRow['dateassigned'])) . '</span>');
     $row[] = $aRow['city'];
     $row[] = $aRow['state'];
-    // $row[] .= render_tags($aRow['tags']);
-    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    $row[] .= render_tags($aRow['tags']);
+    // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
 
     if ($role != 1) {
         $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' . $aRow['followup'] . '</span>');
