@@ -358,9 +358,7 @@ foreach ($rResult as $aRow) {
         $col = ($curdate <= $date2) ? '<span style="color:#f4f407;font-size: 16px;"><i class="fa fa-check-circle"></i></span>' : '<span style="color:#fb3121;font-size: 16px;"><i class="fa fa-times-circle"></i></span>';
     }
     $row[]    = $col;
-    if ($role != 1) {
-        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['followup'])) . "<br>" . date("H:i:s", strtotime($aRow['followup'])) . '</span>');
-    }
+
 
     $updatecount = !empty($aRow['update_count']) ? $aRow['update_count'] : 0;
 
@@ -383,6 +381,8 @@ foreach ($rResult as $aRow) {
     //     }
     // }
     $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
+    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+
 
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
@@ -523,9 +523,10 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['city'];
     $row[] = $aRow['state'];
     // $row[] .= render_tags($aRow['tags']);
-    $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
 
-
+    if ($role != 1) {
+        $row[] = ($aRow['followup'] == '0000-00-00 00:00:00' || !is_date($aRow['followup']) ? '' : '<span data-toggle="tooltip" data-title="' . _dt($aRow['followup']) . '" class="text-has-action is-date">' .  date("Y-m-d", strtotime($aRow['followup'])) . "<br>" . date("H:i:s", strtotime($aRow['followup'])) . '</span>');
+    }
 
     $row['DT_RowId'] = 'lead_' . $aRow['id'];
 

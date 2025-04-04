@@ -691,8 +691,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             </div>
 
                             <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,1)">Generate Registration Slip </button>
-                            <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp"></i> </button>
-                            <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope"></i> </button>
+                            <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp"></i> </button>
+                            <?= getLastEmailWhatsappDate("email", REGISTRATION_TEMPLATE_ID, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope"></i> </button>
                         </div>
                         <div id="upload_documents" class="table-responsive">
                             <table class="table table-bordered table-striped">

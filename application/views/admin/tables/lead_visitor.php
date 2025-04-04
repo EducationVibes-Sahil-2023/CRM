@@ -25,6 +25,8 @@ $aColumns = [
     db_prefix() . 'visitor_request.status as status_id',
     db_prefix() . 'visitor_status.color as color',
     db_prefix() . 'leads_status .name as status_name',
+    db_prefix() . 'leads .call_duration as call_duration',
+
 
 
 ];
@@ -121,6 +123,8 @@ if (!empty($this->ci->input->post('lead_type'))) {
 }
 
 
+
+
 if (!empty($this->ci->input->post('type'))) {
     $where[] = "AND " . $sTable . ".visitor_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('type'))) . ")";
 }
@@ -142,6 +146,14 @@ if (!empty($this->ci->input->post('to_date'))) {
     $where[]   = "AND DATE(" . $sTable . ".date_of_visit) BETWEEN '{$this->ci->db->escape_str($from_date)}' AND '{$this->ci->db->escape_str($to_date)}'";
 }
 
+if ($this->ci->input->post('category') != "") {
+    $category = (int) $this->ci->input->post('category');
+    $currentDate = date('Y-m-d');
+    $operator = $category < 0 ? '<' : ($category > 0 ? '>=' : '=');
+    $where[] = "AND DATE($sTable.date_of_visit) $operator '$currentDate'";
+}
+
+
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, []);
 
 $output  = $result['output'];
@@ -159,9 +171,12 @@ foreach ($rResult as $aRow) {
         $edit_btn .= "</div>";
     }
     $row[] = $aRow["status"];
-    $row[] = date('j F Y, h:i A <\b\r> l', strtotime($aRow["date_of_visit"]));
+    // $row[] = date('j F Y, h:i A <\b\r> l', strtotime($aRow["date_of_visit"]));
+    $row[] = date('j F Y', strtotime($aRow["date_of_visit"]));
     $row[] = $aRow["student_name"] . "<br>" . $edit_btn;
     $row[] = $aRow["phonenumber"];
+    $call_duration = 0;
+    $row[] = !empty($aRow['call_duration']) ? convertToHMS($aRow['call_duration'], 1) : convertToHMS($call_duration, 1);
     $row[] = $aRow["location"];
     $row[] = $aRow["visitor_type"];
     $row[] = !empty($staff_data[$aRow["assigned"]]["full_name"]) ? $staff_data[$aRow["assigned"]]["full_name"] : "";

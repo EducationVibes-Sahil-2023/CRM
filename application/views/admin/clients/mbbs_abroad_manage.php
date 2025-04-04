@@ -504,6 +504,52 @@ array_unshift($office_location, array());
    </div>
    <!-- /.modal-dialog -->
 </div>
+
+<div class="modal fade applicant_status_change" id="applicant_status_change" tabindex="-1" role="dialog" aria-labelledby="applicantStatusModal">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title" id="applicantStatusModal">Applicant Status</h4>
+         </div>
+
+         <div class="modal-body">
+            <form id="applicant_status_change_form" onsubmit="return false;">
+               <input type="hidden" name="userid" value="">
+               <input type="hidden" name="status" value="">
+
+               <!-- Canceled Comment Section -->
+               <div class="canceled_div applicant_status_modal_div">
+                  <div class="form-group">
+                     <?= render_textarea('canceled_comment', 'Cancellation Comment', '', ["required-check" => "required-check", "placeholder" => "Enter comment"]) ?>
+                  </div>
+               </div>
+
+
+
+               <!-- Refund Section -->
+               <div class="refund_div applicant_status_modal_div">
+                  <div class="form-group">
+                     <?= render_input('refund_payment_proof', 'Payment Proof', '', 'file', ["required-check" => "required-check"]) ?>
+                  </div>
+                  <div class="form-group">
+                     <?= render_input('refund_payment_date', 'Payment Date', '', 'date', ["required-check" => "required-check"]) ?>
+                  </div>
+               </div>
+            </form>
+         </div>
+
+         <!-- Modal Footer -->
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
+            <button type="button" class="btn btn-info" onclick="applicant_status_change()"><?php echo _l('confirm'); ?></button>
+         </div>
+      </div>
+   </div>
+</div>
+
 <?php
 init_tail(); ?>
 <script>
@@ -932,6 +978,76 @@ init_tail(); ?>
       applicant_table.ajax.reload(function() {
          disabled_column();
       }, false);
+   }
+
+
+   function applicant_status_change(status = 0) {
+      let additional_fields = {};
+      let form_status = true;
+
+      show_loader();
+
+      $("#applicant_status_change_form input:visible, #applicant_status_change_form textarea:visible, #applicant_status_change_form select:visible, #applicant_status_change_form input[type='date']:visible").each(function() {
+         const value = $(this).val()?.trim(); // Get trimmed value
+         const isRequired = $(this).is("[required-check]"); // Check if 'required-check' exists
+         const name = $(this).attr("name"); // Get name attribute
+         let label = $(this).closest("div.form-group").find("label").text().trim().replace(/\*/g, ""); // Remove * from label
+
+         if (isRequired && name) {
+            additional_fields[name] = "required";
+            if (!value) {
+               if (form_status && status == 0) {
+                  alert_float("danger", `"${label}" is mandatory.`);
+                  $(this).focus();
+               }
+               form_status = false;
+            }
+         }
+      });
+
+      if (!form_status) {
+         appValidateForm($("#applicant_status_change_form"), additional_fields);
+         hide_loader();
+         return false;
+      }
+
+      if (status === 1) {
+         hide_loader();
+         return false;
+      }
+
+      let formData = new FormData(document.getElementById("applicant_status_change_form"));
+
+      // Append CSRF token if it exists
+      let csrfToken = $('input[name="csrf_token_name"]').val();
+      if (csrfToken) {
+         formData.append("csrf_token_name", csrfToken);
+      }
+      // AJAX request to update client status
+      $.ajax({
+         url: "<?php echo base_url('admin/clients/update_client_status'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false, // Prevent jQuery from transforming FormData
+         contentType: false, // Ensure correct Content-Type is set for FormData
+         dataType: "JSON",
+         success: function(res) {
+            hide_loader();
+            if (res.resp_code === "RCS") {
+               $("#applicant_status_change").modal("hide");
+               applicant_reload();
+               alert_float("success", res.resp_desc);
+            } else {
+               alert_float("danger", res.resp_desc || "An unknown error occurred.");
+            }
+         },
+         error: function(xhr, status, error) {
+            hide_loader();
+            let errorMessage = xhr.responseText ? xhr.responseText : "An error occurred while processing the request.";
+            alert_float("danger", errorMessage);
+            console.error("Error:", error);
+         },
+      });
    }
 </script>
 </body>
