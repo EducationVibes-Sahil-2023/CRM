@@ -149,7 +149,7 @@ if (!empty($this->ci->input->post('to_date'))) {
 if ($this->ci->input->post('category') != "") {
     $category = (int) $this->ci->input->post('category');
     $currentDate = date('Y-m-d');
-    $operator = $category < 0 ? '<' : ($category > 0 ? '>' : '=');
+    $operator = $category < 0 ? '<' : ($category > 0 ? '>=' : '=');
     $where[] = "AND DATE($sTable.date_of_visit) $operator '$currentDate'";
 }
 

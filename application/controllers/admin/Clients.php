@@ -4680,8 +4680,7 @@ class Clients extends AdminController
     public function update_client_status()
     {
         if ($this->input->post() && $this->input->is_ajax_request()) {
-
-            $this->clients_model->update_client_status($this->input->post());
+            return $this->clients_model->update_client_status($this->input->post());
         }
     }
 

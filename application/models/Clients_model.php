@@ -2324,10 +2324,37 @@ class Clients_model extends App_Model
         return $get_application_sub_stage = $this->db->get()->result_array();
     }
 
-    function update_client_status($data = [])
+    function update_client_status($data_post = [])
     {
 
+        $data["userid"] = !empty($data_post["userid"]) ? $data_post["userid"] : '';
+        $data["active"] = !empty($data_post["status"]) ? $data_post["status"] : '';
+        if (!empty($data_post["canceled_comment"])) {
+            $data["canceled_comment"] = !empty($data_post["canceled_comment"]) ? $data_post["canceled_comment"] : '';
+        }
+        if (!empty($data_post["refund_payment_date"])) {
+            $data["refund_payment_date"] = !empty($data_post["refund_payment_date"]) ? $data_post["refund_payment_date"] : '';
+        }
         $client_id = $data["userid"];
+
+
+        $documents = $_FILES["refund_payment_proof"];
+
+        $upload_data = [];
+        $file_name_ = "refund_payment_proof";
+        if (!empty($documents['name'])) {
+            $upload_data["name"] =  $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION);
+            $upload_data["type"] = $documents['type'];
+            $upload_data["tmp_name"] = $documents['tmp_name'];
+            $upload_data["error"] = $documents['error'];
+            $upload_data["size"] = $documents['size'];
+            if ($upload_data["error"] === UPLOAD_ERR_OK) {;
+                $file_name = upload_applicant_documents($client_id, $upload_data);
+                $data["refund_payment_proof"] = $file_name["file_path"];
+            }
+        }
+
+
         $this->db->select('active');
 
         $this->db->where('userid', $data['userid']);
@@ -2357,13 +2384,7 @@ class Clients_model extends App_Model
 
         $this->db->where('userid', $data['userid']);
 
-        $this->db->update(db_prefix() . 'clients', [
-
-            'active' => $data['status'],
-
-        ]);
-
-
+        $this->db->update(db_prefix() . 'clients', $data);
 
         $_log_message = '';
 
@@ -2381,17 +2402,26 @@ class Clients_model extends App_Model
         if ($affectedRows > 0) {
 
             if ($_log_message == '') {
-
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => "Applicant status updated successfully."
+                ]);
                 return true;
             }
 
             $this->db->insert(db_prefix() . 'application_activity_log', array("description" => " {$current_status->name} Status Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
 
-
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => "Applicant status updated successfully."
+            ]);
             return true;
         }
 
-
+        echo json_encode([
+            'resp_code' => 'ERR',
+            'resp_desc' => "Applicant status failed."
+        ]);
 
         return false;
     }

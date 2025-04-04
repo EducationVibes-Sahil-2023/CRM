@@ -65,7 +65,7 @@
         // Wait for media files to be processed before proceeding
         await get_media_docs("basic-information-form .media-files", formData);
 
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
 
         $.ajax({
@@ -121,7 +121,7 @@
         // Wait for media files to be processed before proceeding
         await get_media_docs("passport-form .media-files", formData);
 
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
 
         $.ajax({
@@ -419,7 +419,7 @@
         });
 
         // Get CSRF token and client ID
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
 
         // Handle media files
@@ -593,7 +593,7 @@
         //     });
 
         // Append CSRF token and client ID
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
 
         if (!file_upload_status) {
@@ -653,7 +653,7 @@
         let formData = new FormData(document.getElementById('fees-details-form')); // Correct way to initialize FormData
 
         // Append CSRF token and client ID
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
 
 
@@ -715,7 +715,7 @@
         let formData = new FormData(document.getElementById('welcome-information-form')); // Correct way to initialize FormData
 
         // Append CSRF token and client ID
-        formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+        formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
 
 
@@ -828,7 +828,7 @@
             let formData = new FormData(); // Correct way to initialize FormData
 
             // Append CSRF token and client ID
-            formData.append("csrf_token_name", $('input[name="csrf_token_name"]').val());
+            formData.append("csrf_token_name", csrfData.hash);
             formData.append("clientid", $('input[name="clientid"]').val());
             formData.append("submition_status", 1);
 

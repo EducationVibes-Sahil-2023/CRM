@@ -603,6 +603,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  )
                               );
 
+                              /// change follow date
 
 
                               // Common columns for both roles
@@ -619,10 +620,10 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     'name' => _l('Connected'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                                  ),
-                                 // array(
-                                 //    'name' => _l('leads_dt_datecreated'),
-                                 //    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                                 // ),
+                                 array(
+                                    'name' => _l('leads_dt_datecreated'),
+                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                                 ),
                                  array(
                                     'name' => _l('Updated'),
                                     'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
@@ -711,16 +712,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
                               // );
 
-                              $_table_data[] =   array(
-                                 'name' => _l('leads_dt_datecreated'),
-                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                              );
                               if ($role != 1) {
                                  $_table_data[] = array(
                                     'name' => _l('Followup Date'),
                                     'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
                                  );
                               }
+
                               foreach ($_table_data as $_t) {
                                  array_push($table_data, $_t);
                               }

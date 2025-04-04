@@ -200,6 +200,19 @@ class App_mail_template
         $this->_attachments();
 
         if ($this->ci->email->send($this->skipQueue)) {
+
+            $this->ci->db->select('emailtemplateid')->where('name', $this->template->name);
+            $email_details = $this->ci->db->get("tblemailtemplates")->row();
+
+            $this->ci->db->select('userid')->where('email', $this->send_to);
+            $client_details = $this->ci->db->get(db_prefix() . "basic_details")->row();
+
+            $insert_data = [];
+            $insert_data["type"] = "email";
+            $insert_data["template_id"] = $email_details->emailtemplateid;
+            $insert_data["clientid"] = !empty($client_details->userid) ? $client_details->userid : '';
+            $insert_data["datetime"] = date("Y-m-d H:i:s");
+            $inserted =  $this->ci->db->insert(db_prefix() . 'whatsapp_email_logs', $insert_data);
             log_activity('Email Sent To [Email: ' . $this->send_to . ', Template: ' . $this->template->name . ']');
 
             hooks()->do_action('email_template_sent', [
