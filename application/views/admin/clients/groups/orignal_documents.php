@@ -21,7 +21,7 @@ if (!is_postSale() && !is_admin()) {
 ?>
     <h2 class="text-center">Orignal Document - Accessible Only for Post-Sale & Admin</h2>
 <?php
-die;
+    die;
 }
 ?>
 <div class="row">
@@ -30,7 +30,7 @@ die;
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
-                    <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
+                    <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
                 <?php } ?>
             </div>
             <hr>
