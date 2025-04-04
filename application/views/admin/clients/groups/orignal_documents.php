@@ -30,7 +30,7 @@ die;
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
-                    <button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
+                    <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
                 <?php } ?>
             </div>
             <hr>
