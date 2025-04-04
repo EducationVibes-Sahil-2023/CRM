@@ -62,10 +62,10 @@ if (!is_postSale() && !is_admin()) {
                                         <td>
                                             <div class="checkbox">
                                                 <input type="hidden" name="received_id" value="<?= !empty($doc['received_id']) ? $doc['received_id'] : '' ?>">
-                                                <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label></label>
+                                                <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
                                             </div>
                                         </td>
-                                        <td><?= $doc["name"] ?></td>
+                                        <td><?= $doc["name"] ?> <?= !empty($doc["name"]) ? '<i class="fa fa-info-circle" title="' . $doc["name"] . '"></i>' : '' ?></td>
                                         <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
                                         <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>
