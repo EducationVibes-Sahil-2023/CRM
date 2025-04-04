@@ -149,9 +149,20 @@ if (!empty($this->ci->input->post('to_date'))) {
 if ($this->ci->input->post('category') != "") {
     $category = (int) $this->ci->input->post('category');
     $currentDate = date('Y-m-d');
-    $operator = $category < 0 ? '<' : ($category > 0 ? '>=' : '=');
-    $where[] = "AND DATE($sTable.date_of_visit) $operator '$currentDate'";
+    $currentDateTime = date('Y-m-d H:i:s');
+
+    if ($category < 0) {
+        // Past records only (before today)
+        $where[] = "AND $sTable.date_of_visit < '$currentDate 00:00:00'";
+    } elseif ($category > 0) {
+        // Future records including today (considering current date and time)
+        $where[] = "AND $sTable.date_of_visit >= '$currentDateTime'";
+    } else {
+        // Only today's records (date match, ignore time)
+        $where[] = "AND DATE($sTable.date_of_visit) = '$currentDate'";
+    }
 }
+
 
 
 $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, []);
