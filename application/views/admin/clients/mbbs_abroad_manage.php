@@ -759,7 +759,7 @@ init_tail(); ?>
 
 
 
-      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, []);
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
 
       disabled_column();
 
@@ -951,7 +951,7 @@ init_tail(); ?>
          }
       }
       show_loader("apply_filter");
-      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
       disabled_column();
 
       hide_loader("apply_filter");
