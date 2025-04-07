@@ -151,10 +151,10 @@ if ($this->ci->input->post('category') != "") {
     $currentDate = date('Y-m-d');
     $currentDateTime = date('Y-m-d H:i:s');
 
-    if ($category < 0) {
+    if ($category < 1) {
         // Past records only (before today)
         $where[] = "AND $sTable.date_of_visit < '$currentDate 00:00:00'";
-    } elseif ($category > 0) {
+    } elseif ($category > 1) {
         // Future records including today (considering current date and time)
         $where[] = "AND $sTable.date_of_visit >= '$currentDateTime'";
     } else {

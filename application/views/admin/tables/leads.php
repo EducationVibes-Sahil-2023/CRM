@@ -176,39 +176,71 @@ if (!has_permission('leads', '', 'view')) {
 }
 
 // Define columns to be selected
-$aColumns = [
+$aColumns = [$sTable . '.id as id', '(
+    CASE
+        WHEN (
+            GREATEST(
+                IFNULL(' . $sTable . '.lastupdate_date, "0000-00-00"),
+                IFNULL((
+                    SELECT MAX(dateadded)
+                    FROM ' . db_prefix() . 'notes
+                    WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
+                ), "0000-00-00")
+            ) >= IFNULL((
+                SELECT MAX(date)
+                FROM ' . db_prefix() . 'reminders
+                WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
+            ), "0000-00-00")
+        ) THEN 3
+        WHEN (
+            CURDATE() <= IFNULL((
+                SELECT MAX(date)
+                FROM ' . db_prefix() . 'reminders
+                WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
+            ), "0000-00-00")
+        ) THEN 2
+        ELSE 1
+    END
+) as followup_status'];
 
-    $sTable . '.id as id',
-    $sTable . '.id as leadsid',
-];
+
 
 if (is_gdpr() && $consentLeads == '1') {
     $aColumns[] = '1';
 }
 if ($is_admin) {
-    $aColumns = array_merge($aColumns, [
+    $aColumnsExtra = [
         "IFNULL({$sTable}.update_count,0) as update_count",
         "IFNULL({$sTable}.call_duration,0) as call_duration",
-        $sTable . '.lastconnect_date as lastcontact_date',
-        $sTable . '.dateadded as dateadded',
-        $sTable . '.lastupdate_date as lastupdate_date',
-        $sTable . '.name as name',
-        $sTable . '.phonenumber as phonenumber',
-        $sTable . '.status as status',
-
-    ]);
+        "{$sTable}.lastconnect_date as lastcontact_date",
+        "{$sTable}.dateadded as dateadded",
+        "{$sTable}.lastupdate_date as lastupdate_date",
+    ];
 } else {
-    $aColumns = array_merge($aColumns, [
+    $aColumnsExtra = [
         "IFNULL({$sTable}.update_count,0) as update_count",
         "IFNULL({$sTable}.call_duration,0) as call_duration",
-        $sTable . '.lastconnect_date as lastcontact_date',
-        $sTable . '.dateadded as dateadded',
-        $sTable . '.name as name',
-        $sTable . '.phonenumber as phonenumber',
-        $sTable . '.status as status',
-
-    ]);
+        "{$sTable}.lastconnect_date as lastcontact_date",
+        "{$sTable}.dateadded as dateadded",
+    ];
 }
+
+// Add conditional tags column based on search
+if (!empty($_POST["search"]["value"])) {
+    $aColumnsExtra[] = db_prefix() . 'tags.name as tags';
+} else {
+    $aColumnsExtra[] = '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables 
+        JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id 
+        WHERE rel_id = ' . $sTable . '.id AND rel_type="lead" ORDER BY tag_order ASC LIMIT 1) as tags';
+}
+
+// Common fields for both admin and non-admin
+$aColumnsExtra[] = "{$sTable}.name as name";
+$aColumnsExtra[] = "{$sTable}.phonenumber as phonenumber";
+$aColumnsExtra[] = "{$sTable}.status as status";
+
+// Merge with existing columns
+$aColumns = array_merge($aColumns, $aColumnsExtra);
 
 if ($is_admin) {
     foreach ($custom_fields as $field) {
@@ -228,11 +260,7 @@ $aColumns = array_merge($aColumns, [
 
 ]);
 
-if (!empty($_POST["search"]["value"])) {
-    $aColumns[] =  db_prefix() . 'tags.name as tags';
-} else {
-    $aColumns[] = '(SELECT GROUP_CONCAT(name SEPARATOR ",") FROM ' . db_prefix() . 'taggables JOIN ' . db_prefix() . 'tags ON ' . db_prefix() . 'taggables.tag_id = ' . db_prefix() . 'tags.id WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by tag_order ASC LIMIT 1) as tags';
-}
+
 
 if ($this->ci->input->post('followup_to_date')) {
     $aColumns[] = db_prefix() . "reminders.date as followup";
@@ -253,7 +281,8 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     '(SELECT count(leadid) FROM ' . db_prefix() . 'clients WHERE ' . db_prefix() . 'clients.leadid=' . $sTable . '.id) as is_converted',
     'alternative_phonenumber',
     'zip',
-    '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate'
+    '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
+    "{$sTable}.lastupdate_date as lastupdate_date",
 
 ]);
 
@@ -290,6 +319,8 @@ if (!empty($this->ci->input->post('up_to_date'))) {
 }
 
 $result = data_tables_init_($aColumns, $sIndexColumn, $sTable, $join, $where, $additionalColumns, $group_by, '', '', $search_column);
+
+
 
 $output  = $result['output'];
 $rResult = $result['rResult'];

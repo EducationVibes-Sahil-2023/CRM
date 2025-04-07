@@ -336,14 +336,7 @@ if ($lead_type_status == 2) {
                                                 <input class="form-control " <?= $read_only ?> type="tel" class="form-group" required-check required placeholder="Mobile Number" name="mobile" pattern="[0-9]{10}" maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
                                             </div>
                                         </div>
-                                        <?php if ($lead_data->source == REFERENCE_ID) { ?>
-                                            <div class="col-lg-3 hide">
-                                                <div class="form-group">
-                                                    <label for="exampleInputDateOfBirth">Refrence Name <small class="text-danger">*</small></label>
-                                                    <input type="text" <?= $read_only ?> class="form-control" name="reference_name" id="reference_name" required value='<?php echo ($client->reference_name != '') ? $client->reference_name : ''; ?>' required required-check>
-                                                </div>
-                                            </div>
-                                        <?php } ?>
+
                                     </div>
                                     <div class="row">
 
@@ -399,6 +392,19 @@ if ($lead_type_status == 2) {
                                                 <input class="form-control" type="text" class="form-group" placeholder="Parents Email" name="fathers_email" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_email : ''; ?>'>
                                             </div>
                                         </div>
+
+                                        <?php if ($lead_data->source == REFERENCE_ID) { ?>
+                                            <div class="col-lg-3">
+                                                <div class="form-group">
+                                                    <label for="exampleInputDateOfBirth">Refrence Name <small class="text-danger">*</small></label>
+                                                    <input type="text" <?= $read_only ?> class="form-control" name="reference_name" id="reference_name" required value='<?php echo ($client->reference_name != '') ? $client->reference_name : ''; ?>' required required-check>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
+
+
+                                    </div>
+                                    <div class="row">
                                         <?php
                                         foreach ($profile_section["student_details"] as $s_stage) {
                                             $doc_type = $s_stage["name"] ?? '';
@@ -437,7 +443,6 @@ if ($lead_type_status == 2) {
                                         <?php
                                         }
                                         ?>
-
                                     </div>
                                     <div class="btn-save-fun">
                                         <div class="col-md-12">
