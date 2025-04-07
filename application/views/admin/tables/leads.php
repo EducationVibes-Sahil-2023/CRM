@@ -175,33 +175,36 @@ if (!has_permission('leads', '', 'view')) {
     $where[] = "AND (" . $sTable . ".assigned = {$get_staff_user_id} OR " . $sTable . ".is_public = 1)";
 }
 
-// Define columns to be selected
-$aColumns = [$sTable . '.id as id', '(
-    CASE
-        WHEN (
-            GREATEST(
-                IFNULL(' . $sTable . '.lastupdate_date, "0000-00-00"),
-                IFNULL((
-                    SELECT MAX(dateadded)
-                    FROM ' . db_prefix() . 'notes
+$aColumns = [
+    $sTable . '.id as id',
+    '(
+        CASE
+            WHEN (
+                GREATEST(
+                    IFNULL(DATE(' . $sTable . '.lastupdate_date), "0000-00-00"),
+                    IFNULL((
+                        SELECT MAX(DATE(dateadded))
+                        FROM ' . db_prefix() . 'notes
+                        WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
+                    ), "0000-00-00")
+                ) >= IFNULL((
+                    SELECT MAX(DATE(date))
+                    FROM ' . db_prefix() . 'reminders
                     WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
                 ), "0000-00-00")
-            ) >= IFNULL((
-                SELECT MAX(date)
-                FROM ' . db_prefix() . 'reminders
-                WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
-            ), "0000-00-00")
-        ) THEN 3
-        WHEN (
-            CURDATE() <= IFNULL((
-                SELECT MAX(date)
-                FROM ' . db_prefix() . 'reminders
-                WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
-            ), "0000-00-00")
-        ) THEN 2
-        ELSE 1
-    END
-) as followup_status'];
+            ) THEN 3
+            WHEN (
+                CURDATE() <= IFNULL((
+                    SELECT MAX(DATE(date))
+                    FROM ' . db_prefix() . 'reminders
+                    WHERE rel_id = ' . $sTable . '.id AND rel_type = "lead"
+                ), "0000-00-00")
+            ) THEN 2
+            ELSE 1
+        END
+    ) as followup_status'
+];
+
 
 
 
