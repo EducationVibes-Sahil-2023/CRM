@@ -82,10 +82,8 @@ if (!empty($tblma_applicant_tracker)) {
 }
 
 if (is_admin() || is_postSale()) {
-}
-else{
+} else {
     $aColumns[] = $sTable . ".userid as fid";
-
 }
 
 
@@ -240,7 +238,9 @@ $additional_array = [
 
 if (is_admin() || is_postSale()) {
 } else {
-    $_POST["order"][0]["column"] = count($aColumns);
+    if ($_POST["order"][0]["column"] == 0) {
+        $_POST["order"][0]["column"] = count($aColumns);
+    }
 }
 
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid');
