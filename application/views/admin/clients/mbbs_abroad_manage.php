@@ -341,7 +341,7 @@ array_unshift($office_location, array());
                               <div class="col-md-2 margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
+                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', array(1), array('data-width' => '100%', 'data-none-selected-text' => "Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
                                  echo '</div>';
                                  ?>
                               </div>

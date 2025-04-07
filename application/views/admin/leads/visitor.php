@@ -4,9 +4,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 array_unshift($location, array());
 $category = [];
 $category[] = array("id" => "", "name" => "");
-$category[] = array("id" => -1, "name" => "Previous");
-$category[] = array("id" => 0, "name" => "Today");
-$category[] = array("id" => 1, "name" => "Upcomming");
+$category[] = array("id" => "-1", "name" => "Previous");
+$category[] = array("id" => "1", "name" => "Today");
+$category[] = array("id" => "2", "name" => "Upcomming");
 ?>
 <style>
     a {

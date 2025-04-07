@@ -2790,16 +2790,19 @@ class Clients extends AdminController
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
+
                 $client_id = $this->input->post("clientid");
                 $media_upload_data = $_POST;
                 $update_student_data = [];
                 $update_applicant_custom_data["customers"] = [];
+                $reference_name = $_POST["reference_name"];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
                 unset($_POST["doc_type_name"]);
                 unset($_POST["doc_type"]);
                 unset($_POST["doc_name"]);
                 unset($_POST["doc_url"]);
+                unset($_POST["reference_name"]);
 
                 foreach ($_POST as $key => $value) {
                     if (!empty($value) && strpos($key, 'custom_fields') !== false) {
@@ -2830,6 +2833,11 @@ class Clients extends AdminController
                     $update_student_data["userid"] = $client_id;
                     $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
+
+                if (!empty($reference_name)) {
+                    $rows_affected = $this->db->update(db_prefix() . 'clients', array("reference_name" => $reference_name));
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
 
 

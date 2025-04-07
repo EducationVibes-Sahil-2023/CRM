@@ -172,7 +172,6 @@
             $get_currencies = get_currencies();
             $get_currencies = array_column($get_currencies, null, 'id');
 
-
             if (!empty($get_clients_fees) && !empty($get_currencies)) {
             ?>
                <div id="applicant_fees">
@@ -202,6 +201,7 @@
 
                                  <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
                                     <?php foreach ($get_currencies as $c) {
+
                                     ?>
                                        <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($fees["default_currency"]) && $fees["default_currency"] == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
                                     <?php
@@ -289,7 +289,6 @@
 
       <?php
       } ?>
-      console.log(feesMandatory_single);
       if (feesMandatory_single != "") {
          let mandatoryArray = feesMandatory_single.split(',').map(item => item.trim()); // Split and trim values
 
