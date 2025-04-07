@@ -1019,10 +1019,8 @@ init_tail(); ?>
       let formData = new FormData(document.getElementById("applicant_status_change_form"));
 
       // Append CSRF token if it exists
-      let csrfToken = $('input[name="csrf_token_name"]').val();
-      if (csrfToken) {
-         formData.append("csrf_token_name", csrfToken);
-      }
+      formData.append(csrfData.token_name, csrfData.hash);
+
       // AJAX request to update client status
       $.ajax({
          url: "<?php echo base_url('admin/clients/update_client_status'); ?>",
