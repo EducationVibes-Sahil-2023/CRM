@@ -40,6 +40,9 @@ $filter = [];
 
 
 $aColumns = [];
+if (is_admin() || is_postSale()) {
+    $aColumns[] = $sTable . ".userid as fid";
+}
 $aColumns_count = 0;
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
@@ -227,6 +230,13 @@ $additional_array = [
     db_prefix() . 'clients.active as status_id',
     db_prefix() . 'applicant_status.color as color',
 ];
+
+
+if (is_admin() || is_postSale()) {
+} else {
+    $_POST["order"][0]["column"] = count($aColumns);
+}
+
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid');
 
 $output  = $result['output'];
@@ -266,7 +276,7 @@ foreach ($rResult as $aRow) {
     $selection = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
 
     if (is_admin() || is_postSale()) {
-        array_unshift($aRow, $selection);
+        $aRow["fid"] = $selection;
     }
 
     if (!empty($aRow["status"])) {

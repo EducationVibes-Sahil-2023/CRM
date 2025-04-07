@@ -2836,6 +2836,7 @@ class Clients extends AdminController
                 }
 
                 if (!empty($reference_name)) {
+                    $this->db->where('userid', $client_id);
                     $rows_affected = $this->db->update(db_prefix() . 'clients', array("reference_name" => $reference_name));
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
