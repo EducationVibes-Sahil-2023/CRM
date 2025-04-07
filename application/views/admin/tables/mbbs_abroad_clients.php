@@ -81,6 +81,12 @@ if (!empty($tblma_applicant_tracker)) {
     }
 }
 
+if (is_admin() || is_postSale()) {
+}
+else{
+    $aColumns[] = $sTable . ".userid as fid";
+
+}
 
 
 
