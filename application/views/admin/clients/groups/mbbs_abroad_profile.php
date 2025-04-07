@@ -1324,7 +1324,7 @@ if ($lead_type_status == 2) {
                                         <div class="row">
                                             <?php
                                             foreach ($get_clients_fees as $fees) {
-
+                                
                                                 $id = $fees["id"];
                                                 $amount = $fees["amount"];
                                                 // Prepare the field name by replacing spaces with underscores and converting to lowercase
@@ -1342,7 +1342,21 @@ if ($lead_type_status == 2) {
                                                         <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
                                                         <input type="hidden" value="<?= $fees['detail_id'] ?>" name="<?= $field_name ?>_detail_id_<?= $fees['id'] ?>">
 
-                                                        <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["currency_id"]]["symbol"]) ? $get_currencies[$fees["currency_id"]]["symbol"] : '$' ?></div>
+                                                        <div class="input-group-addon currency-symbol-<?= $id ?>">
+                    <?php
+                    $symbol = '$'; // default
+                    
+                    if (!empty($fees["currency_id"]) && !empty($get_currencies[$fees["currency_id"]]["symbol"])) {
+                    $symbol = $get_currencies[$fees["currency_id"]]["symbol"];
+                    } elseif (empty($fees["currency_id"])) {
+                    $symbol = $get_currencies[$fees["default_currency"]]["symbol"];
+                    }
+                    ?>
+                    
+                    <?= $symbol ?>
+
+
+                                                        </div>
                                                         <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
                                                         <div class="input-group-addon currency-addon">
 
@@ -1350,17 +1364,20 @@ if ($lead_type_status == 2) {
                                                                 <?php foreach ($get_currencies as $c) {
                                                                 ?>
                                                                     <option
-                                                                        data-symbol="<?= $c['symbol'] ?>"
-                                                                        value="<?= $c['id'] ?>"
-                                                                        data-placeholder="0.00"
-                                                                        <?=
-                                                                        (!empty($fees['currency_id']) && $fees['currency_id'] == $c['id']) ||
-                                                                            (empty($fees['currency_id']) && !empty($fees['default_currency']) && $fees['default_currency'])
-                                                                            ? 'selected'
-                                                                            : ''
-                                                                        ?>>
-                                                                        <?= $c['name'] ?>
-                                                                    </option>
+                                                                   <option 
+    data-symbol="<?= $c['symbol'] ?>" 
+    value="<?= $c['id'] ?>" 
+    data-placeholder="0.00"
+    <?= 
+        (!empty($fees['currency_id']) && $fees['currency_id'] == $c['id']) ||
+        (empty($fees['currency_id']) && !empty($fees['default_currency']) && $fees['default_currency'] == $c['id']) 
+            ? 'selected' 
+            : '' 
+    ?>
+>
+    <?= $c['name'] ?>
+</option>
+
 
                                                                 <?php
                                                                 }
