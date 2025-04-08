@@ -1074,13 +1074,47 @@ class Clients extends AdminController
 
             // Handle Apostile
             if ($this->input->post('apostile_status') == true) {
-                echo "okk";
-                $get_data_from_document = get_orignal_document_data_list_apostile($ids);
-                print_r($get_data_from_document);
+                $documents_id = !empty($_POST["apostile_document"]) ? $_POST["apostile_document"] : [];
+                if (!empty($documents_id)) {
+                    $get_data_from_document = get_orignal_document_data_list_apostile($ids, $documents_id);
+                    if (isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) {
+
+                        $data = [
+                            'resp_code' => 'ERR',
+                            'resp_desc' => $get_data_from_document["message"],
+                        ];
+                        echo json_encode($data);
+                        die;
+                    }
+
+                    $insert_apostile_data = [];
+                    foreach ($get_data_from_document as $document) {
+
+                        $count = count(explode(",", $document["document_ids"]));
+
+                        $insert_apostile_data["userid"] = $document["userid"];
+                        $insert_apostile_data["document_ids"] = explode(",", $document["document_ids"]);
+                        $insert_apostile_data["document_name"] = explode(",", $document["document_names"]);
+                        $insert_apostile_data["received_id"] = explode(",", $document["received_id"]);
+                        $insert_apostile_data["status_text"] = $this->input->post('status_text');
+                        $insert_apostile_data["in_transit"] = $this->input->post('in_transit');
+                        $insert_apostile_data["transit_location"] = $this->input->post('from_location') . " - " . $this->input->post('to_location');
+
+
+
+
+                        // $response =  $this->clients_model->update_documents($update_data, $document["userid"]);
+                    }
+
+                    die;
+
+                    // $data = [
+                    //     'resp_code' => 'RCS',
+                    //     'resp_desc' => 'Original document bulk update successfully',
+                    // ];
+                    // set_alert('success', "Original document bulk update successfully");
+                }
             }
-            echo "<pre>";
-            print_r($_REQUEST);
-            die;
 
 
             // Handle In-Transit
@@ -2801,16 +2835,19 @@ class Clients extends AdminController
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
+
                 $client_id = $this->input->post("clientid");
                 $media_upload_data = $_POST;
                 $update_student_data = [];
                 $update_applicant_custom_data["customers"] = [];
+                $reference_name = $_POST["reference_name"];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
                 unset($_POST["doc_type_name"]);
                 unset($_POST["doc_type"]);
                 unset($_POST["doc_name"]);
                 unset($_POST["doc_url"]);
+                unset($_POST["reference_name"]);
 
                 foreach ($_POST as $key => $value) {
                     if (!empty($value) && strpos($key, 'custom_fields') !== false) {
@@ -2841,6 +2878,12 @@ class Clients extends AdminController
                     $update_student_data["userid"] = $client_id;
                     $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
+
+                if (!empty($reference_name)) {
+                    $this->db->where('userid', $client_id);
+                    $rows_affected = $this->db->update(db_prefix() . 'clients', array("reference_name" => $reference_name));
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
 
 
@@ -4691,8 +4734,7 @@ class Clients extends AdminController
     public function update_client_status()
     {
         if ($this->input->post() && $this->input->is_ajax_request()) {
-
-            $this->clients_model->update_client_status($this->input->post());
+            return $this->clients_model->update_client_status($this->input->post());
         }
     }
 

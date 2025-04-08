@@ -6,3 +6,5 @@
 /application/sql_cache/*
 /uploads/knowlege_base/*
 /media/*
+/uploads/*
+/uploads/staff_profile_images/*

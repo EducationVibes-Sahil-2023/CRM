@@ -1320,7 +1320,6 @@ class Leads extends AdminController
                 foreach ($fees_array as &$item) {
                     $item["client_id"] = $id;
                 }
-
                 if (!empty($fees_array)) {
                     // Check existing client IDs
                     $this->db->where('client_id', $id);
@@ -2848,6 +2847,7 @@ class Leads extends AdminController
 
             access_denied('Leads Import');
         }
+
 
 
 

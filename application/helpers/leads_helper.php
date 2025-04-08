@@ -8421,6 +8421,13 @@ function whatsapp_message_send($client_id, $whatsapp_template_id, $document_data
         return json_encode(["error" => "WhatsApp API error", "details" => $responseArray]);
     }
 
+    $insert_data = [];
+    $insert_data["type"] = "whatsapp";
+    $insert_data["template_id"] = $whatsapp_template_id;
+    $insert_data["clientid"] = $client_id;
+    $insert_data["datetime"] = date("Y-m-d H:i:s");
+    $inserted = $CI->db->insert(db_prefix() . 'whatsapp_email_logs', $insert_data);
+
     return json_encode(["success" => "Message sent successfully.", "response" => $responseArray]);
 }
 

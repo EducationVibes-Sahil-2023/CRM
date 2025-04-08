@@ -32,6 +32,8 @@ $fees_data = get_clients_fees(2);
 
 
 $statuses = get_applicant_statuses();
+$statuses = array_column($statuses, null, 'id');
+
 $this->ci->db->query("SET sql_mode = ''");
 $sIndexColumn = 'userid';
 $sTable       = db_prefix() . 'clients';
@@ -42,6 +44,9 @@ $filter = [];
 
 
 $aColumns = [];
+if (is_admin() || is_postSale()) {
+    $aColumns[] = $sTable . ".userid as fid";
+}
 $aColumns_count = 0;
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
@@ -97,6 +102,10 @@ if (!empty($tblma_applicant_tracker)) {
     }
 }
 
+if (is_admin() || is_postSale()) {
+} else {
+    $aColumns[] = $sTable . ".userid as fid";
+}
 
 
 
@@ -247,6 +256,15 @@ $additional_array = [
     db_prefix() . 'clients.active as status_id',
     db_prefix() . 'applicant_status.color as color',
 ];
+
+
+if (is_admin() || is_postSale()) {
+} else {
+    if ($_POST["order"][0]["column"] == 0) {
+        $_POST["order"][0]["column"] = count($aColumns);
+    }
+}
+
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid');
 
 $output  = $result['output'];
@@ -286,33 +304,47 @@ foreach ($rResult as $aRow) {
     $selection = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
 
     if (is_admin() || is_postSale()) {
-        array_unshift($aRow, $selection);
+        $aRow["fid"] = $selection;
     }
 
     if (!empty($aRow["status"])) {
-        $outputStatus = '<span class="inline-block text-' . $aRow['color'] . ' lead-status-' . $aRow['status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['status'];
+        $color = !empty($aRow['color']) ? $aRow['color'] : 'default';
+
+        $outputStatus = '<span class="inline-block text-' . $color . ' lead-status-' . $aRow['status'] . ' label label-' . $color . '" style="color:' . $color . '; border:1px solid ' . $color . ';">' . $aRow['status'];
+
         if (!$locked) {
             $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
-            $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+            $outputStatus .= '<a href="#" style="font-size:14px; vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
             $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
             $outputStatus .= '</a>';
-            if (is_admin() || is_postSale()) {
+
+            if ((is_admin() || is_postSale()) && $statuses[$aRow["status_id"]]['refund'] != 1) {
                 $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['id'] . '">';
+
+                $canceled_status = !empty($statuses[$aRow["status_id"]]['canceled']);
+                $refunded_status = !empty($statuses[$aRow["status_id"]]['refund']);
 
                 foreach ($statuses as $leadChangeStatus) {
                     if ($aRow['status_id'] != $leadChangeStatus['id']) {
-                        $outputStatus .= '<li>
-              <a href="#" onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . '); return false;">
-                 ' . $leadChangeStatus['name'] . '
-              </a>
-          </li>';
+                        $is_refunded = !empty($leadChangeStatus["refund"]);
+
+                        // If the current status is canceled, allow only refund transitions.
+                        if ($canceled_status && $is_refunded) {
+                            $outputStatus .= '<li><a href="#" onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                        }
+                        // If the current status is refunded, do nothing.
+                        else if (!$refunded_status && !$is_refunded && !$canceled_status) {
+                            $outputStatus .= '<li><a href="#" onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                        }
                     }
                 }
+
                 $outputStatus .= '</ul>';
             }
 
             $outputStatus .= '</div>';
         }
+
         $outputStatus .= '</span>';
         $aRow["status"] = $outputStatus;
     }

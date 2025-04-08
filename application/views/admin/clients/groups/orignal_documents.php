@@ -21,7 +21,7 @@ if (!is_postSale() && !is_admin()) {
 ?>
     <h2 class="text-center">Orignal Document - Accessible Only for Post-Sale & Admin</h2>
 <?php
-die;
+    die;
 }
 ?>
 <div class="row">
@@ -30,7 +30,7 @@ die;
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
-                    <button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
+                    <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp"></i> </button>
                 <?php } ?>
             </div>
             <hr>
@@ -62,10 +62,10 @@ die;
                                         <td>
                                             <div class="checkbox">
                                                 <input type="hidden" name="received_id" value="<?= !empty($doc['received_id']) ? $doc['received_id'] : '' ?>">
-                                                <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label></label>
+                                                <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
                                             </div>
                                         </td>
-                                        <td><?= $doc["name"] ?></td>
+                                        <td><?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
                                         <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
                                         <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>

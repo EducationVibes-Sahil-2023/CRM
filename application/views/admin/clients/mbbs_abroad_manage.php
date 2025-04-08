@@ -12,6 +12,7 @@ $fees_data = get_clients_fees(2);
 $orignal_document_list = get_orignal_document_list();
 $orignal_document_list_rest = get_orignal_document_list(1);
 $orignal_document_list_georgia = get_orignal_document_list(0, 1);
+$apostille_documents = get_orignal_document_list(0, 0, 1);
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
 $university_list = get_university_list("mbbs abroad");
@@ -20,8 +21,7 @@ $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
 $table_view = array_column(get_view_columns(), null, "id");
 
-$apostile_vendors = get_vendor_list(1);
-$apostile_documents = get_orignal_document_list(0, 0, 1);
+$apostille_vendors = get_vendor_list(1);
 
 
 
@@ -33,6 +33,8 @@ $yes_no_status = [
 ];
 
 array_unshift($office_location, array());
+array_unshift($apostille_vendors, array());
+
 ?>
 <div id="wrapper">
    <style>
@@ -354,7 +356,7 @@ array_unshift($office_location, array());
                               <div class="col-md-2 margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
+                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', array(1), array('data-width' => '100%', 'data-none-selected-text' => "Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -468,91 +470,167 @@ array_unshift($office_location, array());
    <div class="modal-dialog" role="document">
       <div class="modal-content">
          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+            </button>
             <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
          </div>
-         <div class="modal-body">
-            <?php if (has_permission('customers', '', 'delete')) { ?>
-               <!-- <div class="checkbox checkbox-danger">
-                  <input type="checkbox" name="mass_delete" id="mass_delete">
-                  <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
-               </div> -->
-               <hr class="mass_delete_separator" />
-            <?php }
+         <div class="modal-body h-auto">
 
-            array_unshift($orignal_document_status, array()); ?>
-            <div class="apostile_update">
+            <?php array_unshift($orignal_document_status, array()); ?>
+
+            <!-- Apostille Section -->
+            <div class="apostille_update">
                <div class="checkbox checkbox-danger">
-                  <input type="checkbox" name="apostile_status" id="apostile_status" onchange="Update_apostile(this)">
-                  <label for="apostile">Apostile</label>
+                  <input type="checkbox" name="apostille_status" id="apostille_status" onchange="Update_apostille(this)">
+                  <label for="apostille_status">Apostille</label>
                </div>
-               <div class="apostile_status_update">
-                  <div class="col-md-4">
-                     <label>Apostile Vendor</label>
-                     <?php echo render_select('apostile_vendor', $apostile_vendors, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Vendor', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'apostile_vendor'); ?>
-                  </div>
-                  <div class="col-md-4">
-                     <label>Apostile Documents</label>
-                     <?php echo render_select('apostile_document[]', $apostile_documents, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Documents', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'apostile_document'); ?>
-                  </div>
-                  <div class="col-md-4">
-                     <label>Courier Date</label>
-                     <?php echo render_input('apostile_date', '', '', 'date'); ?>
-                  </div>
 
-                  <div class="col-md-4">
-                     <label>Apostile Received</label>
-                     <?php echo render_input('apostile_receiving_date', '', '', 'date'); ?>
-                  </div>
-                  <div class="col-md-4">
-                     <label>Apostile Cost</label>
-                     <?php echo render_input('apostile_cost', '', '', 'number'); ?>
-                  </div>
-                  <div class="col-md-4">
-                     <label>Payment Date</label>
-                     <?php echo render_input('apostile_payment_date', '', '', 'date'); ?>
+               <div class="apostille_status_update" style="display:none;">
+                  <div class="row">
+                     <div class="col-md-4">
+                        <label>Apostille Vendor</label>
+                        <?php echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Vendor',
+                           'data-actions-box' => true
+                        ], [], 'no-mbot', '', false, 'apostille_vendor'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Apostille Documents</label>
+                        <?php echo render_select('apostille_document[]', $apostille_documents, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Documents',
+                           'multiple' => true,
+                           'data-actions-box' => true
+                        ], [], 'no-mbot', '', false, 'apostille_document'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Courier Date</label>
+                        <?php echo render_input('apostille_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Apostille Received</label>
+                        <?php echo render_input('apostille_receiving_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Apostille Cost</label>
+                        <?php echo render_input('apostille_cost', '', '', 'number'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Payment Date</label>
+                        <?php echo render_input('apostille_payment_date', '', '', 'date'); ?>
+                     </div>
                   </div>
                </div>
             </div>
+
+            <!-- Document Status Section -->
             <div class="document_status_update">
                <div class="checkbox checkbox-danger">
                   <input type="checkbox" name="in_transit" id="in_transit" onchange="change_transit(this)">
                   <label for="in_transit">In-Transit</label>
                </div>
+
+               <!-- In Transit Locations -->
                <div class="is_transist_location row" style="display:none;">
                   <div class="col-md-4">
-                     <label>From Location <span class='text-danger'>*</span></label>
-                     <?php echo render_select('from_location', $office_location, array('name', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'From Location', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'from_location'); ?>
+                     <label>From Location <span class="text-danger">*</span></label>
+                     <?php echo render_select('from_location', $office_location, ['name', 'name'], '', [], [
+                        'data-width' => '100%',
+                        'data-none-selected-text' => 'From Location',
+                        'data-actions-box' => true
+                     ], [], 'no-mbot', '', false, 'from_location'); ?>
                   </div>
                   <div class="col-md-4">
-                     <label>To Location <span class='text-danger'>*</span></label>
-                     <?php echo render_select('to_location', $office_location, array('name', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'To Location', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'to_location'); ?>
+                     <label>To Location <span class="text-danger">*</span></label>
+                     <?php echo render_select('to_location', $office_location, ['name', 'name'], '', [], [
+                        'data-width' => '100%',
+                        'data-none-selected-text' => 'To Location',
+                        'data-actions-box' => true
+                     ], [], 'no-mbot', '', false, 'to_location'); ?>
                   </div>
                </div>
+
+               <!-- Default Location and Status -->
                <div class="no_is_transist_location row">
                   <div class="col-md-4">
-                     <label>Location <span class='text-danger'>*</span></label>
-                     <?php echo render_select('office_location', $office_location, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Location', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'office_location'); ?>
+                     <label>Location <span class="text-danger">*</span></label>
+                     <?php echo render_select('office_location', $office_location, ['id', 'name'], '', [], [
+                        'data-width' => '100%',
+                        'data-none-selected-text' => 'Location',
+                        'data-actions-box' => true
+                     ], [], 'no-mbot', '', false, 'office_location'); ?>
                   </div>
                   <div class="col-md-4">
-                     <label>Status <span class='text-danger'>*</span></label>
-                     <?php echo render_select('document_status', $orignal_document_status, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Status', 'data-actions-box' => true), array(), 'no-mbot', '', false, 'document_status'); ?>
+                     <label>Status <span class="text-danger">*</span></label>
+                     <?php echo render_select('document_status', $orignal_document_status, ['id', 'name'], '', [], [
+                        'data-width' => '100%',
+                        'data-none-selected-text' => 'Status',
+                        'data-actions-box' => true
+                     ], [], 'no-mbot', '', false, 'document_status'); ?>
                   </div>
                </div>
             </div>
-            <!-- <hr class="mass_delete_separator" /> -->
+
          </div>
          <div class="modal-footer">
             <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
             <a href="#" class="btn btn-info" onclick="customers_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
          </div>
       </div>
-      <!-- /.modal-content -->
    </div>
-   <!-- /.modal-dialog -->
 </div>
+
+
+<div class="modal fade applicant_status_change" id="applicant_status_change" tabindex="-1" role="dialog" aria-labelledby="applicantStatusModal">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title" id="applicantStatusModal">Applicant Status</h4>
+         </div>
+
+         <div class="modal-body">
+            <form id="applicant_status_change_form" onsubmit="return false;">
+               <input type="hidden" name="userid" value="">
+               <input type="hidden" name="status" value="">
+
+               <!-- Canceled Comment Section -->
+               <div class="canceled_div applicant_status_modal_div">
+                  <div class="form-group">
+                     <?= render_textarea('canceled_comment', 'Cancellation Comment', '', ["required-check" => "required-check", "placeholder" => "Enter comment"]) ?>
+                  </div>
+               </div>
+
+
+
+               <!-- Refund Section -->
+               <div class="refund_div applicant_status_modal_div">
+                  <div class="form-group">
+                     <?= render_input('refund_payment_proof', 'Payment Proof', '', 'file', ["required-check" => "required-check"]) ?>
+                  </div>
+                  <div class="form-group">
+                     <?= render_input('refund_payment_date', 'Payment Date', '', 'date', ["required-check" => "required-check"]) ?>
+                  </div>
+               </div>
+            </form>
+         </div>
+
+         <!-- Modal Footer -->
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
+            <button type="button" class="btn btn-info" onclick="applicant_status_change()"><?php echo _l('confirm'); ?></button>
+         </div>
+      </div>
+   </div>
+</div>
+
 <?php
-init_tail(); ?>
+init_tail();
+?>
 <script>
    var tAPI = "";
    var applicant_table = "";
@@ -563,6 +641,7 @@ init_tail(); ?>
    var orignal_document_list = <?= !empty($orignal_document_list) ? json_encode($orignal_document_list, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list_rest = <?= !empty($orignal_document_list_rest) ? json_encode($orignal_document_list_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var apostille_documents = <?= !empty($apostille_documents) ? json_encode(array_values($apostille_documents), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var tbllead_performance_column = [];
    var tbllead_performance_column_array = <?= !empty($table_view) ? json_encode($table_view, JSON_UNESCAPED_UNICODE) : '[]' ?>;
@@ -700,6 +779,13 @@ init_tail(); ?>
                   addedColumns.add(document.short_name);
                }
             });
+         } else if (selectedLabel.toLowerCase().includes("<?= APOSTILE_DOC ?>".toLowerCase())) {
+            apostille_documents.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
          } else {
             addColumn(value, selectedLabel);
          }
@@ -795,7 +881,12 @@ init_tail(); ?>
 
 
 
-      $('#view_application_stage').on('changed.bs.select', function() {
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
+
+      disabled_column();
+
+
+      $('#view_application_stage').on('changed.bs.select', function(event, clickedIndex, newValue, oldValue) {
          let selectedValue = $(this).val();
          populateChildDropdown(selectedValue);
       });
@@ -840,7 +931,7 @@ init_tail(); ?>
       documentStatusUpdate.toggle();
    });
 
-   function Update_apostile(obj) {
+   function Update_apostille(obj) {
       // Check if the checkbox is checked
       if ($(obj).prop('checked')) {
          // Hide elements related to document status update
@@ -851,6 +942,7 @@ init_tail(); ?>
          // Toggle visibility of transition location elements
          $(".is_transist_location").hide();
          $(".no_is_transist_location").show();
+         $(".apostille_status_update").show();
       } else {
          // Hide elements related to document status update
          $('.document_status_update').show();
@@ -859,6 +951,11 @@ init_tail(); ?>
          // Toggle visibility of transition location elements
          $(".is_transist_location").hide();
          $(".no_is_transist_location").show();
+         $(".apostille_status_update").hide();
+         $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+         $(".apostille_status_update").find("input").val("");
+         $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+
       }
    }
 
@@ -876,12 +973,20 @@ init_tail(); ?>
       var document_status = $('#document_status').val();
       var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
-      var apostile_status = $("#apostile_status").prop('checked');
+      var apostille_status = $("#apostille_status").prop('checked');
+
+      var apostille_data = {};
+      if (apostille_status === true) {
+         $('.apostille_status_update').find('input, select').each(function() {
+            var name = $(this).attr('name');
+            var value = $(this).val();
+            if (name) {
+               apostille_data[name] = value;
+            }
+         });
+      }
 
       var ids = [];
-      var data = {};
-
-      // Collect selected IDs from the table
       $('.table-clients tbody tr').each(function() {
          var checkbox = $(this).find('td').eq(0).find('input[type="checkbox"]');
          if (checkbox.prop('checked')) {
@@ -894,7 +999,7 @@ init_tail(); ?>
          return false;
       }
 
-      Object.assign(data, {
+      var data = {
          ids,
          mass_delete,
          in_transit: transit,
@@ -904,8 +1009,11 @@ init_tail(); ?>
          document_status,
          status_text,
          locations_name,
-         apostile_status
-      });
+         apostille_status
+      };
+
+      // Merge Apostille data
+      Object.assign(data, apostille_data);
 
       $(event.target).prop('disabled', true);
 
@@ -929,6 +1037,7 @@ init_tail(); ?>
             .always(() => $(event.target).prop('disabled', false));
       }, 50);
    }
+
 
    // Apply filter click event
    $('#apply_filter_').on('click', async function() {
@@ -975,13 +1084,9 @@ init_tail(); ?>
       }
 
       show_loader("apply_filter");
-      applicant_table = initDataTable(
-         '.table-clients',
-         admin_url + 'clients/table/2',
-         [0], [0],
-         CustomersServerParams,
-         <?php echo hooks()->apply_filters('customers_table_default_order', json_encode([2, 'asc'])); ?>
-      );
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
+      disabled_column();
+
       hide_loader("apply_filter");
       disabled_column();
    }
@@ -991,14 +1096,85 @@ init_tail(); ?>
    }
 
    $('#customers_bulk_action').on('show.bs.modal', function() {
-      $(".document_status_update").find("select").val("").selectpicker('refresh');
-      $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+      $("#customers_bulk_action").find("select").val("").selectpicker('refresh');
+      $("#customers_bulk_action").find("input[type=checkbox]").prop("checked", false);
+      $("#customers_bulk_action").find("input").val("");
       $(".is_transist_location").hide();
       $(".no_is_transist_location").show();
+      $(".apostille_status_update").hide();
+      $(".document_status_update").show();
    });
 
    function refreshApplicantTable() {
       applicant_table.ajax.reload(null, false);
+   }
+
+
+   function applicant_status_change(status = 0) {
+      let additional_fields = {};
+      let form_status = true;
+
+      show_loader();
+
+      $("#applicant_status_change_form input:visible, #applicant_status_change_form textarea:visible, #applicant_status_change_form select:visible, #applicant_status_change_form input[type='date']:visible").each(function() {
+         const value = $(this).val()?.trim(); // Get trimmed value
+         const isRequired = $(this).is("[required-check]"); // Check if 'required-check' exists
+         const name = $(this).attr("name"); // Get name attribute
+         let label = $(this).closest("div.form-group").find("label").text().trim().replace(/\*/g, ""); // Remove * from label
+
+         if (isRequired && name) {
+            additional_fields[name] = "required";
+            if (!value) {
+               if (form_status && status == 0) {
+                  alert_float("danger", `"${label}" is mandatory.`);
+                  $(this).focus();
+               }
+               form_status = false;
+            }
+         }
+      });
+
+      if (!form_status) {
+         appValidateForm($("#applicant_status_change_form"), additional_fields);
+         hide_loader();
+         return false;
+      }
+
+      if (status === 1) {
+         hide_loader();
+         return false;
+      }
+
+      let formData = new FormData(document.getElementById("applicant_status_change_form"));
+
+      // Append CSRF token if it exists
+      formData.append(csrfData.token_name, csrfData.hash);
+
+      // AJAX request to update client status
+      $.ajax({
+         url: "<?php echo base_url('admin/clients/update_client_status'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false, // Prevent jQuery from transforming FormData
+         contentType: false, // Ensure correct Content-Type is set for FormData
+         dataType: "JSON",
+         success: function(res) {
+            hide_loader();
+            if (res.resp_code === "RCS") {
+               $("#applicant_status_change").modal("hide");
+               applicant_reload();
+               alert_float("success", res.resp_desc);
+            } else {
+               alert_float("danger", res.resp_desc || "An unknown error occurred.");
+            }
+         },
+         error: function(xhr, status, error) {
+            hide_loader();
+            let errorMessage = xhr.responseText ? xhr.responseText : "An error occurred while processing the request.";
+            alert_float("danger", errorMessage);
+            console.error("Error:", error);
+         },
+      });
    }
 </script>
 </body>

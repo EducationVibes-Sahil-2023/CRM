@@ -1650,7 +1650,7 @@ function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0)
     if (!empty($georgia)) {
         $CI->db->where("georgia", 1);
     }
-    if (!empty($georgia)) {
+    if (!empty($apostile)) {
         $CI->db->where("apostile_status", 1);
     }
     return $CI->db->order_by("id", "asc")->get()->result_array();
@@ -1729,23 +1729,22 @@ function get_view_columns()
         ->result_array();
 }
 
-function get_orignal_document_data_list_apostile($client_ids_array = [])
+function get_orignal_document_data_list_apostile($client_ids_array = [], $document_ids = [])
 {
-    $client_ids = implode(",", $client_ids_array);  // Ensure $client_ids_array is an array of integers
 
-    $CI = &get_instance();
+    // $CI = &get_instance();
 
-    $mandatry_documents_apostile = $CI->db
-        ->select("name,")
-        ->from(db_prefix() . 'orignal_documents')
-        ->where(array("apostile_status" => 1, "status" => 1))
-        ->order_by("id", "asc")
-        ->get()
-        ->result_array();
+    // $mandatry_documents_apostile = $CI->db
+    //     ->select("name,")
+    //     ->from(db_prefix() . 'orignal_documents')
+    //     ->where(array("apostile_status" => 1, "status" => 1))
+    //     ->order_by("id", "asc")
+    //     ->get()
+    //     ->result_array();
 
-    // Output the result for debugging
-    print_r($mandatry_documents_apostile);
-    die;
+    // // Output the result for debugging
+    // print_r($mandatry_documents_apostile);
+    // die;
 
     // $CI->db->select("r.userid, 
     //                 group_concat(o.id) AS document_ids, 
@@ -1766,35 +1765,71 @@ function get_orignal_document_data_list_apostile($client_ids_array = [])
     // $result = $CI->db->get()->result_array();
 
     // Output the result for debugging
-    print_r($result);
-    die;
+    // print_r($result);
+    // die;
 
+    $client_ids = array_map('intval', $client_ids_array); // Safe integer casting
 
+    $CI = &get_instance();
 
-    // Find users without documents
-    $missing_users = [];
-    $client_id_array = explode(",", $client_ids); // Convert back to an array for checking
+    // Step 1: Get all valid documents with apostile_status = 1 and status = 1
+    $CI->db->select("o.id AS doc_id, o.name AS doc_name")
+        ->from(db_prefix() . 'orignal_documents o')
+        ->where(['o.status' => 1, 'o.apostile_status' => 1]);
 
-    if (!empty($result)) {
-        $found_users = array_column($result, "userid");
+    if (!empty($document_ids)) {
+        $CI->db->where_in('o.id', $document_ids);
+    }
+    $all_documents = $CI->db->get()->result_array();
 
-        foreach ($client_id_array as $client_id) {
-            if (!in_array($client_id, $found_users)) {
-                $missing_users[] = $client_id; // Collect users with missing documents
-                return [
-                    "error" => true,
-                    "message" => "No documents found for user: " . get_client_name($client_id)
-                ];
-            }
-        }
-    } else {
-        return [
-            "error" => true,
-            "message" => "No documents found for user: " . get_client_name($client_ids_array[0])
-        ];
+    // Step 2: Get documents received by clients
+    $CI->db->select("r.userid, r.doc_id")
+        ->from(db_prefix() . 'orignal_documents_received r')
+        ->where_in('r.userid', $client_ids);
+
+    if (!empty($document_ids)) {
+        $CI->db->where_in('r.doc_id', array_column($all_documents, 'doc_id'));
+    }
+    $received_docs = $CI->db->get()->result_array();
+
+    // Step 3: Map received docs
+    $received_map = [];
+    foreach ($received_docs as $row) {
+        $received_map[$row['userid']][] = $row['doc_id'];
     }
 
-    return array_column($result, null, "userid");
+    // Step 4: Get basic details of clients
+    $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName")
+        ->from(db_prefix() . 'basic_details b')
+        ->where_in('b.userid', $client_ids);
+    $clients = $CI->db->get()->result_array();
+
+    // Step 5: Build output with missing documents
+    $missing_data = [];
+
+    foreach ($clients as $client) {
+        $user_id = $client['userid'];
+        $client_name = $client['clientName'];
+        $received = isset($received_map[$user_id]) ? $received_map[$user_id] : [];
+
+        foreach ($all_documents as $doc) {
+            if (!in_array($doc['doc_id'], $received)) {
+                $missing_data[] = [
+                    'userid' => $user_id,
+                    'clientName' => $client_name,
+                    'missing_document' => $doc['doc_name'],
+                ];
+                return [
+                    "error" => true,
+                    "message" => "User '{$client_name}' has not received orignal document '{$doc['doc_name']}'."
+                ];
+
+                die;
+            }
+        }
+    }
+
+    return true;
 }
 
 

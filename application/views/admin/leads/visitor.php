@@ -2,6 +2,11 @@
 <?php init_head();
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 array_unshift($location, array());
+$category = [];
+$category[] = array("id" => "", "name" => "");
+$category[] = array("id" => "-1", "name" => "Previous");
+$category[] = array("id" => "1", "name" => "Today");
+$category[] = array("id" => "2", "name" => "Upcomming");
 ?>
 <style>
     a {
@@ -79,6 +84,10 @@ array_unshift($location, array());
                                         <?php echo render_select('assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'assigned'); ?>
                                     </div>
 
+                                    <div class="col-md-2 leads-filter-column margin-top mb-5">
+                                        <?php echo render_select('category', $category, array('id', array('name')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Category Select'), 'data-actions-box' => true), array(), 'no-mbot', '', false, 'category'); ?>
+                                    </div>
+
 
                                     <div class="col-md-4 text-center leads-filter-column margin-top">
                                         <div class="form-group">
@@ -96,14 +105,14 @@ array_unshift($location, array());
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-genrate-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
                             <hr>
 
                             <?php
-                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-request-table');
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-request-table');
                             ?>
                         <?php } ?>
                     </div>
@@ -125,6 +134,7 @@ array_unshift($location, array());
         from_date: "[name='from_date']",
         to_date: "[name='to_date']",
         assigned: "[name='assigned[]']",
+        category: "[name='category']",
 
     };
 
