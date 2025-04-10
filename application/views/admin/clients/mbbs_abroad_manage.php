@@ -501,20 +501,24 @@ array_unshift($apostille_vendors, array());
                <div class="apostille_status_update" style="display:none;">
                   <div class="row">
                      <div class="col-md-4">
-                        <label>Apostille Vendor</label>
+                        <label>Apostille Vendor <small class='text-danger'>*</small></label>
                         <?php echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
                            'data-width' => '100%',
                            'data-none-selected-text' => 'Vendor',
-                           'data-actions-box' => true
+                           'data-actions-box' => true,
+                           'required-check' => 'required-check',
+                           'required' => 'required',
                         ], [], 'no-mbot', '', false, 'apostille_vendor'); ?>
                      </div>
                      <div class="col-md-4">
-                        <label>Apostille Documents</label>
+                        <label>Apostille Documents <small class='text-danger'>*</small></label>
                         <?php echo render_select('apostille_document[]', $apostille_documents, ['id', 'name'], '', [], [
                            'data-width' => '100%',
                            'data-none-selected-text' => 'Documents',
                            'multiple' => true,
                            'data-actions-box' => true,
+                           'required-check' => 'required-check',
+                           'required' => 'required',
                            'onchange' => 'document_cost_div(this)'
 
                         ], [], 'no-mbot', '', false, 'apostille_document'); ?>
@@ -993,18 +997,27 @@ init_tail();
       var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
       var apostille_status = $("#apostille_status").prop('checked');
-
+      var is_valid = true;
       var apostille_data = {};
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
             var name = $(this).attr('name');
             var value = $(this).val();
+            var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
                apostille_data[name] = value;
+            }
+
+            if (required && !String(value).trim()) {
+               $(this).focus();
+               alert_float("warning", "Please fill the required field: " + name);
+               is_valid = false;
+               return false; // Exit loop early
             }
          });
       }
 
+      if (!is_valid) return false;
       var ids = [];
       $('.table-clients tbody tr').each(function() {
          var checkbox = $(this).find('td').eq(0).find('input[type="checkbox"]');
