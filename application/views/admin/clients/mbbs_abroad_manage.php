@@ -1006,8 +1006,8 @@ init_tail();
             if (name) {
                apostille_data[name] = value;
             }
-            console.log(value);
-            console.log(required);
+            // console.log(value);
+            // console.log(required);
             if (required && !String(value).trim()) {
                $(this).focus();
                alert_float("warning", "Please fill the required field: " + name);
@@ -1017,7 +1017,7 @@ init_tail();
          });
       }
 
-      console.log(apostille_status);
+      // console.log(apostille_status);
 
       if (!is_valid) return false;
 
@@ -1025,7 +1025,6 @@ init_tail();
          return false;
       }
 
-      return false;
       var ids = [];
       $('.table-clients tbody tr').each(function() {
          var checkbox = $(this).find('td').eq(0).find('input[type="checkbox"]');
