@@ -345,10 +345,22 @@ array_unshift($apostille_vendors, array());
                               </div>
 
 
+
+
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('apostille_status[]', $apostille_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_status");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -502,7 +514,9 @@ array_unshift($apostille_vendors, array());
                            'data-width' => '100%',
                            'data-none-selected-text' => 'Documents',
                            'multiple' => true,
-                           'data-actions-box' => true
+                           'data-actions-box' => true,
+                           'onchange' => 'document_cost_div(this)'
+
                         ], [], 'no-mbot', '', false, 'apostille_document'); ?>
                      </div>
                      <div class="col-md-4">
@@ -513,13 +527,15 @@ array_unshift($apostille_vendors, array());
                         <label>Apostille Received</label>
                         <?php echo render_input('apostille_receiving_date', '', '', 'date'); ?>
                      </div>
-                     <div class="col-md-4">
-                        <label>Apostille Cost</label>
-                        <?php echo render_input('apostille_cost', '', '', 'number'); ?>
-                     </div>
+
                      <div class="col-md-4">
                         <label>Payment Date</label>
                         <?php echo render_input('apostille_payment_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="clearfix"></div>
+                     <div class="doc-cost-section">
+
+
                      </div>
                   </div>
                </div>
@@ -642,6 +658,7 @@ init_tail();
    var orignal_document_list_rest = <?= !empty($orignal_document_list_rest) ? json_encode($orignal_document_list_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var apostille_documents = <?= !empty($apostille_documents) ? json_encode(array_values($apostille_documents), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var tbllead_performance_column = [];
    var tbllead_performance_column_array = <?= !empty($table_view) ? json_encode($table_view, JSON_UNESCAPED_UNICODE) : '[]' ?>;
@@ -711,6 +728,7 @@ init_tail();
          }
       });
       setTimeout(() => {
+         enabled_column();
          set_column_table();
          set_table();
       }, 500);
@@ -790,7 +808,7 @@ init_tail();
             addColumn(value, selectedLabel);
          }
       });
-      disabled_column();
+      // disabled_column();
 
    }
 
@@ -853,6 +871,7 @@ init_tail();
          'columnNames': "[name='column_show[]']",
          'assigned': "[name='view_assigned[]']",
          'source': "[name='view_source[]']",
+         'apostille_status': "[name='apostille_status[]']",
          'lead_type': "[name='lead_type[]']",
          'last_from_date': "[name='last_from_date']",
          'last_to_date': "[name='last_to_date']",
@@ -883,7 +902,7 @@ init_tail();
 
       applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
 
-      disabled_column();
+      // disabled_column();
 
 
       $('#view_application_stage').on('changed.bs.select', function(event, clickedIndex, newValue, oldValue) {
@@ -1085,10 +1104,10 @@ init_tail();
 
       show_loader("apply_filter");
       applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
-      disabled_column();
+      // disabled_column();
 
       hide_loader("apply_filter");
-      disabled_column();
+      // disabled_column();
    }
 
    function change_transit(obj) {
@@ -1103,6 +1122,7 @@ init_tail();
       $(".no_is_transist_location").show();
       $(".apostille_status_update").hide();
       $(".document_status_update").show();
+
    });
 
    function refreshApplicantTable() {
@@ -1174,6 +1194,27 @@ init_tail();
             alert_float("danger", errorMessage);
             console.error("Error:", error);
          },
+      });
+   }
+
+   function document_cost_div(obj) {
+      let selected_documents = $(obj).val() || [];
+
+      // Clear all existing doc cost sections
+      $(".doc-cost-section").empty();
+
+      // Re-add only the selected ones
+      selected_documents.forEach(function(doc_id) {
+         let doc = apostille_documents_list[doc_id];
+
+         $(".doc-cost-section").append(`
+            <div class='col-md-4' id='cost-doc-div-${doc_id}'>
+                <label>${doc.name} Cost</label>
+                <div class='form-group'>
+                    <input class='form-control' type='number' placeholder='100' name='document_cost[${doc.id}]'>
+                </div>
+            </div>
+        `);
       });
    }
 </script>

@@ -1032,7 +1032,8 @@ class Clients extends AdminController
 
     public function bulk_action()
     {
-
+        $apostille_documents = array_column(get_orignal_document_list(0, 0, 1), null, "id");
+        $apostille_vendors = array_column(get_vendor_list(), null, "id");
         hooks()->do_action('before_do_bulk_action_for_customers');
 
         $total_deleted = 0;
@@ -1072,47 +1073,187 @@ class Clients extends AdminController
                 die;
             }
 
-            // Handle Apostile
-            if ($this->input->post('apostile_status') == true) {
-                $documents_id = !empty($_POST["apostile_document"]) ? $_POST["apostile_document"] : [];
-                if (!empty($documents_id)) {
-                    $get_data_from_document = get_orignal_document_data_list_apostile($ids, $documents_id);
-                    if (isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) {
+            // Handle Apostille
+            if ($this->input->post('apostille_status') == true) {
 
-                        $data = [
-                            'resp_code' => 'ERR',
-                            'resp_desc' => $get_data_from_document["message"],
+                $documents_id = $this->input->post('apostille_document') ?? [];
+                $document_cost = $this->input->post('document_cost') ?? [];
+
+                // Required fields
+                $vendor_id = $this->input->post('apostille_vendor');
+                $courier_date = $this->input->post('apostille_date');
+                $receiving_date = $this->input->post('apostille_receiving_date');
+                $payment_date = $this->input->post('apostille_payment_date');
+
+                // Validate essential inputs
+                // if (empty($ids) || empty($documents_id) || empty($vendor_id) || empty($courier_date)) {
+                //     $data = [
+                //         'resp_code' => 'ERR',
+                //         'resp_desc' => 'Missing required fields: applicants, documents, vendor, or courier date.',
+                //     ];
+                //     echo json_encode($data);
+                //     exit;
+                // }
+
+                // Get original document data and validate
+                $check_status = 1;
+                if (!empty($courier_date) && !empty($documents_id)) {
+                    $check_status = 1; // insert new apostile data 
+                } else {
+                    $check_status = 2; // update apostile data 
+                }
+
+                // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
+                //     $check_status = 2; // update apostile data 
+                // }
+                $get_data_from_document = get_orignal_document_data_list_apostille($ids, $documents_id, $check_status, $vendor_id);
+
+                if (isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) {
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => $get_data_from_document["message"],
+                    ];
+                    echo json_encode($data);
+                    exit;
+                }
+                if ($check_status == 1) {
+                    $insert_apostille_data = [];
+                    $activity_data = [];
+                    foreach ($ids as $applicant_id) {
+                        foreach ($documents_id as $doc_id) {
+                            // Validate document cost
+                            if (!isset($document_cost[$doc_id]) || !is_numeric($document_cost[$doc_id])) {
+                                // $data = [
+                                //     'resp_code' => 'ERR',
+                                //     'resp_desc' => "Invalid or missing cost for document ID: $doc_id",
+                                // ];
+                                // echo json_encode($data);
+                                // exit;
+                            }
+
+                            $insert_apostille_data[] = [
+                                "userid" => $applicant_id,
+                                "vendor_id" => $vendor_id,
+                                "doc_id" => $doc_id,
+                                "courier_date" => $courier_date,
+                                "apostille_received" => $receiving_date,
+                                "apostille_cost" => $document_cost[$doc_id],
+                                "payment_date" => $payment_date,
+                                "created_at" => date('Y-m-d H:i:s'),
+                                "created_by" => get_staff_user_id(),
+                                "received_status" => !empty($receiving_date) ? 1 : 0,
+                            ];
+                            $doc_name = !empty($apostille_documents[$doc_id]['name']) ? $apostille_documents[$doc_id]['name'] : 'Unknown Document';
+                            $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
+                            $vendor = !empty($apostille_vendors[$vendor_id]['name']) ? ", vendor: {$apostille_vendors[$vendor_id]['name']}" : '';
+                            $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
+                            $received = !empty($receiving_date) ? ", receiving date: {$receiving_date}" : '';
+                            $payment = !empty($payment_date) ? ", payment date: {$payment_date}" : '';
+
+                            $message = "Sent apostille for document \"{$doc_name}\"{$cost}{$vendor}{$courier}{$received}{$payment}.";
+
+                            $activity_data[] = [
+                                "date" => date('Y-m-d H:i:s'),
+                                "staffid" => get_staff_user_id(),
+                                "client_id" => $applicant_id,
+                                "description" => $message
+                            ];
+                        }
+                    }
+
+                    // Insert into DB
+                    if (!empty($insert_apostille_data)) {
+                        $inserted = $this->db->insert_batch(db_prefix() . "client_apostille_data", $insert_apostille_data);
+                        if ($inserted) {
+
+                            $this->db->insert_batch(db_prefix() . 'apostille_document_activity', $activity_data);
+                            $data = [
+                                'resp_code' => 'RCS',
+                                'resp_desc' => 'Original document bulk updated successfully.',
+                            ];
+                        } else {
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => 'Database insert failed.',
+                            ];
+                        }
+                    }
+
+                    echo json_encode($data);
+                    exit;
+                } else if ($check_status == 2) {
+
+                    $update_apostille_data = [];
+                    $activity_data = [];
+                    foreach ($get_data_from_document as $rec_apostille) {
+
+                        $row = [
+                            "id" => $rec_apostille["id"],
+                            "updated_at" => date('Y-m-d H:i:s'),
+                            "updated_by" => get_staff_user_id(),
                         ];
+
+                        if (!empty($receiving_date)) {
+                            $row["apostille_received"] = $receiving_date;
+                            $row["received_status"] = 1;
+                        }
+
+                        if (!empty($document_cost[$rec_apostille['doc_id']])) {
+                            $row["apostille_cost"] = $document_cost[$rec_apostille['doc_id']];
+                        }
+
+                        if (!empty($payment_date)) {
+                            $row["payment_date"] = $payment_date;
+                        }
+
+                        if (!empty($courier_date)) {
+                            $row["courier_date"] = $courier_date;
+                        }
+
+                        $update_apostille_data[] = $row;
+
+
+                        $doc_name = !empty($apostille_documents[$rec_apostille['doc_id']]['name']) ? $apostille_documents[$rec_apostille['doc_id']]['name'] : 'Unknown Document';
+                        $cost = !empty($document_cost[$rec_apostille['doc_id']]) ? " with cost ₹{$document_cost[$rec_apostille['doc_id']]}" : '';
+                        $vendor = !empty($apostille_vendors[$vendor_id]['name']) ? ", vendor: {$apostille_vendors[$vendor_id]['name']}" : '';
+                        $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
+                        $received = !empty($receiving_date) ? ", receiving date: {$receiving_date}" : '';
+                        $payment = !empty($payment_date) ? ", payment date: {$payment_date}" : '';
+
+                        $message = "Update apostille for document \"{$doc_name}\"{$cost}{$vendor}{$courier}{$received}{$payment}.";
+
+                        $activity_data[] = [
+                            "date" => date('Y-m-d H:i:s'),
+                            "staffid" => get_staff_user_id(),
+                            "client_id" => $rec_apostille["userid"],
+                            "description" => $message
+                        ];
+                    }
+
+                    // Perform batch update
+                    if (!empty($update_apostille_data)) {
+                        $updated = $this->db->update_batch(db_prefix() . "client_apostille_data", $update_apostille_data, "id");
+                        $this->db->insert_batch(db_prefix() . 'apostille_document_activity', $activity_data);
+                        if ($updated) {
+                            $data = [
+                                'resp_code' => 'RCS',
+                                'resp_desc' => 'Apostille document bulk updated successfully.',
+                            ];
+                        } else {
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => 'Apostille document update failed.',
+                            ];
+                        }
+
                         echo json_encode($data);
                         die;
                     }
-
-                    $insert_apostile_data = [];
-                    foreach ($get_data_from_document as $document) {
-
-                        $count = count(explode(",", $document["document_ids"]));
-
-                        $insert_apostile_data["userid"] = $document["userid"];
-                        $insert_apostile_data["document_ids"] = explode(",", $document["document_ids"]);
-                        $insert_apostile_data["document_name"] = explode(",", $document["document_names"]);
-                        $insert_apostile_data["received_id"] = explode(",", $document["received_id"]);
-                        $insert_apostile_data["status_text"] = $this->input->post('status_text');
-                        $insert_apostile_data["in_transit"] = $this->input->post('in_transit');
-                        $insert_apostile_data["transit_location"] = $this->input->post('from_location') . " - " . $this->input->post('to_location');
-
-
-
-
-                        // $response =  $this->clients_model->update_documents($update_data, $document["userid"]);
-                    }
-
-                    die;
-
-                    // $data = [
-                    //     'resp_code' => 'RCS',
-                    //     'resp_desc' => 'Original document bulk update successfully',
-                    // ];
-                    // set_alert('success', "Original document bulk update successfully");
+                } else {
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'Appostile data not updated.',
+                    ];
                 }
             }
 

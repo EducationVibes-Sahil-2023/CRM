@@ -6,7 +6,7 @@ $category = [];
 $category[] = array("id" => "", "name" => "");
 $category[] = array("id" => "-1", "name" => "Previous");
 $category[] = array("id" => "1", "name" => "Today");
-$category[] = array("id" => "2", "name" => "Upcomming");
+$category[] = array("id" => "2", "name" => "Upcoming");
 ?>
 <style>
     a {

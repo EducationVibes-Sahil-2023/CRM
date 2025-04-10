@@ -3157,7 +3157,12 @@ class Leads_model extends App_Model
         if (!empty($ids)) { // Check if the $ids variable is not empty.
             $this->db->where_in('id', $ids); // Add a condition to match multiple 'id' values in the $ids array.
         }
-        $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
+        // $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
+        if (!empty($ids)) {
+            $this->db->order_by('FIELD(id, ' . implode(',', $ids) . ')');
+        } else {
+            $this->db->order_by('sequence', 'ASC');
+        }
         $column = $this->db->get(db_prefix() . 'ma_applicant_tracker')->result_array();
         // Execute the query on the table prefixed with 'performance_columns' and get the results as an array.
         return $column; // Return the resulting array.

@@ -30,7 +30,6 @@ $fees_data = get_clients_fees(2);
 
 
 
-
 $statuses = get_applicant_statuses();
 $statuses = array_column($statuses, null, 'id');
 
@@ -133,7 +132,19 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'client_passport_details ON ' . db_prefix() . 'client_passport_details.client_id=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
-    'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status'
+    'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
+    "LEFT JOIN (
+        SELECT 
+            userid,
+            CASE 
+                WHEN COUNT(*) = 0 THEN 'Pending'
+                WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+                WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+                ELSE 'Pending'
+            END AS apostille_status
+        FROM " . db_prefix() . "client_apostille_data
+        GROUP BY userid
+    ) AS apostille_summary ON apostille_summary.userid = " . db_prefix() . "clients.userid"
 
 ];
 
@@ -172,6 +183,16 @@ if ($this->ci->input->post('source')) {
 if ($this->ci->input->post('lead_type')) {
     array_push($where, 'AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')');
 }
+
+
+if ($this->ci->input->post('apostille_status')) {
+    $apostille_status = array_map(function ($status) {
+        return "'" . $this->ci->db->escape_str($status) . "'";
+    }, $this->ci->input->post('apostille_status'));
+
+    array_push($where, 'AND COALESCE(apostille_summary.apostille_status,"Pending") IN (' . implode(',', $apostille_status) . ')');
+}
+
 
 if ($this->ci->input->post('application_stage')) {
     array_push($where, 'AND ' . db_prefix() . 'clients.applicant_stage = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage'))));

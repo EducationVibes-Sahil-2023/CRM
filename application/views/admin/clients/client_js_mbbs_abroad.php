@@ -354,9 +354,10 @@
         $("#save_admission_preferences").attr("disabled", false);
 
     }
-    if (admissionpreferences_freeze == 1) {
+    if (typeof admissionpreferences_freeze !== 'undefined' && admissionpreferences_freeze === 1) {
         set_frezee();
     }
+
 
 
 
