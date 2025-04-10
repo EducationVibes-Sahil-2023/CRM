@@ -494,7 +494,7 @@ array_unshift($apostille_vendors, array());
             <!-- Apostille Section -->
             <div class="apostille_update">
                <div class="checkbox checkbox-danger">
-                  <input type="checkbox" name="apostille_status" id="apostille_status" onchange="Update_apostille(this)">
+                  <input type="checkbox" name="apostille_status_check" id="apostille_status_check" onchange="Update_apostille(this)">
                   <label for="apostille_status">Apostille</label>
                </div>
 
@@ -984,9 +984,7 @@ init_tail();
 
 
    function customers_bulk_action(event) {
-      if (!confirm(app.lang.confirm_action_prompt)) {
-         return false;
-      }
+
 
       var mass_delete = $('#mass_delete').prop('checked');
       var transit = $('#in_transit').prop('checked');
@@ -996,9 +994,10 @@ init_tail();
       var document_status = $('#document_status').val();
       var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
-      var apostille_status = $("#apostille_status").prop('checked');
+      var apostille_status = $("#apostille_status_check").prop('checked');
       var is_valid = true;
       var apostille_data = {};
+
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
             var name = $(this).attr('name');
@@ -1007,7 +1006,8 @@ init_tail();
             if (name) {
                apostille_data[name] = value;
             }
-
+            console.log(value);
+            console.log(required);
             if (required && !String(value).trim()) {
                $(this).focus();
                alert_float("warning", "Please fill the required field: " + name);
@@ -1017,7 +1017,15 @@ init_tail();
          });
       }
 
+      console.log(apostille_status);
+
       if (!is_valid) return false;
+
+      if (!confirm(app.lang.confirm_action_prompt)) {
+         return false;
+      }
+
+      return false;
       var ids = [];
       $('.table-clients tbody tr').each(function() {
          var checkbox = $(this).find('td').eq(0).find('input[type="checkbox"]');
