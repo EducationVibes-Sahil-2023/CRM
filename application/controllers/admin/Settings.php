@@ -18,6 +18,7 @@ class Settings extends AdminController
             access_denied('settings');
         }
 
+
         $tab = $this->input->get('group');
 
         if ($this->input->post()) {
@@ -54,6 +55,9 @@ class Settings extends AdminController
             if (isset($post_data['settings']['ma_applicant_tracker'])) {
                 $post_data['settings']['ma_applicant_tracker'] = $tmpData['settings']['ma_applicant_tracker'];
             }
+            if (isset($post_data['settings']['ma_table_view'])) {
+                $post_data['settings']['ma_table_view'] = $tmpData['settings']['ma_table_view'];
+            }
 
 
             $ids = isset($_POST['id']) ? $_POST['id'] : [];
@@ -77,7 +81,42 @@ class Settings extends AdminController
             }
             $post_data["columns_data"] = $columns_data;
 
+            $view_id = isset($_POST['table_view']) ? $_POST['table_view'] : "";
+            $column_ids = isset($_POST['column_ids']) ?  $_POST['column_ids'] : [];
+            $selected_ids = isset($_POST['selected_ids']) ?  $_POST['selected_ids'] : [];
+            $sequences = isset($_POST['sequence']) ? $_POST['sequence'] : [];
+
+            // Sorting function: Moves null/blank values to the end
+            uasort($_POST["sequence"], function ($a, $b) {
+                if ($a === null || $a === '') return 1; // Move null/blank values to the end
+                if ($b === null || $b === '') return -1;
+                return $a <=> $b; // Sort in ascending order
+            });
+
+            // Reorder `column_ids` and `selected_ids` based on sorted `sequence`
+            $sorted_column_ids = [];
+            $sorted_selected_ids = [];
+
+            foreach (array_keys($_POST["sequence"]) as $key) {
+                if (isset($_POST["column_ids"][$key])) {
+                    $sorted_column_ids[$key] = $_POST["column_ids"][$key];
+                }
+                if (isset($_POST["selected_ids"][$key])) {
+                    $sorted_selected_ids[$key] = $_POST["selected_ids"][$key];
+                }
+            }
+
+            $table_view = [];
+            // Replace with sorted order
+            $table_view["column_ids"] = implode(",", $sorted_column_ids);
+            $table_view["selected_ids"] = implode(",", $sorted_selected_ids);
+            $table_view["sequence"] = implode(",", $_POST["sequence"]);
+            $table_view["id"] = $view_id;
+            $post_data["table_view"] = $table_view;
+    
+
             $success = $this->settings_model->update($post_data);
+
 
             if ($success > 0) {
                 set_alert('success', _l('settings_updated'));

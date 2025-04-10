@@ -36,6 +36,7 @@ class Settings_model extends App_Model
 
 
 
+
         if (isset($data['tags'])) {
             $tagsExists = false;
             foreach ($data['tags'] as $id => $name) {
@@ -177,6 +178,15 @@ class Settings_model extends App_Model
         } else if (in_array('ma_applicant_tracker', $all_settings_looped)) {
             $update_data = $data["columns_data"];
             $this->db->update_batch(db_prefix() . 'ma_applicant_tracker', $update_data, 'id'); // 'id' is the key
+        } else if (in_array('ma_applicant_tracker', $all_settings_looped)) {
+            $update_data = $data["columns_data"];
+            $this->db->update_batch(db_prefix() . 'ma_applicant_tracker', $update_data, 'id'); // 'id' is the key
+        } else if (in_array('ma_table_view', $all_settings_looped)) {
+            $id = $data["table_view"]["id"];
+            unset($data["table_view"]["id"]);
+            $update_data = $data["table_view"];
+            $this->db->where("id", $id);
+            $this->db->update(db_prefix() . 'ma_applicant_view', $update_data); // 'id' is the key
         }
 
 

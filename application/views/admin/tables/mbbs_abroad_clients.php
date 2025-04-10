@@ -16,7 +16,9 @@ $get_applicant_stages = array_column($get_applicant_stages, null, 'id');
 $get_applicant_sub_stages = get_applicant_sub_stage_mbbs();
 $get_applicant_sub_stages = array_column($get_applicant_sub_stages, null, 'id');
 
-$orignal_documents = get_orignal_document_list();
+$orignal_documents = [];
+
+
 
 
 $hasPermissionDelete = has_permission('customers', '', 'delete');
@@ -25,6 +27,7 @@ $tblma_applicant_tracker = $this->ci->leads_model->tblma_applicant_tracker($this
 
 $tblma_applicant_tracker = array_column($tblma_applicant_tracker, null, "tbl_column_name");
 $fees_data = get_clients_fees(2);
+
 
 
 $statuses = get_applicant_statuses();
@@ -47,7 +50,7 @@ $aColumns_count = 0;
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
 
-        if (in_array($value["column_name"], ["fees", "original_documents"])) {
+        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia"])) {
             if ($value["column_name"] == "fees") {
                 if (!empty($fees_data)) {
                     foreach ($fees_data as $fees) {
@@ -56,19 +59,36 @@ if (!empty($tblma_applicant_tracker)) {
                     }
                 }
             }
-            if ($value["column_name"] == "original_documents") {
+            if (in_array($value["column_name"], ["original_documents", "original_documents_rest", "original_documents_georgia"])) {
+                $orignal_documents = [];
+
+                if ($value["column_name"] == "original_documents") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list());
+                }
+                if ($value["column_name"] == "original_documents_rest") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(1));
+                }
+                if ($value["column_name"] == "original_documents_georgia") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 1));
+                }
 
                 if (!empty($orignal_documents)) {
                     foreach ($orignal_documents as $documents) {
-                        $short_name = $documents['short_name']; // Store short_name
+                        $short_name = trim($documents['short_name']); // Store short_name safely
                         $safe_column_name = str_replace(" ", "_", $short_name); // Replace spaces with underscores
 
-                        $aColumns[] = "MAX(CASE WHEN " . db_prefix() . "orignal_documents.short_name = '" . $short_name . "' 
-                                        THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
-                        $aColumns_count++;
+                        // Check if the column is already added to avoid duplication
+                        $queryPart = "MAX(CASE WHEN " . db_prefix() . "orignal_documents.short_name = '" . $short_name . "' 
+                                      THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
+
+                        if (!in_array($queryPart, $aColumns)) {
+                            $aColumns[] = $queryPart;
+                            $aColumns_count++;
+                        }
                     }
                 }
             }
+
             continue;
         }
 
@@ -105,13 +125,26 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'applicant_fees_details.currency_id',
     'LEFT JOIN ' . db_prefix() . 'orignal_document_status ON ' . db_prefix() . 'orignal_document_status.id = ' . db_prefix() . 'clients.orignal_document_status',
     'LEFT JOIN ' . db_prefix() . 'orignal_documents_received ON ' . db_prefix() . 'orignal_documents_received.userid = ' . db_prefix() . 'clients.userid',
+    'LEFT JOIN ' . db_prefix() . 'office_location ON ' . db_prefix() . 'office_location.id = ' . db_prefix() . 'orignal_documents_received.location_id',
     'LEFT JOIN ' . db_prefix() . 'orignal_documents ON ' . db_prefix() . 'orignal_documents.id = ' . db_prefix() . 'orignal_documents_received.doc_id',
     'LEFT JOIN ' . db_prefix() . 'applicant_stages stage_category ON stage_category.id = ' . db_prefix() . 'clients.applicant_stage',
     'LEFT JOIN ' . db_prefix() . 'application_sub_category_mbbs  stage_sub_category ON stage_sub_category.id = ' . db_prefix() . 'clients.applicant_sub_status',
     'LEFT JOIN ' . db_prefix() . 'client_passport_details ON ' . db_prefix() . 'client_passport_details.client_id=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
-    'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status'
+    'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
+    "LEFT JOIN (
+        SELECT 
+            userid,
+            CASE 
+                WHEN COUNT(*) = 0 THEN 'Pending'
+                WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+                WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+                ELSE 'Pending'
+            END AS apostille_status
+        FROM " . db_prefix() . "client_apostille_data
+        GROUP BY userid
+    ) AS apostille_summary ON apostille_summary.userid = " . db_prefix() . "clients.userid"
 
 ];
 
@@ -150,6 +183,16 @@ if ($this->ci->input->post('source')) {
 if ($this->ci->input->post('lead_type')) {
     array_push($where, 'AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')');
 }
+
+
+if ($this->ci->input->post('apostille_status')) {
+    $apostille_status = array_map(function ($status) {
+        return "'" . $this->ci->db->escape_str($status) . "'";
+    }, $this->ci->input->post('apostille_status'));
+
+    array_push($where, 'AND COALESCE(apostille_summary.apostille_status,"Pending") IN (' . implode(',', $apostille_status) . ')');
+}
+
 
 if ($this->ci->input->post('application_stage')) {
     array_push($where, 'AND ' . db_prefix() . 'clients.applicant_stage = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage'))));
