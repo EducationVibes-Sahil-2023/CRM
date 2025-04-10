@@ -1169,7 +1169,7 @@ class Clients extends AdminController
                             $this->db->insert_batch(db_prefix() . 'apostille_document_activity', $activity_data);
                             $data = [
                                 'resp_code' => 'RCS',
-                                'resp_desc' => 'Original document bulk updated successfully.',
+                                'resp_desc' => 'Apostille document bulk updated successfully.',
                             ];
                         } else {
                             $data = [
