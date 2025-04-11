@@ -25,6 +25,7 @@ $aColumns = [
     db_prefix() . 'visitor_request.status as status_id',
     db_prefix() . 'visitor_status.color as color',
     db_prefix() . 'leads_status .name as status_name',
+    db_prefix() . 'leads_sources .name as source_name',
     db_prefix() . 'leads .call_duration as call_duration',
 
 
@@ -41,6 +42,7 @@ $filter = [];
 $join          = [];
 array_push($join, 'JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'visitor_request.lead_id');
 array_push($join, 'JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status');
+array_push($join, 'JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source');
 array_push($join, 'LEFT JOIN ' . db_prefix() . 'visitor_status ON ' . db_prefix() . 'visitor_status.id = ' . db_prefix() . 'visitor_request.status');
 array_push($join, 'LEFT JOIN ' . db_prefix() . 'cities_ ON ' . db_prefix() . 'cities_.id = ' . db_prefix() . 'visitor_request.location');
 array_push($join, 'LEFT JOIN ' . db_prefix() . 'visitor_type ON ' . db_prefix() . 'visitor_type.id = ' . db_prefix() . 'visitor_request.visitor_type');
@@ -122,6 +124,9 @@ if (!empty($this->ci->input->post('lead_type'))) {
     $where[] = "AND " . db_prefix() . "leads.type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";
 }
 
+if (!empty($this->ci->input->post('source_type'))) {
+    $where[] = "AND " . db_prefix() . "leads.source IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('source_type'))) . ")";
+}
 
 
 
@@ -194,6 +199,7 @@ foreach ($rResult as $aRow) {
     $row[] = !empty($staff_data[$aRow["created_by"]]["full_name"]) ? $staff_data[$aRow["created_by"]]["full_name"] : "";
     $row[] = !empty($lead_data[$aRow["lead_type"]]["name"]) ? $lead_data[$aRow["lead_type"]]["name"] : '';
     $row[] = !empty($aRow["status_name"]) ? $aRow["status_name"] : '';
+    $row[] = !empty($aRow["source_name"]) ? $aRow["source_name"] : '';
     $row['DT_RowClass'] = 'has-row-options ' . " " . !empty($aRow["color"]) ? $aRow["color"] : 'pending';
     $output['aaData'][] = $row;
 }

@@ -67,6 +67,12 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                         ?>
                                     </div>
 
+                                    <div class="col-md-2 leads-filter-column margin-top">
+                                        <?php
+                                        echo render_select('source_type[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Source Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
+                                        ?>
+                                    </div>
+
 
 
 
@@ -105,14 +111,14 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-genrate-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
                             <hr>
 
                             <?php
-                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-request-table');
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-request-table');
                             ?>
                         <?php } ?>
                     </div>
@@ -130,6 +136,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         type: "[name='type[]']",
         attendee: "[name='attendee[]']",
         lead_type: "[name='lead_type[]']",
+        source_type: "[name='source_type[]']",
         lead_status: "[name='view_status[]']",
         from_date: "[name='from_date']",
         to_date: "[name='to_date']",
