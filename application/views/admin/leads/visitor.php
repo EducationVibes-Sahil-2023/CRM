@@ -95,11 +95,9 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                     </div>
 
 
-                                    <div class="col-md-4 text-center leads-filter-column margin-top">
-                                        <div class="form-group">
+                                    <div class="col-md-12 text-center leads-filter-column margin-top">
+                                        <div class="form-group pull-right">
                                             <button type="button" class="btn btn-primary" onclick="filter_data();" id="apply_filter">Apply Filter</button>
-
-                                            <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                             <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                         </div>
                                     </div>
