@@ -1095,11 +1095,11 @@ class Forms extends ClientsController
 
                 // handle automatic lead transfer to admin 
                 $update_array = [
-                    'assigned' => 1,
+                    'assigned' => IVR_AUTO_ASIGNATION,
                     // "status" => 2
                 ];
                 $success = $this->leads_model->update_leads($update_array, $lead_id);
-                $raised_by = 1;
+                $raised_by = IVR_AUTO_ASIGNATION;
 
                 // Add new lead transfer request
                 $data = array_merge($data, [

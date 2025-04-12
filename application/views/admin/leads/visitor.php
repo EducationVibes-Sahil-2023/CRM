@@ -6,7 +6,7 @@ $category = [];
 $category[] = array("id" => "", "name" => "");
 $category[] = array("id" => "-1", "name" => "Previous");
 $category[] = array("id" => "1", "name" => "Today");
-$category[] = array("id" => "2", "name" => "Upcomming");
+$category[] = array("id" => "2", "name" => "Upcoming");
 ?>
 <style>
     a {
@@ -67,6 +67,12 @@ $category[] = array("id" => "2", "name" => "Upcomming");
                                         ?>
                                     </div>
 
+                                    <div class="col-md-2 leads-filter-column margin-top">
+                                        <?php
+                                        echo render_select('source_type[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Source Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
+                                        ?>
+                                    </div>
+
 
 
 
@@ -89,11 +95,9 @@ $category[] = array("id" => "2", "name" => "Upcomming");
                                     </div>
 
 
-                                    <div class="col-md-4 text-center leads-filter-column margin-top">
-                                        <div class="form-group">
+                                    <div class="col-md-12 text-center leads-filter-column margin-top">
+                                        <div class="form-group pull-right">
                                             <button type="button" class="btn btn-primary" onclick="filter_data();" id="apply_filter">Apply Filter</button>
-
-                                            <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                             <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                         </div>
                                     </div>
@@ -105,14 +109,14 @@ $category[] = array("id" => "2", "name" => "Upcomming");
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-genrate-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
                             <hr>
 
                             <?php
-                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status"), 'lead-visitor-request-table');
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-request-table');
                             ?>
                         <?php } ?>
                     </div>
@@ -130,6 +134,7 @@ $category[] = array("id" => "2", "name" => "Upcomming");
         type: "[name='type[]']",
         attendee: "[name='attendee[]']",
         lead_type: "[name='lead_type[]']",
+        source_type: "[name='source_type[]']",
         lead_status: "[name='view_status[]']",
         from_date: "[name='from_date']",
         to_date: "[name='to_date']",
