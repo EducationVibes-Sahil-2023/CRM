@@ -1489,7 +1489,6 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
          $(selector).daterangepicker({
             autoUpdateInput: false,
             locale: {
-               format: "YYYY-MM-DD",
                cancelLabel: "Clear"
             },
             opens: "left",
@@ -1515,6 +1514,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                let label_name = this.element.find("span").data('label');
                this.element.find("span").html(label_name);
             } else {
+               console.log(this);
+               console.log(this.element);
                updateDateText(this.element, start, end);
             }
          });
@@ -1525,8 +1526,15 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             const to = $(this).data("to");
             $("#" + from).val('');
             $("#" + to).val('');
-            $(this).find("span").html('');
+            let label_name = this.element.find("span").data('label');
+            this.element.find("span").html(label_name);
          });
+
+         $(selector).on("apply.daterangepicker", function(ev, picker) {
+            const $this = $(this); // Wrap the DOM element with jQuery
+            updateDateText($this, picker.startDate, picker.endDate);
+         });
+
       }
 
       // Initialize all inputs
