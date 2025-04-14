@@ -93,7 +93,27 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    }
 
    .width250 {
-      width: 280px;
+      width: 230px;
+   }
+
+
+   .right-menu-filter .bootstrap-select .btn-default,
+   .right-menu-filter li .form-control span,
+   .right-menu-filter .set_disabled_date,
+   .right-menu-filter button.btn,
+   .form-control::placeholder {
+      padding: 4px 10px;
+      line-height: 2;
+      height: 30px;
+      text-transform: inherit;
+      padding-left: 10px;
+      font-size: 12px;
+   }
+
+   .right-menu-filter ._filter_data .dropdown-menu li a,
+   .bootstrap-select .dropdown-menu li a {
+      font-size: 12px;
+      padding: 0px !important;
    }
 </style>
 <div id="wrapper">
@@ -130,7 +150,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
                         </div>
 
-                        <div class="col-md-4 col-xs-12 pull-right leads-search hide">
+                        <div class="col-md-4 col-xs-12 pull-right leads-search">
                            <?php if ($this->session->userdata('leads_kanban_view') == 'true' && 1 == 0) { ?>
                               <!-- <div data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
                               <?php echo render_input('search', '', '', 'search', array('data-name' => 'search', 'onkeyup' => 'leads_kanban();', 'placeholder' => _l('leads_search')), array(), 'no-margin') ?>
@@ -260,28 +280,28 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  <li>
                                     <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
-                                       <span>Created Date</span>
+                                       <span data-label="Created Date">Created Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
                                  <li>
                                     <div id="update_date_right" data-from="up_from_date" data-to="up_to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
-                                       <span>Update Date</span>
+                                       <span data-label="Update Date">Update Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
                                  <li>
                                     <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
-                                       <span>Follow-up Date</span>
+                                       <span data-label="Follow-up Date">Follow-up Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
                                  <li>
                                     <div id="assign_date_right" data-from="assign_from_date" data-to="assign_to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
-                                       <span>Assignation Date</span>
+                                       <span data-label="Assignation Date">Assignation Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
@@ -421,7 +441,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                      <?php } else { ?>
                         <div class="row" id="leads-table ">
                            <!-- <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p> -->
-                           <div id="filterArea" class="col-md-12 hidden-xs   ">
+                           <div id="filterArea" class="col-md-12 hidden-xs hide">
                               <div class="row">
                                  <div class="col-md-12">
                                     <p class="bold"><?php echo _l('filter_by'); ?></p>
@@ -489,7 +509,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                  }
                                  ?>
 
-                                 <div class="col-md-2 leads-filter-column hide">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="select-placeholder">
                                        <select name="custom_view" title="<?php echo _l('additional_filters'); ?>" id="custom_view" class="selectpicker" data-width="100%">
                                           <option value=""></option>
@@ -510,27 +530,23 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        </select>
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Created Date" autocomplete="off">
                                     </div>
-                                    <!-- <div id="from_date" class="date-filter form-control">
-                                       <i class="fa fa-calendar"></i>
-                                       <span>Created Date</span>
-                                       <i class="fa fa-chevron-down"></i>
-                                    </div> -->
+
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Created Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="up_from_date" id="up_from_date" placeholder="From Update Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                     </div>
@@ -545,22 +561,22 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        <input type="text" class="form-control datepicker" name="up_to_date_call" id="up_to_date_call" placeholder="To Call Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="followup_from_date" id="followup_from_date" placeholder="From Followup Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="followup_to_date" id="followup_to_date" placeholder="To Followup Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="assign_from_date" id="assign_from_date" placeholder="From Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
@@ -1207,6 +1223,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                return false;
             }
          }
+         right_filter('right-menu-filter');
          show_loader("apply_filter");
          await periodFilter();
 
@@ -1475,7 +1492,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                const to = this.element.data("to");
                $("#" + from).val('');
                $("#" + to).val('');
-               this.element.find("span").html('');
+               let label_name = this.element.find("span").data('label');
+               this.element.find("span").html(label_name);
             } else {
                updateDateText(this.element, start, end);
             }
