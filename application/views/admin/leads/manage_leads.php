@@ -116,8 +116,6 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       font-size: 12px;
       padding: 0px !important;
    }
-
-  
 </style>
 <div id="wrapper">
    <div class="content">
@@ -1512,12 +1510,15 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
          // Cancel button click handler
          $(selector).on('cancel.daterangepicker', function(ev, picker) {
-            const from = $(this).data("from");
-            const to = $(this).data("to");
+            const $this = $(this); // jQuery wrapper
+            const from = $this.data("from");
+            const to = $this.data("to");
+
             $("#" + from).val('');
             $("#" + to).val('');
-            let label_name = this.element.find("span").data('label');
-            this.element.find("span").html(label_name);
+
+            let label_name = $this.find("span").data('label') || 'Select Date Range';
+            $this.find("span").html(label_name);
          });
 
          $(selector).on("apply.daterangepicker", function(ev, picker) {
@@ -1544,8 +1545,6 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    function right_filter(className) {
       $("." + className).toggle();
    }
-
-
 </script>
 
 </body>
