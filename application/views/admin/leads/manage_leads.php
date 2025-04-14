@@ -117,17 +117,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       padding: 0px !important;
    }
 
-   .sticky-header thead {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background-color: #fff;
-      transition: top 0.1s ease;
-   }
-
-   .sticky-header thead.is-stuck {
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-   }
+  
 </style>
 <div id="wrapper">
    <div class="content">
@@ -1556,49 +1546,6 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    }
 
 
-   const stickyHeader = document.querySelector('.sticky-header thead');
-   let initialTop = null;
-
-   function updateStickyPosition() {
-      const scrollTop = window.scrollY || document.documentElement.scrollTop;
-
-      // Set initialTop if not set and thead is at or past top
-      if (initialTop === null) {
-         const rect = stickyHeader.getBoundingClientRect();
-         const absoluteTop = rect.top + scrollTop;
-
-         // Once header reaches/passes top, mark it
-         if (rect.top <= 0) {
-            initialTop = absoluteTop;
-            stickyHeader.classList.add('is-stuck');
-            stickyHeader.style.top = '0px';
-         }
-      }
-
-      // While stuck
-      if (initialTop !== null) {
-         if (scrollTop >= initialTop) {
-            // Scrolls further down — stay stuck and adjust top
-            const offset = scrollTop - initialTop;
-            stickyHeader.style.top = `${offset}px`;
-         } else {
-            // Scrolled up past the original position — unstick
-            stickyHeader.classList.remove('is-stuck');
-            stickyHeader.style.top = '';
-            initialTop = null;
-         }
-      }
-   }
-
-   // Run on scroll
-   window.addEventListener('scroll', () => {
-      requestAnimationFrame(updateStickyPosition);
-   });
-
-   // Run once on load (refresh on middle/bottom)
-   window.addEventListener('load', () => {
-      setTimeout(updateStickyPosition, 200);
-   });
 </script>
 
 </body>
