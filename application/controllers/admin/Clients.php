@@ -1074,7 +1074,7 @@ class Clients extends AdminController
             }
 
             // Handle Apostille
-            if ($this->input->post('apostille_status') == true) {
+            if ($this->input->post('apostille_status') === true) {
 
                 $documents_id = $this->input->post('apostille_document') ?? [];
                 $document_cost = $this->input->post('document_cost') ?? [];
@@ -1260,7 +1260,7 @@ class Clients extends AdminController
 
             // Handle In-Transit
             if (
-                ($this->input->post('in_transit') == true ||
+                ($this->input->post('in_transit') === true ||
                     (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
                 (!empty($this->input->post('office_location')) && !empty($this->input->post('document_status')))
             ) {

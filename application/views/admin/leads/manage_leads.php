@@ -1,9 +1,15 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<link
+   rel="stylesheet"
+   href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.css" />
 <?php init_head();
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 ?>
+
 <link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
 <script src="<?= base_url("assets/js/uislider.js") ?>"></script>
+
+
 <style>
    div#rangeSlider {
       margin: 0px 0px 30px !important;
@@ -52,6 +58,75 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
    .dropdown-menu-right {
       bottom: unset !important;
+      z-index: 9;
+   }
+</style>
+<style>
+   .date-picker-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 400px;
+      margin: auto;
+   }
+
+   .date-label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+   }
+
+   .date-filter {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 5px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      transition: 0.3s;
+      width: 100%;
+   }
+
+   .pull-right>.dropdown-menu li {
+      padding: 5px 10px;
+   }
+
+   .width250 {
+      padding: 10px;
+      width: 1000px;
+   }
+
+
+   .right-menu-filter .bootstrap-select .btn-default,
+   .right-menu-filter li .form-control span,
+   .right-menu-filter .set_disabled_date,
+   .right-menu-filter button.btn,
+   .form-control::placeholder {
+      padding: 4px 10px;
+      line-height: 2;
+      height: 30px;
+      text-transform: inherit;
+      padding-left: 10px;
+      font-size: 12px;
+   }
+
+   .right-menu-filter ._filter_data .dropdown-menu li a,
+   .bootstrap-select .dropdown-menu li a {
+      font-size: 12px;
+      padding: 0px !important;
+   }
+
+   .sticky-header thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background-color: #fff;
+      transition: top 0.1s ease;
+   }
+
+   .sticky-header thead.is-stuck {
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
    }
 </style>
 <div id="wrapper">
@@ -70,7 +145,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                         </a>
                      <?php } ?>
                      <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-4">
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('leads_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
 
                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo "Show Update count and Call Duration"; ?>" data-placement="bottom" onclick="slideToggle('.leads-count-overview'); summary(2); return false; "><i class="fa fa-clock-o"></i></a>
@@ -96,6 +171,192 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                            <?php } ?>
                            <?php echo form_hidden('sort_type'); ?>
                            <?php echo form_hidden('sort', (get_option('default_leads_kanban_sort') != '' ? get_option('default_leads_kanban_sort_type') : '')); ?>
+                           <div class="btn-group pull-right mleft4 btn-with-tooltip-group _filter_data" data-toggle="tooltip" data-title="<?php echo _l('filter_by'); ?>">
+                              <button type="button" onclick="right_filter('right-menu-filter')" class="btn btn-default dropdown-toggle">
+                                 <i class="fa fa-filter" aria-hidden="true"></i>
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-right width250 right-menu-filter">
+                                 <?php if (has_permission('leads', '', 'view')) { ?>
+                                    <li class="col-md-3">
+                                       <div class="leads-filter-column">
+                                          <?php echo render_select(
+                                             'view_assigned[]',
+                                             $staff,
+                                             array('staffid', array('firstname', 'lastname')),
+                                             '',
+                                             '',
+                                             array(
+                                                'data-width' => '100%',
+                                                'data-none-selected-text' => _l('leads_dt_assigned'),
+                                                'multiple' => true,
+                                                'data-actions-box' => true
+                                             ),
+                                             array(),
+                                             'no-mbot',
+                                             '',
+                                             false,
+                                             'view_assigned'
+                                          ); ?>
+                                       </div>
+                                    </li>
+                                 <?php } ?>
+                                 <li class="col-md-3">
+                                    <div class="leads-filter-column">
+                                       <?php
+                                       $selected = array();
+                                       if ($this->input->get('status')) {
+                                          $selected[] = $this->input->get('status');
+                                       } else {
+                                          foreach ($statuses as $key => $status) {
+                                             if ($status['isdefault'] == 0) {
+                                                $selected[] = $status['id'];
+                                             } else {
+                                                $statuses[$key]['option_attributes'] = array('data-subtext' => _l('leads_converted_to_client'));
+                                             }
+                                          }
+                                       }
+                                       echo '<div id="leads-filter-status">';
+                                       echo render_select(
+                                          'view_status[]',
+                                          $statuses,
+                                          array('id', 'name'),
+                                          '',
+                                          $selected,
+                                          array(
+                                             'data-width' => '100%',
+                                             'data-none-selected-text' => _l('leads_all'),
+                                             'multiple' => true,
+                                             'data-actions-box' => true
+                                          ),
+                                          array(),
+                                          'no-mbot',
+                                          '',
+                                          false,
+                                          'view_status'
+                                       );
+                                       echo '</div>';
+                                       ?>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div class="leads-filter-column">
+                                       <div id="leads-filter-source">
+                                          <?php
+                                          echo render_select(
+                                             'view_source[]',
+                                             $sources,
+                                             array('id', 'name'),
+                                             '',
+                                             '',
+                                             array(
+                                                'data-width' => '100%',
+                                                'data-none-selected-text' => _l('leads_source'),
+                                                'multiple' => true,
+                                                'data-actions-box' => true
+                                             ),
+                                             array(),
+                                             'no-mbot',
+                                             '',
+                                             false,
+                                             "view_source"
+                                          );
+                                          ?>
+                                       </div>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div class="leads-filter-column">
+                                       <div id="leads-filter-type">
+                                          <?php
+                                          echo render_select(
+                                             'lead_type[]',
+                                             $type,
+                                             array('id', 'name'),
+                                             '',
+                                             '',
+                                             array(
+                                                'data-width' => '100%',
+                                                'data-none-selected-text' => _l('lead_import_type'),
+                                                'multiple' => true,
+                                                'data-actions-box' => true
+                                             ),
+                                             array(),
+                                             'no-mbot',
+                                             '',
+                                             false,
+                                             "lead_type"
+                                          );
+                                          ?>
+                                       </div>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
+                                       <i class="fa fa-calendar"></i>
+                                       <span data-label="Created Date">Created Date</span>
+                                       <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div id="update_date_right" data-from="up_from_date" data-to="up_to_date" class="date-filter form-control">
+                                       <i class="fa fa-calendar"></i>
+                                       <span data-label="Update Date">Update Date</span>
+                                       <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
+                                       <i class="fa fa-calendar"></i>
+                                       <span data-label="Follow-up Date">Follow-up Date</span>
+                                       <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div id="assign_date_right" data-from="assign_from_date" data-to="assign_to_date" class="date-filter form-control">
+                                       <i class="fa fa-calendar"></i>
+                                       <span data-label="Assignation Date">Assignation Date</span>
+                                       <i class="fa fa-chevron-down"></i>
+                                    </div>
+                                 </li>
+                                 <li class="col-md-3">
+                                    <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
+                                 </li>
+                                 <li class="col-md-3">
+                                    <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
+                                 </li>
+                                 <li class="col-md-3">
+                                    <div class="leads-filter-column col-md-12" style="margin-bottom:20px;">
+                                       <div class="checkbox" style="margin-bottom: 10px;">
+
+                                          <input type="checkbox" name="show_update_counts" value="1"
+                                             class="set_disabled_date disabled_checkbox"
+                                             id="show_update_counts"
+                                             onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');">
+                                          <label> Update Count Range
+                                          </label>
+                                       </div>
+
+                                       <div id="rangeSlider" style="display: none;"></div>
+
+                                       <input type="hidden" id="update_count_min" name="update_count_min">
+                                       <input type="hidden" id="update_count_max" name="update_count_max">
+                                    </div>
+                                    <!-- <div class="form-group" style="margin-top: 10px; text-align: right;">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
+                                    </div> -->
+                                 </li>
+
+                                 <li class="col-md-3">
+                                    <div class="form-group" style="margin-top: 10px; text-align: right;">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
+                                    </div>
+                                 </li>
+
+
+                              </ul> <!-- ✅ Properly closed -->
+                           </div>
                         </div>
                      </div>
                      <div class="clearfix"></div>
@@ -199,20 +460,19 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                      </div> -->
                      <?php } else { ?>
                         <div class="row" id="leads-table ">
-                           <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p>
-                           <div id="filterArea" class="col-md-12 hidden-xs">
+                           <!-- <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p> -->
+                           <div id="filterArea" class="col-md-12 hidden-xs hide">
                               <div class="row">
                                  <div class="col-md-12">
                                     <p class="bold"><?php echo _l('filter_by'); ?></p>
                                  </div>
                                  <?php if (has_permission('leads', '', 'view')) { ?>
-                                    <div class="col-md-2 leads-filter-column">
-                                       <?php //echo render_select('view_assigned',$staff,array('staffid',array('firstname','lastname')),'','',array('data-width'=>'100%','data-none-selected-text'=>_l('leads_dt_assigned')),array(),'no-mbot'); 
-                                       ?>
+                                    <!-- <div class="col-md-2 leads-filter-column">
+                                  
                                        <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
-                                    </div>
+                                    </div> -->
                                  <?php } ?>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <?php
                                     $selected = array();
                                     if ($this->input->get('status')) {
@@ -230,23 +490,21 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     echo render_select('view_status[]', $statuses, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_all'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_status');
                                     echo '</div>';
                                     ?>
-                                 </div>
+                                 </div> -->
                                  <!-- <div class="col-md-2 leads-filter-column">
                                  <?php
-                                 echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source')), array(), 'no-mbot');
+                                 // echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source')), array(), 'no-mbot');
                                  ?>
                               </div> -->
 
-                                 <div class="col-md-2 leads-filter-column">
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <?php
                                     echo '<div id="leads-filter-source">';
                                     echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
                                     echo '</div>';
-
-                                    // die;
                                     ?>
-                                 </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 </div> -->
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <?php
                                     echo '<div id="leads-filter-source">';
                                     echo render_select('lead_type[]', $type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
@@ -254,20 +512,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 
                                     // die;
                                     ?>
-                                 </div>
-                                 <!-- <div class="col-md-2 leads-filter-column">
-                                    <select name="lead_type" id="lead_type" class="selectpicker" data-width="100%">
-                                       <option value="">Select Lead Type</option>
-                                       <?php foreach ($type as $tp => $vl) {
-                                          // print_r($vl['name']);   
-                                       ?>
-                                          <option value="<?php echo $vl['id']; ?>"><?php echo $vl['name']; ?></option>
-                                       <?php } ?>
-                                    </select>
-                                    <?php
-                                    // echo render_leads_type_select($type, ($this->input->post('type') ? $this->input->post('type') : 'Select Lead Type'),'lead_import_type','type', [], true);
-                                    ?>
                                  </div> -->
+
                                  <?php
                                  $neet_score_range = [];
                                  $min_range = 0;
@@ -282,68 +528,11 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     $min_range = $max_range;
                                  }
                                  ?>
-                                 <!-- <div class="col-md-2 leads-filter-column">
-                                    <select name="neet_score" id="neet_score" class="selectpicker" data-width="100%">
-                                       <option value="">Select Neet Score</option>
-                                       <?php foreach ($neet_score_range as $r_val) {
-                                          // print_r($vl['name']);   
-                                       ?>
-                                          <option value="<?php echo $r_val; ?>"><?php echo $r_val; ?></option>
-                                       <?php } ?>
-                                    </select>
-                                    <?php
-                                    ?>
-                                 </div> -->
 
-
-
-
-                                 <?php /*                
-							<!--    <div class="col-md-2 leads-filter-column">-->
-       <!--                          <?php-->
-       <!--                             $selected1 = array();-->
-       <!--                             if($this->input->get('degree')) {-->
-       <!--                              $selected1[] = $this->input->get('degree');-->
-       <!--                             } else {-->
-       <!--                              foreach($degrees as $key => $status) {-->
-       <!--                               $selected1[] = $status['value'];-->
-                                       
-       <!--                              }-->
-       <!--                             }-->
-       <!--                             echo '<div id="leads-filter-status">';-->
-       <!--                             echo render_select('view_degree[]',$degrees,array('value','value'),'','',array('data-width'=>'100%','data-none-selected-text'=>_l('leads_all'),'multiple'=>true,'data-actions-box'=>true),array(),'no-mbot','',false);-->
-       <!--                             echo '</div>';-->
-       <!--                             ?>-->
-       <!--                       </div>-->
-							<!--    <div class="col-md-2 leads-filter-column">-->
-       <!--                          <?php-->
-       <!--                             $selected1 = array();-->
-       <!--                             if($this->input->get('course')) {-->
-       <!--                              $selected1[] = $this->input->get('course');-->
-       <!--                             } else {-->
-       <!--                              foreach($courses as $key => $status) {-->
-       <!--                               $selected1[] = $status['value'];-->
-                                       
-       <!--                              }-->
-       <!--                             }-->
-       <!--                             echo '<div id="leads-filter-status">';-->
-       <!--                             echo render_select('view_course[]',$courses,array('value','value'),'','',array('data-width'=>'100%','data-none-selected-text'=>_l('leads_all'),'multiple'=>true,'data-actions-box'=>true),array(),'no-mbot','',false);-->
-       <!--                             echo '</div>';-->
-       <!--                             ?>-->
-       <!--                       </div>-->
-
-       */ ?>
-
-                                 <!--<p>&nbsp;</p>-->
-                                 <div class="col-md-2 leads-filter-column hide">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="select-placeholder">
                                        <select name="custom_view" title="<?php echo _l('additional_filters'); ?>" id="custom_view" class="selectpicker" data-width="100%">
                                           <option value=""></option>
-                                          <!--
-                                       <option value="lost"><?php echo _l('lead_lost'); ?></option>
-                                       <option value="junk"><?php echo _l('lead_junk'); ?></option>
-                                       <option value="public"><?php echo _l('lead_public'); ?></option>
-                                      -->
                                           <option value="contacted_today"><?php echo _l('lead_add_edit_contacted_today'); ?></option>
                                           <option value="created_today"><?php echo _l('created_today'); ?></option>
                                           <?php if (!has_permission('leads', '', 'view')) { ?>
@@ -361,22 +550,23 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        </select>
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From Created Date" autocomplete="off">
                                     </div>
+
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To Created Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="up_from_date" id="up_from_date" placeholder="From Update Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="up_to_date" id="up_to_date" placeholder="To Update Date" autocomplete="off">
                                     </div>
@@ -391,364 +581,372 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        <input type="text" class="form-control datepicker" name="up_to_date_call" id="up_to_date_call" placeholder="To Call Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="followup_from_date" id="followup_from_date" placeholder="From Followup Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="followup_to_date" id="followup_to_date" placeholder="To Followup Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="assign_from_date" id="assign_from_date" placeholder="From Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
-                                 <div class="col-md-2 leads-filter-column">
+                                 <div class="col-md-2 leads-filter-   ">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker" name="assign_to_date" id="assign_to_date" placeholder="To Assignation Date" autocomplete="off">
                                     </div>
                                  </div>
 
-                                 <div class="col-md-2 leads-filter-column">
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
                                     </div>
-                                 </div>
+                                 </div> -->
 
-                                 <div class="col-md-2 leads-filter-column">
+                                 <!-- <div class="col-md-2 leads-filter-column">
                                     <div class="form-group">
                                        <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
                                     </div>
-                                 </div>
-                                 <div class="col-md-3 leads-filter-column">
+                                 </div> -->
+                                 <!-- <div class="col-md-3 leads-filter-column">
                                     <label>Update Count Range <input type="checkbox" name="show_update_counts" value="1" class="set_disabled_date disabled_checkbox" id="show_update_counts" onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');"> </label>
                                     <div id="rangeSlider" style="display:none;"></div>
                                     <input type="hidden" id="update_count_min" name="update_count_min">
                                     <input type="hidden" id="update_count_max" name="update_count_max">
-                                 </div>
+                                 </div> -->
                                  <div class="col-md-3 text-center leads-filter-column">
-                                    <div class="form-group">
+                                    <!-- <div class="form-group">
                                        <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
-
-                                       <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                        <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
-                                    </div>
+                                    </div> -->
                                  </div>
                               </div>
                            </div>
+
+
+
+                           <!-- 
                            <div class="clearfix"></div>
-                           <div class="col-md-12">
-                              <div>
-                                 <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Transfer Request'); ?>" onclick="show_lead_request()" data-placement="bottom">Lead Transfer Request</button>
-                              </div>
-                              <hr>
+                           <hr class="hr-panel-heading" /> -->
+                        </div>
 
-                              <div class="lead-transfer-table hide">
-                                 <br>
-                                 <br>
-                                 <?php
-                                 if (is_admin()) {
-                                    render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
-                                 } else {
-                                    render_datatable(array(_l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
-                                 }
-                                 ?>
-                                 <hr class="hr-panel-heading" />
-
-                              </div>
-                              <br>
-                              <br>
+                        <div class="clearfix"></div>
+                        <div class="col-md-12">
+                           <div>
+                              <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Transfer Request'); ?>" onclick="show_lead_request()" data-placement="bottom">Lead Transfer Request</button>
                            </div>
+                           <hr>
 
-                           <div class="clearfix"></div>
-                           <div class="col-md-12 hide">
-                              <div>
-                                 <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Visitor Request'); ?>" onclick="show_lead_request_visitor()" data-placement="bottom">Lead Visitor Request</button>
-                              </div>
-                              <hr>
-
-                              <div class="lead-visitor-table hide">
-                                 <br>
-                                 <br>
-                                 <?php
-                                 if (is_admin()) {
-                                    render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
-                                 } else {
-                                    render_datatable(array(_l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
-                                 }
-                                 ?>
-                                 <hr class="hr-panel-heading" />
-
-                              </div>
+                           <div class="lead-transfer-table hide">
                               <br>
                               <br>
-                           </div>
-
-                           <div class="col-md-12">
-                              <a href="#" data-toggle="modal" data-table=".table-leads" data-target="#leads_bulk_actions" class="hide bulk-actions-btn table-btn"><?php echo _l('bulk_actions'); ?></a>
-                              <div class="modal fade bulk_actions" id="leads_bulk_actions" tabindex="-1" role="dialog">
-                                 <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                       <div class="modal-header">
-                                          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                          <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
-                                       </div>
-                                       <div class="modal-body">
-                                          <?php if (has_permission('leads', '', 'delete')) { ?>
-                                             <div class="checkbox checkbox-danger">
-                                                <input type="checkbox" name="mass_delete" id="mass_delete">
-                                                <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
-                                             </div>
-                                          <?php } ?>
-                                          <?php if (has_permission('leads', '', 'mass_assign')) { ?>
-                                             <div class="checkbox checkbox-danger">
-                                                <input type="checkbox" name="mass_re-assignation" id="mass_re-assignation">
-                                                <label for="mass_re-assignation"><?php echo _l('mass_re-assignation'); ?></label>
-                                             </div>
-                                             <hr class="mass_delete_separator" />
-                                          <?php } ?>
-                                          <div id="bulk_change">
-                                             <div class="form-group hide">
-                                                <div class="checkbox checkbox-primary checkbox-inline">
-                                                   <input type="checkbox" name="leads_bulk_mark_lost" id="leads_bulk_mark_lost" value="1">
-                                                   <label for="leads_bulk_mark_lost">
-                                                      <?php echo _l('lead_mark_as_lost'); ?>
-                                                   </label>
-                                                </div>
-                                             </div>
-                                             <?php echo render_select('move_to_status_leads_bulk', $statuses, array('id', 'name'), 'ticket_single_change_status'); ?>
-                                             <?php
-                                             echo render_select('move_to_source_leads_bulk', $sources, array('id', 'name'), 'lead_source');
-                                             ?>
-                                             <div class="form-group">
-                                                <label for="leadtype" class="control-label">Lead Type</label>
-                                                <select name="leadtype" id="leadtype" class="selectpicker" data-width="100%">
-                                                   <option value="">Select Lead Type</option>
-                                                   <?php foreach ($type as $tp => $vl) {
-                                                   ?>
-                                                      <option value="<?php echo $vl['id']; ?>"><?php echo $vl['name']; ?></option>
-                                                   <?php } ?>
-                                                </select>
-                                             </div>
-
-
-                                             <div class="hide">
-                                                <?php
-                                                echo render_datetime_input('leads_bulk_last_contact', 'leads_dt_last_contact');
-                                                ?>
-                                             </div>
-
-                                             <?php
-                                             if (has_permission('leads', '', 'assign')) {
-                                                echo render_select('assign_to_leads_bulk', $staff, array('staffid', array('firstname', 'lastname')), 'leads_dt_assigned');
-                                             }
-                                             ?>
-                                             <?php
-                                             if (has_permission('leads', '', 'assign')) {
-                                             ?>
-                                                <div class="checkbox checkbox-danger delete_created_date hide">
-                                                   <input type="checkbox" name="delete_created_date" id="delete_created_date">
-                                                   <label for="delete_created_date"><?php echo _l('Remove Created Date'); ?></label>
-                                                </div>
-                                             <?php
-                                             }
-                                             ?>
-                                             <div class="form-group">
-                                                <?php echo '<p><b><i class="fa fa-tag" aria-hidden="true"></i> ' . _l('tags') . ':</b></p>'; ?>
-                                                <input type="text" class="tagsinput" id="tags_bulk" name="tags_bulk" value="" data-role="tagsinput">
-                                             </div>
-                                             <!-- <hr /> -->
-                                             <div class="form-group no-mbot hide">
-                                                <div class="radio radio-primary radio-inline">
-                                                   <input type="radio" name="leads_bulk_visibility" id="leads_bulk_public" value="public">
-                                                   <label for="leads_bulk_public">
-                                                      <?php echo _l('lead_public'); ?>
-                                                   </label>
-                                                </div>
-                                                <div class="radio radio-primary radio-inline">
-                                                   <input type="radio" name="leads_bulk_visibility" id="leads_bulk_private" value="private">
-                                                   <label for="leads_bulk_private">
-                                                      <?php echo _l('private'); ?>
-                                                   </label>
-                                                </div>
-                                             </div>
-                                          </div>
-                                          <div id="re-assignation_div" style="display:none;">
-                                             <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
-
-                                          </div>
-                                       </div>
-                                       <div class="modal-footer">
-                                          <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
-                                          <a href="#" class="btn btn-info" onclick="leads_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
-                                       </div>
-                                    </div>
-                                    <!-- /.modal-content -->
-                                 </div>
-                                 <!-- /.modal-dialog -->
-                              </div>
-                              <!-- /.modal -->
                               <?php
-                              $table_data = array();
-                              $_table_data = array(
-                                 '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap">
+                              if (is_admin()) {
+                                 render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                              } else {
+                                 render_datatable(array(_l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                              }
+                              ?>
+                              <hr class="hr-panel-heading" />
+
+                           </div>
+                           <br>
+                           <br>
+                        </div>
+
+                        <div class="clearfix"></div>
+                        <div class="col-md-12 hide">
+                           <div>
+                              <button class="btn mright5 btn-info pull-left display-block" data-toggle="tooltip" data-title="<?php echo _l('Lead Visitor Request'); ?>" onclick="show_lead_request_visitor()" data-placement="bottom">Lead Visitor Request</button>
+                           </div>
+                           <hr>
+
+                           <div class="lead-visitor-table hide">
+                              <br>
+                              <br>
+                              <?php
+                              if (is_admin()) {
+                                 render_datatable(array(_l('Raised by'), _l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('New Lead Type'), "New Lead Source", _l('Reason'), _l('Status'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                              } else {
+                                 render_datatable(array(_l('Lead Type'), "Lead Source", _l('Assignation'), _l('PhoneNumber'), _l('Reason'), _l('Status'), _l('Created By'), _l('Created Date'), _l("Action")), 'lead-transfer-table');
+                              }
+                              ?>
+                              <hr class="hr-panel-heading" />
+
+                           </div>
+                           <br>
+                           <br>
+                        </div>
+
+                        <div class="col-md-12">
+                           <a href="#" data-toggle="modal" data-table=".table-leads" data-target="#leads_bulk_actions" class="hide bulk-actions-btn table-btn"><?php echo _l('bulk_actions'); ?></a>
+                           <div class="modal fade bulk_actions" id="leads_bulk_actions" tabindex="-1" role="dialog">
+                              <div class="modal-dialog" role="document">
+                                 <div class="modal-content">
+                                    <div class="modal-header">
+                                       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                       <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
+                                    </div>
+                                    <div class="modal-body">
+                                       <?php if (has_permission('leads', '', 'delete')) { ?>
+                                          <div class="checkbox checkbox-danger">
+                                             <input type="checkbox" name="mass_delete" id="mass_delete">
+                                             <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
+                                          </div>
+                                       <?php } ?>
+                                       <?php if (has_permission('leads', '', 'mass_assign')) { ?>
+                                          <div class="checkbox checkbox-danger">
+                                             <input type="checkbox" name="mass_re-assignation" id="mass_re-assignation">
+                                             <label for="mass_re-assignation"><?php echo _l('mass_re-assignation'); ?></label>
+                                          </div>
+                                          <hr class="mass_delete_separator" />
+                                       <?php } ?>
+                                       <div id="bulk_change">
+                                          <div class="form-group hide">
+                                             <div class="checkbox checkbox-primary checkbox-inline">
+                                                <input type="checkbox" name="leads_bulk_mark_lost" id="leads_bulk_mark_lost" value="1">
+                                                <label for="leads_bulk_mark_lost">
+                                                   <?php echo _l('lead_mark_as_lost'); ?>
+                                                </label>
+                                             </div>
+                                          </div>
+                                          <?php echo render_select('move_to_status_leads_bulk', $statuses, array('id', 'name'), 'ticket_single_change_status'); ?>
+                                          <?php
+                                          echo render_select('move_to_source_leads_bulk', $sources, array('id', 'name'), 'lead_source');
+                                          ?>
+                                          <div class="form-group">
+                                             <label for="leadtype" class="control-label">Lead Type</label>
+                                             <select name="leadtype" id="leadtype" class="selectpicker" data-width="100%">
+                                                <option value="">Select Lead Type</option>
+                                                <?php foreach ($type as $tp => $vl) {
+                                                ?>
+                                                   <option value="<?php echo $vl['id']; ?>"><?php echo $vl['name']; ?></option>
+                                                <?php } ?>
+                                             </select>
+                                          </div>
+
+
+                                          <div class="hide">
+                                             <?php
+                                             echo render_datetime_input('leads_bulk_last_contact', 'leads_dt_last_contact');
+                                             ?>
+                                          </div>
+
+                                          <?php
+                                          if (has_permission('leads', '', 'assign')) {
+                                             echo render_select('assign_to_leads_bulk', $staff, array('staffid', array('firstname', 'lastname')), 'leads_dt_assigned');
+                                          }
+                                          ?>
+                                          <?php
+                                          if (has_permission('leads', '', 'assign')) {
+                                          ?>
+                                             <div class="checkbox checkbox-danger delete_created_date hide">
+                                                <input type="checkbox" name="delete_created_date" id="delete_created_date">
+                                                <label for="delete_created_date"><?php echo _l('Remove Created Date'); ?></label>
+                                             </div>
+                                          <?php
+                                          }
+                                          ?>
+                                          <div class="form-group">
+                                             <?php echo '<p><b><i class="fa fa-tag" aria-hidden="true"></i> ' . _l('tags') . ':</b></p>'; ?>
+                                             <input type="text" class="tagsinput" id="tags_bulk" name="tags_bulk" value="" data-role="tagsinput">
+                                          </div>
+                                          <!-- <hr /> -->
+                                          <div class="form-group no-mbot hide">
+                                             <div class="radio radio-primary radio-inline">
+                                                <input type="radio" name="leads_bulk_visibility" id="leads_bulk_public" value="public">
+                                                <label for="leads_bulk_public">
+                                                   <?php echo _l('lead_public'); ?>
+                                                </label>
+                                             </div>
+                                             <div class="radio radio-primary radio-inline">
+                                                <input type="radio" name="leads_bulk_visibility" id="leads_bulk_private" value="private">
+                                                <label for="leads_bulk_private">
+                                                   <?php echo _l('private'); ?>
+                                                </label>
+                                             </div>
+                                          </div>
+                                       </div>
+                                       <div id="re-assignation_div" style="display:none;">
+                                          <?php echo render_select('mass_assigned', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned')), array(), 'no-mbot', '', false, 'mass_assigned'); ?>
+
+                                       </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                       <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
+                                       <a href="#" class="btn btn-info" onclick="leads_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
+                                    </div>
+                                 </div>
+                                 <!-- /.modal-content -->
+                              </div>
+                              <!-- /.modal-dialog -->
+                           </div>
+                           <!-- /.modal -->
+                           <?php
+                           $table_data = array();
+                           $_table_data = array(
+                              '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap">
                                      <input type="checkbox" id="mass_select_all" data-to-table="leads"><label></label>
                                  </div>',
-                                 array(
-                                    'name' => _l('Flag'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 )
-                              );
+                              array(
+                                 'name' => _l('Flag'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              )
+                           );
 
-                              /// change follow date
+                           /// change follow date
 
 
-                              // Common columns for both roles
-                              $_table_data = array_merge($_table_data, array(
-                                 array(
-                                    'name' => _l('Count'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('Durations'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('Connected'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
-                                 ),
-                                 array(
-                                    'name' => _l('leads_dt_datecreated'),
-                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
-                                 ),
-                                 array(
-                                    'name' => _l('Updated'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
-                                 ),
-                                 array(
-                                    'name' => _l('tags'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
-                                 ),
-                                 array(
-                                    'name' => _l('leads_dt_name'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
-                                 )
-                              ));
-                              if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
-                                 $_table_data[] = array(
-                                    'name' => _l('gdpr_consent') . ' (' . _l('gdpr_short') . ')',
-                                    'th_attrs' => array('id' => 'th-consent', 'class' => 'not-export')
-                                 );
-                              }
-                              $_table_data[] =  array(
-                                 'name' => _l('leads_dt_phonenumber'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-phone')
-                              );
-
+                           // Common columns for both roles
+                           $_table_data = array_merge($_table_data, array(
+                              array(
+                                 'name' => _l('Count'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              ),
+                              array(
+                                 'name' => _l('Durations'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              ),
+                              array(
+                                 'name' => _l('Connected'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              ),
+                              array(
+                                 'name' => _l('leads_dt_datecreated'),
+                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
+                              ),
+                              array(
+                                 'name' => _l('Updated'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-last-contact')
+                              ),
+                              array(
+                                 'name' => _l('tags'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
+                              ),
+                              array(
+                                 'name' => _l('leads_dt_name'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-name')
+                              )
+                           ));
+                           if (is_gdpr() && get_option('gdpr_enable_consent_for_leads') == '1') {
                               $_table_data[] = array(
-                                 'name' => _l('leads_dt_status'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-status')
+                                 'name' => _l('gdpr_consent') . ' (' . _l('gdpr_short') . ')',
+                                 'th_attrs' => array('id' => 'th-consent', 'class' => 'not-export')
                               );
+                           }
+                           $_table_data[] =  array(
+                              'name' => _l('leads_dt_phonenumber'),
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-phone')
+                           );
 
-                              $custom_fields = get_custom_fields('leads', array('show_on_table' => 1));
+                           $_table_data[] = array(
+                              'name' => _l('leads_dt_status'),
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-status')
+                           );
 
-                              if (is_admin()) {
-                                 foreach ($custom_fields as $key => $field) {
-                                    array_push($_table_data, $field['name']);
-                                 }
+                           $custom_fields = get_custom_fields('leads', array('show_on_table' => 1));
+
+                           if (is_admin()) {
+                              foreach ($custom_fields as $key => $field) {
+                                 array_push($_table_data, $field['name']);
                               }
+                           }
 
+                           $_table_data[] = array(
+                              'name' => _l('Lead Type'),
+
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-lead-type')
+
+                           );
+                           if (is_admin()) {
                               $_table_data[] = array(
-                                 'name' => _l('Lead Type'),
+                                 'name' => _l('lead_website'),
 
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-lead-type')
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-website')
 
                               );
-                              if (is_admin()) {
-                                 $_table_data[] = array(
-                                    'name' => _l('lead_website'),
+                           }
+                           $_table_data[] = array(
+                              'name' => _l('leads_source'),
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')
+                           );
 
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-website')
+                           if ($role != 1) {
 
-                                 );
-                              }
-                              $_table_data[] = array(
-                                 'name' => _l('leads_source'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-source')
-                              );
-
-                              if ($role != 1) {
-
-                                 $_table_data[] =   array(
-                                    'name' => _l('leads_dt_email'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-email')
-                                 );
-                                 $_table_data[] = array(
-                                    'name' => _l('leads_dt_assigned'),
-                                    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-assigned')
-                                 );
-                              }
-                              $_table_data[] = array(
-                                 'name' => _l('Assigned Date'),
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-dateassigned')
+                              $_table_data[] =   array(
+                                 'name' => _l('leads_dt_email'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-email')
                               );
                               $_table_data[] = array(
-                                 'name' => _l('lead_city'),
-
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-city')
-
+                                 'name' => _l('leads_dt_assigned'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-assigned')
                               );
+                           }
+                           $_table_data[] = array(
+                              'name' => _l('Assigned Date'),
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-dateassigned')
+                           );
+                           $_table_data[] = array(
+                              'name' => _l('lead_city'),
+
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-city')
+
+                           );
+                           $_table_data[] = array(
+                              'name' => _l('lead_state'),
+
+                              'th_attrs' => array('class' => 'toggleable', 'id' => 'th-state')
+
+                           );
+                           // $_table_data[] =  array(
+                           //    'name' => _l('tags'),
+                           //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
+                           // );
+
+                           if ($role != 1) {
                               $_table_data[] = array(
-                                 'name' => _l('lead_state'),
-
-                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-state')
-
+                                 'name' => _l('Followup Date'),
+                                 'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
                               );
-                              // $_table_data[] =  array(
-                              //    'name' => _l('tags'),
-                              //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-tags')
-                              // );
+                           }
 
-                              if ($role != 1) {
-                                 $_table_data[] = array(
-                                    'name' => _l('Followup Date'),
-                                    'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-period')
-                                 );
-                              }
+                           foreach ($_table_data as $_t) {
+                              array_push($table_data, $_t);
+                           }
 
-                              foreach ($_table_data as $_t) {
-                                 array_push($table_data, $_t);
-                              }
-
-                              $table_data = hooks()->apply_filters('leads_table_columns', $table_data);
-                              render_datatable(
-                                 $table_data,
-                                 'leads',
-                                 array('customizable-table'),
-                                 array(
-                                    'id' => 'table-leads',
-                                    'data-last-order-identifier' => 'leads',
-                                    'data-default-order' => get_table_last_order('leads'),
-                                 )
-                              ); ?>
-                           </div>
+                           $table_data = hooks()->apply_filters('leads_table_columns', $table_data);
+                           render_datatable(
+                              $table_data,
+                              'leads',
+                              array('customizable-table sticky-header'),
+                              array(
+                                 'id' => 'table-leads',
+                                 'data-last-order-identifier' => 'leads',
+                                 'data-default-order' => get_table_last_order('leads'),
+                              )
+                           ); ?>
                         </div>
-                     <?php } ?>
                   </div>
+               <?php } ?>
                </div>
             </div>
          </div>
       </div>
    </div>
 </div>
+</div>
 <script id="hidden-columns-table-leads" type="text/json">
    <?php echo get_staff_meta(get_staff_user_id(), 'hidden-columns-table-leads'); ?>
 </script>
 <?php include_once(APPPATH . 'views/admin/leads/status.php'); ?>
 <?php init_tail(); ?>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
+
 <script>
    var max_count = parseInt("<?= !empty($updateCount_max) ? $updateCount_max : 0 ?>");
 
@@ -1045,6 +1243,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                return false;
             }
          }
+         right_filter('right-menu-filter');
          show_loader("apply_filter");
          await periodFilter();
 
@@ -1268,6 +1467,130 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       initDataTable('.table-lead-transfer-table', admin_url + 'leads/table_lead_transfer/0/<?= (is_admin()) ? 'admin' : 'counsellor' ?>/1', 'undefined', 'undefined', 'undefined', [0, 'desc']);
       return false;
    }
+
+
+
+
+   $(function() {
+      function updateDateText(element, start, end) {
+
+         let from = element.data("from");
+         let to = element.data("to");
+
+
+         $("#" + from).val(start.format("YYYY-MM-DD"));
+         $("#" + to).val(end.format("YYYY-MM-DD"));
+
+         element.find("span").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+      }
+
+
+      function initDatePicker(selector, extraRanges = {}) {
+         $(selector).daterangepicker({
+            autoUpdateInput: false,
+            locale: {
+               format: "YYYY-MM-DD",
+               cancelLabel: "Clear"
+            },
+            opens: "left",
+            parentEl: "body",
+            ranges: Object.assign({
+               "Today": [moment(), moment()],
+               "Yesterday": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+               "Last 7 Days": [moment().subtract(6, "days"), moment()],
+               "Last 30 Days": [moment().subtract(29, "days"), moment()],
+               "This Month": [moment().startOf("month"), moment().endOf("month")],
+               "Last Month": [
+                  moment().subtract(1, "month").startOf("month"),
+                  moment().subtract(1, "month").endOf("month")
+               ],
+               "Clear": [null, null]
+            }, extraRanges)
+         }, function(start, end, label) {
+            if (label === "Clear") {
+               const from = this.element.data("from");
+               const to = this.element.data("to");
+               $("#" + from).val('');
+               $("#" + to).val('');
+               let label_name = this.element.find("span").data('label');
+               this.element.find("span").html(label_name);
+            } else {
+               updateDateText(this.element, start, end);
+            }
+         });
+
+         // Cancel button click handler
+         $(selector).on('cancel.daterangepicker', function(ev, picker) {
+            const from = $(this).data("from");
+            const to = $(this).data("to");
+            $("#" + from).val('');
+            $("#" + to).val('');
+            $(this).find("span").html('');
+         });
+      }
+
+      // Initialize all inputs
+      initDatePicker("#from_date_right");
+      initDatePicker("#update_date_right");
+      initDatePicker("#assign_date_right");
+
+      // Initialize with extra ranges for follow_date_right
+      initDatePicker("#follow_date_right", {
+         "Tomorrow": [moment().add(1, 'days'), moment().add(1, 'days')],
+         "Next 7 Days": [moment(), moment().add(6, 'days')],
+         "Next 15 Days": [moment(), moment().add(14, 'days')]
+      });
+   });
+
+
+   function right_filter(className) {
+      $("." + className).toggle();
+   }
+
+
+   const stickyHeader = document.querySelector('.sticky-header thead');
+   let initialTop = null;
+
+   function updateStickyPosition() {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+      // Set initialTop if not set and thead is at or past top
+      if (initialTop === null) {
+         const rect = stickyHeader.getBoundingClientRect();
+         const absoluteTop = rect.top + scrollTop;
+
+         // Once header reaches/passes top, mark it
+         if (rect.top <= 0) {
+            initialTop = absoluteTop;
+            stickyHeader.classList.add('is-stuck');
+            stickyHeader.style.top = '0px';
+         }
+      }
+
+      // While stuck
+      if (initialTop !== null) {
+         if (scrollTop >= initialTop) {
+            // Scrolls further down — stay stuck and adjust top
+            const offset = scrollTop - initialTop;
+            stickyHeader.style.top = `${offset}px`;
+         } else {
+            // Scrolled up past the original position — unstick
+            stickyHeader.classList.remove('is-stuck');
+            stickyHeader.style.top = '';
+            initialTop = null;
+         }
+      }
+   }
+
+   // Run on scroll
+   window.addEventListener('scroll', () => {
+      requestAnimationFrame(updateStickyPosition);
+   });
+
+   // Run once on load (refresh on middle/bottom)
+   window.addEventListener('load', () => {
+      setTimeout(updateStickyPosition, 200);
+   });
 </script>
 
 </body>
