@@ -93,7 +93,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    }
 
    .width250 {
-      width: 230px;
+      padding: 10px;
+      width: 1000px;
    }
 
 
@@ -114,6 +115,18 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    .bootstrap-select .dropdown-menu li a {
       font-size: 12px;
       padding: 0px !important;
+   }
+
+   .sticky-header thead {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background-color: #fff;
+      transition: top 0.1s ease;
+   }
+
+   .sticky-header thead.is-stuck {
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
    }
 </style>
 <div id="wrapper">
@@ -164,7 +177,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                               </button>
                               <ul class="dropdown-menu dropdown-menu-right width250 right-menu-filter">
                                  <?php if (has_permission('leads', '', 'view')) { ?>
-                                    <li>
+                                    <li class="col-md-3">
                                        <div class="leads-filter-column">
                                           <?php echo render_select(
                                              'view_assigned[]',
@@ -187,7 +200,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        </div>
                                     </li>
                                  <?php } ?>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div class="leads-filter-column">
                                        <?php
                                        $selected = array();
@@ -225,7 +238,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        ?>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div class="leads-filter-column">
                                        <div id="leads-filter-source">
                                           <?php
@@ -251,7 +264,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        </div>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div class="leads-filter-column">
                                        <div id="leads-filter-type">
                                           <?php
@@ -277,41 +290,41 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        </div>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
                                        <span data-label="Created Date">Created Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div id="update_date_right" data-from="up_from_date" data-to="up_to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
                                        <span data-label="Update Date">Update Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
                                        <span data-label="Follow-up Date">Follow-up Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div id="assign_date_right" data-from="assign_from_date" data-to="assign_to_date" class="date-filter form-control">
                                        <i class="fa fa-calendar"></i>
                                        <span data-label="Assignation Date">Assignation Date</span>
                                        <i class="fa fa-chevron-down"></i>
                                     </div>
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
                                  </li>
-                                 <li>
+                                 <li class="col-md-3">
                                     <div class="leads-filter-column col-md-12" style="margin-bottom:20px;">
                                        <div class="checkbox" style="margin-bottom: 10px;">
 
@@ -328,6 +341,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                        <input type="hidden" id="update_count_min" name="update_count_min">
                                        <input type="hidden" id="update_count_max" name="update_count_max">
                                     </div>
+                                    <!-- <div class="form-group" style="margin-top: 10px; text-align: right;">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
+                                    </div> -->
+                                 </li>
+
+                                 <li class="col-md-3">
                                     <div class="form-group" style="margin-top: 10px; text-align: right;">
                                        <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
                                        <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
@@ -903,7 +923,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                            render_datatable(
                               $table_data,
                               'leads',
-                              array('customizable-table'),
+                              array('customizable-table sticky-header'),
                               array(
                                  'id' => 'table-leads',
                                  'data-last-order-identifier' => 'leads',
@@ -1526,6 +1546,51 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    function right_filter(className) {
       $("." + className).toggle();
    }
+
+
+   const stickyHeader = document.querySelector('.sticky-header thead');
+   let initialTop = null;
+
+   function updateStickyPosition() {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+
+      // Set initialTop if not set and thead is at or past top
+      if (initialTop === null) {
+         const rect = stickyHeader.getBoundingClientRect();
+         const absoluteTop = rect.top + scrollTop;
+
+         // Once header reaches/passes top, mark it
+         if (rect.top <= 0) {
+            initialTop = absoluteTop;
+            stickyHeader.classList.add('is-stuck');
+            stickyHeader.style.top = '0px';
+         }
+      }
+
+      // While stuck
+      if (initialTop !== null) {
+         if (scrollTop >= initialTop) {
+            // Scrolls further down — stay stuck and adjust top
+            const offset = scrollTop - initialTop;
+            stickyHeader.style.top = `${offset}px`;
+         } else {
+            // Scrolled up past the original position — unstick
+            stickyHeader.classList.remove('is-stuck');
+            stickyHeader.style.top = '';
+            initialTop = null;
+         }
+      }
+   }
+
+   // Run on scroll
+   window.addEventListener('scroll', () => {
+      requestAnimationFrame(updateStickyPosition);
+   });
+
+   // Run once on load (refresh on middle/bottom)
+   window.addEventListener('load', () => {
+      setTimeout(updateStickyPosition, 200);
+   });
 </script>
 
 </body>
