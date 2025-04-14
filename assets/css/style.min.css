@@ -9144,6 +9144,7 @@ body.gantt {
 }
 
 @-webkit-keyframes rotate {
+
     /* 100% keyframe for  clockwise. 
  use 0% instead for anticlockwise */
     100% {
@@ -9159,4 +9160,28 @@ body.gantt {
     background: black;
     opacity: 0.2;
     z-index: 999999 !important;
+}
+
+
+.sticky-header thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #fff;
+    transition: top 0.1s ease;
+}
+
+.sticky-header thead.is-stuck {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.table-condensed th,
+.table-condensed td.available {
+    background-color: transparent !important;
+    color: unset !important;
+}
+
+.table-condensed td.active {
+    background-color: #357ebd !important;
+    color: white !important;
 }

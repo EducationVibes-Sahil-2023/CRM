@@ -464,7 +464,7 @@ array_unshift($apostille_vendors, array());
                   <div class="col-md-12 row">
                      <div class="panel_s">
                         <div class="panel-body">
-                           <table id="dynamicTable" class="table table-clients" style="width:100%">
+                           <table id="dynamicTable" class="table table-clients sticky-header" style="width:100%">
                               <thead></thead>
                               <tbody></tbody>
                            </table>
