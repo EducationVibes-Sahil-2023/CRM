@@ -204,24 +204,24 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                                     <div class="leads-filter-column">
                                        <?php
                                        $selected = array();
-                                       if ($this->input->get('status')) {
-                                          $selected[] = $this->input->get('status');
-                                       } else {
-                                          foreach ($statuses as $key => $status) {
-                                             if ($status['isdefault'] == 0) {
-                                                $selected[] = $status['id'];
-                                             } else {
-                                                $statuses[$key]['option_attributes'] = array('data-subtext' => _l('leads_converted_to_client'));
-                                             }
-                                          }
-                                       }
+                                       // if ($this->input->get('status')) {
+                                       //    $selected[] = $this->input->get('status');
+                                       // } else {
+                                       //    foreach ($statuses as $key => $status) {
+                                       //       if ($status['isdefault'] == 0) {
+                                       //          $selected[] = $status['id'];
+                                       //       } else {
+                                       //          $statuses[$key]['option_attributes'] = array('data-subtext' => _l('leads_converted_to_client'));
+                                       //       }
+                                       //    }
+                                       // }
                                        echo '<div id="leads-filter-status">';
                                        echo render_select(
                                           'view_status[]',
                                           $statuses,
                                           array('id', 'name'),
                                           '',
-                                          $selected,
+                                          '',
                                           array(
                                              'data-width' => '100%',
                                              'data-none-selected-text' => _l('leads_all'),
