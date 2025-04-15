@@ -135,7 +135,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
     "LEFT JOIN (
         SELECT 
-            userid,
+            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,
             CASE 
                 WHEN COUNT(*) = 0 THEN 'Pending'
                 WHEN SUM(received_status = 0) > 0 THEN 'Sent'
