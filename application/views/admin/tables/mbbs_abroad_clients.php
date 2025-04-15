@@ -267,8 +267,7 @@ if ($this->ci->input->post('session_intake')) {
     array_push(
         $where,
         "AND DATE_FORMAT(" . db_prefix() . "admission_preferences.session_intake, '%Y-%m') 
-        BETWEEN '" . $this->ci->db->escape_str($from_date) . "' 
-        AND '" . $this->ci->db->escape_str($to_date) . "'"
+        = '" . $this->ci->db->escape_str($session_intake) . "'"
     );
 }
 
