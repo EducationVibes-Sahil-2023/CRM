@@ -7,6 +7,10 @@ class Clients extends AdminController
     /* List all clients */
     public function index()
     {
+
+        $this->load->library('GoogleSheetApi');
+        die;
+
         $lastSegment = $this->uri->segment($this->uri->total_segments());
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
