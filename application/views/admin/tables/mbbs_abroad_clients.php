@@ -266,7 +266,7 @@ if ($this->ci->input->post('session_intake')) {
     $session_intake = $this->ci->input->post('session_intake');
     array_push(
         $where,
-        "AND DATE_FORMAT(" . db_prefix() . "admission_preferences.session_intake, '%Y-%m') 
+        "AND " . db_prefix() . "admission_preferences.session_intake
         = '" . $this->ci->db->escape_str($session_intake) . "'"
     );
 }
