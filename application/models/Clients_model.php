@@ -2215,17 +2215,19 @@ class Clients_model extends App_Model
             $loc_names = $data["locations_name"];
             $doc_ids = $data["document_ids"];
             $locations = $data["locations"];
-            $status_text = !empty($data["status_text"]) ? $data["status_text"] : "Pending";
+            $status_text = !empty($data["status_text"]) ? $data["status_text"] : "";
             $received_id = $data["received_id"];
             $in_transit = $data["in_transit"];
             $transit_location = $data["transit_location"];
 
             // Update client document status
-            $update_client_data = [
-                "orignal_document_status" => !empty($data["status"]) ? $data["status"] : 1
-            ];
-            $this->db->where('userid', $id);
-            $this->db->update(db_prefix() . 'clients', $update_client_data);
+            if (!empty($data["status"])) {
+                $update_client_data = [
+                    "orignal_document_status" => !empty($data["status"]) ? $data["status"] : 1
+                ];
+                $this->db->where('userid', $id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            }
 
             // Prepare received document data
             $update_client_orignal_document_received = [];
@@ -2281,9 +2283,12 @@ class Clients_model extends App_Model
                     " on " . date('Y-m-d H:i:s');
             } else {
                 if (empty($messages)) {
-                    $message = "Orignal Document status is {$status_text}.";
+                    if (!empty($status_text)) {
+                        $message = "Orignal Document status is {$status_text}.";
+                    }
                 } else {
-                    $message = implode(", ", $messages) . ". All documents were received on " . date('Y-m-d H:i:s') . " and the status is {$status_text}.";
+                    $message = implode(", ", $messages) . ". All documents were received on " . date('Y-m-d H:i:s');
+                    //  . " and the status is {$status_text}.";
                 }
             }
             // Insert document activity log

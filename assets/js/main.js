@@ -1097,7 +1097,7 @@ $(function () {
                 },
                 type: 'POST',
                 error: function () {
-                    console.error('There was error fetching calendar data');
+                    // console.error('There was error fetching calendar data');
                 },
             },],
             eventLimitClick: function (cellInfo, jsEvent) {
@@ -1153,7 +1153,7 @@ $(function () {
                             calendar_settings.eventSources.push(_gcal);
                         }
                     } else {
-                        console.error('You have setup Google Calendar IDs but you dont have specified Google API key. To setup Google API key navigate to Setup->Settings->Google');
+                        // console.error('You have setup Google Calendar IDs but you dont have specified Google API key. To setup Google API key navigate to Setup->Settings->Google');
                     }
                 }
             }
@@ -2817,7 +2817,7 @@ function initDataTable(selector, url, notsearchable, notsortable, fnserverparams
                             }
                         });
                     } else {
-                        console.error('Table that have ability to show/hide columns must have an ID');
+                        // console.error('Table that have ability to show/hide columns must have an ID');
                     }
                 });*/
     }
@@ -7095,7 +7095,7 @@ function requestGetJSON(uri, params) {
  * @deprecated
  */
 function initDatatableOffline(dt_table) {
-    console.warn('"initDatatableOffline" is deprecated, use "initDataTableInline" instead.')
+    // console.warn('"initDatatableOffline" is deprecated, use "initDataTableInline" instead.')
     initDataTableInline(dt_table);
 }
 
@@ -7104,7 +7104,7 @@ function initDatatableOffline(dt_table) {
  * @since  2.3.2
  */
 function init_currency_symbol() {
-    console.warn('"init_currency_symbol" is deprecated, use "init_currency" instead')
+    // console.warn('"init_currency_symbol" is deprecated, use "init_currency" instead')
     init_currency();
 }
 

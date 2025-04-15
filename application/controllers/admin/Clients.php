@@ -1057,7 +1057,7 @@ class Clients extends AdminController
             }
 
             // Handle Mass Delete
-            if ($this->input->post('mass_delete') === true) {
+            if ($this->input->post('mass_delete') == "true") {
 
                 foreach ($ids as $id) {
                     if ($this->clients_model->delete($id)) {
@@ -1071,10 +1071,7 @@ class Clients extends AdminController
                 set_alert('success', _l('total_clients_deleted', $total_deleted));
                 echo json_encode($data);
                 die;
-            }
-
-            // Handle Apostille
-            if ($this->input->post('apostille_status') === true) {
+            } else if ($this->input->post('apostille_status') == "true") {
 
                 $documents_id = $this->input->post('apostille_document') ?? [];
                 $document_cost = $this->input->post('document_cost') ?? [];
@@ -1255,14 +1252,10 @@ class Clients extends AdminController
                         'resp_desc' => 'Appostile data not updated.',
                     ];
                 }
-            }
-
-
-            // Handle In-Transit
-            if (
+            } else if (
                 ($this->input->post('in_transit') === true ||
                     (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
-                (!empty($this->input->post('office_location')) && !empty($this->input->post('document_status')))
+                (!empty($this->input->post('office_location')))
             ) {
 
                 $get_data_from_document = get_orignal_document_data_list($ids);
