@@ -428,6 +428,14 @@ array_unshift($apostille_vendors, array());
                                  ?>
                               </div>
 
+                              <div class="col-lg-2 margin-top leads-filter-column">
+                                 <div class="form-group">
+                                    <input type="month" class="form-control" required-check id="session_intake" name="session_intake"
+                                       value=""
+                                       placeholder="Select Month and Year Session Intake">
+                                 </div>
+                              </div>
+
                               <div class="col-md-2  margin-top leads-filter-column hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="last_from_date" id="last_from_date" placeholder="From Last Update Date" autocomplete="off">
@@ -582,14 +590,14 @@ array_unshift($apostille_vendors, array());
                         'data-actions-box' => true
                      ], [], 'no-mbot', '', false, 'office_location'); ?>
                   </div>
-                  <div class="col-md-4">
+                  <!-- <div class="col-md-4">
                      <label>Status <span class="text-danger">*</span></label>
                      <?php echo render_select('document_status', $orignal_document_status, ['id', 'name'], '', [], [
                         'data-width' => '100%',
                         'data-none-selected-text' => 'Status',
                         'data-actions-box' => true
                      ], [], 'no-mbot', '', false, 'document_status'); ?>
-                  </div>
+                  </div> -->
                </div>
             </div>
 
@@ -887,7 +895,8 @@ init_tail();
          'status_': "[name='status_[]']",
          'doc_status': "[name='doc_status[]']",
          'passport_status': "[name='passport_status[]']",
-         'minor_status': "[name='minor']"
+         'minor_status': "[name='minor']",
+         'session_intake': "[name='session_intake']"
       });
 
       applicant_table = initDataTable(
@@ -991,7 +1000,7 @@ init_tail();
       var from_location = $('#from_location').val();
       var to_location = $('#to_location').val();
       var office_location = $('#office_location').val();
-      var document_status = $('#document_status').val();
+      // var document_status = $('#document_status').val();
       var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
       var apostille_status = $("#apostille_status_check").prop('checked');
@@ -1045,7 +1054,7 @@ init_tail();
          from_location,
          to_location,
          office_location,
-         document_status,
+         // document_status,
          status_text,
          locations_name,
          apostille_status
@@ -1142,6 +1151,7 @@ init_tail();
       $(".no_is_transist_location").show();
       $(".apostille_status_update").hide();
       $(".document_status_update").show();
+      $(".doc-cost-section").html('');
 
    });
 
@@ -1237,6 +1247,24 @@ init_tail();
         `);
       });
    }
+
+   $(document).ready(function() {
+      $("#session_intake").on("change", function() {
+         let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
+
+         if (selectedDate) {
+            let [year, month] = selectedDate.split("-"); // Extract year and month
+
+            if (month !== "02" && month !== "09") {
+               // If not February or September, auto-correct to the nearest allowed month
+               // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+               $(this).val('');
+               alert_float("danger", "Only February and September are allowed.");
+            }
+         }
+      });
+
+   });
 </script>
 </body>
 
