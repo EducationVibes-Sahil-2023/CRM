@@ -47,10 +47,11 @@ if (is_admin() || is_postSale()) {
     $aColumns[] = $sTable . ".userid as fid";
 }
 $aColumns_count = 0;
+
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
 
-        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia"])) {
+        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia", "apostille_documents"])) {
             if ($value["column_name"] == "fees") {
                 if (!empty($fees_data)) {
                     foreach ($fees_data as $fees) {
@@ -59,9 +60,8 @@ if (!empty($tblma_applicant_tracker)) {
                     }
                 }
             }
-            if (in_array($value["column_name"], ["original_documents", "original_documents_rest", "original_documents_georgia"])) {
+            if (in_array($value["column_name"], ['original_documents', 'original_documents_rest', 'original_documents_georgia', 'apostille_documents'])) {
                 $orignal_documents = [];
-
                 if ($value["column_name"] == "original_documents") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list());
                 }
@@ -70,6 +70,9 @@ if (!empty($tblma_applicant_tracker)) {
                 }
                 if ($value["column_name"] == "original_documents_georgia") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 1));
+                }
+                if ($value["column_name"] == "apostille_documents") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 1));
                 }
 
                 if (!empty($orignal_documents)) {
