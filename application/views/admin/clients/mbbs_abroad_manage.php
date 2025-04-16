@@ -418,7 +418,7 @@ array_unshift($office_location, array());
                               </div>
 
 
-                              <div class="col-md-2  margin-top leads-filter-columnfilter-hide-default filter-ap-vendor hide">
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
                                  <?php
 
                                  echo '<div id="leads-filter-source">';
@@ -427,7 +427,7 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-columnfilter-hide-default filter-ap-status hide">
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
                                  <?php
                                  $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
                                  echo '<div id="leads-filter-source">';
@@ -718,7 +718,7 @@ init_tail();
 
    // Event Listener for Table View Change
    $("#table_view").change(function() {
-      $(".filter-hide-default").val('').selectpicker("refresh").addClass('hide');
+      $(".filter-hide-default").find("select").val('').selectpicker("refresh").addClass('hide');
       let select_view = $("#table_view option:selected").val() || 0;
       if (tbllead_performance_column_array[select_view]) {
          selected_performance_column = [];
