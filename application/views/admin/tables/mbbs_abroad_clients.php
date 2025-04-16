@@ -138,7 +138,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
     "LEFT JOIN (
         SELECT 
-            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,
+            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
             CASE 
                 WHEN COUNT(*) = 0 THEN 'Pending'
                 WHEN SUM(received_status = 0) > 0 THEN 'Sent'
@@ -245,15 +245,70 @@ if ($this->ci->input->post('passport_status')) {
 
 if ($this->ci->input->post('doc_status')) {
     $doc_status = $this->ci->input->post('doc_status');
+
     if (is_array($doc_status)) {
-        $escaped_doc_status = array_map([$this->ci->db, 'escape'], $doc_status);
-        array_push($where, 'AND ' . db_prefix() . 'clients.orignal_document_status IN (' . implode(',', $escaped_doc_status) . ')');
+        $doc_status_conditions = [];
+
+        // Check if array contains a blank value
+        $contains_blank = in_array('', $doc_status, true);
+
+        // Remove blank values
+        $filtered_doc_status = array_filter($doc_status, function ($value) {
+            return $value !== '';
+        });
+
+        // Escape remaining values
+        $escaped_doc_status = array_map([$this->ci->db, 'escape'], $filtered_doc_status);
+
+        // Add condition for document status IN (values)
+        if (!empty($escaped_doc_status)) {
+            $doc_status_conditions[] = db_prefix() . "clients.orignal_document_status IN (" . implode(',', $escaped_doc_status) . ")";
+        }
+
+        // Add condition if blank exists (i.e., in_transit should not be blank)
+        if ($contains_blank) {
+            $doc_status_conditions[] = db_prefix() . "orignal_documents_received.in_transit != ''";
+        }
+
+        // Decide the operator (AND only if only blank is present)
+        $operator = (count($filtered_doc_status) === 0 && $contains_blank) ? 'AND' : 'OR';
+
+        // Merge all conditions with the chosen operator
+        if (!empty($doc_status_conditions)) {
+            $where[] = 'AND (' . implode(" $operator ", $doc_status_conditions) . ')';
+        }
+    }
+}
+
+
+
+
+if ($this->ci->input->post('apostille_vendors_filter')) {
+    $apostille_vendors_filter = $this->ci->input->post('apostille_vendors_filter');
+
+    if (is_array($apostille_vendors_filter)) {
+        // Remove empty values
+        $apostille_vendors_filter = array_filter($apostille_vendors_filter, function ($v) {
+            return $v !== '';
+        });
+
+        if (!empty($apostille_vendors_filter)) {
+            // Build REGEXP condition dynamically
+            $regexp_parts = array_map(function ($v) {
+                return '(^|,)' . preg_quote($v, '/') . '(,|$)';
+            }, $apostille_vendors_filter);
+
+            $regexp_pattern = implode('|', $regexp_parts);
+
+            array_push($where, "AND apostille_summary.vendor_id IS NOT NULL AND apostille_summary.vendor_id REGEXP " . $this->ci->db->escape($regexp_pattern));
+        }
     }
 }
 
 if ($this->ci->input->post('application_sub_stage')) {
     array_push($where, 'AND ' . db_prefix() . 'clients.applicant_sub_status = ' . $this->ci->db->escape($this->ci->input->post('application_sub_stage')));
 }
+
 
 
 
