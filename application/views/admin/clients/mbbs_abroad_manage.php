@@ -718,7 +718,8 @@ init_tail();
 
    // Event Listener for Table View Change
    $("#table_view").change(function() {
-      $(".filter-hide-default").find("select").val('').selectpicker("refresh").addClass('hide');
+      $(".filter-hide-default").find("select").val('').selectpicker("refresh");
+      $(".filter-hide-default").addClass('hide');
       let select_view = $("#table_view option:selected").val() || 0;
       if (tbllead_performance_column_array[select_view]) {
          selected_performance_column = [];
