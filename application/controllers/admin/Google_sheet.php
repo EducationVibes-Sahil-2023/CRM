@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Google_sheet extends CI_Controller
+class googlesheet extends AdminController
 {
 
     public function __construct()

@@ -85,6 +85,8 @@ $route['/'] = 'clients';       // When no type is provided
 $route['admin/clients/mbbs_abroad'] = 'admin/clients/index'; // When type is provided
 $route['admin/clients/study_abroad'] = 'admin/clients/index'; // When type is provided
 
+$route['admin/Google_sheet'] = 'admin/Google_sheet'; // When type is provided
+
 
 /**
  * @deprecated
