@@ -940,7 +940,7 @@ init_tail();
 
          $('[name="column_show[]"]').on('show.bs.select', disabled_column);
          $('[name="column_show[]"]').on('hidden.bs.select', enabled_column);
-      }, 3000);
+      }, 1000);
 
 
    }
