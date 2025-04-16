@@ -438,7 +438,7 @@ array_unshift($office_location, array());
 
                               <div class="col-md-2 margin-top leads-filter-column filter-hide-default filter-org-status hide">
                                  <?php
-                                 $orignal_document_status[] = array("id" => "", "name" => "In-Transit");
+                                 $orignal_document_status[] = array("id" => "-1", "name" => "In-Transit");
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('doc_status[]', $orignal_document_status, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc. status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "doc_status");
                                  echo '</div>';

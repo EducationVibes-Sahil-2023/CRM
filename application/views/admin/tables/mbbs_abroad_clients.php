@@ -250,7 +250,7 @@ if ($this->ci->input->post('doc_status')) {
         $doc_status_conditions = [];
 
         // Check if array contains a blank value
-        $contains_blank = in_array('', $doc_status, true);
+        $contains_blank = in_array('-1', $doc_status, true);
 
         // Remove blank values
         $filtered_doc_status = array_filter($doc_status, function ($value) {
