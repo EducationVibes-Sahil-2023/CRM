@@ -288,9 +288,9 @@ class Google_Service_Resource
     }
 
     if (count($queryVars)) {
-      $requestUrl .= '?' . implode($queryVars, '&');
-    }
-
+      $requestUrl .= '?' . implode('&', $queryVars); // ✅ Correct
+  }
+  
     return $requestUrl;
   }
 }
