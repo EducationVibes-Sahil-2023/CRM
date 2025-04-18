@@ -46,6 +46,10 @@ array_unshift($office_location, array());
       .table>tfoot>tr>td {
          text-wrap: auto !important;
       }
+
+      table.dataTable thead .sorting:after {
+         display: none;
+      }
    </style>
    <div class="content">
       <div class="row">
@@ -400,7 +404,7 @@ array_unshift($office_location, array());
                               </div>
 
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column hide">
                                  <?php
                                  array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
@@ -409,7 +413,7 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Stage'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");

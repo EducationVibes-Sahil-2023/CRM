@@ -60,12 +60,12 @@ function app_init_admin_sidebar_menu_items()
 
 
 
-        $CI->app_menu->add_sidebar_menu_item('sales', [
-                'collapse' => true,
-                'name'     => _l('als_sales'),
-                'position' => 10,
-                'icon'     => 'fa fa-balance-scale',
-        ]);
+        // $CI->app_menu->add_sidebar_menu_item('sales', [
+        //         'collapse' => true,
+        //         'name'     => _l('als_sales'),
+        //         'position' => 10,
+        //         'icon'     => 'fa fa-balance-scale',
+        // ]);
 
         if ((has_permission('proposals', '', 'view') || has_permission('proposals', '', 'view_own'))
                 || (staff_has_assigned_proposals() && get_option('allow_staff_view_proposals_assigned') == 1)
@@ -139,23 +139,23 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
-        if (has_permission('expenses', '', 'view') || has_permission('expenses', '', 'view_own')) {
-                $CI->app_menu->add_sidebar_menu_item('expenses', [
-                        'name'     => _l('expenses'),
-                        'href'     => admin_url('expenses'),
-                        'icon'     => 'fa fa-file-text-o',
-                        'position' => 20,
-                ]);
-        }
+        // if (has_permission('expenses', '', 'view') || has_permission('expenses', '', 'view_own')) {
+        //         $CI->app_menu->add_sidebar_menu_item('expenses', [
+        //                 'name'     => _l('expenses'),
+        //                 'href'     => admin_url('expenses'),
+        //                 'icon'     => 'fa fa-file-text-o',
+        //                 'position' => 20,
+        //         ]);
+        // }
 
-        if (has_permission('contracts', '', 'view') || has_permission('contracts', '', 'view_own')) {
-                $CI->app_menu->add_sidebar_menu_item('contracts', [
-                        'name'     => _l('contracts'),
-                        'href'     => admin_url('contracts'),
-                        'icon'     => 'fa fa-file',
-                        'position' => 25,
-                ]);
-        }
+        // if (has_permission('contracts', '', 'view') || has_permission('contracts', '', 'view_own')) {
+        //         $CI->app_menu->add_sidebar_menu_item('contracts', [
+        //                 'name'     => _l('contracts'),
+        //                 'href'     => admin_url('contracts'),
+        //                 'icon'     => 'fa fa-file',
+        //                 'position' => 25,
+        //         ]);
+        // }
 
         $CI->app_menu->add_sidebar_menu_item('projects', [
                 'name'     => _l('projects'),
