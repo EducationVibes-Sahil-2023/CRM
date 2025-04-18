@@ -47,66 +47,66 @@ $CI->load->helper(HRM_MODULE_NAME . '/hrm');
 function hrm_module_init_menu_items()
 {
     $CI = &get_instance();
-    if (has_permission('hrm', '', 'view')) {
+    // if (has_permission('hrm', '', 'view')) {
 
-        $CI->app_menu->add_sidebar_menu_item('HRM', [
-                'name'     => _l('hrm'),
-                'icon'     => 'fa fa-user-circle',
-                'href'     => admin_url('#'),
-        ]);
-        $CI->app_menu->add_sidebar_children_item('HRM', [
-                'slug'     => 'hrm_dashboard',
-                'name'     => _l('dashboard'),
-                'icon'     => 'fa fa-home',
+    //     $CI->app_menu->add_sidebar_menu_item('HRM', [
+    //             'name'     => _l('hrm'),
+    //             'icon'     => 'fa fa-user-circle',
+    //             'href'     => admin_url('#'),
+    //     ]);
+    //     $CI->app_menu->add_sidebar_children_item('HRM', [
+    //             'slug'     => 'hrm_dashboard',
+    //             'name'     => _l('dashboard'),
+    //             'icon'     => 'fa fa-home',
                 
-                'href'     => admin_url('hrm'),
-        ]);
-        $CI->app_menu->add_sidebar_children_item('HRM', [
-                'slug'     => 'hrm_staff',
-                'name'     => _l('staff'),
-                'icon'     => 'fa fa-address-book',
+    //             'href'     => admin_url('hrm'),
+    //     ]);
+    //     $CI->app_menu->add_sidebar_children_item('HRM', [
+    //             'slug'     => 'hrm_staff',
+    //             'name'     => _l('staff'),
+    //             'icon'     => 'fa fa-address-book',
                 
-                'href'     => admin_url('hrm/staff_infor'),
-        ]);
-        $CI->app_menu->add_sidebar_children_item('HRM', [
-                'slug'     => 'hrm_staff_contract',
-                'name'     => _l('staff_contract'),
-                'icon'     => 'fa fa-file',
-                'href'     => admin_url('hrm/contracts'),
-        ]);
-        $CI->app_menu->add_sidebar_children_item('HRM', [
-                'slug'     => 'hrm_insurrance',
-                'name'     => _l('insurrance'),
-                'icon'     => 'fa fa-medkit',
-                'href'     => admin_url('hrm/insurances'),
-        ]);
-        if (is_admin()) {
-            $CI->app_menu->add_sidebar_children_item('HRM', [
-                    'slug'     => 'hrm_timekeeping',
-                    'name'     => _l('timekeeping'),
-                    'icon'     => 'fa fa fa-pencil',
-                    'href'     => admin_url('hrm/timekeeping'),
-            ]);
-        }
+    //             'href'     => admin_url('hrm/staff_infor'),
+    //     ]);
+    //     $CI->app_menu->add_sidebar_children_item('HRM', [
+    //             'slug'     => 'hrm_staff_contract',
+    //             'name'     => _l('staff_contract'),
+    //             'icon'     => 'fa fa-file',
+    //             'href'     => admin_url('hrm/contracts'),
+    //     ]);
+    //     $CI->app_menu->add_sidebar_children_item('HRM', [
+    //             'slug'     => 'hrm_insurrance',
+    //             'name'     => _l('insurrance'),
+    //             'icon'     => 'fa fa-medkit',
+    //             'href'     => admin_url('hrm/insurances'),
+    //     ]);
+    //     if (is_admin()) {
+    //         $CI->app_menu->add_sidebar_children_item('HRM', [
+    //                 'slug'     => 'hrm_timekeeping',
+    //                 'name'     => _l('timekeeping'),
+    //                 'icon'     => 'fa fa fa-pencil',
+    //                 'href'     => admin_url('hrm/timekeeping'),
+    //         ]);
+    //     }
 
-        if (is_admin()) {
-        $CI->app_menu->add_sidebar_children_item('HRM', [
-                'slug'     => 'hrm_payroll',
-                'name'     => _l('payroll'),
-                'icon'     => 'fa fa-dollar',
-                'href'     => admin_url('hrm/payroll'),
-        ]);
-        }
+    //     if (is_admin()) {
+    //     $CI->app_menu->add_sidebar_children_item('HRM', [
+    //             'slug'     => 'hrm_payroll',
+    //             'name'     => _l('payroll'),
+    //             'icon'     => 'fa fa-dollar',
+    //             'href'     => admin_url('hrm/payroll'),
+    //     ]);
+    //     }
 
-        if (is_admin()) {
-            $CI->app_menu->add_sidebar_children_item('HRM', [
-                    'slug'     => 'hrm_setting',
-                    'name'     => _l('setting'),
-                    'icon'     => 'fa fa-cog',
-                    'href'     => admin_url('hrm/setting'),
-            ]);
-        }
-    }
+    //     if (is_admin()) {
+    //         $CI->app_menu->add_sidebar_children_item('HRM', [
+    //                 'slug'     => 'hrm_setting',
+    //                 'name'     => _l('setting'),
+    //                 'icon'     => 'fa fa-cog',
+    //                 'href'     => admin_url('hrm/setting'),
+    //         ]);
+    //     }
+    // }
 }
 
 

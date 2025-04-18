@@ -22,7 +22,7 @@ array_unshift($office_location, array());
 <?php
 if (!is_postSale() && !is_admin()) {
 ?>
-    <h2 class="text-center">Orignal Document - Accessible Only for Post-Sale & Admin</h2>
+    <h2 class="text-center">Apostille Document - Accessible Only for Post-Sale & Admin</h2>
 <?php
     die;
 }

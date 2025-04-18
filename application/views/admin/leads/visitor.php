@@ -33,7 +33,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
 
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
-                                        echo render_select('status[]', $visitor_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Status'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
+                                        echo render_select('status[]', $visitor_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Visit Status'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
 
@@ -46,7 +46,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                     </div>
                                     <div class="col-md-2 leads-filter-column margin-top">
                                         <?php
-                                        echo render_select('type[]', $visitor_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
+                                        echo render_select('type[]', $visitor_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Visit Type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false);
                                         ?>
                                     </div>
                                     <div class="col-md-2 leads-filter-column margin-top">
@@ -91,7 +91,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                     </div>
 
                                     <div class="col-md-2 leads-filter-column margin-top mb-5">
-                                        <?php echo render_select('category', $category, array('id', array('name')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Category Select'), 'data-actions-box' => true), array(), 'no-mbot', '', false, 'category'); ?>
+                                        <?php echo render_select('category', $category, array('id', array('name')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Schedule'), 'data-actions-box' => true), array(), 'no-mbot', '', false, 'category'); ?>
                                     </div>
 
 
