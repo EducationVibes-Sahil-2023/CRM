@@ -653,6 +653,11 @@ array_unshift($office_location, array());
 <?php
 init_tail();
 ?>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
 <script>
    var tAPI = "";
    var applicant_table = "";
@@ -1279,6 +1284,69 @@ init_tail();
       });
 
    });
+
+
+   function downloadAndZipFiles(fileUrls, zipFileName = "documents.zip") {
+      const zip = new JSZip();
+      const folder = zip.folder("files"); // optional folder inside zip
+
+      const downloadPromises = fileUrls.map((url, index) =>
+         fetch(url)
+         .then(response => {
+            if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
+            return response.blob();
+         })
+         .then(blob => {
+            const fileName = url.split('/').pop().split('?')[0]; // extract filename
+            folder.file(fileName || `file${index}`, blob);
+         })
+         .catch(err => console.error("Error downloading file:", err))
+      );
+
+      Promise.all(downloadPromises).then(() => {
+         zip.generateAsync({
+            type: "blob"
+         }).then(content => {
+            saveAs(content, zipFileName);
+         });
+      });
+   }
+
+   function download_documents(userid, userName) {
+      let formData = new FormData();
+
+      // Append CSRF token if it exists
+      formData.append(csrfData.token_name, csrfData.hash);
+      formData.append("userid", userid);
+
+      // AJAX request to fetch approved documents
+      $.ajax({
+         url: "<?php echo base_url('admin/clients/download_approved_documents'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false,
+         contentType: false,
+         dataType: "json", // ✅ FIXED: was "JSOfN", should be "json"
+         success: function(res) {
+            hide_loader();
+            console.log(res);
+
+            if (res.resp_code === "RCS") {
+               let files = res.data;
+               downloadAndZipFiles(files, userName + '.zip'); // Assuming this function handles zipping and downloading
+               alert_float("success", res.resp_desc);
+            } else {
+               alert_float("danger", res.resp_desc || "An unknown error occurred.");
+            }
+         },
+         error: function(xhr, status, error) {
+            hide_loader();
+            let errorMessage = xhr.responseText ? xhr.responseText : "An error occurred while processing the request.";
+            alert_float("danger", errorMessage);
+            console.error("Error:", error);
+         },
+      });
+   }
 </script>
 </body>
 

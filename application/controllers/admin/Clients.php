@@ -4955,4 +4955,58 @@ class Clients extends AdminController
             exit;
         }
     }
+
+    public function download_approved_documents()
+    {
+        try {
+            $data = $this->input->post();
+            $userid = !empty($data["userid"]) ? $data["userid"] : '';
+            // Validate required fields
+            if (empty($data["userid"])) {
+
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "Missing required data userid"
+                ]);
+                die;
+            }
+
+            $documents = get_clients_documents($userid);
+            $doc_urls = [];
+            if (!empty($documents[0]['data'])) {
+                $documents = json_decode($documents[0]['data'], true);
+                foreach ($documents as $doc) {
+                    if ($doc['approval_status'] == 1) {
+                        $doc_urls[] = base_url($doc['document_file']);
+                    }
+                }
+            }
+
+            if (!empty($doc_urls)) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Please wait to download documents.',
+                    'data' => $doc_urls
+                ]);
+            } else {
+                // Return success response
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "User No documents found."
+                ]);
+            }
+
+            exit;
+        } catch (Exception $e) {
+            // Rollback if any error occurs
+            $this->db->trans_rollback();
+
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage(),
+                'error_code' => $e->getCode()
+            ]);
+            exit;
+        }
+    }
 }
