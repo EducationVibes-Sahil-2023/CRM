@@ -231,15 +231,15 @@ register_language_files(ACCOUNT_PLANNING_MODULE_NAME, [ACCOUNT_PLANNING_MODULE_N
  */
 function account_planning_module_init_menu_items()
 {
-    if (has_permission('account_planning', '', 'view')) {
-        $CI = &get_instance();      
-        $CI->app_menu->add_sidebar_menu_item('account_planning', [
-                'name'     => _l('als_account_planning'),
-                'href'     => admin_url('account_planning'),
-                'position' => 30,
-                'icon'     => 'fa fa-address-card-o',
-        ]);
-    }
+    // if (has_permission('account_planning', '', 'view')) {
+    //     $CI = &get_instance();      
+    //     $CI->app_menu->add_sidebar_menu_item('account_planning', [
+    //             'name'     => _l('als_account_planning'),
+    //             'href'     => admin_url('account_planning'),
+    //             'position' => 30,
+    //             'icon'     => 'fa fa-address-card-o',
+    //     ]);
+    // }
 }
 
 function account_planning_permissions()

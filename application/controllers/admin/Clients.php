@@ -1059,7 +1059,7 @@ class Clients extends AdminController
             }
 
             // Handle Mass Delete
-            if ($this->input->post('mass_delete') === true) {
+            if ($this->input->post('mass_delete') == "true") {
 
                 foreach ($ids as $id) {
                     if ($this->clients_model->delete($id)) {
@@ -1073,10 +1073,7 @@ class Clients extends AdminController
                 set_alert('success', _l('total_clients_deleted', $total_deleted));
                 echo json_encode($data);
                 die;
-            }
-
-            // Handle Apostille
-            if ($this->input->post('apostille_status') === true) {
+            } else if ($this->input->post('apostille_status') == "true") {
 
                 $documents_id = $this->input->post('apostille_document') ?? [];
                 $document_cost = $this->input->post('document_cost') ?? [];
@@ -1257,14 +1254,10 @@ class Clients extends AdminController
                         'resp_desc' => 'Appostile data not updated.',
                     ];
                 }
-            }
-
-
-            // Handle In-Transit
-            if (
+            } else if (
                 ($this->input->post('in_transit') === true ||
                     (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
-                (!empty($this->input->post('office_location')) && !empty($this->input->post('document_status')))
+                (!empty($this->input->post('office_location')))
             ) {
 
                 $get_data_from_document = get_orignal_document_data_list($ids);
@@ -4951,6 +4944,60 @@ class Clients extends AdminController
                 'resp_code' => 'RCS',
                 'resp_desc' => "Fees details updated successfully."
             ]);
+            exit;
+        } catch (Exception $e) {
+            // Rollback if any error occurs
+            $this->db->trans_rollback();
+
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage(),
+                'error_code' => $e->getCode()
+            ]);
+            exit;
+        }
+    }
+
+    public function download_approved_documents()
+    {
+        try {
+            $data = $this->input->post();
+            $userid = !empty($data["userid"]) ? $data["userid"] : '';
+            // Validate required fields
+            if (empty($data["userid"])) {
+
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "Missing required data userid"
+                ]);
+                die;
+            }
+
+            $documents = get_clients_documents($userid);
+            $doc_urls = [];
+            if (!empty($documents[0]['data'])) {
+                $documents = json_decode($documents[0]['data'], true);
+                foreach ($documents as $doc) {
+                    if ($doc['approval_status'] == 1) {
+                        $doc_urls[] = base_url($doc['document_file']);
+                    }
+                }
+            }
+
+            if (!empty($doc_urls)) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Please wait to download documents.',
+                    'data' => $doc_urls
+                ]);
+            } else {
+                // Return success response
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "User No documents found."
+                ]);
+            }
+
             exit;
         } catch (Exception $e) {
             // Rollback if any error occurs

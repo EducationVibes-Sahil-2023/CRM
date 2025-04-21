@@ -33,7 +33,7 @@ $yes_no_status = [
 ];
 
 array_unshift($office_location, array());
-array_unshift($apostille_vendors, array());
+
 
 ?>
 <div id="wrapper">
@@ -45,6 +45,10 @@ array_unshift($apostille_vendors, array());
       .table>tbody>tr>td,
       .table>tfoot>tr>td {
          text-wrap: auto !important;
+      }
+
+      table.dataTable thead .sorting:after {
+         display: none;
       }
    </style>
    <div class="content">
@@ -326,52 +330,6 @@ array_unshift($apostille_vendors, array());
                                  <?php echo render_select('column_show[]', [], array('id', 'label_name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show'); ?>
                               </div>
 
-                              <?php if (has_permission('leads', '', 'view')) { ?>
-                                 <div class="col-md-2  margin-top leads-filter-column">
-                                    <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
-                                 </div>
-                              <?php } ?>
-
-                              <div class="col-md-2  margin-top leads-filter-column hide ">
-                                 <?php
-                                 $selected = [];
-                                 $selected[] = 2;
-                                 echo '<div id="leads-filter-source">';
-                                 echo render_select('lead_type[]', $leadType, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
-                                 echo '</div>';
-
-                                 // die;
-                                 ?>
-                              </div>
-
-
-
-
-                              <div class="col-md-2  margin-top leads-filter-column">
-                                 <?php
-                                 echo '<div id="leads-filter-source">';
-                                 echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
-                                 echo '</div>';
-                                 ?>
-                              </div>
-
-
-                              <div class="col-md-2  margin-top leads-filter-column">
-                                 <?php
-                                 $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
-                                 echo '<div id="leads-filter-source">';
-                                 echo render_select('apostille_status[]', $apostille_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_status");
-                                 echo '</div>';
-                                 ?>
-                              </div>
-
-                              <div class="col-md-2 margin-top leads-filter-column">
-                                 <?php
-                                 echo '<div id="leads-filter-source">';
-                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', array(1), array('data-width' => '100%', 'data-none-selected-text' => "Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
-                                 echo '</div>';
-                                 ?>
-                              </div>
 
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
@@ -387,15 +345,34 @@ array_unshift($apostille_vendors, array());
                                  echo '</div>';
                                  ?>
                               </div>
-                              <div class="col-md-2 margin-top leads-filter-column">
+                              <?php if (has_permission('leads', '', 'view')) { ?>
+                                 <div class="col-md-2  margin-top leads-filter-column">
+                                    <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Counsellor", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
+                                 </div>
+                              <?php } ?>
+
+                              <div class="col-md-2  margin-top leads-filter-column hide ">
+                                 <?php
+                                 $selected = [];
+                                 $selected[] = 2;
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('lead_type[]', $leadType, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                                 echo '</div>';
+
+                                 // die;
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('doc_status[]', $orignal_document_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc. status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "doc_status");
+                                 echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
                                  echo '</div>';
                                  ?>
                               </div>
 
-                              <div class="col-md-2 margin-top leads-filter-column">
+
+                              <div class="col-md-2 margin-top leads-filter-column ">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('minor', $yes_no_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Minor", 'data-actions-box' => true), array(), 'no-mbot', '', false, "minor");
@@ -403,7 +380,7 @@ array_unshift($apostille_vendors, array());
                                  ?>
                               </div>
 
-                              <div class="col-md-2 margin-top leads-filter-column">
+                              <div class="col-md-2 margin-top leads-filter-column ">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('passport_status[]', $passport_stages, array('id', 'name'), '', '', array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => "Passport status", 'data-actions-box' => true), array(), 'no-mbot', '', false, "passport_status");
@@ -411,7 +388,23 @@ array_unshift($apostille_vendors, array());
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2 margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', array(1), array('data-width' => '100%', 'data-none-selected-text' => "Applicant Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
+                              <div class="col-lg-2 margin-top leads-filter-column">
+                                 <input type="month" class="form-control" required-check id="session_intake" name="session_intake"
+                                    value=""
+                                    placeholder="Select Month and Year Session Intake">
+                              </div>
+
+
+                              <div class="col-md-2  margin-top leads-filter-column hide">
                                  <?php
                                  array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
@@ -420,10 +413,38 @@ array_unshift($apostille_vendors, array());
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Stage'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
+                                 <?php
+
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('apostille_vendors_filter[]', $apostille_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Vendors", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_vendors_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
+                                 <?php
+                                 $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('apostille_status[]', $apostille_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2 margin-top leads-filter-column filter-hide-default filter-org-status hide">
+                                 <?php
+                                 $orignal_document_status[] = array("id" => "-1", "name" => "In-Transit");
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('doc_status[]', $orignal_document_status, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc. status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "doc_status");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -438,21 +459,10 @@ array_unshift($apostille_vendors, array());
                                     <input type="text" class="form-control datepicker" name="last_to_date" id="last_to_date" placeholder="To Last Update Date" autocomplete="off">
                                  </div>
                               </div>
-                              <!-- <div class="col-md-2  margin-top leads-filter-column">
-                                 <div class="form-group">
-                                    <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
-                                 </div>
-                              </div>
-                              <div class="col-md-2  margin-top leads-filter-column">
-                                 <div class="form-group">
-                                    <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
-                                 </div>
-                              </div> -->
-                              <div class="col-md-4 margin-top ">
+
+                              <div class="col-md-2 margin-top ">
                                  <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter_">Apply Filter</button>
-
-                                    <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
                                     <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                  </div>
                               </div>
@@ -488,9 +498,6 @@ array_unshift($apostille_vendors, array());
             <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
          </div>
          <div class="modal-body h-auto">
-
-            <?php array_unshift($orignal_document_status, array()); ?>
-
             <!-- Apostille Section -->
             <div class="apostille_update">
                <div class="checkbox checkbox-danger">
@@ -502,7 +509,9 @@ array_unshift($apostille_vendors, array());
                   <div class="row">
                      <div class="col-md-4">
                         <label>Apostille Vendor <small class='text-danger'>*</small></label>
-                        <?php echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
+                        <?php
+                        array_unshift($apostille_vendors, array());
+                        echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
                            'data-width' => '100%',
                            'data-none-selected-text' => 'Vendor',
                            'data-actions-box' => true,
@@ -582,14 +591,7 @@ array_unshift($apostille_vendors, array());
                         'data-actions-box' => true
                      ], [], 'no-mbot', '', false, 'office_location'); ?>
                   </div>
-                  <div class="col-md-4">
-                     <label>Status <span class="text-danger">*</span></label>
-                     <?php echo render_select('document_status', $orignal_document_status, ['id', 'name'], '', [], [
-                        'data-width' => '100%',
-                        'data-none-selected-text' => 'Status',
-                        'data-actions-box' => true
-                     ], [], 'no-mbot', '', false, 'document_status'); ?>
-                  </div>
+
                </div>
             </div>
 
@@ -651,6 +653,11 @@ array_unshift($apostille_vendors, array());
 <?php
 init_tail();
 ?>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
 <script>
    var tAPI = "";
    var applicant_table = "";
@@ -716,14 +723,33 @@ init_tail();
 
    }
 
+
+
    // Event Listener for Table View Change
    $("#table_view").change(function() {
+      $(".filter-hide-default").find("select").val('').selectpicker("refresh");
+      $(".filter-hide-default").addClass('hide');
       let select_view = $("#table_view option:selected").val() || 0;
       if (tbllead_performance_column_array[select_view]) {
          selected_performance_column = [];
          show_column_array = (tbllead_performance_column_array[select_view].column_ids || "").split(",");
          selected_column_array = (tbllead_performance_column_array[select_view].selected_ids || "").split(",");
          selected_performance_column = selected_column_array;
+
+         let show_filters = tbllead_performance_column_array[select_view]?.filter_show;
+
+         // Check if show_filters is a non-empty string
+         if (typeof show_filters === 'string' && show_filters.trim() !== '') {
+            let filters = show_filters.split(',').map(f => f.trim()).filter(f => f !== '');
+
+            if (filters.length > 0) {
+               filters.forEach(function(filter) {
+                  $("." + filter).removeClass("hide");
+               });
+            }
+         }
+
+
       }
       column_name_update();
       $("#column_show").each(function() {
@@ -887,7 +913,9 @@ init_tail();
          'status_': "[name='status_[]']",
          'doc_status': "[name='doc_status[]']",
          'passport_status': "[name='passport_status[]']",
-         'minor_status': "[name='minor']"
+         'minor_status': "[name='minor']",
+         'session_intake': "[name='session_intake']",
+         'apostille_vendors_filter': "[name='apostille_vendors_filter[]']"
       });
 
       applicant_table = initDataTable(
@@ -922,7 +950,7 @@ init_tail();
 
          $('[name="column_show[]"]').on('show.bs.select', disabled_column);
          $('[name="column_show[]"]').on('hidden.bs.select', enabled_column);
-      }, 3000);
+      }, 1000);
 
 
    }
@@ -991,7 +1019,7 @@ init_tail();
       var from_location = $('#from_location').val();
       var to_location = $('#to_location').val();
       var office_location = $('#office_location').val();
-      var document_status = $('#document_status').val();
+      // var document_status = $('#document_status').val();
       var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
       var apostille_status = $("#apostille_status_check").prop('checked');
@@ -1045,7 +1073,7 @@ init_tail();
          from_location,
          to_location,
          office_location,
-         document_status,
+         // document_status,
          status_text,
          locations_name,
          apostille_status
@@ -1142,6 +1170,7 @@ init_tail();
       $(".no_is_transist_location").show();
       $(".apostille_status_update").hide();
       $(".document_status_update").show();
+      $(".doc-cost-section").html('');
 
    });
 
@@ -1235,6 +1264,87 @@ init_tail();
                 </div>
             </div>
         `);
+      });
+   }
+
+   $(document).ready(function() {
+      $("#session_intake").on("change", function() {
+         let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
+
+         if (selectedDate) {
+            let [year, month] = selectedDate.split("-"); // Extract year and month
+
+            if (month !== "02" && month !== "09") {
+               // If not February or September, auto-correct to the nearest allowed month
+               // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+               $(this).val('');
+               alert_float("danger", "Only February and September are allowed.");
+            }
+         }
+      });
+
+   });
+
+
+   function downloadAndZipFiles(fileUrls, zipFileName = "documents.zip") {
+      const zip = new JSZip();
+      const folder = zip.folder("files"); // optional folder inside zip
+
+      const downloadPromises = fileUrls.map((url, index) =>
+         fetch(url)
+         .then(response => {
+            if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
+            return response.blob();
+         })
+         .then(blob => {
+            const fileName = url.split('/').pop().split('?')[0]; // extract filename
+            folder.file(fileName || `file${index}`, blob);
+         })
+         .catch(err => console.error("Error downloading file:", err))
+      );
+
+      Promise.all(downloadPromises).then(() => {
+         zip.generateAsync({
+            type: "blob"
+         }).then(content => {
+            saveAs(content, zipFileName);
+         });
+      });
+   }
+
+   function download_documents(userid, userName) {
+      let formData = new FormData();
+
+      // Append CSRF token if it exists
+      formData.append(csrfData.token_name, csrfData.hash);
+      formData.append("userid", userid);
+
+      // AJAX request to fetch approved documents
+      $.ajax({
+         url: "<?php echo base_url('admin/clients/download_approved_documents'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false,
+         contentType: false,
+         dataType: "json", // ✅ FIXED: was "JSOfN", should be "json"
+         success: function(res) {
+            hide_loader();
+            console.log(res);
+
+            if (res.resp_code === "RCS") {
+               let files = res.data;
+               downloadAndZipFiles(files, userName + '.zip'); // Assuming this function handles zipping and downloading
+               alert_float("success", res.resp_desc);
+            } else {
+               alert_float("danger", res.resp_desc || "An unknown error occurred.");
+            }
+         },
+         error: function(xhr, status, error) {
+            hide_loader();
+            let errorMessage = xhr.responseText ? xhr.responseText : "An error occurred while processing the request.";
+            alert_float("danger", errorMessage);
+            console.error("Error:", error);
+         },
       });
    }
 </script>

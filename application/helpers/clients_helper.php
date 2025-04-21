@@ -1972,3 +1972,10 @@ function activity_apostille_document($id)
     $CI->db->order_by('date', $sorting);
     return $CI->db->get(db_prefix() . 'apostille_document_activity')->result_array();
 }
+
+function get_approval_documents($userid)
+{
+    $CI = &get_instance();
+    $approval_documents = $CI->db->select("data as url")->where(array("document_status" => 1, "client_id" => $userid))->get(db_prefix() . "client_documents")->row();
+    print_r($approval_documents);
+}

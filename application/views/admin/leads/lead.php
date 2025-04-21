@@ -5,9 +5,8 @@ $whatsapp_template = get_whatsapp_template();
 array_unshift($staff_members, array());
 array_unshift($type, array());
 array_unshift($visitor_type, array());
-if(empty($location))
-{
-    $location =[];
+if (empty($location)) {
+   $location = [];
 }
 array_unshift($location, array());
 
@@ -608,7 +607,7 @@ $last_lead_request = last_lead_request($lead->id);
                      <div class="form-group col-md-2">
                         <label> &nbsp;</label> <?php
                                                 $button_text = !empty($last_lead_request->id)
-                                                   ? (is_admin() ? _l('Update & Approve') : _l('Update NOW'))
+                                                   ? (is_admin() || has_permission('leads', '', 'approval') ? _l('Update & Approve') : _l('Update NOW'))
                                                    : _l('Request NOW');
                                                 ?>
                         <?php if (empty($last_lead_request->automatic) || is_admin() || has_permission('leads', '', 'approval')) { ?>

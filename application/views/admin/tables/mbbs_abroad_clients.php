@@ -47,10 +47,11 @@ if (is_admin() || is_postSale()) {
     $aColumns[] = $sTable . ".userid as fid";
 }
 $aColumns_count = 0;
+
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
 
-        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia"])) {
+        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia", "apostille_documents"])) {
             if ($value["column_name"] == "fees") {
                 if (!empty($fees_data)) {
                     foreach ($fees_data as $fees) {
@@ -59,9 +60,8 @@ if (!empty($tblma_applicant_tracker)) {
                     }
                 }
             }
-            if (in_array($value["column_name"], ["original_documents", "original_documents_rest", "original_documents_georgia"])) {
+            if (in_array($value["column_name"], ['original_documents', 'original_documents_rest', 'original_documents_georgia', 'apostille_documents'])) {
                 $orignal_documents = [];
-
                 if ($value["column_name"] == "original_documents") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list());
                 }
@@ -70,6 +70,9 @@ if (!empty($tblma_applicant_tracker)) {
                 }
                 if ($value["column_name"] == "original_documents_georgia") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 1));
+                }
+                if ($value["column_name"] == "apostille_documents") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 1));
                 }
 
                 if (!empty($orignal_documents)) {
@@ -135,7 +138,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
     "LEFT JOIN (
         SELECT 
-            userid,
+            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
             CASE 
                 WHEN COUNT(*) = 0 THEN 'Pending'
                 WHEN SUM(received_status = 0) > 0 THEN 'Sent'
@@ -242,9 +245,63 @@ if ($this->ci->input->post('passport_status')) {
 
 if ($this->ci->input->post('doc_status')) {
     $doc_status = $this->ci->input->post('doc_status');
+
     if (is_array($doc_status)) {
-        $escaped_doc_status = array_map([$this->ci->db, 'escape'], $doc_status);
-        array_push($where, 'AND ' . db_prefix() . 'clients.orignal_document_status IN (' . implode(',', $escaped_doc_status) . ')');
+        $doc_status_conditions = [];
+
+        // Check if array contains a blank value
+        $contains_blank = in_array('-1', $doc_status, true);
+
+        // Remove blank values
+        $filtered_doc_status = array_filter($doc_status, function ($value) {
+            return $value !== '';
+        });
+
+        // Escape remaining values
+        $escaped_doc_status = array_map([$this->ci->db, 'escape'], $filtered_doc_status);
+
+        // Add condition for document status IN (values)
+        if (!empty($escaped_doc_status)) {
+            $doc_status_conditions[] = db_prefix() . "clients.orignal_document_status IN (" . implode(',', $escaped_doc_status) . ")";
+        }
+
+        // Add condition if blank exists (i.e., in_transit should not be blank)
+        if ($contains_blank) {
+            $doc_status_conditions[] = db_prefix() . "orignal_documents_received.in_transit != ''";
+        }
+
+        // Decide the operator (AND only if only blank is present)
+        $operator = (count($filtered_doc_status) === 0 && $contains_blank) ? 'AND' : 'OR';
+
+        // Merge all conditions with the chosen operator
+        if (!empty($doc_status_conditions)) {
+            $where[] = 'AND (' . implode(" $operator ", $doc_status_conditions) . ')';
+        }
+    }
+}
+
+
+
+
+if ($this->ci->input->post('apostille_vendors_filter')) {
+    $apostille_vendors_filter = $this->ci->input->post('apostille_vendors_filter');
+
+    if (is_array($apostille_vendors_filter)) {
+        // Remove empty values
+        $apostille_vendors_filter = array_filter($apostille_vendors_filter, function ($v) {
+            return $v !== '';
+        });
+
+        if (!empty($apostille_vendors_filter)) {
+            // Build REGEXP condition dynamically
+            $regexp_parts = array_map(function ($v) {
+                return '(^|,)' . preg_quote($v, '/') . '(,|$)';
+            }, $apostille_vendors_filter);
+
+            $regexp_pattern = implode('|', $regexp_parts);
+
+            array_push($where, "AND apostille_summary.vendor_id IS NOT NULL AND apostille_summary.vendor_id REGEXP " . $this->ci->db->escape($regexp_pattern));
+        }
     }
 }
 
@@ -256,10 +313,20 @@ if ($this->ci->input->post('application_sub_stage')) {
 
 
 
+
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');
     $to_date = $this->ci->input->post('to_date');
     array_push($where, 'AND DATE(' . db_prefix() . 'clients.datecreated) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+}
+
+if ($this->ci->input->post('session_intake')) {
+    $session_intake = $this->ci->input->post('session_intake');
+    array_push(
+        $where,
+        "AND " . db_prefix() . "admission_preferences.session_intake
+        = '" . $this->ci->db->escape_str($session_intake) . "'"
+    );
 }
 
 if ($this->ci->input->post('last_to_date')) {
@@ -312,6 +379,7 @@ foreach ($rResult as $aRow) {
 
         $company .= '<div class="row-options">';
         $company .= '<a href="' . admin_url('clients/client/' . $aRow['userid']) . '">' . _l('view') . '</a>';
+        $company .= ' | <a href="javascript:void(0);" onclick="download_documents(' . $aRow['userid'] . ', \'' . addslashes($aRow['name']) . '\')">' . _l('Download') . '</a>';
 
         if ($aRow['registration_confirmed'] == 0 && is_admin()) {
             // $company .= ' | <a href="' . admin_url('clients/confirm_registration/' . $aRow['userid']) . '" class="text-success bold">' . _l('confirm_registration') . '</a>';

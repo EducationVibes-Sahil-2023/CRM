@@ -102,7 +102,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    .right-menu-filter li .form-control span,
    .right-menu-filter .set_disabled_date,
    .right-menu-filter button.btn,
-   .form-control::placeholder {
+   .right-menu-filter .form-control::placeholder {
       padding: 4px 10px;
       line-height: 2;
       height: 30px;
@@ -112,7 +112,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    }
 
    .right-menu-filter ._filter_data .dropdown-menu li a,
-   .bootstrap-select .dropdown-menu li a {
+   .right-menu-filter .bootstrap-select .dropdown-menu li a {
       font-size: 12px;
       padding: 0px !important;
    }

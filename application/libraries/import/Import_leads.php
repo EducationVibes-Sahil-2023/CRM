@@ -88,9 +88,13 @@ class Import_leads extends App_import
                             $insert['dateadded'] = date('Y-m-d H:i:s');
                         }
 
+                        if (!isset($insert['dateassigned'])) {
+                            $insert['dateassigned'] = date('Y-m-d H:i:s');
+                        }
                         if (!isset($insert['addedfrom'])) {
                             $insert['addedfrom'] = get_staff_user_id();
                         }
+
 
                         $insert['status'] = $this->ci->input->post('status');
                         $insert['source'] = $this->ci->input->post('source');
