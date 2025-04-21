@@ -73,6 +73,8 @@ class Clients extends AdminController
         }
     }
 
+
+
     public function table($type = "")
     {
 

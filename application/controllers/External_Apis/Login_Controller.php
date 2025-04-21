@@ -522,4 +522,25 @@ class Login_Controller extends Api_Controller
         $response = $this->Api_Model->update_all_contacts();
         echo  $this->json_output($response);
     }
+
+    public function excel_sync()
+    {
+
+        $this->load->library('GoogleSheetApi');
+        $this->load->helper('google');
+        $auto_sync = get_data_excel();
+   
+        if ($auto_sync) {
+            $response[] = array(
+                "status" => 1,
+                "message" => "Google sheet Sync successfully.",
+            );
+        } else {
+            $response[] = array(
+                "status" => 0,
+                "message" => $validate[0],
+            );
+        }
+        echo  $this->json_output($response);
+    }
 }
