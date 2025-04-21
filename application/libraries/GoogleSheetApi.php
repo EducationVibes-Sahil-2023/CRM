@@ -145,7 +145,8 @@ class GoogleSheetApi
     public function updateSheetColumnNames($spreadsheetId, $columnNames = [])
     {
 
-        $sheetName = $this->listSheetNames($spreadsheetId);
+        // $sheetName = $this->listSheetNames($spreadsheetId);
+        $sheetName = "Sheet1";
         if (empty($spreadsheetId) || empty($sheetName) || empty($columnNames)) {
             return [
                 'resp_code' => 'ERR',
@@ -184,7 +185,8 @@ class GoogleSheetApi
 
     public function updateSheetData($spreadsheetId, $arrayData = [])
     {
-        $sheetName = $this->listSheetNames($spreadsheetId);
+        // $sheetName = $this->listSheetNames($spreadsheetId);
+        $sheetName = "Sheet1";
 
         if (empty($spreadsheetId) || empty($sheetName) || empty($arrayData)) {
             return [
