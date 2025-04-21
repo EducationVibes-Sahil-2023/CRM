@@ -7,20 +7,6 @@ class Clients extends AdminController
     /* List all clients */
     public function index()
     {
-        // $this->load->library('GoogleSheetApi');
-        // $this->googlesheetapi->authenticate($this->input->get('code'));
-        // $data = [
-        //     ['Name', 'Email', 'Phone'],
-        //     ['Rahul', 'rahul@example.com', '9999999999']
-        // ];
-
-        // $response = $this->googlesheetapi->updateSheet('MA Tracker!A1', $data);
-        // echo '✅ Sheet updated. Cells: ' . $response->getUpdatedCells();
-        // $this->load->helper('google');
-
-        // create_sheet(1);
-        // print_r(insert_sheet_data(1));
-        // die;
         $lastSegment = $this->uri->segment($this->uri->total_segments());
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {

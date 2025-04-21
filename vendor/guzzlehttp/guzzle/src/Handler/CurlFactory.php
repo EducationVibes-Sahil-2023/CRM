@@ -1,4 +1,5 @@
 <?php
+
 namespace GuzzleHttp\Handler;
 
 use GuzzleHttp\Exception\RequestException;
@@ -64,7 +65,7 @@ class CurlFactory implements CurlFactoryInterface
         $resource = $easy->handle;
         unset($easy->handle);
 
-        if (count($this->handles) >= $this->maxHandles) {
+        if (isset($this->handles) && count($this->handles) >= $this->maxHandles) {
             curl_close($resource);
         } else {
             // Remove all callback functions as they can hold onto references
@@ -141,7 +142,8 @@ class CurlFactory implements CurlFactoryInterface
         $factory->release($easy);
 
         // Retry when nothing is present or when curl failed to rewind.
-        if (empty($easy->options['_err_message'])
+        if (
+            empty($easy->options['_err_message'])
             && (!$easy->errno || $easy->errno == 65)
         ) {
             return self::retryFailedRewind($handler, $easy, $ctx);
@@ -386,7 +388,8 @@ class CurlFactory implements CurlFactoryInterface
                 $scheme = $easy->request->getUri()->getScheme();
                 if (isset($options['proxy'][$scheme])) {
                     $host = $easy->request->getUri()->getHost();
-                    if (!isset($options['proxy']['no']) ||
+                    if (
+                        !isset($options['proxy']['no']) ||
                         !\GuzzleHttp\is_host_in_noproxy($host, $options['proxy']['no'])
                     ) {
                         $conf[CURLOPT_PROXY] = $options['proxy'][$scheme];

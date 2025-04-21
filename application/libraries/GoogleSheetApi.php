@@ -35,19 +35,17 @@ class GoogleSheetApi
             // Create service instances
             $this->sheetsService = new Sheets($this->client);
             $this->driveService = new Drive($this->client);
-            // $this->spreadsheetId = $this->createAndShareSheet("MA Tracker 2024-2025", "sahil.chaudhary@educationvibes.in");
         } catch (Exception $e) {
             echo "❌ Initialization Error: " . $e->getMessage();
         }
     }
 
-    public function createAndShareSheet($title = 'New Spreadsheet', $shareEmail = 'sahil.chaudhary@educationvibes.in', $role = 'writer')
+    public function createAndShareSheet($title = 'New Spreadsheet', $shareEmail = GOOGLE_SHEET_SHARE, $role = 'writer')
     {
         try {
+            $driveService = new Google_Service_Drive($this->client);
 
-            $driveService = new Drive($this->client);
-
-            // 1. Check if a sheet with the same name already exists
+            // Step 1: Check if a spreadsheet with the same name already exists
             $query = sprintf(
                 "mimeType='application/vnd.google-apps.spreadsheet' and name='%s' and trashed=false",
                 addslashes($title)
@@ -59,14 +57,10 @@ class GoogleSheetApi
             ]);
 
             if (count($files->getFiles()) > 0) {
-
-
-                // Found existing sheet
-                $existingSheet = $files->getFiles()[0];
-                return $existingSheet->getId();
+                return $files->getFiles()[0]->getId();
             }
 
-            // Create the spreadsheet
+            // Step 2: Create new spreadsheet
             $spreadsheet = new Google_Service_Sheets_Spreadsheet([
                 'properties' => ['title' => $title]
             ]);
@@ -74,22 +68,48 @@ class GoogleSheetApi
             $createdSheet = $this->sheetsService->spreadsheets->create($spreadsheet);
             $spreadsheetId = $createdSheet->spreadsheetId;
 
-            // Share with specific user
+            // Step 3: Share with user
             if (!empty($shareEmail)) {
                 $permission = new Google_Service_Drive_Permission([
                     'type' => 'user',
-                    'role' => $role, // 'reader' or 'writer'
+                    'role' => $role === 'owner' ? 'writer' : $role, // Fallback to 'writer'
                     'emailAddress' => $shareEmail
                 ]);
 
-                $this->driveService->permissions->create(
-                    $spreadsheetId,
-                    $permission,
-                    ['sendNotificationEmail' => true] // optional
-                );
+                $params = ['sendNotificationEmail' => true];
+
+                try {
+                    $driveService->permissions->create(
+                        $spreadsheetId,
+                        $permission,
+                        $params
+                    );
+
+                    // Attempt to transfer ownership if domain allows
+                    if ($role === 'owner') {
+                        $params['transferOwnership'] = true;
+                        $permission->setRole('owner');
+
+                        $driveService->permissions->create(
+                            $spreadsheetId,
+                            $permission,
+                            $params
+                        );
+                    }
+                } catch (Google_Service_Exception $e) {
+                    // Ownership transfer failed due to domain restrictions
+                    if (strpos($e->getMessage(), 'ownershipChangeAcrossDomainNotPermitted') !== false) {
+                        // echo "⚠️ Cannot transfer ownership across domains. Shared as writer instead.";
+                    } else {
+                        throw $e;
+                    }
+                }
             }
 
-            // Return the spreadsheet URL
+            // Step 4: Attach script if needed
+            // $this->attachScript  ToSheet($spreadsheetId);
+
+            // Step 5: Return
             $this->spreadsheetUrl = 'https://docs.google.com/spreadsheets/d/' . $spreadsheetId;
             return $spreadsheetId;
         } catch (Exception $e) {
@@ -98,7 +118,8 @@ class GoogleSheetApi
         }
     }
 
-    public function shareWithDomain($spreadsheetId, $domain = 'sahil.chaudhary@educationvibes.in', $role = 'reader')
+
+    public function shareWithDomain($spreadsheetId, $domain = GOOGLE_SHEET_SHARE, $role = 'reader')
     {
         try {
             $permission = new Google\Service\Drive\Permission([
@@ -164,6 +185,7 @@ class GoogleSheetApi
     public function updateSheetData($spreadsheetId, $arrayData = [])
     {
         $sheetName = $this->listSheetNames($spreadsheetId);
+
         if (empty($spreadsheetId) || empty($sheetName) || empty($arrayData)) {
             return [
                 'resp_code' => 'ERR',
@@ -221,16 +243,13 @@ class GoogleSheetApi
         return $sheetData;
     }
 
-
-
-
-
-
     public function listSheetNames($spreadsheetId)
     {
         try {
+
             // Fetch spreadsheet metadata to check sheet names
             $spreadsheet = $this->service->spreadsheets->get($spreadsheetId);
+
             $sheetNames = array_map(function ($sheet) {
                 return $sheet['properties']['title'];
             }, $spreadsheet->getSheets());
@@ -328,4 +347,6 @@ class GoogleSheetApi
             return ['error' => $e->getMessage()];
         }
     }
+
+    public function get_auto_Sync_sheet() {}
 }

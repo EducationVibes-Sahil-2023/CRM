@@ -195,6 +195,10 @@ $route['external/call_activity_cron'] = 'External_Apis/Login_Controller/call_act
 $route['external/update_all_contacts'] = 'External_Apis/Login_Controller/update_all_contacts';
 $route['external/re_assign_cron'] = 'Authentication/re_assign_cron';
 
+// Sync Excel
+$route['external/excel_sync'] = 'External_Apis/Login_Controller/excel_sync';
+
+
 
 
 /**

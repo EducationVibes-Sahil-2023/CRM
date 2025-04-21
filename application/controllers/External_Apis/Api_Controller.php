@@ -15,16 +15,8 @@ class Api_Controller extends CI_Controller
         $this->load->helper('jwt');
         $token = $this->input->get_request_header('Authorization');
         $current_url = current_url();
-        // $issuedAt = time();
-        // $expirationTime = $issuedAt + 60 * 60 * 24 * 60;
-        // $data = array(
-        //     "login_token" => "b6d5dd663af253bd3ad79a8c916ad703",
-        //     'iat' => $issuedAt,
-        //     'exp' => $expirationTime,
-        // );
-        // echo $jwt_token =  $this->generate_token($data);
-        // die;
-        if (str_contains($current_url, 'login') || str_contains($current_url, 'process_data') || str_contains($current_url, 'call_activity_cron') |  str_contains($current_url, "update_all_contacts")) {
+
+        if (str_contains($current_url, 'login') || str_contains($current_url, 'process_data') || str_contains($current_url, 'call_activity_cron') ||  str_contains($current_url, "update_all_contacts") ||  str_contains($current_url, "excel_sync")) {
         } else {
             if (!empty($token)) {
                 $token = explode(" ", $token);
