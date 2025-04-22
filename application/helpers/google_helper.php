@@ -120,7 +120,7 @@ if (!function_exists('get_data_excel')) {
         $CI = &get_instance();
 
         // Build the query for excel data update
-        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync")
+        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year")
             ->from(db_prefix() . "excel_data_update");
 
         if (!empty($id)) {
@@ -140,6 +140,7 @@ if (!function_exists('get_data_excel')) {
             $currentId = $sheet['id']; // Important for multiple autoSync rows
             $fromDate = $sheet['fromDate']; // Important for multiple autoSync rows
             $toDate = $sheet['toDate']; // Important for multiple autoSync rows
+            $acadmic_year = $sheet['acadmic_year']; // Important for multiple autoSync rows
             $spreadsheetId = $sheet['spreadsheetId']; // Important for multiple autoSync rows
             create_sheet($currentId);
             // Get selected columns
@@ -162,6 +163,13 @@ if (!function_exists('get_data_excel')) {
                 // $CI->db->where("c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}'", null, false);
                 // Prepare raw SQL condition for manual query usage
                 $condition_sql = " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
+            }
+
+            if (!empty($acadmic_year)) {
+                // Apply to CodeIgniter query builder (this works the same as BETWEEN)
+                // $CI->db->where("c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}'", null, false);
+                // Prepare raw SQL condition for manual query usage
+                $condition_sql = " AND (p.acadmic_year = '{$acadmic_year}')";
             }
 
 
