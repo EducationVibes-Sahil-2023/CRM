@@ -3182,4 +3182,16 @@ class Leads_model extends App_Model
         }
         return false;
     }
+
+    public function view_form()
+    {
+
+        $this->db->select(' l.website id,l.website name ');
+        $this->db->from(db_prefix() . 'leads AS l');
+        $this->db->where("website!=", '');
+        $this->db->group_by('l.website');
+        $this->db->order_by('l.website', 'asc');
+
+        return $this->db->get()->result_array();
+    }
 }

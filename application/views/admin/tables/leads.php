@@ -123,6 +123,17 @@ if ($this->ci->input->post('source')) {
     $where[] = "AND " . $sTable . ".source IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ")";
 }
 
+if ($this->ci->input->post('view_form')) {
+    $websites = $this->ci->input->post('view_form');
+    $escaped_websites = array_map(function ($w) {
+        return "'" . $this->ci->db->escape_str(trim($w)) . "'";
+    }, $websites);
+
+    $where[] = "AND " . $sTable . ".website IN (" . implode(',', $escaped_websites) . ")";
+}
+
+
+
 if ($this->ci->input->post('lead_type')) {
     $where[] = "AND " . $sTable . ".type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ")";
 }

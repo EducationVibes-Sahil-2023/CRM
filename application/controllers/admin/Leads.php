@@ -82,6 +82,8 @@ class Leads extends AdminController
         $data['sources']  = $this->leads_model->get_source();
 
         $data['type']  = $this->leads_model->get_type();
+        $data['view_form']  = $this->leads_model->view_form();
+       
 
         $data['title']    = _l('leads');
 

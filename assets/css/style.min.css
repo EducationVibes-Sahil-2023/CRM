@@ -9185,3 +9185,51 @@ body.gantt {
     background-color: #357ebd !important;
     color: white !important;
 }
+
+#filter-right-side {
+    width: 230px;
+    bottom: 0;
+    float: right;
+    right: 0;
+    position: absolute;
+    top: 63px;
+    -webkit-transition: all .5s ease 0s;
+    transition: all .5s ease 0s;
+    z-index: 9;
+}
+
+.admin #side-filter {
+    padding-top: 20px;
+    background: white;
+
+}
+
+#filter-right-side {
+    background: white;
+}
+
+body.show-sidefilter #wrapper {
+    margin-right: 230px !important;
+}
+
+body.show-sidefilter #filter-right-side {
+    display: block;
+    transition: all .5s ease 0s;
+}
+
+body.hide-sidefilter:not(.show-sidefilter) #wrapper {
+    margin-right: 0px;
+}
+
+body.hide-sidefilter:not(.show-sidefilter) #filter-right-side {
+    display: none;
+    transition: all .5s ease 0s;
+}
+
+ul#side-filter > li {
+    padding: 10px;
+}
+
+.nav.navbar-right>li>a {
+    display: inline !important;
+}

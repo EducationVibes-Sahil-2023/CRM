@@ -159,192 +159,15 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                            <?php } ?>
                            <?php echo form_hidden('sort_type'); ?>
                            <?php echo form_hidden('sort', (get_option('default_leads_kanban_sort') != '' ? get_option('default_leads_kanban_sort_type') : '')); ?>
-                           <div class="btn-group pull-right mleft4 btn-with-tooltip-group _filter_data" data-toggle="tooltip" data-title="<?php echo _l('filter_by'); ?>">
-                              <button type="button" onclick="right_filter('right-menu-filter')" class="btn btn-default dropdown-toggle">
-                                 <i class="fa fa-filter" aria-hidden="true"></i>
-                              </button>
+                           <!-- <div class="btn-group pull-right mleft4 btn-with-tooltip-group _filter_data hide" data-toggle="tooltip" data-title="<?php echo _l('filter_by'); ?>">
+                             
                               <ul class="dropdown-menu dropdown-menu-right width250 right-menu-filter">
-                                 <?php if (has_permission('leads', '', 'view')) { ?>
-                                    <li class="col-md-3">
-                                       <div class="leads-filter-column">
-                                          <?php echo render_select(
-                                             'view_assigned[]',
-                                             $staff,
-                                             array('staffid', array('firstname', 'lastname')),
-                                             '',
-                                             '',
-                                             array(
-                                                'data-width' => '100%',
-                                                'data-none-selected-text' => _l('leads_dt_assigned'),
-                                                'multiple' => true,
-                                                'data-actions-box' => true
-                                             ),
-                                             array(),
-                                             'no-mbot',
-                                             '',
-                                             false,
-                                             'view_assigned'
-                                          ); ?>
-                                       </div>
-                                    </li>
-                                 <?php } ?>
-                                 <li class="col-md-3">
-                                    <div class="leads-filter-column">
-                                       <?php
-                                       $selected = array();
-                                       // if ($this->input->get('status')) {
-                                       //    $selected[] = $this->input->get('status');
-                                       // } else {
-                                       //    foreach ($statuses as $key => $status) {
-                                       //       if ($status['isdefault'] == 0) {
-                                       //          $selected[] = $status['id'];
-                                       //       } else {
-                                       //          $statuses[$key]['option_attributes'] = array('data-subtext' => _l('leads_converted_to_client'));
-                                       //       }
-                                       //    }
-                                       // }
-                                       echo '<div id="leads-filter-status">';
-                                       echo render_select(
-                                          'view_status[]',
-                                          $statuses,
-                                          array('id', 'name'),
-                                          '',
-                                          '',
-                                          array(
-                                             'data-width' => '100%',
-                                             'data-none-selected-text' => _l('leads_all'),
-                                             'multiple' => true,
-                                             'data-actions-box' => true
-                                          ),
-                                          array(),
-                                          'no-mbot',
-                                          '',
-                                          false,
-                                          'view_status'
-                                       );
-                                       echo '</div>';
-                                       ?>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div class="leads-filter-column">
-                                       <div id="leads-filter-source">
-                                          <?php
-                                          echo render_select(
-                                             'view_source[]',
-                                             $sources,
-                                             array('id', 'name'),
-                                             '',
-                                             '',
-                                             array(
-                                                'data-width' => '100%',
-                                                'data-none-selected-text' => _l('leads_source'),
-                                                'multiple' => true,
-                                                'data-actions-box' => true
-                                             ),
-                                             array(),
-                                             'no-mbot',
-                                             '',
-                                             false,
-                                             "view_source"
-                                          );
-                                          ?>
-                                       </div>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div class="leads-filter-column">
-                                       <div id="leads-filter-type">
-                                          <?php
-                                          echo render_select(
-                                             'lead_type[]',
-                                             $type,
-                                             array('id', 'name'),
-                                             '',
-                                             '',
-                                             array(
-                                                'data-width' => '100%',
-                                                'data-none-selected-text' => _l('lead_import_type'),
-                                                'multiple' => true,
-                                                'data-actions-box' => true
-                                             ),
-                                             array(),
-                                             'no-mbot',
-                                             '',
-                                             false,
-                                             "lead_type"
-                                          );
-                                          ?>
-                                       </div>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
-                                       <i class="fa fa-calendar"></i>
-                                       <span data-label="Created Date">Created Date</span>
-                                       <i class="fa fa-chevron-down"></i>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div id="update_date_right" data-from="up_from_date" data-to="up_to_date" class="date-filter form-control">
-                                       <i class="fa fa-calendar"></i>
-                                       <span data-label="Update Date">Update Date</span>
-                                       <i class="fa fa-chevron-down"></i>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
-                                       <i class="fa fa-calendar"></i>
-                                       <span data-label="Follow-up Date">Follow-up Date</span>
-                                       <i class="fa fa-chevron-down"></i>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div id="assign_date_right" data-from="assign_from_date" data-to="assign_to_date" class="date-filter form-control">
-                                       <i class="fa fa-calendar"></i>
-                                       <span data-label="Assignation Date">Assignation Date</span>
-                                       <i class="fa fa-chevron-down"></i>
-                                    </div>
-                                 </li>
-                                 <li class="col-md-3">
-                                    <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
-                                 </li>
-                                 <li class="col-md-3">
-                                    <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
-                                 </li>
-                                 <li class="col-md-3">
-                                    <div class="leads-filter-column col-md-12" style="margin-bottom:20px;">
-                                       <div class="checkbox" style="margin-bottom: 10px;">
-
-                                          <input type="checkbox" name="show_update_counts" value="1"
-                                             class="set_disabled_date disabled_checkbox"
-                                             id="show_update_counts"
-                                             onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');">
-                                          <label> Update Count Range
-                                          </label>
-                                       </div>
-
-                                       <div id="rangeSlider" style="display: none;"></div>
-
-                                       <input type="hidden" id="update_count_min" name="update_count_min">
-                                       <input type="hidden" id="update_count_max" name="update_count_max">
-                                    </div>
-                                    <!-- <div class="form-group" style="margin-top: 10px; text-align: right;">
-                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
-                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
-                                    </div> -->
-                                 </li>
-
-                                 <li class="col-md-3">
-                                    <div class="form-group" style="margin-top: 10px; text-align: right;">
-                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
-                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
-                                    </div>
-                                 </li>
 
 
-                              </ul> <!-- ✅ Properly closed -->
-                           </div>
+
+
+                              </ul> 
+                           </div> -->
                         </div>
                      </div>
                      <div class="clearfix"></div>
@@ -928,6 +751,207 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    </div>
 </div>
 </div>
+
+<aside id="filter-right-side" class="sidefilter-right">
+   <ul class="nav metis-filter" style="display:none;" id="side-filter">
+
+      <?php if (has_permission('leads', '', 'view')) { ?>
+         <li class="">
+            <div class="leads-filter-column">
+               <?php echo render_select(
+                  'view_assigned[]',
+                  $staff,
+                  array('staffid', array('firstname', 'lastname')),
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => _l('leads_dt_assigned'),
+                     'multiple' => true,
+                     'data-actions-box' => true
+                  ),
+                  array(),
+                  'no-mbot',
+                  '',
+                  false,
+                  'view_assigned'
+               ); ?>
+            </div>
+         </li>
+      <?php } ?>
+      <li>
+         <div class="leads-filter-column">
+            <?php
+            $selected = array();
+            echo '<div id="leads-filter-status">';
+            echo render_select(
+               'view_status[]',
+               $statuses,
+               array('id', 'name'),
+               '',
+               '',
+               array(
+                  'data-width' => '100%',
+                  'data-none-selected-text' => _l('leads_all'),
+                  'multiple' => true,
+                  'data-actions-box' => true
+               ),
+               array(),
+               'no-mbot',
+               '',
+               false,
+               'view_status'
+            );
+            echo '</div>';
+            ?>
+         </div>
+      </li>
+      <li>
+         <div class="leads-filter-column">
+            <div id="leads-filter-source">
+               <?php
+               echo render_select(
+                  'view_source[]',
+                  $sources,
+                  array('id', 'name'),
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => _l('leads_source'),
+                     'multiple' => true,
+                     'data-actions-box' => true
+                  ),
+                  array(),
+                  'no-mbot',
+                  '',
+                  false,
+                  "view_source"
+               );
+               ?>
+            </div>
+         </div>
+      </li>
+
+      <li class="">
+         <div class="leads-filter-column">
+            <div id="leads-filter-type">
+               <?php
+               echo render_select(
+                  'lead_type[]',
+                  $type,
+                  array('id', 'name'),
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => _l('lead_import_type'),
+                     'multiple' => true,
+                     'data-actions-box' => true
+                  ),
+                  array(),
+                  'no-mbot',
+                  '',
+                  false,
+                  "lead_type"
+               );
+               ?>
+            </div>
+         </div>
+      </li>
+
+      <li class="">
+         <div class="leads-filter-column">
+            <div id="leads-filter-type">
+               <?php
+               echo render_select(
+                  'view_form[]',
+                  $view_form,
+                  array('id', 'name'),
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => "Form Name",
+                     'multiple' => true,
+                     'data-actions-box' => true
+                  ),
+                  array(),
+                  'no-mbot',
+                  '',
+                  false,
+                  "view_form"
+               );
+               ?>
+            </div>
+         </div>
+      </li>
+      <li class="">
+         <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
+            <i class="fa fa-calendar"></i>
+            <span data-label="Created Date">Created Date</span>
+            <i class="fa fa-chevron-down"></i>
+         </div>
+      </li>
+      <li class="">
+         <div id="update_date_right" data-from="up_from_date" data-to="up_to_date" class="date-filter form-control">
+            <i class="fa fa-calendar"></i>
+            <span data-label="Update Date">Update Date</span>
+            <i class="fa fa-chevron-down"></i>
+         </div>
+      </li>
+      <li class="">
+         <div id="follow_date_right" data-from="followup_from_date" data-to="followup_to_date" class="date-filter form-control">
+            <i class="fa fa-calendar"></i>
+            <span data-label="Follow-up Date">Follow-up Date</span>
+            <i class="fa fa-chevron-down"></i>
+         </div>
+      </li>
+      <li class="">
+         <div id="assign_date_right" data-from="assign_from_date" data-to="assign_to_date" class="date-filter form-control">
+            <i class="fa fa-calendar"></i>
+            <span data-label="Assignation Date">Assignation Date</span>
+            <i class="fa fa-chevron-down"></i>
+         </div>
+      </li>
+      <li class="">
+         <input type="text" class="form-control datepicker set_disabled_date" name="last_contact_date" onchange="set_disabled_date(this.value)" id="last_contact_date" placeholder="Last Connected Date" autocomplete="off">
+      </li>
+      <li class="">
+         <input type="text" class="form-control datepicker set_disabled_date" onchange="set_disabled_date(this.value)" name="last_update_date" id="last_update_date" placeholder="Last Updated Date" autocomplete="off">
+      </li>
+      <li class="">
+         <div class="leads-filter-column col-md-12" style="margin-bottom:20px;">
+            <div class="checkbox" style="margin-bottom: 10px;">
+
+               <input type="checkbox" name="show_update_counts" value="1"
+                  class="set_disabled_date disabled_checkbox"
+                  id="show_update_counts"
+                  onclick="show_update_count_range(this); set_disabled_date(this.checked ? 1 : '');">
+               <label> Update Count Range
+               </label>
+            </div>
+
+            <div id="rangeSlider" style="display: none;"></div>
+
+            <input type="hidden" id="update_count_min" name="update_count_min">
+            <input type="hidden" id="update_count_max" name="update_count_max">
+         </div>
+         <!-- <div class="form-group" style="margin-top: 10px; text-align: right;">
+                                       <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+                                       <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
+                                    </div> -->
+      </li>
+
+      <li class="">
+         <div class="form-group" style="margin-top: 10px; text-align: right;">
+            <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+            <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
+         </div>
+      </li>
+   </ul>
+</aside>
+
 <script id="hidden-columns-table-leads" type="text/json">
    <?php echo get_staff_meta(get_staff_user_id(), 'hidden-columns-table-leads'); ?>
 </script>
@@ -1282,6 +1306,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    $(document).ready(function() {
       // Optionally, you can ensure this starts only once the page is fully loaded
       set_datatable_string();
+      $(".hide-lead-filter").removeClass("hide");
    });
 </script>
 <script>
@@ -1293,10 +1318,12 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       var element_view_source = document.getElementById("view_source");
       var element_view_status = document.getElementById("view_status");
       var element_lead_type = document.getElementById("lead_type");
+      var element_form_name = document.getElementById("view_form");
       var view_assigned_options = "";
       var view_source_options = "";
       var view_status_options = "";
       var view_lead_type_options = "";
+      var view_view_form_options = "";
       if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
          view_source_options = document.getElementById('view_source').selectedOptions;
          view_source_options = Array.from(view_source_options).map(({
@@ -1319,6 +1346,13 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       if (typeof(element_view_assign) != 'undefined' && element_view_assign != null) {
          view_assigned_options = document.getElementById('view_assigned').selectedOptions;
          view_assigned_options = Array.from(view_assigned_options).map(({
+            value
+         }) => value);
+      }
+
+      if (typeof(element_form_name) != 'undefined' && element_form_name != null) {
+         view_view_form_options = document.getElementById('view_form').selectedOptions;
+         view_view_form_options = Array.from(view_view_form_options).map(({
             value
          }) => value);
       }
@@ -1349,6 +1383,7 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       var up_to_date_call = document.getElementById("up_to_date_call").value;
       var last_contact_date = document.getElementById("last_contact_date").value;
       var last_update_date = document.getElementById("last_update_date").value;
+
       if ($("#show_update_counts").is(":checked")) {
          update_count_min = document.getElementById("update_count_min").value;
          update_count_max = document.getElementById("update_count_max").value;
@@ -1380,9 +1415,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             up_to_date_call: up_to_date_call,
             last_contact_date: last_contact_date,
             last_update_date: last_update_date,
-            show_lead_status: status
-
-
+            show_lead_status: status,
+            view_form: view_view_form_options
          },
          dataType: "JSON",
          cache: false,
@@ -1545,6 +1579,29 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    function right_filter(className) {
       $("." + className).toggle();
    }
+
+
+   function right_lead_filter() {
+      if ($('body').hasClass('hide-sidefilter')) {
+         $('body').removeClass('hide-sidefilter').addClass('show-sidefilter');
+         $('body').removeClass('show-sidebar').addClass('hide-sidebar');
+
+         // Set full height to #filter-right-side
+         $("#filter-right-side").css('height', $(".content").height() + 'px');
+      } else {
+         $('body').removeClass('show-sidefilter').addClass('hide-sidefilter');
+      }
+
+      // Toggle visibility with fade
+      $("#filter-right-side ul.nav").fadeToggle("slow");
+
+      // Fix columns going out of the table
+      delay(function() {
+         $($.fn.dataTable.tables(true)).DataTable().responsive.recalc();
+      }, 300);
+   }
+
+   document.body.classList.add("hide-sidefilter");
 </script>
 
 </body>

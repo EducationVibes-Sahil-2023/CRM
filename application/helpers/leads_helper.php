@@ -7683,6 +7683,16 @@ function calculate_call_duration_new($params = false, $max_status = 0)
         $sql .= ' AND l.source IN (' . implode(",", $CI->db->escape_str($params['source'])) . ')';
     }
 
+    if (!empty($params['view_form'])) {
+        $websites = $params['view_form'];
+        $escaped_websites = array_map(function ($w) {
+            return "'" . trim($w) . "'";
+        }, $websites);
+        $sql .= " AND l.website IN (" . implode(',', $escaped_websites) . ")";
+    }
+
+   
+
     if (!empty($params['lead_type'])) {
         $check_today = false;
         $sql .= ' AND l.type IN (' . implode(",", $CI->db->escape_str($params['lead_type'])) . ')';
@@ -8094,6 +8104,16 @@ function get_leads_summary_filter_neww($params)
 
     if (!empty($params['location'])) {
         $conditions[] = " " . db_prefix() . "staff.office_location IN ('" . implode("','", $CI->db->escape_str($params['location'])) . "')";
+    }
+
+
+    if (!empty($params['view_form'])) {
+        $websites = $params['view_form'];
+        $escaped_websites = array_map(function ($w) {
+            return "'" . trim($w) . "'";
+        }, $websites);
+
+        $conditions[] = " " . $tblleads . ".website IN (" . implode(',', $escaped_websites) . ")";
     }
 
     if (!empty($params['up_to_date'])) {
