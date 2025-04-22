@@ -120,7 +120,7 @@ if (!function_exists('get_data_excel')) {
         $CI = &get_instance();
 
         // Build the query for excel data update
-        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync")
+        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year")
             ->from(db_prefix() . "excel_data_update");
 
         if (!empty($id)) {
