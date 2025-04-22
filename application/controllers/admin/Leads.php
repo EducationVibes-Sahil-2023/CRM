@@ -3886,4 +3886,91 @@ class Leads extends AdminController
             access_denied('Delete Visit Lead');
         }
     }
+
+    function visitor_lead_summary_filter()
+    {
+        $statusHtml = '<div class="row panel-body">';
+        $statusHtml .= '<div class="col-md-12"><h4 class="no-margin">Lead Summary</h4></div>';
+        $response_data = get_visitor_leads_summary_filter_neww($_POST);
+        $marketing_data = [];
+        $total_leads = 0;
+        $summary = $response_data["lead_status"];
+        foreach ($summary as $status) {
+
+            if (!empty($status["conversion_type_name"]) && !empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
+                $marketing_data[$status["conversion_type"]]["name"] = $status["conversion_type_name"];
+                $marketing_data[$status["conversion_type"]]["total"] += $status["total"];
+                $marketing_data[$status["conversion_type"]]["color"] = $status["color"];
+                $total_leads += $status["total"];
+            }
+
+            $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
+            $statusHtml .= "<div class='col-md-2 col-xs-6'>
+            <div class='border-card'>
+            <h3 class='bold'>{$percent}</h3>
+            <span style='color: {$status['color']}'>{$status['name']}</span></div></div>";
+        }
+        $statusHtml .= "</div>";
+
+        // if (!empty($_POST["show_marketing_status"]) && $_POST["show_marketing_status"] == 1) {
+        //     $marketing_data[$status["conversion_type"]]["name"] = "total";
+        //     $marketing_data[$status["conversion_type"]]["total"] = $total_leads;
+        //     $marketing_data[$status["conversion_type"]]["color"] = "black";
+        //     $statusHtml .= '<br><br><hr><div><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Performance Marketing</span></h3></div>';
+        //     foreach ($marketing_data as $mar) {
+
+        //         $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type border-right"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . number_format((($mar['total'] / $total_leads) * 100), 2) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div>';
+        //     }
+        //     $statusHtml .= "</div>";
+        // }
+
+
+        // $statusHtml .= '<div class="row panel-body">';
+        // $statusHtml .= '<div class="col-md-12"><h4 class="no-margin">Visitor Status</h4></div>';
+        // $visitorStatus = $response_data["visitor_status"];
+        // foreach ($visitorStatus as $status) {
+
+
+        //     $percent = $status['total'];
+        //     $statusHtml .= "<div class='col-md-2 col-xs-6'>
+        //     <div class='border-card'>
+        //     <h3 class='bold'>{$percent}</h3>
+        //     <span class='text-{$status['color']}'>{$status['name']}</span></div></div>";
+        // }
+        // $statusHtml .= "</div>";
+
+
+        // $statusHtml .= '<div class="row panel-body">';
+        // $statusHtml .= '<div class="col-md-12"><h4 class="no-margin">Visitor Type</h4></div>';
+        // $visitorStatus = $response_data["visitor_type"];
+        // foreach ($visitorStatus as $status) {
+
+
+        //     $percent = $status['total'];
+        //     $statusHtml .= "<div class='col-md-2 col-xs-6'>
+        //     <div class='border-card'>
+        //     <h3 class='bold'>{$percent}</h3>
+        //     <span style='color:{$status['color']}'>{$status['name']}</span></div></div>";
+        // }
+        // $statusHtml .= "</div>";
+
+
+        // $statusHtml .= '<div class="row panel-body">';
+        // $statusHtml .= '<div class="col-md-12"><h4 class="no-margin">Schedule</h4></div>';
+        // $visitorStatus = $response_data["schedule"];
+        // foreach ($visitorStatus as $status) {
+
+
+        //     $percent = $status['total'];
+        //     $statusHtml .= "<div class='col-md-2 col-xs-6'>
+        //     <div class='border-card'>
+        //     <h3 class='bold'>{$percent}</h3>
+        //     <span style='color:{$status['color']}'>{$status['name']}</span></div></div>";
+        // }
+        // $statusHtml .= "</div>";
+
+        echo json_encode([
+            'status' => $statusHtml,
+        ]);
+    }
 }
