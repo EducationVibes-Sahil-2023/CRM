@@ -5,7 +5,11 @@ $all_leads =  [];
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 ?>
 <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css" /> -->
-
+<style>
+   li.p-20 {
+      /* padding-top: 20px */
+   }
+</style>
 <li id="top_search" class="dropdown" data-toggle="tooltip" data-placement="bottom" data-title="<?php echo _l('search_by_tags'); ?>">
    <input type="search" id="search_input" class="form-control" placeholder="<?php echo _l('top_search_placeholder'); ?>">
    <div id="search_results">
@@ -106,18 +110,18 @@ ob_end_clean();
             </ul>
          </li>
          <?php if (is_staff_member()) { ?>
-            <li class="icon header-newsfeed">
+            <!-- <li class="icon header-newsfeed">
                <a href="#" class="open_newsfeed desktop" data-toggle="tooltip" title="<?php echo _l('whats_on_your_mind'); ?>" data-placement="bottom"><i class="fa fa-share fa-fw fa-lg" aria-hidden="true"></i></a>
-            </li>
+            </li> -->
          <?php } ?>
-         <li class="icon header-todo">
+         <!-- <li class="icon header-todo">
             <a href="<?php echo admin_url('todo'); ?>" data-toggle="tooltip" title="<?php echo _l('nav_todo_items'); ?>" data-placement="bottom"><i class="fa fa-check-square-o fa-fw fa-lg"></i>
                <span class="label bg-warning icon-total-indicator nav-total-todos<?php if ($current_user->total_unfinished_todos == 0) {
                                                                                     echo ' hide';
                                                                                  } ?>"><?php echo $current_user->total_unfinished_todos; ?></span>
             </a>
-         </li>
-         <li class="icon header-timers timer-button" data-placement="bottom" data-toggle="tooltip" data-title="<?php echo _l('my_timesheets'); ?>">
+         </li> -->
+         <!-- <li class="icon header-timers timer-button" data-placement="bottom" data-toggle="tooltip" data-title="<?php echo _l('my_timesheets'); ?>">
             <a href="#" id="top-timers" class="dropdown-toggle top-timers" data-toggle="dropdown">
                <i class="fa fa-clock-o fa-fw fa-lg" aria-hidden="true"></i>
                <span class="label bg-success icon-total-indicator icon-started-timers<?php if ($totalTimers = count($startedTimers) == 0) {
@@ -129,13 +133,16 @@ ob_end_clean();
             <ul class="dropdown-menu animated fadeIn started-timers-top width350" id="started-timers-top">
                <?php $this->load->view('admin/tasks/started_timers', array('startedTimers' => $startedTimers)); ?>
             </ul>
-         </li>
-         <li class="dropdown notifications-wrapper header-notifications" data-toggle="tooltip" title="<?php echo _l('nav_notifications'); ?>" data-placement="bottom">
+         </li> -->
+         <li class="dropdown notifications-wrapper header-notifications p-20" data-toggle="tooltip" title="<?php echo _l('nav_notifications'); ?>" data-placement="bottom">
             <?php $this->load->view('admin/includes/notifications'); ?>
          </li>
          <?php if (is_admin()) { ?>
-            <li class="dropdown" data-toggle="tooltip" title="<?= $this->session->userdata('Facebook_Error') ?>" data-placement="bottom"><a><i class="fa fa-facebook fa-fw fa-lg" aria-hidden="true"></i></a></li>
+            <li class="dropdown p-20" data-toggle="tooltip" title="<?= $this->session->userdata('Facebook_Error') ?>" data-placement="bottom"><a><i class="fa fa-facebook fa-fw fa-lg" aria-hidden="true"></i></a></li>
          <?php } ?>
+         <li class="p-20 dropdown hide-lead-filter hide right-filter-icon">
+            <a><i title="Leads Fiters" data-placement="bottom" class="fa fa-filter fa-fw fa-lg" onclick="right_lead_filter()"></i></a>
+         </li>
 
          <?php if (has_permission('whatsapp', '', 'view') && 1 == 2) { ?>
             <li class="dropdown whatsapp_alert-wrapper header-notifications header-whatsapp_alert" data-toggle="tooltip" title="WhatsApp Notification" data-placement="bottom">
@@ -246,8 +253,8 @@ ob_end_clean();
 <script>
    var isAdmin = <?= is_admin() ? 1 : 0 ?>;
    var TablePagination = <?= is_admin() ? TABLEPAGINATION : (!empty($role) && $role == 3 ? TABLEPAGINATIONTEAMLEAD : "''") ?>;
-   console.log(isAdmin);
-   console.log(TablePagination);
+   // console.log(isAdmin);
+   // console.log(TablePagination);
    var WebURL = "<?= WHATSAPP_WEB_URL ?>";
    var WebSOCKETURL = "<?= SOCKET_WEB_URL ?>";
    var phoneNumber = "<?= get_staff_phonenumber(get_staff_user_id())->phonenumber ?>";
@@ -256,7 +263,7 @@ ob_end_clean();
       whatsapp_permission_view = 0;
    }
    whatsapp_permission_view = 0;
-   console.log("whatsapp_permission", whatsapp_permission_view);
+   // console.log("whatsapp_permission", whatsapp_permission_view);
 
 
    if (whatsapp_permission_view == 1) {

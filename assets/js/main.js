@@ -2643,8 +2643,8 @@ function initDataTable(selector, url, notsearchable, notsortable, fnserverparams
         }
     }
 
-    var length_options = [5,10, 25, 50, 100];
-    var length_options_names = [5,10, 25, 50, 100];
+    var length_options = [5, 10, 25, 50, 100];
+    var length_options_names = [5, 10, 25, 50, 100];
 
     app.options.tables_pagination_limit = parseFloat(app.options.tables_pagination_limit);
 
@@ -7107,5 +7107,6 @@ function init_currency_symbol() {
     // console.warn('"init_currency_symbol" is deprecated, use "init_currency" instead')
     init_currency();
 }
+
 
 
