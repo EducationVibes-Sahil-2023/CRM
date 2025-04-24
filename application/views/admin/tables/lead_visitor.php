@@ -12,21 +12,24 @@ $aColumns = [
     db_prefix() . 'visitor_request.date_of_visit as date_of_visit',
     db_prefix() . 'leads.name as student_name',
     db_prefix() . 'leads.phonenumber as phonenumber',
+    db_prefix() . 'leads.call_duration as call_duration',
     db_prefix() . 'cities_.name as location',
     db_prefix() . 'visitor_type.name as visitor_type',
     db_prefix() . 'visitor_request.assigned as assigned',
-    db_prefix() . 'leads.type as lead_type',
-    db_prefix() . 'visitor_request.created_at as created_at',
     db_prefix() . 'visitor_request.created_by as created_by',
-    db_prefix() . 'visitor_request.updated_at as updated_at',
-    db_prefix() . 'visitor_request.updated_by as updated_by',
-    db_prefix() . 'visitor_request.id as id',
+    db_prefix() . 'leads.type as lead_type',
+    db_prefix() . 'leads_status .name as status_name',
+    db_prefix() . 'leads_sources .name as source_name',
+    db_prefix() . 'leads.website as website',
+    "Date(" . db_prefix() . 'visitor_request.created_at) as created_at',
+    "Date(" . db_prefix() . 'visitor_request.updated_at) as updated_at',
+    "Date(" . db_prefix() . 'leads.lastconnect_date) as lastcontact_date',
     db_prefix() . 'visitor_request.lead_id as lead_id',
     db_prefix() . 'visitor_request.status as status_id',
     db_prefix() . 'visitor_status.color as color',
-    db_prefix() . 'leads_status .name as status_name',
-    db_prefix() . 'leads_sources .name as source_name',
-    db_prefix() . 'leads .call_duration as call_duration',
+    db_prefix() . 'visitor_request.updated_by as updated_by',
+    db_prefix() . 'visitor_request.id as id',
+
 
 
 
@@ -200,6 +203,10 @@ foreach ($rResult as $aRow) {
     $row[] = !empty($lead_data[$aRow["lead_type"]]["name"]) ? $lead_data[$aRow["lead_type"]]["name"] : '';
     $row[] = !empty($aRow["status_name"]) ? $aRow["status_name"] : '';
     $row[] = !empty($aRow["source_name"]) ? $aRow["source_name"] : '';
+    $row[] = !empty($aRow["website"]) ? $aRow["website"] : '';
+    $row[] = !empty($aRow["created_at"]) ? $aRow["created_at"] : '';
+    $row[] = !empty($aRow["updated_at"]) ? $aRow["updated_at"] : '';
+    $row[] = !empty($aRow["lastcontact_date"]) ? $aRow["lastcontact_date"] : '';
     $row['DT_RowClass'] = 'has-row-options ' . " " . !empty($aRow["color"]) ? $aRow["color"] : 'pending';
     $output['aaData'][] = $row;
 }

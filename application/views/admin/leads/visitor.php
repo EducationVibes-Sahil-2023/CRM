@@ -16,6 +16,31 @@ $category[] = array("id" => "2", "name" => "Upcoming");
     .margin-top {
         margin-top: 10px;
     }
+
+    .border-card {
+        margin-bottom: 10px;
+        text-align: center;
+        padding: 5px 0px;
+        box-shadow: 1px 1px 6px 1px lightgray;
+    }
+
+    .border-card h3.bold {
+        margin: 5px !important;
+    }
+
+    .border-card span {
+        margin: 5px !important;
+    }
+
+    #leadSum h4.no-margin {
+        font-size: 18px;
+        padding: 10px 0px;
+    }
+
+    #leadSum .panel-body {
+        border-radius: 0px;
+        padding: 10px 0px;
+    }
 </style>
 <div id="wrapper">
     <div class="content">
@@ -23,6 +48,22 @@ $category[] = array("id" => "2", "name" => "Upcoming");
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
+
+
+                        <div class="col-md-4">
+                            <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="Lead Status" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
+
+                            
+                        </div>
+
+                        <div class="clearfix"></div>
+                        <div class=" hide leads-overview">
+                            <hr class="hr-panel-heading" />
+                            <div id="leadSum"></div>
+                        </div>
+
+                        <div class="clearfix"></div>
+                        <hr>
                         <div class="row" id="leads-table ">
                             <div id="filterArea" class="col-md-12 hidden-xs">
                                 <div class="row">
@@ -109,7 +150,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-genrate-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
@@ -181,6 +222,9 @@ $category[] = array("id" => "2", "name" => "Upcoming");
             initDataTable('.table-lead-visitor-request-table', admin_url + 'leads/table_lead_visitor/1', 'undefined', 'undefined', r, [0, 'desc']);
         <?php } ?>
 
+        $("#leadSum").html('');
+        $(".leads-overview").hide();
+
     }
 
 
@@ -249,5 +293,58 @@ $category[] = array("id" => "2", "name" => "Upcoming");
             }
         });
 
+    }
+
+    let xhr = null;
+
+    function summary(status = "") {
+        show_loader();
+
+        const requestData = {};
+        if (r && typeof r === "object") {
+            Object.keys(r).forEach(key => {
+                const value = r[key];
+
+                if (typeof value === "string") {
+                    // Use jQuery to get input value
+                    requestData[key] = $(value).val();
+                } else if (typeof value === "object" && value !== null) {
+                    // Serialize nested object
+                    requestData[key] = JSON.stringify(value);
+                }
+            });
+        }
+
+        // Add CSRF protection if available
+        if (typeof csrfData !== "undefined" && csrfData.token_name && csrfData.hash) {
+            requestData[csrfData.token_name] = csrfData.hash;
+        }
+
+        // Abort any ongoing request to prevent race conditions
+        if (xhr !== null) {
+            xhr.abort();
+        }
+        if ($("#leadSum").html() === "") {
+            xhr = $.ajax({
+                type: "POST",
+                url: `${admin_url}leads/visitor_lead_summary_filter`,
+                data: requestData,
+                dataType: "JSON",
+                cache: false,
+                success: function(data) {
+
+                    if ($("#leadSum").html() === "" && data.status) {
+                        $("#leadSum").html(data.status);
+                    }
+                    hide_loader();
+                },
+                error: function() {
+                    hide_loader();
+                    console.error("An error occurred while fetching the summary.");
+                }
+            });
+        }
+        hide_loader();
+        return false;
     }
 </script>

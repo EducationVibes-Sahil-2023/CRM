@@ -8443,3 +8443,210 @@ function extractYear($date)
     }
     return $date; // Already in YYYY format
 }
+
+
+function get_visitor_leads_summary_filter_neww($params)
+{
+    $CI = &get_instance();
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+        $CI->load->model('staff_model');
+    }
+
+    $statuses = $CI->leads_model->get_status();
+    $visitor_statuses = $CI->staff_model->visitor_status();
+    $visitor_type = $CI->staff_model->visitor_type();
+    $tblleads = db_prefix() . 'leads';
+    $schedule = [];
+    $schedule[] = array("id" => "0", "name" => "Previous", "color" => "Red");
+    $schedule[] = array("id" => "1", "name" => "Today", "color" => "green");
+    $schedule[] = array("id" => "2", "name" => "Upcoming", "color" => "orange");
+
+    $has_permission_view   = has_permission('leads', '', 'view');
+    $whereNoViewPermission = '(' . db_prefix() . 'visitor_request.assigned = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'visitor_request.created_at=' . get_staff_user_id() . ')';
+
+    // Fetch role and handle reporting persons for role ID 3
+    $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+    $tids = '';
+    if ($role == 3) {
+        $sid = get_staff_user_id();
+        $teamids = $CI->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
+        $CI->db->close();
+        $CI->db->initialize();
+        $idsarr = array_column($teamids, 'staffid');
+        $sids = implode(",", $idsarr);
+        $tids = !empty($sids) ? " AND ( " . db_prefix() . "visitor_request.assigned IN ($sid, $sids))" : " AND ( " . db_prefix() . "visitor_request.assigned IN ($sid) ) ";
+    }
+
+    // Base query
+    // Base query with visitor_request as main table
+    $select = 'SELECT 
+IFNULL(' . db_prefix() . 'leads_status.id, "unknown") AS status_id, 
+COUNT(DISTINCT ' . db_prefix() . 'visitor_request.lead_id) AS total 
+';
+    $sql = "";
+    $sql .= 'FROM ' . db_prefix() . 'visitor_request ';
+    $sql .= 'LEFT JOIN ' . db_prefix() . 'visitor_status ON ' . db_prefix() . 'visitor_status.id = ' . db_prefix() . 'visitor_request.status ';
+    $sql .= 'LEFT JOIN ' . db_prefix() . 'visitor_type ON ' . db_prefix() . 'visitor_type.id = ' . db_prefix() . 'visitor_request.visitor_type ';
+    $sql .= ' JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'visitor_request.lead_id ';
+    $sql .= ' JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads.status = ' . db_prefix() . 'leads_status.id ';
+
+
+
+    if (!empty($params['location']) || !empty($params['department'])) {
+        $sql .= 'JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'staff.staffid = ' . db_prefix() . 'visitor_request.assigned ';
+    }
+
+    // WHERE clause
+    $conditions = [];
+    if (!$has_permission_view) {
+        $conditions[] = $whereNoViewPermission;
+    }
+    if (!empty($params['status'])) {
+        $conditions[] = db_prefix() . 'visitor_request.status IN (' . implode(',', $params['status']) . ')';
+    }
+
+    if (!empty($params['location'])) {
+        $conditions[] = db_prefix() . 'visitor_request.location IN (' . implode(',', $params['location']) . ')';
+    }
+
+    if (!empty($params['type'])) {
+        $conditions[] = db_prefix() . 'visitor_request.visitor_type IN (' . implode(',', $params['type']) . ')';
+    }
+
+    if (!empty($params['attendee'])) {
+        $conditions[] = db_prefix() . 'visitor_request.assigned IN (' . implode(',', $params['attendee']) . ')';
+    } else if ($role == 3) {
+        $conditions[] = substr($tids, 4); // Remove the leading " AND"
+    }
+
+    if (!empty($params['lead_status'])) {
+        $conditions[] = $tblleads . '.status IN (' . implode(',', $CI->db->escape_str($params['lead_status'])) . ')';
+    }
+    if (!empty($params['lead_type'])) {
+        $conditions[] = $tblleads . '.type IN (' . implode(',', $CI->db->escape_str($params['lead_type'])) . ')';
+    }
+
+    if (!empty($params['assigned'])) {
+        $conditions[] = db_prefix() . 'visitor_request.created_by IN (' . implode(',', $CI->db->escape_str($params['assigned'])) . ')';
+    }
+
+    if (!empty($params['category'])) {
+        if ($params['category'] < 0) {
+            $conditions[] = db_prefix() . 'visitor_request.date_of_visit < NOW() ';
+        } else if ($params['category'] == 1) {
+            $conditions[] = ' Date(' . db_prefix() . 'visitor_request.date_of_visit) = CURDATE() ';
+        } else if ($params['category'] == 2) {
+            $conditions[] = db_prefix() . 'visitor_request.date_of_visit > NOW() ';
+        }
+    }
+
+    if (!empty($params['from_date']) && !empty($params['to_date'])) {
+        $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
+    }
+
+
+
+
+    // Apply conditions to WHERE clause
+    if (!empty($conditions)) {
+        $sql .= 'WHERE ' . implode(' AND ', $conditions) . ' ';
+    }
+
+    // GROUP BY and ORDER BY
+    $group_by = 'GROUP BY ' . $tblleads . '.status ';
+    $group_by .= 'ORDER BY ' . db_prefix() . 'leads_status.statusorder';
+
+    // Execute query
+    $result = $CI->db->query($select . $sql . $group_by)->result();
+
+    $select = " Select " . db_prefix() . "leads_status.name," . db_prefix() . "leads_status.id,count(1) total ";
+    $group_by = 'GROUP BY ' . db_prefix() . 'leads_status.id ';
+    $group_by .= 'ORDER BY ' . db_prefix() . 'leads_status.id';
+    $result_status = $CI->db->query($select . $sql . $group_by)->result();
+
+    $select = " Select " . db_prefix() . "visitor_type.name," . db_prefix() . "visitor_type.id,count(1) total ";
+    $group_by = 'GROUP BY ' . db_prefix() . 'visitor_type.id ';
+    $group_by .= 'ORDER BY ' . db_prefix() . 'visitor_type.id';
+    $result_type = $CI->db->query($select . $sql . $group_by)->result();
+
+    $select = "
+    SELECT 
+        CASE 
+            WHEN date_of_visit < NOW() THEN 0
+            WHEN DATE(date_of_visit) = CURDATE() THEN 1
+            WHEN date_of_visit > NOW() THEN 2
+            ELSE 0
+        END AS schedule_id,
+        COUNT(*) AS total
+";
+
+    $group_by = "
+    GROUP BY schedule_id
+    ORDER BY schedule_id
+";
+
+    $result_schedule = $CI->db->query($select . $sql . $group_by)->result();
+
+    $response_data = [];
+    // Prepare results
+    if (!empty($result)) {
+        $result = array_column($result, "total", "status_id");
+    }
+
+    $statuses[] = ["id" => "unknown", "name" => "Unknown Status"];
+
+    $totalLeads = 0;
+    foreach ($statuses as $key => $status) {
+        $statuses[$key]['total'] = $result[$status["id"]] ?? 0;
+        $totalLeads += $statuses[$key]['total'];
+    }
+
+    $statuses[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalLeads];
+    $response_data["lead_status"] = $statuses;
+
+    if (!empty($result_status)) {
+        $result_status = array_column($result_status, "total", "id");
+    }
+
+    $totalStatus = 0;
+
+    foreach ($visitor_statuses as $key => $status) {
+        if (!empty($status['name'])) {
+            $visitor_statuses[$key]['total'] = $result_status[$status["id"]] ?? 0;
+            $totalStatus += $visitor_statuses[$key]['total'];
+        }
+    }
+    $visitor_statuses[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalStatus];
+    $response_data["visitor_status"] = $visitor_statuses;
+
+    if (!empty($result_type)) {
+        $result_type = array_column($result_type, "total", "id");
+    }
+
+    $totalType = 0;
+    foreach ($visitor_type as $key => $status) {
+        if (!empty($status['name'])) {
+            $visitor_type[$key]['total'] = $result_type[$status["id"]] ?? 0;
+            $totalType += $visitor_type[$key]['total'];
+        }
+    }
+    $visitor_type[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalType];
+    $response_data["visitor_type"] = $visitor_type;
+
+
+    if (!empty($result_schedule)) {
+        $result_schedule = array_column($result_schedule, "total", "id");
+    }
+
+    $totalSchedule = 0;
+    foreach ($schedule as $key => $status) {
+        if (!empty($status['name'])) {
+            $schedule[$key]['total'] = $result_schedule[$status["id"]] ?? 0;
+            $totalType += $schedule[$key]['total'];
+        }
+    }
+    $schedule[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalSchedule];
+    $response_data["schedule"] = $schedule;
+    return $response_data;
+}
