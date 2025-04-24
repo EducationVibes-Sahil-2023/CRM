@@ -120,8 +120,10 @@ if (!function_exists('get_data_excel')) {
         $CI = &get_instance();
 
         // Build the query for excel data update
-        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync")
+        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year")
             ->from(db_prefix() . "excel_data_update");
+            
+                $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
         if (!empty($id)) {
             $CI->db->where("id", $id);
@@ -140,20 +142,22 @@ if (!function_exists('get_data_excel')) {
             $currentId = $sheet['id']; // Important for multiple autoSync rows
             $fromDate = $sheet['fromDate']; // Important for multiple autoSync rows
             $toDate = $sheet['toDate']; // Important for multiple autoSync rows
+            $acadmic_year = $sheet['acadmic_year']; // Important for multiple autoSync rows
             $spreadsheetId = $sheet['spreadsheetId']; // Important for multiple autoSync rows
             create_sheet($currentId);
             // Get selected columns
-            $CI->db->select("GROUP_CONCAT(fetch_column_name) as fetch_column_name")
-                ->from(db_prefix() . "excel_column_update")
-                ->where("excel_id", $currentId);
+         $selectColumnName = $CI->db
+    ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) as fetch_column_name", false)
+    ->from(db_prefix() . "excel_column_update")
+    ->where("excel_id", $currentId)
+    ->get()
+    ->row()
+    ->fetch_column_name;
 
-            $selectColumnName =   $CI->db->order_by("sequence", "ASC")
-                ->get()
-                ->row()->fetch_column_name;
 
             if (empty($selectColumnName)) {
                 continue; // Skip if no columns
-            }
+}
 
             $condition_sql = "";
 
@@ -164,15 +168,22 @@ if (!function_exists('get_data_excel')) {
                 $condition_sql = " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
             }
 
+            if (!empty($acadmic_year)) {
+                // Apply to CodeIgniter query builder (this works the same as BETWEEN)
+                // $CI->db->where("c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}'", null, false);
+                // Prepare raw SQL condition for manual query usage
+                $condition_sql = " AND (p.acadmic_year = '{$acadmic_year}')";
+            }
+
 
             // Build the main data query
-            $sql = "SELECT {$selectColumnName}
+             $sql = "SELECT {$selectColumnName}
                     FROM " . db_prefix() . "clients c
                     LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
                     LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
                     JOIN " . db_prefix() . "leads l ON l.id = c.leadid
                     LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
-                    LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
+                    LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = (c.applicant_stage)
                     LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
                     LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid
                     LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
@@ -180,8 +191,10 @@ if (!function_exists('get_data_excel')) {
                     LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
                     LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                     LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+                    LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
                     WHERE l.type = 2 {$condition_sql}
                     GROUP BY c.userid";
+
 
 
             $arrayData = $CI->db->query($sql)->result_array(); // Return first successful result
