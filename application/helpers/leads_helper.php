@@ -8445,6 +8445,7 @@ function extractYear($date)
 }
 
 
+
 function get_visitor_leads_summary_filter_neww($params)
 {
     $CI = &get_instance();
@@ -8452,6 +8453,10 @@ function get_visitor_leads_summary_filter_neww($params)
         $CI->load->model('leads_model');
         $CI->load->model('staff_model');
     }
+    
+    $current_date_time = date('Y-m-d H:i:s');
+    $current_date = date('Y-m-d');
+    
 
     $statuses = $CI->leads_model->get_status();
     $visitor_statuses = $CI->staff_model->visitor_status();
@@ -8482,7 +8487,7 @@ function get_visitor_leads_summary_filter_neww($params)
     // Base query with visitor_request as main table
     $select = 'SELECT 
 IFNULL(' . db_prefix() . 'leads_status.id, "unknown") AS status_id, 
-COUNT(DISTINCT ' . db_prefix() . 'visitor_request.lead_id) AS total 
+COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total 
 ';
     $sql = "";
     $sql .= 'FROM ' . db_prefix() . 'visitor_request ';
@@ -8533,11 +8538,11 @@ COUNT(DISTINCT ' . db_prefix() . 'visitor_request.lead_id) AS total
 
     if (!empty($params['category'])) {
         if ($params['category'] < 0) {
-            $conditions[] = db_prefix() . 'visitor_request.date_of_visit < NOW() ';
+            $conditions[] = db_prefix() . 'visitor_request.date_of_visit < "'.$current_date_time.'" ';
         } else if ($params['category'] == 1) {
-            $conditions[] = ' Date(' . db_prefix() . 'visitor_request.date_of_visit) = CURDATE() ';
+            $conditions[] = ' Date(' . db_prefix() . 'visitor_request.date_of_visit) = "'.$current_date.'" ';
         } else if ($params['category'] == 2) {
-            $conditions[] = db_prefix() . 'visitor_request.date_of_visit > NOW() ';
+            $conditions[] = db_prefix() . 'visitor_request.date_of_visit > "'.$current_date_time.'" ';
         }
     }
 
@@ -8556,35 +8561,41 @@ COUNT(DISTINCT ' . db_prefix() . 'visitor_request.lead_id) AS total
     // GROUP BY and ORDER BY
     $group_by = 'GROUP BY ' . $tblleads . '.status ';
     $group_by .= 'ORDER BY ' . db_prefix() . 'leads_status.statusorder';
-
     // Execute query
     $result = $CI->db->query($select . $sql . $group_by)->result();
 
-    $select = " Select " . db_prefix() . "leads_status.name," . db_prefix() . "leads_status.id,count(1) total ";
-    $group_by = 'GROUP BY ' . db_prefix() . 'leads_status.id ';
-    $group_by .= 'ORDER BY ' . db_prefix() . 'leads_status.id';
+
+
+    $select = " Select " . db_prefix() . "visitor_status.name," . db_prefix() . "visitor_status.id,count(1) total ";
+    $group_by = 'GROUP BY ' . db_prefix() . 'visitor_status.id ';
+    $group_by .= 'ORDER BY ' . db_prefix() . 'visitor_status.id';
+    // echo $select . $sql . $group_by
     $result_status = $CI->db->query($select . $sql . $group_by)->result();
+
 
     $select = " Select " . db_prefix() . "visitor_type.name," . db_prefix() . "visitor_type.id,count(1) total ";
     $group_by = 'GROUP BY ' . db_prefix() . 'visitor_type.id ';
     $group_by .= 'ORDER BY ' . db_prefix() . 'visitor_type.id';
     $result_type = $CI->db->query($select . $sql . $group_by)->result();
 
+
     $select = "
     SELECT 
         CASE 
-            WHEN date_of_visit < NOW() THEN 0
-            WHEN DATE(date_of_visit) = CURDATE() THEN 1
-            WHEN date_of_visit > NOW() THEN 2
+            WHEN date_of_visit < '".$current_date_time."' THEN 0
+            WHEN DATE(date_of_visit) = '".$current_date."' THEN 1
+            WHEN date_of_visit > '".$current_date_time."' THEN 2
             ELSE 0
-        END AS schedule_id,
-        COUNT(*) AS total
+        END AS id,
+        COUNT(1) AS total
 ";
 
     $group_by = "
-    GROUP BY schedule_id
-    ORDER BY schedule_id
+    GROUP BY id
+    ORDER BY id
 ";
+
+// echo $select . $sql . $group_by;
 
     $result_schedule = $CI->db->query($select . $sql . $group_by)->result();
 
@@ -8607,6 +8618,8 @@ COUNT(DISTINCT ' . db_prefix() . 'visitor_request.lead_id) AS total
 
     if (!empty($result_status)) {
         $result_status = array_column($result_status, "total", "id");
+        // print_r($result_status);
+        // die;
     }
 
     $totalStatus = 0;
@@ -8638,14 +8651,17 @@ COUNT(DISTINCT ' . db_prefix() . 'visitor_request.lead_id) AS total
     if (!empty($result_schedule)) {
         $result_schedule = array_column($result_schedule, "total", "id");
     }
+    
+
 
     $totalSchedule = 0;
     foreach ($schedule as $key => $status) {
         if (!empty($status['name'])) {
             $schedule[$key]['total'] = $result_schedule[$status["id"]] ?? 0;
-            $totalType += $schedule[$key]['total'];
+            $totalSchedule += $schedule[$key]['total'];
         }
     }
+
     $schedule[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalSchedule];
     $response_data["schedule"] = $schedule;
     return $response_data;
