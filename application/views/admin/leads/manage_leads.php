@@ -116,6 +116,41 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       font-size: 12px;
       padding: 0px !important;
    }
+
+   .border-card {
+      margin-bottom: 10px;
+      text-align: center;
+      padding: 5px 0px;
+      box-shadow: 1px 1px 6px 1px lightgray;
+   }
+
+   .border-card h3.bold {
+      margin: 5px !important;
+   }
+
+   .border-card span {
+      margin: 5px !important;
+   }
+
+   #leadSum h4.no-margin {
+      font-size: 18px;
+      padding: 10px 0px;
+   }
+
+   #leadSum .panel-body {
+      border-radius: 0px;
+      padding: 10px 0px;
+   }
+
+   .admin #side-filter.is_fixed {
+      padding-top: 20px;
+      position: fixed;
+      height: 100vh !important;
+      overflow: auto;
+      top: 0px;
+      background: white;
+      width: -webkit-fill-available;
+   }
 </style>
 <div id="wrapper">
    <div class="content">
@@ -175,6 +210,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                         <hr class="hr-panel-heading" />
                         <div class="col-md-12">
                            <h4 class="no-margin"><?php echo _l('leads_summary'); ?></h4>
+                           <hr class="hr-panel-heading" />
+
                         </div>
                         <div id="leadSum">
                            <?php
@@ -753,8 +790,11 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
 </div>
 
 <aside id="filter-right-side" class="sidefilter-right">
-   <ul class="nav metis-filter" style="display:none;" id="side-filter">
 
+   <ul class="nav metis-filter sticky-fixed" style="display:none;" id="side-filter">
+      <li>
+         <h5><?php echo _l('filter_by'); ?></h2>
+      </li>
       <?php if (has_permission('leads', '', 'view')) { ?>
          <li class="">
             <div class="leads-filter-column">
@@ -832,7 +872,6 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             </div>
          </div>
       </li>
-
       <li class="">
          <div class="leads-filter-column">
             <div id="leads-filter-type">
@@ -859,33 +898,34 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             </div>
          </div>
       </li>
-
-      <li class="">
-         <div class="leads-filter-column">
-            <div id="leads-filter-type">
-               <?php
-               echo render_select(
-                  'view_form[]',
-                  $view_form,
-                  array('id', 'name'),
-                  '',
-                  '',
-                  array(
-                     'data-width' => '100%',
-                     'data-none-selected-text' => "Form Name",
-                     'multiple' => true,
-                     'data-actions-box' => true
-                  ),
-                  array(),
-                  'no-mbot',
-                  '',
-                  false,
-                  "view_form"
-               );
-               ?>
+      <?php if (is_admin()) { ?>
+         <li class="">
+            <div class="leads-filter-column">
+               <div id="leads-filter-type">
+                  <?php
+                  echo render_select(
+                     'view_form[]',
+                     $view_form,
+                     array('id', 'name'),
+                     '',
+                     '',
+                     array(
+                        'data-width' => '100%',
+                        'data-none-selected-text' => "Form Name",
+                        'multiple' => true,
+                        'data-actions-box' => true
+                     ),
+                     array(),
+                     'no-mbot',
+                     '',
+                     false,
+                     "view_form"
+                  );
+                  ?>
+               </div>
             </div>
-         </div>
-      </li>
+         </li>
+      <?php } ?>
       <li class="">
          <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
@@ -949,7 +989,9 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             <button type="button" class="btn btn-default" onclick="window.location.reload();">Reset</button>
          </div>
       </li>
+
    </ul>
+
 </aside>
 
 <script id="hidden-columns-table-leads" type="text/json">
@@ -1496,14 +1538,20 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
    $(function() {
       function updateDateText(element, start, end) {
 
+
          let from = element.data("from");
          let to = element.data("to");
+         if (start._isValid) {
+            $("#" + from).val(start.format("YYYY-MM-DD"));
+            $("#" + to).val(end.format("YYYY-MM-DD"));
 
-
-         $("#" + from).val(start.format("YYYY-MM-DD"));
-         $("#" + to).val(end.format("YYYY-MM-DD"));
-
-         element.find("span").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+            element.find("span").html(start.format("YYYY-MM-DD") + " - " + end.format("YYYY-MM-DD"));
+         } else {
+            $("#" + from).val('');
+            $("#" + to).val('');
+            let label_name = element.find("span").data('label');
+            element.find("span").html(label_name);
+         }
       }
 
 
@@ -1536,8 +1584,6 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
                let label_name = this.element.find("span").data('label');
                this.element.find("span").html(label_name);
             } else {
-               console.log(this);
-               console.log(this.element);
                updateDateText(this.element, start, end);
             }
          });

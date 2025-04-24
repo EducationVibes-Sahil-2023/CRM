@@ -9226,10 +9226,15 @@ body.hide-sidefilter:not(.show-sidefilter) #filter-right-side {
     transition: all .5s ease 0s;
 }
 
-ul#side-filter > li {
+ul#side-filter>li {
     padding: 10px;
 }
 
 .nav.navbar-right>li>a {
     display: inline !important;
+}
+
+.is_fixed::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
 }
