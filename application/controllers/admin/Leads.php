@@ -244,9 +244,10 @@ class Leads extends AdminController
                 }
 
                 $percent = isset($status['percent']) ? '<span data-toggle="tooltip" data-title="' . $status['total'] . '">' . $status['percent'] . '%</span>' : $status['total'];
-                $statusHtml .= "<div class='col-md-2 col-xs-6 border-right'>
+                $statusHtml .= "<div class='col-md-2 col-xs-6 '>
+                <div class='border-card'>
                 <h3 class='bold'>{$percent}</h3>
-                <span style='color: {$status['color']}'>{$status['name']}</span></div>";
+                <span style='color: {$status['color']}'>{$status['name']}</span></div></div>";
             }
             $statusHtml .= "</div>";
 
@@ -257,7 +258,7 @@ class Leads extends AdminController
                 $statusHtml .= '<br><br><hr><div><div class="col-md-12 col-xs-12 "><h3 class="bold"><span style="color:#d81b60">Performance Marketing</span></h3></div>';
                 foreach ($marketing_data as $mar) {
 
-                    $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type border-right"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . number_format((($mar['total'] / $total_leads) * 100), 2) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div>';
+                    $statusHtml .= '<div class="col-md-2 col-xs-6 marketing-type "><div class="border-card"><h3 class="bold">' . $mar['total'] . '<span class="show-persentage">' . number_format((($mar['total'] / $total_leads) * 100), 2) . '%</span></h3><span style="color:' . $mar['color'] . '">' . $mar['name'] . '</span></div></div>';
                 }
                 $statusHtml .= "</div>";
             }
