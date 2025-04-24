@@ -248,7 +248,7 @@ define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
 
 define('ORG_REST', 'original rest');
 define('ORG_GEORGIA', 'original georgia');
-define('APOSTILE_DOC', 'apostille doc');
+define('APOSTILE_DOC', 'ap doc');
 define('REFERENCE_ID', '1');
 define('REFERENCE_AMOUNT_ID', '8');
 define('GOOGLE_SHEET_SHARE', 'sahil.chaudhary@educationvibes.in');
