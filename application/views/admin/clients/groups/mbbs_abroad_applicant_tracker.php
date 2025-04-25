@@ -13,6 +13,7 @@ $documents_type =  get_documents($lead_type_status, !empty($admissionpreferences
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
+$visa_vendors = get_vendor_list(2);
 
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
@@ -1209,6 +1210,56 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <?php else : ?>
                                     <p class="text-muted">No Fees available.</p>
                                 <?php endif; ?>
+                            </div>
+                        </form>
+                    <?php } else if ($track["show_div_name"] == "visa_div") {  ?>
+                        <form id="visa-form" class="form-disabled" onsubmit="return false;">
+
+                            <div class="visa_div">
+
+                                <div class="visa-details">
+                                    <!-- <div class="visa-infomation">
+                                        <div class="col-md-4">
+                                            <label>Visa Vendor <small class='text-danger'>*</small></label>
+                                            <?php
+                                            array_unshift($visa_vendors, array());
+                                            echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
+                                                'data-width' => '100%',
+                                                'data-none-selected-text' => 'Vendor',
+                                                'data-actions-box' => true,
+                                                'required-check' => 'required-check',
+                                                'required' => 'required',
+                                            ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Courier Date <small class='text-danger'>*</small></label>
+                                            <?php echo render_input('visa_date', '', '', 'date'); ?>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Courier Type <small class='text-danger'>*</small></label>
+                                            <?php
+                                            array_unshift($courier_type, array());
+                                            echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [], [
+                                                'data-width' => '100%',
+                                                'data-none-selected-text' => 'Vendor',
+                                                'data-actions-box' => true,
+                                                'required-check' => 'required-check',
+                                                'required' => 'required',
+                                            ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Visa Received</label>
+                                            <?php echo render_input('visa_receiving_date', '', '', 'date'); ?>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Payment Date</label>
+                                            <?php echo render_input('visa_payment_date', '', '', 'date'); ?>
+                                        </div>
+                                    </div> -->
+                                </div>
+                                <div class="visa-details-add">
+                                </div>
+
                             </div>
                         </form>
                     <?php } ?>
