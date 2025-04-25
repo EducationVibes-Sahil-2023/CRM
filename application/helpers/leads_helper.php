@@ -8488,7 +8488,7 @@ function get_visitor_leads_summary_filter_neww($params)
     $schedule[] = array("id" => "2", "name" => "Upcoming", "color" => "orange");
 
     $has_permission_view   = has_permission('leads', '', 'view');
-    $whereNoViewPermission = '(' . db_prefix() . 'visitor_request.assigned = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'visitor_request.created_at=' . get_staff_user_id() . ')';
+    $whereNoViewPermission = '(' . db_prefix() . 'visitor_request.assigned = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'visitor_request.created_by=' . get_staff_user_id() . ')';
 
     // Fetch role and handle reporting persons for role ID 3
     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
@@ -8500,7 +8500,7 @@ function get_visitor_leads_summary_filter_neww($params)
         $CI->db->initialize();
         $idsarr = array_column($teamids, 'staffid');
         $sids = implode(",", $idsarr);
-        $tids = !empty($sids) ? " AND ( " . db_prefix() . "visitor_request.assigned IN ($sid, $sids))" : " AND ( " . db_prefix() . "visitor_request.assigned IN ($sid) ) ";
+        $tids = !empty($sids) ? " AND ( " . db_prefix() . "visitor_request.assigned IN ($sid, $sids) OR " . db_prefix() . "visitor_request.created_by IN ($sid, $sids)  )" : " AND ( " . db_prefix() . "visitor_request.assigned IN ($sid) OR " . db_prefix() . "visitor_request.created_by IN ($sid) ) ";
     }
 
     // Base query
@@ -8589,7 +8589,7 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     $select = " Select " . db_prefix() . "visitor_status.name," . db_prefix() . "visitor_status.id,count(1) total ";
     $group_by = 'GROUP BY ' . db_prefix() . 'visitor_status.id ';
     $group_by .= 'ORDER BY ' . db_prefix() . 'visitor_status.id';
-    // echo $select . $sql . $group_by
+    // echo $select . $sql . $group_by; die;
     $result_status = $CI->db->query($select . $sql . $group_by)->result();
 
 

@@ -1286,31 +1286,32 @@ init_tail();
    });
 
 
-   function downloadAndZipFiles(fileUrls, zipFileName = "documents.zip") {
-      const zip = new JSZip();
-      const folder = zip.folder("files"); // optional folder inside zip
+   function downloadAndZipFiles(files, zipFileName = "documents.zip") {
+   const zip = new JSZip();
+   const folder = zip.folder("files");
 
-      const downloadPromises = fileUrls.map((url, index) =>
-         fetch(url)
+   const downloadPromises = files.map(({ url, name }, index) =>
+      fetch(url)
          .then(response => {
             if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
-            return response.blob();
-         })
-         .then(blob => {
-            const fileName = url.split('/').pop().split('?')[0]; // extract filename
-            folder.file(fileName || `file${index}`, blob);
+            return response.blob().then(blob => {
+               const originalName = url.split('/').pop().split('?')[0] || `file${index}`;
+               const extension = originalName.includes('.') ? '.' + originalName.split('.').pop() : '';
+               const finalName = (name || `file${index}`) + extension;
+               folder.file(finalName, blob);
+            });
          })
          .catch(err => console.error("Error downloading file:", err))
-      );
+   );
 
-      Promise.all(downloadPromises).then(() => {
-         zip.generateAsync({
-            type: "blob"
-         }).then(content => {
-            saveAs(content, zipFileName);
-         });
+   Promise.all(downloadPromises).then(() => {
+      zip.generateAsync({ type: "blob" }).then(content => {
+         saveAs(content, zipFileName);
       });
-   }
+   });
+}
+
+
 
    function download_documents(userid, userName) {
       let formData = new FormData();
@@ -1326,7 +1327,7 @@ init_tail();
          data: formData,
          processData: false,
          contentType: false,
-         dataType: "json", // ✅ FIXED: was "JSOfN", should be "json"
+         dataType: "json",
          success: function(res) {
             hide_loader();
             console.log(res);

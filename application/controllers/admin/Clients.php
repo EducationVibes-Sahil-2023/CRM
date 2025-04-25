@@ -4974,12 +4974,15 @@ class Clients extends AdminController
             }
 
             $documents = get_clients_documents($userid);
+            $documents_type =  array_column(get_documents(), "name", "id");
+
             $doc_urls = [];
             if (!empty($documents[0]['data'])) {
                 $documents = json_decode($documents[0]['data'], true);
                 foreach ($documents as $doc) {
                     if ($doc['approval_status'] == 1) {
-                        $doc_urls[] = base_url($doc['document_file']);
+                        $name = !empty($documents_type[$doc["id"]]) ? $documents_type[$doc["id"]] : '';
+                        $doc_urls[] = array("url" => base_url($doc['document_file']), "name" => sanitizeFileName($name));
                     }
                 }
             }

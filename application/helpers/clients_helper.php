@@ -1352,7 +1352,7 @@ function get_currencies()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
-function get_documents($lead_type, $selected_country = [], $show_all = 0, $stage = "")
+function get_documents($lead_type="", $selected_country = [], $show_all = 0, $stage = "")
 {
     $CI = &get_instance();
 
