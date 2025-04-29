@@ -1352,9 +1352,42 @@ function get_currencies()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
+
+function check_country_rest($studyCountries)
+{
+    $studyCountries = array_map('trim', $studyCountries); // Clean whitespace
+    $hasOtherCountry = false;
+
+    foreach ($studyCountries as $country) {
+        if (strtolower($country) !== 'georgia') {
+            $hasOtherCountry = true;
+            break;
+        }
+    }
+
+    // If other countries (not Georgia) exist, remove Georgia
+    if ($hasOtherCountry) {
+        $studyCountries = array_filter($studyCountries, function ($country) {
+            return strtolower($country) !== 'georgia';
+        });
+
+        // Add 'Rest' if not already included
+        if (!in_array('Rest', $studyCountries)) {
+            $studyCountries[] = 'Rest';
+        }
+    }
+
+    return $studyCountries;
+}
+
 function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $stage = "")
 {
     $CI = &get_instance();
+
+    if (!empty($selected_country)) {
+        $selected_country = check_country_rest($selected_country);
+    }
+
 
     try {
         // Fetch documents where country is empty
@@ -2021,39 +2054,59 @@ function visa_details($client_id)
     return $CI->db->get(db_prefix() . 'visa_details')->result_array();
 }
 
-function validate_orignal_documents($client_ids)
+function validate_orignal_documents($client_ids, $country_names = [])
 {
+    if (!empty($country_names)) {
+        $country_names = check_country_rest($country_names);
+    }
+
     $CI = &get_instance();
-    // Step 1: Fetch valid documents (active + apostille enabled)
+
+    // Step 1: Fetch valid documents
     $CI->db->select("o.id AS doc_id, o.name AS doc_name")
         ->from(db_prefix() . 'orignal_documents o')
-        ->where(['o.status' => 1, 'o.visa' => 1]);
+        ->where('o.status', 1);
 
-    if (!empty($document_ids)) {
-        $CI->db->where_in('o.id', $document_ids);
+    if (in_array("Rest", $country_names)) {
+        $CI->db->where('o.visa', 1);
+    } else {
+        $CI->db->where('o.visa_georgia', 1);
     }
+
+    // Optional: filter by specific document IDs (ensure $document_ids is set if used)
+    // if (!empty($document_ids ?? [])) {
+    //     $CI->db->where_in('o.id', $document_ids);
+    // }
 
     $all_documents = $CI->db->get()->result_array();
     $valid_doc_ids = array_column($all_documents, 'doc_id');
 
+    if (empty($valid_doc_ids)) {
+        return [
+            "error" => true,
+            "message" => "No valid documents found for the selected country.",
+        ];
+    }
 
-    // Step 3: Get received original documents
+    // Step 2: Get received documents
     $CI->db->select("r.userid, r.doc_id")
         ->from(db_prefix() . 'orignal_documents_received r')
         ->where_in('r.userid', $client_ids)
         ->where_in('r.doc_id', $valid_doc_ids);
     $received_docs = $CI->db->get()->result_array();
 
-    // Step 4: Build received docs map
+    // Step 3: Map received documents by user ID
     $received_map = [];
     foreach ($received_docs as $row) {
         $received_map[$row['userid']][] = $row['doc_id'];
     }
-    // Step 5: Get basic client info
+
+    // Step 4: Fetch client names
     $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName")
         ->from(db_prefix() . 'basic_details b')
         ->where_in('b.userid', $client_ids);
     $clients = $CI->db->get()->result_array();
+
 
     $errors = [];
     foreach ($clients as $client) {
@@ -2086,6 +2139,7 @@ function validate_orignal_documents($client_ids)
         "message" => "Validation passed."
     ];
 }
+
 
 function get_orignal_document_data_list_visa($client_ids_array = [], $check_status = 0, $vendor_id = "")
 {

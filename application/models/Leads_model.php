@@ -3173,13 +3173,19 @@ class Leads_model extends App_Model
 
         $normal_ids = [];
         $additional_ids = [];
-        
+
         if (!empty($ids)) {
             // First fetch columns field
             $this->db->select('id, columns');
             $this->db->where_in('id', $ids);
+
+            if (!empty($ids)) {
+                $this->db->order_by('FIELD(id, ' . implode(',', $ids) . ')');
+            } else {
+                $this->db->order_by('sequence', 'ASC');
+            }
             $column_data = $this->db->get(db_prefix() . 'ma_applicant_tracker')->result_array();
-        
+
             foreach ($column_data as $col) {
                 if ($col['columns'] == '') {
                     $normal_ids[] = $col['id']; // Normal column
@@ -3190,12 +3196,12 @@ class Leads_model extends App_Model
                 }
             }
         }
-        
+
         // Now merge normal + additional ids
         $columns_ids = array_unique(array_merge($normal_ids, $additional_ids)); // Unique to avoid duplicates
-        
 
-        
+
+
 
         $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
         $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.

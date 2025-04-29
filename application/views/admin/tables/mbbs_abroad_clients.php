@@ -142,7 +142,18 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
-    'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
+    // 'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
+    'LEFT JOIN (
+    SELECT *,sum(cost) as total_cost
+    FROM ' . db_prefix() . 'visa_details vd1
+    WHERE vd1.id = (
+        SELECT MAX(vd2.id)
+        FROM ' . db_prefix() . 'visa_details vd2
+        WHERE vd2.userid = vd1.userid
+    )
+) AS ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid = ' . db_prefix() . 'clients.userid',
+
+
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
     'LEFT JOIN ' . db_prefix() . 'vendor_list  visa_vendor ON visa_vendor.id=' . db_prefix() . 'visa_details.vendor_id',
     'LEFT JOIN ' . db_prefix() . 'payment_mode  visa_p_mode ON visa_p_mode.id=' . db_prefix() . 'visa_details.payment_mode',
@@ -315,6 +326,33 @@ if ($this->ci->input->post('apostille_vendors_filter')) {
     }
 }
 
+
+
+
+
+
+if ($this->ci->input->post('visa_vendors_filter')) {
+    $visa_vendors_filter = $this->ci->input->post('visa_vendors_filter');
+
+    if (is_array($visa_vendors_filter)) {
+        // Remove empty values
+        $visa_vendors_filter = array_filter($visa_vendors_filter, function ($v) {
+            return $v !== '';
+        });
+
+        if (!empty($visa_vendors_filter)) {
+            // Build REGEXP condition dynamically
+            $regexp_parts = array_map(function ($v) {
+                return '(^|,)' . preg_quote($v, '/') . '(,|$)';
+            }, $visa_vendors_filter);
+
+            $regexp_pattern = implode('|', $regexp_parts);
+
+            array_push($where, "AND " . db_prefix() . "visa_details.vendor_id IS NOT NULL AND " . db_prefix() . "visa_details.vendor_id REGEXP " . $this->ci->db->escape($regexp_pattern));
+        }
+    }
+}
+
 if ($this->ci->input->post('application_sub_stage')) {
     array_push($where, 'AND ' . db_prefix() . 'clients.applicant_sub_status = ' . $this->ci->db->escape($this->ci->input->post('application_sub_stage')));
 }
@@ -322,7 +360,10 @@ if ($this->ci->input->post('application_sub_stage')) {
 
 
 
-
+if ($this->ci->input->post('visa_payment_date')) {
+    $visa_payment_date = $this->ci->input->post('visa_payment_date');
+    array_push($where, 'AND DATE(' . db_prefix() . 'visa_details.payment_date) BETWEEN "' . $this->ci->db->escape_str($visa_payment_date) . '" AND "' . $this->ci->db->escape_str($visa_payment_date) . '"');
+}
 
 if ($this->ci->input->post('to_date')) {
     $from_date = $this->ci->input->post('from_date');

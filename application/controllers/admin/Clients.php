@@ -1260,7 +1260,7 @@ class Clients extends AdminController
                 $vendor_id = $this->input->post('visa_vendor');
                 $courier_date = $this->input->post('visa_date');
                 $visa_courier_type = $this->input->post('visa_courier_type');
-                $visa_payment_date = $this->input->post('apostille_visa_payment_date');
+                $visa_payment_date = $this->input->post('visa_payment_date');
                 $visa_cost = $this->input->post('visa_cost');
                 $visa_payment_mode = $this->input->post('visa_payment_mode');
 
@@ -1302,8 +1302,8 @@ class Clients extends AdminController
                             "vendor_id" => $vendor_id,
                             "courier_date" => $courier_date,
                             "payment_mode" => $visa_payment_mode,
-                            "cost" => $visa_cost,
-                            "courier_type" => $visa_courier_type,
+                            "cost" => !empty($visa_cost) ? $visa_cost : "",
+                            "courier_type" => !empty($visa_courier_type) ? $visa_courier_type : '',
                             "payment_date" => $visa_payment_date,
                             "status" => 1,
                             "created_at" => date('Y-m-d H:i:s'),
@@ -1327,8 +1327,8 @@ class Clients extends AdminController
                     }
 
                     // Insert into DB
-                    if (!empty($insert_apostille_data)) {
-                        $inserted = $this->db->insert_batch(db_prefix() . "visa_data", $insert_apostille_data);
+                    if (!empty($insert_visa_data)) {
+                        $inserted = $this->db->insert_batch(db_prefix() . "visa_details", $insert_visa_data);
                         if ($inserted) {
 
                             $this->db->insert_batch(db_prefix() . 'visa_document_activity', $activity_data);
@@ -1371,6 +1371,13 @@ class Clients extends AdminController
                             $row["courier_date"] = $courier_date;
                         }
 
+                        if (!empty($visa_payment_mode)) {
+                            $row["payment_mode"] = $visa_payment_mode;
+                        }
+
+                        if (!empty($visa_courier_type)) {
+                            $row["courier_type"] = $visa_courier_type;
+                        }
                         $update_visa_data[] = $row;
 
 
@@ -3882,10 +3889,12 @@ class Clients extends AdminController
             }
             $this->update_applicant_tracker_stages($client_id, $tracker_id);
             $legalization =  $this->clients_model->legalization_data($client_id);
+            $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
             $data =  [
                 'resp_code' => 'RCS',
                 'resp_desc' => "Skip this stage.",
-                'legalization' => $legalization
+                'legalization' => $legalization,
+                'invitation' => $university_shortlisting_data
             ];
 
             echo json_encode($data);
@@ -3930,7 +3939,8 @@ class Clients extends AdminController
             } else {
                 $update_client_data = [
                     "applicant_status" => 0,
-                    "applicant_stage" => VISA
+                    "applicant_stage" => VISA,
+                    "applicant_sub_status" => VISA_APPLY
                 ];
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
@@ -4831,18 +4841,20 @@ class Clients extends AdminController
             ];
 
             // set_alert('danger',  $message);
+
             return $data;
             die;
         }
 
-
-        $resultOrignal = validate_orignal_documents([$client_id]);
+        $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
+        $country_names = array_column($university_shortlisting, "country_name");
+        $resultOrignal = validate_orignal_documents([$client_id], $country_names);
         if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
             $data = [
                 'resp_code'               => 'ERR',
                 'resp_desc'               =>  $resultOrignal["message"][0],
             ];
-
+           
             // set_alert('danger',  $message);
             return $data;
         }
@@ -4852,7 +4864,7 @@ class Clients extends AdminController
 
         $batch_update_data = [];
         $batch_insert_data = [];
-        $received_status_pass = true;
+        $received_status_pass = false;
         $visa_sub_stage = VISA_PENDING;
         foreach ($visa as $key => $row) {
             $data_ = [];
@@ -4866,12 +4878,15 @@ class Clients extends AdminController
             if (!empty($row['visa_receiving_date'])) {
                 $visa_status = 3;
                 $received_status = 1;
+
                 $visa_sub_stage = VISA_APPLY;
             }
 
-            if ($received_status == 0) {
-                $received_status_pass = false;
+            if (!empty($row['visa_receiving_date']) && !empty($row['visa_payment_date'])) {
+                $received_status_pass = true;
             }
+
+
             if (!empty($row['visa_receiving_date']) && $row['visa_receiving_date'] == 3) {
                 $visa_status = 4;
                 $visa_sub_stage = VISA_REJECTED;
@@ -4881,7 +4896,7 @@ class Clients extends AdminController
                 'userid'           => $client_id ?? "",
                 'vendor_id'           => $row['visa_vendor'] ?? "",
                 'courier_date'           => $row['visa_date'] ?? "",
-                'cost'           => $row['visa_cost'] ?? "",
+                'cost'           =>     $row['visa_cost'] ?? "",
                 'payment_date'           => $row['visa_payment_date'] ?? "",
                 'payment_mode'           => $row['visa_payment_mode'] ?? "",
                 'courier_type'           => $row['visa_courier_type'] ?? "",
@@ -4955,6 +4970,13 @@ class Clients extends AdminController
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
+                $this->update_applicant_tracker_stages($client_id, $tracker_id);
+                $responseData = [
+                    'resp_code' => 'RCS',
+                    'resp_desc' => "Visa Letter data updated successfully.",
+                    'visa_details' => visa_details($client_id)
+
+                ];
             } else {
                 $update_client_data = [
                     "applicant_status" => 0,
@@ -4964,10 +4986,16 @@ class Clients extends AdminController
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+
+                $responseData = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
+                    'visa_details' => visa_details($client_id)
+                ];
             }
 
             // Update applicant tracker stages
-            $this->update_applicant_tracker_stages($client_id, $tracker_id);
             $this->db->insert(db_prefix() . 'application_activity_log', array(
                 "description" => "Visa data updated by " . get_staff_full_name(get_staff_user_id()),
                 "date"        => date('Y-m-d H:i:s'),
@@ -4975,16 +5003,12 @@ class Clients extends AdminController
                 "client_id"   => $client_id
             ));
 
-            return [
-                'resp_code' => 'RCS',
-                'resp_desc' => "Visa Letter data updated successfully.",
-                'visa_details' => visa_details($client_id)
-
-            ];
+            return $responseData;
         } else {
             return [
                 'resp_code' => 'ERR',
                 'resp_desc' => 'No valid records to update',
+                'visa_details' => visa_details($client_id)
             ];
         }
     }
@@ -5003,7 +5027,17 @@ class Clients extends AdminController
         }
 
         // Extract country names
+        // $country_names = array_column($university_shortlisting, "country_name");
+
         $country_names = array_column($university_shortlisting, "country_name");
+
+        if (in_array("georgia", array_map('strtolower', $country_names))) {
+            // If 'georgia' is present in any case (e.g., 'Georgia', 'GEORGIA')
+            $documents_type = get_documents($lead_type, $country_names, "", $stage);
+        } else {
+            $country_names[] = "Rest"; // Add 'Rest' to the list
+            $documents_type = get_documents($lead_type, $country_names, "", $stage);
+        }
 
         // Fetch document types based on lead type and country names
         $documents_type = get_documents($lead_type, $country_names, "", $stage);
