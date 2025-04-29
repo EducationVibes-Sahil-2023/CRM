@@ -8567,7 +8567,10 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     }
 
     if (!empty($params['from_date']) && !empty($params['to_date'])) {
-        $conditions[] = 'DATE(' . $tblleads . '.dateadded) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
+        $conditions[] = 'DATE(' . db_prefix() . 'visitor_request.date_of_visit) BETWEEN "' . $CI->db->escape_str($params['from_date']) . '" AND "' . $CI->db->escape_str($params['to_date']) . '"';
+    }
+    if (!empty($params['source_type'])) {
+        $conditions[] = $tblleads . '.source IN (' . implode(',', $CI->db->escape_str($params['source_type'])) . ')';
     }
 
 
