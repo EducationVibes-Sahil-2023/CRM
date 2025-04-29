@@ -1254,6 +1254,167 @@ class Clients extends AdminController
                         'resp_desc' => 'Appostile data not updated.',
                     ];
                 }
+            } else if ($this->input->post('visa_status') == "true") {
+
+                // Required fields
+                $vendor_id = $this->input->post('visa_vendor');
+                $courier_date = $this->input->post('visa_date');
+                $visa_courier_type = $this->input->post('visa_courier_type');
+                $visa_payment_date = $this->input->post('apostille_visa_payment_date');
+                $visa_cost = $this->input->post('visa_cost');
+                $visa_payment_mode = $this->input->post('visa_payment_mode');
+
+
+                $check_status = 1;
+                if (!empty($courier_date)) {
+                    $check_status = 1; // insert new apostile data 
+                } else {
+                    $check_status = 2; // update apostile data 
+                }
+
+
+
+                $get_data_from_document = get_orignal_document_data_list_visa($ids, $check_status, $vendor_id);
+
+                if ((isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) || (isset($get_data_from_document["resp_code"]) && $get_data_from_document["resp_code"] == "ERR")) {
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => !empty($get_data_from_document["resp_desc"])
+                            ? $get_data_from_document["resp_desc"]
+                            : (!empty($get_data_from_document["message"])
+                                ? $get_data_from_document["message"]
+                                : 'Error message'),
+
+                    ];
+                    echo json_encode($data);
+                    exit;
+                }
+
+                if ($check_status == 1) {
+                    $insert_visa_data = [];
+                    $activity_data = [];
+                    foreach ($ids as $applicant_id) {
+
+
+
+                        $insert_visa_data[] = [
+                            "userid" => $applicant_id,
+                            "vendor_id" => $vendor_id,
+                            "courier_date" => $courier_date,
+                            "payment_mode" => $visa_payment_mode,
+                            "cost" => $visa_cost,
+                            "courier_type" => $visa_courier_type,
+                            "payment_date" => $visa_payment_date,
+                            "status" => 1,
+                            "created_at" => date('Y-m-d H:i:s'),
+                            "created_by" => get_staff_user_id(),
+                            "received_status" => !empty($receiving_date) ? 1 : 0,
+                        ];
+
+                        $cost = !empty($visa_cost) ? " with cost ₹{$visa_cost}" : '';
+                        $vendor = !empty($apostille_vendors[$vendor_id]['name']) ? ", vendor: {$apostille_vendors[$vendor_id]['name']}" : '';
+                        $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
+                        $payment = !empty($payment_date) ? ", payment date: {$payment_date}" : '';
+
+                        $message = "Apply Visa details \"{$cost}{$vendor}{$courier}{$payment}.";
+
+                        $activity_data[] = [
+                            "date" => date('Y-m-d H:i:s'),
+                            "staffid" => get_staff_user_id(),
+                            "client_id" => $applicant_id,
+                            "description" => $message
+                        ];
+                    }
+
+                    // Insert into DB
+                    if (!empty($insert_apostille_data)) {
+                        $inserted = $this->db->insert_batch(db_prefix() . "visa_data", $insert_apostille_data);
+                        if ($inserted) {
+
+                            $this->db->insert_batch(db_prefix() . 'visa_document_activity', $activity_data);
+                            $data = [
+                                'resp_code' => 'RCS',
+                                'resp_desc' => 'Visa bulk updated successfully.',
+                            ];
+                        } else {
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => 'Database insert failed.',
+                            ];
+                        }
+                    }
+
+                    echo json_encode($data);
+                    exit;
+                } else if ($check_status == 2) {
+
+
+                    $update_visa_data = [];
+                    $activity_data = [];
+                    foreach ($get_data_from_document as $rec_visa) {
+
+                        $row = [
+                            "id" => $rec_visa["id"],
+                            "updated_at" => date('Y-m-d H:i:s'),
+                            "updated_by" => get_staff_user_id(),
+                        ];
+
+                        if (!empty($visa_cost)) {
+                            $row["cost"] = $visa_cost;
+                        }
+
+                        if (!empty($visa_payment_date)) {
+                            $row["payment_date"] = $visa_payment_date;
+                        }
+
+                        if (!empty($courier_date)) {
+                            $row["courier_date"] = $courier_date;
+                        }
+
+                        $update_visa_data[] = $row;
+
+
+                        // $doc_name = !empty($apostille_documents[$rec_visa['doc_id']]['name']) ? $apostille_documents[$rec_visa['doc_id']]['name'] : 'Unknown Document';
+                        $cost = !empty($visa_cost) ? " with cost ₹{$visa_cost}" : '';
+                        $vendor = !empty($apostille_vendors[$vendor_id]['name']) ? ", vendor: {$apostille_vendors[$vendor_id]['name']}" : '';
+                        $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
+                        $payment = !empty($visa_payment_date) ? ", payment date: {$visa_payment_date}" : '';
+
+                        $message = "Update Visa details \"{$cost}{$vendor}{$courier}{$payment}.";
+
+                        $activity_data[] = [
+                            "date" => date('Y-m-d H:i:s'),
+                            "staffid" => get_staff_user_id(),
+                            "client_id" => $rec_visa["userid"],
+                            "description" => $message
+                        ];
+                    }
+
+                    // Perform batch update
+                    if (!empty($update_visa_data)) {
+                        $updated = $this->db->update_batch(db_prefix() . "visa_details", $update_visa_data, "id");
+                        $this->db->insert_batch(db_prefix() . 'visa_document_activity', $activity_data);
+                        if ($updated) {
+                            $data = [
+                                'resp_code' => 'RCS',
+                                'resp_desc' => 'Visa Details bulk updated successfully.',
+                            ];
+                        } else {
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => 'Visa details update failed.',
+                            ];
+                        }
+
+                        echo json_encode($data);
+                        die;
+                    }
+                } else {
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'Visa data not updated.',
+                    ];
+                }
             } else if (
                 ($this->input->post('in_transit') === true ||
                     (empty($this->input->post('office_location')) && empty($this->input->post('document_status')))) ||
@@ -3752,6 +3913,41 @@ class Clients extends AdminController
             $data = $this->feesDeposite();
         } else if ($tracker_id == 7) {
             $data = $this->invitationLetter();
+        } else if ($tracker_id == 8) {
+
+            $visa_information = visa_details($client_id);
+            $this->db->where('userid', $client_id);
+            $this->db->update(db_prefix() . 'clients', array("payment_3_received" => 1, "payment_3_received_date" => date('Y-m-d H:i:s')));
+
+            if (empty($visa_information)) {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => VISA,
+                    "applicant_sub_status" => VISA_PENDING,
+                ];
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            } else {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => VISA
+                ];
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            }
+
+            $this->update_applicant_tracker_stages($client_id, $tracker_id);
+
+            $data = [
+                'resp_code' => 'RCS',
+                'resp_desc' => "3rd payment received successfully.",
+                'visa_details' => $visa_information
+            ];
+
+            echo json_encode($data);
+            return;
+        } else if ($tracker_id == 9) {
+            $data = $this->visaLetter();
         } else {
             $data =  [
                 'resp_code' => 'RCS',
@@ -4306,8 +4502,6 @@ class Clients extends AdminController
         }
     }
 
-
-
     private function feesDeposite()
     {
 
@@ -4562,6 +4756,238 @@ class Clients extends AdminController
             ];
         }
     }
+
+    public function remove_visa_details()
+    {
+        // Check if POST request has data
+        if ($this->input->post()) {
+            // Retrieve the visa ID and user ID from the POST request
+            $visa_id = $this->input->post('visa_id');
+            $userid  = $this->input->post('client_id');
+
+            // Ensure visa_id and userid are provided
+            if (empty($visa_id) || empty($userid)) {
+                $response = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Missing required parameters (visa_id or client_id).',
+                ];
+            } else {
+                // Perform the delete operation
+                $this->db->where(['userid' => $userid, 'id' => $visa_id]);
+                $this->db->delete(db_prefix() . 'visa_details');
+
+                // Check if the delete was successful
+                if ($this->db->affected_rows() > 0) {
+                    // Success response
+                    $response = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => 'Visa details deleted successfully.',
+                    ];
+                } else {
+                    // If no rows were deleted, it may mean the record doesn't exist
+                    $response = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'Visa details not found or already deleted.',
+                    ];
+                }
+            }
+        } else {
+            // Invalid request method
+            $response = [
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Invalid request method.',
+            ];
+        }
+
+        // Output response as JSON
+        echo json_encode($response);
+    }
+
+    private function visaLetter()
+    {
+        $data = [];
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return [
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Invalid request method',
+            ];
+        }
+
+        $client_id = $this->input->post("client_id");
+        $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
+        $visa = !empty($this->input->post("visa")) ? json_decode($this->input->post("visa"), true) : [];
+        $files = $_FILES;
+
+        $check_documents = $this->check_documents(9);
+        if (!empty($check_documents)) {
+            // If required documents are missing
+            $doc_names = implode(", ", $check_documents);
+            $message = "{$doc_names} are mandatory to proceed to the next step.";
+
+            $data = [
+                'resp_code'               => 'ERR',
+                'resp_desc'               =>  $message,
+            ];
+
+            // set_alert('danger',  $message);
+            return $data;
+            die;
+        }
+
+
+        $resultOrignal = validate_orignal_documents([$client_id]);
+        if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
+            $data = [
+                'resp_code'               => 'ERR',
+                'resp_desc'               =>  $resultOrignal["message"][0],
+            ];
+
+            // set_alert('danger',  $message);
+            return $data;
+        }
+
+
+
+
+        $batch_update_data = [];
+        $batch_insert_data = [];
+        $received_status_pass = true;
+        $visa_sub_stage = VISA_PENDING;
+        foreach ($visa as $key => $row) {
+            $data_ = [];
+
+            $visa_status = 1;
+            $received_status = 0;
+            if (!empty($row['visa_date'])) {
+                $visa_status = 2;
+                $visa_sub_stage = VISA_APPLY;
+            }
+            if (!empty($row['visa_receiving_date'])) {
+                $visa_status = 3;
+                $received_status = 1;
+                $visa_sub_stage = VISA_APPLY;
+            }
+
+            if ($received_status == 0) {
+                $received_status_pass = false;
+            }
+            if (!empty($row['visa_receiving_date']) && $row['visa_receiving_date'] == 3) {
+                $visa_status = 4;
+                $visa_sub_stage = VISA_REJECTED;
+            }
+            $data_ = [
+                'id'                => $row['id'],
+                'userid'           => $client_id ?? "",
+                'vendor_id'           => $row['visa_vendor'] ?? "",
+                'courier_date'           => $row['visa_date'] ?? "",
+                'cost'           => $row['visa_cost'] ?? "",
+                'payment_date'           => $row['visa_payment_date'] ?? "",
+                'payment_mode'           => $row['visa_payment_mode'] ?? "",
+                'courier_type'           => $row['visa_courier_type'] ?? "",
+                'entry_date'           => $row['visa_entry_date'] ?? "",
+                'updated_by'           =>  get_staff_user_id(),
+                'updated_at'           => date('Y-m-d H:i:s'),
+                'receiving_date'           => $row['visa_receiving_date'] ?? "",
+                'status'           =>      $visa_status,
+                'received_status'           => $received_status
+            ];
+
+
+            $file_input_name = "visa_file_" . $key;
+
+            if (isset($files[$file_input_name]) && !empty($files[$file_input_name]['name'])) {
+                $document = $files[$file_input_name];
+
+                if ($document['error'] === UPLOAD_ERR_OK) {
+                    $file_extension = pathinfo($document['name'], PATHINFO_EXTENSION);
+                    $file_name = uniqid("visa_letter") . "." . $file_extension;
+
+                    $uploaded_file = upload_applicant_documents($client_id, [
+                        "name"      => $file_name,
+                        "type"      => $document['type'],
+                        "tmp_name"  => $document['tmp_name'],
+                        "error"     => $document['error'],
+                        "size"      => $document['size']
+                    ]);
+
+                    if (!empty($uploaded_file["file_path"])) {
+                        $data_['file'] = $uploaded_file["file_path"];
+                    }
+
+                    // Log file upload
+                    $this->db->insert(db_prefix() . 'application_activity_log', [
+                        "description" => "Visa details uploaded by staff ID: " . get_staff_user_id(),
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id
+                    ]);
+                }
+            }
+
+            if (!empty($data_["id"])) {
+                $batch_update_data[] = $data_;
+            } else {
+                $data_["created_at"] = date('Y-m-d H:i:s');
+                $data_["created_by"] = get_staff_user_id();
+                $batch_insert_data[] = $data_;
+            }
+        }
+
+
+
+        if (!empty($batch_update_data) || !empty($batch_insert_data)) {
+            if (!empty($batch_update_data)) {
+                $update = $this->db->update_batch(db_prefix() . 'visa_details', $batch_update_data, 'id');
+            }
+
+            if (!empty($batch_insert_data)) {
+                $update = $this->db->insert_batch(db_prefix() . 'visa_details', $batch_insert_data);
+            }
+
+
+            if ($received_status_pass == true) {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => VISA,
+                    "applicant_sub_status" => VISA_STAMP,
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            } else {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => VISA,
+                    "applicant_sub_status" => $visa_sub_stage,
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            }
+
+            // Update applicant tracker stages
+            $this->update_applicant_tracker_stages($client_id, $tracker_id);
+            $this->db->insert(db_prefix() . 'application_activity_log', array(
+                "description" => "Visa data updated by " . get_staff_full_name(get_staff_user_id()),
+                "date"        => date('Y-m-d H:i:s'),
+                "staffid"     => get_staff_user_id(),
+                "client_id"   => $client_id
+            ));
+
+            return [
+                'resp_code' => 'RCS',
+                'resp_desc' => "Visa Letter data updated successfully.",
+                'visa_details' => visa_details($client_id)
+
+            ];
+        } else {
+            return [
+                'resp_code' => 'ERR',
+                'resp_desc' => 'No valid records to update',
+            ];
+        }
+    }
     private function check_documents($stage)
     {
         // Retrieve POST data safely
@@ -4569,7 +4995,8 @@ class Clients extends AdminController
         $client_id = filter_input(INPUT_POST, "client_id", FILTER_SANITIZE_STRING);
 
         // Decode university_shortlisting JSON safely
-        $university_shortlisting = isset($_POST["university_shortlisting"]) ? json_decode($_POST["university_shortlisting"], true) : [];
+        // $university_shortlisting = isset($_POST["university_shortlisting"]) ? json_decode($_POST["university_shortlisting"], true) : [];
+        $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
 
         if (!is_array($university_shortlisting)) {
             $university_shortlisting = [];

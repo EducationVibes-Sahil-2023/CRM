@@ -122,8 +122,8 @@ if (!function_exists('get_data_excel')) {
         // Build the query for excel data update
         $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year")
             ->from(db_prefix() . "excel_data_update");
-            
-                $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+        $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
         if (!empty($id)) {
             $CI->db->where("id", $id);
@@ -146,18 +146,18 @@ if (!function_exists('get_data_excel')) {
             $spreadsheetId = $sheet['spreadsheetId']; // Important for multiple autoSync rows
             create_sheet($currentId);
             // Get selected columns
-         $selectColumnName = $CI->db
-    ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) as fetch_column_name", false)
-    ->from(db_prefix() . "excel_column_update")
-    ->where("excel_id", $currentId)
-    ->get()
-    ->row()
-    ->fetch_column_name;
+            $selectColumnName = $CI->db
+                ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) as fetch_column_name", false)
+                ->from(db_prefix() . "excel_column_update")
+                ->where("excel_id", $currentId)
+                ->get()
+                ->row()
+                ->fetch_column_name;
 
 
             if (empty($selectColumnName)) {
                 continue; // Skip if no columns
-}
+            }
 
             $condition_sql = "";
 
@@ -177,7 +177,7 @@ if (!function_exists('get_data_excel')) {
 
 
             // Build the main data query
-             $sql = "SELECT {$selectColumnName}
+            $sql = "SELECT {$selectColumnName}
                     FROM " . db_prefix() . "clients c
                     LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
                     LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
@@ -212,6 +212,7 @@ if (!function_exists('get_data_excel')) {
         return true; // No valid autoSync sheet found
     }
 }
+
 
 
 // Read data from sheet

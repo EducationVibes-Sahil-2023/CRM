@@ -226,6 +226,8 @@ define('LEGALIZATION', '6');
 define('FEES_DEPOSITE', '7');
 define('INVITATION', '8');
 define('THIRD_PAYMENT', '9');
+define('VISA', '10');
+define('SC', '11');
 
 
 define('REGISTRATION_PENDING', '1');
@@ -240,6 +242,11 @@ define('LEGALIZATION_PENDING', '9');
 define('FEES_DEPOSITE_PENDING', '10');
 define('INVITATION_PENDING', '11');
 define('THIRD_PAYMENT_PENDING', '12');
+define('VISA_PENDING', '13');
+define('VISA_APPLY', '14');
+define('VISA_STAMP', '15');
+define('VISA_REJECTED', '16');
+define('SC_PENDING', '17');
 
 
 
@@ -249,6 +256,9 @@ define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
 define('ORG_REST', 'original rest');
 define('ORG_GEORGIA', 'original georgia');
 define('APOSTILE_DOC', 'ap doc');
+define('VISA_GEORGIA', 'visa doc (georgia)');
+define('VISA_REST', 'visa doc (rest)');
+define('VISA_POST', 'visa post');
 define('REFERENCE_ID', '1');
 define('REFERENCE_AMOUNT_ID', '8');
 define('GOOGLE_SHEET_SHARE', 'sahil.chaudhary@educationvibes.in');

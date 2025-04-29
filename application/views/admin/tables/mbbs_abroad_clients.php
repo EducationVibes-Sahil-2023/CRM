@@ -51,7 +51,7 @@ $aColumns_count = 0;
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
 
-        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia", "apostille_documents"])) {
+        if (in_array($value["column_name"], ["fees", "original_documents", "original_documents_rest", "original_documents_georgia", "apostille_documents", "orignal_document_visa_rest", "orignal_document_visa_georgia"])) {
             if ($value["column_name"] == "fees") {
                 if (!empty($fees_data)) {
                     foreach ($fees_data as $fees) {
@@ -60,7 +60,7 @@ if (!empty($tblma_applicant_tracker)) {
                     }
                 }
             }
-            if (in_array($value["column_name"], ['original_documents', 'original_documents_rest', 'original_documents_georgia', 'apostille_documents'])) {
+            if (in_array($value["column_name"], ['original_documents', 'original_documents_rest', 'original_documents_georgia', 'apostille_documents', 'orignal_document_visa_rest', 'orignal_document_visa_georgia'])) {
                 $orignal_documents = [];
                 if ($value["column_name"] == "original_documents") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list());
@@ -73,6 +73,12 @@ if (!empty($tblma_applicant_tracker)) {
                 }
                 if ($value["column_name"] == "apostille_documents") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 1));
+                }
+                if ($value["column_name"] == "orignal_document_visa_rest") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 0, '', 1));
+                }
+                if ($value["column_name"] == "orignal_document_visa_georgia") {
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 0, '', 0, 1));
                 }
 
                 if (!empty($orignal_documents)) {
@@ -136,6 +142,10 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
+    'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
+    'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
+    'LEFT JOIN ' . db_prefix() . 'vendor_list  visa_vendor ON visa_vendor.id=' . db_prefix() . 'visa_details.vendor_id',
+    'LEFT JOIN ' . db_prefix() . 'payment_mode  visa_p_mode ON visa_p_mode.id=' . db_prefix() . 'visa_details.payment_mode',
     "LEFT JOIN (
         SELECT 
             userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,

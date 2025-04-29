@@ -430,9 +430,9 @@ public function insert_data_batch($table, $data)
 $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs 
      SET status = 2 
      where id IN (" . implode(',', $delete_ids) . ") ");
-                    // $sql = "DELETE FROM " . db_prefix() . "calls_activity_temp_logs WHERE id IN (" . implode(',', $delete_ids) . ")";
+                    $sql = "DELETE FROM " . db_prefix() . "calls_activity_temp_logs WHERE id IN (" . implode(',', $delete_ids) . ") and status = 2";
                     // Execute the query
-                    // $this->db->query($sql);
+                    $this->db->query($sql);
                 }
             }
     //         $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs 

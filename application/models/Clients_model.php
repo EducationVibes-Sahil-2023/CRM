@@ -1831,18 +1831,28 @@ class Clients_model extends App_Model
         $this->db->order_by('sequence', "asc");
         return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
     }
-    function university_shortlisting($client_id)
+    function university_shortlisting($client_id, $is_primary = 0)
     {
+
         // Fetch shortlisted universities with vendor details
-        $result = $this->db->select('us.*, cv.name AS vendor_name,if(us.country_name = a.primary_country AND us.university_name = a.primary_university,1,0) primary_university')
+        $query = $this->db->select('us.*, cv.name AS vendor_name, IF(us.country_name = a.primary_country AND us.university_name = a.primary_university, 1, 0) AS primary_university')
             ->from(db_prefix() . 'client_university_shortlisting us')
-            ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'LEFT')
-            ->join(db_prefix() . 'admission_preferences a', "us.client_id = a.userid", "LEFT")
-            ->where(['us.client_id' => $client_id, 'us.status' => 1])
-            ->order_by('us.id', 'ASC')
+            ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'left')
+            ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
+            ->where([
+                'us.client_id' => $client_id,
+                'us.status' => 1
+            ]);
+
+        if (!empty($is_primary)) {
+            $this->db->having('primary_university', 1);
+        }
+
+        $result = $query->order_by('us.id', 'ASC')
             ->get()
             ->result_array();
 
+      
         if (empty($result)) return [];
 
         // Extract unique country names

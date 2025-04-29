@@ -12,6 +12,8 @@ $fees_data = get_clients_fees(2);
 $orignal_document_list = get_orignal_document_list();
 $orignal_document_list_rest = get_orignal_document_list(1);
 $orignal_document_list_georgia = get_orignal_document_list(0, 1);
+$orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
+$orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
@@ -23,6 +25,9 @@ $table_view = array_column(get_view_columns(), null, "id");
 
 $apostille_vendors = get_vendor_list(1);
 
+$visa_vendors = get_vendor_list(2);
+$courier_type = get_courier_list();
+$payment_mode = get_payment_mode();
 
 
 
@@ -49,6 +54,10 @@ array_unshift($office_location, array());
 
       table.dataTable thead .sorting:after {
          display: none;
+      }
+
+      div#customers_bulk_action .form-group {
+         margin-bottom: 20px !important;
       }
    </style>
    <div class="content">
@@ -553,7 +562,68 @@ array_unshift($office_location, array());
                   </div>
                </div>
             </div>
+            <div class="visa_update">
+               <div class="checkbox checkbox-danger">
+                  <input type="checkbox" name="visa_status_check" id="visa_status_check" onchange="Update_visa(this)">
+                  <label for="visa_status">Visa</label>
+               </div>
 
+               <div class="visa_status_update" style="display:none;">
+                  <div class="row">
+                     <div class="col-md-4">
+                        <label>Visa Vendor <small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($visa_vendors, array());
+                        echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Vendor',
+                           'data-actions-box' => true,
+                           'required-check' => 'required-check',
+                           'required' => 'required',
+                        ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                     </div>
+
+                     <div class="col-md-4">
+                        <label>Courier Date</label>
+                        <?php echo render_input('visa_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Courier Type <small class='text-danger'>*</small></label>
+                        <?php
+                        array_unshift($courier_type, array());
+                        echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [$visa["courier_type"]], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Courier Type',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Payment Date</label>
+                        <?php echo render_input('visa_payment_date', '', '', 'date'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Visa Cost</label>
+                        <?php echo render_input('visa_cost', '', '', 'number'); ?>
+                     </div>
+                     <div class="col-md-4">
+                        <label>Payment Mode</label>
+                        <?php
+                        array_unshift($payment_mode, array());
+                        echo render_select('visa_payment_mode', $payment_mode, ['id', 'name'], '', [$visa["payment_mode"]], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Payment Mode',
+                           'data-actions-box' => true,
+                        ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                     </div>
+
+                     <div class="clearfix"></div>
+                     <div class="doc-cost-section">
+
+
+                     </div>
+                  </div>
+               </div>
+            </div>
             <!-- Document Status Section -->
             <div class="document_status_update">
                <div class="checkbox checkbox-danger">
@@ -668,6 +738,8 @@ init_tail();
    var orignal_document_list = <?= !empty($orignal_document_list) ? json_encode($orignal_document_list, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list_rest = <?= !empty($orignal_document_list_rest) ? json_encode($orignal_document_list_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_visa_rest = <?= !empty($orignal_document_visa_rest) ? json_encode($orignal_document_visa_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_visa_georgia = <?= !empty($orignal_document_visa_georgia) ? json_encode($orignal_document_visa_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var apostille_documents = <?= !empty($apostille_documents) ? json_encode(array_values($apostille_documents), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
@@ -677,6 +749,7 @@ init_tail();
    var show_column_array = [];
    var selected_column_array = [];
    var default_columns = <?= !empty($tbllead_performance_column) ? json_encode(array_column($tbllead_performance_column, null, "id"), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var group_selection = [];
 
    $(document).ready(function() {
       if (tbllead_performance_column_array[selected_view]) {
@@ -714,7 +787,7 @@ init_tail();
          // if (show_column_array.includes(value.id)) {
          let isDisabled = selected_column_array.includes(String(value.id));
          //console.log(isDisabled);
-         let option = `<option value="${value.id}" ${isDisabled ? 'disabled Selected' : ''} >${value.label_name}</option>`;
+         let option = `<option data-columns="${value.columns}" value="${value.id}" ${isDisabled ? 'disabled Selected' : ''} >${value.label_name}</option>`;
          columnSelect.append(option);
          // }
       });
@@ -789,7 +862,7 @@ init_tail();
    function updateColumns(element) {
       enabled_column();
       tbllead_performance_column = [];
-
+      group_selection = [];
       <?php if (is_postSale() || is_admin()) { ?>
          tbllead_performance_column.push({
             tbl_column_name: " ",
@@ -797,48 +870,141 @@ init_tail();
          });
       <?php } ?>
 
-      let selectedValues = element.selectpicker('val') || [];
+      //       let selectedValues = element.selectpicker('val') || [];
+      //       let selectedOptions = element.find('option:selected');
+      // console.log(selectedOptions);
+      //       let addedColumns = new Set();
+      //       selectedValues.forEach(value => {
+      //          // if (!show_column_array.includes(String(value))) return;
+
+      //          let selectedLabel = element.find(`option[value="${value}"]`).text();
+
+      //          if (selectedLabel.toLowerCase() === "fees") {
+      //             fees_array.forEach(fees => addColumn(fees.name, fees.name));
+      //          } else if (selectedLabel === "Original Documents") {
+      //             orignal_document_list.forEach(document => {
+      //                if (!addedColumns.has(document.short_name)) {
+      //                   addColumn(document.short_name, document.short_name);
+      //                   addedColumns.add(document.short_name);
+      //                }
+      //             });
+      //          } else if (selectedLabel.toLowerCase().includes("<?= ORG_REST ?>".toLowerCase())) {
+      //             orignal_document_list_rest.forEach(document => {
+      //                if (!addedColumns.has(document.short_name)) {
+      //                   addColumn(document.short_name, document.short_name);
+      //                   addedColumns.add(document.short_name);
+      //                }
+      //             });
+      //          } else if (selectedLabel.toLowerCase().includes("<?= ORG_GEORGIA ?>".toLowerCase())) {
+      //             orignal_document_list_georgia.forEach(document => {
+      //                if (!addedColumns.has(document.short_name)) {
+      //                   addColumn(document.short_name, document.short_name);
+      //                   addedColumns.add(document.short_name);
+      //                }
+      //             });
+      //          } else if (selectedLabel.toLowerCase().includes("<?= APOSTILE_DOC ?>".toLowerCase())) {
+      //             apostille_documents.forEach(document => {
+      //                if (!addedColumns.has(document.short_name)) {
+      //                   addColumn(document.short_name, document.short_name);
+      //                   addedColumns.add(document.short_name);
+      //                }
+      //             });
+      //          } else if (selectedLabel.toLowerCase().includes("<?= VISA_GEORGIA ?>".toLowerCase())) {
+      //             orignal_document_visa_georgia.forEach(document => {
+      //                if (!addedColumns.has(document.short_name)) {
+      //                   addColumn(document.short_name, document.short_name);
+      //                   addedColumns.add(document.short_name);
+      //                }
+      //             });
+      //          } else if (selectedLabel.toLowerCase().includes("<?= VISA_REST ?>".toLowerCase())) {
+      //             orignal_document_visa_rest.forEach(document => {
+      //                if (!addedColumns.has(document.short_name)) {
+      //                   addColumn(document.short_name, document.short_name);
+      //                   addedColumns.add(document.short_name);
+      //                }
+      //             });
+      //          } else {
+      //             console.log();
+      //             addColumn(value, selectedLabel);
+      //          }
+      //       });
+      //       // disabled_column();
+
+
+      let selectedOptions = element.find('option:selected'); // Get selected option elements
       let addedColumns = new Set();
-      selectedValues.forEach(value => {
-         // if (!show_column_array.includes(String(value))) return;
 
-         let selectedLabel = element.find(`option[value="${value}"]`).text();
+      selectedOptions.each(function() {
+         let value = $(this).val();
+         let text = $(this).text().trim().toLowerCase();
+         let additional_columns = $(this).attr("data-columns") || "";
 
-         if (selectedLabel.toLowerCase() === "fees") {
+         if (text === "fees") {
             fees_array.forEach(fees => addColumn(fees.name, fees.name));
-         } else if (selectedLabel === "Original Documents") {
+         } else if (text === "original documents") {
             orignal_document_list.forEach(document => {
                if (!addedColumns.has(document.short_name)) {
                   addColumn(document.short_name, document.short_name);
                   addedColumns.add(document.short_name);
                }
             });
-         } else if (selectedLabel.toLowerCase().includes("<?= ORG_REST ?>".toLowerCase())) {
+         } else if (text.includes("<?= strtolower(ORG_REST) ?>")) {
             orignal_document_list_rest.forEach(document => {
                if (!addedColumns.has(document.short_name)) {
                   addColumn(document.short_name, document.short_name);
                   addedColumns.add(document.short_name);
                }
             });
-         } else if (selectedLabel.toLowerCase().includes("<?= ORG_GEORGIA ?>".toLowerCase())) {
+         } else if (text.includes("<?= strtolower(ORG_GEORGIA) ?>")) {
             orignal_document_list_georgia.forEach(document => {
                if (!addedColumns.has(document.short_name)) {
                   addColumn(document.short_name, document.short_name);
                   addedColumns.add(document.short_name);
                }
             });
-         } else if (selectedLabel.toLowerCase().includes("<?= APOSTILE_DOC ?>".toLowerCase())) {
+         } else if (text.includes("<?= strtolower(APOSTILE_DOC) ?>")) {
             apostille_documents.forEach(document => {
                if (!addedColumns.has(document.short_name)) {
                   addColumn(document.short_name, document.short_name);
                   addedColumns.add(document.short_name);
                }
             });
+         } else if (text.includes("<?= strtolower(VISA_GEORGIA) ?>")) {
+            orignal_document_visa_georgia.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (text.includes("<?= strtolower(VISA_REST) ?>")) {
+            orignal_document_visa_rest.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
          } else {
-            addColumn(value, selectedLabel);
+            if (additional_columns !== "") {
+               let columns = additional_columns.split(",");
+               columns.forEach(function(key) {
+                  let columnValue = key.trim();
+                  if (columnValue && default_columns[columnValue]) {
+                     let label = default_columns[columnValue].label_name;
+                     addColumn(columnValue, label);
+                     group_selection.push(columnValue);
+
+                  }
+               });
+            } else {
+               addColumn(value, $(this).text().trim());
+            }
          }
       });
-      // disabled_column();
+
+      // Finally call your function to disable columns
+      disabled_column();
+
+
 
    }
 
@@ -859,7 +1025,6 @@ init_tail();
 
       tbllead_performance_column.forEach(column => {
          let label = column.label_name && column.label_name.trim() !== "" ? column.label_name : column.tbl_column_name.replace(".", "_");
-
          column_names[column.tbl_column_name] = label.replace(/ /g, "_");
 
          columnHeaders.push({
@@ -990,6 +1155,10 @@ init_tail();
          $(".document_status_update").find("select").val("").selectpicker('refresh');
          $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
 
+         $('.visa_update').hide();
+         $(".visa_update").find("select").val("").selectpicker('refresh');
+         $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+
          // Toggle visibility of transition location elements
          $(".is_transist_location").hide();
          $(".no_is_transist_location").show();
@@ -997,6 +1166,7 @@ init_tail();
       } else {
          // Hide elements related to document status update
          $('.document_status_update').show();
+         $('.visa_update').show();
 
 
          // Toggle visibility of transition location elements
@@ -1011,6 +1181,40 @@ init_tail();
    }
 
 
+   function Update_visa(obj) {
+      // Check if the checkbox is checked
+      if ($(obj).prop('checked')) {
+         // Hide elements related to document status update
+         $('.document_status_update').hide();
+         $(".document_status_update").find("select").val("").selectpicker('refresh');
+         $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+         $('.apostille_update').hide();
+         $(".apostille_update").find("select").val("").selectpicker('refresh');
+         $(".apostille_update").find("input[type=checkbox]").prop("checked", false);
+
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+         $(".visa_status_update").show();
+      } else {
+         // Hide elements related to document status update
+         $('.document_status_update').show();
+
+
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+         $(".apostille_update").show();
+         $(".visa_status_update").find("select").val("").selectpicker('refresh');
+         $(".visa_status_update").find("input").val("");
+         $(".visa_status_update").find("input[type=checkbox]").prop("checked", false);
+         $(".visa_status_update").hide();
+
+
+      }
+   }
+
    function customers_bulk_action(event) {
 
 
@@ -1023,8 +1227,10 @@ init_tail();
       var status_text = $("#document_status option:selected").text();
       var locations_name = $("#office_location option:selected").text();
       var apostille_status = $("#apostille_status_check").prop('checked');
+      var visa_status = $("#visa_status_check").prop('checked');
       var is_valid = true;
       var apostille_data = {};
+      var visa_data = {};
 
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
@@ -1033,6 +1239,25 @@ init_tail();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
                apostille_data[name] = value;
+            }
+            // console.log(value);
+            // console.log(required);
+            if (required && !String(value).trim()) {
+               $(this).focus();
+               alert_float("warning", "Please fill the required field: " + name);
+               is_valid = false;
+               return false; // Exit loop early
+            }
+         });
+      }
+
+      if (visa_status === true) {
+         $('.visa_status_update').find('input, select').each(function() {
+            var name = $(this).attr('name');
+            var value = $(this).val();
+            var required = $(this).attr('required') || $(this).attr('requried');
+            if (name) {
+               visa_data[name] = value;
             }
             // console.log(value);
             // console.log(required);
@@ -1076,11 +1301,13 @@ init_tail();
          // document_status,
          status_text,
          locations_name,
-         apostille_status
+         apostille_status,
+         visa_status,
       };
 
       // Merge Apostille data
       Object.assign(data, apostille_data);
+      Object.assign(data, visa_data);
 
       $(event.target).prop('disabled', true);
 
@@ -1169,6 +1396,7 @@ init_tail();
       $(".is_transist_location").hide();
       $(".no_is_transist_location").show();
       $(".apostille_status_update").hide();
+      $(".document_status_update").hide();
       $(".document_status_update").show();
       $(".doc-cost-section").html('');
 
@@ -1177,7 +1405,6 @@ init_tail();
    function refreshApplicantTable() {
       applicant_table.ajax.reload(null, false);
    }
-
 
    function applicant_status_change(status = 0) {
       let additional_fields = {};
@@ -1287,11 +1514,14 @@ init_tail();
 
 
    function downloadAndZipFiles(files, zipFileName = "documents.zip") {
-   const zip = new JSZip();
-   const folder = zip.folder("files");
+      const zip = new JSZip();
+      const folder = zip.folder("files");
 
-   const downloadPromises = files.map(({ url, name }, index) =>
-      fetch(url)
+      const downloadPromises = files.map(({
+            url,
+            name
+         }, index) =>
+         fetch(url)
          .then(response => {
             if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
             return response.blob().then(blob => {
@@ -1302,14 +1532,16 @@ init_tail();
             });
          })
          .catch(err => console.error("Error downloading file:", err))
-   );
+      );
 
-   Promise.all(downloadPromises).then(() => {
-      zip.generateAsync({ type: "blob" }).then(content => {
-         saveAs(content, zipFileName);
+      Promise.all(downloadPromises).then(() => {
+         zip.generateAsync({
+            type: "blob"
+         }).then(content => {
+            saveAs(content, zipFileName);
+         });
       });
-   });
-}
+   }
 
 
 
