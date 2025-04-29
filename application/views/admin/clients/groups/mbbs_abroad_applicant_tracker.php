@@ -1317,7 +1317,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label>Visa Document <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url]); ?>
+                                                        <?php
+                                                        $re = !empty($file_url) ? 'false' : 'true';
+                                                        echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url, "required" => $re]); ?>
                                                         <?php
                                                         if (!empty($file_url)) { ?>
                                                             <div class="margin-top">
@@ -1881,7 +1883,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 upload_data.append("3_payment", 1);
             }
             if (id == 9) {
-                // await set_validation_visa();
+                await set_validation_visa();
                 let check_validation = await check_required_fields("visa-form");
                 if (!check_validation) return false;
                 await check_visa_letter(upload_data);
@@ -1939,6 +1941,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     set_visa_section(response.visa_details);
                 }
             } else {
+                if (response.visa_details != undefined) {
+                    set_visa_section(response.visa_details);
+                }
                 alert_float("danger", response.resp_desc || "An error occurred.");
             }
         } catch (error) {
@@ -3000,6 +3005,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     }
 
     async function add_visa_div() {
+        await set_validation_visa();
         let check_validation = await check_required_fields("visa-form");
         if (!check_validation) return false;
         set_visa_section([], 1);

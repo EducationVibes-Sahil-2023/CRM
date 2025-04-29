@@ -449,6 +449,8 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
+
+
                               <div class="col-md-2 margin-top leads-filter-column filter-hide-default filter-org-status hide">
                                  <?php
                                  $orignal_document_status[] = array("id" => "-1", "name" => "In-Transit");
@@ -456,6 +458,19 @@ array_unshift($office_location, array());
                                  echo render_select('doc_status[]', $orignal_document_status, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc. status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "doc_status");
                                  echo '</div>';
                                  ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-visa-vendor hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('visa_vendors_filter[]', $visa_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Visa Vendors", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "visa_vendors_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-payment hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="visa_payment_date" id="visa_payment_date" placeholder="Visa Payment Update Date" autocomplete="off">
+                                 </div>
                               </div>
 
                               <div class="col-md-2  margin-top leads-filter-column hide">
@@ -1080,7 +1095,9 @@ init_tail();
          'passport_status': "[name='passport_status[]']",
          'minor_status': "[name='minor']",
          'session_intake': "[name='session_intake']",
-         'apostille_vendors_filter': "[name='apostille_vendors_filter[]']"
+         'apostille_vendors_filter': "[name='apostille_vendors_filter[]']",
+         'visa_vendors_filter': "[name='visa_vendors_filter[]']",
+         'visa_payment_date': "[name='visa_payment_date']"
       });
 
       applicant_table = initDataTable(
@@ -1562,7 +1579,7 @@ init_tail();
          dataType: "json",
          success: function(res) {
             hide_loader();
-            console.log(res);
+            // console.log(res);
 
             if (res.resp_code === "RCS") {
                let files = res.data;
