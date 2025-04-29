@@ -1306,6 +1306,7 @@ class Clients extends AdminController
                             "courier_type" => !empty($visa_courier_type) ? $visa_courier_type : '',
                             "payment_date" => $visa_payment_date,
                             "status" => 1,
+                            " bulk" => 1,
                             "created_at" => date('Y-m-d H:i:s'),
                             "created_by" => get_staff_user_id(),
                             "received_status" => !empty($receiving_date) ? 1 : 0,

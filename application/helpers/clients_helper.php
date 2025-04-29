@@ -2273,7 +2273,8 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
         // Step 1: Fetch existing combinations from DB
         $CI->db->select("r.id,r.userid, r.vendor_id")
             ->from(db_prefix() . 'visa_details r')
-            ->where_in('r.userid', $client_ids);
+            ->where_in('r.userid', $client_ids)
+            ->where('r.bulk', 1);
 
         if (!empty($vendor_id)) {
             $CI->db->where_in('r.vendor_id', $vendor_id);
