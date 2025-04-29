@@ -21,8 +21,12 @@ $aColumns = [
     db_prefix() . 'leads_status .name as status_name',
     db_prefix() . 'leads_sources .name as source_name',
     db_prefix() . 'leads.website as website',
-    "Date(" . db_prefix() . 'visitor_request.created_at) as created_at',
-    "Date(" . db_prefix() . 'visitor_request.updated_at) as updated_at',
+    "Date(" . db_prefix() . 'leads.dateadded) as created_at',
+    // "Date(last_note.date_contacted) as updated_at",
+    "GREATEST(
+    IFNULL(DATE(last_note.dateadded), ''),
+    IFNULL(DATE(" . db_prefix() . "leads.lastupdate_date), '')
+) AS updated_at",
     "Date(" . db_prefix() . 'leads.lastconnect_date) as lastcontact_date',
     db_prefix() . 'visitor_request.lead_id as lead_id',
     db_prefix() . 'visitor_request.status as status_id',
@@ -49,6 +53,17 @@ array_push($join, 'JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'l
 array_push($join, 'LEFT JOIN ' . db_prefix() . 'visitor_status ON ' . db_prefix() . 'visitor_status.id = ' . db_prefix() . 'visitor_request.status');
 array_push($join, 'LEFT JOIN ' . db_prefix() . 'cities_ ON ' . db_prefix() . 'cities_.id = ' . db_prefix() . 'visitor_request.location');
 array_push($join, 'LEFT JOIN ' . db_prefix() . 'visitor_type ON ' . db_prefix() . 'visitor_type.id = ' . db_prefix() . 'visitor_request.visitor_type');
+array_push($join, '
+    LEFT JOIN (
+        SELECT *
+        FROM ' . db_prefix() . 'notes n1
+        WHERE n1.id = (
+            SELECT MAX(n2.id)
+            FROM ' . db_prefix() . 'notes n2
+            WHERE n2.rel_id = n1.rel_id AND n2.rel_type = "lead"
+        )
+    ) AS last_note ON last_note.rel_id = ' . db_prefix() . 'leads.id
+');
 
 
 
@@ -161,7 +176,7 @@ if ($this->ci->input->post('category') != "") {
 
     if ($category < 1) {
         // Past records only (before today)
-        $where[] = "AND $sTable.date_of_visit < '$currentDate 00:00:00'";
+        $where[] = "AND $sTable.date_of_visit < '$currentDateTime'";
     } elseif ($category > 1) {
         // Future records including today (considering current date and time)
         $where[] = "AND $sTable.date_of_visit >= '$currentDateTime'";

@@ -3152,14 +3152,59 @@ class Leads_model extends App_Model
 
     public function tblma_applicant_tracker($ids = [])
     {
+        // $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
+        // $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
+        // if (!empty($ids)) { // Check if the $ids variable is not empty.
+        //     $this->db->where_in('id', $ids); // Add a condition to match multiple 'id' values in the $ids array.
+        // }
+        // // $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
+        // if (!empty($ids)) {
+        //     $this->db->order_by('FIELD(id, ' . implode(',', $ids) . ')');
+        // } else {
+        //     $this->db->order_by('sequence', 'ASC');
+        // }
+        // $column = $this->db->get(db_prefix() . 'ma_applicant_tracker')->result_array();
+        // // Execute the query on the table prefixed with 'performance_columns' and get the results as an array.
+        // return $column; // Return the resulting array.
+
+        // 1. Separate normal column ids and additional column ids first
+        $normal_ids = [];
+        $additional_ids = [];
+
+        $normal_ids = [];
+        $additional_ids = [];
+        
+        if (!empty($ids)) {
+            // First fetch columns field
+            $this->db->select('id, columns');
+            $this->db->where_in('id', $ids);
+            $column_data = $this->db->get(db_prefix() . 'ma_applicant_tracker')->result_array();
+        
+            foreach ($column_data as $col) {
+                if ($col['columns'] == '') {
+                    $normal_ids[] = $col['id']; // Normal column
+                } else {
+                    if (!empty($col['columns'])) {
+                        $additional_ids = array_merge($additional_ids, explode(",", $col['columns'])); // Merge directly
+                    }
+                }
+            }
+        }
+        
+        // Now merge normal + additional ids
+        $columns_ids = array_unique(array_merge($normal_ids, $additional_ids)); // Unique to avoid duplicates
+        
+
+        
+
         $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
         $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
         if (!empty($ids)) { // Check if the $ids variable is not empty.
-            $this->db->where_in('id', $ids); // Add a condition to match multiple 'id' values in the $ids array.
+            $this->db->where_in('id', $columns_ids); // Add a condition to match multiple 'id' values in the $columns_ids array.
         }
         // $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
-        if (!empty($ids)) {
-            $this->db->order_by('FIELD(id, ' . implode(',', $ids) . ')');
+        if (!empty($columns_ids)) {
+            $this->db->order_by('FIELD(id, ' . implode(',', $columns_ids) . ')');
         } else {
             $this->db->order_by('sequence', 'ASC');
         }

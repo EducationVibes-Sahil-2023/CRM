@@ -450,3 +450,18 @@ function strip_html_tags($str, $allowed = '')
 
     return $str;
 }
+
+
+function sanitizeFileName($string) {
+    // Remove special characters except letters, numbers, and spaces
+    $string = preg_replace('/[^A-Za-z0-9 ]/', '', $string);
+    
+    // Replace one or more spaces with a single hyphen
+    $string = preg_replace('/\s+/', '-', $string);
+
+    // Convert to lowercase (optional)
+    $string = strtolower($string);
+
+    return $string;
+}
+

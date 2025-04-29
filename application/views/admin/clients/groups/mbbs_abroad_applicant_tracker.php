@@ -13,6 +13,10 @@ $documents_type =  get_documents($lead_type_status, !empty($admissionpreferences
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
+$visa_details =  visa_details($client_id);
+$visa_vendors = get_vendor_list(2);
+$courier_type = get_courier_list();
+$payment_mode = get_payment_mode();
 
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
@@ -397,6 +401,7 @@ if (in_array(get_staff_user_id(), $staff_id)) {
     }
 
     .application_div div.university_div_application,
+    .visa_div_application,
     .entrance_exam_university_div,
     .legalization-item,
     .feesDeposite-item,
@@ -675,6 +680,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <?php
                         if ($track["show_div_name"] == "university_div") { ?>
                             <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+
+                        <?php } ?>
+                        <?php
+                        if ($track["show_div_name"] == "visa_div") { ?>
+                            <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_visa_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
 
                         <?php } ?>
                     </h2>
@@ -1211,6 +1221,214 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <?php endif; ?>
                             </div>
                         </form>
+                    <?php } else if ($track["show_div_name"] == "3_payment") {
+                    ?>
+                        <form id="3-payment-form" class="form-disabled" onsubmit="return false;">
+
+                            <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" class="form-check-input" required name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
+                        </form>
+                    <?php
+
+                    } else if ($track["show_div_name"] == "visa_div") { ?>
+                        <form id="visa-form" class="form-disabled" onsubmit="return false;">
+
+                            <div class="visa_div">
+
+                                <div id="visa-details" class="visa-details row">
+                                    <?php if (!empty($visa_details)) {
+                                        foreach ($visa_details as $key => $visa) {
+                                            $visa_id = $visa["id"];
+                                            $file_url = !empty($visa["file"]) ? $visa["file"] : '';
+
+                                    ?>
+                                            <div class="col-md-12 visa_div_application">
+                                                <?php if ($key > 0) { ?>
+                                                    <div class="text-right">
+                                                        <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
+                                                    </div>
+                                                <?php } ?>
+                                                <?php echo render_input('id', '', $visa["id"], 'hidden'); ?>
+
+                                                <div class="d-flex">
+                                                    <div class="col-md-4">
+                                                        <label>Visa Vendor <small class='text-danger'>*</small></label>
+                                                        <?php
+                                                        array_unshift($visa_vendors, array());
+                                                        echo render_select('visa_vendor_' . $visa_id, $visa_vendors, ['id', 'name'], '', [$visa["vendor_id"]], [
+                                                            'data-width' => '100%',
+                                                            'data-none-selected-text' => 'Vendor',
+                                                            'data-actions-box' => true,
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required',
+                                                        ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Courier Date <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_date_' . $visa_id, '', $visa["courier_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Courier Type <small class='text-danger'>*</small></label>
+                                                        <?php
+                                                        array_unshift($courier_type, array());
+                                                        echo render_select('visa_courier_type_' . $visa_id, $courier_type, ['id', 'name'], '', [$visa["courier_type"]], [
+                                                            'data-width' => '100%',
+                                                            'data-none-selected-text' => 'Courier Type',
+                                                            'data-actions-box' => true,
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required',
+                                                        ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex visa-payment-details">
+                                                    <div class="col-md-4">
+                                                        <label>Payment Date <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_payment_date_' . $visa_id, '',  $visa["payment_date"], 'date', [
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required'
+                                                        ]); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Cost <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_cost_' . $visa_id, '',  !empty($visa["cost"]) ? $visa["cost"] : '', 'number', [
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required'
+                                                        ]); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Payment Mode <small class='text-danger'>*</small></label>
+                                                        <?php
+                                                        array_unshift($payment_mode, array());
+                                                        echo render_select('visa_payment_mode_' . $visa_id, $payment_mode, ['id', 'name'], '', [$visa["payment_mode"]], [
+                                                            'data-width' => '100%',
+                                                            'data-none-selected-text' => 'Payment Mode',
+                                                            'data-actions-box' => true,
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required',
+                                                        ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex visa-receving-details">
+                                                    <div class="col-md-4">
+                                                        <label>Visa Received <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_receiving_date_' . $visa_id, '',  $visa["receiving_date"], 'date', [
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required'
+                                                        ]); ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Visa Document <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url]); ?>
+                                                        <?php
+                                                        if (!empty($file_url)) { ?>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                            </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label>Visa Entry Date <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_entry_date_' . $visa_id, '',  $visa["entry_date"], 'date', [
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required'
+                                                        ]); ?>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        <?php }
+                                    } else { ?>
+                                        <div class="col-md-12 visa_div_application">
+                                            <div class="d-flex">
+                                                <div class="col-md-4">
+                                                    <label>Visa Vendor <small class='text-danger'>*</small></label>
+                                                    <?php
+                                                    array_unshift($visa_vendors, array());
+                                                    echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
+                                                        'data-width' => '100%',
+                                                        'data-none-selected-text' => 'Vendor',
+                                                        'data-actions-box' => true,
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required',
+                                                    ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Courier Date <small class='text-danger'>*</small></label>
+                                                    <?php echo render_input('visa_date', '', '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Courier Type <small class='text-danger'>*</small></label>
+                                                    <?php
+                                                    array_unshift($courier_type, array());
+                                                    echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [], [
+                                                        'data-width' => '100%',
+                                                        'data-none-selected-text' => 'Courier Type',
+                                                        'data-actions-box' => true,
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required',
+                                                    ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex visa-payment-details">
+                                                <div class="col-md-4">
+                                                    <label>Payment Date <small class='text-danger'>*</small></label>
+                                                    <?php echo render_input('visa_payment_date', '', '', 'date', [
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required'
+                                                    ]); ?>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Cost <small class='text-danger'>*</small></label>
+                                                    <?php echo render_input('visa_cost', '', '', 'number', [
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required'
+                                                    ]); ?>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Payment Mode <small class='text-danger'>*</small></label>
+                                                    <?php
+                                                    array_unshift($payment_mode, array());
+                                                    echo render_select('visa_payment_mode', $payment_mode, ['id', 'name'], '', [], [
+                                                        'data-width' => '100%',
+                                                        'data-none-selected-text' => 'Payment Mode',
+                                                        'data-actions-box' => true,
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required',
+                                                    ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex visa-receving-details">
+                                                <div class="col-md-4">
+                                                    <label>Visa Received <small class='text-danger'>*</small></label>
+                                                    <?php echo render_input('visa_receiving_date', '', '', 'date', [
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required'
+                                                    ]); ?>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Visa Document <small class='text-danger'>*</small></label>
+                                                    <?php echo render_input('visa_file', '', '', 'file', [
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required'
+                                                    ]); ?>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label>Visa Entry Date <small class='text-danger'>*</small></label>
+                                                    <?php echo render_input('visa_entry_date', '', '', 'date', [
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required'
+                                                    ]); ?>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    <?php } ?>
+                                </div>
+                                <div id="visa-details-add" class="visa-details-add row">
+                                </div>
+
+                            </div>
+                        </form>
                     <?php } ?>
                     <?php if ($k > 0) { ?>
                         <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
@@ -1507,6 +1725,90 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         next_fs.slideDown("slow");
     }
 
+    function set_validation_visa() {
+        return new Promise((resolve, reject) => {
+            try {
+                $(".visa_div_application").each(function() {
+                    let paymentFields = $(this).find(".visa-payment-details input, .visa-payment-details select");
+                    let receivingFields = $(this).find(".visa-receving-details input, .visa-receving-details select");
+
+                    paymentFields.removeClass("error-validation");
+                    receivingFields.removeClass("error-validation");
+
+                    let hasPaymentValue = false;
+                    let hasReceivingValue = false;
+
+                    // Check payment fields
+                    paymentFields.each(function() {
+                        if ($(this).val().trim() !== "") {
+                            hasPaymentValue = true;
+                        }
+                    });
+
+                    // Check receiving fields
+                    receivingFields.each(function() {
+                        const inputType = $(this).attr("type");
+                        const inputVal = $(this).val().trim();
+                        const dataFileValue = $(this).attr("data-file");
+
+                        if (inputType === "file") {
+                            // Check if either the file has been selected or the data-file attribute is set
+                            if ((inputVal !== "" || (dataFileValue && dataFileValue.trim() !== ""))) {
+                                hasReceivingValue = true;
+                            }
+                        } else {
+                            // For non-file inputs, just check if the input has a value
+                            if (inputVal !== "") {
+                                hasReceivingValue = true;
+                            }
+                        }
+                    });
+
+                    // Apply required attributes based on whether any value exists
+
+                    if (hasPaymentValue) {
+                        paymentFields.each(function() {
+                            $(this).attr("required", true).attr("required-check", true);
+                        });
+                    } else {
+                        paymentFields.each(function() {
+                            $(this).removeAttr("required").removeAttr("required-check");
+                        });
+                    }
+
+                    if (hasReceivingValue) {
+                        receivingFields.each(function() {
+                            const inputType = $(this).attr("type");
+                            const dataFileValue = $(this).attr("data-file");
+
+                            if (inputType === "file") {
+                                // Check if file has been selected or data-file attribute exists
+                                if (dataFileValue && dataFileValue.trim() !== "") {
+                                    $(this).removeAttr("required").removeAttr("required-check");
+                                } else {
+                                    $(this).attr("required", true).attr("required-check", true);
+                                }
+                            } else {
+                                // For non-file inputs, just mark them as required if they have a value
+                                $(this).attr("required", true).attr("required-check", true);
+                            }
+                        });
+                    } else {
+                        receivingFields.each(function() {
+                            $(this).removeAttr("required").removeAttr("required-check");
+                        });
+                    }
+                });
+
+                console.log("✅ Visa validation rules applied successfully.");
+                resolve("Validation rules applied successfully.");
+            } catch (error) {
+                console.error("❌ Error applying visa validation rules:", error);
+                reject("Error applying validation rules: " + error.message);
+            }
+        });
+    }
+
 
     function show_next_stage(index = 5) {
         let current_fs = $("fieldset:visible"); // Get the currently visible fieldset
@@ -1573,6 +1875,20 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 if (!check_validation) return false;
                 await check_invitation_letter(upload_data);
             }
+            if (id == 8) {
+                let check_validation = await check_required_fields("3-payment-form");
+                if (!check_validation) return false;
+                upload_data.append("3_payment", 1);
+            }
+            if (id == 9) {
+                // await set_validation_visa();
+                let check_validation = await check_required_fields("visa-form");
+                if (!check_validation) return false;
+                await check_visa_letter(upload_data);
+                // upload_data.append("university_shortlisting", JSON.stringify(university_shortlisting));
+
+
+            }
             // Perform AJAX request
             let response = await $.ajax({
                 url: "<?= base_url('admin/clients/mbbs_tracker') ?>",
@@ -1615,6 +1931,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 }
                 if (id == 6 && response.invitation != undefined) {
                     createInvitationLetter(response.invitation);
+                }
+                if (id == 8 && response.visa_details != undefined) {
+                    set_visa_section(response.visa_details);
+                }
+                if (response.visa_details != undefined) {
+                    set_visa_section(response.visa_details);
                 }
             } else {
                 alert_float("danger", response.resp_desc || "An error occurred.");
@@ -2240,9 +2562,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     }
                 }
 
+
                 if (isRequired && name) {
                     additional_fields[name] = "required";
-
+                    console.log(additional_fields);
                     if ($.trim(value) === "") {
                         form_status = false;
                         $(this).addClass("error"); // Highlight invalid fields
@@ -2251,7 +2574,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     }
                 }
             });
-            console.log(additional_fields);
+
             if (!form_status) {
                 appValidateForm($("#" + id), additional_fields);
                 $("#" + id).submit()
@@ -2410,6 +2733,179 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         });
     }
 
+    const visa_vendors = <?= json_encode($visa_vendors, true) ?>;
+    const courier_type = <?= json_encode($courier_type, true) ?>;
+    const payment_mode = <?= json_encode($payment_mode, true) ?>;
+
+    function set_visa_section(visa_data = [], create = 0) {
+        let container = document.getElementById('visa-details');
+        if (create === 0) {
+            container.innerHTML = ''; // Clear existing content
+        }
+
+        const createSelect = (name, options, required = false, selectedValue = '', visa_id = '') => {
+            // Ensure visa_id is defined as an empty string if not provided
+            visa_id = visa_id ?? '';
+            let selectName = (visa_id !== '') ? name + "_" + visa_id : name;
+            let html = `<select id="${selectName}" name="${selectName}" class="form-control selectpicker" id="" data-live-search="true" data-width="100%" ${required ? 'required-check="true" required="true"' : ''}>`;
+            html += `<option value=""></option>`;
+            options.forEach(opt => {
+                if (opt && opt.id !== undefined) {
+                    let selected = (opt.id == selectedValue) ? 'selected' : '';
+                    html += `<option value="${opt.id}" ${selected}>${opt.name}</option>`;
+                }
+            });
+            html += `</select>`;
+            return html;
+        };
+
+        const renderVisaBlock = (visa = {}, index = 1) => {
+            let media_view = '';
+            let requried = 'required-check="true" required="true"';
+            let visa_id = visa.id ?? Math.floor(Math.random() * (999 - 0 + 1)) + 0; // Default to empty string if visa.id is undefined or null
+            console.log(visa_id);
+            let random = Math.floor(Math.random() * (999 - 0 + 1)) + 0;
+            if (visa.file && visa.file !== "") {
+                media_view = `
+                <div class='margin-top'>
+                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${visa.file}');"></i>&nbsp;
+                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${visa.file}', '_blank');"></i>
+                </div>`;
+            }
+            let delete_ = ``;
+            if (index > 0) {
+                delete_ = `<div class="text-right">
+        <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,${visa.id ?? 0})"></i>
+        </div>`;
+            }
+            return `
+        <div class="col-md-12 visa_div_application">
+        ${delete_}
+            <input type='hidden' name='id' value='${visa.id ?? ''}'>
+            <div class="d-flex">
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Visa Vendor <small class='text-danger'>*</small></label>
+                    ${createSelect('visa_vendor', visa_vendors, true, visa.vendor_id ?? '', visa_id)}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Courier Date <small class='text-danger'>*</small></label>
+                    <input type="date" id="visa_date_${visa_id}" name="visa_date_${visa_id}" value="${visa.courier_date ?? ''}" class="form-control" required />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Courier Type <small class='text-danger'>*</small></label>
+                    ${createSelect('visa_courier_type', courier_type, true, visa.courier_type ?? '', visa_id)}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex visa-payment-details">
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Payment Date</label>
+                    <input type="date" id="visa_payment_date_${visa_id}" name="visa_payment_date_${visa_id}" value="${visa.payment_date ?? ''}" class="form-control"  ${requried}/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Cost</label>
+                    <input type="number" id="visa_cost_${visa_id}" name="visa_cost_${visa_id}" value="${visa.cost ?? ''}" class="form-control"  ${requried}/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Payment Mode</label>
+                    ${createSelect('visa_payment_mode', payment_mode, false, visa.payment_mode ?? '', visa_id)}
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex visa-receving-details">
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Visa Received</label>
+                    <input type="date" id="visa_receiving_date_${visa_id}" name="visa_receiving_date_${visa_id}" value="${visa.receiving_date ?? ''}" class="form-control"  ${requried}/>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Visa Document</label>
+                    <input type="file" data-file="${visa.file ?? '' }" id="visa_file_${visa_id}" name="visa_file_${visa_id}" class="form-control" ${!media_view ? 'required' : ''} />
+                    ${media_view}
+                    </div>
+                </div>
+                <div class="col-md-4">
+                <div class="form-group">
+                    <label>Visa Entry Date</label>
+                    <input type="date" id="visa_entry_date_${visa_id}" name="visa_entry_date_${visa_id}" value="${visa.entry_date ?? ''}" class="form-control" ${requried}/>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        };
+
+        // Render blocks based on visa_data
+        if (visa_data.length > 0) {
+            let index = 0;
+            visa_data.forEach((visa) => {
+                container.insertAdjacentHTML('beforeend', renderVisaBlock(visa, index));
+                index++;
+                $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
+            });
+        } else {
+            container.insertAdjacentHTML('beforeend', renderVisaBlock());
+            $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
+        }
+    }
+
+
+
+    function check_visa_letter(upload_data) {
+        return new Promise((resolve, reject) => {
+            try {
+                let invitation = [];
+
+                $(".visa_div .visa_div_application").each(function(index) {
+                    let container = $(this);
+                    let entry = {};
+                    let id = container.find("input[name='id']").val() || "";
+
+                    // if (!id.trim()) return;
+
+                    // Automatically collect all input/select values
+                    container.find("input[name], select[name]").each(function() {
+                        let name = $(this).attr("name");
+                        name = name.replace(/_\d+$/, '');
+                        let value = $(this).val();
+
+                        // Handle file input separately
+                        if ($(this).attr("type") === "file") {
+                            let fileInput = this;
+                            if (fileInput.files.length > 0) {
+                                upload_data.append(name + "_" + index, fileInput.files[0]);
+                            }
+                        } else {
+                            entry[name] = value;
+                        }
+                    });
+
+                    invitation.push(entry);
+                });
+
+                if (invitation.length > 0) {
+                    upload_data.append("visa", JSON.stringify(invitation));
+                }
+
+                resolve(upload_data);
+            } catch (err) {
+                reject("Error collecting visa letter data: " + err.message);
+            }
+        });
+    }
 
 
     async function email_send(client_id, type, s_university_id = "", s_university_name = "") {
@@ -2501,5 +2997,53 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         } finally {
             hide_loader();
         }
+    }
+
+    async function add_visa_div() {
+        let check_validation = await check_required_fields("visa-form");
+        if (!check_validation) return false;
+        set_visa_section([], 1);
+    }
+
+    async function remove_visa_div(obj, id) {
+
+        if (id == "" || id == 0) {
+            $(obj).parents("div.visa_div_application").remove();
+            return false;
+        }
+
+        let upload_data = new FormData();
+        try {
+
+            upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+            upload_data.append("client_id", <?= $client_id ?>);
+            upload_data.append("visa_id", id);
+
+
+            let response = await $.ajax({
+                url: "<?= base_url("admin/clients/remove_visa_details") ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false
+            });
+            response = JSON.parse(response);
+            if (response.resp_code === "RCS") {
+                alert_float("success", response.resp_desc);
+                $(obj).parents("div.visa_div_application").remove();
+
+            } else {
+                if (response.resp_code !== undefined) {
+                    alert_float("danger", response.resp_desc);
+                } else {
+                    alert_float("danger", response);
+                }
+            }
+        } catch (error) {
+            // Handle the error response from the server
+            console.error(error);
+            reject(error);
+        }
+
     }
 </script>

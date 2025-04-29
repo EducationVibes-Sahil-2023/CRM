@@ -1352,7 +1352,7 @@ function get_currencies()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
-function get_documents($lead_type, $selected_country = [], $show_all = 0, $stage = "")
+function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $stage = "")
 {
     $CI = &get_instance();
 
@@ -1646,7 +1646,7 @@ function activity_orignal_document($id)
     return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }
 
-function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id = "")
+function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id = "", $visa_rest = 0, $visa_georgia = 0)
 {
     $CI = &get_instance();
     $CI->db->select("*")
@@ -1656,6 +1656,12 @@ function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id =
     }
     if (!empty($georgia)) {
         $CI->db->where("georgia", 1);
+    }
+    if (!empty($visa_rest)) {
+        $CI->db->where("visa_rest", 1);
+    }
+    if (!empty($visa_georgia)) {
+        $CI->db->where("visa_georgia", 1);
     }
     if (!empty($apostile)) {
         $CI->db->where("apostile_status", 1);
@@ -1934,11 +1940,38 @@ function get_vendor_list($vendor_type = "")
         ->where('status', 1);
 
     if (!empty($vendor_type)) {
-        $CI->db->where_in("vendor_type", $vendor_type);
+        $CI->db->where("FIND_IN_SET('$vendor_type',vendor_type) >", 0);
     }
 
     return  $CI->db->get()->result_array(); // Execute and return result
 }
+
+function get_courier_list()
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'courier_type')
+        ->where('status', 1);
+
+
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+}
+
+function get_payment_mode()
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'payment_mode')
+        ->where('status', 1);
+
+
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+}
+
 
 function get_apostille_document_data($client_id)
 {
@@ -1978,4 +2011,257 @@ function get_approval_documents($userid)
     $CI = &get_instance();
     $approval_documents = $CI->db->select("data as url")->where(array("document_status" => 1, "client_id" => $userid))->get(db_prefix() . "client_documents")->row();
     print_r($approval_documents);
+}
+
+function visa_details($client_id)
+{
+    $CI = &get_instance();
+    $CI->db->where('userid', $client_id);
+    $CI->db->order_by('id', "asc");
+    return $CI->db->get(db_prefix() . 'visa_details')->result_array();
+}
+
+function validate_orignal_documents($client_ids)
+{
+    $CI = &get_instance();
+    // Step 1: Fetch valid documents (active + apostille enabled)
+    $CI->db->select("o.id AS doc_id, o.name AS doc_name")
+        ->from(db_prefix() . 'orignal_documents o')
+        ->where(['o.status' => 1, 'o.visa' => 1]);
+
+    if (!empty($document_ids)) {
+        $CI->db->where_in('o.id', $document_ids);
+    }
+
+    $all_documents = $CI->db->get()->result_array();
+    $valid_doc_ids = array_column($all_documents, 'doc_id');
+
+
+    // Step 3: Get received original documents
+    $CI->db->select("r.userid, r.doc_id")
+        ->from(db_prefix() . 'orignal_documents_received r')
+        ->where_in('r.userid', $client_ids)
+        ->where_in('r.doc_id', $valid_doc_ids);
+    $received_docs = $CI->db->get()->result_array();
+
+    // Step 4: Build received docs map
+    $received_map = [];
+    foreach ($received_docs as $row) {
+        $received_map[$row['userid']][] = $row['doc_id'];
+    }
+    // Step 5: Get basic client info
+    $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName")
+        ->from(db_prefix() . 'basic_details b')
+        ->where_in('b.userid', $client_ids);
+    $clients = $CI->db->get()->result_array();
+
+    $errors = [];
+    foreach ($clients as $client) {
+        $user_id = $client['userid'];
+        $client_name = $client['clientName'];
+        $received = isset($received_map[$user_id]) ? $received_map[$user_id] : [];
+
+        foreach ($all_documents as $doc) {
+            if (!in_array($doc['doc_id'], $received)) {
+                $errors[] = "User '{$client_name}' has not received original document '{$doc['doc_name']}'.";
+
+                return [
+                    "error" => true,
+                    "message" => $errors, // Return first error message (optional: return all as list)
+                ];
+            }
+        }
+    }
+
+    // If any errors found, return the first one
+    if (!empty($errors)) {
+        return [
+            "error" => true,
+            "message" => $errors[0], // Return first error message (optional: return all as list)
+        ];
+    }
+
+    return [
+        "error" => false,
+        "message" => "Validation passed."
+    ];
+}
+
+function get_orignal_document_data_list_visa($client_ids_array = [], $check_status = 0, $vendor_id = "")
+{
+    $CI = &get_instance();
+
+    // Validate input
+    if ($check_status == 0 || empty($client_ids_array)) {
+        return [
+            "error" => true,
+            "message" => "Something went wrong. Required data missing or status check not enabled."
+        ];
+    }
+
+    $client_ids = array_map('intval', $client_ids_array); // Safe casting to integer
+
+    $resultOrignal = validate_orignal_documents($client_ids);
+    if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
+        $data = [
+            'error'               => true,
+            'message'               =>  $resultOrignal["message"][0],
+        ];
+
+        // set_alert('danger',  $message);
+        return $data;
+    }
+
+
+
+
+
+    $CI->db->select(db_prefix() . 'admission_preferences.userid, tblclient_university_shortlisting.invitation_letter');
+    $CI->db->from(db_prefix() . 'admission_preferences');
+    $CI->db->join(
+        db_prefix() . 'client_university_shortlisting',
+        db_prefix() . 'admission_preferences.userid = tblclient_university_shortlisting.client_id AND tbladmission_preferences.primary_university = tblclient_university_shortlisting.university_name',
+        "LEFT"
+    );
+    $CI->db->where_in(db_prefix() . 'admission_preferences.userid', $client_ids_array);
+    $CI->db->group_start();
+    $CI->db->where(db_prefix() . 'client_university_shortlisting.invitation_letter', '');
+    $CI->db->or_where(db_prefix() . 'client_university_shortlisting.invitation_letter IS NULL', NULL, FALSE);
+    $CI->db->group_end();
+
+    $query = $CI->db->get();
+    $invitation_result = $query->result_array();
+
+    if (!empty($invitation_result)) {
+        foreach ($invitation_result as $letter) {
+            if (empty($letter['invitation_letter'])) {
+                $client_name = get_client_name($letter["userid"]);
+                $errors[] = "User '{$client_name}' has not received Invitation Letter.";
+
+                return [
+                    "error" => true,
+                    "message" => $errors, // Return first error message (optional: return all as list)
+                ];
+                die;
+            }
+        }
+    }
+
+    $stage = 9;
+    $lead_type = 2;
+    foreach ($client_ids as $userid) {
+        $university_shortlisting = $CI->clients_model->university_shortlisting($userid, 1);
+
+        if (!is_array($university_shortlisting)) {
+            $university_shortlisting = [];
+        }
+        // Extract country names
+        $country_names = array_column($university_shortlisting, "country_name");
+
+        // Fetch document types based on lead type and country names
+        $documents_type = get_documents($lead_type, $country_names, "", $stage);
+
+        // Map document types by ID
+        $documents_type_ids = !empty($documents_type) ? array_column($documents_type, null, "id") : [];
+
+        // Fetch client documents
+        $applicant_documents = get_clients_documents($userid);
+        $client_documents = (!empty($applicant_documents[0]["data"])) ? json_decode($applicant_documents[0]["data"], true) : [];
+
+        // Map client documents by ID
+        $client_documents_ids = !empty($client_documents) ? array_column($client_documents, null, "id") : [];
+
+        // Initialize required documents array
+        $doc_required = [];
+
+        // Compare required documents with client documents
+        if (!empty($documents_type_ids)) {
+            foreach ($documents_type_ids as $key => $doc) {
+                if (!isset($client_documents_ids[$key]) || empty($client_documents_ids[$key]['approval_status']) || $client_documents_ids[$key]['approval_status'] != 1) {
+                    $doc_required[] = $doc["name"];
+                }
+            }
+            if (!empty($doc_required)) {
+                $client_name = get_client_name($userid);
+                $doc_names = implode(", ", $doc_required);
+                return [
+                    "error" => true,
+                    "message" => "{$client_name} - {$doc_names} are mandatory to proceed to the next step."
+
+                ];
+                die;
+            }
+        }
+
+        // return $doc_required; // Return the missing document names
+    }
+
+
+
+    if ($check_status == 1) {
+        $CI->db->select("v.userid")
+            ->from(db_prefix() . 'visa_details v')
+            ->where_in('v.userid', $client_ids);
+
+        $check_Visa_data = $CI->db->get()->result_array();
+
+        if (!empty($check_Visa_data)) {
+            $user_id = $check_Visa_data[0]["userid"];
+
+            $client_name = get_client_name($user_id);
+
+            return [
+                "error" => true,
+                "message" => "User '{$client_name}' has already visa Apply."
+            ];
+        }
+    } else if ($check_status == 2) {
+        // Step 1: Fetch existing combinations from DB
+        $CI->db->select("r.id,r.userid, r.vendor_id")
+            ->from(db_prefix() . 'visa_details r')
+            ->where_in('r.userid', $client_ids);
+
+        if (!empty($vendor_id)) {
+            $CI->db->where_in('r.vendor_id', $vendor_id);
+        }
+
+        $existing_combinations = $CI->db->get()->result_array();
+
+        // Step 2: Build a set of existing keys for fast lookup
+        $existing_map = [];
+        foreach ($existing_combinations as $row) {
+            $existing_map[$row['userid'] . '_' . $row['vendor_id']] = true;
+        }
+
+
+
+        // Step 3: Loop through input combinations to validate
+        foreach ($client_ids as $userid) {
+            $key = $userid . '_' . $vendor_id;
+            if (!isset($existing_map[$key])) {
+                $client_name = get_client_name($userid);
+
+                return [
+                    "error" => true,
+                    "message" => "No visa apply record found for client '{$client_name}'."
+                ];
+
+                die;
+            }
+        }
+
+        return $existing_combinations;
+    }
+    // If any errors found, return the first one
+    if (!empty($errors)) {
+        return [
+            "error" => true,
+            "message" => $errors[0], // Return first error message (optional: return all as list)
+        ];
+    }
+
+    return [
+        "error" => false,
+        "message" => "Validation passed."
+    ];
 }
