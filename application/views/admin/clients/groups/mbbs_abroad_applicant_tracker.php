@@ -1242,7 +1242,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                     ?>
                                             <div class="col-md-12 visa_div_application">
-                                                <?php if ($key > 0) { ?>
+                                                <?php if ($key > 0 || ($key > 0 && is_admin())) { ?>
                                                     <div class="text-right">
                                                         <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
                                                     </div>
@@ -1832,13 +1832,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     }
 
     async function next_step(id, obj, skip = 0) {
-        id = $.trim(id);
+        id = $.trim(id) || $("#progressbar .active").data("id");
+
         let upload_data = new FormData();
+        show_loader();
 
         try {
-            // Ensure ID is retrieved from the progress bar if not provided
-            id = $("#progressbar .active").data("id");
-
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
             upload_data.append("tracker_id", id);
@@ -1847,13 +1846,19 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
             if (id == 2) {
                 let result = await university_shortlisting_dropdown();
-                if (!result) return false;
-                await check_university_shortlisting(upload_data);
+                if (!result) {
+                    hide_loader();
+                    return false;
+                }
+                await university_shortlisting(upload_data);
             }
 
             if (id == 3) {
                 let check_validation = await check_required_fields("application-form");
-                if (!check_validation) return false;
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
                 await check_university_admission(upload_data);
             }
 
@@ -1863,35 +1868,51 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
             if (id == 5) {
                 let check_validation = await check_required_fields("legalization-form");
-                if (!check_validation) return false;
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
                 await check_legalization(upload_data);
             }
 
             if (id == 6 && skip == 0) {
                 let check_validation = await check_required_fields("fees-deposite-form");
-                if (!check_validation) return false;
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
                 await check_fees_deposite(upload_data);
             }
+
             if (id == 7) {
                 let check_validation = await check_required_fields("invitation-form");
-                if (!check_validation) return false;
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
                 await check_invitation_letter(upload_data);
             }
+
             if (id == 8) {
                 let check_validation = await check_required_fields("3-payment-form");
-                if (!check_validation) return false;
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
                 upload_data.append("3_payment", 1);
             }
+
             if (id == 9) {
                 await set_validation_visa();
                 let check_validation = await check_required_fields("visa-form");
-                if (!check_validation) return false;
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
                 await check_visa_letter(upload_data);
-                // upload_data.append("university_shortlisting", JSON.stringify(university_shortlisting));
-
-
             }
-            // Perform AJAX request
+
+            // AJAX request
             let response = await $.ajax({
                 url: "<?= base_url('admin/clients/mbbs_tracker') ?>",
                 method: "POST",
@@ -1908,49 +1929,48 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 return false;
             }
 
+            hide_loader();
+
             if (response.resp_code === "RCS") {
                 alert_float("success", response.resp_desc);
 
-
-
-                if (response.pass_stage != undefined) {
+                if (response.pass_stage !== undefined) {
                     show_next_stage(response.pass_stage);
                 } else {
                     show_next_previous(obj);
                 }
+
                 if (id == 2) {
                     set_application(response);
                 }
-                if (id == 3 && response.entrance_exams != undefined) {
+                if (id == 3 && response.entrance_exams !== undefined) {
                     createEntranceExamList(response.entrance_exams);
                 }
-                if (id == 4 && response.legalization != undefined) {
-
+                if (id == 4 && response.legalization !== undefined) {
                     createLegalization(response.legalization);
                 }
-                if (id == 5 && response.fees_deposite != undefined) {
+                if (id == 5 && response.fees_deposite !== undefined) {
                     createFeesDeposite(response.fees_deposite);
                 }
-                if (id == 6 && response.invitation != undefined) {
+                if (id == 6 && response.invitation !== undefined) {
                     createInvitationLetter(response.invitation);
                 }
-                if (id == 8 && response.visa_details != undefined) {
-                    set_visa_section(response.visa_details);
-                }
-                if (response.visa_details != undefined) {
+                if (response.visa_details !== undefined) {
                     set_visa_section(response.visa_details);
                 }
             } else {
-                if (response.visa_details != undefined) {
+                if (response.visa_details !== undefined) {
                     set_visa_section(response.visa_details);
                 }
                 alert_float("danger", response.resp_desc || "An error occurred.");
             }
         } catch (error) {
+            hide_loader();
             console.error("Error in next_step:", error);
-            // alert_float("danger", "An unexpected error occurred.");
+            alert_float("danger", "An unexpected error occurred.");
         }
     }
+
 
     $(".previous").click(function() {
         current_fs = $(this).parent();
@@ -2778,7 +2798,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 </div>`;
             }
             let delete_ = ``;
-            if (index > 0) {
+            if ((index > 0 && visa.id != "") || (index > 0 && <?= is_admin() ?> == 1)) {
                 delete_ = `<div class="text-right">
         <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,${visa.id ?? 0})"></i>
         </div>`;

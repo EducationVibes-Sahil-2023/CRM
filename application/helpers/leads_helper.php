@@ -7691,7 +7691,7 @@ function calculate_call_duration_new($params = false, $max_status = 0)
         $sql .= " AND l.website IN (" . implode(',', $escaped_websites) . ")";
     }
 
-   
+
 
     if (!empty($params['lead_type'])) {
         $check_today = false;
@@ -8196,7 +8196,7 @@ function get_leads_summary_filter_neww($params)
 function get_university_list($lead_type)
 {
     $CI = &get_instance();
-    return $CI->s_db->query("SELECT co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type'")->result_array();
+    return $CI->s_db->query("SELECT c.id country_id,co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type'")->result_array();
 }
 
 function get_country_list($segment_id)
@@ -8226,6 +8226,53 @@ function get_client_list($university_name)
 
     return $CI->db->query($sql, ["%$university_name%"])->result_array();
 }
+
+function get_client_list_fly_batch($university_names = [])
+{
+    $CI = &get_instance();
+
+    if (empty($university_names)) {
+        return [];
+    }
+
+    // Clean and prepare university names
+    $university_names = array_unique(array_filter($university_names));
+    $escaped_universities = array_map(function ($name) use ($CI) {
+        return $CI->db->escape($name);
+    }, $university_names);
+
+    $university_list = implode(',', $escaped_universities);
+
+    $sql = "
+    SELECT c.userid, CONCAT(b.first_name, ' ', b.last_name) AS full_name
+    FROM " . db_prefix() . "clients c
+    LEFT JOIN " . db_prefix() . "admission_preferences a ON c.userid = a.userid
+    LEFT JOIN (
+        SELECT t1.*
+        FROM " . db_prefix() . "ticket_data t1
+        INNER JOIN (
+            SELECT client_id, MAX(id) AS max_id
+            FROM " . db_prefix() . "ticket_data
+            GROUP BY client_id
+        ) t2 ON t1.client_id = t2.client_id AND t1.id = t2.max_id
+    ) t ON t.client_id = c.userid
+    LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
+    WHERE a.course LIKE '%MBBS%'
+    AND c.active = 1
+    AND a.primary_university IN ($university_list)
+    AND (
+        t.ticket_status IS NULL
+        OR t.ticket_status != 3
+    )
+";
+
+
+    return $CI->db->query($sql)->result_array();
+}
+
+
+
+
 
 function getLast10Digits($phoneNumber)
 {
@@ -8473,10 +8520,10 @@ function get_visitor_leads_summary_filter_neww($params)
         $CI->load->model('leads_model');
         $CI->load->model('staff_model');
     }
-    
+
     $current_date_time = date('Y-m-d H:i:s');
     $current_date = date('Y-m-d');
-    
+
 
     $statuses = $CI->leads_model->get_status();
     $visitor_statuses = $CI->staff_model->visitor_status();
@@ -8558,11 +8605,11 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
 
     if (!empty($params['category'])) {
         if ($params['category'] < 0) {
-            $conditions[] = db_prefix() . 'visitor_request.date_of_visit < "'.$current_date_time.'" ';
+            $conditions[] = db_prefix() . 'visitor_request.date_of_visit < "' . $current_date_time . '" ';
         } else if ($params['category'] == 1) {
-            $conditions[] = ' Date(' . db_prefix() . 'visitor_request.date_of_visit) = "'.$current_date.'" ';
+            $conditions[] = ' Date(' . db_prefix() . 'visitor_request.date_of_visit) = "' . $current_date . '" ';
         } else if ($params['category'] == 2) {
-            $conditions[] = db_prefix() . 'visitor_request.date_of_visit > "'.$current_date_time.'" ';
+            $conditions[] = db_prefix() . 'visitor_request.date_of_visit > "' . $current_date_time . '" ';
         }
     }
 
@@ -8605,9 +8652,9 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     $select = "
     SELECT 
         CASE 
-            WHEN date_of_visit < '".$current_date_time."' THEN 0
-            WHEN DATE(date_of_visit) = '".$current_date."' THEN 1
-            WHEN date_of_visit > '".$current_date_time."' THEN 2
+            WHEN date_of_visit < '" . $current_date_time . "' THEN 0
+            WHEN DATE(date_of_visit) = '" . $current_date . "' THEN 1
+            WHEN date_of_visit > '" . $current_date_time . "' THEN 2
             ELSE 0
         END AS id,
         COUNT(1) AS total
@@ -8618,7 +8665,7 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     ORDER BY id
 ";
 
-// echo $select . $sql . $group_by;
+    // echo $select . $sql . $group_by;
 
     $result_schedule = $CI->db->query($select . $sql . $group_by)->result();
 
@@ -8674,7 +8721,7 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     if (!empty($result_schedule)) {
         $result_schedule = array_column($result_schedule, "total", "id");
     }
-    
+
 
 
     $totalSchedule = 0;
@@ -8688,4 +8735,12 @@ COUNT( ' . db_prefix() . 'visitor_request.lead_id) AS total
     $schedule[] = ["name" => "Total Leads", "color" => "#28B8DA", "isdefault" => 0, "total" => $totalSchedule];
     $response_data["schedule"] = $schedule;
     return $response_data;
+}
+
+
+function get_departure_list()
+{
+    $CI = &get_instance();
+
+    return $CI->db->query("SELECT * FROM  " . db_prefix() . "departure_location")->result_array();
 }

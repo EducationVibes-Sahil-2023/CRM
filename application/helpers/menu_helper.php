@@ -184,6 +184,16 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
+
+         if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('fly_batch', [
+                        'href'     => admin_url('fly_batch'),
+                        'name'     => "Fly Batch",
+                        'icon'     => 'fa fa-file',
+                        'position' => 199,
+                ]);
+        }
+
         if ((!is_staff_member() && get_option('access_tickets_to_none_staff_members') == 1) || is_staff_member()) {
                 $CI->app_menu->add_sidebar_menu_item('support', [
                         'name'     => _l('support'),

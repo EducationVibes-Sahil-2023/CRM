@@ -142,16 +142,16 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'neet_status ON ' . db_prefix() . 'neet_status.id=' . db_prefix() . 'academic_details.neet_status',
-    // 'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
-    'LEFT JOIN (
-    SELECT *,sum(cost) as total_cost
-    FROM ' . db_prefix() . 'visa_details vd1
-    WHERE vd1.id = (
-        SELECT MAX(vd2.id)
-        FROM ' . db_prefix() . 'visa_details vd2
-        WHERE vd2.userid = vd1.userid
-    )
-) AS ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid = ' . db_prefix() . 'clients.userid',
+    'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
+    //     'LEFT JOIN (
+    //     SELECT *,sum(cost) as total_cost
+    //     FROM ' . db_prefix() . 'visa_details vd1
+    //     WHERE vd1.id = (
+    //         SELECT MAX(vd2.id)
+    //         FROM ' . db_prefix() . 'visa_details vd2
+    //         WHERE vd2.userid = vd1.userid
+    //     )
+    // ) AS ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid = ' . db_prefix() . 'clients.userid',
 
 
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
