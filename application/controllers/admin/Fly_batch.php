@@ -110,6 +110,7 @@ class Fly_batch extends AdminController
             $departure_location = $this->input->post("departure_location", true);
             $manually = $this->input->post("manually", true);
 
+            check_invitation_letter($client_list);
             // If manually is 1, process only ticket creation
             if ((int)$manually === 1) {
                 $postData_Ticket = [
@@ -187,7 +188,7 @@ class Fly_batch extends AdminController
             // Insert/update batch
             $insert_result = $this->fly_model->insert_update($postData);
 
-      
+
             $final_batch_id = !empty($insert_result["id"]) ? $insert_result["id"] : 0;
 
             // Proceed with ticket assignment
@@ -204,7 +205,7 @@ class Fly_batch extends AdminController
             ];
 
             $ticket_result = $this->fly_model->insert_client_ticket($postData_Ticket, 1);
-       
+
             if ($ticket_result["status"] === true) {
                 $message = empty($batch_id) ? "Fly Ticket Batch created successfully." : "Fly Ticket Batch updated successfully.";
                 set_alert('success', $message);
