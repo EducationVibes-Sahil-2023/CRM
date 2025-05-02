@@ -2177,10 +2177,13 @@ function check_invitation_letter($client_ids_array = [])
     $errors = [];
 
     if (empty($client_ids_array)) {
-        return [
+        $data = [
             "error" => true,
             "message" => ["No client IDs provided."],
         ];
+
+        echo json_encode($data);
+        die;
     }
 
     try {

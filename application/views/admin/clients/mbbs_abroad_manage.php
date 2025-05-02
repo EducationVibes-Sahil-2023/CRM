@@ -1410,11 +1410,17 @@ init_tail();
       $("#customers_bulk_action").find("select").val("").selectpicker('refresh');
       $("#customers_bulk_action").find("input[type=checkbox]").prop("checked", false);
       $("#customers_bulk_action").find("input").val("");
-      $(".is_transist_location").hide();
-      $(".no_is_transist_location").show();
-      $(".apostille_status_update").hide();
-      $(".document_status_update").hide();
+
       $(".document_status_update").show();
+      $(".no_is_transist_location").show();
+      $(".visa_update div.checkbox").show();
+      $(".apostille_update div.checkbox").show();
+
+      $(".is_transist_location").hide();
+      $(".visa_status_update").hide();
+      $(".apostille_status_update").hide()
+      $(".document_status_update").hide();
+
       $(".doc-cost-section").html('');
 
    });
