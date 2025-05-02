@@ -1850,7 +1850,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     hide_loader();
                     return false;
                 }
-                await university_shortlisting(upload_data);
+                await check_university_shortlisting(upload_data);
             }
 
             if (id == 3) {
@@ -2604,7 +2604,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 appValidateForm($("#" + id), additional_fields);
                 $("#" + id).submit()
 
-                reject(false);
+
+                resolve(false);
             } else {
                 resolve(true);
             }
