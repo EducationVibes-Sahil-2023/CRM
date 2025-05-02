@@ -340,6 +340,13 @@ function app_init_customer_profile_tabs()
         'position' => 95,
     ]);
 
+    $CI->app_tabs->add_customer_profile_tab('fly_ticket', [
+        'name'     => "Fly Ticket",
+        'icon'     => 'fa fa-map-marker',
+        'view'     => 'admin/clients/groups/fly_ticket',
+        'position' => 95,
+    ]);
+
 
     $post_staff = array_column($CI->staff_model->post_sale_get(), "staffid");
 
@@ -2063,7 +2070,7 @@ function validate_orignal_documents($client_ids, $country_names = [])
     $CI = &get_instance();
 
     // Step 1: Fetch valid documents
-    $CI->db->select("o.id AS doc_id, o.name AS doc_name")
+    $CI->db->select("o.id AS doc_id, o.name AS doc_name,if(minor_status = 2,o.id ,0) check_minor")
         ->from(db_prefix() . 'orignal_documents o')
         ->where('o.status', 1);
 
@@ -2079,7 +2086,19 @@ function validate_orignal_documents($client_ids, $country_names = [])
     // }
 
     $all_documents = $CI->db->get()->result_array();
-    $valid_doc_ids = array_column($all_documents, 'doc_id');
+
+    $minor_id = "";
+
+    $filtered_documents = array_filter($all_documents, function ($doc) use (&$minor_id) {
+        if (!empty($doc['check_minor']) && $doc['check_minor'] > 0) {
+            $minor_id = $doc['doc_id'];
+            return true; // Exclude this document
+        }
+        return true; // Keep documents where check_minor is 0
+    });
+
+
+    $valid_doc_ids = array_column($filtered_documents, 'doc_id');
 
     if (empty($valid_doc_ids)) {
         return [
@@ -2102,7 +2121,10 @@ function validate_orignal_documents($client_ids, $country_names = [])
     }
 
     // Step 4: Fetch client names
-    $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName")
+    $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName,CASE 
+    WHEN TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 THEN 1
+    ELSE 0
+END AS is_minor")
         ->from(db_prefix() . 'basic_details b')
         ->where_in('b.userid', $client_ids);
     $clients = $CI->db->get()->result_array();
@@ -2112,9 +2134,17 @@ function validate_orignal_documents($client_ids, $country_names = [])
     foreach ($clients as $client) {
         $user_id = $client['userid'];
         $client_name = $client['clientName'];
+        $clientMinor = $client['is_minor'];
         $received = isset($received_map[$user_id]) ? $received_map[$user_id] : [];
 
         foreach ($all_documents as $doc) {
+
+            // Skip document check if it is minor-only and client is not a minor
+            if ($doc["check_minor"] > 0 && $clientMinor == 0) {
+                continue;
+            }
+
+            // Check if document was received
             if (!in_array($doc['doc_id'], $received)) {
                 $errors[] = "User '{$client_name}' has not received original document '{$doc['doc_name']}'.";
 
@@ -2138,6 +2168,103 @@ function validate_orignal_documents($client_ids, $country_names = [])
         "error" => false,
         "message" => "Validation passed."
     ];
+}
+
+
+function check_invitation_letter($client_ids_array = [])
+{
+    $CI = &get_instance();
+    $errors = [];
+
+    if (empty($client_ids_array)) {
+        return [
+            "error" => true,
+            "message" => ["No client IDs provided."],
+        ];
+    }
+
+    try {
+        // Get records where invitation_letter is either NULL or empty string
+        $CI->db->select(db_prefix() . 'admission_preferences.userid, ' . db_prefix() . 'client_university_shortlisting.invitation_letter');
+        $CI->db->from(db_prefix() . 'admission_preferences');
+        $CI->db->join(
+            db_prefix() . 'client_university_shortlisting',
+            db_prefix() . 'admission_preferences.userid = ' . db_prefix() . 'client_university_shortlisting.client_id 
+             AND tbladmission_preferences.primary_university = ' . db_prefix() . 'client_university_shortlisting.university_name',
+            "LEFT"
+        );
+        $CI->db->where_in(db_prefix() . 'admission_preferences.userid', $client_ids_array);
+        $CI->db->group_start();
+        $CI->db->where(db_prefix() . 'client_university_shortlisting.invitation_letter', '');
+        $CI->db->or_where(db_prefix() . 'client_university_shortlisting.invitation_letter IS NULL', NULL, FALSE);
+        $CI->db->group_end();
+
+        $query = $CI->db->get();
+        $result = $query->result_array();
+
+        if (!empty($result)) {
+            foreach ($result as $row) {
+                $client_name = get_client_name($row["userid"]);
+                $errors[] = "User '{$client_name}' has not received an Invitation Letter.";
+                $data = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "User '{$client_name}' has not received an Invitation Letter."
+                ];
+                echo json_encode($data);
+                die;
+            }
+        }
+
+        // Check if any IDs are completely missing from the shortlist table (no join record)
+        $CI->db->select('DISTINCT(' . db_prefix() . 'admission_preferences.userid)');
+        $CI->db->from(db_prefix() . 'admission_preferences');
+        $CI->db->join(
+            db_prefix() . 'client_university_shortlisting',
+            db_prefix() . 'admission_preferences.userid = ' . db_prefix() . 'client_university_shortlisting.client_id 
+             AND tbladmission_preferences.primary_university = ' . db_prefix() . 'client_university_shortlisting.university_name',
+            "LEFT"
+        );
+        $CI->db->where_in(db_prefix() . 'admission_preferences.userid', $client_ids_array);
+        $CI->db->where(db_prefix() . 'client_university_shortlisting.client_id IS NULL', null, false);
+
+        $missing_query = $CI->db->get();
+        $missing_rows = $missing_query->result_array();
+
+        foreach ($missing_rows as $row) {
+            $client_name = get_client_name($row["userid"]);
+            $errors[] = "User '{$client_name}' does not have any university shortlisting record.";
+
+            $data = [
+                'resp_code' => 'ERR',
+                'resp_desc' => "User '{$client_name}' has not received an Invitation Letter."
+            ];
+            echo json_encode($data);
+            die;
+        }
+
+        if (!empty($errors)) {
+            return [
+                "error" => true,
+                "message" => $errors,
+            ];
+            $data = [
+                'resp_code' => 'ERR',
+                'resp_desc' => $errors
+            ];
+            echo json_encode($data);
+            die;
+        }
+
+        return [
+            "error" => false,
+            "message" => "All users have valid Invitation Letters.",
+        ];
+    } catch (Exception $e) {
+        return [
+            "error" => true,
+            "message" => ["Server error: " . $e->getMessage()],
+        ];
+    }
 }
 
 
@@ -2167,39 +2294,7 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
     }
 
 
-
-
-
-    $CI->db->select(db_prefix() . 'admission_preferences.userid, tblclient_university_shortlisting.invitation_letter');
-    $CI->db->from(db_prefix() . 'admission_preferences');
-    $CI->db->join(
-        db_prefix() . 'client_university_shortlisting',
-        db_prefix() . 'admission_preferences.userid = tblclient_university_shortlisting.client_id AND tbladmission_preferences.primary_university = tblclient_university_shortlisting.university_name',
-        "LEFT"
-    );
-    $CI->db->where_in(db_prefix() . 'admission_preferences.userid', $client_ids_array);
-    $CI->db->group_start();
-    $CI->db->where(db_prefix() . 'client_university_shortlisting.invitation_letter', '');
-    $CI->db->or_where(db_prefix() . 'client_university_shortlisting.invitation_letter IS NULL', NULL, FALSE);
-    $CI->db->group_end();
-
-    $query = $CI->db->get();
-    $invitation_result = $query->result_array();
-
-    if (!empty($invitation_result)) {
-        foreach ($invitation_result as $letter) {
-            if (empty($letter['invitation_letter'])) {
-                $client_name = get_client_name($letter["userid"]);
-                $errors[] = "User '{$client_name}' has not received Invitation Letter.";
-
-                return [
-                    "error" => true,
-                    "message" => $errors, // Return first error message (optional: return all as list)
-                ];
-                die;
-            }
-        }
-    }
+    check_invitation_letter($client_ids_array = []);
 
     $stage = 9;
     $lead_type = 2;

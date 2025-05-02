@@ -141,6 +141,16 @@ class GoogleSheetApi
         }
     }
 
+    public function getExcelColumnName($index)
+    {
+        $columnName = '';
+        while ($index > 0) {
+            $mod = ($index - 1) % 26;
+            $columnName = chr(65 + $mod) . $columnName;
+            $index = (int)(($index - $mod) / 26);
+        }
+        return $columnName;
+    }
 
     public function updateSheetColumnNames($spreadsheetId, $columnNames = [])
     {
@@ -154,7 +164,11 @@ class GoogleSheetApi
             ];
         }
 
-        $range = $sheetName . '!A1:' . chr(64 + count($columnNames)) . '1';
+        $lastColumn =  $this->getExcelColumnName(count($columnNames));
+
+        $range = $sheetName . '!A1:' . $lastColumn . '1';
+
+        // $range = $sheetName . '!A1:' . chr(64 + count()) . '1';
 
         $body = new Google_Service_Sheets_ValueRange([
             'values' => [$columnNames]

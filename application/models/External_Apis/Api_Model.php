@@ -146,71 +146,71 @@ class Api_Model extends CI_Model
         return $response;
     }
 
-public function insert_data_batch($table, $data)
-{
-    $response = [];
-    $chunk_size = 500;  // Break data into smaller chunks (e.g., 1000 rows at a time)
+    public function insert_data_batch($table, $data)
+    {
+        $response = [];
+        $chunk_size = 500;  // Break data into smaller chunks (e.g., 1000 rows at a time)
 
-    try {
-        // Disable foreign key checks (if needed) for faster insertion
-        $this->db->query('SET foreign_key_checks = 0;');
-        
-        // Start transaction
-        $this->db->trans_start();
+        try {
+            // Disable foreign key checks (if needed) for faster insertion
+            $this->db->query('SET foreign_key_checks = 0;');
 
-        // Loop through data in chunks
-        foreach (array_chunk($data, $chunk_size) as $chunk) {
-            $fields = implode(',', array_keys($chunk[0]));  // Get the column names from the first record
-            $values = array_map(function($item) {
-                return '(' . implode(',', array_map(function($value) {
-                    return $this->db->escape($value);  // Use escape method for security
-                }, $item)) . ')';
-            }, $chunk);
+            // Start transaction
+            $this->db->trans_start();
 
-            // Join all values to make the bulk insert query
-            $sql = 'INSERT IGNORE INTO ' . $table . ' (' . $fields . ') VALUES ' . implode(',', $values);
+            // Loop through data in chunks
+            foreach (array_chunk($data, $chunk_size) as $chunk) {
+                $fields = implode(',', array_keys($chunk[0]));  // Get the column names from the first record
+                $values = array_map(function ($item) {
+                    return '(' . implode(',', array_map(function ($value) {
+                        return $this->db->escape($value);  // Use escape method for security
+                    }, $item)) . ')';
+                }, $chunk);
 
-            // Execute the query in bulk
-            $this->db->query($sql);
-        }
+                // Join all values to make the bulk insert query
+                $sql = 'INSERT IGNORE INTO ' . $table . ' (' . $fields . ') VALUES ' . implode(',', $values);
 
-        // Complete the transaction
-        $this->db->trans_complete();
+                // Execute the query in bulk
+                $this->db->query($sql);
+            }
 
-        // Re-enable foreign key checks
-        $this->db->query('SET foreign_key_checks = 1;');
+            // Complete the transaction
+            $this->db->trans_complete();
 
-        // Check if the transaction was successful
-        if ($this->db->trans_status() === FALSE) {
-            log_message('error', 'Data insert failed during transaction.');
-            $response = [
-                "status" => 0,
-                "message" => "Failed to insert data"
-            ];
-        } else {
-            // Handle the response based on affected rows
-            if ($this->db->affected_rows() > 0) {
-                $response = [
-                    "status" => 1,
-                    "message" => "Data inserted successfully."
-                ];
-            } else {
+            // Re-enable foreign key checks
+            $this->db->query('SET foreign_key_checks = 1;');
+
+            // Check if the transaction was successful
+            if ($this->db->trans_status() === FALSE) {
+                log_message('error', 'Data insert failed during transaction.');
                 $response = [
                     "status" => 0,
-                    "message" => "No rows inserted (possibly duplicates)."
+                    "message" => "Failed to insert data"
                 ];
+            } else {
+                // Handle the response based on affected rows
+                if ($this->db->affected_rows() > 0) {
+                    $response = [
+                        "status" => 1,
+                        "message" => "Data inserted successfully."
+                    ];
+                } else {
+                    $response = [
+                        "status" => 0,
+                        "message" => "No rows inserted (possibly duplicates)."
+                    ];
+                }
             }
+        } catch (Exception $e) {
+            // Catch any exceptions and return an error message
+            $response = [
+                "status" => 0,
+                "message" => $e->getMessage()
+            ];
         }
-    } catch (Exception $e) {
-        // Catch any exceptions and return an error message
-        $response = [
-            "status" => 0,
-            "message" => $e->getMessage()
-        ];
-    }
 
-    return $response;
-}
+        return $response;
+    }
 
 
     public function update_data($table, $data, $where)
@@ -344,11 +344,11 @@ public function insert_data_batch($table, $data)
 
             // $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
             //  $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
-             $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
+            $call_activity_temp = $this->insert_data_batch(db_prefix() . 'calls_activity_temp_logs', $call_data);
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
 
             if ($call_activity_temp["status"] == 1) {
-                
+
                 $response = array(
                     "status" => 1,
                     "message" => "Call data update successfully.",
@@ -368,16 +368,19 @@ public function insert_data_batch($table, $data)
 
     public function update_call_activity()
     {
-        
+
+        $sql = "DELETE FROM " . db_prefix() . "calls_activity_temp_logs WHERE  status = 2";
+        // Execute the query
+        $this->db->query($sql);
 
         $response = [];
         try {
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
-            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => "","status"=>1), "*", 2000);
+            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => "", "status" => 1), "*", 2000);
             // echo "<pre>";
             // print_r($get_all_activity_temp );
-          
+
             $delete_ids = [];
             if (!empty($get_all_activity_temp["data"])) {
                 foreach ($get_all_activity_temp["data"] as $key => $call_data) {
@@ -391,20 +394,20 @@ public function insert_data_batch($table, $data)
                         "call_end" => $call_data["call_end"],
                         "status" => 1
                     );
-                    
-               
+
+
                     $check_exisit = $this->getdata(db_prefix() . 'calls_activity_logs', $where, "*");
-             
+
                     if ($check_exisit["status"] == 1) {
                         $delete_ids[] = $call_data["id"];
                     } else {
-                        $staffid = $call_data["staffid"]?$call_data["staffid"]:'';
+                        $staffid = $call_data["staffid"] ? $call_data["staffid"] : '';
                         // $staff_data =  $this->getdata(db_prefix() . "staff", array("phonenumber" => $call_data["staff_contact"], "active" => 1), "staffid");
-                    
+
                         // if (!empty($staff_data["status"]) && $staff_data["status"] == 1) {
                         //     $staffid = !empty($staff_data["data"][0]["staffid"]) ? $staff_data["data"][0]["staffid"] : '';
                         // }
-                        
+
                         if (!empty($staffid)) {
                             $delete_ids[] = $call_data["id"];
                             if (!empty($call_data["staff_contact"]) && !empty($staffid)) {
@@ -427,18 +430,15 @@ public function insert_data_batch($table, $data)
                 }
 
                 if (!empty($delete_ids)) {
-$this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs 
+                    $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs 
      SET status = 2 
      where id IN (" . implode(',', $delete_ids) . ") ");
-                    $sql = "DELETE FROM " . db_prefix() . "calls_activity_temp_logs WHERE id IN (" . implode(',', $delete_ids) . ") and status = 2";
-                    // Execute the query
-                    $this->db->query($sql);
                 }
             }
-    //         $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs 
-    // SET contact = RIGHT(TRIM(contact), 10) 
-    // WHERE LENGTH(TRIM(contact)) > 10 
-    // AND DATE(datetime) = '" . date('Y-m-d') . "'");
+            //         $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs 
+            // SET contact = RIGHT(TRIM(contact), 10) 
+            // WHERE LENGTH(TRIM(contact)) > 10 
+            // AND DATE(datetime) = '" . date('Y-m-d') . "'");
             $response = array(
                 "status" => 1,
                 "message" => "Call activity update successfully.",
@@ -449,7 +449,7 @@ $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs
         }
         return $response;
     }
-    
+
 
     public function generate_token($data)
     {

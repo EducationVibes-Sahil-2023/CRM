@@ -19,7 +19,6 @@ $aColumns = [
 $sIndexColumn = 'id';
 $sTable       = db_prefix() . 'exam_batch';
 $join         = ['LEFT JOIN ' . db_prefix() . 'clients_exam ON ' . db_prefix() . 'clients_exam.batch_id = ' . db_prefix() . 'exam_batch.id'];
-$join         = ['LEFT JOIN ' . db_prefix() . 'clients_exam ON ' . db_prefix() . 'clients_exam.batch_id = ' . db_prefix() . 'exam_batch.id'];
 $join         = ['LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'exam_batch.created_by = ' . db_prefix() . 'staff.staffid'];
 $i            = 0;
 $group_by = ' Group By ' . db_prefix() . 'exam_batch.id ';

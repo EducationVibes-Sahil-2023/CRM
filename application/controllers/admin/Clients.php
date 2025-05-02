@@ -333,6 +333,11 @@ class Clients extends AdminController
                 if (!empty($data['profile_creation_data'][0]["vendor"])) {
                     $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
                 }
+            } else if ($group == 'fly_ticket') {
+                $data['country_list'] = get_country_list(7);
+                $data['vendor_list'] = get_vendor_list(3);
+                $data['payment_mode'] = get_payment_mode();
+                $data['departure_location'] = get_departure_list();
             } else if ($group == 'visa') {
                 $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
                 $data['vendor'] = $this->clients_model->visa_vendor();
@@ -1705,6 +1710,7 @@ class Clients extends AdminController
 
             if (empty($check_client->tracker_id) && $check_client->tracker_id == 0) {
             } else {
+                $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING, "tracker_id" => 1));
             }
 
@@ -3817,7 +3823,20 @@ class Clients extends AdminController
     }
 
 
-
+    public function check_documents_validation($id)
+    {
+        $check_documents = $this->check_documents($id);
+        if (!empty($check_documents)) {
+            $doc_names = implode(", ", $check_documents);
+            $message = "{$doc_names} are mandatory to proceed to the next step.";
+            $data = [
+                'resp_code'               => 'ERR',
+                'resp_desc'               => "Document requried " . $message,
+            ];
+            echo json_encode($data);
+            exit;
+        }
+    }
 
     public function mbbs_tracker()
     {
@@ -3918,6 +3937,7 @@ class Clients extends AdminController
         } else if ($tracker_id == 4) {
             $data = $this->entrance_exam();
         } else if ($tracker_id == 5) {
+            $this->check_documents_validation(($tracker_id + 1));
             $data = $this->Legalization();
         } else if ($tracker_id == 6) {
             $data = $this->feesDeposite();
@@ -3999,6 +4019,7 @@ class Clients extends AdminController
                 ->get(db_prefix() . 'clients')
                 ->row();
             if (empty($check_client->tracker_id) && $check_client->tracker_id == 0) {
+                $this->db->where("userid", $client_id);
                 $this->update_applicant_tracker_stages($client_id, $tracker_id);
             }
         }
@@ -4841,6 +4862,15 @@ class Clients extends AdminController
                 'resp_desc'               =>  $message,
             ];
 
+            $update_client_data = [
+                "applicant_status" => 0,
+                "applicant_stage" => VISA,
+                "applicant_sub_status" => VISA_STAMP,
+            ];
+
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
+            $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
             // set_alert('danger',  $message);
 
             return $data;
@@ -4855,8 +4885,17 @@ class Clients extends AdminController
                 'resp_code'               => 'ERR',
                 'resp_desc'               =>  $resultOrignal["message"][0],
             ];
-           
+
             // set_alert('danger',  $message);
+            $update_client_data = [
+                "applicant_status" => 0,
+                "applicant_stage" => VISA,
+                "applicant_sub_status" => VISA_STAMP,
+            ];
+
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
+            $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
             return $data;
         }
 
