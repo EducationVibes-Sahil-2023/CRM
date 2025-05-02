@@ -133,7 +133,7 @@ class Fly_model extends App_Model
             }
 
             // Validate invitation letters
-            $check_invitation = check_invitation_letter($client_exam_data["client_ids"]);
+            // $check_invitation = check_invitation_letter($client_exam_data["client_ids"]);
             if (!empty($check_invitation["error"])) {
                 return ["status" => false, "message" => implode(", ", $check_invitation["message"])];
             }
