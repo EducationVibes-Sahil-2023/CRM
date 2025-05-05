@@ -26,10 +26,11 @@ $table_view = array_column(get_view_columns(), null, "id");
 $apostille_vendors = get_vendor_list(1);
 
 $visa_vendors = get_vendor_list(2);
+$fly_vendors = get_vendor_list(3);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
-
-
+$fly_batch = fly_batch();
+$fly_departure = fly_departure();
 
 $yes_no_status = [
    ["id" => "", "name" => ""],
@@ -470,6 +471,35 @@ array_unshift($office_location, array());
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-payment hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="visa_payment_date" id="visa_payment_date" placeholder="Visa Payment Update Date" autocomplete="off">
+                                 </div>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-batch hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('fly_batch_filter[]', $fly_batch, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Batch", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_batch_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-departure hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('fly_departure_filter[]', $fly_departure, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Departure", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_departure_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-vendor hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('fly_vendors_filter[]', $fly_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Vendors", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_vendors_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-fly-date hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="fly_date" id="fly_date" placeholder="Fly Date" autocomplete="off">
                                  </div>
                               </div>
 
@@ -1064,6 +1094,7 @@ init_tail();
 
    function set_table() {
 
+      enabled_column();
       // Destroy existing DataTable instance
       if ($.fn.DataTable.isDataTable('.table-clients')) {
          $('.table-clients').DataTable().clear().destroy();
@@ -1097,7 +1128,11 @@ init_tail();
          'session_intake': "[name='session_intake']",
          'apostille_vendors_filter': "[name='apostille_vendors_filter[]']",
          'visa_vendors_filter': "[name='visa_vendors_filter[]']",
-         'visa_payment_date': "[name='visa_payment_date']"
+         'visa_payment_date': "[name='visa_payment_date']",
+         'fly_batch_filter': "[name='fly_batch_filter[]']",
+         'fly_departure_filter': "[name='fly_departure_filter[]']",
+         'fly_vendors_filter': "[name='fly_vendors_filter[]']",
+         'fly_date': "[name='fly_date']"
       });
 
       applicant_table = initDataTable(
@@ -1406,7 +1441,7 @@ init_tail();
       $(".is_transist_location, .no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
    }
 
- $('#customers_bulk_action').on('show.bs.modal', function() {
+   $('#customers_bulk_action').on('show.bs.modal', function() {
       $("#customers_bulk_action").find("select").val("").selectpicker('refresh');
       $("#customers_bulk_action").find("input[type=checkbox]").prop("checked", false);
       $("#customers_bulk_action").find("input").val("");
@@ -1424,6 +1459,7 @@ init_tail();
       $(".doc-cost-section").html('');
 
    });
+
    function refreshApplicantTable() {
       applicant_table.ajax.reload(null, false);
    }

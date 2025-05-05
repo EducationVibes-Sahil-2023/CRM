@@ -2,7 +2,7 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $has_permission_delete = has_permission('fly_batch', '', 'delete');
-
+$statuses = fly_status();
 $manually = !empty($_POST["manually"]) ? 1 : 0;
 $aColumns = [
     db_prefix() . 'ticket_batch.name as name',
@@ -22,6 +22,8 @@ $aColumns = [
     db_prefix() . 'ticket_data.departure_location as departure_location_id',
     db_prefix() . 'ticket_data.auto as auto',
     db_prefix() . 'ticket_data.ticket_status as ticket_status',
+    db_prefix() . 'ticket_status.name as ticket_status_name',
+    db_prefix() . 'ticket_status.color as color',
 ];
 
 if ($manually == 1) {
@@ -35,7 +37,7 @@ if ($manually == 1) {
 $sIndexColumn = 'id';
 if ($manually == 1) {
     $sTable = db_prefix() . 'ticket_data';
-    $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_batch ON ' . db_prefix() . 'ticket_data.batch_id = ' . db_prefix() . 'ticket_data.batch_id';
+    $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_batch ON ' . db_prefix() . 'ticket_batch.id = ' . db_prefix() . 'ticket_data.batch_id';
 } else {
     $sTable = db_prefix() . 'ticket_batch';
     $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_data ON ' . db_prefix() . 'ticket_data.batch_id = ' . db_prefix() . 'ticket_batch.id';
@@ -46,6 +48,7 @@ $join[] = 'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'ticket_batch
 $join[] = 'LEFT JOIN ' . db_prefix() . 'vendor_list ON FIND_IN_SET(' . db_prefix() . 'vendor_list.id, ' . db_prefix() . 'ticket_data.vendor_id)';
 $join[] = 'LEFT JOIN ' . db_prefix() . 'payment_mode ON ' . db_prefix() . 'ticket_data.payment_mode = ' . db_prefix() . 'payment_mode.id';
 $join[] = 'LEFT JOIN ' . db_prefix() . 'departure_location ON ' . db_prefix() . 'departure_location.id = ' . db_prefix() . 'ticket_data.departure_location';
+$join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_status ON ' . db_prefix() . 'ticket_status.id = ' . db_prefix() . 'ticket_data.ticket_status';
 
 
 // Optional WHERE conditions
@@ -72,10 +75,14 @@ $result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [],
 $output  = $result['output'];
 $rResult = $result['rResult'];
 
+
+
 if ($manually == 1) {
     foreach ($rResult as $aRow) {
+
         $row = []; // Corrected initialization
 
+        $row[] = !empty($aRow["id"]) ? $aRow["name"] : 'Manually';
         $row[] = $aRow["country_name"];
         $row[] = $aRow["university_name"];
         $row[] = $aRow["vendor_name"];
@@ -84,11 +91,42 @@ if ($manually == 1) {
         $row[] = $aRow["payment_mode"];
         $row[] = !empty($aRow["fly_date"] && $aRow["fly_date"] != '0000-00-00 00:00:00') ? $aRow["fly_date"] : '';
         $row[] = $aRow["departure_location"];
+        // $row[] = $aRow["ticket_status_name"];
+
+
+        $outputStatus = '<span class="inline-block lead-status-' . $aRow['ticket_status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['ticket_status_name'];
+
+        if ($aRow['ticket_status'] != 3 && empty($aRow['id'])) {
+            $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+            $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['data_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+            $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
+            $outputStatus .= '</a>';
+            $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['data_id'] . '">';
+            foreach ($statuses as $leadChangeStatus) {
+                if ($aRow['ticket_status'] != $leadChangeStatus['id']) {
+                    $outputStatus .= '<li>
+                  <a href="#" onclick="fly_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['data_id'] . '); return false;">
+                     ' . $leadChangeStatus['name'] . '
+                  </a>
+              </li>';
+                }
+            }
+            $outputStatus .= '</ul>';
+            $outputStatus .= '</div>';
+
+            $outputStatus .= '</span>';
+        }
+
+
+        $row[] = $outputStatus;
 
         if (empty($aRow['auto']) && $manually == 1 && $aRow["ticket_status"] != 3) {
             $id = $aRow['data_id'];
             $encodedData = base64_encode(json_encode($aRow));
             $row[] = "<div>
+             <a class='btn btn-xs btn-danger' href='javascript:void(0)' onclick='delete_ticket($id)'>
+                    <i class='fa fa-trash'></i>
+                </a>
                 <a class='btn btn-xs btn-primary' href='javascript:void(0)' onclick='edit_ticket($id, \"" . $encodedData . "\")'>
                     <i class='fa fa-eye'></i>
                 </a>

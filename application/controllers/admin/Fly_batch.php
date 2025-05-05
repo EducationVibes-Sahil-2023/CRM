@@ -57,8 +57,8 @@ class Fly_batch extends AdminController
     {
         // Fetch university name from POST request securely
         $university_names = $this->input->post("university_name", true); // array or string
- $batch_id = $this->input->post("$batch_id", true); // array or string
-        
+        $batch_id = $this->input->post("batch_id", true); // array or string
+
         // Ensure it's treated as an array
         if (!is_array($university_names)) {
             $university_names = [$university_names];
@@ -74,7 +74,7 @@ class Fly_batch extends AdminController
         }
 
         // Get client list for all universities
-        $get_client_list = get_client_list_fly_batch($university_names,$batch_id); // Adjust this function if needed
+        $get_client_list = get_client_list_fly_batch($university_names, $batch_id); // Adjust this function if needed
 
         // Initialize response data
         $data = [];
@@ -205,18 +205,20 @@ class Fly_batch extends AdminController
                 "departure_location" => $departure_location,
             ];
 
+
             $ticket_result = $this->fly_model->insert_client_ticket($postData_Ticket, 1);
+
             if ($ticket_result["status"] === true) {
                 $message = empty($batch_id) ? "Fly Ticket Batch created successfully." : "Fly Ticket Batch updated successfully.";
                 // set_alert('success', $message);
                 echo json_encode([
                     'resp_code' => 'RCS',
-                    'resp_desc' => $ticket_result,
+                    'resp_desc' =>  $ticket_result["message"] ? $ticket_result["message"] : "Ticket Fly Batch saved successfully.",
                 ]);
             } else {
                 echo json_encode([
                     'resp_code' => 'ERR',
-                    'resp_desc' => $ticket_result["message"]?$ticket_result["message"]:"Client-ticket mapping failed.",
+                    'resp_desc' => $ticket_result["message"] ? $ticket_result["message"] : "Client-ticket mapping failed.",
                 ]);
             }
         } catch (Exception $e) {

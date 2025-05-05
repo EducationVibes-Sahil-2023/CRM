@@ -169,18 +169,20 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
         FROM " . db_prefix() . "client_apostille_data
         GROUP BY userid
     ) AS apostille_summary ON apostille_summary.userid = " . db_prefix() . "clients.userid",
-//     'LEFT JOIN (
-//     SELECT td1.*
-//     FROM ' . db_prefix() . 'ticket_data td1
-//     INNER JOIN (
-//         SELECT MAX(id) AS max_id
-//         FROM ' . db_prefix() . 'ticket_data
-//         GROUP BY client_id
-//     ) td2 ON td1.id = td2.max_id
-// ) td ON td.client_id = ' . db_prefix() . 'clients.userid',
-//     'LEFT JOIN ' . db_prefix() . 'ticket_status ts ON ts.id=td.ticket_status',
-//     'LEFT JOIN ' . db_prefix() . 'vendor_list tc ON tc.id=td.vendor_id',
-//     'LEFT JOIN ' . db_prefix() . 'payment_mode tm ON tm.id=td.payment_mode',
+    'LEFT JOIN (
+    SELECT td1.*,td2.total_cost
+    FROM ' . db_prefix() . 'ticket_data td1
+    INNER JOIN (
+        SELECT MAX(id) AS max_id,sum(ticket_cost) total_cost
+        FROM ' . db_prefix() . 'ticket_data
+        GROUP BY client_id
+    ) td2 ON td1.id = td2.max_id
+) td ON td.client_id = ' . db_prefix() . 'clients.userid',
+    'LEFT JOIN ' . db_prefix() . 'ticket_status ts ON ts.id=td.ticket_status',
+    'LEFT JOIN ' . db_prefix() . 'vendor_list tc ON tc.id=td.vendor_id',
+    'LEFT JOIN ' . db_prefix() . 'payment_mode tm ON tm.id=td.payment_mode',
+    'LEFT JOIN ' . db_prefix() . 'departure_location dl ON dl.id=td.departure_location',
+    'LEFT JOIN ' . db_prefix() . 'ticket_batch tb ON tb.id=td.batch_id'
 
 ];
 
@@ -396,6 +398,41 @@ if ($this->ci->input->post('last_to_date')) {
     $from_date = $this->ci->input->post('last_from_date');
     $to_date = $this->ci->input->post('last_to_date');
     array_push($where, 'AND DATE(' . db_prefix() . 'clients.last_update) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
+}
+
+
+// Ticket 
+
+if ($this->ci->input->post('fly_batch_filter')) {
+    $batch_ids = $this->ci->input->post('fly_batch_filter');
+    if (is_array($batch_ids)) {
+        $escaped_batch_ids = array_map([$this->ci->db, 'escape'], $batch_ids);
+        array_push($where, 'AND td.batch_id IN (' . implode(',', $escaped_batch_ids) . ')');
+    }
+}
+
+
+if ($this->ci->input->post('fly_departure_filter')) {
+    $fly_departure = $this->ci->input->post('fly_departure_filter');
+    if (is_array($fly_departure)) {
+        $escaped_fly_departure = array_map([$this->ci->db, 'escape'], $fly_departure);
+        array_push($where, 'AND td.departure_location IN (' . implode(',', $escaped_fly_departure) . ')');
+    }
+}
+
+
+if ($this->ci->input->post('fly_vendors_filter')) {
+    $fly_vendors = $this->ci->input->post('fly_vendors_filter');
+    if (is_array($fly_vendors)) {
+        $escaped_fly_vendors = array_map([$this->ci->db, 'escape'], $fly_vendors);
+        array_push($where, 'AND td.vendor_id IN (' . implode(',', $escaped_fly_vendors) . ')');
+    }
+}
+
+
+if ($this->ci->input->post('fly_date')) {
+    $fly_date = $this->ci->input->post('fly_date');
+    array_push($where, 'AND DATE(td.fly_date) BETWEEN "' . $this->ci->db->escape_str($fly_date) . '" AND "' . $this->ci->db->escape_str($fly_date) . '"');
 }
 
 $additional_array = [

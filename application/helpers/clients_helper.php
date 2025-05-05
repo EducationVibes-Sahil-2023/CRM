@@ -1383,10 +1383,9 @@ function check_country_rest($studyCountries)
             $studyCountries[] = 'Rest';
         }
     }
-    
-    if(empty($studyCountries))
-    {
-         $studyCountries[] = 'Rest';
+
+    if (empty($studyCountries)) {
+        $studyCountries[] = 'Rest';
     }
 
     return $studyCountries;
@@ -2017,6 +2016,50 @@ function get_payment_mode()
     return  $CI->db->get()->result_array(); // Execute and return result
 }
 
+function fly_batch($id = "")
+{
+    $CI = &get_instance();
+
+    $CI->db->select("id,name,created_at,created_by")
+        ->from(db_prefix() . 'ticket_batch')
+        ->where('status', 1);
+    if (!empty($id)) {
+        $CI->db->where('id', $id);
+    }
+
+
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+}
+
+function fly_departure($id = "")
+{
+    $CI = &get_instance();
+
+    $CI->db->select("id,name")
+        ->from(db_prefix() . 'departure_location')
+        ->where('status', 1);
+    if (!empty($id)) {
+        $CI->db->where('id', $id);
+    }
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+}
+
+
+function fly_status($id = "")
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'ticket_status')
+        ->where('status', 1);
+    if (!empty($id)) {
+        $CI->db->where('id', $id);
+    }
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+}
 
 function get_apostille_document_data($client_id)
 {
@@ -2071,7 +2114,7 @@ function visa_details($client_id)
 //     if (!empty($country_names)) {
 //         $country_names = check_country_rest($country_names);
 //     }
-    
+
 
 //     $CI = &get_instance();
 
@@ -2263,14 +2306,14 @@ function validate_orignal_documents($client_ids, $country_names = [])
             // Check if the document is received
             if (!in_array($doc['doc_id'], $received)) {
                 // $errors[] = "User '{$client_name}' has not received original document '{$doc['doc_name']}'.";
-                 $data =  [
-            "error" => true,
-            "message" => "No valid documents found for the selected country.",
-            'resp_code' => 'ERR',
-            'resp_desc' =>  "User '{$client_name}' has not received original document '{$doc['doc_name']}'."
-        ];
-        echo json_encode($data);
-        die;
+                $data =  [
+                    "error" => true,
+                    "message" => "No valid documents found for the selected country.",
+                    'resp_code' => 'ERR',
+                    'resp_desc' =>  "User '{$client_name}' has not received original document '{$doc['doc_name']}'."
+                ];
+                echo json_encode($data);
+                die;
             }
         }
     }
@@ -2291,7 +2334,7 @@ function check_invitation_letter($client_ids_array = [])
         $data = [
             "error" => true,
             "message" => "No client IDs provided.",
-             'resp_code' => 'ERR',
+            'resp_code' => 'ERR',
             'resp_desc' => "No client IDs provided."
 
         ];
