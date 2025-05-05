@@ -15,6 +15,7 @@ if (!is_postSale() && !is_admin()) {
 }
 
 $table_data = array(
+    _l('Batch Name'),
     _l('Country Name'),
     _l('university_name'),
     _l('Vendor Name'),
@@ -23,6 +24,7 @@ $table_data = array(
     _l('Payment Mode'),
     _l('Fly Date'),
     _l('Departure'),
+    _l('Status'),
     "Action",
 );
 ?>

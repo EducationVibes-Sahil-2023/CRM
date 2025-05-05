@@ -134,9 +134,9 @@ class Fly_model extends App_Model
 
             // Validate invitation letters
             // $check_invitation = check_invitation_letter($client_exam_data["client_ids"]);
-            if (!empty($check_invitation["error"])) {
-                return ["status" => false, "message" => implode(", ", $check_invitation["message"])];
-            }
+            // if (!empty($check_invitation["error"])) {
+            //     return ["status" => false, "message" => implode(", ", $check_invitation["message"])];
+            // }
 
             // Manual validation (check existing active ticket)
             if ($auto == 0) {
@@ -206,12 +206,12 @@ class Fly_model extends App_Model
                         $data['id'] = $existing->id;
                         $updateData[] = $data;
                     } else {
-                        
-                         $check = $this->check_ticket_data([$data["client_id"]], $data);
 
-                if (!$check["status"]) {
-                    return $check;
-                }
+                        $check = $this->check_ticket_data([$data["client_id"]], $data);
+
+                        if (!$check["status"]) {
+                            return $check;
+                        }
                         $insertData[] = $data;
                     }
                 }
@@ -227,6 +227,13 @@ class Fly_model extends App_Model
                 $this->db->insert_batch(db_prefix() . 'ticket_data', $insertData);
             }
 
+            if ($auto == 1 && !empty($client_exam_data["batch_id"])) {
+                $this->db->where([
+                    "batch_id" => $client_exam_data["batch_id"],
+                    "status" => 0,
+                    "auto"     => 1
+                ])->update(db_prefix() . 'ticket_data', ["auto" => 0, 'batch_id' => 0,'status'=>1]);
+            }
             return ["status" => true, "message" => "Ticket Fly Batch saved successfully."];
         } catch (Exception $e) {
             log_message('error', 'Insert Ticket Fly Batch failed: ' . $e->getMessage());
