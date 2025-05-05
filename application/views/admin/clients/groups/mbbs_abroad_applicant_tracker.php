@@ -674,6 +674,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <section style="display:<?= (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) ? 'none' : 'block' ?>">
             <?php
             foreach ($applicant_tracker as $k => $track) {
+
             ?>
                 <fieldset id="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '12' ?>" style="display:<?= ($applicant_status == $k) ? "show" : "none" ?>">
                     <h2 class="fs-title text-center" style="margin-bottom: 20px!important;"><?= !empty($track["name"]) ? $track["name"] : 'Document' ?>
@@ -1431,7 +1432,29 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                             </div>
                         </form>
-                    <?php } ?>
+                        <?php } else if ($track["show_div_name"] == "sc_div") {
+
+                        if (!has_permission($track["check_permission"])) {
+                            echo "You do not have permission to continue to the next step.";
+                        } else {
+                        ?>
+                            <form id="final-form" class="form-disabled" onsubmit="return false;">
+                                <div class="col-md-12">
+                                    <?php $mand_re = "required required-check"; ?>
+                                    <p class="form-check-label">&nbsp;</p>
+                                    <label class="form-check-label">
+                                        <?= $mand ?> Received 100% service charge clearance.
+                                        <input type="checkbox"
+                                            id="sc_100" class="form-check-input <?= $mand_re ?>"
+                                            name="sc_100"
+                                            <?= !has_permission($track["check_permission"]) ? 'disabled' : '' ?>
+                                            <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'checked' : '' ?>>
+                                    </label>
+                                </div>
+                            </form>
+                    <?php }
+                    } ?>
+
                     <?php if ($k > 0) { ?>
                         <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
                     <?php } ?>
@@ -1443,7 +1466,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <?php } ?>
                     <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
                         <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
-                    <?php } ?>
+                    <?php } else {
+                    ?>
+                        <?php if (has_permission($track["application_tracker_mbbbs_sc"])) { ?>
+                            <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
+                        <?php } ?>
+                    <?php
+                    } ?>
 
 
                 </fieldset>
@@ -1831,7 +1860,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         next_fs.slideDown("slow");
     }
 
-    async function next_step(id, obj, skip = 0) {
+    async function next_step(id, obj, skip = 0, completed = 0) {
         id = $.trim(id) || $("#progressbar .active").data("id");
 
         let upload_data = new FormData();
@@ -1844,7 +1873,18 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             upload_data.append("lead_type", <?= $lead_type_status ?>);
             upload_data.append("skip", skip);
 
-            if (id == 2) {
+            if (completed === 1) {
+                let check_validation = await check_required_fields("final-form");
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
+
+                upload_data.append("sc_100", $("#sc_100").is(":checked") ? 1 : 0);
+                upload_data.append("completed", 1);
+
+
+            } else if (id == 2) {
                 let result = await university_shortlisting_dropdown();
                 if (!result) {
                     hide_loader();
@@ -1934,11 +1974,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             if (response.resp_code === "RCS") {
                 alert_float("success", response.resp_desc);
 
-                if (response.pass_stage !== undefined) {
-                    show_next_stage(response.pass_stage);
-                } else {
-                    show_next_previous(obj);
-                }
+
 
                 if (id == 2) {
                     set_application(response);
@@ -1957,6 +1993,21 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 }
                 if (response.visa_details !== undefined) {
                     set_visa_section(response.visa_details);
+                }
+
+
+                if (response.pass_stage !== undefined) {
+                    if (response.stage_next_permission !== undefined && response.stage_next_permission == 0) {
+                        alert_float("danger", "You do not have permission to view the next stage or take action.");
+                        return false;
+
+                    }
+                    show_next_stage(response.pass_stage);
+                } else {
+                    if (completed == 1) {
+                        return false;
+                    }
+                    show_next_previous(obj);
                 }
             } else {
                 if (response.visa_details !== undefined) {
@@ -2800,7 +2851,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 </div>`;
             }
             let delete_ = ``;
-            if ((index > 0 && visa.id != "") || (index > 0 && <?= is_admin()?1:0 ?> == 1)) {
+            if ((index > 0 && visa.id != "") || (index > 0 && <?= is_admin() ? 1 : 0 ?> == 1)) {
                 delete_ = `<div class="text-right">
         <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,${visa.id ?? 0})"></i>
         </div>`;

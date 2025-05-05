@@ -3854,11 +3854,35 @@ class Clients extends AdminController
         $lead_type = $this->input->post("lead_type");
         $tracker_id = $this->input->post("tracker_id");
         $skip_status = !empty($this->input->post("skip")) ? $this->input->post("skip") : 0;
+        $completed = !empty($this->input->post("completed")) ? $this->input->post("completed") : 0;
 
         $post_data = $_POST;
         if (empty($client_id)) {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+        if ($completed == 1) {
+            $sc_100 = !empty($this->input->post("sc_100")) ? $this->input->post("sc_100") : 0;
+
+            $update_client_data = [
+                "sc_100" => $sc_100,
+                "applicant_status" => 0,
+                "applicant_stage" => !empty($sc_100) ? SC : VISA,
+                "applicant_sub_status" => !empty($sc_100) ? SC : VISA_STAMP,
+            ];
+
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
+
+            $data =  [
+                'resp_code' => 'RCS',
+                'resp_desc' => "Service charge 100% update successfully."
+            ];
+
+
             echo json_encode($data);
             return;
         }
@@ -3918,6 +3942,7 @@ class Clients extends AdminController
             ];
 
             echo json_encode($data);
+
             return;
         }
 
@@ -3979,9 +4004,10 @@ class Clients extends AdminController
             return;
         } else if ($tracker_id == 9) {
             $data = $this->visaLetter();
+            $data["stage_next_permission"] = has_permission('application_tracker_mbbbs_sc') ? 1 : 0;
         } else {
             $data =  [
-                'resp_code' => 'RCS',
+                'resp_code' => 'ERR',
                 'resp_desc' => "Invalid Stage",
             ];
 
