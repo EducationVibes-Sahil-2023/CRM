@@ -4877,7 +4877,7 @@ class Clients extends AdminController
         $visa = !empty($this->input->post("visa")) ? json_decode($this->input->post("visa"), true) : [];
         $files = $_FILES;
 
-        $check_documents = $this->check_documents(9);
+        $check_documents = $this->check_documents(10);
         if (!empty($check_documents)) {
             // If required documents are missing
             $doc_names = implode(", ", $check_documents);
@@ -5516,7 +5516,7 @@ class Clients extends AdminController
             }
             $doc_urls_additional = doc_urls_additional($userid);
 
-            $doc_urls = array_merge($doc_urls,$doc_urls_additional);
+            $doc_urls = array_merge($doc_urls, $doc_urls_additional);
             if (!empty($doc_urls)) {
                 echo json_encode([
                     'resp_code' => 'RCS',
