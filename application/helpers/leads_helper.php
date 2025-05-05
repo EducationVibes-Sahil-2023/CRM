@@ -8196,7 +8196,7 @@ function get_leads_summary_filter_neww($params)
 function get_university_list($lead_type)
 {
     $CI = &get_instance();
-    return $CI->s_db->query("SELECT c.id country_id,co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type'")->result_array();
+    return $CI->s_db->query("SELECT c.id country_id,co.name,c.country_name,u.university_name,u.university_name university_name_id,u.id university_id,u.fees_mandatory,u.exam FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id) where name='$lead_type' and status = 0 ")->result_array();
 }
 
 function get_country_list($segment_id)
