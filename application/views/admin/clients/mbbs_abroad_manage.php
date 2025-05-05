@@ -1406,25 +1406,24 @@ init_tail();
       $(".is_transist_location, .no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
    }
 
-   $('#customers_bulk_action').on('show.bs.modal', function() {
+ $('#customers_bulk_action').on('show.bs.modal', function() {
       $("#customers_bulk_action").find("select").val("").selectpicker('refresh');
       $("#customers_bulk_action").find("input[type=checkbox]").prop("checked", false);
       $("#customers_bulk_action").find("input").val("");
 
       $(".document_status_update").show();
       $(".no_is_transist_location").show();
-      $(".visa_update div.checkbox").show();
-      $(".apostille_update div.checkbox").show();
+      $(".visa_update,.visa_update div.checkbox").show();
+      $(".apostille_update,.apostille_update div.checkbox").show();
 
       $(".is_transist_location").hide();
       $(".visa_status_update").hide();
       $(".apostille_status_update").hide()
-      $(".document_status_update").hide();
+      // $(".document_status_update").hide();
 
       $(".doc-cost-section").html('');
 
    });
-
    function refreshApplicantTable() {
       applicant_table.ajax.reload(null, false);
    }

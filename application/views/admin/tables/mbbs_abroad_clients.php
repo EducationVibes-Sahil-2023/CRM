@@ -168,7 +168,19 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
             END AS apostille_status
         FROM " . db_prefix() . "client_apostille_data
         GROUP BY userid
-    ) AS apostille_summary ON apostille_summary.userid = " . db_prefix() . "clients.userid"
+    ) AS apostille_summary ON apostille_summary.userid = " . db_prefix() . "clients.userid",
+//     'LEFT JOIN (
+//     SELECT td1.*
+//     FROM ' . db_prefix() . 'ticket_data td1
+//     INNER JOIN (
+//         SELECT MAX(id) AS max_id
+//         FROM ' . db_prefix() . 'ticket_data
+//         GROUP BY client_id
+//     ) td2 ON td1.id = td2.max_id
+// ) td ON td.client_id = ' . db_prefix() . 'clients.userid',
+//     'LEFT JOIN ' . db_prefix() . 'ticket_status ts ON ts.id=td.ticket_status',
+//     'LEFT JOIN ' . db_prefix() . 'vendor_list tc ON tc.id=td.vendor_id',
+//     'LEFT JOIN ' . db_prefix() . 'payment_mode tm ON tm.id=td.payment_mode',
 
 ];
 

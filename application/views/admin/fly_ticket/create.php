@@ -332,7 +332,8 @@ if (!empty($batch_data["client_ids"])) {
         } else {
             formData.append("university_name", university_name);
         }
-
+       let batch_id = "<?= !empty($batch_id) ? $batch_id :'' ?>";
+ formData.append("batch_id", batch_id);
         $.ajax({
             url: "<?php echo base_url('admin/fly_batch/client_list'); ?>",
             type: "POST",

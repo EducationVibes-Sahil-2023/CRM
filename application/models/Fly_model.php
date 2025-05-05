@@ -206,6 +206,12 @@ class Fly_model extends App_Model
                         $data['id'] = $existing->id;
                         $updateData[] = $data;
                     } else {
+                        
+                         $check = $this->check_ticket_data([$data["client_id"]], $data);
+
+                if (!$check["status"]) {
+                    return $check;
+                }
                         $insertData[] = $data;
                     }
                 }
