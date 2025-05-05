@@ -1383,6 +1383,11 @@ function check_country_rest($studyCountries)
             $studyCountries[] = 'Rest';
         }
     }
+    
+    if(empty($studyCountries))
+    {
+         $studyCountries[] = 'Rest';
+    }
 
     return $studyCountries;
 }
@@ -2061,107 +2066,213 @@ function visa_details($client_id)
     return $CI->db->get(db_prefix() . 'visa_details')->result_array();
 }
 
+// function validate_orignal_documents($client_ids, $country_names = [])
+// {
+//     if (!empty($country_names)) {
+//         $country_names = check_country_rest($country_names);
+//     }
+    
+
+//     $CI = &get_instance();
+
+//     // Step 1: Fetch valid documents
+//     $CI->db->select("o.id AS doc_id, o.name AS doc_name,if(minor_status = 2,o.id ,0) check_minor")
+//         ->from(db_prefix() . 'orignal_documents o')
+//         ->where('o.status', 1);
+
+
+//     if (in_array("Rest", $country_names)) {
+//         $CI->db->where('o.visa_rest', 1);
+//     } else {
+//         $CI->db->where('o.visa_georgia', 1);
+//     }
+
+//     // Optional: filter by specific document IDs (ensure $document_ids is set if used)
+//     // if (!empty($document_ids ?? [])) {
+//     //     $CI->db->where_in('o.id', $document_ids);
+//     // }
+
+//     $all_documents = $CI->db->get()->result_array();
+
+//     $minor_id = "";
+
+//     $filtered_documents = array_filter($all_documents, function ($doc) use (&$minor_id) {
+//         if (!empty($doc['check_minor']) && $doc['check_minor'] > 0) {
+//             $minor_id = $doc['doc_id'];
+//             return true; // Exclude this document
+//         }
+//         return true; // Keep documents where check_minor is 0
+//     });
+
+
+//     $valid_doc_ids = array_column($filtered_documents, 'doc_id');
+
+//     if (empty($valid_doc_ids)) {
+//         return [
+//             "error" => true,
+//             "message" => "No valid documents found for the selected country.",
+//         ];
+//     }
+
+//     // Step 2: Get received documents
+//     $CI->db->select("r.userid, r.doc_id")
+//         ->from(db_prefix() . 'orignal_documents_received r')
+//         ->where_in('r.userid', $client_ids)
+//         ->where_in('r.doc_id', $valid_doc_ids);
+//     $received_docs = $CI->db->get()->result_array();
+
+//     // Step 3: Map received documents by user ID
+//     $received_map = [];
+//     foreach ($received_docs as $row) {
+//         $received_map[$row['userid']][] = $row['doc_id'];
+//     }
+
+//     // Step 4: Fetch client names
+//     $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName,CASE 
+//     WHEN TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 THEN 1
+//     ELSE 0
+// END AS is_minor,country")
+//         ->from(db_prefix() . 'basic_details b')
+//          ->join(db_prefix() . 'admission_preferences a','a.userid = b.userid','left')
+//         ->where_in('b.userid', $client_ids);
+//     $clients = $CI->db->get()->result_array();
+
+
+//     $errors = [];
+//     foreach ($clients as $client) {
+//         $user_id = $client['userid'];
+//         $client_name = $client['clientName'];
+//         $clientMinor = $client['is_minor'];
+//         $received = isset($received_map[$user_id]) ? $received_map[$user_id] : [];
+
+//         foreach ($all_documents as $doc) {
+
+//             // Skip document check if it is minor-only and client is not a minor
+//             if ($doc["check_minor"] > 0 && $clientMinor == 0) {
+//                 continue;
+//             }
+
+//             // Check if document was received
+//             if (!in_array($doc['doc_id'], $received)) {
+//                 $errors[] = "User '{$client_name}' has not received original document '{$doc['doc_name']}'.";
+
+//                 return [
+//                     "error" => true,
+//                     "message" => $errors, // Return first error message (optional: return all as list)
+//                 ];
+//             }
+//         }
+//     }
+
+//     // If any errors found, return the first one
+//     if (!empty($errors)) {
+//         return [
+//             "error" => true,
+//             "message" => $errors[0], // Return first error message (optional: return all as list)
+//         ];
+//     }
+
+//     return [
+//         "error" => false,
+//         "message" => "Validation passed."
+//     ];
+// }
+
 function validate_orignal_documents($client_ids, $country_names = [])
 {
-    if (!empty($country_names)) {
-        $country_names = check_country_rest($country_names);
-    }
-
     $CI = &get_instance();
 
-    // Step 1: Fetch valid documents
-    $CI->db->select("o.id AS doc_id, o.name AS doc_name,if(minor_status = 2,o.id ,0) check_minor")
+    // Step 1: If no countries provided, fetch them based on client IDs
+    if (empty($country_names)) {
+        $CI->db->select("DISTINCT TRIM(LOWER(a.study_country)) AS country")
+            ->from(db_prefix() . 'admission_preferences a')
+            ->where_in('a.userid', $client_ids);
+        $country_rows = $CI->db->get()->result_array();
+
+        $country_names = array_column($country_rows, 'country');
+        $country_names = array_map('ucfirst', $country_names); // Normalize, e.g., 'georgia'
+    }
+
+    // Step 2: Normalize countries (handle 'Rest' if needed)
+    $country_names = check_country_rest($country_names);
+
+    // Step 3: Fetch valid documents based on visa country
+    $CI->db->select("o.id AS doc_id, o.name AS doc_name, IF(minor_status = 2, o.id, 0) AS check_minor")
         ->from(db_prefix() . 'orignal_documents o')
         ->where('o.status', 1);
 
     if (in_array("Rest", $country_names)) {
-        $CI->db->where('o.visa', 1);
+        $CI->db->where('o.visa_rest', 1);
     } else {
         $CI->db->where('o.visa_georgia', 1);
     }
 
-    // Optional: filter by specific document IDs (ensure $document_ids is set if used)
-    // if (!empty($document_ids ?? [])) {
-    //     $CI->db->where_in('o.id', $document_ids);
-    // }
-
     $all_documents = $CI->db->get()->result_array();
 
-    $minor_id = "";
-
-    $filtered_documents = array_filter($all_documents, function ($doc) use (&$minor_id) {
-        if (!empty($doc['check_minor']) && $doc['check_minor'] > 0) {
-            $minor_id = $doc['doc_id'];
-            return true; // Exclude this document
-        }
-        return true; // Keep documents where check_minor is 0
-    });
-
-
+    // Step 4: Filter minor documents
+    $filtered_documents = $all_documents;
     $valid_doc_ids = array_column($filtered_documents, 'doc_id');
 
     if (empty($valid_doc_ids)) {
-        return [
+        $data =  [
             "error" => true,
             "message" => "No valid documents found for the selected country.",
+            'resp_code' => 'ERR',
+            'resp_desc' => "No valid documents found for the selected country.",
         ];
+        echo json_encode($data);
+        die;
     }
 
-    // Step 2: Get received documents
+    // Step 5: Get received documents
     $CI->db->select("r.userid, r.doc_id")
         ->from(db_prefix() . 'orignal_documents_received r')
         ->where_in('r.userid', $client_ids)
         ->where_in('r.doc_id', $valid_doc_ids);
     $received_docs = $CI->db->get()->result_array();
 
-    // Step 3: Map received documents by user ID
+    // Step 6: Map received documents by user ID
     $received_map = [];
     foreach ($received_docs as $row) {
         $received_map[$row['userid']][] = $row['doc_id'];
     }
 
-    // Step 4: Fetch client names
-    $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName,CASE 
-    WHEN TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 THEN 1
-    ELSE 0
-END AS is_minor")
+    // Step 7: Fetch client details (including minor status and country)
+    $CI->db->select("b.userid, CONCAT(b.first_name, ' ', b.last_name) AS clientName, 
+                     CASE WHEN TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 THEN 1 ELSE 0 END AS is_minor,
+                     TRIM(LOWER(a.study_country)) AS country")
         ->from(db_prefix() . 'basic_details b')
+        ->join(db_prefix() . 'admission_preferences a', 'a.userid = b.userid', 'left')
         ->where_in('b.userid', $client_ids);
     $clients = $CI->db->get()->result_array();
 
-
+    // Step 8: Validate for each client
     $errors = [];
     foreach ($clients as $client) {
         $user_id = $client['userid'];
         $client_name = $client['clientName'];
         $clientMinor = $client['is_minor'];
-        $received = isset($received_map[$user_id]) ? $received_map[$user_id] : [];
+        $received = $received_map[$user_id] ?? [];
 
-        foreach ($all_documents as $doc) {
-
-            // Skip document check if it is minor-only and client is not a minor
-            if ($doc["check_minor"] > 0 && $clientMinor == 0) {
+        foreach ($filtered_documents as $doc) {
+            // Skip minor-only documents for non-minors
+            if ($doc['check_minor'] > 0 && $clientMinor == 0) {
                 continue;
             }
 
-            // Check if document was received
+            // Check if the document is received
             if (!in_array($doc['doc_id'], $received)) {
-                $errors[] = "User '{$client_name}' has not received original document '{$doc['doc_name']}'.";
-
-                return [
-                    "error" => true,
-                    "message" => $errors, // Return first error message (optional: return all as list)
-                ];
+                // $errors[] = "User '{$client_name}' has not received original document '{$doc['doc_name']}'.";
+                 $data =  [
+            "error" => true,
+            "message" => "No valid documents found for the selected country.",
+            'resp_code' => 'ERR',
+            'resp_desc' =>  "User '{$client_name}' has not received original document '{$doc['doc_name']}'."
+        ];
+        echo json_encode($data);
+        die;
             }
         }
-    }
-
-    // If any errors found, return the first one
-    if (!empty($errors)) {
-        return [
-            "error" => true,
-            "message" => $errors[0], // Return first error message (optional: return all as list)
-        ];
     }
 
     return [
@@ -2179,7 +2290,10 @@ function check_invitation_letter($client_ids_array = [])
     if (empty($client_ids_array)) {
         $data = [
             "error" => true,
-            "message" => ["No client IDs provided."],
+            "message" => "No client IDs provided.",
+             'resp_code' => 'ERR',
+            'resp_desc' => "No client IDs provided."
+
         ];
 
         echo json_encode($data);
@@ -2289,7 +2403,7 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
     if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
         $data = [
             'error'               => true,
-            'message'               =>  $resultOrignal["message"][0],
+            'message'               =>  $resultOrignal["message"],
         ];
 
         // set_alert('danger',  $message);
@@ -2297,7 +2411,7 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
     }
 
 
-    check_invitation_letter($client_ids_array = []);
+    check_invitation_letter($client_ids_array);
 
     $stage = 9;
     $lead_type = 2;

@@ -8227,7 +8227,7 @@ function get_client_list($university_name)
     return $CI->db->query($sql, ["%$university_name%"])->result_array();
 }
 
-function get_client_list_fly_batch($university_names = [])
+function get_client_list_fly_batch($university_names = [],$batch_id="")
 {
     $CI = &get_instance();
 
@@ -8243,7 +8243,7 @@ function get_client_list_fly_batch($university_names = [])
 
     $university_list = implode(',', $escaped_universities);
 
-    $sql = "
+   $sql = "
     SELECT c.userid, CONCAT(b.first_name, ' ', b.last_name) AS full_name
     FROM " . db_prefix() . "clients c
     LEFT JOIN " . db_prefix() . "admission_preferences a ON c.userid = a.userid
@@ -8261,10 +8261,10 @@ function get_client_list_fly_batch($university_names = [])
     AND c.active = 1
     AND a.primary_university IN ($university_list)
     AND (
-        t.ticket_status IS NULL
-        OR t.ticket_status != 3
+        t.ticket_status = 3 OR t.id IS NULL
     )
 ";
+
 
 
     return $CI->db->query($sql)->result_array();

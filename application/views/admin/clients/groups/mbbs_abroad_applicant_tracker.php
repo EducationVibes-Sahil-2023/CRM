@@ -2785,6 +2785,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             return html;
         };
 
+
         const renderVisaBlock = (visa = {}, index = 1) => {
             let media_view = '';
             let requried = 'required-check="true" required="true"';
@@ -2799,7 +2800,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 </div>`;
             }
             let delete_ = ``;
-            if ((index > 0 && visa.id != "") || (index > 0 && <?= is_admin() ?> == 1)) {
+            if ((index > 0 && visa.id != "") || (index > 0 && <?= is_admin()?1:0 ?> == 1)) {
                 delete_ = `<div class="text-right">
         <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,${visa.id ?? 0})"></i>
         </div>`;
