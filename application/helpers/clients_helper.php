@@ -2575,3 +2575,76 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
         "message" => "Validation passed."
     ];
 }
+
+function doc_urls_additional($user_id)
+{
+    $CI = &get_instance();
+    $user_id = (int) $user_id;
+
+    $final_files = [];
+
+    // Centralized config: table name => fields with labels
+    $queries = [
+        db_prefix() . 'clients' => [
+            'where' => "userid = {$user_id}",
+            'order' => 'registration_slip DESC',
+            'fields' => [
+                'quotation' => 'Quotation',
+                'registration_slip' => 'Registration Slip',
+                'registration_slip_invoice' => 'Registration Slip Invoice',
+                'fees_structure' => 'Fees Structure',
+                'refund_payment_proof' => 'Refund Payment Proof'
+            ]
+        ],
+        db_prefix() . 'client_university_shortlisting' => [
+            'where' => "client_id = {$user_id}",
+            'order' => 'university_fees_payment_slip DESC',
+            'fields' => [
+                'application_file' => 'Application Letter',
+                'ministry_payment' => 'MD Payment Proof',
+                'fees_deposite_slip' => 'Payment Proof',
+                'university_fees_payment_slip' => 'University Payment Receipt',
+                'invitation_letter' => 'Invitation Letter'
+            ]
+        ],
+        db_prefix() . 'visa_details' => [
+            'where' => "userid = {$user_id}",
+            'fields' => [
+                'file' => 'Visa'
+            ]
+        ],
+        // db_prefix() . 'ticket_data' => [
+        //     'where' => "client_id = {$user_id}",
+        //     'fields' => [
+        //         'file' => 'Ticket'
+        //     ]
+        // ],
+    ];
+
+    // Build and run queries dynamically
+    foreach ($queries as $table => $config) {
+        $fieldSelections = [];
+        foreach ($config['fields'] as $field => $label) {
+            $fieldSelections[] = "{$field} AS `{$label}`";
+        }
+
+        $sql = "SELECT " . implode(', ', $fieldSelections) . " FROM {$table} WHERE {$config['where']}";
+        if (!empty($config['order'])) {
+            $sql .= " ORDER BY {$config['order']}";
+        }
+
+        $results = $CI->db->query($sql)->result_array();
+        foreach ($results as $row) {
+            foreach ($row as $label => $path) {
+                if (!empty($path) && $path !== '0') {
+                    $final_files[] = [
+                        'name' => $label,
+                        'url' => base_url($path)
+                    ];
+                }
+            }
+        }
+    }
+
+    return $final_files;
+}
