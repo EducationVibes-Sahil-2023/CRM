@@ -177,7 +177,7 @@ function get_available_staff_permissions($data = [])
         ],
 
         'application_tracker_mbbbs_sc' => [
-            'name'         => "Fly batch",
+            'name'         => "Applicant Tracker Permission",
             'capabilities' => [
                 'edit'     => _l('permission_edit')
             ],

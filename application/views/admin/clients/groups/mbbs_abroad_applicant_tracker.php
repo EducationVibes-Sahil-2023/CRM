@@ -1434,7 +1434,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         </form>
                         <?php } else if ($track["show_div_name"] == "sc_div") {
 
-                        if (!has_permission($track["check_permission"])) {
+                        if (!has_permission($track['check_permission'], '', 'edit')) {
+
                             echo ' <div class="col-md-12"><h3>You do not have permission to continue to the next step.</h3></div>';
                         } else {
                         ?>
@@ -1447,7 +1448,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                         <input type="checkbox"
                                             id="sc_100" class="form-check-input <?= $mand_re ?>"
                                             name="sc_100"
-                                            <?= !has_permission($track["check_permission"]) ? 'disabled' : '' ?>
+                                            <?= !has_permission($track['check_permission'], '', 'edit') ? 'disabled' : '' ?>
                                             <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'checked' : '' ?>>
                                     </label>
                                 </div>
@@ -1468,7 +1469,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
                     <?php } else {
                     ?>
-                        <?php if (has_permission($track["application_tracker_mbbbs_sc"])) { ?>
+                        <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit')) { ?>
                             <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
                         <?php } ?>
                     <?php

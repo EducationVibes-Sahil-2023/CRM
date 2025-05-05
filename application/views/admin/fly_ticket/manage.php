@@ -22,7 +22,7 @@ $table_data = array(
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body _buttons">
-                        <?php if (has_permission('fly_ticket', '', 'create')) { ?>
+                        <?php if (has_permission('fly_batch', '', 'create')) { ?>
                             <a href="<?php echo admin_url('Fly_batch/create'); ?>" class="btn btn-info pull-left display-block"><?= "Fly Ticket Batch Create" ?></a>
                         <?php } ?>
                         <div class="clearfix"></div>
