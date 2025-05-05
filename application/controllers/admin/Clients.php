@@ -5499,13 +5499,14 @@ class Clients extends AdminController
                 ]);
                 die;
             }
-
+            // $documents_name = get_documents()
             $documents = get_clients_documents($userid);
             $documents_type =  array_column(get_documents(), "name", "id");
 
             $doc_urls = [];
             if (!empty($documents[0]['data'])) {
                 $documents = json_decode($documents[0]['data'], true);
+
                 foreach ($documents as $doc) {
                     if ($doc['approval_status'] == 1) {
                         $name = !empty($documents_type[$doc["id"]]) ? $documents_type[$doc["id"]] : '';
@@ -5513,7 +5514,9 @@ class Clients extends AdminController
                     }
                 }
             }
+            $doc_urls_additional = doc_urls_additional($userid);
 
+            $doc_urls = array_merge($doc_urls,$doc_urls_additional);
             if (!empty($doc_urls)) {
                 echo json_encode([
                     'resp_code' => 'RCS',
