@@ -175,6 +175,13 @@ function get_available_staff_permissions($data = [])
                 'delete' => _l('permission_delete'),
             ],
         ],
+
+        'application_tracker_mbbbs_sc' => [
+            'name'         => "Fly batch",
+            'capabilities' => [
+                'edit'     => _l('permission_edit')
+            ],
+        ],
     ];
 
     $addLeadsPermission = true;

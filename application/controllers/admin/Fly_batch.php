@@ -283,4 +283,56 @@ class Fly_batch extends AdminController
         }
         redirect(admin_url('taxes'));
     }
+
+    public function delete_ticket()
+    {
+        $id = $this->input->post("id", true); // could be array or single ID
+
+        if (!is_lead_creator($id) && !has_permission('fly_batch', '', 'delete')) {
+            access_denied('Delete Fly Ticket');
+        }
+
+        // Attempt to delete the ticket
+        $this->db->where('id', $id);
+        $response = $this->db->delete(db_prefix() . 'ticket_data');
+
+        // Check for deletion result
+        if ($response === true) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => "Ticket successfully deleted."
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => "Problem deleting the ticket."
+            ]);
+        }
+    }
+
+    public function update_ticket_status()
+    {
+        $id = $this->input->post("id", true); // Could be array or single ID
+        $ticket_status = $this->input->post("ticket_status", true);
+
+        if (!is_lead_creator($id) && !has_permission('fly_batch', '', 'edit')) {
+            access_denied('Update Fly Ticket');
+        }
+
+        $this->db->where('id', $id);
+        $data = array("ticket_status" => $ticket_status);
+        $response = $this->db->update(db_prefix() . 'ticket_data', $data);
+
+        if ($response) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => "Ticket status updated successfully."
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => "Problem updating the ticket status."
+            ]);
+        }
+    }
 }

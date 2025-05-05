@@ -230,4 +230,65 @@ $table_data = array(
             },
         });
     }
+
+
+    function delete_ticket(id) {
+        let formData = new FormData();
+
+        formData.append("csrf_token_name", csrfData.hash);
+        formData.append("id", id);
+
+        $.ajax({
+            url: "<?= base_url('admin/fly_batch/delete_ticket'); ?>",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: "JSON",
+            success: function(res) {
+                if (res.resp_code === "RCS") {
+                    alert_float("success", res.resp_desc);
+                    if (typeof tAPI !== "undefined") tAPI.ajax.reload();
+                    $("#ticketModal").modal("hide");
+                } else {
+                    alert_float("danger", res.resp_desc || "An unknown error occurred.");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: ", error);
+                alert_float("danger", "An error occurred while processing the request.");
+            },
+        });
+    }
+
+
+    function fly_mark_as(status, id) {
+        let formData = new FormData();
+
+        formData.append("csrf_token_name", csrfData.hash);
+        formData.append("ticket_status", status);
+        formData.append("id", id);
+
+        $.ajax({
+            url: "<?= base_url('admin/fly_batch/update_ticket_status'); ?>",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: "JSON",
+            success: function(res) {
+                if (res.resp_code === "RCS") {
+                    alert_float("success", res.resp_desc);
+                    if (typeof tAPI !== "undefined") tAPI.ajax.reload();
+                    $("#ticketModal").modal("hide");
+                } else {
+                    alert_float("danger", res.resp_desc || "An unknown error occurred.");
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: ", error);
+                alert_float("danger", "An error occurred while processing the request.");
+            },
+        });
+    }
 </script>
