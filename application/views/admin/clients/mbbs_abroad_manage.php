@@ -469,8 +469,10 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-payment hide">
-                                 <div class="form-group">
-                                    <input type="text" class="form-control datepicker" name="visa_payment_date" id="visa_payment_date" placeholder="Visa Payment Update Date" autocomplete="off">
+                                 <div id="leads-filter-source">
+                                    <div class="form-group no-mbot">
+                                       <input type="text" class="form-control datepicker" name="visa_payment_date" id="visa_payment_date" placeholder="Visa Payment Update Date" autocomplete="off">
+                                    </div>
                                  </div>
                               </div>
 
@@ -797,6 +799,12 @@ init_tail();
    var group_selection = [];
 
    $(document).ready(function() {
+
+
+
+      $(".filter-hide-default").find("select").val('').selectpicker("refresh");
+      $(".filter-hide-default").addClass('show');
+
       if (tbllead_performance_column_array[selected_view]) {
          show_column_array = (tbllead_performance_column_array[selected_view].column_ids || "").split(",");
          selected_column_array = (tbllead_performance_column_array[selected_view].selected_ids || "").split(",");
@@ -1572,17 +1580,20 @@ init_tail();
 
 
    function downloadAndZipFiles(files, zipFileName = "documents.zip") {
-   const zip = new JSZip();
-   const folder = zip.folder("files");
+      const zip = new JSZip();
+      const folder = zip.folder("files");
 
-   const downloadPromises = files.map(({ url, name }, index) =>
-      fetch(url)
+      const downloadPromises = files.map(({
+            url,
+            name
+         }, index) =>
+         fetch(url)
          .then(response => {
             if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
             return response.blob().then(blob => {
                const originalName = url.split('/').pop().split('?')[0] || `file${index}`;
                const extension = originalName.includes('.') ? '.' + originalName.split('.').pop() : '';
-               
+
                // Use the provided name if available, or default to 'fileX' where X is the index
                const finalName = (name || `file${index}`) + extension;
 
@@ -1590,15 +1601,17 @@ init_tail();
             });
          })
          .catch(err => console.error("Error downloading file:", err))
-   );
+      );
 
-   Promise.all(downloadPromises).then(() => {
-      // Generate the zip and save it with the provided name (or default to 'documents.zip')
-      zip.generateAsync({ type: "blob" }).then(content => {
-         saveAs(content, zipFileName);
+      Promise.all(downloadPromises).then(() => {
+         // Generate the zip and save it with the provided name (or default to 'documents.zip')
+         zip.generateAsync({
+            type: "blob"
+         }).then(content => {
+            saveAs(content, zipFileName);
+         });
       });
-   });
-}
+   }
 
 
 

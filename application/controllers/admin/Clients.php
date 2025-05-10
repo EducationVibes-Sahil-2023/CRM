@@ -4115,6 +4115,20 @@ class Clients extends AdminController
 
 
                 $rows_affected = $this->db->affected_rows();
+
+                if (!empty($post_date) && $post_date['save'] == 1) {
+                    $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+                    $ids = array_column($university_shortlisting_data, "id");
+                    $this->update_applicant_tracker_stages($client_id, $tracker_id);
+
+
+                    return  $data = [
+                        'resp_code'               => 'RCS',
+                        'resp_desc'               => "University shortlisting updated successfully.",
+                        'ids'                     => $ids,
+                        'university_shortlisting' => $university_shortlisting_data
+                    ];
+                }
                 if ($rows_affected) {
                     // Check required documents for stage 3
                     $check_documents = $this->check_documents(4);
@@ -4187,6 +4201,80 @@ class Clients extends AdminController
 
         return $data;
     }
+
+
+
+    function select_primary_university()
+    {
+        $primary_university = $this->input->post('primaryUniversity', true);
+        $primary_country = $this->input->post('primaryCountry', true);
+        $client_id = $this->input->post('client_id', true);
+
+        if (!empty($primary_university) && !empty($primary_country) && !empty($client_id)) {
+            $this->db->where("userid", $client_id);
+            $update = $this->db->update(db_prefix() . 'admission_preferences', [
+                "primary_university" => $primary_university,
+                "primary_country"    => $primary_country
+            ]);
+
+            if ($update) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Primary university and country updated successfully.'
+                ]);
+            } else {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Update failed. Please try again.'
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Required fields are missing.'
+            ]);
+        }
+    }
+    function reset_university_shortlisting()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+
+        $client_id = $this->input->post("client_id", true);
+
+        if (empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Client ID is required';
+            echo json_encode($data);
+            return;
+        }
+
+        // Delete old shortlisting records
+        $this->db->delete(db_prefix() . "client_university_shortlisting", ["client_id" => $client_id]);
+
+        // Get new shortlisting data
+        $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+        $ids = array_column($university_shortlisting_data, "id");
+
+        $this->db->where("userid", $client_id);
+        $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
+
+        $this->update_applicant_tracker_stages($client_id, 2);
+
+        $data = [
+            'resp_code'               => 'RCS',
+            'resp_desc'               => 'University shortlisting reset successfully.',
+            'ids'                     => $ids,
+            'university_shortlisting' => $university_shortlisting_data
+        ];
+
+        echo json_encode($data);
+    }
+
 
     private function admission_letter()
     {

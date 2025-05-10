@@ -60,7 +60,7 @@ if (!empty($this->ci->input->post('up_to_date'))) {
 
         $min = isset($_POST['update_count_min']) ? $_POST['update_count_min'] : 0;
         $max = isset($_POST['update_count_max']) ? $_POST['update_count_max'] : 0;
-        // $where_c = " AND ifnull(tblcalls_activity_logs.id,0) between {$min} AND {$max} ";
+        $where_c = " AND ifnull(tblcalls_activity_logs.id,0) between {$min} AND {$max} ";
 
 
         if ($min == 0) {

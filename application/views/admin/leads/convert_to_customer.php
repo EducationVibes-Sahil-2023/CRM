@@ -1,4 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+$states = get_states();
+?>
 <style>
    .currency-selector {
       position: absolute;
@@ -82,7 +85,31 @@
                      <?php echo render_input('city', 'client_city', $lead->city); ?>
                   </div>
                   <div class="col-lg-4 col-md-6 col-12">
-                     <?php echo render_input('state', 'client_state', $lead->state); ?>
+
+                     <?php
+                     array_unshift($states, ['name' => '']); // Add an empty option at the beginning
+
+                     echo render_select(
+                        'state',
+                        $states,
+                        ['name', 'name'],
+                        'State',
+                        '',
+                        [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'States',
+                           'data-actions-box' => true
+                        ],
+                        [],
+                        'no-mbot',
+                        '',
+                        false,
+                        'state'
+                     );
+
+
+                     // echo render_select('country', $countries, array('country_id', array('short_name')), 'clients_country', $selected, array('data-none-selected-text' => _l('dropdown_non_selected_tex')));
+                     ?>
                   </div>
                </div>
                <div class="row col-md-12">
@@ -121,7 +148,7 @@
                <?php if ($lead->source == REFERENCE_ID) { ?>
                   <div class="col-lg-4 col-md-6 col-12">
                      <label></label>
-                     <?php echo render_input('reference_name', 'Reference Name <small class="text-danger">*</small>', '', '', ["required" => "required", "placeholder" => "reference Name"]); ?>
+                     <?php echo render_input('reference_name', 'Reference Name <small class="text-danger">*</small>', !empty($lead->reference_name) ? $lead->reference_name : '', '', ["required" => "required", "placeholder" => "reference Name"]); ?>
                   </div>
                <?php } ?>
                <!-- 

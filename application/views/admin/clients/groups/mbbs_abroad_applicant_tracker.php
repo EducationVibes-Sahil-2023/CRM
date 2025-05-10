@@ -1462,6 +1462,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <?php
                     if (($k + 1) < count($applicant_tracker)) { ?>
                         <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Save & Next" />
+                        <?php if (!empty($track['save']) && $track['save'] == 1) { ?>
+                            <input type="button" name="next" class="next text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
+                            <input type="button" name="next" class="next text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
+
+                        <?php } ?>
                         <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
                             <input type="button" name="next" class=" text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
                         <?php } ?>
@@ -1475,6 +1480,35 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <?php
                     } ?>
 
+                    <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['save'] == 1) { ?>
+                        <div class="col-lg-5 pull-right">
+                            <div class="form-group">
+                                <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
+                                <select class="form-control selectpicker" required-check name="primary_university" onchange="select_primary_university(this)" id="primary_university" required>
+                                    <option value="">Select University</option>
+                                    <?php
+                                    $university_p = json_decode($admissionpreferences->university, true);
+
+                                    if (!empty($university_p)) {
+                                        foreach ($university_p as $key => $country) {
+                                            $universities = array_filter(explode(",", $country)); // Remove empty values
+                                            foreach ($universities as $uni) { ?>
+                                                <option data-country="<?= $key ?>" <?= ($admissionpreferences->primary_university == $uni) ? 'selected' : '' ?> value="<?= htmlspecialchars($uni) ?>"><?= htmlspecialchars($uni) ?></option>
+                                    <?php }
+                                        }
+                                    }
+                                    ?>
+                                </select>
+
+                            </div>
+                        </div>
+                        <div class="col-lg-4 hide">
+                            <div class="form-group">
+                                <label for="primary_university">Primary Country<small class="text-danger">*</small></label>
+                                <input type="text" class="form-control" id="primary_country" name="primary_country" value="<?= $admissionpreferences->primary_country ?>">
+                            </div>
+                        </div>
+                    <?php } ?>
 
                 </fieldset>
             <?php
@@ -1861,7 +1895,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         next_fs.slideDown("slow");
     }
 
-    async function next_step(id, obj, skip = 0, completed = 0) {
+    async function next_step(id, obj, skip = 0, completed = 0, same_step = 0) {
         id = $.trim(id) || $("#progressbar .active").data("id");
 
         let upload_data = new FormData();
@@ -1883,6 +1917,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                 upload_data.append("sc_100", $("#sc_100").is(":checked") ? 1 : 0);
                 upload_data.append("completed", 1);
+                upload_data.append("save", same_step);
 
 
             } else if (id == 2) {
@@ -1997,6 +2032,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 }
 
 
+                if(same_step == 1)
+                {
+                    return false;
+                }
                 if (response.pass_stage !== undefined) {
                     if (response.stage_next_permission !== undefined && response.stage_next_permission == 0) {
                         alert_float("danger", "You do not have permission to view the next stage or take action.");
@@ -3078,6 +3117,51 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }
     }
 
+    async function reset_university_shortlisting() {
+
+        if (confirm("Are you sure you want to proceed? This action will reset the university shortlisting for the selected client.")) {
+
+            show_loader();
+
+            let upload_data = new FormData();
+            upload_data.append("client_id", client_id);
+            upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+
+            try {
+                let response = await $.ajax({
+                    url: "<?= base_url('admin/clients/reset_university_shortlisting') ?>",
+                    method: "POST",
+                    data: upload_data,
+                    contentType: false,
+                    processData: false,
+                });
+
+                response = typeof response === "string" ? JSON.parse(response) : response;
+
+                if (response.resp_code == "RCS") {
+                    $(".add_university_div_block").html('');
+                    add_university_div();
+                    alert_float("success", response.resp_desc);
+
+                } else {
+                    alert_float("danger", response.resp_desc);
+                }
+
+                return Response;
+            } catch (error) {
+                console.error("Email send error:", error);
+                alert_float("danger", "An error occurred while sending the email.");
+                return {
+                    success: false,
+                    message: "An error occurred while sending the email.",
+                };
+            } finally {
+                hide_loader();
+            }
+        }
+    }
+
+
     async function add_visa_div() {
         await set_validation_visa();
         let check_validation = await check_required_fields("visa-form");
@@ -3124,6 +3208,52 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             console.error(error);
             reject(error);
         }
+
+    }
+
+    $("#primary_university").on("change", async function() {
+        const country_name = $(this).find("option:selected").data("country") || "";
+        $("#primary_country").val(country_name);
+
+        const primaryUniversity = $('#primary_university').val();
+        const primaryCountry = $('#primary_country').val();
+
+        console.log(primaryUniversity);
+        console.log(primaryCountry);
+
+        let upload_data = new FormData();
+
+        try {
+            upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+            upload_data.append("client_id", <?= $client_id ?>);
+            upload_data.append("primaryUniversity", primaryUniversity);
+            upload_data.append("primaryCountry", primaryCountry);
+
+            const response = await $.ajax({
+                url: "<?= base_url("admin/clients/select_primary_university") ?>",
+                method: "POST",
+                data: upload_data,
+                contentType: false,
+                processData: false
+            });
+
+            const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+
+            if (parsedResponse.resp_code === "RCS") {
+                alert_float("success", parsedResponse.resp_desc);
+            } else {
+                alert_float("danger", parsedResponse.resp_desc || "Something went wrong.");
+            }
+        } catch (error) {
+            console.error("AJAX error:", error);
+            alert_float("danger", "Server error occurred. Please try again.");
+        }
+    });
+
+
+    async function select_primary_university(obj) {
+
+
 
     }
 </script>

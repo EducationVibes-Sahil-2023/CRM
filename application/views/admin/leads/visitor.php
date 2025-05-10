@@ -41,6 +41,10 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         border-radius: 0px;
         padding: 10px 0px;
     }
+
+    table .dropdown-menu-right {
+        right: auto !important
+    }
 </style>
 <div id="wrapper">
     <div class="content">
@@ -53,7 +57,7 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                         <div class="col-md-4">
                             <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="Lead Status" data-placement="bottom" onclick="slideToggle('.leads-overview');  summary(1); return false;"><i class="fa fa-bar-chart"></i></a>
 
-                            
+
                         </div>
 
                         <div class="clearfix"></div>
@@ -150,14 +154,14 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                         <hr>
 
                         <?php
-                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
+                        render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source", "Fb Form Name", "Created Date", "Updated Date", "connected date"), 'lead-visitor-genrate-table');
                         ?>
                         <?php if (!is_admin()) { ?>
                             <h4>Request Received</h4>
                             <hr>
 
                             <?php
-                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-request-table');
+                            render_datatable(array("Status", _l('Date Of Visit'), _l('Student Name'), "Contact no.", "Update Count", "Duration", _l('Place of Visit'), _l('Visit Type'), _l('Attendee'), "Assignee", _l('Lead type'), "Lead Status", "Lead Source"), 'lead-visitor-request-table');
                             ?>
                         <?php } ?>
                     </div>
@@ -346,5 +350,12 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         }
         hide_loader();
         return false;
+    }
+
+    function visit_lead_mark_as(e, t) {
+        var a = {};
+        a.status = e, a.id = t, $.post(admin_url + "leads/update_visit_lead_status", a).done(function(e) {
+            filter_data();
+        })
     }
 </script>

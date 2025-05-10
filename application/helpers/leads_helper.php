@@ -8068,7 +8068,7 @@ function get_leads_summary_filter_neww($params)
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
 
-    if (!empty($params['update_count_min'])) {
+    if (isset($params['update_count_min'])) {
         $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
     }
 
@@ -8747,4 +8747,19 @@ function get_departure_list()
     $CI = &get_instance();
 
     return $CI->db->query("SELECT * FROM  " . db_prefix() . "departure_location")->result_array();
+}
+
+function get_states()
+{
+    $CI = &get_instance();
+
+    return $CI->db->query("SELECT * from " . db_prefix() . "states ")->result_array();
+}
+
+
+function visitor_status(){
+    $CI = &get_instance();
+
+    $CI->db->where('status', 1);
+    return $CI->db->get(db_prefix() . 'visitor_status')->result_array();
 }
