@@ -333,7 +333,8 @@ if ($lead_type_status == 2) {
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Mobile Number <small class="text-danger">*</small></label>
-                                                <input class="form-control " <?= $read_only ?> type="tel" class="form-group" required-check required placeholder="Mobile Number" name="mobile" pattern="[0-9]{10}" maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
+                                                <input class="form-control check-phonenumber" <?= $read_only ?> type="tel" class="form-group" required-check required placeholder="Mobile Number" name="mobile" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                    maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
                                             </div>
                                         </div>
 
@@ -382,7 +383,8 @@ if ($lead_type_status == 2) {
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Contact <small class="text-danger">*</small></label>
-                                                <input class="form-control" required required-check type="tel" pattern="[0-9]{10}" maxlength="10" class="form-group" placeholder="Parents Contact" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
+                                                <input class="form-control check-phonenumber" required required-check type="tel" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                    maxlength="10" class="form-group" placeholder="Parents Contact" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
                                             </div>
                                         </div>
 
@@ -940,7 +942,8 @@ if ($lead_type_status == 2) {
                                             <p>Roll No. <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="[0-9]{10}" maxlength="15" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+                                            <input class="form-control check-phonenumber" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                maxlength="15" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
                                         </div>
 
                                     </div>
@@ -1533,6 +1536,11 @@ if ($lead_type_status == 2) {
                 feeBlock.style.display = "none"; // Hiding the element
             }
         <?php } ?>
+
+        $(".check-phonenumber").on("input", function() {
+            this.value = this.value.replace(/\D/g, '').substring(0, 10);
+        });
+        s
     });
 
 
