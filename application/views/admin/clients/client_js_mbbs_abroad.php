@@ -60,6 +60,15 @@
             return false;
         }
 
+        let phonenumber = $("#mobile").val().trim();
+        let p_phonenumber = $("#p_mobile").val().trim();
+
+        if (phonenumber !== "" && phonenumber === p_phonenumber) {
+            alert_float("danger", "Parent contact number and your phone number cannot be the same.");
+            return false; // prevent form submission or continue
+        }
+
+
         let formData = new FormData($("#basic-information-form")[0]); // Create FormData from form
 
         // Wait for media files to be processed before proceeding
