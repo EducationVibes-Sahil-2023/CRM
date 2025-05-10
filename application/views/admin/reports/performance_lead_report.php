@@ -26,10 +26,41 @@ $tbllead_performance_column = $this->leads_model->tbllead_performance_column();
 $selected_performance_column = array_slice(array_column($tbllead_performance_column, "id"), 0, 5);
 
 ?>
+<link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.css" />
+
+<link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
+<script src="<?= base_url("assets/js/uislider.js") ?>"></script>
 <style>
     span.show-persentage {
         float: right;
         font-size: 15px;
+    }
+
+    div#rangeSlider {
+        margin: 0px 0px 30px !important;
+    }
+
+    .noUi-horizontal {
+        height: 10px !important;
+    }
+
+    .noUi-horizontal .noUi-handle {
+        width: 20px;
+        height: 20px;
+        top: -7px;
+    }
+
+    .noUi-tooltip {
+        width: 30px !important;
+        bottom: -35px !important;
+        top: auto !important;
+    }
+
+    .noUi-tooltip {
+        width: auto !important;
+        min-width: 30px !important;
     }
 </style>
 
@@ -166,9 +197,26 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
                                 </div>
                             </div>
 
+                            <div class="leads-filter-column col-md-4" style="margin-bottom:20px;">
+                                <div class="checkbox" style="margin-bottom: 10px;">
+
+                                    <input type="checkbox" name="show_update_counts" value="1"
+                                        class="set_disabled_date disabled_checkbox"
+                                        id="show_update_counts"
+                                        onclick="show_update_count_range(this);">
+                                    <label> Update Count Range
+                                    </label>
+                                </div>
+
+                                <div id="rangeSlider" style="display: none;"></div>
+
+                                <input type="hidden" id="update_count_min" name="update_count_min">
+                                <input type="hidden" id="update_count_max" name="update_count_max">
+                            </div>
 
 
-                            <div class="col-md-6 leads-filter-column">
+
+                            <div class="col-md-2 leads-filter-column">
                                 <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
                                     <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
@@ -243,11 +291,109 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
             overflow-x: auto;
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.min.js"></script>
+
     <script>
+        var max_count = parseInt("30");
+
         var lead_performance_table;
         var performance_related_dropdown = <?= !empty($performance_related_dropdown) ? json_encode($performance_related_dropdown, true) : [] ?>;
         // console.log(performance_related_dropdown);
         var columnHeaders = [];
+
+
+        function show_update_count_range(obj) {
+            if ($(obj).is(":checked")) {
+                $("#rangeSlider").show();
+                setMinMaxValues();
+            } else {
+                $("#rangeSlider").hide();
+
+            }
+        }
+
+        function setMinMaxValues() {
+            // Get the current values of the slider
+            var currentValues = rangeSlider.noUiSlider.get();
+            max_count = 30;
+            // Update the options with new min and max values
+            rangeSlider.noUiSlider.updateOptions({
+                range: {
+                    'min': 0,
+                    'max': max_count
+                },
+                start: [0, max_count] // Preserve the current slider values
+            });
+        }
+
+        function recreate_range_slider(max) {
+
+            if (max != undefined && parseInt(max) != max_count) {
+                max_count = 30;
+                rangeSlider.noUiSlider.destroy();
+                max_count = parseInt(max);
+                let min_ = document.getElementById("update_count_min").value;
+                let max_ = document.getElementById("update_count_max").value;
+                make_range_slider(min_, max_);
+            }
+        }
+        // Initialize the range slider
+        function make_range_slider(min = 0, max = 0) {
+            var rangeSlider = document.getElementById('rangeSlider');
+            if (max == 0) {
+                max = max_count;
+            }
+            maxs = 30;
+            max_count = 30;
+
+            noUiSlider.create(rangeSlider, {
+                start: [min, max], // Initial values for min and max
+                connect: true,
+                tooltips: [true, true],
+                format: {
+                    to: function(value) {
+                        return Math.round(value); // Round the tooltip values
+                    },
+                    from: function(value) {
+                        return parseFloat(value); // Convert tooltip values to numbers
+                    }
+                },
+                step: 1,
+                range: {
+                    'min': 0,
+                    'max': max_count
+                }
+            });
+
+            // Get handles for min and max sliders
+            var sliderHandles = rangeSlider.getElementsByClassName('noUi-handle');
+            var minSliderHandle = sliderHandles[0];
+            var maxSliderHandle = sliderHandles[1];
+
+            // Set event listeners for slider change
+            rangeSlider.noUiSlider.on('update', function(values, handle) {
+                var minValue = parseFloat(values[0]);
+                var maxValue = parseFloat(values[1]);
+
+                // Update the hidden input values
+                document.getElementById('update_count_min').value = minValue;
+                document.getElementById('update_count_max').value = maxValue;
+            });
+
+            // Set event listeners for slider handle drag
+            minSliderHandle.addEventListener('drag', function() {
+                var minValue = parseFloat(rangeSlider.noUiSlider.get()[0]);
+                rangeSlider.noUiSlider.set([minValue, null]);
+            });
+
+            maxSliderHandle.addEventListener('drag', function() {
+                var maxValue = parseFloat(rangeSlider.noUiSlider.get()[1]);
+                rangeSlider.noUiSlider.set([null, maxValue]);
+            });
+        }
+
+        make_range_slider("", "");
+
         var column_names = {}; // Object to store column name mappings
         var r = {
             custom_view: "[name='custom_view']",

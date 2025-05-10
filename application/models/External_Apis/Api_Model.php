@@ -377,7 +377,7 @@ class Api_Model extends CI_Model
         try {
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
             // $this->db->query("UPDATE " . db_prefix() . "calls_activity_temp_logs SET contact = RIGHT(TRIM(contact), 10) WHERE LENGTH(TRIM(contact)) > 10");
-            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => "", "status" => 1), "*", 2000);
+            $get_all_activity_temp = $this->getdata(db_prefix() . 'calls_activity_temp_logs', array("id!=" => "", "status" => 1), "*", 1000);
             // echo "<pre>";
             // print_r($get_all_activity_temp );
 

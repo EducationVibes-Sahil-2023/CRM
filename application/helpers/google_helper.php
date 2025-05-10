@@ -184,6 +184,7 @@ if (!function_exists('get_data_excel')) {
                     JOIN " . db_prefix() . "leads l ON l.id = c.leadid
                     LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
                     LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = (c.applicant_stage)
+                    LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = (c.applicant_sub_status)
                     LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
                     LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid
                     LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid

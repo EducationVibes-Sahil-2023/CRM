@@ -519,6 +519,11 @@ class Leads_model extends App_Model
 
                 $data['description'] = nl2br($data['description']);
             }
+
+            if (isset($data['reference_name'])) {
+
+                $data['reference_name'] = nl2br($data['reference_name']);
+            }
         }
 
 
@@ -1817,6 +1822,22 @@ class Leads_model extends App_Model
 
      */
 
+    public function update_lead_visitor_status($data)
+
+    {
+        $this->db->where('id', $data['id']);
+
+        $this->db->update(db_prefix() . 'visitor_request', [
+
+            'status' => $data['status'],
+
+        ]);
+        if ($this->db->affected_rows() > 0) {
+            return true;
+        }
+
+        return false;
+    }
     public function update_lead_status($data)
 
     {
@@ -3191,14 +3212,14 @@ class Leads_model extends App_Model
                     $normal_ids[] = $col['id']; // Normal column
                 } else {
                     if (!empty($col['columns'])) {
-                        $additional_ids = array_merge($additional_ids, explode(",", $col['columns'])); // Merge directly
+                        $normal_ids = array_merge($normal_ids, explode(",", $col['columns'])); // Merge directly
                     }
                 }
             }
         }
 
         // Now merge normal + additional ids
-        $columns_ids = array_unique(array_merge($normal_ids, $additional_ids)); // Unique to avoid duplicates
+        $columns_ids = $normal_ids; // Unique to avoid duplicates
 
 
 

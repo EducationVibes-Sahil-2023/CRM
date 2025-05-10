@@ -297,8 +297,8 @@
                <div class="form-group" app-field-wrapper="phonenumber">
                   <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
                   <input type="text" maxlength="10" pattern="\d{10}" id="phonenumber" name="phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
-                                                                                                   echo 'maxlength="10"';
-                                                                                                } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
+                                                                                                                                                         echo 'maxlength="10"';
+                                                                                                                                                      } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
                </div>
             <?php } else { ?>
                <div class="form-group" app-field-wrapper="phonenumber">
@@ -332,12 +332,14 @@
                   </div>
                <?php } ?>
             </div>
+            <?php $value = (isset($lead) ? $lead->reference_name : ''); ?>
+            <?php echo render_input('reference_name', 'Reference Name', $value); ?>
             <div class="form-group hide">
                <label for="lead_value"><?php echo _l('lead_value'); ?></label>
                <div class="input-group" data-toggle="tooltip" title="<?php echo _l('lead_value_tooltip'); ?>">
                   <input type="text" maxlength="10" pattern="\d{10}" class="form-control" name="lead_value" value="<?php if (isset($lead)) {
-                                                                                          echo $lead->lead_value;
-                                                                                       } ?>">
+                                                                                                                        echo $lead->lead_value;
+                                                                                                                     } ?>">
                   <div class="input-group-addon">
                      <?php echo $base_currency->symbol; ?>
                   </div>
@@ -354,8 +356,8 @@
             <div class="form-group" app-field-wrapper="alternative_phonenumber">
                <label for="alternative_phonenumber" class="control-label"><?= _l('lead_add_edit_alternative_phonenumber'); ?></label>
                <input type="text" maxlength="10" pattern="\d{10}" id="alternative_phonenumber" name="alternative_phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
-                                                                                                                        echo 'maxlength="10"';
-                                                                                                                     } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>">
+                                                                                                                                                                              echo 'maxlength="10"';
+                                                                                                                                                                           } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>">
             </div>
             <?php // $value = (isset($lead) ? $lead->address : ''); 
             ?>
@@ -513,54 +515,54 @@
 <?php if (isset($lead) && $lead_locked == true) { ?>
    <script>
       $(function() {
-    // Set all fields to disabled if lead is locked
-    $('.lead-wrapper').find('input, select, textarea').each(function() {
-        $(this).attr('disabled', true);
-        if ($(this).is('select')) {
-            $(this).selectpicker('refresh');
-        }
-    });
+         // Set all fields to disabled if lead is locked
+         $('.lead-wrapper').find('input, select, textarea').each(function() {
+            $(this).attr('disabled', true);
+            if ($(this).is('select')) {
+               $(this).selectpicker('refresh');
+            }
+         });
 
-    // Allow only numbers in the phone number field
-    $('#phonenumber').keypress(function(event) {
-        console.log("okkkkk");
-        if (event.which != 8 && (event.which < 48 || event.which > 57)) {
-            event.preventDefault();
-        }
-    });
+         // Allow only numbers in the phone number field
+         $('#phonenumber').keypress(function(event) {
+            console.log("okkkkk");
+            if (event.which != 8 && (event.which < 48 || event.which > 57)) {
+               event.preventDefault();
+            }
+         });
 
-    // Apply maxlength, minlength, and pattern to phone number input
-    addmaxlen();
+         // Apply maxlength, minlength, and pattern to phone number input
+         addmaxlen();
 
-    function addmaxlen() {
-        var inputs = document.getElementsByClassName("phonenumber-validation");
-        for (var i = 0; i < inputs.length; i++) {
-            inputs[i].setAttribute("maxlength", "10");
-            inputs[i].setAttribute("minlength", "10");
-            inputs[i].setAttribute("pattern", "[6-9][0-9]{9}");
-            inputs[i].setAttribute("title", "Enter a valid 10-digit mobile number starting with 6-9");
-        }
-    }
+         function addmaxlen() {
+            var inputs = document.getElementsByClassName("phonenumber-validation");
+            for (var i = 0; i < inputs.length; i++) {
+               inputs[i].setAttribute("maxlength", "10");
+               inputs[i].setAttribute("minlength", "10");
+               inputs[i].setAttribute("pattern", "[6-9][0-9]{9}");
+               inputs[i].setAttribute("title", "Enter a valid 10-digit mobile number starting with 6-9");
+            }
+         }
 
-    // Prevent input of more than 10 digits and remove non-numeric characters
-   
-});
+         // Prevent input of more than 10 digits and remove non-numeric characters
 
- $('.phonenumber-validation').on('keypress', function() {
+      });
+
+      $('.phonenumber-validation').on('keypress', function() {
          var numbers = $(this).val().replace(/\D/g, ''); // Remove non-numeric characters
- var numbers = $(this).val().replace(/\D/g, '').length;
-   $(this).val(numbers); // Set the modified value
-   if(numbers > 9) {
-      return false;
-   } else if(e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
-      return false;
-   } else if((numbers == 0) && (e.which == 48)) {
-      return false;
-   }
-       
+         var numbers = $(this).val().replace(/\D/g, '').length;
+         $(this).val(numbers); // Set the modified value
+         if (numbers > 9) {
+            return false;
+         } else if (e.which != 8 && e.which != 0 && (e.which < 48 || e.which > 57)) {
+            return false;
+         } else if ((numbers == 0) && (e.which == 48)) {
+            return false;
+         }
 
-      
-    });
+
+
+      });
    </script>
 <?php } ?>
 
@@ -685,5 +687,5 @@
 
    setTimeout(add_required_exam_block(), 5000);
    leadUniqueValidationFields.push('alternative_phonenumber');
-  app.lang['alternative_phonenumber_exists'] = 'Phone number already exists';
+   app.lang['alternative_phonenumber_exists'] = 'Phone number already exists';
 </script>

@@ -83,7 +83,7 @@ class Leads extends AdminController
 
         $data['type']  = $this->leads_model->get_type();
         $data['view_form']  = $this->leads_model->view_form();
-       
+
 
         $data['title']    = _l('leads');
 
@@ -1751,6 +1751,15 @@ class Leads extends AdminController
         }
     }
 
+    public function update_visit_lead_status()
+
+    {
+
+        if ($this->input->post() && $this->input->is_ajax_request()) {
+
+            $this->leads_model->update_lead_visitor_status($this->input->post());
+        }
+    }
 
 
     public function update_lead_type()

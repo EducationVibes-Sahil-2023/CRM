@@ -118,19 +118,22 @@ echo form_hidden('settings[ma_table_view]', 'true');
     function set_checkbox() {
         // Ensure arrays exist
         if (typeof show_column_array !== "undefined") {
-            show_column_array.forEach(function(show_c) {
-                console.log(show_c);
+            show_column_array.forEach(function(show_c,key) {
                 $("#show_column_" + show_c).prop("checked", true);
+                 $("#sequence_column_" + show_c).val(sequence[key]);
             });
         }
 
         if (typeof selected_column_array !== "undefined") {
             selected_column_array.forEach(function(value, key) {
                 $("#selected_column_" + value).prop("checked", true);
-                $("#sequence_column_" + value).val(sequence[key]);
+                // $("#sequence_column_" + value).val(sequence[key]);
             });
 
         }
+        
+        
+      
     }
 
 

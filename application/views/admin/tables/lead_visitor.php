@@ -1,17 +1,22 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+
+
 $lead_data = array_column(get_type(), null, 'id');
 $lead_source = array_column(get_source(), null, 'id');
 $staff_data = array_column(get_all_staff(), null, 'staffid');
 $get_staff_user_id = get_staff_user_id();
 $has_permission_delete = has_permission('visit_leads', '', 'delete');
+$statuses = visitor_status();
+
 
 $aColumns = [
     db_prefix() . 'visitor_status.name as status',
     db_prefix() . 'visitor_request.date_of_visit as date_of_visit',
     db_prefix() . 'leads.name as student_name',
     db_prefix() . 'leads.phonenumber as phonenumber',
+    db_prefix() . 'leads.update_count as update_count',
     db_prefix() . 'leads.call_duration as call_duration',
     db_prefix() . 'cities_.name as location',
     db_prefix() . 'visitor_type.name as visitor_type',
@@ -204,11 +209,34 @@ foreach ($rResult as $aRow) {
 
         $edit_btn .= "</div>";
     }
-    $row[] = $aRow["status"];
+
+
+    $outputStatus = '<span class="inline-block text-' . $aRow['color'] . ' lead-status-' . $aRow['status_id'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid black; background:white;">' . $aRow['status'];
+    if (is_admin()) {
+        $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+        $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+        $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
+        $outputStatus .= '</a>';
+        $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['id'] . '">';
+        foreach ($statuses as $leadChangeStatus) {
+            if ($aRow['status_id'] != $leadChangeStatus['id']) {
+                $outputStatus .= '<li>
+              <a href="#" onclick="visit_lead_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['id'] . '); return false;">
+                 ' . $leadChangeStatus['name'] . '
+              </a>
+          </li>';
+            }
+        }
+        $outputStatus .= '</ul>';
+        $outputStatus .= '</div>';
+    }
+    $outputStatus .= '</span>';
+    $row[] = $outputStatus;
     // $row[] = date('j F Y, h:i A <\b\r> l', strtotime($aRow["date_of_visit"]));
     $row[] = date('j F Y', strtotime($aRow["date_of_visit"]));
     $row[] = $aRow["student_name"] . "<br>" . $edit_btn;
     $row[] = $aRow["phonenumber"];
+    $row[] = $aRow["update_count"];
     $call_duration = 0;
     $row[] = !empty($aRow['call_duration']) ? convertToHMS($aRow['call_duration'], 1) : convertToHMS($call_duration, 1);
     $row[] = $aRow["location"];
