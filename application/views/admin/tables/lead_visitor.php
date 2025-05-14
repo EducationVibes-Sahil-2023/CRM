@@ -191,9 +191,13 @@ if ($this->ci->input->post('category') != "") {
     }
 }
 
+$search_column = [];
+// Define search and group-by clauses
+if (!empty($_POST["search"]["value"])) {
+    $search_column = [db_prefix() . 'leads.name', db_prefix() . 'leads.phonenumber', db_prefix() . 'cities_.name'];
+}
 
-
-$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, []);
+$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [], '', '', '', $search_column);
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
