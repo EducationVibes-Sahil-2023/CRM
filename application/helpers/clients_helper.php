@@ -1416,7 +1416,8 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
             $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
         }
 
-        $document = $CI->db->order_by("sequence", "ASC")
+        $CI->db->order_by("sequence", "ASC");
+        $document = $CI->db->group_by("document_upload_type.id")
             ->get()
             ->result_array();
 

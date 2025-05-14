@@ -120,7 +120,7 @@ $aColumns[] = db_prefix() . "admission_preferences.primary_university as primary
 $join = [
     'LEFT JOIN ' . db_prefix() . 'basic_details ON ' . db_prefix() . 'basic_details.userid=' . db_prefix() . 'clients.userid ',
     'LEFT JOIN ' . db_prefix() . 'applicant_status ON ' . db_prefix() . 'applicant_status.id=' . db_prefix() . 'clients.active ',
-    ' JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
+    ' LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
 AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')',
     'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'leads.assigned=' . db_prefix() . 'staff.staffid ',
     'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
@@ -219,7 +219,7 @@ if ($this->ci->input->post('source')) {
 
 
 if ($this->ci->input->post('lead_type')) {
-    array_push($where, 'AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')');
+    array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
 }
 
 
@@ -454,6 +454,7 @@ if ($this->ci->input->post('fly_date')) {
 
 $additional_array = [
     db_prefix() . 'clients.zip as zip',
+    db_prefix() . 'clients.client_type as client_type',
     'registration_confirmed',
     db_prefix() . 'applicant_tracker.name as applicant_stage_name',
     db_prefix() . 'applicant_tracker.id as applicant_stage_id',
@@ -486,7 +487,11 @@ foreach ($rResult as $aRow) {
 
     if (!empty($aRow["name"])) {
         $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['name'] . '</a>' : '');
-        $url = admin_url('clients/client/' . $aRow['userid']);
+        if ($aRow["client_type"] ==  2) {
+            $url = admin_url('clients/ev_partner/' . $aRow['userid']);
+        } else {
+            $url = admin_url('clients/client/' . $aRow['userid']);
+        }
 
         // if ($isPerson && $aRow['contact_id']) {
         //     $url .= '?contactid=' . $aRow['contact_id'];
@@ -495,7 +500,7 @@ foreach ($rResult as $aRow) {
         $company = '<a href="' . $url . '">' . $company . '</a>';
 
         $company .= '<div class="row-options">';
-        $company .= '<a href="' . admin_url('clients/client/' . $aRow['userid']) . '">' . _l('view') . '</a>';
+        $company .= '<a href="' . $url . '">' . _l('view') . '</a>';
         $company .= ' | <a href="javascript:void(0);" onclick="download_documents(' . $aRow['userid'] . ', \'' . addslashes($aRow['name']) . '\')">' . _l('Download') . '</a>';
 
         if ($aRow['registration_confirmed'] == 0 && is_admin()) {

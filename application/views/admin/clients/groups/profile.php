@@ -4,7 +4,6 @@ if (!empty($score_value)) {
 	$score_value = array_column($score_value, null, "type");
 }
 ?>
-<!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
 <script>
 	var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
 </script>
