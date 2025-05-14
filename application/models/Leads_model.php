@@ -3118,10 +3118,13 @@ class Leads_model extends App_Model
         // Get reporting persons
         $query = $this->db->query('CALL GetReportingPersons(?)', array($sid));
         $teamids = $query->result_array();
+        
 
         // Close and reinitialize DB after calling a stored procedure
         $this->db->close();
         $this->db->initialize();
+        
+             $role = $this->db->where('staffid',get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 
         // Extract staff IDs and include the current staff ID
         $idsarr = array_column($teamids, 'staffid');
@@ -3131,7 +3134,15 @@ class Leads_model extends App_Model
         $this->db->select('id,assigned,created_by');
 
         // Filter conditions
-        $this->db->where_in("status", [1, 3]);
+       
+    if ($role == 3) {
+//   $this->db->where_in("status", [1, 3]);
+}
+else{
+      $this->db->where_in("status", [1, 3]);
+}
+     
+        
         $this->db->where(array("lead_id" => $lead_id));
 
         // Use where_in and or_where_in properly

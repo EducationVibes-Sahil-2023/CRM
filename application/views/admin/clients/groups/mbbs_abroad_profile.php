@@ -1540,7 +1540,6 @@ if ($lead_type_status == 2) {
         $(".check-phonenumber").on("input", function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 10);
         });
-        s
     });
 
 

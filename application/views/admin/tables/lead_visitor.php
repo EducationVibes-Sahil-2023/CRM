@@ -200,7 +200,7 @@ $rResult = $result['rResult'];
 foreach ($rResult as $aRow) {
     $row = [];
     $edit_btn = '';
-    if (in_array($aRow["status_id"], [1, 3]) || $has_permission_delete) {
+    if (in_array($aRow["status_id"], [1, 3]) || $role == 3) {
         $edit_btn = "<div class='row-options'><a onclick='init_lead(" . $aRow['lead_id'] . ",``,`#show_visitor_lead_div`,1)'>" . _l('view') . "</a>";
 
         if ($has_permission_delete) {

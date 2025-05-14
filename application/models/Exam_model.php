@@ -137,6 +137,77 @@ class Exam_model extends App_Model
         }
     }
 
+
+    // public function insert_client_exams($client_exam_data)
+    // {
+    //     try {
+    //         if (
+    //             empty($client_exam_data["client_ids"]) ||
+    //             !is_array($client_exam_data["client_ids"])
+    //         ) {
+    //             return ["status" => false, "message" => "No clients provided"];
+    //         }
+
+    //         $client_ids = $client_exam_data["client_ids"];
+    //         $exam_id    = $client_exam_data["exam_id"];
+    //         $batch_id   = $client_exam_data["batch_id"];
+    //         $exam_date  = isset($client_exam_data["exam_date"]) ? $client_exam_data["exam_date"] : null;
+
+    //         $table = db_prefix() . 'clients_exam';
+
+    //         // Fetch existing entries
+    //         $this->db->where_in("client_id", $client_ids);
+    //         $this->db->where("exam_id", $exam_id);
+    //         $this->db->where("batch_id", $batch_id);
+    //         $existing_records = $this->db->get($table)->result_array();
+
+    //         $existing_map = [];
+    //         foreach ($existing_records as $record) {
+    //             $existing_map[$record["client_id"]] = $record;
+    //         }
+
+    //         $update_data = [];
+    //         $insert_data = [];
+
+    //         foreach ($client_ids as $client_id) {
+    //             $data = [
+    //                 "client_id" => $client_id,
+    //                 "exam_id"   => $exam_id,
+    //                 "batch_id"  => $batch_id
+    //             ];
+
+    //             if (!empty($exam_date)) {
+    //                 $data["exam_date"] = $exam_date;
+    //             }
+
+    //             if (isset($existing_map[$client_id])) {
+    //                 $data["id"] = $existing_map[$client_id]["id"];
+    //                 $update_data[] = $data;
+    //             } else {
+    //                 // For insert, exam_date can be NULL if not passed
+    //                 $data["exam_date"] = $exam_date;
+    //                 $insert_data[] = $data;
+    //             }
+    //         }
+
+    //         // Perform batch update
+    //         if (!empty($update_data)) {
+    //             $this->db->update_batch($table, $update_data, 'id');
+    //         }
+
+    //         // Perform batch insert
+    //         if (!empty($insert_data)) {
+    //             $this->db->insert_batch($table, $insert_data);
+    //         }
+
+    //         return ["status" => true, "message" => "Client exams processed successfully"];
+    //     } catch (Exception $e) {
+    //         log_message('error', 'Insert/Update Client Exams failed: ' . $e->getMessage());
+    //         return ["status" => false, "message" => "An unexpected error occurred"];
+    //     }
+    // }
+
+
     public function get_exam_batch($id)
     {
         try {

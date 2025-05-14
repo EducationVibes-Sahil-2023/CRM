@@ -103,7 +103,6 @@ if (!empty($tblma_applicant_tracker)) {
 
         // Use sql_condition if available
         $column_key = !empty($value["sql_condition"]) ? $value["sql_condition"] : $key;
-
         // Add column name to array
         $aColumns[] = "$column_key as " . str_replace(" ", "_", strtolower($value["label_name"]));
         $aColumns_count++;
@@ -114,6 +113,7 @@ if (is_admin() || is_postSale()) {
 } else {
     $aColumns[] = $sTable . ".userid as fid";
 }
+$aColumns[] = db_prefix() . "admission_preferences.primary_university as primary_university_select";
 
 
 
@@ -247,6 +247,23 @@ if ($this->ci->input->post('university')) {
         array_push($where, 'AND ' . db_prefix() . 'admission_preferences.primary_university IN (' . implode(',', $escaped_universities) . ')');
     }
 }
+
+
+if ($this->ci->input->post('university_secondary')) {
+    $universities = $this->ci->input->post('university_secondary');
+    if (is_array($universities)) {
+        $conditions = [];
+        foreach ($universities as $university) {
+            // Match exact value within a JSON string array
+            $escaped = $this->ci->db->escape('%"' . $university . '"%');
+            $conditions[] = db_prefix() . "admission_preferences.university LIKE $escaped";
+        }
+        $where[] = 'AND (' . implode(' OR ', $conditions) . ')';
+    }
+}
+
+
+
 
 if ($this->ci->input->post('country')) {
     $countries = $this->ci->input->post('country');
@@ -546,7 +563,7 @@ foreach ($rResult as $aRow) {
 
 
     if (!empty($aRow["secondary_university"])) {
-        $primary_university = trim($aRow["primary_university"]);
+        $primary_university = trim($aRow["primary_university_select"]);
         $secondary_university = json_decode($aRow["secondary_university"], true); // Decode JSON as an associative array
 
         $filtered_universities = [];

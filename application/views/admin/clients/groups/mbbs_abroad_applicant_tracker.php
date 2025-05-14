@@ -986,36 +986,62 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <?php } else if ($track["show_div_name"] == "entrance_div") { ?>
                         <form id="entrance-form" class="form-disabled" onsubmit=" return false;">
                             <div class="entrance_div">
-                                <?php if (!empty($entrance_exams)): ?>
-                                    <?php foreach ($entrance_exams as $university => $exams): ?>
+                                <?php if (!empty($entrance_exams)) { ?>
+                                    <?php foreach ($entrance_exams as $university => $exams) { ?>
                                         <div class="entrance_exam_university_div shadow">
-                                            <h4 class="text-left "><?= htmlspecialchars($university) ?>
+                                            <h4 class="text-left "><?= htmlspecialchars(empty($university) ? $exams[0]["m_university_name"] : $university) ?>
+                                                <?php if ($exams[0]["batch_id"] == 0) { ?>
+                                                    <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                <?php } ?>
                                             </h4>
-                                            <?php if (!empty($entrance_exams)): ?>
+                                            <?php if (!empty($entrance_exams)) { ?>
                                                 <div class="text-right">
                                                     <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
                                                     <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope"></i> </button>
                                                 </div>
-                                            <?php endif; ?>
+                                            <?php } ?>
 
-                                            <?php foreach ($exams as $exam): ?>
+                                            <?php foreach ($exams as $index_key => $exam) { ?>
                                                 <div class="row university-entrance-exam">
-
-                                                    <div class="col-md-3">
-                                                        <label>Batch Name</label>
-                                                        <input type="text" value="<?= htmlspecialchars($exam["batch_name"]) ?>" readonly class="form-control">
-
-                                                        <input type="hidden" name="batch_id" value="<?= $exam['batch_id'] ?>" class="form-control">
-                                                        <input type="hidden" name="client_id" value="<?= $exam['client_id'] ?>" class="form-control">
+                                                    <input type="hidden" name="batch_id" value="<?= $exam['batch_id'] ?>" class="form-control">
+                                                    <input type="hidden" name="client_id" value="<?= $exam['client_id'] ?>" class="form-control">
+                                                    <?php
+                                                    if ($exam['batch_id'] == 0) {
+                                                    } else { ?>
                                                         <input type="hidden" name="exam_id" value="<?= $exam['exam_id'] ?>" class="form-control">
-                                                    </div>
+                                                    <?php } ?>
+                                                    <input type="hidden" name="m_university_name" value="<?= htmlspecialchars($exam["m_university_name"]) ?>" class="form-control">
+                                                    <?php if ($exam['batch_id'] != 0) { ?>
+                                                        <div class="col-md-3">
+                                                            <label>Batch Name</label>
+                                                            <input type="text" value="<?= htmlspecialchars($exam["batch_name"]) ?>" readonly class="form-control">
+                                                        </div>
+                                                    <?php } ?>
                                                     <div class="col-md-3">
                                                         <label>Exam Name</label>
-                                                        <input type="text" value="<?= htmlspecialchars($exam["exam_name"]) ?>" readonly class="form-control">
+
+                                                        <?php
+                                                        if ($exam['batch_id'] == 0) {
+                                                            $get_university_exam = get_university_exam();
+                                                            array_unshift($get_university_exam, array());
+
+                                                            echo render_select('exam_id', $get_university_exam, ['id', 'name'], '', [$exam['exam_id']], [
+                                                                'data-width' => '100%',
+                                                                'data-none-selected-text' => 'Exam Name',
+                                                                'data-actions-box' => true,
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required',
+                                                            ], [], 'no-mbot', '', false, 'exam_id');  ?>
+                                                        <?php
+                                                        } else {
+                                                        ?>
+                                                            <input type="text" value="<?= htmlspecialchars($exam["exam_name"]) ?>" <?= $exam['batch_id'] == 0 ? '' : 'readonly' ?> class="form-control">
+                                                        <?php } ?>
                                                     </div>
+
                                                     <div class="col-md-3">
                                                         <label>Exam Date</label>
-                                                        <input type="date" value="<?= htmlspecialchars($exam["exam_date"]) ?>" readonly class="form-control">
+                                                        <input type="date" name="exam_date" value="<?= htmlspecialchars($exam["exam_date"]) ?>" <?= $exam['batch_id'] == 0 ? '' : 'readonly' ?> class="form-control">
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label>Status</label>
@@ -1027,16 +1053,63 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <option value="reschedule" <?= (strtolower($exam["status"]) == "reschedule") ? 'selected' : '' ?>>Re-schedule</option>
                                                         </select>
 
+
+
                                                     </div>
+                                                    <?php if ($exam['batch_id'] == 0 && $index_key > 0) { ?>
+                                                        <div class="col-md-3"><br><button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_entrance_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button></div>
+
+                                                    <?php } ?>
                                                 </div>
                                                 <br>
 
-                                            <?php endforeach; ?>
+                                            <?php } ?>
 
                                         </div>
                                         <hr>
-                                    <?php endforeach; ?>
-                                <?php endif; ?>
+                                    <?php } ?>
+                                <?php } else if ($admissionpreferences->primary_country == 'Georgia') { ?>
+                                    <div class="entrance_exam_university_div shadow">
+                                        <h4 class="text-left "><?= htmlspecialchars($admissionpreferences->primary_university) ?>
+
+                                            <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                        </h4>
+                                        <div class="row university-entrance-exam">
+                                            <div class="col-md-3">
+                                                <input type="hidden" name="client_id" value="<?= $client_id ?>" class="form-control">
+                                                <input type="hidden" name="m_university_name" value="<?= $admissionpreferences->primary_university ?>" class="form-control">
+                                                <label>Exam Name</label>
+                                                <?php
+                                                $get_university_exam = get_university_exam();
+                                                array_unshift($get_university_exam, array());
+
+                                                echo render_select('exam_id', $get_university_exam, ['id', 'name'], '', [], [
+                                                    'data-width' => '100%',
+                                                    'data-none-selected-text' => 'Exam Name',
+                                                    'data-actions-box' => true,
+                                                    'required-check' => 'required-check',
+                                                    'required' => 'required',
+                                                ], [], 'no-mbot', '', false, 'exam_id');  ?>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Exam Date</label>
+                                                <input type="date" name="exam_date" value="" class="form-control">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label>Status</label>
+
+                                                <select name="entrance_status" class="selectpicker form-control">
+                                                    <option value="Pending" selected>Pending</option>
+                                                    <option value="pass">Pass</option>
+                                                    <option value="fail">Fail</option>
+                                                    <option value="reschedule">Re-schedule</option>
+                                                </select>
+
+                                            </div>
+                                        </div>
+                                        <br>
+                                    </div>
+                                <?php } ?>
                             </div>
 
                         </form>
@@ -1059,9 +1132,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <div class="row mt-2">
                                                     <div class="col-md-6">
                                                         <p class="form-check-label">&nbsp;</p>
-                                                        <label class="form-check-label">Ministry Order of Documents Received
+                                                        <label class="form-check-label">Ministry Order of Documents Received <?= $mand ?>
                                                             <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                            <?= $mand ?>
+                                                            
                                                         </label>
                                                     </div>
                                                     <div class="col-md-6">
@@ -1484,7 +1557,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <div class="col-lg-5 pull-right">
                             <div class="form-group">
                                 <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
-                                <select class="form-control selectpicker" required-check name="primary_university" onchange="select_primary_university(this)" id="primary_university" required>
+                                <select class="form-control selectpicker" required-check name="primary_university" id="primary_university" required>
                                     <option value="">Select University</option>
                                     <?php
                                     $university_p = json_decode($admissionpreferences->university, true);
@@ -1555,7 +1628,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var base_url = "<?= base_url() ?>";
     //jQuery time
     let lead_type_status = "<?= $lead_type_status ?>";
-    console.log(lead_type_status);
+    // console.log(lead_type_status);
     let documents_type_dropdown = <?= json_encode($documents_type_dropdown) ?>; // Get your data from PHP
     var applicant_status = "<?= $applicant_status ?>";
     // console.log(applicant_status);
@@ -1565,6 +1638,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
     var csrfToken = "<?= $this->security->get_csrf_hash() ?>"; // Replace with the actual CSRF token value
     var step_stage = 0;
+    var get_university_list = <?= json_encode(array_column(get_university_list("mbbs abroad"), "university_id", "university_name"), true); ?>
 
     var customer_admins = <?= !empty($customer_admins) ? json_encode($customer_admins, true) : [] ?>;
     var upload_documents_button = <?= !empty($upload_documents_button) ? json_encode($upload_documents_button, true) : "" ?>;
@@ -1866,10 +1940,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     }
                 });
 
-                console.log("✅ Visa validation rules applied successfully.");
+                // console.log("✅ Visa validation rules applied successfully.");
                 resolve("Validation rules applied successfully.");
             } catch (error) {
-                console.error("❌ Error applying visa validation rules:", error);
+                // console.error("❌ Error applying visa validation rules:", error);
                 reject("Error applying validation rules: " + error.message);
             }
         });
@@ -1907,7 +1981,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             upload_data.append("tracker_id", id);
             upload_data.append("lead_type", <?= $lead_type_status ?>);
             upload_data.append("skip", skip);
-
+            upload_data.append("save", same_step);
             if (completed === 1) {
                 let check_validation = await check_required_fields("final-form");
                 if (!check_validation) {
@@ -1917,7 +1991,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                 upload_data.append("sc_100", $("#sc_100").is(":checked") ? 1 : 0);
                 upload_data.append("completed", 1);
-                upload_data.append("save", same_step);
+
 
 
             } else if (id == 2) {
@@ -1930,20 +2004,33 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
 
             if (id == 3) {
-                let check_validation = await check_required_fields("application-form");
-                if (!check_validation) {
-                    hide_loader();
-                    return false;
+                if (skip == 1) {
+
+                } else {
+                    let check_validation = await check_required_fields("application-form");
+                    if (!check_validation) {
+                        hide_loader();
+                        return false;
+                    }
                 }
                 await check_university_admission(upload_data);
             }
 
             if (id == 4 && skip == 0) {
-                await check_entrance_exam(upload_data);
+                if (skip == 1) {} else {
+                    await check_entrance_exam(upload_data);
+
+                    let check_validation = await check_required_fields("entrance-form");
+                    if (!check_validation) {
+                        hide_loader();
+                        return false;
+                    }
+                }
             }
 
             if (id == 5) {
                 let check_validation = await check_required_fields("legalization-form");
+                console.log("check_validation:", check_validation);
                 if (!check_validation) {
                     hide_loader();
                     return false;
@@ -2016,7 +2103,17 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     set_application(response);
                 }
                 if (id == 3 && response.entrance_exams !== undefined) {
-                    createEntranceExamList(response.entrance_exams);
+                    $(".entrance_div").html('');
+
+                    if (response.entrance_exams != "") {
+                        // console.log("createEntranceExamList");
+                        createEntranceExamList(response.entrance_exams);
+
+                    } else {
+                        // console.log("addPrimaryUniversityExamBlock");
+
+                        addPrimaryUniversityExamBlock()
+                    }
                 }
                 if (id == 4 && response.legalization !== undefined) {
                     createLegalization(response.legalization);
@@ -2032,8 +2129,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 }
 
 
-                if(same_step == 1)
-                {
+                if (same_step == 1) {
                     return false;
                 }
                 if (response.pass_stage !== undefined) {
@@ -2062,7 +2158,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }
     }
 
-
+    var get_university_exam = <?= json_encode($get_university_exam, true) ?>;
     $(".previous").click(function() {
         current_fs = $(this).parent();
         previous_fs = $(this).parent().prev();
@@ -2073,57 +2169,214 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         current_fs.slideUp("slow");
     });
 
+    function addPrimaryUniversityExamBlock(obj = "") {
+        let university_name = "<?= addslashes($admissionpreferences->primary_university) ?>";
+        let primary_country = "<?= addslashes($admissionpreferences->primary_country) ?>";
+        let client_id = "<?= $client_id ?>"; // Ensure this PHP variable is available
+
+        if (primary_country !== 'Georgia') {
+            return false;
+        }
+
+        $(obj).parents(".entrance_exam_university_div").last().append("");
+        const $container = obj ?
+            $(obj).parents(".entrance_exam_university_div").last() :
+            $(".entrance_div");
+
+        const $universityDiv = obj ? $("<div>") : $("<div>").addClass("entrance_exam_university_div shadow");
+
+        const $titleRow = $("<div>").addClass("d-flex justify-content-between align-items-center");
+        const $title = $("<h4>").addClass("text-left mb-0").text(university_name);
+        const $addBtn = $(`
+        <button style="display:block!important;" class="btn btn-sm btn-primary add_university_btn" type="button" onclick="addPrimaryUniversityExamBlock(this)">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+        </button>
+    `);
+        if (obj == "") {
+            $titleRow.append($title).append($addBtn);
+        }
+        $universityDiv.append($titleRow);
+
+        const $examRow = $("<div>").addClass("row university-entrance-exam mt-3");
+
+        // Hidden fields
+        const hiddenFields = `
+        <input type="hidden" name="client_id" value="${client_id}" class="form-control">
+        <input type="hidden" name="m_university_name" value="${university_name}" class="form-control">
+    `;
+
+        // Build exam select options
+        let examOptions = `<option value="">Exam Name</option>`;
+        $.each(get_university_exam, function(i, exam) {
+            if (exam && exam.id && exam.name) {
+                examOptions += `<option value="${exam.id}">${exam.name}</option>`;
+            }
+        });
+
+        const $examCol = $(`
+        <div class="col-md-3">
+            ${hiddenFields}
+            <label>Exam Name</label>
+            <select name="exam_id" class="form-control selectpicker" data-width="100%" data-none-selected-text="Exam Name" data-actions-box="true" required>
+                ${examOptions}
+            </select>
+        </div>
+    `);
+
+        const $dateCol = $(`
+        <div class="col-md-3">
+            <label>Exam Date</label>
+            <input type="date" name="exam_date" class="form-control">
+        </div>
+    `);
+
+        var $statusCol = $(`
+        <div class="col-md-3">
+            <label>Status</label>
+            <select name="entrance_status" class="selectpicker form-control">
+                <option value="Pending" selected>Pending</option>
+                <option value="pass">Pass</option>
+                <option value="fail">Fail</option>
+                <option value="reschedule">Re-schedule</option>
+            </select>
+        </div>
+    `);
+
+
+        $examRow.append($examCol, $dateCol, $statusCol);
+        // $universityDiv.append($examRow).append("<br>");
+
+        if ($(obj).parents(".entrance_exam_university_div").length > 0) {
+            $examRow.append(` <div class="col-md-3"><br><button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_entrance_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button></div>`);
+        }
+        // Add new university block with its first exam row
+        $universityDiv.append($examRow).append("<br>");
+        $container.append($universityDiv);
+
+
+
+        // Refresh selectpicker
+        $(".selectpicker").selectpicker("refresh");
+    }
+
+
     function createEntranceExamList(data) {
         const $container = $(".entrance_div");
+
         $container.html(""); // Clear the container
 
         $.each(data, function(university, exams) {
+            if (!university && exams.length > 0) {
+                university = exams[0].m_university_name || "Unknown University";
+            }
+
             const $universityDiv = $("<div>").addClass("entrance_exam_university_div shadow");
-            let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 3,'','${university}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 2,'','${university}')"><i class="fa fa-envelope"></i></button> </div>`;
+
+            const email_button = `
+            <div class="text-right">
+                <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${exams[0].client_id}, 3, '', '${university}')">
+                    <i class="fa fa-whatsapp"></i>
+                </button>
+                <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${exams[0].client_id}, 2, '', '${university}')">
+                    <i class="fa fa-envelope"></i>
+                </button>
+            </div>`;
+
             const $title = $("<h4>").addClass("text-left").text(university);
-            $universityDiv.append($title);
-            $universityDiv.append(email_button);
+            if (exams[0].batch_id == 0) {
+                $title.append(`<button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>`);
+            }
+            $universityDiv.append($title).append(email_button);
 
             $.each(exams, function(index, exam) {
                 const $examRow = $("<div>").addClass("row university-entrance-exam");
-                console.log(exam.status);
-                $examRow.append(`
-                <div class="col-md-3">
-                    <label>Batch Name</label>
-                    <input type="text" value="${exam.batch_name}" readonly class="form-control">
-                    <input type="hidden" name="batch_id" value="${exam.batch_id}" readonly class="form-control">
-                    <input type="hidden" name="client_id" value="${exam.client_id}" readonly class="form-control">
-                    <input type="hidden" name="exam_id" value="${exam.exam_id}" readonly class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label>Exam Name</label>
-                    <input type="text" value="${exam.exam_name}" readonly class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label>Exam Date</label>
-                    <input type="date" value="${exam.exam_date}" readonly class="form-control">
-                </div>
-                <div class="col-md-3">
-                    <label>Status</label>
-                    <select name="entrance_status" class="selectpicker form-control" data-status="${exam.status}">
-                        <option value="Pending" ${exam.status === "Pending" ? "selected" : ""}>Pending</option>
-                        <option value="pass" ${exam.status === "pass" ? "selected" : ""}>Pass</option>
-                        <option value="fail" ${exam.status === "fail" ? "selected" : ""}>Fail</option>
-                        <option value="reschedule" ${exam.status === "reschedule" ? "selected" : ""}>Re-schedule</option>
-                    </select>
-                </div>
-            `);
 
-                $universityDiv.append($examRow);
-                $universityDiv.append("<br>"); // Add spacing
+                if (exam.batch_id == 0) {
+                    // Build the exam options
+                    let examOptions = "";
+                    $.each(get_university_exam, function(i, examData) {
+                        const selected = examData.id == exam.exam_id ? "selected" : "";
+                        examOptions += `<option value="${examData.id}" ${selected}>${examData.name}</option>`;
+                    });
+
+                    var html = `
+                    <input type="hidden" name="batch_id" value="${exam.batch_id}" class="form-control">
+                    <input type="hidden" name="client_id" value="${exam.client_id}" class="form-control">
+                    <input type="hidden" name="m_university_name" value="${exam.m_university_name}" class="form-control">
+                    <input type="hidden" name="m_university_id" value="${exam.m_university_id}" class="form-control">
+
+                    <div class="col-md-3">
+                        <label>Exam Name</label>
+                        <select name="exam_id" class="form-control selectpicker" data-width="100%" data-none-selected-text="Exam Name" required>
+                            ${examOptions}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Exam Date</label>
+                        <input type="date" name="exam_date" value="${exam.exam_date || ''}" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Status</label>
+                        <select name="entrance_status" class="selectpicker form-control" data-status="${exam.status}">
+                            <option value="Pending" ${exam.status === "Pending" ? "selected" : ""}>Pending</option>
+                            <option value="pass" ${exam.status === "pass" ? "selected" : ""}>Pass</option>
+                            <option value="fail" ${exam.status === "fail" ? "selected" : ""}>Fail</option>
+                            <option value="reschedule" ${exam.status === "reschedule" ? "selected" : ""}>Re-schedule</option>
+                        </select>
+                    </div>
+                `;
+
+                    if (exam.batch_id == 0 && index > 0) {
+                        html += `<div class="col-md-3"><br><button class="col-md-2  add_document remove_university_btn" type="button" onclick="remove_entrance_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button></div>`;
+                    }
+
+                    $examRow.append(html);
+                } else {
+                    $examRow.append(`
+                    <div class="col-md-3">
+                        <label>Batch Name</label>
+                        <input type="text" value="${exam.batch_name || ''}" readonly class="form-control">
+                        <input type="hidden" name="batch_id" value="${exam.batch_id}" class="form-control">
+                        <input type="hidden" name="client_id" value="${exam.client_id}" class="form-control">
+                        <input type="hidden" name="exam_id" value="${exam.exam_id}" class="form-control">
+                         <input type="hidden" name="m_university_name" value="${exam.m_university_name}" class="form-control">
+                    <input type="hidden" name="m_university_id" value="${exam.m_university_id}" class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Exam Name</label>
+                        <input type="text" value="${exam.exam_name}" readonly class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Exam Date</label>
+                        <input type="date" value="${exam.exam_date || ''}" readonly class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Status</label>
+                        <select name="entrance_status" class="selectpicker form-control" data-status="${exam.status}">
+                            <option value="Pending" ${exam.status === "Pending" ? "selected" : ""}>Pending</option>
+                            <option value="pass" ${exam.status === "pass" ? "selected" : ""}>Pass</option>
+                            <option value="fail" ${exam.status === "fail" ? "selected" : ""}>Fail</option>
+                            <option value="reschedule" ${exam.status === "reschedule" ? "selected" : ""}>Re-schedule</option>
+                        </select>
+                    </div>
+                `);
+                }
+
+                $universityDiv.append($examRow).append("<br>");
             });
 
-            $container.append($universityDiv);
-            $container.append("<hr>"); // Divider
+            $container.append($universityDiv).append("<hr>");
         });
 
-        $(".selectpicker").selectpicker("refresh"); // Refresh bootstrap-select
+        // Refresh bootstrap selectpicker
+        $(".selectpicker").selectpicker("refresh");
     }
+
 
     function createLegalization(legalizationData) {
         let legalizationContainer = $(".legalization_div"); // Target container
@@ -2162,9 +2415,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <div class="col-md-6">
                             <p class="form-check-label">&nbsp;</p>
                             <label class="form-check-label">
-                                Ministry Order of Documents Received
+                                Ministry Order of Documents Received  ${mand}
                                 <input type="checkbox" class="form-check-input" ${check_min_doc} ${mand_re} name="ministry_doc_received_${(leg.id)}">
-                                ${mand}
+                               
                             </label>
                         </div>
                          <div class="col-md-6">
@@ -2191,7 +2444,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 }
 
                 html += `</div>`;
-                console.log(html);
+                // console.log(html);
                 legalizationContainer.append(html);
             });
         } else {
@@ -2520,6 +2773,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         is_validate_application_status();
     }
 
+    function remove_entrance_div(obj) {
+        $(obj).parents(".university-entrance-exam").remove();
+    }
+
     function is_validate_application_status(status = 0) {
         if (university_shortlisting != undefined && university_shortlisting.length > 0) {
             // let html = '<h3 class="message-notification">Your University under Processing</h3>';
@@ -2669,7 +2926,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 const isRequired = $(this).attr("required-check") !== undefined; // Check for 'required-check' attribute
                 const name = $(this).attr("name"); // Get the name attribute
 
-                if ($(this).is(":checkbox")) {
+                if ($(this).is(":checkbox") && isRequired) {
                     if (!$(this).is(":checked")) { // Check if checkbox is NOT checked
                         form_status = false;
                         $(this).addClass("error"); // Highlight the checkbox
@@ -2681,7 +2938,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                 if (isRequired && name) {
                     additional_fields[name] = "required";
-                    console.log(additional_fields);
+                    // console.log(additional_fields);
                     if ($.trim(value) === "") {
                         form_status = false;
                         $(this).addClass("error"); // Highlight invalid fields
@@ -2710,23 +2967,43 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             let entrance_exam_data = [];
 
             $(".entrance_exam_university_div .university-entrance-exam").each(function() {
-                let batch_id = $(this).find("input[name='batch_id']").val() || "";
-                let client_id = $(this).find("input[name='client_id']").val() || "";
-                let exam_id = $(this).find("input[name='exam_id']").val() || "";
-                let status = $(this).find("select[name='entrance_status']").val() || "";
+                const batch_id = ($(this).find("input[name='batch_id']").val() || "").trim();
+                const client_id = ($(this).find("input[name='client_id']").val() || "").trim();
+                const exam_id_input = ($(this).find("input[name='exam_id']").val() || "").trim();
+                const exam_id_select = ($(this).find("select[name='exam_id']").val() || "").trim();
+                const status = ($(this).find("select[name='entrance_status']").val() || "").trim();
+                const exam_date = ($(this).find("input[name='exam_date']").val() || "").trim();
+                const m_university_name = ($(this).find("input[name='m_university_name']").val() || "").trim();
+                const m_university_id = get_university_list[m_university_name] || "";
 
-                // Push only if required fields are present
-                if (batch_id && client_id && exam_id) {
-                    entrance_exam_data.push({
-                        batch_id: batch_id.trim(),
-                        client_id: client_id.trim(),
-                        exam_id: exam_id.trim(),
-                        status: status.trim(),
-                    });
+                // Prefer input exam_id, fallback to select
+                const exam_id = exam_id_input || exam_id_select;
+
+                if (client_id && exam_id) {
+                    let exam_obj = {
+                        batch_id: batch_id || "0",
+                        client_id,
+                        exam_id,
+                        status,
+                        m_university_name,
+                        m_university_id,
+                    };
+
+                    // Include exam_date only if it's not empty
+                    if (exam_date !== "") {
+                        exam_obj.exam_date = exam_date;
+                    }
+
+                    // Mark manually if batch_id is 0
+                    if (batch_id === "" || batch_id === "0") {
+                        exam_obj.manually = 1;
+                    }
+
+                    entrance_exam_data.push(exam_obj);
                 }
             });
 
-            // Append data only if there's valid input
+            // Append only if data is collected
             if (entrance_exam_data.length > 0) {
                 upload_data.append("entrance_exam", JSON.stringify(entrance_exam_data));
             }
@@ -2734,6 +3011,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             resolve(upload_data);
         });
     }
+
 
     function check_legalization(upload_data) {
         return new Promise((resolve, reject) => {
@@ -2881,7 +3159,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             let media_view = '';
             let requried = 'required-check="true" required="true"';
             let visa_id = visa.id ?? Math.floor(Math.random() * (999 - 0 + 1)) + 0; // Default to empty string if visa.id is undefined or null
-            console.log(visa_id);
+            // console.log(visa_id);
             let random = Math.floor(Math.random() * (999 - 0 + 1)) + 0;
             if (visa.file && visa.file !== "") {
                 media_view = `
@@ -3218,8 +3496,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         const primaryUniversity = $('#primary_university').val();
         const primaryCountry = $('#primary_country').val();
 
-        console.log(primaryUniversity);
-        console.log(primaryCountry);
+        // console.log(primaryUniversity);
+        // console.log(primaryCountry);
 
         let upload_data = new FormData();
 
@@ -3249,11 +3527,4 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             alert_float("danger", "Server error occurred. Please try again.");
         }
     });
-
-
-    async function select_primary_university(obj) {
-
-
-
-    }
 </script>

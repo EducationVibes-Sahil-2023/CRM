@@ -46,6 +46,9 @@ $category[] = array("id" => "2", "name" => "Upcoming");
         right: auto !important
     }
 </style>
+<script>
+    var role_type = "<?=!empty($role)?$role:0?>";
+</script>
 <div id="wrapper">
     <div class="content">
         <div class="row">

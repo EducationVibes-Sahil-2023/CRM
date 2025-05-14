@@ -307,6 +307,8 @@ $selected_performance_column = array_slice(array_column($tbllead_performance_col
                 $("#rangeSlider").show();
                 setMinMaxValues();
             } else {
+                document.getElementById('update_count_min').value = '';
+                document.getElementById('update_count_max').value = '';
                 $("#rangeSlider").hide();
 
             }
