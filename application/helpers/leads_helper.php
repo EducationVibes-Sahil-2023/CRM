@@ -7971,6 +7971,16 @@ function get_leads_summary_filter_new($params)
 
 function get_leads_summary_filter_neww($params)
 {
+    
+    $params['update_count_min'] = (isset($params['update_count_min']) && is_numeric($params['update_count_min']) && $params['update_count_min'] !== 'NaN')
+    ? $params['update_count_min']
+    : '';
+
+$params['update_count_max'] = (isset($params['update_count_max']) && is_numeric($params['update_count_max']) && $params['update_count_max'] !== 'NaN')
+    ? $params['update_count_max']
+    : '';
+
+
     $CI = &get_instance();
     if (!class_exists('leads_model')) {
         $CI->load->model('leads_model');
@@ -8068,7 +8078,7 @@ function get_leads_summary_filter_neww($params)
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
 
-    if (isset($params['update_count_min'])) {
+    if (isset($params['update_count_min']) && $params['update_count_min']!='') {
         $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
     }
 
@@ -8126,7 +8136,7 @@ function get_leads_summary_filter_neww($params)
 
         $where_c = "";
         $join_type = "";
-        if ($params['update_count_min']) {
+        if ($params['update_count_min']  && $params['update_count_min']!='') {
 
             $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
             $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;

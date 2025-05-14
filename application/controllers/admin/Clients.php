@@ -3746,7 +3746,7 @@ class Clients extends AdminController
             $data["total_amount"] = $total_amount;
             $data["registration_amount"] = $registration_amount;
             $data["pending_amount"] = $pending_amount;
-            $data["address"] = $client->billing_street;
+            $data["address"] = nl2br(htmlspecialchars($client->billing_street));
             $data["date_of_payment"] = $client->date_of_payment;
             $data["acadmic_year"] = $admission_prefrences->acadmic_year;
             $data["invoice_number"] = "BRCM-00" . $client_id;
@@ -3779,6 +3779,7 @@ class Clients extends AdminController
 
             // Load HTML Template
             $html = $this->load->view('admin/pdf/registration', $data, true);
+
             $pdf->writeHTML($html, true, false, true, false, '');
 
 
@@ -3931,6 +3932,11 @@ class Clients extends AdminController
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
             }
+            if ($tracker_id == 3) {
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ENTRANCE_EXAM, "applicant_sub_status" => ENTRANCE_EXAM_PENDING));
+            }
             $this->update_applicant_tracker_stages($client_id, $tracker_id);
             $legalization =  $this->clients_model->legalization_data($client_id);
             $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
@@ -3962,6 +3968,19 @@ class Clients extends AdminController
         } else if ($tracker_id == 4) {
             $data = $this->entrance_exam();
         } else if ($tracker_id == 5) {
+            $this->db->select("count(1) check_count");
+            $this->db->where(array('client_id' => $client_id, "status" => 1));
+            $check_count = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+            if (!empty($check_count->check_count) && $check_count->check_count > 1) {
+                $data =  [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "Please select only one primary university in the Shortlisting section to proceed.",
+                ];
+
+                echo json_encode($data);
+                return;
+                die;
+            }
             $this->check_documents_validation(($tracker_id + 1));
             $data = $this->Legalization();
         } else if ($tracker_id == 6) {
@@ -4119,15 +4138,17 @@ class Clients extends AdminController
                 if (!empty($post_date) && $post_date['save'] == 1) {
                     $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
                     $ids = array_column($university_shortlisting_data, "id");
-                    $this->update_applicant_tracker_stages($client_id, $tracker_id);
+                    $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
 
-
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
                     return  $data = [
                         'resp_code'               => 'RCS',
                         'resp_desc'               => "University shortlisting updated successfully.",
                         'ids'                     => $ids,
                         'university_shortlisting' => $university_shortlisting_data
                     ];
+                    die;
                 }
                 if ($rows_affected) {
                     // Check required documents for stage 3
@@ -4388,6 +4409,7 @@ class Clients extends AdminController
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ENTRANCE_EXAM, "applicant_sub_status" => ENTRANCE_EXAM_PENDING));
                 $entrance_exams =  $this->clients_model->entrance_exams($client_id);
+                $this->update_applicant_tracker_stages($client_id, $tracker_id);
                 $entrance_exams = array_reduce($entrance_exams, function ($acc, $row) {
                     $acc[$row['university_name']] = ($acc[$row['university_name']] ?? []);
                     $acc[$row['university_name']][] = $row;
@@ -4459,16 +4481,26 @@ class Clients extends AdminController
 
         foreach ($entrance_exam_data as $exam) {
             // Validate required fields
-            if (empty($exam["batch_id"]) || empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
-                return [
-                    "resp_code" => "ERR",
-                    "resp_desc" => "Missing required entrance exam fields",
-                ];
+            if ($exam["manually"] == 1) {
+                if (empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
+                    return [
+                        "resp_code" => "ERR",
+                        "resp_desc" => "Missing required entrance exam fields",
+                    ];
+                }
+            } else {
+                if (empty($exam["batch_id"]) || empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
+                    return [
+                        "resp_code" => "ERR",
+                        "resp_desc" => "Missing required entrance exam fields",
+                    ];
+                }
             }
 
             $batch_id = $exam["batch_id"];
             $exam_id = $exam["exam_id"];
             $status = $exam["status"];
+            $exam_date = $exam["exam_date"];
 
             // Check if the record exists
             $existing_exam = $this->db->get_where(db_prefix() . "clients_exam_status", [
@@ -4480,6 +4512,7 @@ class Clients extends AdminController
             if ($existing_exam) {
                 // Prepare data for batch update
                 $update_data[] = [
+                    "id" => $existing_exam["id"],
                     "exam_id" => $exam_id,
                     "client_id" => $client_id,
                     "batch_id" => $batch_id,
@@ -4494,14 +4527,32 @@ class Clients extends AdminController
                     "status" => $status,
                 ];
             }
+
+            $client_exam_data[] = [
+                "client_id"  => $client_id,
+                "exam_date"  => $exam_date,
+                "exam_id"    => $exam_id,
+                "batch_id"   => $batch_id,
+                "m_university_name" => $exam["m_university_name"],
+                "m_university_id" => $exam["m_university_id"]
+            ];
+
+            if ($exam["manually"] == 1) {
+
+                $this->db->where(array("batch_id" => $batch_id, "client_id" => $client_id))
+                    ->delete(db_prefix() . 'clients_exam');
+
+                // Insert data into the database
+                if (!empty($client_exam_data)) {
+                    $this->db->insert_batch(db_prefix() . 'clients_exam', $client_exam_data);
+                }
+            }
         }
 
-        // print_r($update_data);
-        // print_r($insert_data);
-        //         die;
-        // Execute batch update
+
+
         if (!empty($update_data)) {
-            $this->db->update_batch(db_prefix() . "clients_exam_status", $update_data, "exam_id");
+            $this->db->update_batch(db_prefix() . "clients_exam_status", $update_data, "id");
         }
 
         // Execute batch insert
@@ -4515,6 +4566,8 @@ class Clients extends AdminController
             "applicant_stage" => LEGALIZATION,
             "applicant_sub_status" => LEGALIZATION_PENDING,
         ];
+
+
 
         $this->db->where("userid", $client_id);
         $this->db->update(db_prefix() . 'clients', $update_client_data);

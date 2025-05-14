@@ -344,7 +344,7 @@ array_unshift($office_location, array());
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('university[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "university");
+                                 echo render_select('university[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Primary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "university");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -352,6 +352,14 @@ array_unshift($office_location, array());
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('country[]', $country_list, array('country_name', 'country_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Country", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "country");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('university_secondary[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Secondary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "secondary_university");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -803,7 +811,7 @@ init_tail();
 
 
       $(".filter-hide-default").find("select").val('').selectpicker("refresh");
-      $(".filter-hide-default").addClass('show');
+      $(".filter-hide-default").removeClass('hide');
 
       if (tbllead_performance_column_array[selected_view]) {
          show_column_array = (tbllead_performance_column_array[selected_view].column_ids || "").split(",");
@@ -1140,7 +1148,8 @@ init_tail();
          'fly_batch_filter': "[name='fly_batch_filter[]']",
          'fly_departure_filter': "[name='fly_departure_filter[]']",
          'fly_vendors_filter': "[name='fly_vendors_filter[]']",
-         'fly_date': "[name='fly_date']"
+         'fly_date': "[name='fly_date']",
+         'university_secondary': "[name='university_secondary[]']"
       });
 
       applicant_table = initDataTable(

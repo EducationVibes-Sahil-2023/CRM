@@ -60,11 +60,12 @@
             return false;
         }
 
-        let phonenumber = $("#mobile").val().trim();
-        let p_phonenumber = $("#p_mobile").val().trim();
+        let phonenumber =$("input[name='mobile']").val();
+        let p_phonenumber = $("input[name='fathers_mobile']").val();
 
-        if (phonenumber !== "" && phonenumber === p_phonenumber) {
+        if (p_phonenumber !== "" && phonenumber == p_phonenumber) {
             alert_float("danger", "Parent contact number and your phone number cannot be the same.");
+             hide_loader();
             return false; // prevent form submission or continue
         }
 

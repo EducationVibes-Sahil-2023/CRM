@@ -950,6 +950,35 @@ class Clients_model extends App_Model
             $this->db->where('client_id', $id);
             $this->db->delete(db_prefix() . 'client_university_shortlisting');
 
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'visa_document_activity');
+
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'apostille_document_activity');
+
+            //university shortlisting
+            $this->db->where('userid', $id);
+            $this->db->delete(db_prefix() . 'client_apostille_data');
+
+            //university shortlisting
+            $this->db->where('userid', $id);
+            $this->db->delete(db_prefix() . 'visa_details');
+
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'ticket_data');
+
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'clients_exam');
+
+            //university shortlisting
+            $this->db->where('client_id', $id);
+            $this->db->delete(db_prefix() . 'clients_exam_status');
+
+
             $path = APPLICANT_UPLOAD_DOCUMENT . $id . '/';
             $this->deleteFolder($path);
         }
@@ -1852,7 +1881,7 @@ class Clients_model extends App_Model
             ->get()
             ->result_array();
 
-      
+
         if (empty($result)) return [];
 
         // Extract unique country names
@@ -2040,7 +2069,9 @@ class Clients_model extends App_Model
             db_prefix() . "university_exams.name AS exam_name",
             db_prefix() . "exam_batch.name AS batch_name",
             db_prefix() . "exam_batch.university_name",
-            db_prefix() . "clients_exam_status.status AS status"
+            db_prefix() . "clients_exam_status.status AS status",
+            db_prefix() . "clients_exam.m_university_name AS m_university_name"
+
         ]);
 
         $this->db->from(db_prefix() . 'clients_exam');
@@ -2048,8 +2079,7 @@ class Clients_model extends App_Model
         $this->db->join(db_prefix() . 'university_exams', db_prefix() . 'university_exams.id = ' . db_prefix() . 'clients_exam.exam_id', "left");
         $this->db->join(
             db_prefix() . 'clients_exam_status',
-            db_prefix() . 'clients_exam_status.batch_id = ' . db_prefix() . 'clients_exam.batch_id AND ' .
-                db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
+            db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
                 db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id',
             "left"
         );
