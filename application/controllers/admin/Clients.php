@@ -5056,7 +5056,7 @@ class Clients extends AdminController
             $update_client_data = [
                 "applicant_status" => 0,
                 "applicant_stage" => VISA,
-                "applicant_sub_status" => VISA_STAMP,
+                "applicant_sub_status" => VISA_APPLY,
             ];
 
             $this->db->where("userid", $client_id);
@@ -5081,7 +5081,7 @@ class Clients extends AdminController
             $update_client_data = [
                 "applicant_status" => 0,
                 "applicant_stage" => VISA,
-                "applicant_sub_status" => VISA_STAMP,
+                "applicant_sub_status" => VISA_APPLY,
             ];
 
             $this->db->where("userid", $client_id);
