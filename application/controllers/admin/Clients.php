@@ -1786,7 +1786,31 @@ class Clients extends AdminController
 
                 $documents_type =  get_documents("", [], 1);
                 $documents_type =  array_column($documents_type, null, 'id');
-                $already_data = array_column($already_data, null, "id"); // Convert to associative array
+                $already_data = array_column($already_data, null, "id"); // Make it associative with 'id' as key
+
+
+                if (isset($already_data[$doc_id])) {
+                    unset($already_data[$doc_id]); // Remove the entry by doc_id
+                }
+
+                if (empty($status)) {
+                    $update = $this->db->where("id", $check_->id);
+                    $this->db->update(db_prefix() . 'client_documents', array("data" => json_encode($already_data, true)));
+                    $rows_affected = $this->db->affected_rows();
+                    if ($rows_affected > 0) {
+                        applicant_last_update($client_id);
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = "Document delete successfully";
+                        set_alert('success', "Document delete successfully");
+                    } else {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = "Some this went wrong delete data";
+                        set_alert('danger', "Some this went wrong delete data");
+                    }
+                    echo json_encode($data);
+                    die;
+                }
+
                 if (!empty($already_data[$doc_id])) {
                     $already_data[$doc_id]["approval_date"] = date('Y-m-d H:i:s');
                     $already_data[$doc_id]["approval_status"] = $status;
@@ -5032,7 +5056,7 @@ class Clients extends AdminController
             $update_client_data = [
                 "applicant_status" => 0,
                 "applicant_stage" => VISA,
-                "applicant_sub_status" => VISA_STAMP,
+                "applicant_sub_status" => VISA_APPLY,
             ];
 
             $this->db->where("userid", $client_id);
@@ -5057,7 +5081,7 @@ class Clients extends AdminController
             $update_client_data = [
                 "applicant_status" => 0,
                 "applicant_stage" => VISA,
-                "applicant_sub_status" => VISA_STAMP,
+                "applicant_sub_status" => VISA_APPLY,
             ];
 
             $this->db->where("userid", $client_id);

@@ -230,6 +230,7 @@ if (in_array(get_staff_user_id(), $staff_id)) {
         float: left;
         position: relative;
         letter-spacing: 1px;
+        cursor: pointer;
     }
 
     #progressbar li:before {
@@ -664,7 +665,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             <?php
             foreach ($applicant_tracker as $key => $track) {
             ?>
-                <li data-id="<?= $track['id'] ?>" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
+                <li data-id="<?= $track['id'] ?>" onclick="goToStep(<?= $key ?>)" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
             <?php
             }
             ?>
@@ -768,6 +769,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     <?php if (!empty($file_url)) : ?>
                                                         <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                         <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
+                                                        <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
 
                                                         <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                             <div class="action_button_<?= $doc_id ?>">
@@ -1134,7 +1136,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         <p class="form-check-label">&nbsp;</p>
                                                         <label class="form-check-label">Ministry Order of Documents Received <?= $mand ?>
                                                             <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                            
+
                                                         </label>
                                                     </div>
                                                     <div class="col-md-6">
@@ -1686,14 +1688,14 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         .prevAll().removeClass("inactive").removeClass("active")
         .addClass("previous permanent_previous");
 
-    async function document_approved(obj, doc_id, status) {
+    async function document_approved(obj, doc_id, status = 0) {
         let upload_data = new FormData();
         try {
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
             upload_data.append("status", status);
             upload_data.append("doc_id", doc_id);
-
+            show_loader();
 
             let response = await $.ajax({
                 url: "<?= base_url("admin/clients/documents_approval") ?>",
@@ -1703,17 +1705,24 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 processData: false
             });
             response = JSON.parse(response);
+            hide_loader();
             if (response.resp_code === "RCS") {
                 alert_float("success", response.resp_desc);
                 if (status == 1) {
                     $(".action_button_" + doc_id).html("<span class='text-success'>Approved</span>");
+                } else if (status == 0) {
+
                 } else {
                     $(".action_button_" + doc_id).html("<span class='text-danger'>Rejected</span>");
                 }
-                let date = new Date();
-                let formattedDate = formatDate(date);
-                $(".approved_by_" + doc_id).text("<?= !empty($staff_list[get_staff_user_id()]["firstname"]) ? $staff_list[get_staff_user_id()]["firstname"] . " " . $staff_list[get_staff_user_id()]["lastname"] : '' ?>");
-                $(".approved_date_" + doc_id).text(formattedDate);
+                if (status == 0) {
+                    location.reload();
+                } else {
+                    let date = new Date();
+                    let formattedDate = formatDate(date);
+                    $(".approved_by_" + doc_id).text("<?= !empty($staff_list[get_staff_user_id()]["firstname"]) ? $staff_list[get_staff_user_id()]["firstname"] . " " . $staff_list[get_staff_user_id()]["lastname"] : '' ?>");
+                    $(".approved_date_" + doc_id).text(formattedDate);
+                }
             } else {
                 if (response.resp_code !== undefined) {
                     alert_float("danger", response.resp_desc);
@@ -1723,7 +1732,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
         } catch (error) {
             // Handle the error response from the server
-            console.error(error);
+            // console.error(error);
+            hide_loader();
             reject(error);
         }
     }
@@ -2159,7 +2169,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     }
 
     var get_university_exam = <?= json_encode($get_university_exam, true) ?>;
-    $(".previous").click(function() {
+    $("input.previous").click(function() {
         current_fs = $(this).parent();
         previous_fs = $(this).parent().prev();
         //de-activate current step on progressbar
@@ -2168,6 +2178,39 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         previous_fs.slideDown();
         current_fs.slideUp("slow");
     });
+
+    function goToStep(index) {
+        // Prevent forward navigation
+        if ($("#progressbar li.active").index() <= index) {
+            return false;
+        }
+
+        const fieldsets = $("fieldset");
+        const currentIndex = fieldsets.index($("fieldset:visible"));
+        const current_fs = fieldsets.eq(currentIndex);
+        const target_fs = fieldsets.eq(index);
+
+        // Transition fieldsets
+        current_fs.slideUp("slow");
+        target_fs.slideDown();
+
+        const $progressItems = $("#progressbar li");
+
+        // Remove all step-related classes
+        $progressItems.removeClass("active inactive previous permanent_previous");
+
+        // Add class to all steps by default
+        $progressItems.addClass("inactive");
+
+        // // Mark previous steps
+        $("#progressbar li:lt(" + index + ")").removeClass("inactive").addClass("previous permanent_previous");
+
+        // Mark current step
+        $("#progressbar li").eq(index).removeClass("inactive").addClass("active");
+    }
+
+
+
 
     function addPrimaryUniversityExamBlock(obj = "") {
         let university_name = "<?= addslashes($admissionpreferences->primary_university) ?>";
