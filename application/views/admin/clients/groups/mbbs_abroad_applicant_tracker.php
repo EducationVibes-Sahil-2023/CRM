@@ -1519,7 +1519,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <form id="final-form" class="form-disabled" onsubmit="return false;">
                                 <div class="col-md-12">
                                     <?php $mand_re = "required required-check"; ?>
-                                    <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->country ?></b> has been completed successfully.</h4>
+                                    <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->primary_country ?></b> has been completed successfully.</h4>
                                     <p class="form-check-label">&nbsp;</p>
                                     <label class="form-check-label">
                                         <?= $mand ?> Received 100% service charge clearance.
@@ -2237,7 +2237,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
     function goToStep(index) {
         // Prevent forward navigation
-        if ($("#progressbar li.active").index() <= index && complete_application !=1) {
+        if ($("#progressbar li.active").index() <= index && complete_application != 1) {
             return false;
         }
 
