@@ -253,7 +253,7 @@ if ($this->ci->input->post('university_secondary')) {
     $universities = $this->ci->input->post('university_secondary');
     if (is_array($universities)) {
         $escaped_universities = array_map([$this->ci->db, 'escape'], $universities);
-        array_push($where, 'AND ' . db_prefix() . 'client_university_shortlisting.university_name not IN (' . implode(',', $escaped_universities) . ')');
+        array_push($where, 'AND ' . db_prefix() . 'admission_preferences.primary_university not IN (' . implode(',', $escaped_universities) . ')');
     }
 }
 
