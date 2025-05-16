@@ -1646,11 +1646,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
 
     if (complete_application == 1) {
+        setTimeout(function () {
         $(".btn-hide-complete").hide();
         $(".secondary_university_remark").prop("disabled", true)
         $("fieldset form").find("input, select, textarea").prop("disabled", true).selectpicker("refresh");
-        $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").find("button").hide();
+        $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").hide();
         $("#primary_university").prop("disabled", true).selectpicker("refresh");
+        },500);
 
     }
     var admissionpreferences_freeze = 0;
