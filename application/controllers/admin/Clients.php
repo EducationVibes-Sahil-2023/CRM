@@ -3904,7 +3904,7 @@ class Clients extends AdminController
                 "sc_100" => $sc_100,
                 "applicant_status" => 0,
                 "applicant_stage" => !empty($sc_100) ? SC : VISA,
-                "applicant_sub_status" => !empty($sc_100) ? SC : VISA_STAMP,
+                "applicant_sub_status" => !empty($sc_100) ? SC_PENDING : VISA_STAMP,
             ];
 
             $this->db->where("userid", $client_id);
