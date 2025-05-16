@@ -764,12 +764,14 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <!-- <td>
                                                         <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                     </td> -->
-                                                <td class="d-flex">
+                                                <td class="d-flex action_<?= $doc_id ?>">
 
                                                     <?php if (!empty($file_url)) : ?>
                                                         <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                         <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
-                                                        <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
+                                                        <?php if (is_admin()) { ?>
+                                                            <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
+                                                        <?php } ?>
 
                                                         <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                             <div class="action_button_<?= $doc_id ?>">
@@ -786,10 +788,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     <?php endif; ?>
 
                                                 </td>
-                                                <td>
+                                                <td class=" updated_by_<?= $doc_id ?>">
                                                     <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
                                                 </td>
-                                                <td>
+                                                <td class=" updated_at_<?= $doc_id ?>">
                                                     <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
                                                     ?>
                                                 </td>
@@ -963,7 +965,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                                     ?>
                                                     <label>Admission Letter <?= $mand ?> </label>
-                                                    <input type="file" class="form-control" accept=".pdf" name="admission_letter_<?= $short_list["id"] ?>">
+                                                    <input type="file" class="form-control" accept=".pdf,images/*" name="admission_letter_<?= $short_list["id"] ?>">
                                                     <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
 
                                                     <?php
@@ -1528,8 +1530,18 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                     </label>
                                 </div>
                             </form>
+
+
+
                     <?php }
                     } ?>
+                    <?php if ($k < 5) { ?>
+                        <p class='col-12 margin-top'>
+                            <label class="margin-top">Secondary University Remarks</label>
+                            <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
+
+                        </p>
+                    <?php } ?>
 
                     <?php if ($k > 0) { ?>
                         <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
@@ -1555,7 +1567,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <?php
                     } ?>
 
-                    <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['save'] == 1) { ?>
+                    <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['id'] == 2) { ?>
                         <div class="col-lg-5 pull-right">
                             <div class="form-group">
                                 <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
@@ -1589,6 +1601,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             <?php
             }
             ?>
+
+
         </section>
 
         <!-- </form> -->
@@ -1673,6 +1687,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     reloadNote_list(notes_url);
     reloadActivity_list(activity_url);
 
+    function update_remark(text) {
+        $(".secondary_university_remark").val(text);
+    }
+
     $(document).on('click', '.btn-switch-toggle', function() {
         var parentDiv = $(".note_activity_section .parrent-div");
         parentDiv.find(".panel-body").toggle();
@@ -1697,6 +1715,15 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             upload_data.append("doc_id", doc_id);
             show_loader();
 
+            if (status == 0) {
+                if (confirm("Are you sure you want to download " + documents_type_dropdown[doc_id].name + " document?")) {
+
+                } else {
+                    hide_loader();
+                    return false;
+                }
+            }
+
             let response = await $.ajax({
                 url: "<?= base_url("admin/clients/documents_approval") ?>",
                 method: "POST",
@@ -1712,11 +1739,16 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     $(".action_button_" + doc_id).html("<span class='text-success'>Approved</span>");
                 } else if (status == 0) {
 
+                    $(".approved_by_" + doc_id).html("");
+                    $(".approved_date_" + doc_id).html("");
+                    $(".action_" + doc_id).html("");
+                    $(".updated_by_" + doc_id).html("");
+                    $(".updated_at_" + doc_id).html("");
                 } else {
                     $(".action_button_" + doc_id).html("<span class='text-danger'>Rejected</span>");
                 }
                 if (status == 0) {
-                    location.reload();
+                    // location.reload();
                 } else {
                     let date = new Date();
                     let formattedDate = formatDate(date);
@@ -2014,7 +2046,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
 
             if (id == 3) {
-                if (skip == 1) {
+                if (skip == 1 || same_step == 1) {
 
                 } else {
                     let check_validation = await check_required_fields("application-form");
@@ -2084,6 +2116,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 }
                 await check_visa_letter(upload_data);
             }
+
+            let secondary_university_remark = $('.secondary_university_remark').first().val();
+            upload_data.append("secondary_university_remark", secondary_university_remark);
+
+
+
 
             // AJAX request
             let response = await $.ajax({
@@ -2945,7 +2983,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <div class="col-md-3">
             <label>Admission Letter ${mand}</label>
             <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university.id}">
-            <input type="file" class="form-control" accept=".pdf" name="admission_letter_${university.id}">
+            <input type="file" class="form-control" accept=".pdf,images/*" name="admission_letter_${university.id}">
             ${media_view}
         </div>
     </div>`;

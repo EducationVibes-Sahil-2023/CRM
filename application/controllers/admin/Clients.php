@@ -1789,11 +1789,12 @@ class Clients extends AdminController
                 $already_data = array_column($already_data, null, "id"); // Make it associative with 'id' as key
 
 
-                if (isset($already_data[$doc_id])) {
-                    unset($already_data[$doc_id]); // Remove the entry by doc_id
-                }
+
 
                 if (empty($status)) {
+                    if (isset($already_data[$doc_id])) {
+                        unset($already_data[$doc_id]); // Remove the entry by doc_id
+                    }
                     $update = $this->db->where("id", $check_->id);
                     $this->db->update(db_prefix() . 'client_documents', array("data" => json_encode($already_data, true)));
                     $rows_affected = $this->db->affected_rows();
@@ -3880,6 +3881,7 @@ class Clients extends AdminController
         $tracker_id = $this->input->post("tracker_id");
         $skip_status = !empty($this->input->post("skip")) ? $this->input->post("skip") : 0;
         $completed = !empty($this->input->post("completed")) ? $this->input->post("completed") : 0;
+        $secondary_university_remark = !empty($this->input->post("secondary_university_remark")) ? $this->input->post("secondary_university_remark") : 0;
 
         $post_data = $_POST;
         if (empty($client_id)) {
@@ -3889,6 +3891,12 @@ class Clients extends AdminController
             return;
         }
 
+
+
+        if (!empty($secondary_university_remark)) {
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', array("secondary_university_remark" => $secondary_university_remark));
+        }
         if ($completed == 1) {
             $sc_100 = !empty($this->input->post("sc_100")) ? $this->input->post("sc_100") : 0;
 
@@ -4335,6 +4343,7 @@ class Clients extends AdminController
         $client_id = $this->input->post("client_id");
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $admission = !empty($this->input->post("admission")) ? json_decode($this->input->post("admission"), true) : [];
+        $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
         $admission_letter = [];
         $files = $_FILES;
 
@@ -4404,6 +4413,16 @@ class Clients extends AdminController
 
             $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
             $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
+
+            if ($save == 1) {
+                return  $data = [
+                    'resp_code'               => 'RCS',
+                    'resp_desc'               => "Admission Letter updated successfully.",
+                    'university_shortlisting' => $university_shortlisting_data
+                ];
+                return $data;
+                die;
+            }
 
             if (empty($admissionpreferences->primary_university) ||  empty($admissionpreferences->primary_country)) {
                 $data['resp_code'] = 'ERR';
