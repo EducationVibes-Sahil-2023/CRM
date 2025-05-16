@@ -106,8 +106,9 @@ if (!is_postSale() && !is_admin()) {
 
                     <div class="pull-right">
                         <!-- <button type="button" class="btn btn-primary" onclick="check_update()">Update</button> -->
-
-                        <a href="#" data-toggle="modal" data-target="#customers_apostille" class="bulk-actions-btn table-btn btn btn-primary ">processed</a>
+                        <?php if (!empty($client->sc_100) && $client->sc_100 != 1) { ?>
+                            <a href="#" data-toggle="modal" data-target="#customers_apostille" class="bulk-actions-btn table-btn btn btn-primary ">processed</a>
+                        <?php } ?>
                     </div>
                     <!-- <div class="col-md-3 pull-right">
                         <?php
@@ -230,6 +231,11 @@ if (!is_postSale() && !is_admin()) {
 <?php init_tail(); ?>
 <script>
     var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+    var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+
+    if (complete_application == 1) {
+
+    }
 
     function document_cost_div(obj) {
         let selected_documents = $(obj).val() || [];

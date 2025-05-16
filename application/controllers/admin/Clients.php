@@ -3882,6 +3882,14 @@ class Clients extends AdminController
         $skip_status = !empty($this->input->post("skip")) ? $this->input->post("skip") : 0;
         $completed = !empty($this->input->post("completed")) ? $this->input->post("completed") : 0;
         $secondary_university_remark = !empty($this->input->post("secondary_university_remark")) ? $this->input->post("secondary_university_remark") : 0;
+        $complete_application = !empty($this->input->post("complete_application")) ? $this->input->post("complete_application") : 0;
+
+        if (!empty($complete_application)) {
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = '';
+            echo json_encode($data);
+            return;
+        }
 
         $post_data = $_POST;
         if (empty($client_id)) {
@@ -3904,7 +3912,7 @@ class Clients extends AdminController
                 "sc_100" => $sc_100,
                 "applicant_status" => 0,
                 "applicant_stage" => !empty($sc_100) ? SC : VISA,
-                "applicant_sub_status" => !empty($sc_100) ? SC : VISA_STAMP,
+                "applicant_sub_status" => !empty($sc_100) ? SC_PENDING : VISA_STAMP,
             ];
 
             $this->db->where("userid", $client_id);
