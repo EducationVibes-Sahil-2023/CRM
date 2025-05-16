@@ -1523,6 +1523,13 @@ if ($lead_type_status == 2) {
     }
     var dropdown_country_university_selection = <?= !empty($dropdown_country_university_selection) ? json_encode($dropdown_country_university_selection, true) : [] ?>;
     // console.log(dropdown_country_university_selection);
+    var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+
+    if (complete_application == 1) {
+        setTimeout(function() {
+            $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+        }, 1500);
+    }
 
 
     document.addEventListener("DOMContentLoaded", function() {

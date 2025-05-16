@@ -1519,6 +1519,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <form id="final-form" class="form-disabled" onsubmit="return false;">
                                 <div class="col-md-12">
                                     <?php $mand_re = "required required-check"; ?>
+                                    <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->country ?></b> has been completed successfully.</h4>
                                     <p class="form-check-label">&nbsp;</p>
                                     <label class="form-check-label">
                                         <?= $mand ?> Received 100% service charge clearance.
@@ -1535,7 +1536,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                     <?php }
                     } ?>
-                    <?php if ($k < 5) { ?>
+                    <?php if ($k > 0 && $k < 5) { ?>
                         <p class='col-12 margin-top'>
                             <label class="margin-top">Secondary University Remarks</label>
                             <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
@@ -1550,18 +1551,20 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     if (($k + 1) < count($applicant_tracker)) { ?>
                         <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Save & Next" />
                         <?php if (!empty($track['save']) && $track['save'] == 1) { ?>
-                            <input type="button" name="next" class="next text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
-                            <input type="button" name="next" class="next text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
+                            <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
+                        <?php } ?>
 
+                        <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
+                            <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                         <?php } ?>
                         <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
-                            <input type="button" name="next" class=" text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
+                            <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
                         <?php } ?>
                     <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
-                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
+                        <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
                     <?php } else {
                     ?>
-                        <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit')) { ?>
+                        <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>
                             <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
                         <?php } ?>
                     <?php
@@ -1640,6 +1643,16 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 <?php init_tail(); ?>
 <!-- /.MultiStep Form -->
 <script>
+    var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+
+    if (complete_application == 1) {
+        $(".btn-hide-complete").hide();
+        $(".secondary_university_remark").prop("disabled", true)
+        $("fieldset form").find("input, select, textarea").prop("disabled", true).selectpicker("refresh");
+        $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").find("button").hide();
+        $("#primary_university").prop("disabled", true).selectpicker("refresh");
+
+    }
     var admissionpreferences_freeze = 0;
     var base_url = "<?= base_url() ?>";
     //jQuery time
@@ -2016,7 +2029,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
         let upload_data = new FormData();
         show_loader();
-
+        if (complete_application == 1) {
+            skip == 1;
+            skip == 1;
+            show_next_stage(id);
+            return false;
+        }
         try {
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
@@ -2119,9 +2137,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
             let secondary_university_remark = $('.secondary_university_remark').first().val();
             upload_data.append("secondary_university_remark", secondary_university_remark);
-
-
-
+            upload_data.append("complete_application", complete_application);
 
             // AJAX request
             let response = await $.ajax({
@@ -2143,7 +2159,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             hide_loader();
 
             if (response.resp_code === "RCS") {
-                alert_float("success", response.resp_desc);
+                if (response.resp_desc != "") {
+                    alert_float("success", response.resp_desc);
+                }
 
 
 
@@ -2219,7 +2237,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
     function goToStep(index) {
         // Prevent forward navigation
-        if ($("#progressbar li.active").index() <= index) {
+        if ($("#progressbar li.active").index() <= index && complete_application !=1) {
             return false;
         }
 

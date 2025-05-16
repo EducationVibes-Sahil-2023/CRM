@@ -138,6 +138,13 @@ if (!is_postSale() && !is_admin()) {
 </div>
 <?php init_tail(); ?>
 <script>
+    var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+    if (complete_application == 1) {
+
+        $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+
+    }
+
     function check_update(obj) {
         $(obj).addClass("disabled");
         let isValid = true;
