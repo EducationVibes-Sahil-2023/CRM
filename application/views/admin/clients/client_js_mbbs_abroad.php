@@ -193,6 +193,10 @@
             }
         });
 
+        var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+
+
+
         // Pre-fill with the nearest allowed month on page load
         let today = new Date();
         let currentYear = today.getFullYear();
@@ -219,6 +223,10 @@
                 // Directly applying instead of using another setTimeout
                 $(".tags-input-wrapper").css("pointer-events", "none");
             }, 100);
+
+            if (complete_application == 1) {
+                $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+            }
         }
 
         setTimeout(function() {
@@ -779,6 +787,10 @@
         }
 
         if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {}
+
+        if (complete_application == 1) {
+            $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+        }
     });
 
 

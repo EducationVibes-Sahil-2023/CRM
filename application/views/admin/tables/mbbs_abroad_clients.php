@@ -252,16 +252,28 @@ if ($this->ci->input->post('university')) {
 if ($this->ci->input->post('university_secondary')) {
     $universities = $this->ci->input->post('university_secondary');
     if (is_array($universities)) {
-        $conditions = [];
-        foreach ($universities as $university) {
-            // Match exact value within a JSON string array
-            $escaped = $this->ci->db->escape('%"' . $university . '"%');
-            $conditions[] = db_prefix() . "admission_preferences.university LIKE $escaped";
-        }
-        $where[] = 'AND (' . implode(' OR ', $conditions) . ')';
+        $escaped_universities = array_map([$this->ci->db, 'escape'], $universities);
+        array_push($where, 'AND ' . db_prefix() . 'admission_preferences.primary_university not IN (' . implode(',', $escaped_universities) . ')');
     }
 }
 
+if ($this->ci->input->post('university_secondary')) {
+    $universities = $this->ci->input->post('university_secondary');
+    
+    if (is_array($universities)) {
+        $likeConditions = [];
+
+        foreach ($universities as $university) {
+            $escapedLike = $this->ci->db->escape_like_str($university);
+            $likeConditions[] = db_prefix() . "admission_preferences.university LIKE " . 
+                                $this->ci->db->escape('%' . $escapedLike . '%');
+        }
+
+        if (!empty($likeConditions)) {
+            $where[] = 'AND (' . implode(' OR ', $likeConditions) . ')';
+        }
+    }
+}
 
 
 

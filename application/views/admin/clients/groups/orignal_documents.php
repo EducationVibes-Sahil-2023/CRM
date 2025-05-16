@@ -91,7 +91,7 @@ if (!is_postSale() && !is_admin()) {
                 <div class="col-md-12 text-right">
 
                     <div class="pull-right">
-                        <button type="button" class="btn btn-primary" onclick="check_update()">Update</button>
+                        <button type="button" class="btn btn-primary" onclick="check_update(this)">Update</button>
                     </div>
                     <div class="col-md-3 pull-right">
                         <?php
@@ -138,7 +138,15 @@ if (!is_postSale() && !is_admin()) {
 </div>
 <?php init_tail(); ?>
 <script>
-    function check_update() {
+    var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+    if (complete_application == 1) {
+
+        $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+
+    }
+
+    function check_update(obj) {
+        $(obj).addClass("disabled");
         let isValid = true;
         let isValid_check = false;
         let formData = new FormData(); // Create a FormData object
@@ -157,6 +165,7 @@ if (!is_postSale() && !is_admin()) {
                     isValid = false;
                     locationInput.focus();
                     alert_float("danger", "Please enter a location for the selected document.");
+                    $(obj).removeClass("disabled");
                     return false; // Exit loop early if validation fails
                 }
 
@@ -174,11 +183,14 @@ if (!is_postSale() && !is_admin()) {
         formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
 
         if (!isValid) {
+            $(obj).removeClass("disabled");
             return false; // Stop form submission
         }
 
         if ($(".document_upload_div tr input[type='checkbox']:checked").length === 0 && isValid_check == false) {
             alert_float("danger", "Please check at least one checkbox before saving!");
+            $(obj).removeClass("disabled");
+
             return false;
         }
 
@@ -195,7 +207,7 @@ if (!is_postSale() && !is_admin()) {
                     location.reload(); // Reload page after success
                 } else {
                     alert_float("danger", response.message);
-
+                    $(obj).removeClass("disabled");
                 }
             },
             error: function() {

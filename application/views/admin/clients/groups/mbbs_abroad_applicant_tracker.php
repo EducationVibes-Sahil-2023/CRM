@@ -230,6 +230,7 @@ if (in_array(get_staff_user_id(), $staff_id)) {
         float: left;
         position: relative;
         letter-spacing: 1px;
+        cursor: pointer;
     }
 
     #progressbar li:before {
@@ -664,7 +665,7 @@ die;
             <?php
             foreach ($applicant_tracker as $key => $track) {
             ?>
-                <li data-id="<?= $track['id'] ?>" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
+                <li data-id="<?= $track['id'] ?>" onclick="goToStep(<?= $key ?>)" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
             <?php
             }
             ?>
@@ -763,11 +764,14 @@ die;
                                                 <!-- <td>
                                                         <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                     </td> -->
-                                                <td class="d-flex">
+                                                <td class="d-flex action_<?= $doc_id ?>">
 
                                                     <?php if (!empty($file_url)) : ?>
                                                         <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                         <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
+                                                        <?php if (is_admin()) { ?>
+                                                            <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
+                                                        <?php } ?>
 
                                                         <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                             <div class="action_button_<?= $doc_id ?>">
@@ -784,10 +788,10 @@ die;
                                                     <?php endif; ?>
 
                                                 </td>
-                                                <td>
+                                                <td class=" updated_by_<?= $doc_id ?>">
                                                     <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
                                                 </td>
-                                                <td>
+                                                <td class=" updated_at_<?= $doc_id ?>">
                                                     <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
                                                     ?>
                                                 </td>
@@ -961,7 +965,7 @@ die;
 
                                                     ?>
                                                     <label>Admission Letter <?= $mand ?> </label>
-                                                    <input type="file" class="form-control" accept=".pdf" name="admission_letter_<?= $short_list["id"] ?>">
+                                                    <input type="file" class="form-control" accept=".pdf,images/*" name="admission_letter_<?= $short_list["id"] ?>">
                                                     <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
 
                                                     <?php
@@ -1134,7 +1138,7 @@ die;
                                                         <p class="form-check-label">&nbsp;</p>
                                                         <label class="form-check-label">Ministry Order of Documents Received <?= $mand ?>
                                                             <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                            
+
                                                         </label>
                                                     </div>
                                                     <div class="col-md-6">
@@ -1515,6 +1519,7 @@ die;
                             <form id="final-form" class="form-disabled" onsubmit="return false;">
                                 <div class="col-md-12">
                                     <?php $mand_re = "required required-check"; ?>
+                                    <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->primary_country ?></b> has been completed successfully.</h4>
                                     <p class="form-check-label">&nbsp;</p>
                                     <label class="form-check-label">
                                         <?= $mand ?> Received 100% service charge clearance.
@@ -1526,8 +1531,18 @@ die;
                                     </label>
                                 </div>
                             </form>
+
+
+
                     <?php }
                     } ?>
+                    <?php if ($k > 0 && $k < 5) { ?>
+                        <p class='col-12 margin-top'>
+                            <label class="margin-top">Secondary University Remarks</label>
+                            <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
+
+                        </p>
+                    <?php } ?>
 
                     <?php if ($k > 0) { ?>
                         <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
@@ -1536,24 +1551,26 @@ die;
                     if (($k + 1) < count($applicant_tracker)) { ?>
                         <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Save & Next" />
                         <?php if (!empty($track['save']) && $track['save'] == 1) { ?>
-                            <input type="button" name="next" class="next text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
-                            <input type="button" name="next" class="next text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
+                            <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
+                        <?php } ?>
 
+                        <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
+                            <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                         <?php } ?>
                         <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
-                            <input type="button" name="next" class=" text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
+                            <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
                         <?php } ?>
                     <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
-                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
+                        <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
                     <?php } else {
                     ?>
-                        <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit')) { ?>
+                        <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>
                             <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
                         <?php } ?>
                     <?php
                     } ?>
 
-                    <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['save'] == 1) { ?>
+                    <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['id'] == 2) { ?>
                         <div class="col-lg-5 pull-right">
                             <div class="form-group">
                                 <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
@@ -1587,6 +1604,8 @@ die;
             <?php
             }
             ?>
+
+
         </section>
 
         <!-- </form> -->
@@ -1624,6 +1643,18 @@ die;
 <?php init_tail(); ?>
 <!-- /.MultiStep Form -->
 <script>
+    var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+
+    if (complete_application == 1) {
+        setTimeout(function () {
+        $(".btn-hide-complete").hide();
+        $(".secondary_university_remark").prop("disabled", true)
+        $("fieldset form").find("input, select, textarea").prop("disabled", true).selectpicker("refresh");
+        $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").hide();
+        $("#primary_university").prop("disabled", true).selectpicker("refresh");
+        },500);
+
+    }
     var admissionpreferences_freeze = 0;
     var base_url = "<?= base_url() ?>";
     //jQuery time
@@ -1671,6 +1702,10 @@ die;
     reloadNote_list(notes_url);
     reloadActivity_list(activity_url);
 
+    function update_remark(text) {
+        $(".secondary_university_remark").val(text);
+    }
+
     $(document).on('click', '.btn-switch-toggle', function() {
         var parentDiv = $(".note_activity_section .parrent-div");
         parentDiv.find(".panel-body").toggle();
@@ -1686,14 +1721,23 @@ die;
         .prevAll().removeClass("inactive").removeClass("active")
         .addClass("previous permanent_previous");
 
-    async function document_approved(obj, doc_id, status) {
+    async function document_approved(obj, doc_id, status = 0) {
         let upload_data = new FormData();
         try {
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
             upload_data.append("status", status);
             upload_data.append("doc_id", doc_id);
+            show_loader();
 
+            if (status == 0) {
+                if (confirm("Are you sure you want to download " + documents_type_dropdown[doc_id].name + " document?")) {
+
+                } else {
+                    hide_loader();
+                    return false;
+                }
+            }
 
             let response = await $.ajax({
                 url: "<?= base_url("admin/clients/documents_approval") ?>",
@@ -1703,17 +1747,29 @@ die;
                 processData: false
             });
             response = JSON.parse(response);
+            hide_loader();
             if (response.resp_code === "RCS") {
                 alert_float("success", response.resp_desc);
                 if (status == 1) {
                     $(".action_button_" + doc_id).html("<span class='text-success'>Approved</span>");
+                } else if (status == 0) {
+
+                    $(".approved_by_" + doc_id).html("");
+                    $(".approved_date_" + doc_id).html("");
+                    $(".action_" + doc_id).html("");
+                    $(".updated_by_" + doc_id).html("");
+                    $(".updated_at_" + doc_id).html("");
                 } else {
                     $(".action_button_" + doc_id).html("<span class='text-danger'>Rejected</span>");
                 }
-                let date = new Date();
-                let formattedDate = formatDate(date);
-                $(".approved_by_" + doc_id).text("<?= !empty($staff_list[get_staff_user_id()]["firstname"]) ? $staff_list[get_staff_user_id()]["firstname"] . " " . $staff_list[get_staff_user_id()]["lastname"] : '' ?>");
-                $(".approved_date_" + doc_id).text(formattedDate);
+                if (status == 0) {
+                    // location.reload();
+                } else {
+                    let date = new Date();
+                    let formattedDate = formatDate(date);
+                    $(".approved_by_" + doc_id).text("<?= !empty($staff_list[get_staff_user_id()]["firstname"]) ? $staff_list[get_staff_user_id()]["firstname"] . " " . $staff_list[get_staff_user_id()]["lastname"] : '' ?>");
+                    $(".approved_date_" + doc_id).text(formattedDate);
+                }
             } else {
                 if (response.resp_code !== undefined) {
                     alert_float("danger", response.resp_desc);
@@ -1723,7 +1779,8 @@ die;
             }
         } catch (error) {
             // Handle the error response from the server
-            console.error(error);
+            // console.error(error);
+            hide_loader();
             reject(error);
         }
     }
@@ -1974,7 +2031,12 @@ die;
 
         let upload_data = new FormData();
         show_loader();
-
+        if (complete_application == 1) {
+            skip == 1;
+            skip == 1;
+            show_next_stage(id);
+            return false;
+        }
         try {
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
             upload_data.append("client_id", <?= $client_id ?>);
@@ -2004,7 +2066,7 @@ die;
             }
 
             if (id == 3) {
-                if (skip == 1) {
+                if (skip == 1 || same_step == 1) {
 
                 } else {
                     let check_validation = await check_required_fields("application-form");
@@ -2075,6 +2137,10 @@ die;
                 await check_visa_letter(upload_data);
             }
 
+            let secondary_university_remark = $('.secondary_university_remark').first().val();
+            upload_data.append("secondary_university_remark", secondary_university_remark);
+            upload_data.append("complete_application", complete_application);
+
             // AJAX request
             let response = await $.ajax({
                 url: "<?= base_url('admin/clients/mbbs_tracker') ?>",
@@ -2095,7 +2161,9 @@ die;
             hide_loader();
 
             if (response.resp_code === "RCS") {
-                alert_float("success", response.resp_desc);
+                if (response.resp_desc != "") {
+                    alert_float("success", response.resp_desc);
+                }
 
 
 
@@ -2159,7 +2227,7 @@ die;
     }
 
     var get_university_exam = <?= json_encode($get_university_exam, true) ?>;
-    $(".previous").click(function() {
+    $("input.previous").click(function() {
         current_fs = $(this).parent();
         previous_fs = $(this).parent().prev();
         //de-activate current step on progressbar
@@ -2168,6 +2236,39 @@ die;
         previous_fs.slideDown();
         current_fs.slideUp("slow");
     });
+
+    function goToStep(index) {
+        // Prevent forward navigation
+        if ($("#progressbar li.active").index() <= index && complete_application != 1) {
+            return false;
+        }
+
+        const fieldsets = $("fieldset");
+        const currentIndex = fieldsets.index($("fieldset:visible"));
+        const current_fs = fieldsets.eq(currentIndex);
+        const target_fs = fieldsets.eq(index);
+
+        // Transition fieldsets
+        current_fs.slideUp("slow");
+        target_fs.slideDown();
+
+        const $progressItems = $("#progressbar li");
+
+        // Remove all step-related classes
+        $progressItems.removeClass("active inactive previous permanent_previous");
+
+        // Add class to all steps by default
+        $progressItems.addClass("inactive");
+
+        // // Mark previous steps
+        $("#progressbar li:lt(" + index + ")").removeClass("inactive").addClass("previous permanent_previous");
+
+        // Mark current step
+        $("#progressbar li").eq(index).removeClass("inactive").addClass("active");
+    }
+
+
+
 
     function addPrimaryUniversityExamBlock(obj = "") {
         let university_name = "<?= addslashes($admissionpreferences->primary_university) ?>";
@@ -2902,7 +3003,7 @@ die;
         <div class="col-md-3">
             <label>Admission Letter ${mand}</label>
             <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university.id}">
-            <input type="file" class="form-control" accept=".pdf" name="admission_letter_${university.id}">
+            <input type="file" class="form-control" accept=".pdf,images/*" name="admission_letter_${university.id}">
             ${media_view}
         </div>
     </div>`;
