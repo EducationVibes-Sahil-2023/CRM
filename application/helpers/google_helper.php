@@ -147,7 +147,7 @@ if (!function_exists('get_data_excel')) {
             $sheet_name = $sheet['sheet_name']; // Important for multiple autoSync rows
 
             $response_ = create_sheet($currentId, $sheet_name);
-           
+
             // Get selected columns
             $selectColumnName = $CI->db
                 ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) as fetch_column_name", false)
@@ -183,8 +183,9 @@ if (!function_exists('get_data_excel')) {
             $sql = "SELECT {$selectColumnName}
                     FROM " . db_prefix() . "clients c
                     LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
+                    LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
                     LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
-                    JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+                    LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
                     LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
                     LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = (c.applicant_stage)
                     LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = (c.applicant_sub_status)
