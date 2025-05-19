@@ -9,6 +9,7 @@ $caste_category = get_caste_category();
 $neet_status = get_neet_status();
 
 $board_dropdown = get_board_dropdown();
+$ev_partner = get_ev_partner();
 $staff_list              = $this->leads_model->get_staff_list();
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
@@ -308,6 +309,16 @@ if ($lead_type_status == 2) {
 									<div class="row">
 										<div class="col-lg-3">
 											<div class="form-group">
+												<?php
+												array_unshift($ev_partner, array("id" => "", "value" => "", "name" => "Select Partner"));
+												$selected_agent[] = !empty($client->agent_id) ? $client->agent_id : '';
+
+												echo render_select('agent_id', $ev_partner, array('id', 'name'), "Partner", $selected_agent, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "agent_id");
+												?>
+											</div>
+										</div>
+										<div class="col-lg-3">
+											<div class="form-group">
 												<label for="exampleInputFirstName">First Name <small class="text-danger"></small></label>
 												<input class="form-control" <?= $read_only ?> type="text" class="form-group" required-check required placeholder="First Name" name="first_name" id="first_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->first_name : $contact->firstname; ?>'>
 											</div>
@@ -324,6 +335,10 @@ if ($lead_type_status == 2) {
 												<input class="form-control " <?= $read_only ?> type="text" class="form-group" placeholder="Email Address" name="email" value='<?php echo (isset($basicdetails)) ? $basicdetails->email : $contact->email; ?>'>
 											</div>
 										</div>
+
+
+									</div>
+									<div class="row">
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputMobileNumber">Mobile Number <small class="text-danger"></small></label>
@@ -331,10 +346,6 @@ if ($lead_type_status == 2) {
 													maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
 											</div>
 										</div>
-
-									</div>
-									<div class="row">
-
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputDateOfBirth">Date Of Birth <small class="text-danger"></small></label>
@@ -366,14 +377,15 @@ if ($lead_type_status == 2) {
 
 											</div>
 										</div>
+
+									</div>
+									<div class="row">
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputMobileNumber">Parent's Name <small class="text-danger"></small></label>
 												<input class="form-control" type="text" class="form-group" placeholder="Parents Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
 											</div>
 										</div>
-									</div>
-									<div class="row">
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputMobileNumber">Parent's Contact <small class="text-danger"></small></label>

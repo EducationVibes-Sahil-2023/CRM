@@ -152,11 +152,14 @@ class GoogleSheetApi
         return $columnName;
     }
 
-    public function updateSheetColumnNames($spreadsheetId, $columnNames = [])
+    public function updateSheetColumnNames($spreadsheetId, $columnNames = [], $sheetName = "")
     {
 
         // $sheetName = $this->listSheetNames($spreadsheetId);
-        $sheetName = "Sheet1";
+        if (empty($sheetName)) {
+            $sheetName = "Sheet1";
+        }
+
         if (empty($spreadsheetId) || empty($sheetName) || empty($columnNames)) {
             return [
                 'resp_code' => 'ERR',
@@ -197,11 +200,17 @@ class GoogleSheetApi
         }
     }
 
-    public function updateSheetData($spreadsheetId, $arrayData = [])
+    public function updateSheetData($spreadsheetId, $arrayData = [], $sheetName = "Sheet1")
     {
-        // $sheetName = $this->listSheetNames($spreadsheetId);
-        $sheetName = "Sheet1";
+        if (empty($sheetName)) {
+            $sheetName = "Sheet1";
+        }
+        // Ensure sheet exists or create it
+        $sheetResponse = $this->ensureSheetExists($spreadsheetId, $sheetName);
+        // Proceed with sheet name
+        $sheetName = $sheetName; // Keep original name passed
 
+        // Validate inputs
         if (empty($spreadsheetId) || empty($sheetName) || empty($arrayData)) {
             return [
                 'resp_code' => 'ERR',
@@ -209,10 +218,12 @@ class GoogleSheetApi
             ];
         }
 
-        // Format array with headers + values
+        // Format array for Sheets (assume formatForGoogleSheet returns 2D array: [headers, data...])
         $sheetData = $this->formatForGoogleSheet($arrayData);
 
-        $range = 'Sheet1!A2'; // Include headers
+        // Set the range to insert data (starting from A2 to skip header row)
+        $range = $sheetName . '!A2';
+
         $body = new Google_Service_Sheets_BatchUpdateValuesRequest([
             'valueInputOption' => 'RAW',
             'data' => [
@@ -228,16 +239,17 @@ class GoogleSheetApi
 
             return [
                 'resp_code' => 'RCS',
-                'resp_desc' => 'Sheet data updated successfully via batchUpdate.',
+                'resp_desc' => '✅ Sheet data updated successfully.',
                 'total_updated_cells' => $response->getTotalUpdatedCells()
             ];
         } catch (Exception $e) {
             return [
                 'resp_code' => 'ERR',
-                'resp_desc' => 'Google Sheets API Error: ' . $e->getMessage()
+                'resp_desc' => '❌ Google Sheets API Error: ' . $e->getMessage()
             ];
         }
     }
+
 
     public function formatForGoogleSheet($arrayData)
     {
@@ -258,6 +270,60 @@ class GoogleSheetApi
 
         return $sheetData;
     }
+
+    public function ensureSheetExists($spreadsheetId, $desiredSheetName)
+    {
+        try {
+            // Get all sheet names
+            $sheetNames = $this->listSheetNames($spreadsheetId);
+
+            // If only a single sheet is returned as string, convert to array
+            if (!is_array($sheetNames)) {
+                $sheetNames = [$sheetNames];
+            }
+
+            // Check if sheet already exists
+            if (in_array($desiredSheetName, $sheetNames)) {
+                return [
+                    "status" => "RCS",
+                    "message" => "✅ Sheet '{$desiredSheetName}' already exists."
+                ];
+            }
+
+            // Sheet does not exist, create it
+            $batchUpdateRequest = new Google_Service_Sheets_BatchUpdateSpreadsheetRequest([
+                'requests' => [
+                    [
+                        'addSheet' => [
+                            'properties' => [
+                                'title' => $desiredSheetName
+                            ]
+                        ]
+                    ]
+                ]
+            ]);
+
+            return $response = $this->service->spreadsheets->batchUpdate($spreadsheetId, $batchUpdateRequest);
+            die;
+            return [
+                "status" => "RCS",
+                "message" => "✅ Sheet '{$desiredSheetName}' created successfully.",
+                "response" => $response
+            ];
+        } catch (Google_Service_Exception $e) {
+            return [
+                "status" => "ERR",
+                "message" => "❌ API Error: " . $e->getMessage()
+            ];
+        } catch (Exception $e) {
+            return [
+                "status" => "ERR",
+                "message" => "❌ General Error: " . $e->getMessage()
+            ];
+        }
+    }
+
+
 
     public function listSheetNames($spreadsheetId)
     {

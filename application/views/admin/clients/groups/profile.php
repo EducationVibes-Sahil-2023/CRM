@@ -352,6 +352,7 @@ if (!empty($score_value)) {
 										</select>
 									</div>
 								</div>
+
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputFirstName">First Name</label>
@@ -398,7 +399,7 @@ if (!empty($score_value)) {
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father Name</label>
-										<input class="form-control" type="text"  class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
+										<input class="form-control" type="text" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">

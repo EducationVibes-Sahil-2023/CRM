@@ -2649,3 +2649,25 @@ function doc_urls_additional($user_id)
 
     return $final_files;
 }
+
+function get_ev_partner()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $board_dropdown = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'ev_partner')
+            ->get()
+            ->result_array();
+
+        return $board_dropdown; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching document: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}

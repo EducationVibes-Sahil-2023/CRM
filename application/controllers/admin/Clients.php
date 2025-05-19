@@ -3521,7 +3521,29 @@ class Clients extends AdminController
             unset($_POST["files"]);
 
             if (empty($client_id)) {
-                $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2];
+                $first_name = trim($_POST["first_name"] ?? '');
+                $last_name = trim($_POST["last_name"] ?? '');
+                $agent_id_raw = trim($_POST["agent_id"] ?? '');
+                $agent_id = trim($agent_id_raw);
+                unset($_POST["agent_id"]);
+                $unique_agent_id = base64_encode($first_name . $last_name . $agent_id);
+
+                // Check if unique_agent_id is empty
+                if (empty($unique_agent_id)) {
+                    echo json_encode(["status" => "ERR", "message" => "Unique Agent ID is empty."]);
+                    return;
+                }
+
+                // Check if unique_agent_id already exists
+                $this->db->where('unique_agent_id', $unique_agent_id);
+                $exists = $this->db->get(db_prefix() . 'clients')->row();
+
+                if ($exists) {
+                    echo json_encode(["status" => "ERR", "message" => "Student already exist already exists."]);
+                    return;
+                }
+
+                $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
                 $this->db->insert(db_prefix() . 'clients', $client_data);
 
                 $client_id = $this->db->insert_id();
@@ -4773,6 +4795,19 @@ class Clients extends AdminController
                     'resp_desc'               => "Admission Letter updated successfully.",
                     'university_shortlisting' => $university_shortlisting_data
                 ];
+
+
+                $check_primary_university_exist = $this->checkUniversityExists($university_shortlisting_data, $admissionpreferences->primary_university, $admissionpreferences->primary_country);
+
+                if (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_APPLY));
+                }
+
+                if ((!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) && empty($check_primary_university_exist["application_file"])) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_WAITING));
+                }
                 return $data;
                 die;
             }
