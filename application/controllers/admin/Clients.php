@@ -519,7 +519,9 @@ class Clients extends AdminController
 
             $client                = $this->clients_model->get($id);
 
-            $data["lead_data"]                = $this->leads_model->get($client->leadid);
+            if (!empty($client->leadid)) {
+                $data["lead_data"]                = $this->leads_model->get($client->leadid);
+            }
             $data['customer_tabs'] = get_customer_profile_tabs();
 
             $prefix_page = !empty($data["lead_data"]->type_name)
@@ -3511,6 +3513,9 @@ class Clients extends AdminController
             $update_student_data = [];
             $update_applicant_custom_data["customers"] = [];
             $reference_name = $_POST["reference_name"];
+            $agent_id_raw = trim($_POST["agent_id"] ?? '');
+            $agent_id = trim($agent_id_raw);
+
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -3519,12 +3524,12 @@ class Clients extends AdminController
             unset($_POST["doc_url"]);
             unset($_POST["reference_name"]);
             unset($_POST["files"]);
+            unset($_POST["agent_id"]);
+
 
             if (empty($client_id)) {
                 $first_name = trim($_POST["first_name"] ?? '');
                 $last_name = trim($_POST["last_name"] ?? '');
-                $agent_id_raw = trim($_POST["agent_id"] ?? '');
-                $agent_id = trim($agent_id_raw);
                 unset($_POST["agent_id"]);
                 $unique_agent_id = base64_encode($first_name . $last_name . $agent_id);
 
@@ -3548,6 +3553,7 @@ class Clients extends AdminController
 
                 $client_id = $this->db->insert_id();
             }
+
 
             foreach ($_POST as $key => $value) {
                 if (!empty($value) && strpos($key, 'custom_fields') !== false) {
