@@ -180,7 +180,7 @@ if (!function_exists('get_data_excel')) {
             }
 
             if (!empty($sql_conditions)) {
-                $condition_sql .= $condition_sql;
+                $condition_sql .= $sql_conditions;
             }
 
             // Build the main data query
@@ -201,7 +201,7 @@ if (!function_exists('get_data_excel')) {
                     LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                     LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                     LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
-                    WHERE l.type = 2 {$condition_sql}
+                    WHERE 1 = 1  {$condition_sql}
                     GROUP BY c.userid";
 
 
