@@ -4790,7 +4790,7 @@ class Clients extends AdminController
             $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
 
             if ($save == 1) {
-                return  $data = [
+                  $data = [
                     'resp_code'               => 'RCS',
                     'resp_desc'               => "Admission Letter updated successfully.",
                     'university_shortlisting' => $university_shortlisting_data
