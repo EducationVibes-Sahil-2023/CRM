@@ -1,7 +1,7 @@
 <script>
     // comman functions
 
-
+  var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
     function get_media_docs(id, formData) {
         formData.doc_url = [];
         return new Promise((resolve) => {
@@ -87,6 +87,7 @@
             dataType: "JSON",
             success: function(res) {
                 hide_loader();
+                console.log(res);
                 if (res.resp_code === "RCS") {
                     let url = new URL(window.location.href);
                     let segments = url.pathname.split('/');
@@ -193,7 +194,7 @@
             }
         });
 
-        var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+      
 
 
 

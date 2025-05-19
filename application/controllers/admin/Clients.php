@@ -3535,18 +3535,22 @@ class Clients extends AdminController
 
                 // Check if unique_agent_id is empty
                 if (empty($unique_agent_id)) {
-                    echo json_encode(["status" => "ERR", "message" => "Unique Agent ID is empty."]);
+                    echo json_encode(["resp_code" => "ERR", "resp_desc" => "Unique Agent ID is empty."]);
                     return;
                 }
-
+                
+        
                 // Check if unique_agent_id already exists
                 $this->db->where('unique_agent_id', $unique_agent_id);
                 $exists = $this->db->get(db_prefix() . 'clients')->row();
 
+    
+                
                 if ($exists) {
-                    echo json_encode(["status" => "ERR", "message" => "Student already exist already exists."]);
+                    echo json_encode(["resp_code" => "ERR", "resp_desc" => "Student already exist already exists."]);
                     return;
                 }
+                
 
                 $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
                 $this->db->insert(db_prefix() . 'clients', $client_data);
