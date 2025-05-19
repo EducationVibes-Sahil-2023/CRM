@@ -4564,20 +4564,58 @@ class Clients extends AdminController
                     if (empty($check_documents)) {
                         // If no missing documents, update applicant tracker stage
                         $this->update_applicant_tracker_stages($client_id, $tracker_id);
+                        // $this->db->where("userid", $client_id);
+                        // $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_PENDING));
+                        $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+                        $ids = array_column($university_shortlisting_data, "id");
+
+                        $check_primary_university_exist = $this->checkUniversityExists($university_shortlisting_data, $admissionpreferences->primary_university, $admissionpreferences->primary_country);
+
+                        // Default status update
                         $this->db->where("userid", $client_id);
-                        $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_PENDING));
+                        $this->db->update(db_prefix() . 'clients', [
+                            "applicant_status" => 0,
+                            "applicant_stage"  => ADMISSION,
+                            "applicant_sub_status" => ADMISSION_LETTER_PENDING
+                        ]);
+
+                        // If partner or application date exists AND application_file is empty → APPLY
+                        if (
+                            (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                            && empty($check_primary_university_exist['application_file'])
+                        ) {
+                            $this->db->where("userid", $client_id);
+                            $this->db->update(db_prefix() . 'clients', [
+                                "applicant_status" => 0,
+                                "applicant_stage"  => ADMISSION,
+                                "applicant_sub_status" => ADMISSION_LETTER_APPLY
+                            ]);
+                        }
+
+                        // If partner or application date exists AND application_file exists → RECEIVED
+                        if (
+                            (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                            && !empty($check_primary_university_exist['application_file'])
+                        ) {
+                            $this->db->where("userid", $client_id);
+                            $this->db->update(db_prefix() . 'clients', [
+                                "applicant_status" => 0,
+                                "applicant_stage"  => ADMISSION,
+                                "applicant_sub_status" => ADMISSION_LETTER_RECEIVED
+                            ]);
+                        }
+
+                        // Insert activity log for university shortlisting update
+                        $this->db->insert(db_prefix() . 'application_activity_log', array(
+                            "description" => "University shortlisting completed and updated by " . get_staff_full_name(get_staff_user_id()),
+                            "date"        => date('Y-m-d H:i:s'),
+                            "staffid"     => get_staff_user_id(),
+                            "client_id"   => $client_id
+                        ));
                     } else {
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_DOC_PENDING));
                     }
-
-                    // Insert activity log for university shortlisting update
-                    $this->db->insert(db_prefix() . 'application_activity_log', array(
-                        "description" => "University shortlisting completed and updated by " . get_staff_full_name(get_staff_user_id()),
-                        "date"        => date('Y-m-d H:i:s'),
-                        "staffid"     => get_staff_user_id(),
-                        "client_id"   => $client_id
-                    ));
                 }
 
                 // Fetch updated university shortlisting data
@@ -4790,7 +4828,7 @@ class Clients extends AdminController
             $admissionpreferences = $this->clients_model->getAdmissionPreferences($client_id);
 
             if ($save == 1) {
-                  $data = [
+                $data = [
                     'resp_code'               => 'RCS',
                     'resp_desc'               => "Admission Letter updated successfully.",
                     'university_shortlisting' => $university_shortlisting_data
