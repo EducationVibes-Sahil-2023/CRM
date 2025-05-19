@@ -3527,7 +3527,7 @@ class Clients extends AdminController
             unset($_POST["agent_id"]);
 
 
-            if (empty($client_id)) {
+            if (empty($client_id) || !empty($agent_id)) {
                 $first_name = trim($_POST["first_name"] ?? '');
                 $last_name = trim($_POST["last_name"] ?? '');
                 unset($_POST["agent_id"]);
@@ -3538,24 +3538,25 @@ class Clients extends AdminController
                     echo json_encode(["resp_code" => "ERR", "resp_desc" => "Unique Agent ID is empty."]);
                     return;
                 }
-                
-        
+
+
                 // Check if unique_agent_id already exists
                 $this->db->where('unique_agent_id', $unique_agent_id);
                 $exists = $this->db->get(db_prefix() . 'clients')->row();
 
-    
-                
+
+
                 if ($exists) {
                     echo json_encode(["resp_code" => "ERR", "resp_desc" => "Student already exist already exists."]);
                     return;
                 }
-                
 
-                $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
-                $this->db->insert(db_prefix() . 'clients', $client_data);
+                if (empty($client_id)) {
 
-                $client_id = $this->db->insert_id();
+                    $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
+                    $this->db->insert(db_prefix() . 'clients', $client_data);
+                    $client_id = $this->db->insert_id();
+                }
             }
 
 
