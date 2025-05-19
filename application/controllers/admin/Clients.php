@@ -4806,7 +4806,7 @@ class Clients extends AdminController
 
                 if ((!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) && empty($check_primary_university_exist["application_file"])) {
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_WAITING));
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_RECEIVED));
                 }
                 return $data;
                 die;
