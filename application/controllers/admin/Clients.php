@@ -4799,15 +4799,40 @@ class Clients extends AdminController
 
                 $check_primary_university_exist = $this->checkUniversityExists($university_shortlisting_data, $admissionpreferences->primary_university, $admissionpreferences->primary_country);
 
-                if (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) {
+                // Default status update
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', [
+                    "applicant_status" => 0,
+                    "applicant_stage"  => ADMISSION,
+                    "applicant_sub_status" => ADMISSION_LETTER_PENDING
+                ]);
+
+                // If partner or application date exists AND application_file is empty → APPLY
+                if (
+                    (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                    && empty($check_primary_university_exist['application_file'])
+                ) {
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_APPLY));
+                    $this->db->update(db_prefix() . 'clients', [
+                        "applicant_status" => 0,
+                        "applicant_stage"  => ADMISSION,
+                        "applicant_sub_status" => ADMISSION_LETTER_APPLY
+                    ]);
                 }
 
-                if ((!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) && empty($check_primary_university_exist["application_file"])) {
+                // If partner or application date exists AND application_file exists → RECEIVED
+                if (
+                    (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                    && !empty($check_primary_university_exist['application_file'])
+                ) {
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_RECEIVED));
+                    $this->db->update(db_prefix() . 'clients', [
+                        "applicant_status" => 0,
+                        "applicant_stage"  => ADMISSION,
+                        "applicant_sub_status" => ADMISSION_LETTER_RECEIVED
+                    ]);
                 }
+
                 return $data;
                 die;
             }
