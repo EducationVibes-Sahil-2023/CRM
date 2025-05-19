@@ -4605,7 +4605,7 @@ class Clients extends AdminController
 
                         // If partner or application date exists AND application_file exists → RECEIVED
                         if (
-                            (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                            (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'] && $check_primary_university_exist['application_date']!="0000-00-00"))
                             && !empty($check_primary_university_exist['application_file'])
                         ) {
                             $this->db->where("userid", $client_id);
