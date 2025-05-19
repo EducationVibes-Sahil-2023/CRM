@@ -10,7 +10,7 @@ $CI->load->library('GoogleSheetApi');
 
 // Create a new sheet using ID from database
 if (!function_exists('create_sheet')) {
-    function create_sheet($id)
+    function create_sheet($id, $sheet_name = "")
     {
         $CI = &get_instance();
         $response = [
@@ -55,7 +55,7 @@ if (!function_exists('create_sheet')) {
                     $columnHeaders[] = $col['name'];
                 }
 
-                $response_data = $CI->googlesheetapi->updateSheetColumnNames($spreadsheetId, $columnHeaders);
+                $response_data = $CI->googlesheetapi->updateSheetColumnNames($spreadsheetId, $columnHeaders, $sheet_name);
 
                 if ($response_data["resp_code"] == "RCS") {
                     $response = [
@@ -120,7 +120,7 @@ if (!function_exists('get_data_excel')) {
         $CI = &get_instance();
 
         // Build the query for excel data update
-        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year")
+        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year,sheet_name")
             ->from(db_prefix() . "excel_data_update");
 
         $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
@@ -144,7 +144,10 @@ if (!function_exists('get_data_excel')) {
             $toDate = $sheet['toDate']; // Important for multiple autoSync rows
             $acadmic_year = $sheet['acadmic_year']; // Important for multiple autoSync rows
             $spreadsheetId = $sheet['spreadsheetId']; // Important for multiple autoSync rows
-            create_sheet($currentId);
+            $sheet_name = $sheet['sheet_name']; // Important for multiple autoSync rows
+
+            $response_ = create_sheet($currentId, $sheet_name);
+           
             // Get selected columns
             $selectColumnName = $CI->db
                 ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) as fetch_column_name", false)
@@ -206,7 +209,7 @@ if (!function_exists('get_data_excel')) {
                 $CI->db->update(db_prefix() . "excel_data_update", [
                     'lastSync' => date('Y-m-d H:i:s')
                 ]);
-                $CI->googlesheetapi->updateSheetData($spreadsheetId, $arrayData);
+                $CI->googlesheetapi->updateSheetData($spreadsheetId, $arrayData, $sheet_name);
             }
         }
 

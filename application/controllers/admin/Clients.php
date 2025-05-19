@@ -430,6 +430,340 @@ class Clients extends AdminController
 
 
         $data["tab"]["js"] =  !empty($data["lead_data"]->type_name) ? 'admin/clients/client_js_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/client_js';
+
+        $this->load->view('admin/clients/client', $data);
+    }
+
+    public function ev_partner($id = '')
+    {
+        // $database_secondary = $this->load->database('database_secondary', TRUE);
+
+        $this->load->model('leads_model');
+        $data['lead_type'] = $this->leads_model->get_type();
+        $client = "";
+        if (!empty($id)) {
+            $client = $this->clients_model->get($id);
+        }
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        if (!has_permission('customers', '', 'view')) {
+            if ($id != '' && !is_customer_admin($id)) {
+                if ($client->addedfrom == get_staff_user_id()) {
+                } else {
+                    access_denied('customers');
+                }
+            }
+        }
+
+        $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+
+
+        if ($this->input->post() && !$this->input->is_ajax_request()) {
+            if ($id == '') {
+                if (!has_permission('customers', '', 'create')) {
+                    access_denied('customers');
+                }
+
+                $data = $this->input->post();
+                $save_and_add_contact = false;
+                if (isset($data['save_and_add_contact'])) {
+                    unset($data['save_and_add_contact']);
+                    $save_and_add_contact = true;
+                }
+                $id = $this->clients_model->add($data);
+                if (!has_permission('customers', '', 'view')) {
+                    $assign['customer_admins']   = [];
+                    $assign['customer_admins'][] = get_staff_user_id();
+                    $this->clients_model->assign_admins($assign, $id);
+                }
+                if ($id) {
+                    set_alert('success', _l('added_successfully', _l('client')));
+                    if ($save_and_add_contact == false) {
+                        redirect(admin_url('clients/client/' . $id));
+                    } else {
+                        redirect(admin_url('clients/client/' . $id . '?group=contacts&new_contact=true'));
+                    }
+                }
+            } else {
+                if (!has_permission('customers', '', 'edit')) {
+                    if (!is_customer_admin($id)) {
+                        if ($client->addedfrom == get_staff_user_id()) {
+                        } else {
+                            access_denied('customers');
+                        }
+                        // access_denied('customers');
+                    }
+                }
+                $success = $this->clients_model->update($this->input->post(), $id);
+                if ($success == true) {
+                    set_alert('success', _l('updated_successfully', _l('client')));
+                }
+                redirect(admin_url('clients/client/' . $id));
+            }
+        }
+
+        $group         = !$this->input->get('group') ? 'profile' : $this->input->get('group');
+        $data['group'] = $group;
+
+        if ($group != 'contacts' && $contact_id = $this->input->get('contactid')) {
+            redirect(admin_url('clients/client/' . $id . '?group=contacts&contactid=' . $contact_id));
+        }
+
+        // Customer groups
+        $data['groups'] = $this->clients_model->get_groups();
+
+
+        if ($id == '') {
+            $title = _l('add_new', _l('client_lowercase'));
+        } else {
+            $this->load->model('leads_model');
+
+            $client                = $this->clients_model->get($id);
+
+            $data["lead_data"]                = $this->leads_model->get($client->leadid);
+            $data['customer_tabs'] = get_customer_profile_tabs();
+
+            $prefix_page = !empty($data["lead_data"]->type_name)
+                ? strtolower(str_replace(" ", "_", $data["lead_data"]->type_name))
+                : '';
+
+            foreach ($data['customer_tabs'] as $key => $tabs) {
+                $urls = explode("/", $tabs["view"]); // Split URL into parts
+                $last_index = count($urls) - 1; // Get last index
+
+                // Modify the last segment by adding the prefix
+                $urls[$last_index] = $prefix_page . '_' . $urls[$last_index];
+
+                // Rebuild the URL
+                $modified_url = implode("/", $urls);
+
+                // Construct full file path using CodeIgniter's VIEWPATH constant
+                $file_path = VIEWPATH . $modified_url . ".php";
+
+                // Check if the file exists
+                if (file_exists($file_path)) {
+                    $data['customer_tabs'][$key]["view"] = $modified_url;
+                } else {
+                }
+            }
+
+
+
+
+            if (!$client) {
+                show_404();
+            }
+
+            $data['contacts'] = $this->clients_model->get_contacts($id);
+            $data['basicDetails'] = $this->clients_model->get_contact_by_userid($data['contacts'][0]['userid']);
+
+            $data['tab']      = isset($data['customer_tabs'][$group]) ? $data['customer_tabs'][$group] : null;
+
+
+            if (!$data['tab']) {
+                show_404();
+            }
+            $data['basicdetails'] = $this->clients_model->getBasicDetails($id);
+            $title          = $data["basicdetails"]->first_name . " " . $data["basicdetails"]->last_name;
+
+            // Fetch data based on groups
+            if ($group == 'profile') {
+                $data["tab"]["view"] =  'admin/clients/groups/ev_partner_profile';
+
+                $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
+                $data['customer_admins'] = $this->clients_model->get_admins($id);
+
+                $data['passport_info'] = $this->clients_model->getPassportDetails($id);
+                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                $data['parentdetails'] = $this->clients_model->getParentDetails($id);
+                $data['academicdetails'] = $this->clients_model->getAcademicDetails($id);
+                $data['declarationdetails'] = $this->clients_model->getDeclarationDetails($id);
+                $data['program_data'] = $this->clients_model->getProgram();
+                $data['course_data'] = $this->clients_model->getCourse();
+                $data['entrance_data'] = $this->clients_model->getEntrance();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+                $data['score_columns'] =  $this->clients_model->get_scroe_column();
+                $data['score_value'] =  $this->clients_model->get_scroe_value($id);
+            } elseif ($group == 'attachments') {
+                $data['attachments'] = get_all_customer_attachments($id);
+            } elseif ($group == 'vault') {
+                $data['vault_entries'] = hooks()->apply_filters('check_vault_entries_visibility', $this->clients_model->get_vault_entries($id));
+
+                if ($data['vault_entries'] === -1) {
+                    $data['vault_entries'] = [];
+                }
+            } elseif ($group == 'estimates') {
+                $this->load->model('estimates_model');
+                $data['estimate_statuses'] = $this->estimates_model->get_statuses();
+            } elseif ($group == 'invoices') {
+                $this->load->model('invoices_model');
+                $data['invoice_statuses'] = $this->invoices_model->get_statuses();
+            } elseif ($group == 'credit_notes') {
+                $this->load->model('credit_notes_model');
+                $data['credit_notes_statuses'] = $this->credit_notes_model->get_statuses();
+                $data['credits_available']     = $this->credit_notes_model->total_remaining_credits_by_customer($id);
+            } elseif ($group == 'payments') {
+                $this->load->model('payment_modes_model');
+                $data['payment_modes'] = $this->payment_modes_model->get();
+            } elseif ($group == 'notes') {
+                $data['user_notes'] = $this->misc_model->get_notes($id, 'customer');
+            } elseif ($group == 'projects') {
+                $this->load->model('projects_model');
+                $data['project_statuses'] = $this->projects_model->get_project_statuses();
+            } elseif ($group == 'statement') {
+                if (!has_permission('invoices', '', 'view') && !has_permission('payments', '', 'view')) {
+                    set_alert('danger', _l('access_denied'));
+                    redirect(admin_url('clients/client/' . $id));
+                }
+
+                $data = array_merge($data, prepare_mail_preview_data('customer_statement', $id));
+            } elseif ($group == 'map') {
+                if (get_option('google_api_key') != '' && !empty($client->latitude) && !empty($client->longitude)) {
+                    $this->app_scripts->add('map-js', base_url($this->app_scripts->core_file('assets/js', 'map.js')) . '?v=' . $this->app_css->core_version());
+
+                    $this->app_scripts->add('google-maps-api-js', [
+                        'path'       => 'https://maps.googleapis.com/maps/api/js?key=' . get_option('google_api_key') . '&callback=initMap',
+                        'attributes' => [
+                            'async',
+                            'defer',
+                            'latitude'       => "$client->latitude",
+                            'longitude'      => "$client->longitude",
+                            'mapMarkerTitle' => "$client->company",
+                        ],
+                    ]);
+                }
+            } elseif ($group == 'tracker') {
+                $data["tab"]["view"] =  'admin/clients/groups/mbbs_abroad_applicant_tracker';
+                $this->load->model('exam_model');
+                $data['upload_documents'] = $this->clients_model->get_update_documents($id);
+                $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
+                $data['profile_verification_button'] = $this->clients_model->profile_verification_button();
+                $data['profile_creator_vendor'] = $this->clients_model->get_profile_creator_vendor();
+                $data['profile_creation_data'] = $this->clients_model->get_profile_creator_data($id);
+                $data['customer_admins'] = $this->clients_model->get_admins($id);
+                $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+                $data['university_application_status'] = $this->clients_model->university_status_update();
+                $data['university_status_submit'] = $this->clients_model->university_status_submit();
+                $data['documents'] =  $this->clients_model->get_documents($id);
+                $university_names = array_column($data['university_shortlisting'], "university_name");
+                $data['university_exams'] = [];
+                if (!empty($university_names)) {
+                    $data['university_exams'] = $this->clients_model->university_exams($university_names);
+                }
+                $data['exams_array'] = array_column(get_university_exam(), null, "id");
+                $data['entrance_exams'] =  $this->clients_model->entrance_exams($id);
+                $data['entrance_exams'] = array_reduce($data['entrance_exams'], function ($acc, $row) {
+                    $acc[$row['university_name']] = ($acc[$row['university_name']] ?? []);
+                    $acc[$row['university_name']][] = $row;
+                    return $acc;
+                }, []);
+
+
+                $data['legalization'] =  $this->clients_model->legalization_data($id);
+
+                $data['customer_vendors'] = [];
+                if (!empty($data['profile_creation_data'][0]["vendor"])) {
+                    $data['customer_vendors'] = $this->clients_model->get_profile_creator_vendor($data['profile_creation_data'][0]["vendor"]);
+                }
+            } else if ($group == 'fly_ticket') {
+                $data['country_list'] = get_country_list(7);
+                $data['vendor_list'] = get_vendor_list(3);
+                $data['payment_mode'] = get_payment_mode();
+                $data['departure_location'] = get_departure_list();
+            } else if ($group == 'visa') {
+                $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+                $data['vendor'] = $this->clients_model->visa_vendor();
+                $data["visa_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'visa_documents')->result_array();
+            } else if ($group == 'accommodation') {
+                $data['selected_university_country'] = $this->clients_model->selected_university_country($id);
+                $data['vendor'] = $this->clients_model->accommodation_vendor();
+                $data["accommodation_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'accommodation')->result_array();
+                $data["flight_data"] = $this->db->select('*')->where(['client_id' => $id])->get(db_prefix() . 'flight')->result_array();
+            }
+            $data["client_infomation"] = $this->clients_model->get($id);
+
+
+            // $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+
+            $data['members'] = $this->staff_model->post_sale_get();
+
+            $data['staff'] = [];
+            if (!empty($data["lead_data"]->type)) {
+                $lead_status_data = $data["lead_data"]->type;
+                foreach ($data['members'] as $members) {
+                    // if ($members["lead_type"] == $lead_status_data) {
+                    $data['staff'][] = $members;
+                    // }
+                }
+            }
+                // echo $data["lead_data"]->form_data->lead_status;
+            ;
+
+            $data['client'] = $client;
+            // $title          = $client->company;
+
+
+            // Get all active staff members (used to add reminder)
+            $data['members'] = $data['staff'];
+
+            if (!empty($data['client']->company)) {
+                // Check if is realy empty client company so we can set this field to empty
+                // The query where fetch the client auto populate firstname and lastname if company is empty
+                if (is_empty_customer_company($data['client']->userid)) {
+                    $data['client']->company = '';
+                }
+            }
+        }
+        $data['lead_type_status'] = 2;
+        $this->load->model('currencies_model');
+        $data['currencies'] = $this->currencies_model->get();
+
+        if ($id != '') {
+            $customer_currency = $data['client']->default_currency;
+
+            foreach ($data['currencies'] as $currency) {
+                if ($customer_currency != 0) {
+                    if ($currency['id'] == $customer_currency) {
+                        $customer_currency = $currency;
+
+                        break;
+                    }
+                } else {
+                    if ($currency['isdefault'] == 1) {
+                        $customer_currency = $currency;
+
+                        break;
+                    }
+                }
+            }
+
+            if (is_array($customer_currency)) {
+                $customer_currency = (object) $customer_currency;
+            }
+
+            $data['customer_currency'] = $customer_currency;
+
+            $slug_zip_folder = ($client->company != ''
+                ? $client->companyclient
+                : get_contact_full_name(get_primary_contact_user_id($client->userid))
+            );
+
+            $data['zip_in_folder'] = slug_it($slug_zip_folder);
+        }
+
+        $data['bodyclass'] = 'customer-profile dynamic-create-groups';
+        $data['title']     = $title;
+        $data['client_id']     = $id;
+
+
+
+
+        // $data["customer_tabs"]["profile"]["view"] = 'admin/clients/groups/' . !empty($data["lead_data"]->type_name) ? 'admin/clients/groups/' . 'profile_' . str_replace(" ", "_", strtolower($data["lead_data"]->type_name)) : 'admin/clients/groups/' . 'profile';
+
+
+        $data["tab"]["js"] =  'admin/clients/client_js_mbbs_abroad';
+        $data["tab"]["left_tabs"] =  'admin/clients/ev_tabs';
+
         $this->load->view('admin/clients/client', $data);
     }
 
@@ -3170,77 +3504,110 @@ class Clients extends AdminController
     {
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
+            // try {
 
-                $client_id = $this->input->post("clientid");
-                $media_upload_data = $_POST;
-                $update_student_data = [];
-                $update_applicant_custom_data["customers"] = [];
-                $reference_name = $_POST["reference_name"];
-                unset($_POST["clientid"]);
-                unset($_POST["doc_type_id"]);
-                unset($_POST["doc_type_name"]);
-                unset($_POST["doc_type"]);
-                unset($_POST["doc_name"]);
-                unset($_POST["doc_url"]);
-                unset($_POST["reference_name"]);
+            $client_id = $this->input->post("clientid");
+            $media_upload_data = $_POST;
+            $update_student_data = [];
+            $update_applicant_custom_data["customers"] = [];
+            $reference_name = $_POST["reference_name"];
+            unset($_POST["clientid"]);
+            unset($_POST["doc_type_id"]);
+            unset($_POST["doc_type_name"]);
+            unset($_POST["doc_type"]);
+            unset($_POST["doc_name"]);
+            unset($_POST["doc_url"]);
+            unset($_POST["reference_name"]);
+            unset($_POST["files"]);
 
-                foreach ($_POST as $key => $value) {
-                    if (!empty($value) && strpos($key, 'custom_fields') !== false) {
-                        // If the key contains 'custom_fields' and the value is not empty, add to custom data array
-                        foreach ($value as $k => $custom_value) {
-                            $update_applicant_custom_data["customers"] = $custom_value;
-                        }
-                    } else {
-                        // Otherwise, add to general data array
-                        if ($key != 'clientid') {
-                            $update_student_data[$key] = $value;
-                        }
-                    }
-                }
-                // Assuming this is part of a function or method in a CodeIgniter controller or model
-                $check_client = $this->db->select('id')
-                    ->where('userid', $client_id)
-                    ->get(db_prefix() . 'basic_details')->row();
+            if (empty($client_id)) {
+                $first_name = trim($_POST["first_name"] ?? '');
+                $last_name = trim($_POST["last_name"] ?? '');
+                $agent_id_raw = trim($_POST["agent_id"] ?? '');
+                $agent_id = trim($agent_id_raw);
+                unset($_POST["agent_id"]);
+                $unique_agent_id = base64_encode($first_name . $last_name . $agent_id);
 
-
-                if (!empty($check_client->id)) {
-                    $update_student_data["updated_at"] = date('Y-m-d H:i:s');
-                    $this->db->where('userid', $client_id);
-                    $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
-                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
-                } else {
-                    $update_student_data["created_at"] = date('Y-m-d H:i:s');
-                    $update_student_data["userid"] = $client_id;
-                    $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
-                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                // Check if unique_agent_id is empty
+                if (empty($unique_agent_id)) {
+                    echo json_encode(["status" => "ERR", "message" => "Unique Agent ID is empty."]);
+                    return;
                 }
 
-                if (!empty($reference_name)) {
-                    $this->db->where('userid', $client_id);
-                    $rows_affected = $this->db->update(db_prefix() . 'clients', array("reference_name" => $reference_name));
-                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                // Check if unique_agent_id already exists
+                $this->db->where('unique_agent_id', $unique_agent_id);
+                $exists = $this->db->get(db_prefix() . 'clients')->row();
+
+                if ($exists) {
+                    echo json_encode(["status" => "ERR", "message" => "Student already exist already exists."]);
+                    return;
                 }
 
+                $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
+                $this->db->insert(db_prefix() . 'clients', $client_data);
 
-                if ($rows_affected) {
-                    if (!empty($media_upload_data["doc_type"])) {
-                        $this->media_upload($media_upload_data, $_FILES);
-                    }
-                    // handle_custom_fields_post($client_id, $update_applicant_custom_data);
-                    applicant_last_update($client_id);
-                    $data['resp_code'] = 'RCS';
-                    $data['resp_desc'] = "Basic information update successfully.";
-                    set_alert('success', "Basic information update successfully.");
-                } else {
-                    $data['resp_code'] = 'ERR';
-                    $data['resp_desc'] = "Basic information update failed";
-                    set_alert('danger', "Basic information update failed");
-                }
-            } catch (Exception $e) {
-                $data['resp_code'] = 'ERR';
-                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+                $client_id = $this->db->insert_id();
             }
+
+            foreach ($_POST as $key => $value) {
+                if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                    // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                    foreach ($value as $k => $custom_value) {
+                        $update_applicant_custom_data["customers"] = $custom_value;
+                    }
+                } else {
+                    // Otherwise, add to general data array
+                    if ($key != 'clientid') {
+                        $update_student_data[$key] = $value;
+                    }
+                }
+            }
+            // Assuming this is part of a function or method in a CodeIgniter controller or model
+            $check_client = $this->db->select('id')
+                ->where('userid', $client_id)
+                ->get(db_prefix() . 'basic_details')->row();
+
+
+            if (!empty($check_client->id)) {
+                $update_student_data["updated_at"] = date('Y-m-d H:i:s');
+                $this->db->where('userid', $client_id);
+                $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+            } else {
+                $update_student_data["created_at"] = date('Y-m-d H:i:s');
+                $update_student_data["userid"] = $client_id;
+
+                $rows_affected = $this->db->insert(db_prefix() . 'basic_details', $update_student_data);
+
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+            }
+
+            if (!empty($reference_name)) {
+                $this->db->where('userid', $client_id);
+                $rows_affected = $this->db->update(db_prefix() . 'clients', array("reference_name" => $reference_name));
+                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+            }
+
+
+            if ($rows_affected) {
+                if (!empty($media_upload_data["doc_type"])) {
+                    $this->media_upload($media_upload_data, $_FILES);
+                }
+                // handle_custom_fields_post($client_id, $update_applicant_custom_data);
+                applicant_last_update($client_id);
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = "Basic information update successfully.";
+                $data['client_id'] = $client_id;
+                set_alert('success', "Basic information update successfully.");
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = "Basic information update failed";
+                set_alert('danger', "Basic information update failed");
+            }
+            // } catch (Exception $e) {
+            //     $data['resp_code'] = 'ERR';
+            //     $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            // }
         } else {
             $data['resp_code'] = 'ERR';
             $data['resp_desc'] = 'Invalid request method';
@@ -4428,6 +4795,19 @@ class Clients extends AdminController
                     'resp_desc'               => "Admission Letter updated successfully.",
                     'university_shortlisting' => $university_shortlisting_data
                 ];
+
+
+                $check_primary_university_exist = $this->checkUniversityExists($university_shortlisting_data, $admissionpreferences->primary_university, $admissionpreferences->primary_country);
+
+                if (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_APPLY));
+                }
+
+                if ((!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date'])) && empty($check_primary_university_exist["application_file"])) {
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_WAITING));
+                }
                 return $data;
                 die;
             }

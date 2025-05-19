@@ -88,8 +88,12 @@
             success: function(res) {
                 hide_loader();
                 if (res.resp_code === "RCS") {
-                    window_reload();
-                    alert_float("success", res.resp_desc);
+                    let url = new URL(window.location.href);
+                    let segments = url.pathname.split('/');
+                    let baseUrl = `${url.origin}/${segments.slice(1, 5).join('/')}`;
+                    window_reload(`${baseUrl}/${res.client_id}`);
+
+                    // alert_float("success", res.resp_desc);
                 } else if (res.resp_code && res.resp_desc) {
                     alert_float("danger", res.resp_desc);
                 }
@@ -897,31 +901,30 @@
     }
 
 
-    function window_reload() {
+    function window_reload(url = "") {
+        // Get the current active tab ID (e.g., "passport", "documents")
+        const activeTabTarget = $("ul.profile-tabs li.active a").attr("href")?.replace("#", "") || "";
 
-        // Get the href of the active tab (e.g., "tab1", "tab2")
-        var activeTabTarget = $("ul.profile-tabs li.active a").attr("href").replace("#", "");
+        // Use current URL if none is provided
+        url = url ? new URL(url, window.location.origin) : new URL(window.location.href);
 
-        // Create a new URL object based on the current window location
-        const url = new URL(window.location);
-
-        // Set the 'tab' query parameter to the active tab's ID
-        url.searchParams.set("tab", activeTabTarget);
-
-        // Check if the next tab exists, and if so, set it in the URL
-        var nextTab = $("ul.profile-tabs li.active").next("li").find("a").attr("href");
-        if (nextTab) {
-            // Get the ID of the next tab
-            var nextTabId = nextTab.replace("#", "");
-            url.searchParams.set("tab", nextTabId); // Optional: Set the next tab in the URL if it exists
+        // Set 'tab' parameter to the active tab
+        if (activeTabTarget) {
+            url.searchParams.set("tab", activeTabTarget);
         }
 
-        // console.log(url);
-        // Redirect to the new URL with the updated 'tab' and 'nextTab' parameters
+        // Optional: Set the next tab as 'tab' if desired
+        const nextTabHref = $("ul.profile-tabs li.active").next("li").find("a").attr("href");
+        if (nextTabHref) {
+            const nextTabId = nextTabHref.replace("#", "");
+            // Uncomment below line if you want to overwrite 'tab' with next tab
+            url.searchParams.set("tab", nextTabId);
+        }
+
+        // Redirect to the updated URL
         window.location.href = url.href;
-
-
     }
+
 
 
     function check_primary_university() {

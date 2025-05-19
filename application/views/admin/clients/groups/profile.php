@@ -4,7 +4,6 @@ if (!empty($score_value)) {
 	$score_value = array_column($score_value, null, "type");
 }
 ?>
-<!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
 <script>
 	var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
 </script>
@@ -353,6 +352,7 @@ if (!empty($score_value)) {
 										</select>
 									</div>
 								</div>
+
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputFirstName">First Name</label>
@@ -399,7 +399,7 @@ if (!empty($score_value)) {
 								<div class="col-lg-3">
 									<div class="form-group">
 										<label for="exampleInputMobileNumber">Father Name</label>
-										<input class="form-control" type="text"  class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
+										<input class="form-control" type="text" class="form-group" placeholder="Father Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
 									</div>
 								</div>
 								<div class="col-lg-3">

@@ -655,7 +655,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 ?>
     <h2 class="text-center">Applicant Tracker - Accessible Only for Post-Sale & Admin</h2>
 <?php
-
+die;
 }
 ?>
 <div class="row">

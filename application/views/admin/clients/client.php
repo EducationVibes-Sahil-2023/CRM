@@ -29,9 +29,9 @@
             <?php echo _l('submit'); ?> -->
                </button>
                <?php if (!isset($client)) { ?>
-                  <button class="btn btn-info save-and-add-contact customer-form-submiter">
+                  <!-- <button class="btn btn-info save-and-add-contact customer-form-submiter">
                      <?php echo _l('save_customer_and_add_contact'); ?>
-                  </button>
+                  </button> -->
                <?php } ?>
             </div>
          <?php } ?>
@@ -75,7 +75,7 @@
                      </h4>
                   </div>
                </div>
-               <?php $this->load->view('admin/clients/tabs'); ?>
+               <?php $this->load->view((isset($tab['left_tabs']) ? $tab['left_tabs'] : 'admin/clients/tabs')); ?>
             </div>
          <?php } ?>
          <div class="col-md-<?php if (isset($client)) {
@@ -101,7 +101,7 @@
                            </style>
                         </div>
                         <?php
-                        $this->load->view((isset($tab) ? $tab['view'] : 'admin/clients/groups/profile'));
+                        $this->load->view((isset($tab['view']) ? $tab['view'] : 'admin/clients/groups/ev_partner_profile'));
                         ?>
                      </div>
                   </div>
@@ -126,6 +126,7 @@
 <?php //$this->load->view('admin/clients/client_js'); 
 ?>
 <?php
+
 $this->load->view((isset($tab) ? $tab['js'] : 'admin/clients/client_js'));
 ?>
 </body>

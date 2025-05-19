@@ -3135,13 +3135,13 @@ class Leads_model extends App_Model
 
         // Filter conditions
        
-    if ($role == 3) {
-//   $this->db->where_in("status", [1, 3]);
-}
-else{
-      $this->db->where_in("status", [1, 3]);
-}
-     
+//     if ($role == 3) {
+// //   $this->db->where_in("status", [1, 3]);
+// }
+// else{
+//       $this->db->where_in("status", [1, 3]);
+// }
+        $this->db->where_in("status", [1, 3]);
         
         $this->db->where(array("lead_id" => $lead_id));
 
