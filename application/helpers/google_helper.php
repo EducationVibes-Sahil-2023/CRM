@@ -120,7 +120,7 @@ if (!function_exists('get_data_excel')) {
         $CI = &get_instance();
 
         // Build the query for excel data update
-        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year,sheet_name")
+        $CI->db->select("id,spreadsheetId, fromDate, toDate, autoSync,acadmic_year,sheet_name,sql_condition")
             ->from(db_prefix() . "excel_data_update");
 
         $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
@@ -145,6 +145,7 @@ if (!function_exists('get_data_excel')) {
             $acadmic_year = $sheet['acadmic_year']; // Important for multiple autoSync rows
             $spreadsheetId = $sheet['spreadsheetId']; // Important for multiple autoSync rows
             $sheet_name = $sheet['sheet_name']; // Important for multiple autoSync rows
+            $sql_conditions = $sheet['sql_condition']; // Important for multiple autoSync rows
 
             $response_ = create_sheet($currentId, $sheet_name);
 
@@ -168,16 +169,19 @@ if (!function_exists('get_data_excel')) {
                 // Apply to CodeIgniter query builder (this works the same as BETWEEN)
                 // $CI->db->where("c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}'", null, false);
                 // Prepare raw SQL condition for manual query usage
-                $condition_sql = " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
+                $condition_sql .= " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
             }
 
             if (!empty($acadmic_year)) {
                 // Apply to CodeIgniter query builder (this works the same as BETWEEN)
                 // $CI->db->where("c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}'", null, false);
                 // Prepare raw SQL condition for manual query usage
-                $condition_sql = " AND (p.acadmic_year = '{$acadmic_year}')";
+                $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
             }
 
+            if (!empty($sql_conditions)) {
+                $condition_sql .= $condition_sql;
+            }
 
             // Build the main data query
             $sql = "SELECT {$selectColumnName}
