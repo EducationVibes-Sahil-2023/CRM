@@ -529,6 +529,7 @@ class Login_Controller extends Api_Controller
         if (empty($id)) {
             $id = $_REQUEST['id'];
         }
+        
         $this->load->library('GoogleSheetApi');
         $this->load->helper('google');
         $auto_sync = get_data_excel($id);
