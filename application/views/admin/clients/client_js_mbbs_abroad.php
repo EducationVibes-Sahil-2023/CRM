@@ -2,6 +2,7 @@
     // comman functions
 
     var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
+    var client_type = <?= !empty($client->client_type)  ? $client->client_type : 0 ?>;
 
     function get_media_docs(id, formData) {
         formData.doc_url = [];
@@ -196,7 +197,7 @@
         });
 
 
-        $(".hide-client-type").parent("button.btn").hide();
+if(client_type!=1){        $(".hide-client-type").parent("button.btn").hide(); }
 
 
         // Pre-fill with the nearest allowed month on page load
