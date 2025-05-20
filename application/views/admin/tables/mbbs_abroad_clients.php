@@ -236,6 +236,8 @@ if ($this->ci->input->post('application_stage')) {
     array_push($where, 'AND ' . db_prefix() . 'clients.applicant_stage = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage'))));
 }
 
+
+
 if ($this->ci->input->post('application_sub_stage')) {
     array_push($where, 'AND ' . db_prefix() . 'clients.applicant_sub_status = ' . $this->ci->db->escape($this->ci->input->post('application_sub_stage')));
 }
@@ -259,14 +261,14 @@ if ($this->ci->input->post('university_secondary')) {
 
 if ($this->ci->input->post('university_secondary')) {
     $universities = $this->ci->input->post('university_secondary');
-    
+
     if (is_array($universities)) {
         $likeConditions = [];
 
         foreach ($universities as $university) {
             $escapedLike = $this->ci->db->escape_like_str($university);
-            $likeConditions[] = db_prefix() . "admission_preferences.university LIKE " . 
-                                $this->ci->db->escape('%' . $escapedLike . '%');
+            $likeConditions[] = db_prefix() . "admission_preferences.university LIKE " .
+                $this->ci->db->escape('%' . $escapedLike . '%');
         }
 
         if (!empty($likeConditions)) {
@@ -285,6 +287,14 @@ if ($this->ci->input->post('country')) {
     }
 }
 
+
+if ($this->ci->input->post('client_type')) {
+    $client_type = $this->ci->input->post('client_type');
+    if (is_array($client_type)) {
+        $escaped_client_type = array_map([$this->ci->db, 'escape'], $client_type);
+        array_push($where, 'AND ' . db_prefix() . 'clients.client_type IN (' . implode(',', $escaped_client_type) . ')');
+    }
+}
 if ($this->ci->input->post('status_')) {
     $status = $this->ci->input->post('status_');
     if (is_array($status)) {
