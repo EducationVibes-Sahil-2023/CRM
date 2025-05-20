@@ -243,6 +243,7 @@ define('ENTRANCE_EXAM_PENDING', '8');
 define('LEGALIZATION_PENDING', '9');
 define('FEES_DEPOSITE_PENDING', '10');
 define('INVITATION_PENDING', '11');
+define('INVITATION_RECEIVED', '20');
 define('THIRD_PAYMENT_PENDING', '12');
 define('VISA_PENDING', '13');
 define('VISA_APPLY', '14');
