@@ -38,6 +38,12 @@ $yes_no_status = [
    ["id" => "No", "name" => "No"]
 ];
 
+$client_type = [
+   ["id" => "", "name" => ""],
+   ["id" => "1", "name" => "EV"],
+   ["id" => "2", "name" => "EVP"],
+
+];
 array_unshift($office_location, array());
 
 
@@ -385,6 +391,14 @@ array_unshift($office_location, array());
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('view_source[]', $sources, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_source'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_source");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('client_type[]', $client_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Client type", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "client_type");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -1141,6 +1155,7 @@ init_tail();
          'doc_status': "[name='doc_status[]']",
          'passport_status': "[name='passport_status[]']",
          'minor_status': "[name='minor']",
+         'client_type': "[name='client_type[]']",
          'session_intake': "[name='session_intake']",
          'apostille_vendors_filter': "[name='apostille_vendors_filter[]']",
          'visa_vendors_filter': "[name='visa_vendors_filter[]']",

@@ -13,7 +13,7 @@ $documents_type =  get_documents($lead_type_status, !empty($admissionpreferences
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
-$visa_details =  visa_details($client_id);
+$visa_details =  visa_details($client_id, 0, 1);
 $visa_vendors = get_vendor_list(2);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
@@ -655,7 +655,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 ?>
     <h2 class="text-center">Applicant Tracker - Accessible Only for Post-Sale & Admin</h2>
 <?php
-die;
+    die;
 }
 ?>
 <div class="row">
@@ -1319,7 +1319,7 @@ die;
                                             $file_url = !empty($visa["file"]) ? $visa["file"] : '';
 
                                     ?>
-                                            <div class="col-md-12 visa_div_application">
+                                            <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
                                                 <?php if ($key > 0 || ($key > 0 && is_admin())) { ?>
                                                     <div class="text-right">
                                                         <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
@@ -1414,7 +1414,15 @@ die;
                                                         ]); ?>
                                                     </div>
                                                 </div>
+                                                <div class="col-md-12 text-right">
+                                                    <label class="form-check-label">Visa Rejected
 
+                                                        <input type="checkbox" class="form-check-input"
+                                                            <?= ($visa["status"] && $visa["status"] == 4) ? 'checked' : '' ?>
+                                                            name="visa_rejected_<?= $visa_id ?>"
+                                                            id="visa_rejected_<?= $visa_id ?>">
+                                                    </label>
+                                                </div>
                                             </div>
                                         <?php }
                                     } else { ?>
@@ -1499,8 +1507,13 @@ die;
                                                         'required' => 'required'
                                                     ]); ?>
                                                 </div>
-                                            </div>
 
+                                            </div>
+                                            <div class="col-md-12 text-right">
+                                                <label class="form-check-label">Visa Rejected
+                                                    <input type="checkbox" class="form-check-input" name="visa_rejected" id="visa_rejected">
+                                                </label>
+                                            </div>
                                         </div>
                                     <?php } ?>
                                 </div>
@@ -1519,7 +1532,9 @@ die;
                             <form id="final-form" class="form-disabled" onsubmit="return false;">
                                 <div class="col-md-12">
                                     <?php $mand_re = "required required-check"; ?>
-                                    <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->primary_country ?></b> has been completed successfully.</h4>
+                                    <?php if (!empty($client->sc_100) && $client->sc_100 == 1) { ?>
+                                        <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->primary_country ?></b> has been completed successfully.</h4>
+                                    <?php } ?>
                                     <p class="form-check-label">&nbsp;</p>
                                     <label class="form-check-label">
                                         <?= $mand ?> Received 100% service charge clearance.
@@ -1644,15 +1659,15 @@ die;
 <!-- /.MultiStep Form -->
 <script>
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
-
+    var is_admin = <?= is_admin() ? 1 : 0 ?>;
     if (complete_application == 1) {
-        setTimeout(function () {
-        $(".btn-hide-complete").hide();
-        $(".secondary_university_remark").prop("disabled", true)
-        $("fieldset form").find("input, select, textarea").prop("disabled", true).selectpicker("refresh");
-        $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").hide();
-        $("#primary_university").prop("disabled", true).selectpicker("refresh");
-        },500);
+        setTimeout(function() {
+            $(".btn-hide-complete").hide();
+            $(".secondary_university_remark").prop("disabled", true)
+            $("fieldset form").find("input, select, textarea").prop("disabled", true).selectpicker("refresh");
+            $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").hide();
+            $("#primary_university").prop("disabled", true).selectpicker("refresh");
+        }, 500);
 
     }
     var admissionpreferences_freeze = 0;
@@ -3276,7 +3291,7 @@ die;
         </div>`;
             }
             return `
-        <div class="col-md-12 visa_div_application">
+        <div class="col-md-12 visa_div_application  ${visa.status == 4 ? 'visa-rejected-div' : ''}"  >
         ${delete_}
             <input type='hidden' name='id' value='${visa.id ?? ''}'>
             <div class="d-flex">
@@ -3342,6 +3357,11 @@ die;
                     </div>
                 </div>
             </div>
+            <div class="col-md-12 text-right">
+             <label class="form-check-label">Visa Rejected
+                                                          <input type="checkbox" class="form-check-input" name="visa_rejected_${visa_id}"  id="visa_rejected_${visa_id}"  ${visa.status == 4 ? 'checked' : ''}>
+                                                        </label>
+            </div>
         </div>`;
         };
 
@@ -3351,21 +3371,34 @@ die;
             visa_data.forEach((visa) => {
                 container.insertAdjacentHTML('beforeend', renderVisaBlock(visa, index));
                 index++;
-                $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
+                $(".visa-rejected-div").find('input').attr("disabled", true);
+                if (is_admin == 0) {
+                    $(".visa-rejected-div").last().find("select.selectpicker").attr('disabled', true).selectpicker("refresh");
+                    $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
+                }
             });
         } else {
             container.insertAdjacentHTML('beforeend', renderVisaBlock());
+            if (is_admin == 0) {
+                $(".visa-rejected-div").find('input').attr("disabled", true);
+                $(".visa-rejected-div").last().find("select.selectpicker").attr('disabled', true).selectpicker("refresh");
+            }
             $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
         }
     }
 
+    if (is_admin == 0) {
+        $(".visa-rejected-div").find('input').attr("disabled", true);
+        $(".visa-rejected-div").find("select.selectpicker").attr('disabled', true).selectpicker("refresh");
+    }
 
 
     function check_visa_letter(upload_data) {
         return new Promise((resolve, reject) => {
             try {
                 let invitation = [];
-
+                $(".visa-rejected-div").find('input').attr("disabled", false);
+                $(".visa-rejected-div").find("select.selectpicker").attr('disabled', false).selectpicker("refresh");
                 $(".visa_div .visa_div_application").each(function(index) {
                     let container = $(this);
                     let entry = {};
@@ -3385,7 +3418,12 @@ die;
                             if (fileInput.files.length > 0) {
                                 upload_data.append(name + "_" + index, fileInput.files[0]);
                             }
+                        } else if ($(this).attr("type") === "checkbox") {
+                            // For checkboxes, store 1 if checked, 0 if not
+                            value = $(this).is(":checked") ? 1 : 0;
+                            entry[name] = value;
                         } else {
+                            value = $(this).val();
                             entry[name] = value;
                         }
                     });
@@ -3396,6 +3434,8 @@ die;
                 if (invitation.length > 0) {
                     upload_data.append("visa", JSON.stringify(invitation));
                 }
+                $(".visa-rejected-div").find('input').attr("disabled", true);
+                $(".visa-rejected-div").find("select.selectpicker").attr('disabled', true).selectpicker("refresh");
 
                 resolve(upload_data);
             } catch (err) {

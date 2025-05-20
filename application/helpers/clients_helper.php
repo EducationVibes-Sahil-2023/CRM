@@ -2102,11 +2102,20 @@ function get_approval_documents($userid)
     print_r($approval_documents);
 }
 
-function visa_details($client_id)
+function visa_details($client_id, $limit = 0, $show_all = 0)
 {
     $CI = &get_instance();
     $CI->db->where('userid', $client_id);
+    if (empty($show_all)) {
+        $CI->db->where('status!=', 4);
+    } else {
+        // $CI->db->where('status!=', 4);
+
+    }
     $CI->db->order_by('id', "asc");
+    if (!empty($limt)) {
+        $CI->db->limit(1);
+    }
     return $CI->db->get(db_prefix() . 'visa_details')->result_array();
 }
 
