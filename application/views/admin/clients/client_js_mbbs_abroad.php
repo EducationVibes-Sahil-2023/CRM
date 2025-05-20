@@ -1,7 +1,8 @@
 <script>
     // comman functions
 
-  var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
+    var complete_application = <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>;
+
     function get_media_docs(id, formData) {
         formData.doc_url = [];
         return new Promise((resolve) => {
@@ -194,8 +195,8 @@
             }
         });
 
-      
 
+        $(".hide-client-type").parent("button.btn").hide();
 
 
         // Pre-fill with the nearest allowed month on page load

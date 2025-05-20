@@ -703,8 +703,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             </div>
 
                             <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,1)">Generate Registration Slip </button>
-                            <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp"></i> </button>
-                            <?= getLastEmailWhatsappDate("email", REGISTRATION_TEMPLATE_ID, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope"></i> </button>
+                            <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                            <?= getLastEmailWhatsappDate("email", REGISTRATION_TEMPLATE_ID, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope hide-client-type"></i> </button>
                         </div>
                         <div id="upload_documents" class="table-responsive">
                             <table class="table table-bordered table-striped">
@@ -1000,8 +1000,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             </h4>
                                             <?php if (!empty($entrance_exams)) { ?>
                                                 <div class="text-right">
-                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
-                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope"></i> </button>
+                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope hide-client-type"></i> </button>
                                                 </div>
                                             <?php } ?>
 
@@ -1257,8 +1257,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                             </h4>
                                             <div class="text-right">
-                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp"></i> </button>
-                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope"></i></button>
+                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
                                             </div>
                                             <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
@@ -2125,12 +2125,27 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
 
             if (id == 7) {
-                let check_validation = await check_required_fields("invitation-form");
-                if (!check_validation) {
-                    hide_loader();
-                    return false;
+
+
+
+
+                if (same_step == 1) {} else {
+
+                    if (university_shortlisting[0].application_file == "") {
+                        if (confirm("Admission letter is not uploaded. Are you sure you want to proceed without it?")) {
+                        } else {
+                            goToStep(2);
+                            return false;
+                        }
+                    }
+
+                    let check_validation = await check_required_fields("invitation-form");
+                    if (!check_validation) {
+                        hide_loader();
+                        return false;
+                    }
+                    await check_invitation_letter(upload_data);
                 }
-                await check_invitation_letter(upload_data);
             }
 
             if (id == 8) {
@@ -2391,10 +2406,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             const email_button = `
             <div class="text-right">
                 <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${exams[0].client_id}, 3, '', '${university}')">
-                    <i class="fa fa-whatsapp"></i>
+                    <i class="fa fa-whatsapp hide-client-type"></i>
                 </button>
                 <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${exams[0].client_id}, 2, '', '${university}')">
-                    <i class="fa fa-envelope"></i>
+                    <i class="fa fa-envelope hide-client-type"></i>
                 </button>
             </div>`;
 
@@ -2639,7 +2654,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 ` :
                     "";
                 let file_url_university_payment = leg.invitation_letter ? leg.invitation_letter : "";
-                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope"></i></button> </div>`;
+                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
                 let card = `
                 <div class="invitation-item card shadow-sm p-3 mb-3">
                     <h4 class="university-name">${leg.university_name}</h4>

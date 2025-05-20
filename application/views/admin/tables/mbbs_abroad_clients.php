@@ -157,6 +157,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
     'LEFT JOIN ' . db_prefix() . 'vendor_list  visa_vendor ON visa_vendor.id=' . db_prefix() . 'visa_details.vendor_id',
     'LEFT JOIN ' . db_prefix() . 'payment_mode  visa_p_mode ON visa_p_mode.id=' . db_prefix() . 'visa_details.payment_mode',
+    'LEFT JOIN ' . db_prefix() . 'ev_partner  ev_partner ON ev_partner.id=' . db_prefix() . 'clients.agent_id',
     "LEFT JOIN (
         SELECT 
             userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
