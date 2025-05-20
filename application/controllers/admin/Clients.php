@@ -4330,12 +4330,21 @@ class Clients extends AdminController
                     return;
                 }
 
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => INVITATION,
-                    "applicant_sub_status" => INVITATION_PENDING,
-                ];
+                $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id, 1);
 
+                if (!empty($university_shortlisting_data) && !empty($university_shortlisting_data[0]["invitation_letter"])) {
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => INVITATION,
+                        "applicant_sub_status" => INVITATION_RECEIVED,
+                    ];
+                } else {
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => INVITATION,
+                        "applicant_sub_status" => INVITATION_PENDING,
+                    ];
+                }
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
             }
@@ -4596,15 +4605,9 @@ class Clients extends AdminController
 
                         // If partner or application date exists AND application_file is empty → APPLY
                         if (
-                            (
-                                !empty($check_primary_university_exist['partner']) ||
-                                (
-                                    !empty($check_primary_university_exist['application_date']) &&
-                                    $check_primary_university_exist['application_date'] != "0000-00-00"
-                                )
-                            )
-                            && empty($check_primary_university_exist['application_file'])
-                        ) {
+                    ((!empty($check_primary_university_exist['partner']) && !empty($check_primary_university_exist['partner'])!=0) || (!empty($check_primary_university_exist['application_date'])) &&  $check_primary_university_exist['application_date']!="0000-00-00")
+                    && empty($check_primary_university_exist['application_file'])
+                ) { {
                             $this->db->where("userid", $client_id);
                             $this->db->update(db_prefix() . 'clients', [
                                 "applicant_status" => 0,
@@ -4615,9 +4618,9 @@ class Clients extends AdminController
 
                         // If partner or application date exists AND application_file exists → RECEIVED
                         if (
-                            (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
-                            && !empty($check_primary_university_exist['application_file'])
-                        ) {
+                    ((!empty($check_primary_university_exist['partner']) && !empty($check_primary_university_exist['partner'])!=0) || (!empty($check_primary_university_exist['application_date'])) &&  $check_primary_university_exist['application_date']!="0000-00-00")
+                    && !empty($check_primary_university_exist['application_file'])
+                ) { {
                             $this->db->where("userid", $client_id);
                             $this->db->update(db_prefix() . 'clients', [
                                 "applicant_status" => 0,
@@ -5376,6 +5379,7 @@ class Clients extends AdminController
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $invitation = !empty($this->input->post("invitation")) ? json_decode($this->input->post("invitation"), true) : [];
         $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+        $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
 
         $files = $_FILES;
 
@@ -5439,6 +5443,25 @@ class Clients extends AdminController
 
         if (!empty($batch_update_data)) {
             $update = $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $batch_update_data, 'id');
+
+
+            if ($save == 1) {
+                $data = [
+                    'resp_code'               => 'RCS',
+                    'resp_desc'               => "Invitation Letter updated successfully.",
+                    'university_shortlisting' => $university_shortlisting_data
+                ];
+
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => INVITATION,
+                    "applicant_sub_status" => INVITATION_RECEIVED,
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+                die;
+            }
 
 
             $update_client_data = [
@@ -5616,6 +5639,8 @@ class Clients extends AdminController
         $received_status_pass = false;
         $visa_sub_stage = VISA_PENDING;
         foreach ($visa as $key => $row) {
+              $received_status_pass = false;
+                $visa_sub_stage = VISA_PENDING;
             $data_ = [];
 
             $visa_status = 1;
@@ -5697,6 +5722,9 @@ class Clients extends AdminController
                 $batch_insert_data[] = $data_;
             }
         }
+
+
+                
 
 
 
