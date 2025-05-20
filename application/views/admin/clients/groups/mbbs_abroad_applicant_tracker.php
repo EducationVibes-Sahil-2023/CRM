@@ -965,7 +965,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                                     ?>
                                                     <label>Admission Letter <?= $mand ?> </label>
-                                                    <input type="file" class="form-control" accept=".pdf,images/*" name="admission_letter_<?= $short_list["id"] ?>">
+                                                    <input type="file" class="form-control" accept=".pdf,image/*" name="admission_letter_<?= $short_list["id"] ?>">
                                                     <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
 
                                                     <?php
@@ -2129,7 +2129,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
 
 
-                if (same_step == 1) {} else {
+                if (same_step == 1) {
+                    
+                } else {
 
                     if (university_shortlisting[0].application_file == "") {
                         if (confirm("Admission letter is not uploaded. Are you sure you want to proceed without it?")) {
@@ -2144,8 +2146,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         hide_loader();
                         return false;
                     }
-                    await check_invitation_letter(upload_data);
+                    
                 }
+                
+                await check_invitation_letter(upload_data);
             }
 
             if (id == 8) {
@@ -2268,6 +2272,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     });
 
     function goToStep(index) {
+        
         // Prevent forward navigation
         if ($("#progressbar li.active").index() <= index && complete_application != 1) {
             return false;
@@ -2295,6 +2300,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
         // Mark current step
         $("#progressbar li").eq(index).removeClass("inactive").addClass("active");
+        hide_loader();
     }
 
 
@@ -3033,7 +3039,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <div class="col-md-3">
             <label>Admission Letter ${mand}</label>
             <input type="hidden" class="form-control" value="${file}" name="admission_letter_path_${university.id}">
-            <input type="file" class="form-control" accept=".pdf,images/*" name="admission_letter_${university.id}">
+            <input type="file" class="form-control" accept=".pdf,image/*" name="admission_letter_${university.id}">
             ${media_view}
         </div>
     </div>`;
