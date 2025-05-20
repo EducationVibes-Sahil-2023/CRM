@@ -5645,6 +5645,8 @@ class Clients extends AdminController
         $received_status_pass = false;
         $visa_sub_stage = VISA_PENDING;
         foreach ($visa as $key => $row) {
+              $received_status_pass = false;
+                $visa_sub_stage = VISA_PENDING;
             $data_ = [];
 
             $visa_status = 1;
@@ -5726,6 +5728,9 @@ class Clients extends AdminController
                 $batch_insert_data[] = $data_;
             }
         }
+
+
+                
 
 
 
