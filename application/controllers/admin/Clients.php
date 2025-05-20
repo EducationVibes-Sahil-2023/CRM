@@ -5710,6 +5710,21 @@ class Clients extends AdminController
             }
 
 
+            $visa_information_check = visa_details($client_id, 1);
+            if (empty($visa_information_check)) {
+
+                $responseData = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
+                    'visa_details' => visa_details($client_id, 0, 1)
+                ];
+
+                return $responseData;
+                die;
+            }
+
+
+
             if ($received_status_pass == true) {
                 $update_client_data = [
                     "applicant_status" => 0,
