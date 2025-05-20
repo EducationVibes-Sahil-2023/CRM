@@ -3371,11 +3371,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             visa_data.forEach((visa) => {
                 container.insertAdjacentHTML('beforeend', renderVisaBlock(visa, index));
                 index++;
-                $(".visa-rejected-div").find('input').attr("disabled", true);
                 if (is_admin == 0) {
                     $(".visa-rejected-div").last().find("select.selectpicker").attr('disabled', true).selectpicker("refresh");
-                    $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
+                    $(".visa-rejected-div").find('input').attr("disabled", true);
+
                 }
+                $(".visa-details .visa_div_application").last().find("select.selectpicker").selectpicker("refresh");
+
             });
         } else {
             container.insertAdjacentHTML('beforeend', renderVisaBlock());
