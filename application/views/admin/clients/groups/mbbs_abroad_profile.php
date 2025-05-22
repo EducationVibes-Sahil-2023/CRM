@@ -20,12 +20,16 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
+array_push($documents_type, array("id" => "application", "name" => "Application Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "invitation", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "visa", "name" => "Visa Letter", "file_type" => ".pdf,image/*"));
+
 $staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
 $read_only = "readonly";
 
 $admin_status = 0;
-
+$visa_details =  visa_details($client_id, 0, 1);
 if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
     $final_sumbit = 0;
     $read_only = "";
@@ -43,10 +47,18 @@ $applicant_documents =  get_clients_documents($client_id);
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
 
+    array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
+    array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
+    array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
+
     if (!empty($applicant_documents)) {
         $applicant_documents = array_column($applicant_documents, null, "id");
     }
 }
+
+
+
+
 
 
 $years_array = [];
@@ -253,7 +265,6 @@ if ($lead_type_status == 2) {
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
-
     <input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
     <div class="additional"></div>
     <div class="col-md-12">
@@ -1147,21 +1158,25 @@ if ($lead_type_status == 2) {
                                                     </td>
                                                     <td>
                                                         <?php
-                                                        $status = isset($applicant_documents[$doc_id]["approval_status"])
-                                                            ? ($applicant_documents[$doc_id]["approval_status"] == 1 ? 'Approved' : 'Rejected')
-                                                            : (!empty($file_url) ? 'Pending' : '');
+                                                        if (!empty($doc_files["lead_type"])) {
+                                                            $status = isset($applicant_documents[$doc_id]["approval_status"])
+                                                                ? ($applicant_documents[$doc_id]["approval_status"] == 1 ? 'Approved' : 'Rejected')
+                                                                : (!empty($file_url) ? 'Pending' : '');
 
-                                                        $class = $status === 'Approved' ? 'text-success'
-                                                            : ($status === 'Rejected' ? 'text-danger'
-                                                                : ($status === 'Pending' ? 'text-warning' : ''));
+                                                            $class = $status === 'Approved' ? 'text-success'
+                                                                : ($status === 'Rejected' ? 'text-danger'
+                                                                    : ($status === 'Pending' ? 'text-warning' : ''));
 
                                                         ?>
 
-                                                        <span class="<?= $class; ?>"><?= $status; ?></span>
+                                                            <span class="<?= $class; ?>"><?= $status; ?></span>
+                                                        <?php } ?>
 
                                                     </td>
                                                     <td>
-                                                        <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                        <?php if (!empty($doc_files["lead_type"])) { ?>
+                                                            <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                        <?php } ?>
                                                     </td>
                                                     <td class="text-center">
                                                         <?php

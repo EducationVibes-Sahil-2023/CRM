@@ -240,7 +240,7 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
