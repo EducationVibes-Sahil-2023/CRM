@@ -4753,7 +4753,7 @@ class Clients extends AdminController
         $this->db->where("userid", $client_id);
         $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
 
-        $this->update_applicant_tracker_stages($client_id, 2);
+        $this->update_applicant_tracker_stages($client_id, 1);
 
         $data = [
             'resp_code'               => 'RCS',
