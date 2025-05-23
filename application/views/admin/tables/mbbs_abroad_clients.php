@@ -289,9 +289,9 @@ if ($this->ci->input->post('country')) {
 }
 
 
-if ($this->ci->input->post('client_type')) {
+if (!empty($this->ci->input->post('client_type'))) {
     $client_type = $this->ci->input->post('client_type');
-    if (is_array($client_type)) {
+    if (is_array($client_type) &&  !empty(array_filter($client_type))) {
         $escaped_client_type = array_map([$this->ci->db, 'escape'], $client_type);
         array_push($where, 'AND ' . db_prefix() . 'clients.client_type IN (' . implode(',', $escaped_client_type) . ')');
     }
@@ -509,10 +509,13 @@ foreach ($rResult as $aRow) {
     $row = [];
 
     if (!empty($aRow["name"])) {
-        $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?contactid=' . $aRow['contact_id']) . '" target="_blank">' . $aRow['name'] . '</a>' : '');
         if ($aRow["client_type"] ==  2) {
+            $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=tracker') . '" target="_blank">' . $aRow['name'] . '</a>' : '');
+
             $url = admin_url('clients/ev_partner/' . $aRow['userid']);
         } else {
+            $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?group=tracker') . '" target="_blank">' . $aRow['name'] . '</a>' : '');
+
             $url = admin_url('clients/client/' . $aRow['userid']);
         }
 

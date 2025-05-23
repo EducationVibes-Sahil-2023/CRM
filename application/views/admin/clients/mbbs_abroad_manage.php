@@ -577,6 +577,16 @@ array_unshift($office_location, array());
          </div>
          <div class="modal-body h-auto">
             <!-- Apostille Section -->
+
+            <?php if (is_admin()) { ?>
+               <div class="mass_delete">
+                  <div class="checkbox checkbox-danger">
+                     <input type="checkbox" name="mass_delete" id="mass_delete">
+                     <label for="mass_delete">Mass Delete</label>
+                  </div>
+               </div>
+            <?php } ?>
+
             <div class="apostille_update">
                <div class="checkbox checkbox-danger">
                   <input type="checkbox" name="apostille_status_check" id="apostille_status_check" onchange="Update_apostille(this)">
@@ -1228,13 +1238,23 @@ init_tail();
       let documentStatusUpdate = $('.document_status_update');
       documentStatusUpdate.find("select").val("").trigger("change");
       documentStatusUpdate.find("input[type=checkbox]").prop("checked", false);
+      $('.visa_update').toggle();
+      $(".visa_update").find("select").val("").selectpicker('refresh');
+      $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+      $(".apostille_update").toggle();
+      $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+      $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
       documentStatusUpdate.toggle();
+
    });
 
    function Update_apostille(obj) {
       // Check if the checkbox is checked
       if ($(obj).prop('checked')) {
          // Hide elements related to document status update
+         $('.mass_delete').hide();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
          $('.document_status_update').hide();
          $(".document_status_update").find("select").val("").selectpicker('refresh');
          $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
@@ -1251,8 +1271,9 @@ init_tail();
          // Hide elements related to document status update
          $('.document_status_update').show();
          $('.visa_update').show();
-
-
+         $('.mass_delete').show();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
          // Toggle visibility of transition location elements
          $(".is_transist_location").hide();
          $(".no_is_transist_location").show();
@@ -1269,6 +1290,10 @@ init_tail();
       // Check if the checkbox is checked
       if ($(obj).prop('checked')) {
          // Hide elements related to document status update
+         $('.mass_delete').hide();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+
          $('.document_status_update').hide();
          $(".document_status_update").find("select").val("").selectpicker('refresh');
          $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
@@ -1284,7 +1309,9 @@ init_tail();
       } else {
          // Hide elements related to document status update
          $('.document_status_update').show();
-
+         $('.mass_delete').show();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
 
          // Toggle visibility of transition location elements
          $(".is_transist_location").hide();
@@ -1389,6 +1416,10 @@ init_tail();
          visa_status,
       };
 
+      if (!confirm("Are you sure you want to delete the selected applicants?")) {
+         hide_loader();
+         return false;
+      }
       // Merge Apostille data
       Object.assign(data, apostille_data);
       Object.assign(data, visa_data);
