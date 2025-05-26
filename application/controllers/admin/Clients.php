@@ -5763,15 +5763,16 @@ class Clients extends AdminController
                         'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
                         'visa_details' => visa_details($client_id, 0, 1)
                     ];
-                    $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
                 }
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+
                 return $responseData;
                 die;
             }
 
 
 
-            if ($received_status_pass == true) {
+            if ($received_status_pass == true && !empty($this->input->post("save"))) {
                 $update_client_data = [
                     "applicant_status" => 0,
                     "applicant_stage" => VISA,
@@ -5810,7 +5811,7 @@ class Clients extends AdminController
                         'visa_details' => visa_details($client_id, 0, 1)
                     ];
                 }
-                $this->update_applicant_tracker_stages($client_id, ($tracker_id-1));
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
             }
 
             // Update applicant tracker stages
