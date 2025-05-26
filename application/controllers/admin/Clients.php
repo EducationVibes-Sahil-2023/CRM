@@ -4144,8 +4144,8 @@ class Clients extends AdminController
 
             // Prepare Data for PDF
             $data["student_name"] = $client_basic->first_name . " " . $client_basic->last_name;
-            $data["university_name"] = $client_basic->university_name;
-            $data["country"] = $client_basic->country;
+            $data["university_name"] = $admission_prefrences->primary_university;
+            $data["country"] = $admission_prefrences->primary_country;
             $data["total_amount"] = $total_amount;
             $data["registration_amount"] = $registration_amount;
             $data["pending_amount"] = $pending_amount;
@@ -4605,9 +4605,9 @@ class Clients extends AdminController
 
                         // If partner or application date exists AND application_file is empty → APPLY
                         if (
-                    ((!empty($check_primary_university_exist['partner']) && !empty($check_primary_university_exist['partner'])!=0) || (!empty($check_primary_university_exist['application_date'])) &&  $check_primary_university_exist['application_date']!="0000-00-00")
-                    && empty($check_primary_university_exist['application_file'])
-                ) {
+                            ((!empty($check_primary_university_exist['partner']) && !empty($check_primary_university_exist['partner']) != 0) || (!empty($check_primary_university_exist['application_date'])) &&  $check_primary_university_exist['application_date'] != "0000-00-00")
+                            && empty($check_primary_university_exist['application_file'])
+                        ) {
                             $this->db->where("userid", $client_id);
                             $this->db->update(db_prefix() . 'clients', [
                                 "applicant_status" => 0,
@@ -5460,6 +5460,7 @@ class Clients extends AdminController
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
+                return $data;
                 die;
             }
 
@@ -5556,91 +5557,101 @@ class Clients extends AdminController
         $visa = !empty($this->input->post("visa")) ? json_decode($this->input->post("visa"), true) : [];
         $files = $_FILES;
 
-        $check_documents = $this->check_documents(10);
-        if (!empty($check_documents)) {
-            // If required documents are missing
-            $doc_names = implode(", ", $check_documents);
-            $message = "{$doc_names} are mandatory to proceed to the next step.";
 
-            $data = [
-                'resp_code'               => 'ERR',
-                'resp_desc'               =>  $message,
-            ];
+        if (empty($this->input->post("save"))) {
+            $check_documents = $this->check_documents(10);
+            if (!empty($check_documents)) {
+                // If required documents are missing
+                $doc_names = implode(", ", $check_documents);
+                $message = "{$doc_names} are mandatory to proceed to the next step.";
 
-            $visa_information_check = visa_details($client_id, 1);
-
-            if (empty($visa_information_check)) {
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => VISA,
-                    "applicant_sub_status" => VISA_PENDING,
+                $data = [
+                    'resp_code'               => 'ERR',
+                    'resp_desc'               =>  $message,
                 ];
-                $this->db->where("userid", $client_id);
-                $this->db->update(db_prefix() . 'clients', $update_client_data);
-            } else {
 
-                if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+                $visa_information_check = visa_details($client_id, 1);
+
+                if (empty($visa_information_check)) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => VISA,
-                        "applicant_sub_status" => VISA_APPLY
+                        "applicant_sub_status" => VISA_PENDING,
                     ];
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-                }
-            }
-            $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
-            // set_alert('danger',  $message);
+                } else {
 
-            return $data;
-            die;
+                    if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => VISA,
+                            "applicant_sub_status" => VISA_APPLY
+                        ];
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', $update_client_data);
+                    }
+                }
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+                return $data;
+                die;
+            }
         }
 
-        $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
-        $country_names = array_column($university_shortlisting, "country_name");
-        $resultOrignal = validate_orignal_documents([$client_id], $country_names);
-        if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
-            $data = [
-                'resp_code'               => 'ERR',
-                'resp_desc'               =>  $resultOrignal["message"][0],
-            ];
-
-            $visa_information_check = visa_details($client_id, 1);
-
-            if (empty($visa_information_check)) {
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => VISA,
-                    "applicant_sub_status" => VISA_PENDING,
+        if (empty($this->input->post("tracker_id"))) {
+            $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
+            $country_names = array_column($university_shortlisting, "country_name");
+            $resultOrignal = validate_orignal_documents([$client_id], $country_names);
+            if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
+                $data = [
+                    'resp_code'               => 'ERR',
+                    'resp_desc'               =>  $resultOrignal["message"][0],
                 ];
-                $this->db->where("userid", $client_id);
-                $this->db->update(db_prefix() . 'clients', $update_client_data);
-            } else {
 
-                if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+                $visa_information_check = visa_details($client_id, 1);
+
+                if (empty($visa_information_check)) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => VISA,
-                        "applicant_sub_status" => VISA_APPLY
+                        "applicant_sub_status" => VISA_PENDING,
                     ];
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', $update_client_data);
+                } else {
+
+                    if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => VISA,
+                            "applicant_sub_status" => VISA_APPLY
+                        ];
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', $update_client_data);
+                    }
+
+                    if ($visa_information_check[0]["visa_rejected"] == 1) {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => VISA,
+                            "applicant_sub_status" => VISA_APPLY
+                        ];
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', $update_client_data);
+                    }
                 }
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+                return $data;
             }
-            $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
-            return $data;
         }
-
-
-
 
         $batch_update_data = [];
         $batch_insert_data = [];
         $received_status_pass = false;
         $visa_sub_stage = VISA_PENDING;
         foreach ($visa as $key => $row) {
-              $received_status_pass = false;
-                $visa_sub_stage = VISA_PENDING;
+            $received_status_pass = false;
+            $visa_sub_stage = VISA_PENDING;
             $data_ = [];
 
             $visa_status = 1;
@@ -5724,7 +5735,7 @@ class Clients extends AdminController
         }
 
 
-                
+
 
 
 
@@ -5740,13 +5751,19 @@ class Clients extends AdminController
 
             $visa_information_check = visa_details($client_id, 1);
             if (empty($visa_information_check)) {
-
-                $responseData = [
-                    'resp_code' => 'ERR',
-                    'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
-                    'visa_details' => visa_details($client_id, 0, 1)
-                ];
-
+                if (!empty($this->input->post("save"))) {
+                    $responseData = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => "Visa letter data updated successfully.",
+                        'visa_details' => visa_details($client_id, 0, 1)
+                    ];
+                } else {
+                    $responseData = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
+                        'visa_details' => visa_details($client_id, 0, 1)
+                    ];
+                }
                 return $responseData;
                 die;
             }
@@ -5779,12 +5796,19 @@ class Clients extends AdminController
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
-
-                $responseData = [
-                    'resp_code' => 'ERR',
-                    'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
-                    'visa_details' => visa_details($client_id, 0, 1)
-                ];
+                if (!empty($this->input->post("save"))) {
+                    $responseData = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => "Visa letter data updated successfully.",
+                        'visa_details' => visa_details($client_id, 0, 1)
+                    ];
+                } else {
+                    $responseData = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "Visa letter data updated successfully. However, the information is incomplete to proceed to the next step.",
+                        'visa_details' => visa_details($client_id, 0, 1)
+                    ];
+                }
             }
 
             // Update applicant tracker stages
@@ -6030,7 +6054,7 @@ class Clients extends AdminController
         if (!$client) {
             http_response_code(404);
             echo json_encode([
-                "resp_code" => "RCS",
+                "resp_code" => "ERR",
                 "resp_desc" => "Client not found"
             ]);
             return;
@@ -6094,7 +6118,7 @@ class Clients extends AdminController
                     $response = [
                         "resp_code" => "ERR",
                         "resp_desc"
- => "Registration slip is not generated.",
+                        => "Registration slip is not generated.",
                     ];
                     echo json_encode($response);
                     return;
