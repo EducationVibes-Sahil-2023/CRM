@@ -2064,12 +2064,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     hide_loader();
                     return false;
                 }
-
                 upload_data.append("sc_100", $("#sc_100").is(":checked") ? 1 : 0);
                 upload_data.append("completed", 1);
-
-
-
             } else if (id == 2) {
                 let result = await university_shortlisting_dropdown();
                 if (!result) {
@@ -2129,12 +2125,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
 
                 if (same_step == 1) {
-                    
+
                 } else {
 
                     if (university_shortlisting[0].application_file == "") {
-                        if (confirm("Admission letter is not uploaded. Are you sure you want to proceed without it?")) {
-                        } else {
+                        if (confirm("Admission letter is not uploaded. Are you sure you want to proceed without it?")) {} else {
                             goToStep(2);
                             return false;
                         }
@@ -2145,9 +2140,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         hide_loader();
                         return false;
                     }
-                    
+
                 }
-                
+
                 await check_invitation_letter(upload_data);
             }
 
@@ -2242,6 +2237,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     show_next_stage(response.pass_stage);
                 } else {
                     if (completed == 1) {
+                        location.reload();
                         return false;
                     }
                     show_next_previous(obj);
@@ -2271,7 +2267,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     });
 
     function goToStep(index) {
-        
+
         // Prevent forward navigation
         if ($("#progressbar li.active").index() <= index && complete_application != 1) {
             return false;
