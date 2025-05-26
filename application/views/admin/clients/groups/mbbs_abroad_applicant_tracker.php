@@ -1563,7 +1563,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <?php } ?>
                     <?php
                     if (($k + 1) < count($applicant_tracker)) { ?>
-                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Save & Next" />
+                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="<?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'Next' : 'Save & Next' ?>" />
                         <?php if (!empty($track['save']) && $track['save'] == 1) { ?>
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
                         <?php } ?>
