@@ -5602,7 +5602,7 @@ class Clients extends AdminController
             }
         }
 
-        if (empty($this->input->post("tracker_id"))) {
+        if (empty($this->input->post("save"))) {
             $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
             $country_names = array_column($university_shortlisting, "country_name");
             $resultOrignal = validate_orignal_documents([$client_id], $country_names);
@@ -5768,6 +5768,16 @@ class Clients extends AdminController
                         'visa_details' => visa_details($client_id, 0, 1)
                     ];
                 }
+
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => VISA,
+                    "applicant_sub_status" => $visa_sub_stage,
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+
                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
 
                 return $responseData;
