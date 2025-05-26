@@ -4895,6 +4895,8 @@ class Clients extends AdminController
                     ]);
                 }
 
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+
                 return $data;
                 die;
             }
@@ -5460,6 +5462,8 @@ class Clients extends AdminController
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
+
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
                 return $data;
                 die;
             }
@@ -5797,7 +5801,6 @@ class Clients extends AdminController
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
-                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
                 if (!empty($this->input->post("save"))) {
                     $responseData = [
                         'resp_code' => 'RCS',
