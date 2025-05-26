@@ -5772,7 +5772,7 @@ class Clients extends AdminController
 
 
 
-            if ($received_status_pass == true && !empty($this->input->post("save"))) {
+            if ($received_status_pass == true && empty($this->input->post("save"))) {
                 $update_client_data = [
                     "applicant_status" => 0,
                     "applicant_stage" => VISA,
