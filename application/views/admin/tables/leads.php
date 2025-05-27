@@ -307,7 +307,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
-    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber", $sTable . ".website"];
+    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber", $sTable . ".website", $sTable. ".name"];
 }
 
 $having_ = "";

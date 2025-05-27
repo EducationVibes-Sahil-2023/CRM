@@ -529,10 +529,34 @@ class Login_Controller extends Api_Controller
         if (empty($id)) {
             $id = $_REQUEST['id'];
         }
-        
+
         $this->load->library('GoogleSheetApi');
         $this->load->helper('google');
         $auto_sync = get_data_excel($id);
+
+        if ($auto_sync) {
+            $response[] = array(
+                "status" => 1,
+                "message" => "Google sheet Sync successfully.",
+            );
+        } else {
+            $response[] = array(
+                "status" => 0,
+                "message" => $validate[0],
+            );
+        }
+        echo  $this->json_output($response);
+    }
+
+    public function applicant_sync_excel($id = "")
+    {
+
+        if (empty($id)) {
+            $id = $_REQUEST['id'];
+        }
+        $this->load->helper('google');
+
+        $auto_sync =  syncExcel($id);
 
         if ($auto_sync) {
             $response[] = array(
