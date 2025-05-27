@@ -4918,7 +4918,7 @@ class Clients extends AdminController
             } else {
                 if (empty($check_primary_university_exist["application_file"])) {
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_WAITING));
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => ADMISSION, "applicant_sub_status" => ADMISSION_LETTER_APPLY));
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = "The primary university application letter for '" . $check_primary_university_exist["university_name"] . "' is mandatory to proceed to the next step.";
                     return $data;
