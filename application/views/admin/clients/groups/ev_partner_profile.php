@@ -772,7 +772,7 @@ if ($lead_type_status == 2) {
 											$doc_id = $s_stage["id"] ?? '';
 											$info = $s_stage["info"] ?? '';
 											$accept = $s_stage["file_type"] ?? '';
-											$is_mandatory = !empty($s_stage["mandatry"]);
+											$is_mandatory = '';
 											$mandatry_text = $is_mandatory ? "<small class='text-danger'></small>" : '';
 											$required_attr = $is_mandatory ? "required required-check" : '';
 											$file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
