@@ -16,7 +16,7 @@ class Api_Controller extends CI_Controller
         $token = $this->input->get_request_header('Authorization');
         $current_url = current_url();
 
-        if (str_contains($current_url, 'login') || str_contains($current_url, 'process_data') || str_contains($current_url, 'call_activity_cron') ||  str_contains($current_url, "update_all_contacts") ||  str_contains($current_url, "excel_sync")) {
+        if (str_contains($current_url, 'login') || str_contains($current_url, 'process_data') || str_contains($current_url, 'call_activity_cron') ||  str_contains($current_url, "update_all_contacts") ||  str_contains($current_url, "excel_sync") || str_contains($current_url, "applicant_sync_excel")) {
         } else {
             if (!empty($token)) {
                 $token = explode(" ", $token);

@@ -497,7 +497,12 @@ if (is_admin() || is_postSale()) {
 $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
-    $search_column = [db_prefix() . "basic_details.email", db_prefix() . "basic_details.mobile", db_prefix() . "basic_details.first_name", db_prefix() . "basic_details.last_name"];
+    $search_column = [
+    db_prefix() . "basic_details.email",
+    db_prefix() . "basic_details.mobile",
+    "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
+];
+
 }
 
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid', '', '', $search_column);
