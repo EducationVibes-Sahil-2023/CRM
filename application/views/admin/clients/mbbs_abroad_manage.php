@@ -579,12 +579,12 @@ array_unshift($office_location, array());
             <!-- Apostille Section -->
 
             <?php if (is_admin()) { ?>
-               <div class="mass_delete">
+               <!-- <div class="mass_delete">
                   <div class="checkbox checkbox-danger">
                      <input type="checkbox" name="mass_delete" id="mass_delete">
                      <label for="mass_delete">Mass Delete</label>
                   </div>
-               </div>
+               </div> -->
             <?php } ?>
 
             <div class="apostille_update">
@@ -1329,7 +1329,7 @@ init_tail();
    function customers_bulk_action(event) {
 
 
-      var mass_delete = $('#mass_delete').prop('checked');
+      // var mass_delete = $('#mass_delete').prop('checked');
       var transit = $('#in_transit').prop('checked');
       var from_location = $('#from_location').val();
       var to_location = $('#to_location').val();
