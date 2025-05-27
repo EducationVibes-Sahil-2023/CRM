@@ -4572,7 +4572,7 @@ class Clients extends AdminController
                     $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
 
                     $this->db->where("userid", $client_id);
-                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_SHORTLISTING_PENDING));
+                    $this->db->update(db_prefix() . 'clients', array("applicant_status" => 0, "applicant_stage" => UNIVERSITY_SHORTLISTING, "applicant_sub_status" => UNIVERSITY_APPLIED));
                     return  $data = [
                         'resp_code'               => 'RCS',
                         'resp_desc'               => "University shortlisting updated successfully.",
