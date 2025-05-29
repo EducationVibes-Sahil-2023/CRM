@@ -548,27 +548,52 @@ class Login_Controller extends Api_Controller
         echo  $this->json_output($response);
     }
 
-    public function applicant_sync_excel($id = "")
-    {
+   public function applicant_sync_excel()
+{
+    $this->load->helper('google');
 
-        if (empty($id)) {
-            $id = $_REQUEST['id'];
+    // Initialize response
+    $response = [
+        'status' => 0,
+        'message' => 'An unknown error occurred.',
+    ];
+
+    try {
+        // Check if 'id' is provided
+        if (!isset($_REQUEST['id']) || empty($_REQUEST['id'])) {
+            throw new Exception('Missing required parameter: id');
         }
-        $this->load->helper('google');
 
-        $auto_sync =  syncExcel($id);
+        // Decode the ID (from JavaScript encodeURIComponent)
+        $id = rawurldecode($_REQUEST['id']);
 
-        if ($auto_sync) {
-            $response[] = array(
-                "status" => 1,
-                "message" => "Google sheet Sync successfully.",
-            );
+        // Validate the format of the ID (optional, example: only allow alphanumeric and comma)
+        if (!preg_match('/^[a-zA-Z0-9,_\-]+$/', $id)) {
+            throw new Exception('Invalid sheet ID format.');
+        }
+
+        // Attempt to sync
+        $auto_sync = syncExcel($id);
+
+        if ($auto_sync === true) {
+            $response = [
+                'status' => 1,
+                'message' => 'Google sheet synced successfully.',
+            ];
         } else {
-            $response[] = array(
-                "status" => 0,
-                "message" => $validate[0],
-            );
+            // Assume syncExcel() returns false or an error string/array
+            $errorMessage = is_array($auto_sync) ? $auto_sync[0] : 'Sync failed due to unknown reason.';
+            throw new Exception($errorMessage);
         }
-        echo  $this->json_output($response);
+    } catch (Exception $e) {
+        $response = [
+            'status' => 0,
+            'message' => $e->getMessage(),
+        ];
     }
+
+    // Output JSON response
+    echo $this->json_output([$response]);
+}
+
 }
