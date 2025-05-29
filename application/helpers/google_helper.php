@@ -234,11 +234,11 @@ function syncExcel($id = "")
         ->where("autoSync", 1);
 
     if (!empty($id)) {
-        $id = array_filter(explode(",", $id));
-        $CI->db->where_in("id", $id);
+        // $id = array_filter(explode(",", $id));
+        $CI->db->where("spreadsheetId", $id);
     }
 
-    $sheetData = $CI->db->get()->result_array();
+    $sheetData = $CI->db->order_by("id","asc")->get()->result_array();
 
     if (empty($sheetData)) {
         return [];

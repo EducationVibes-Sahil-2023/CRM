@@ -2156,10 +2156,37 @@ class Clients extends AdminController
                     $status_name =  !empty($status) && $status == 1 ? 'Approved' : 'Reject';
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "{$doc_name} document {$status_name} by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
 
-                    $client = $this->clients_model->getBasicDetails($client_id);
+                    // $client = $this->clients_model->getBasicDetails($client_id);
 
-                    if (!empty($client->email)) {
-                        send_mail_template('Applicant_document_reject', $client->email, $client_id, get_staff_user_id(), get_staff_user_id(), $doc_id);
+                    // if (!empty($client->email)) {
+                    //     send_mail_template('Applicant_document_reject', $client->email, $client_id, get_staff_user_id(), get_staff_user_id(), $doc_id);
+                    // }
+                    
+                       // Fetch client information by client ID
+                    $clientInformation = $this->clients_model->get($client_id);
+
+                    // Check if client information is found
+                    if ($clientInformation && isset($clientInformation->addedfrom)) {
+
+                        // Fetch staff details using client user ID
+                        $staffDetails = $this->staff_model->get($clientInformation->addedfrom);
+                        // Check if staff details and staff email are valid
+                        if ($staffDetails && !empty($staffDetails->email)) {
+
+                            // Send rejection email using the template
+                            send_mail_template(
+                                'Applicant_document_reject',
+                                $staffDetails->email,
+                                $client_id,
+                                get_staff_user_id(),
+                                get_staff_user_id(),
+                                $doc_id
+                            );
+                        } else {
+                            log_message('error', 'Staff details not found or email missing for client ID: ' . $client_id);
+                        }
+                    } else {
+                        log_message('error', 'Client information not found for client ID: ' . $client_id);
                     }
                 }
 
