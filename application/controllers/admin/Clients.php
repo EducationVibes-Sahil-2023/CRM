@@ -2164,8 +2164,7 @@ class Clients extends AdminController
                     
                        // Fetch client information by client ID
                     $clientInformation = $this->clients_model->get($client_id);
-
-                    // Check if client information is found
+if($status== 2){                    // Check if client information is found
                     if ($clientInformation && isset($clientInformation->addedfrom)) {
 
                         // Fetch staff details using client user ID
@@ -2188,6 +2187,7 @@ class Clients extends AdminController
                     } else {
                         log_message('error', 'Client information not found for client ID: ' . $client_id);
                     }
+}
                 }
 
                 $update = $this->db->where("id", $check_->id);
@@ -3542,7 +3542,7 @@ class Clients extends AdminController
             $reference_name = $_POST["reference_name"];
             $agent_id_raw = trim($_POST["agent_id"] ?? '');
             $agent_id = trim($agent_id_raw);
-
+            $state = trim($_POST["state"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -3552,6 +3552,7 @@ class Clients extends AdminController
             unset($_POST["reference_name"]);
             unset($_POST["files"]);
             unset($_POST["agent_id"]);
+             unset($_POST["state"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -3569,6 +3570,11 @@ class Clients extends AdminController
 
                 // Check if unique_agent_id already exists
                 $this->db->where('unique_agent_id', $unique_agent_id);
+                
+                if(!empty($client_id))
+                {
+                     $this->db->where('userid!=', $client_id);
+                }
                 $exists = $this->db->get(db_prefix() . 'clients')->row();
 
 
@@ -3584,7 +3590,14 @@ class Clients extends AdminController
                     $this->db->insert(db_prefix() . 'clients', $client_data);
                     $client_id = $this->db->insert_id();
                 }
+                else
+                {
+                    $client_data =["agent_id"=>$agent_id];
+                    $this->db->where("userid",$client_id);
+                     $this->db->update(db_prefix() . 'clients', $client_data);
+                }
             }
+
 
 
             foreach ($_POST as $key => $value) {
@@ -3606,8 +3619,11 @@ class Clients extends AdminController
                 ->get(db_prefix() . 'basic_details')->row();
 
 
+
             if (!empty($check_client->id)) {
                 $update_student_data["updated_at"] = date('Y-m-d H:i:s');
+               
+                
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
@@ -3620,10 +3636,20 @@ class Clients extends AdminController
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
             }
 
-            if (!empty($reference_name)) {
+            if (!empty($reference_name) || !empty($state)) {
+                
+                $updateClientInfo=[];
+                 if(!empty($reference_name)){
+                $updateClientInfo['reference_name']=$reference_name;
+                 }
+                if(!empty($state)){
+                $updateClientInfo['state']=$state;
+                }
                 $this->db->where('userid', $client_id);
-                $rows_affected = $this->db->update(db_prefix() . 'clients', array("reference_name" => $reference_name));
+                $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);
+                 if(!empty($reference_name)){
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                 }
             }
 
 

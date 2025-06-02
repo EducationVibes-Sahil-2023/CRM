@@ -525,6 +525,8 @@ class Login_Controller extends Api_Controller
 
     public function excel_sync($id = "")
     {
+        
+        die;
 
         if (empty($id)) {
             $id = $_REQUEST['id'];
@@ -550,6 +552,7 @@ class Login_Controller extends Api_Controller
 
    public function applicant_sync_excel()
 {
+    
     $this->load->helper('google');
 
     // Initialize response

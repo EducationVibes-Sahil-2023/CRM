@@ -20,6 +20,7 @@
 							_l('staff_dt_name'),
 							_l('staff_dt_email'),
 							_l('phone'),
+							'Alternative No.',
 							_l('role'),
 							_l('staff_dt_last_Login'),
 							_l('staff_dt_active'),
