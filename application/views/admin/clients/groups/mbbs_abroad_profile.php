@@ -1222,7 +1222,7 @@ if ($lead_type_status == 2) {
 
                             <h4>Welcome Message</h4>
                             <hr>
-                            <form id="welcome-information-form" class="form-disabled" onsubmit=" return false;">
+                            <form id="welcome-information-form" class="" onsubmit=" return false;">
                                 <?php
 
                                 $get_clients_fees = get_clients_fees_details($lead_type_status, $client_id, REGISTRATION_AMOUNT_ID);
@@ -1232,7 +1232,7 @@ if ($lead_type_status == 2) {
                                 <div class="row">
                                     <div class="col-lg-4">
                                         <label class="form-check-label">Registration Amount Cash Deposite
-                                            <input type="checkbox" value="<?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 1 : 0 ?>" class="form-check-input" onclick="check_registration_cash_status(this,'hide-show-regi')" <?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 'checked' : '' ?> name="registration_slip_cash_status" <?= !empty($client->registration_slip_cash_status && $client->registration_slip_cash_status == 1) ? 'checked' : '' ?>>
+                                            <input type="checkbox" <?= !empty($final_sumbit)?'disabled':''?>  value="<?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 1 : 0 ?>" class="form-check-input <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" onclick="check_registration_cash_status(this,'hide-show-regi')" <?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 'checked' : '' ?> name="registration_slip_cash_status" <?= !empty($client->registration_slip_cash_status && $client->registration_slip_cash_status == 1) ? 'checked' : '' ?>>
 
                                         </label>
                                     </div>
@@ -1241,7 +1241,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Date of payment <small class="text-danger">*</small></label>
-                                            <input <?= $text_danger_mbbs_required ?> class="form-control" type="date" name="date_of_payment" value="<?= $client->date_of_payment ?>">
+                                            <input <?= $text_danger_mbbs_required ?> <?= !empty($final_sumbit)?'disabled':''?>  class="form-control <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" type="date" name="date_of_payment" value="<?= $client->date_of_payment ?>">
                                         </div>
                                     </div>
                                     <div class="col-lg-2">
@@ -1253,7 +1253,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Payment received from <small class="text-danger">*</small></label>
-                                            <input class="form-control" type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
+                                            <input class="form-control <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" <?= !empty($final_sumbit)?'disabled':''?>   type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
                                         </div>
                                     </div>
 
@@ -1293,7 +1293,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2 hide-show-regi" style="display: <?= !empty($client->registration_slip_cash_status) ? 'none' : 'block' ?>;">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Registration Proof <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="registration_slip" value="">
+                                            <input <?= !empty($final_sumbit)?'disabled':''?>  <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" type="file" accept=".pdf, image/*" name="registration_slip" value="">
                                             <?php
                                             if (!empty($client->registration_slip)) {
                                             ?>
@@ -1307,9 +1307,9 @@ if ($lead_type_status == 2) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row btn-save-fun">
+                                <div class="row row">
                                     <div class="col-md-12 ">
-                                        <button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                        <button type="submit"  onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right">Save changes</button>
                                     </div>
                                 </div>
                             </form>

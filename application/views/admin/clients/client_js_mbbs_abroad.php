@@ -718,6 +718,7 @@ if(client_type!=1){        $(".hide-client-type").parent("button.btn").hide(); }
         var additional_fields = {};
         var form_status = true;
         show_loader();
+        $(".disabled-form-welcome").removeAttr("disabled");
         $("#welcome-information-form input:visible, #welcome-information-form select:visible, #welcome-information-form input[type='date']:visible").each(function() {
             const value = $(this).val()?.trim(); // Get trimmed value
             const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
@@ -731,14 +732,21 @@ if(client_type!=1){        $(".hide-client-type").parent("button.btn").hide(); }
             }
         });
 
+        let formData = new FormData(document.getElementById('welcome-information-form')); // Correct way to initialize FormData
         if (!form_status) {
+            if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
+            $(".disabled-form-welcome").attr("disabled");
+            }
             appValidateForm($("#welcome-information-form"), additional_fields);
             hide_loader();
             return false;
         }
+        if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
+         $(".disabled-form-welcome").attr("disabled");
+        }
 
 
-        let formData = new FormData(document.getElementById('welcome-information-form')); // Correct way to initialize FormData
+       
 
         // Append CSRF token and client ID
         formData.append("csrf_token_name", csrfData.hash);

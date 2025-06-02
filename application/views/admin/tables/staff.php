@@ -11,6 +11,7 @@ $aColumns = [
     'firstname',
     'email',
     'phonenumber',
+    'alternate_number',
     db_prefix() . 'roles.name',
     'last_login',
     'active',

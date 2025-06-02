@@ -578,11 +578,11 @@ foreach ($rResult as $aRow) {
 
                         // If the current status is canceled, allow only refund transitions.
                         if ($canceled_status && $is_refunded) {
-                            $outputStatus .= '<li><a href="#" onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                            $outputStatus .= '<li><a onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
                         }
                         // If the current status is refunded, do nothing.
                         else if (!$refunded_status && !$is_refunded && !$canceled_status) {
-                            $outputStatus .= '<li><a href="#" onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                            $outputStatus .= '<li><a onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
                         }
                     }
                 }

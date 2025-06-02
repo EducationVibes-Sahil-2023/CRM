@@ -7,7 +7,7 @@ if (!empty($score_value)) {
 $passport_stages = get_passport_stages();
 $caste_category = get_caste_category();
 $neet_status = get_neet_status();
-
+$states = get_states();
 $board_dropdown = get_board_dropdown();
 $ev_partner = get_ev_partner();
 $staff_list              = $this->leads_model->get_staff_list();
@@ -391,6 +391,18 @@ if ($lead_type_status == 2) {
 
 									</div>
 									<div class="row">
+									    	<div class="col-lg-3">
+											<div class="form-group">
+												<label for="exampleInputPassword1">State <small class="text-danger"></small></label>
+												<?php
+												array_unshift($states, array("id" => "", "value" => "", "name" => "Select States"));
+												$selectedState[] = !empty($client_infomation->state) ? $client_infomation->state : '';
+
+												echo render_select('state', $states, array('name', 'name'), "", $selectedState, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "state");
+												?>
+
+											</div>
+										</div>
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputMobileNumber">Parent's Name <small class="text-danger"></small></label>
