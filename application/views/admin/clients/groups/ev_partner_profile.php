@@ -360,7 +360,7 @@ if ($lead_type_status == 2) {
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputDateOfBirth">Date Of Birth <small class="text-danger"></small></label>
-												<input type="date" class="form-control" name="dob" id="dob" required value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>' >
+												<input type="date" class="form-control" name="dob" id="dob" value='<?php echo ($basicdetails->dob != '') ? $basicdetails->dob : ''; ?>'>
 											</div>
 										</div>
 
@@ -368,7 +368,7 @@ if ($lead_type_status == 2) {
 										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputPassword1">Gender <small class="text-danger"></small></label>
-												<select class="form-control" name="gender" id="gender" >
+												<select class="form-control" name="gender" id="gender">
 													<option value="">Select</option>
 													<option <?php echo ($basicdetails->gender == 'Male') ? 'selected' : ''; ?>>Male</option>
 													<option <?php echo ($basicdetails->gender == 'Female') ? 'selected' : ''; ?>>Female</option>
@@ -391,7 +391,7 @@ if ($lead_type_status == 2) {
 
 									</div>
 									<div class="row">
-									    	<div class="col-lg-3">
+										<div class="col-lg-3">
 											<div class="form-group">
 												<label for="exampleInputPassword1">State <small class="text-danger"></small></label>
 												<?php
