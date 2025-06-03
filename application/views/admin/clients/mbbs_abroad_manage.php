@@ -22,6 +22,7 @@ $country_list = get_country_list(7);
 $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
 $table_view = array_column(get_view_columns(), null, "id");
+$ev_partner = get_ev_partner();
 
 $apostille_vendors = get_vendor_list(1);
 
@@ -45,6 +46,7 @@ $client_type = [
 
 ];
 array_unshift($office_location, array());
+array_unshift($ev_partner, array());
 
 
 ?>
@@ -463,6 +465,15 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
+                                 <?php
+
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('ev_partner_filter[]', $ev_partner, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "EVP Partners", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "ev_partner_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
                                  <?php
                                  $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
@@ -781,7 +792,7 @@ array_unshift($office_location, array());
                <!-- Refund Section -->
                <div class="refund_div applicant_status_modal_div">
                   <div class="form-group">
-                     <?= render_input('refund_payment_proof', 'Payment Proof', '', 'file', ["required-check" => "required-check"]) ?>
+                     <?= render_input('refund_payment_proof', 'Refund Proof', '', 'file', ["required-check" => "required-check"]) ?>
                   </div>
                   <div class="form-group">
                      <?= render_input('refund_payment_date', 'Payment Date', '', 'date', ["required-check" => "required-check"]) ?>
@@ -1168,6 +1179,7 @@ init_tail();
          'client_type': "[name='client_type[]']",
          'session_intake': "[name='session_intake']",
          'apostille_vendors_filter': "[name='apostille_vendors_filter[]']",
+         'ev_partner_filter': "[name='ev_partner_filter[]']",
          'visa_vendors_filter': "[name='visa_vendors_filter[]']",
          'visa_payment_date': "[name='visa_payment_date']",
          'fly_batch_filter': "[name='fly_batch_filter[]']",

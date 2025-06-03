@@ -157,7 +157,13 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
     'LEFT JOIN ' . db_prefix() . 'vendor_list  visa_vendor ON visa_vendor.id=' . db_prefix() . 'visa_details.vendor_id',
     'LEFT JOIN ' . db_prefix() . 'payment_mode  visa_p_mode ON visa_p_mode.id=' . db_prefix() . 'visa_details.payment_mode',
-    'LEFT JOIN ' . db_prefix() . 'ev_partner  ev_partner ON ev_partner.id=' . db_prefix() . 'clients.agent_id',
+    'LEFT JOIN ' . db_prefix() . 'ev_partner ev_partner 
+ ON ev_partner.id = ' . db_prefix() . 'clients.agent_id 
+ OR (
+   ' . db_prefix() . 'staff.evp_partners IS NOT NULL 
+   AND ' . db_prefix() . 'staff.evp_partners != "" 
+   AND FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners)
+ )',
     "LEFT JOIN (
         SELECT 
             userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
@@ -223,6 +229,9 @@ if ($this->ci->input->post('lead_type')) {
     array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
 }
 
+if (empty($this->ci->input->post('ev_partner_filter'))) {
+array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
+}
 
 if ($this->ci->input->post('apostille_status')) {
     $apostille_status = array_map(function ($status) {
@@ -469,6 +478,15 @@ if ($this->ci->input->post('fly_vendors_filter')) {
     }
 }
 
+if ($this->ci->input->post('ev_partner_filter')) {
+    $ev_partner_filter = $this->ci->input->post('ev_partner_filter');
+
+    if (!empty($ev_partner_filter) && is_array($ev_partner_filter)) {
+        $escaped_ev_partner_filter = array_map([$this->ci->db, 'escape'], $ev_partner_filter);
+        $where[] = 'AND ' . db_prefix() . 'clients.agent_id IS NOT NULL AND ' . db_prefix() . 'clients.agent_id IN (' . implode(',', $escaped_ev_partner_filter) . ')';
+    }
+}
+
 
 if ($this->ci->input->post('fly_date')) {
     $fly_date = $this->ci->input->post('fly_date');
@@ -498,11 +516,10 @@ $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
     $search_column = [
-    db_prefix() . "basic_details.email",
-    db_prefix() . "basic_details.mobile",
-    "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
-];
-
+        db_prefix() . "basic_details.email",
+        db_prefix() . "basic_details.mobile",
+        "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
+    ];
 }
 
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid', '', '', $search_column);
