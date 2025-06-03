@@ -4671,7 +4671,7 @@ if($status== 2){                    // Check if client information is found
 
                         // If partner or application date exists AND application_file exists → RECEIVED
                         if (
-                            (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                            (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date']!="0000-00-00"))
                             && !empty($check_primary_university_exist['application_file'])
                         ) {
                             $this->db->where("userid", $client_id);
@@ -4921,10 +4921,13 @@ if($status== 2){                    // Check if client information is found
                     "applicant_stage"  => ADMISSION,
                     "applicant_sub_status" => ADMISSION_LETTER_PENDING
                 ]);
+                
+                
+       
 
                 // If partner or application date exists AND application_file is empty → APPLY
                 if (
-                    (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                    (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date']!="0000-00-00"))
                     && empty($check_primary_university_exist['application_file'])
                 ) {
                     $this->db->where("userid", $client_id);
@@ -4937,7 +4940,7 @@ if($status== 2){                    // Check if client information is found
 
                 // If partner or application date exists AND application_file exists → RECEIVED
                 if (
-                    (!empty($check_primary_university_exist['partner']) || !empty($check_primary_university_exist['application_date']))
+                    (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date']!="0000-00-00"))
                     && !empty($check_primary_university_exist['application_file'])
                 ) {
                     $this->db->where("userid", $client_id);
