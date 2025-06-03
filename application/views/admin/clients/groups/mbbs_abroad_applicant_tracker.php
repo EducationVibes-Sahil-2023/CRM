@@ -669,169 +669,245 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
             ?>
         </ul>
+        <?php
 
 
-        <section style="display:<?= (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) ? 'none' : 'block' ?>">
-            <?php
-            foreach ($applicant_tracker as $k => $track) {
+        if ($client_infomation->active == 4) {
+        ?>
+            <section>
+                <fieldset id="refund_stage">
+                    <h2 class="fs-title text-center mb-4">Refund Stage</h2>
+                    <div class="row margin-top">
 
-            ?>
-                <fieldset id="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '12' ?>" style="display:<?= ($applicant_status == $k) ? "show" : "none" ?>">
-                    <h2 class="fs-title text-center" style="margin-bottom: 20px!important;"><?= !empty($track["name"]) ? $track["name"] : 'Document' ?>
-                        <?php
-                        if ($track["show_div_name"] == "university_div") { ?>
-                            <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
-
-                        <?php } ?>
-                        <?php
-                        if ($track["show_div_name"] == "visa_div") { ?>
-                            <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_visa_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
-
-                        <?php } ?>
-                    </h2>
-                    <?php if ($track["show_div_name"] == "document_div") { ?>
-
-                        <div class="text-right">
-
-                            <div class="registration-slip-invoice">
-                                <?php if (!empty($client_infomation->registration_slip_invoice)) { ?>
-                                    <label>Registration Slip</label>
-                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() . $client_infomation->registration_slip_invoice ?>');"></i>&nbsp;
-                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() . $client_infomation->registration_slip_invoice ?>', '_blank');"></i>
-                                <?php } ?>
-                            </div>
-
-                            <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,1)">Generate Registration Slip </button>
-                            <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp hide-client-type"></i> </button>
-                            <?= getLastEmailWhatsappDate("email", REGISTRATION_TEMPLATE_ID, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                        <!-- Refund Date -->
+                        <div class="col-md-4 mb-3 margin-top ">
+                            <label class=" mb-2 margin-top"><b>Refund Date</b></label>
+                            <div><?= $client_infomation->refund_payment_date ?></div>
                         </div>
-                        <div id="upload_documents" class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead class="thead-dark ">
-                                    <tr class="">
-                                        <th scope="col">S.No</th>
-                                        <th scope="col">Document Type</th>
-                                        <th scope="col">Stage</th>
 
-                                        <th scope="col">Approved By</th>
-                                        <th scope="col">Approved Date</th>
-                                        <th scope="col">Action</th>
-                                        <th scope="col">Upload By</th>
-                                        <th scope="col">Upload Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="document_upload_div">
+                        <!-- Refund Payment Proof -->
+                        <div class="col-md-4 mb-3 margin-top">
+                            <label class=" mb-2 margin-top"><b>Refund Payment Proof</b></label>
+                            <div>
+                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() . $client_infomation->refund_payment_proof ?>');"></i>&nbsp;
+                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() . $client_infomation->refund_payment_proof ?>', '_blank');"></i>
+                            </div>
+                        </div>
 
-                                    <?php if (!empty($documents_type)) : ?>
-                                        <?php
-                                        $index = 1;
-                                        foreach ($documents_type as $key => $doc_files) :
-                                            $doc_type = $doc_files["name"] ?? '';
-                                            $doc_id = $doc_files["id"] ?? '';
-                                            $info = $doc_files["info"] ?? '';
-                                            $accept = $doc_files["file_type"] ?? '';
-                                            $is_mandatory = !empty($doc_files["mandatry"]);
-                                            $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
-                                            $required_attr = $is_mandatory ? "required required-check" : '';
-                                            $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
-                                            $required_attr = !empty($file_url) ? "" : $required_attr;
-                                        ?>
-                                            <tr>
-                                                <td><?= ($index) ?></td>
-                                                <td>
-                                                    <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
-                                                    <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
-                                                    <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                        <!-- Comment -->
+                        <div class="col-md-4 mb-3 margin-top">
+                            <label class=" mb-2 margin-top"><b>Comment</b></label>
+                            <div><?= $client_infomation->canceled_comment ?></div>
+                        </div>
+
+                    </div>
+                </fieldset>
+            </section>
+
+        <?php
+        } else {
+        ?>
+
+            <section style="display:<?= (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) ? 'none' : 'block' ?>">
+                <?php
+                foreach ($applicant_tracker as $k => $track) {
+
+                ?>
+                    <fieldset id="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '12' ?>" style="display:<?= ($applicant_status == $k) ? "show" : "none" ?>">
+                        <h2 class="fs-title text-center" style="margin-bottom: 20px!important;"><?= !empty($track["name"]) ? $track["name"] : 'Document' ?>
+                            <?php
+                            if ($track["show_div_name"] == "university_div") { ?>
+                                <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_university_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+
+                            <?php } ?>
+                            <?php
+                            if ($track["show_div_name"] == "visa_div") { ?>
+                                <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_visa_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+
+                            <?php } ?>
+                        </h2>
+                        <?php if ($track["show_div_name"] == "document_div") { ?>
+
+                            <div class="text-right">
+
+                                <div class="registration-slip-invoice">
+                                    <?php if (!empty($client_infomation->registration_slip_invoice)) { ?>
+                                        <label>Registration Slip</label>
+                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() . $client_infomation->registration_slip_invoice ?>');"></i>&nbsp;
+                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() . $client_infomation->registration_slip_invoice ?>', '_blank');"></i>
+                                    <?php } ?>
+                                </div>
+
+                                <button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,1)">Generate Registration Slip </button>
+                                <?= getLastEmailWhatsappDate("whatsapp", 1, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,1)"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                                <?= getLastEmailWhatsappDate("email", REGISTRATION_TEMPLATE_ID, $client_id) ?><button type="button" class="btn btn-primary btn-xs" onclick="registration_slip_generate(<?= $client_id ?>,0,0,1)"><i class="fa fa-envelope hide-client-type"></i> </button>
+                            </div>
+                            <div id="upload_documents" class="table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <thead class="thead-dark ">
+                                        <tr class="">
+                                            <th scope="col">S.No</th>
+                                            <th scope="col">Document Type</th>
+                                            <th scope="col">Stage</th>
+
+                                            <th scope="col">Approved By</th>
+                                            <th scope="col">Approved Date</th>
+                                            <th scope="col">Action</th>
+                                            <th scope="col">Upload By</th>
+                                            <th scope="col">Upload Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="document_upload_div">
+
+                                        <?php if (!empty($documents_type)) : ?>
+                                            <?php
+                                            $index = 1;
+                                            foreach ($documents_type as $key => $doc_files) :
+                                                $doc_type = $doc_files["name"] ?? '';
+                                                $doc_id = $doc_files["id"] ?? '';
+                                                $info = $doc_files["info"] ?? '';
+                                                $accept = $doc_files["file_type"] ?? '';
+                                                $is_mandatory = !empty($doc_files["mandatry"]);
+                                                $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+                                                $required_attr = $is_mandatory ? "required required-check" : '';
+                                                $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+                                                $required_attr = !empty($file_url) ? "" : $required_attr;
+                                            ?>
+                                                <tr>
+                                                    <td><?= ($index) ?></td>
+                                                    <td>
+                                                        <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
 
 
-                                                    <?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') . ' ' . $mandatry_text ?>
-                                                    <?php if (!empty($info)) : ?>
-                                                        &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
-                                                    <?php endif; ?>
-                                                </td>
-                                                <td>
-                                                    <?= $doc_files["stage"] ?>
-                                                </td>
+                                                        <?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') . ' ' . $mandatry_text ?>
+                                                        <?php if (!empty($info)) : ?>
+                                                            &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td>
+                                                        <?= $doc_files["stage"] ?>
+                                                    </td>
 
-                                                <td class="approved_by_<?= $doc_id ?>">
-                                                    <?= !empty($staff_list[$applicant_documents[$doc_id]["approval_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["approval_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["approval_by"]]["lastname"] : '' ?>
-                                                </td>
-                                                <td class="approved_date_<?= $doc_id ?>">
-                                                    <?= !empty($applicant_documents[$doc_id]["approval_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["approval_date"])) : '';
-                                                    ?>
-                                                </td>
-                                                <!-- <td>
+                                                    <td class="approved_by_<?= $doc_id ?>">
+                                                        <?= !empty($staff_list[$applicant_documents[$doc_id]["approval_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["approval_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["approval_by"]]["lastname"] : '' ?>
+                                                    </td>
+                                                    <td class="approved_date_<?= $doc_id ?>">
+                                                        <?= !empty($applicant_documents[$doc_id]["approval_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["approval_date"])) : '';
+                                                        ?>
+                                                    </td>
+                                                    <!-- <td>
                                                         <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                     </td> -->
-                                                <td class="d-flex action_<?= $doc_id ?>">
+                                                    <td class="d-flex action_<?= $doc_id ?>">
 
-                                                    <?php if (!empty($file_url)) : ?>
-                                                        <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
-                                                        <?php if (is_admin()) { ?>
-                                                            <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
-                                                        <?php } ?>
+                                                        <?php if (!empty($file_url)) : ?>
+                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
+                                                            <?php if (is_admin()) { ?>
+                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
+                                                            <?php } ?>
 
-                                                        <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
-                                                            <div class="action_button_<?= $doc_id ?>">
-                                                                <button class="btn-xs btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)"><i class="fa fa-check"></i></button>
-                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)"><i class="fa fa-times"></i></button>
-                                                            </div>
-                                                        <?php else :
-                                                            $approval_status = $applicant_documents[$doc_id]["approval_status"];
-                                                            $status_text = ($approval_status == 1) ? 'Approved' : 'Rejected';
-                                                            $status_text_color = ($approval_status == 1) ? 'text-success' : 'text-danger';
-                                                        ?>
-                                                            <span class="<?= $status_text_color ?>"><b><?= $status_text ?></b></span>
+                                                            <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
+                                                                <div class="action_button_<?= $doc_id ?>">
+                                                                    <button class="btn-xs btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)"><i class="fa fa-check"></i></button>
+                                                                    <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)"><i class="fa fa-times"></i></button>
+                                                                </div>
+                                                            <?php else :
+                                                                $approval_status = $applicant_documents[$doc_id]["approval_status"];
+                                                                $status_text = ($approval_status == 1) ? 'Approved' : 'Rejected';
+                                                                $status_text_color = ($approval_status == 1) ? 'text-success' : 'text-danger';
+                                                            ?>
+                                                                <span class="<?= $status_text_color ?>"><b><?= $status_text ?></b></span>
+                                                            <?php endif; ?>
                                                         <?php endif; ?>
-                                                    <?php endif; ?>
 
-                                                </td>
-                                                <td class=" updated_by_<?= $doc_id ?>">
-                                                    <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
-                                                </td>
-                                                <td class=" updated_at_<?= $doc_id ?>">
-                                                    <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
-                                                    ?>
+                                                    </td>
+                                                    <td class=" updated_by_<?= $doc_id ?>">
+                                                        <?= !empty($staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"]) ? $staff_list[$applicant_documents[$doc_id]["updated_by"]]["firstname"] . " " . $staff_list[$applicant_documents[$doc_id]["updated_by"]]["lastname"] : '' ?>
+                                                    </td>
+                                                    <td class=" updated_at_<?= $doc_id ?>">
+                                                        <?= !empty($applicant_documents[$doc_id]["updated_date"]) ? date("Y-m-d H:i:s", strtotime($applicant_documents[$doc_id]["updated_date"])) : '';
+                                                        ?>
+                                                    </td>
+                                                </tr>
+                                            <?php $index++;
+                                            endforeach; ?>
+                                        <?php else : ?>
+                                            <tr>
+                                                <td colspan="4" class="text-center">
+                                                    <h5>No Documents Available</h5>
                                                 </td>
                                             </tr>
-                                        <?php $index++;
-                                        endforeach; ?>
-                                    <?php else : ?>
-                                        <tr>
-                                            <td colspan="4" class="text-center">
-                                                <h5>No Documents Available</h5>
-                                            </td>
-                                        </tr>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        <div class="document_approval_message_action">
-                        </div>
-                    <?php
-                    } else if ($track["show_div_name"] == "university_div") {
-                        $selected_university = json_decode($admissionpreferences->university, true);
-                        $university_drop_down = [];
-                        foreach ($selected_university as $key => $university) {
-                            if (!empty($university)) {
-                                $university_drop_down[$key] = explode(",", $university);
+                            <div class="document_approval_message_action">
+                            </div>
+                        <?php
+                        } else if ($track["show_div_name"] == "university_div") {
+                            $selected_university = json_decode($admissionpreferences->university, true);
+                            $university_drop_down = [];
+                            foreach ($selected_university as $key => $university) {
+                                if (!empty($university)) {
+                                    $university_drop_down[$key] = explode(",", $university);
+                                }
                             }
-                        }
-                    ?>
+                        ?>
 
-                        <div class="add_university_div_block">
-                            <?php if (!empty($university_shortlisting)) {
-                                foreach ($university_shortlisting as $key_u => $short_list) {
-                            ?>
-                                    <div class="col-md-12 university_div <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>   bg-<?= ($short_list["university_status"] == 1) ? 'success' : (($short_list["university_status"] == 2) ? 'danger' : 'warning') ?>">
+                            <div class="add_university_div_block">
+                                <?php if (!empty($university_shortlisting)) {
+                                    foreach ($university_shortlisting as $key_u => $short_list) {
+                                ?>
+                                        <div class="col-md-12 university_div <?= ($short_list["university_status"] == 1) ? '' : 'university_div_'; ?>   bg-<?= ($short_list["university_status"] == 1) ? 'success' : (($short_list["university_status"] == 2) ? 'danger' : 'warning') ?>">
+                                            <div class="col-md-2">
+
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="hidden" name="id" value="<?= $short_list["id"] ?>">
+                                                <select class="selectpicker from-control" onchange="university_shortlisting_dropdown()" data-width="100%" name="select_university" id="select_university" data-live-search="true">
+                                                    <option value="">Select University</option>
+                                                    <?php
+                                                    if (!empty($university_drop_down)) {
+                                                        foreach ($university_drop_down as $country_name => $university_list) {
+                                                            if (!empty($university_list)) {
+                                                    ?>
+                                                                <optgroup label="<?= $country_name ?>" id="<?= $country_name ?>">
+                                                                    <?php
+                                                                    foreach ($university_list as $university_name) {
+                                                                        $selected_university = strtolower(trim($university_name)) == strtolower(trim($short_list["university_name"])) ? "selected" : '';
+                                                                        if (!empty($university_name)) {
+                                                                    ?>
+                                                                            <option <?= $selected_university ?> data-country-name="<?= $country_name ?>" value='<?= $university_name ?>'><?= $university_name ?></option>
+                                                                    <?php
+                                                                        }
+                                                                    }
+                                                                    ?>
+                                                                </optgroup>
+                                                    <?php
+                                                            }
+                                                        }
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                            </div>
+                                        </div>
+                                    <?php }
+                                    ?>
+
+                                <?php } else { ?>
+                                    <div class="col-md-12 university_div university_div_  bg-warning">
                                         <div class="col-md-2">
-
                                         </div>
                                         <div class="col-md-4">
-                                            <input type="hidden" name="id" value="<?= $short_list["id"] ?>">
-                                            <select class="selectpicker from-control" onchange="university_shortlisting_dropdown()" data-width="100%" name="select_university" id="select_university" data-live-search="true">
+                                            <input type="hidden" name="id">
+                                            <select class="selectpicker from-control" data-width="100%" onchange="university_shortlisting_dropdown()" name="select_university" id="select_university" data-live-search="true">
                                                 <option value="">Select University</option>
                                                 <?php
                                                 if (!empty($university_drop_down)) {
@@ -841,10 +917,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <optgroup label="<?= $country_name ?>" id="<?= $country_name ?>">
                                                                 <?php
                                                                 foreach ($university_list as $university_name) {
-                                                                    $selected_university = strtolower(trim($university_name)) == strtolower(trim($short_list["university_name"])) ? "selected" : '';
                                                                     if (!empty($university_name)) {
                                                                 ?>
-                                                                        <option <?= $selected_university ?> data-country-name="<?= $country_name ?>" value='<?= $university_name ?>'><?= $university_name ?></option>
+                                                                        <option data-country-name="<?= $country_name ?>" value='<?= $university_name ?>'><?= $university_name ?></option>
                                                                 <?php
                                                                     }
                                                                 }
@@ -857,294 +932,79 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 ?>
                                             </select>
                                         </div>
+
                                         <div class="col-md-2">
-                                            <button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
+                                            <button class="col-md-2 add_document remove_university_btn" type="button" style="display:none;" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
                                         </div>
                                     </div>
-                                <?php }
-                                ?>
+                                <?php } ?>
+                            </div>
+                            <div class="university_approval_message_action">
+                            </div>
 
-                            <?php } else { ?>
-                                <div class="col-md-12 university_div university_div_  bg-warning">
-                                    <div class="col-md-2">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <input type="hidden" name="id">
-                                        <select class="selectpicker from-control" data-width="100%" onchange="university_shortlisting_dropdown()" name="select_university" id="select_university" data-live-search="true">
-                                            <option value="">Select University</option>
-                                            <?php
-                                            if (!empty($university_drop_down)) {
-                                                foreach ($university_drop_down as $country_name => $university_list) {
-                                                    if (!empty($university_list)) {
-                                            ?>
-                                                        <optgroup label="<?= $country_name ?>" id="<?= $country_name ?>">
-                                                            <?php
-                                                            foreach ($university_list as $university_name) {
-                                                                if (!empty($university_name)) {
-                                                            ?>
-                                                                    <option data-country-name="<?= $country_name ?>" value='<?= $university_name ?>'><?= $university_name ?></option>
-                                                            <?php
-                                                                }
-                                                            }
-                                                            ?>
-                                                        </optgroup>
-                                            <?php
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-md-2">
-                                        <button class="col-md-2 add_document remove_university_btn" type="button" style="display:none;" onclick="remove_university_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button>
-                                    </div>
-                                </div>
-                            <?php } ?>
-                        </div>
-                        <div class="university_approval_message_action">
-                        </div>
-
-                    <?php } else if ($track["show_div_name"] == "application_div") {
-                        $selected_university = json_decode($admissionpreferences->university, true);
-                        $university_drop_down = [];
-                        foreach ($selected_university as $key => $university) {
-                            if (!empty($university)) {
-                                $university_drop_down[$key] = explode(",", $university);
+                        <?php } else if ($track["show_div_name"] == "application_div") {
+                            $selected_university = json_decode($admissionpreferences->university, true);
+                            $university_drop_down = [];
+                            foreach ($selected_university as $key => $university) {
+                                if (!empty($university)) {
+                                    $university_drop_down[$key] = explode(",", $university);
+                                }
                             }
-                        }
-                    ?>
-                        <form id="application-form" class="form-disabled" onsubmit=" return false;">
+                        ?>
+                            <form id="application-form" class="form-disabled" onsubmit=" return false;">
 
-                            <div class="application_div">
-                                <?php if (!empty($university_shortlisting)) {
-                                    foreach ($university_shortlisting as $key_u => $short_list) {
-                                        $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
-                                        if (!empty($selected_university_application) && $selected_university_application == 1) {
+                                <div class="application_div">
+                                    <?php if (!empty($university_shortlisting)) {
+                                        foreach ($university_shortlisting as $key_u => $short_list) {
+                                            $selected_university_application = !empty($short_list["university_status"]) ? $short_list["university_status"] : "";
+                                            if (!empty($selected_university_application) && $selected_university_application == 1) {
 
-                                            $mand = "";
-                                            $mand_re = "";
-                                            if ($short_list["primary_university"] == 1) {
-                                                $mand = '<small class="text-danger">*</small>';
-                                                $mand_re = "required required-check";
-                                            }
+                                                $mand = "";
+                                                $mand_re = "";
+                                                if ($short_list["primary_university"] == 1) {
+                                                    $mand = '<small class="text-danger">*</small>';
+                                                    $mand_re = "required required-check";
+                                                }
 
-                                ?>
-                                            <div class="col-md-12 university_div_application mt-2 d-flex">
-                                                <div class="col-md-3">
-                                                    <label>Country Name <?= $mand ?></label>
-                                                    <input type="input" name="country_<?= $short_list["id"] ?>" readonly <?= $mand_re ?> class="form-control" value="<?= $short_list["country_name"] ?>">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>University Name <?= $mand ?></label>
-                                                    <input type="hidden" name="id" value="<?= $short_list["id"] ?>">
-                                                    <input type="input" name="university_<?= $short_list["id"] ?>" class="form-control" <?= $mand_re ?> readonly value="<?= $short_list["university_name"] ?>">
-                                                </div>
-
-                                                <div class="col-md-3">
-                                                    <label>Partner Name <?= $mand ?></label>
-                                                    <?php
-                                                    $selected_value = [];
-                                                    $selected_value[] =  !empty($short_list["partner"]) ? $short_list["partner"] : '';
-                                                    if (!empty($mand)) {
-                                                        echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value, ["required" => "required", "required-check" => "required-check"]);
-                                                    } else {
-                                                        echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value);
-                                                    }
-
-                                                    ?>
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>Application Date <?= $mand ?> </label>
-                                                    <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" <?= $mand_re ?> value="<?= $short_list["application_date"] ?>">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <?php
-                                                    $file_url = !empty($short_list["application_file"]) ? $short_list["application_file"] : '';
-
-                                                    ?>
-                                                    <label>Admission Letter <?= $mand ?> </label>
-                                                    <input type="file" class="form-control" accept=".pdf,image/*" name="admission_letter_<?= $short_list["id"] ?>">
-                                                    <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
-
-                                                    <?php
-                                                    if (!empty($file_url)) { ?>
-                                                        <div class="margin-top">
-                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
-                                                        </div>
-                                                    <?php } ?>
-                                                </div>
-
-
-
-                                            </div>
-                                    <?php }
-                                    }
                                     ?>
-
-                                <?php } ?>
-                            </div>
-                        </form>
-                    <?php } else if ($track["show_div_name"] == "entrance_div") { ?>
-                        <form id="entrance-form" class="form-disabled" onsubmit=" return false;">
-                            <div class="entrance_div">
-                                <?php if (!empty($entrance_exams)) { ?>
-                                    <?php foreach ($entrance_exams as $university => $exams) { ?>
-                                        <div class="entrance_exam_university_div shadow">
-                                            <h4 class="text-left "><?= htmlspecialchars(empty($university) ? $exams[0]["m_university_name"] : $university) ?>
-                                                <?php if ($exams[0]["batch_id"] == 0) { ?>
-                                                    <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                                <?php } ?>
-                                            </h4>
-                                            <?php if (!empty($entrance_exams)) { ?>
-                                                <div class="text-right">
-                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
-                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope hide-client-type"></i> </button>
-                                                </div>
-                                            <?php } ?>
-
-                                            <?php foreach ($exams as $index_key => $exam) { ?>
-                                                <div class="row university-entrance-exam">
-                                                    <input type="hidden" name="batch_id" value="<?= $exam['batch_id'] ?>" class="form-control">
-                                                    <input type="hidden" name="client_id" value="<?= $exam['client_id'] ?>" class="form-control">
-                                                    <?php
-                                                    if ($exam['batch_id'] == 0) {
-                                                    } else { ?>
-                                                        <input type="hidden" name="exam_id" value="<?= $exam['exam_id'] ?>" class="form-control">
-                                                    <?php } ?>
-                                                    <input type="hidden" name="m_university_name" value="<?= htmlspecialchars($exam["m_university_name"]) ?>" class="form-control">
-                                                    <?php if ($exam['batch_id'] != 0) { ?>
-                                                        <div class="col-md-3">
-                                                            <label>Batch Name</label>
-                                                            <input type="text" value="<?= htmlspecialchars($exam["batch_name"]) ?>" readonly class="form-control">
-                                                        </div>
-                                                    <?php } ?>
+                                                <div class="col-md-12 university_div_application mt-2 d-flex">
                                                     <div class="col-md-3">
-                                                        <label>Exam Name</label>
+                                                        <label>Country Name <?= $mand ?></label>
+                                                        <input type="input" name="country_<?= $short_list["id"] ?>" readonly <?= $mand_re ?> class="form-control" value="<?= $short_list["country_name"] ?>">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>University Name <?= $mand ?></label>
+                                                        <input type="hidden" name="id" value="<?= $short_list["id"] ?>">
+                                                        <input type="input" name="university_<?= $short_list["id"] ?>" class="form-control" <?= $mand_re ?> readonly value="<?= $short_list["university_name"] ?>">
+                                                    </div>
 
+                                                    <div class="col-md-3">
+                                                        <label>Partner Name <?= $mand ?></label>
                                                         <?php
-                                                        if ($exam['batch_id'] == 0) {
-                                                            $get_university_exam = get_university_exam();
-                                                            array_unshift($get_university_exam, array());
-
-                                                            echo render_select('exam_id', $get_university_exam, ['id', 'name'], '', [$exam['exam_id']], [
-                                                                'data-width' => '100%',
-                                                                'data-none-selected-text' => 'Exam Name',
-                                                                'data-actions-box' => true,
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required',
-                                                            ], [], 'no-mbot', '', false, 'exam_id');  ?>
-                                                        <?php
+                                                        $selected_value = [];
+                                                        $selected_value[] =  !empty($short_list["partner"]) ? $short_list["partner"] : '';
+                                                        if (!empty($mand)) {
+                                                            echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value, ["required" => "required", "required-check" => "required-check"]);
                                                         } else {
+                                                            echo render_select('partner_' . $short_list["id"], $university_partner_names, array('id', 'name'), "", $selected_value);
+                                                        }
+
                                                         ?>
-                                                            <input type="text" value="<?= htmlspecialchars($exam["exam_name"]) ?>" <?= $exam['batch_id'] == 0 ? '' : 'readonly' ?> class="form-control">
-                                                        <?php } ?>
-                                                    </div>
-
-                                                    <div class="col-md-3">
-                                                        <label>Exam Date</label>
-                                                        <input type="date" name="exam_date" value="<?= htmlspecialchars($exam["exam_date"]) ?>" <?= $exam['batch_id'] == 0 ? '' : 'readonly' ?> class="form-control">
                                                     </div>
                                                     <div class="col-md-3">
-                                                        <label>Status</label>
-
-                                                        <select name="entrance_status" class="selectpicker form-control">
-                                                            <option value="Pending" <?= (strtolower($exam["status"]) == "pending") ? 'selected' : '' ?>>Pending</option>
-                                                            <option value="pass" <?= (strtolower($exam["status"]) == "pass") ? 'selected' : '' ?>>Pass</option>
-                                                            <option value="fail" <?= (strtolower($exam["status"]) == "fail") ? 'selected' : '' ?>>Fail</option>
-                                                            <option value="reschedule" <?= (strtolower($exam["status"]) == "reschedule") ? 'selected' : '' ?>>Re-schedule</option>
-                                                        </select>
-
-
-
+                                                        <label>Application Date <?= $mand ?> </label>
+                                                        <input type="date" class="form-control" name="date_<?= $short_list["id"] ?>" <?= $mand_re ?> value="<?= $short_list["application_date"] ?>">
                                                     </div>
-                                                    <?php if ($exam['batch_id'] == 0 && $index_key > 0) { ?>
-                                                        <div class="col-md-3"><br><button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_entrance_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button></div>
-
-                                                    <?php } ?>
-                                                </div>
-                                                <br>
-
-                                            <?php } ?>
-
-                                        </div>
-                                        <hr>
-                                    <?php } ?>
-                                <?php } else if ($admissionpreferences->primary_country == 'Georgia') { ?>
-                                    <div class="entrance_exam_university_div shadow">
-                                        <h4 class="text-left "><?= htmlspecialchars($admissionpreferences->primary_university) ?>
-
-                                            <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
-                                        </h4>
-                                        <div class="row university-entrance-exam">
-                                            <div class="col-md-3">
-                                                <input type="hidden" name="client_id" value="<?= $client_id ?>" class="form-control">
-                                                <input type="hidden" name="m_university_name" value="<?= $admissionpreferences->primary_university ?>" class="form-control">
-                                                <label>Exam Name</label>
-                                                <?php
-                                                $get_university_exam = get_university_exam();
-                                                array_unshift($get_university_exam, array());
-
-                                                echo render_select('exam_id', $get_university_exam, ['id', 'name'], '', [], [
-                                                    'data-width' => '100%',
-                                                    'data-none-selected-text' => 'Exam Name',
-                                                    'data-actions-box' => true,
-                                                    'required-check' => 'required-check',
-                                                    'required' => 'required',
-                                                ], [], 'no-mbot', '', false, 'exam_id');  ?>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label>Exam Date</label>
-                                                <input type="date" name="exam_date" value="" class="form-control">
-                                            </div>
-                                            <div class="col-md-3">
-                                                <label>Status</label>
-
-                                                <select name="entrance_status" class="selectpicker form-control">
-                                                    <option value="Pending" selected>Pending</option>
-                                                    <option value="pass">Pass</option>
-                                                    <option value="fail">Fail</option>
-                                                    <option value="reschedule">Re-schedule</option>
-                                                </select>
-
-                                            </div>
-                                        </div>
-                                        <br>
-                                    </div>
-                                <?php } ?>
-                            </div>
-
-                        </form>
-                    <?php } else if ($track["show_div_name"] == "legalization_div") { ?>
-                        <form id="legalization-form" class="form-disabled" onsubmit=" return false;">
-                            <div class="legalization_div">
-                                <?php if (!empty($legalization)) : ?>
-                                    <?php foreach ($legalization as $leg) :
-                                        $mand = "";
-                                        $mand_re = "";
-                                        if ($leg["primary_university"] == 1) {
-                                            $mand = '<small class="text-danger">*</small>';
-                                            $mand_re = "required required-check";
-                                        }
-                                    ?>
-                                        <div class="legalization-item card shadow-sm p-3 mb-3">
-                                            <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?></h4>
-                                            <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                            <?php if (!empty($leg["ministry_document_status"]) && $leg["ministry_document_status"] == 1) : ?>
-                                                <div class="row mt-2">
-                                                    <div class="col-md-6">
-                                                        <p class="form-check-label">&nbsp;</p>
-                                                        <label class="form-check-label">Ministry Order of Documents Received <?= $mand ?>
-                                                            <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-
-                                                        </label>
-                                                    </div>
-                                                    <div class="col-md-6">
-                                                        <label>MD Payment Proof <?= $mand ?> </label>
-                                                        <input type="file" class="form-control" <?= empty($leg["ministry_payment"]) ? $mand_re : "" ?> accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                    <div class="col-md-3">
                                                         <?php
-                                                        $file_url = !empty($leg["ministry_payment"]) ? $leg["ministry_payment"] : "";
+                                                        $file_url = !empty($short_list["application_file"]) ? $short_list["application_file"] : '';
+
+                                                        ?>
+                                                        <label>Admission Letter <?= $mand ?> </label>
+                                                        <input type="file" class="form-control" accept=".pdf,image/*" name="admission_letter_<?= $short_list["id"] ?>">
+                                                        <input type="hidden" class="form-control" value="<?= $file_url ?>" name="admission_letter_path_<?= $short_list["id"] ?>">
+
+                                                        <?php
                                                         if (!empty($file_url)) { ?>
                                                             <div class="margin-top">
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
@@ -1152,186 +1012,463 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             </div>
                                                         <?php } ?>
                                                     </div>
-                                                </div>
-                                            <?php else : ?>
-                                                <div class="row mt-2">
-                                                    <div class="col-md-6">
-                                                        <p class="form-check-label">&nbsp;</p>
-                                                        <label class="form-check-label">
-                                                            Contract Signed <?= $mand ?>
-                                                            <input type="checkbox" <?= !empty($leg["contract_signed"]) && $leg["contract_signed"] == 1 ? 'checked' : '' ?> class="form-check-input" <?= $mand_re ?> name="contract_signed_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
+
+
+                                                </div>
+                                        <?php }
+                                        }
+                                        ?>
+
+                                    <?php } ?>
+                                </div>
+                            </form>
+                        <?php } else if ($track["show_div_name"] == "entrance_div") { ?>
+                            <form id="entrance-form" class="form-disabled" onsubmit=" return false;">
+                                <div class="entrance_div">
+                                    <?php if (!empty($entrance_exams)) { ?>
+                                        <?php foreach ($entrance_exams as $university => $exams) { ?>
+                                            <div class="entrance_exam_university_div shadow">
+                                                <h4 class="text-left "><?= htmlspecialchars(empty($university) ? $exams[0]["m_university_name"] : $university) ?>
+                                                    <?php if ($exams[0]["batch_id"] == 0) { ?>
+                                                        <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                                    <?php } ?>
+                                                </h4>
+                                                <?php if (!empty($entrance_exams)) { ?>
+                                                    <div class="text-right">
+                                                        <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                                                        <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 2,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-envelope hide-client-type"></i> </button>
+                                                    </div>
+                                                <?php } ?>
+
+                                                <?php foreach ($exams as $index_key => $exam) { ?>
+                                                    <div class="row university-entrance-exam">
+                                                        <input type="hidden" name="batch_id" value="<?= $exam['batch_id'] ?>" class="form-control">
+                                                        <input type="hidden" name="client_id" value="<?= $exam['client_id'] ?>" class="form-control">
+                                                        <?php
+                                                        if ($exam['batch_id'] == 0) {
+                                                        } else { ?>
+                                                            <input type="hidden" name="exam_id" value="<?= $exam['exam_id'] ?>" class="form-control">
+                                                        <?php } ?>
+                                                        <input type="hidden" name="m_university_name" value="<?= htmlspecialchars($exam["m_university_name"]) ?>" class="form-control">
+                                                        <?php if ($exam['batch_id'] != 0) { ?>
+                                                            <div class="col-md-3">
+                                                                <label>Batch Name</label>
+                                                                <input type="text" value="<?= htmlspecialchars($exam["batch_name"]) ?>" readonly class="form-control">
+                                                            </div>
+                                                        <?php } ?>
+                                                        <div class="col-md-3">
+                                                            <label>Exam Name</label>
+
+                                                            <?php
+                                                            if ($exam['batch_id'] == 0) {
+                                                                $get_university_exam = get_university_exam();
+                                                                array_unshift($get_university_exam, array());
+
+                                                                echo render_select('exam_id', $get_university_exam, ['id', 'name'], '', [$exam['exam_id']], [
+                                                                    'data-width' => '100%',
+                                                                    'data-none-selected-text' => 'Exam Name',
+                                                                    'data-actions-box' => true,
+                                                                    'required-check' => 'required-check',
+                                                                    'required' => 'required',
+                                                                ], [], 'no-mbot', '', false, 'exam_id');  ?>
+                                                            <?php
+                                                            } else {
+                                                            ?>
+                                                                <input type="text" value="<?= htmlspecialchars($exam["exam_name"]) ?>" <?= $exam['batch_id'] == 0 ? '' : 'readonly' ?> class="form-control">
+                                                            <?php } ?>
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            <label>Exam Date</label>
+                                                            <input type="date" name="exam_date" value="<?= htmlspecialchars($exam["exam_date"]) ?>" <?= $exam['batch_id'] == 0 ? '' : 'readonly' ?> class="form-control">
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            <label>Status</label>
+
+                                                            <select name="entrance_status" class="selectpicker form-control">
+                                                                <option value="Pending" <?= (strtolower($exam["status"]) == "pending") ? 'selected' : '' ?>>Pending</option>
+                                                                <option value="pass" <?= (strtolower($exam["status"]) == "pass") ? 'selected' : '' ?>>Pass</option>
+                                                                <option value="fail" <?= (strtolower($exam["status"]) == "fail") ? 'selected' : '' ?>>Fail</option>
+                                                                <option value="reschedule" <?= (strtolower($exam["status"]) == "reschedule") ? 'selected' : '' ?>>Re-schedule</option>
+                                                            </select>
+
+
+
+                                                        </div>
+                                                        <?php if ($exam['batch_id'] == 0 && $index_key > 0) { ?>
+                                                            <div class="col-md-3"><br><button class="col-md-2 add_document remove_university_btn" type="button" onclick="remove_entrance_div(this)"><i class="fa fa-trash text-danger" aria-hidden="true"></i></button></div>
+
+                                                        <?php } ?>
+                                                    </div>
+                                                    <br>
+
+                                                <?php } ?>
+
+                                            </div>
+                                            <hr>
+                                        <?php } ?>
+                                    <?php } else if ($admissionpreferences->primary_country == 'Georgia') { ?>
+                                        <div class="entrance_exam_university_div shadow">
+                                            <h4 class="text-left "><?= htmlspecialchars($admissionpreferences->primary_university) ?>
+
+                                                <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" type="button" onclick="addPrimaryUniversityExamBlock(this)"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                            </h4>
+                                            <div class="row university-entrance-exam">
+                                                <div class="col-md-3">
+                                                    <input type="hidden" name="client_id" value="<?= $client_id ?>" class="form-control">
+                                                    <input type="hidden" name="m_university_name" value="<?= $admissionpreferences->primary_university ?>" class="form-control">
+                                                    <label>Exam Name</label>
+                                                    <?php
+                                                    $get_university_exam = get_university_exam();
+                                                    array_unshift($get_university_exam, array());
+
+                                                    echo render_select('exam_id', $get_university_exam, ['id', 'name'], '', [], [
+                                                        'data-width' => '100%',
+                                                        'data-none-selected-text' => 'Exam Name',
+                                                        'data-actions-box' => true,
+                                                        'required-check' => 'required-check',
+                                                        'required' => 'required',
+                                                    ], [], 'no-mbot', '', false, 'exam_id');  ?>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label>Exam Date</label>
+                                                    <input type="date" name="exam_date" value="" class="form-control">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label>Status</label>
+
+                                                    <select name="entrance_status" class="selectpicker form-control">
+                                                        <option value="Pending" selected>Pending</option>
+                                                        <option value="pass">Pass</option>
+                                                        <option value="fail">Fail</option>
+                                                        <option value="reschedule">Re-schedule</option>
+                                                    </select>
+
+                                                </div>
+                                            </div>
+                                            <br>
+                                        </div>
+                                    <?php } ?>
+                                </div>
+
+                            </form>
+                        <?php } else if ($track["show_div_name"] == "legalization_div") { ?>
+                            <form id="legalization-form" class="form-disabled" onsubmit=" return false;">
+                                <div class="legalization_div">
+                                    <?php if (!empty($legalization)) : ?>
+                                        <?php foreach ($legalization as $leg) :
+                                            $mand = "";
+                                            $mand_re = "";
+                                            if ($leg["primary_university"] == 1) {
+                                                $mand = '<small class="text-danger">*</small>';
+                                                $mand_re = "required required-check";
+                                            }
+                                        ?>
+                                            <div class="legalization-item card shadow-sm p-3 mb-3">
+                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?></h4>
+                                                <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                <?php if (!empty($leg["ministry_document_status"]) && $leg["ministry_document_status"] == 1) : ?>
+                                                    <div class="row mt-2">
+                                                        <div class="col-md-6">
+                                                            <p class="form-check-label">&nbsp;</p>
+                                                            <label class="form-check-label">Ministry Order of Documents Received <?= $mand ?>
+                                                                <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                            </label>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label>MD Payment Proof <?= $mand ?> </label>
+                                                            <input type="file" class="form-control" <?= empty($leg["ministry_payment"]) ? $mand_re : "" ?> accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <?php
+                                                            $file_url = !empty($leg["ministry_payment"]) ? $leg["ministry_payment"] : "";
+                                                            if (!empty($file_url)) { ?>
+                                                                <div class="margin-top">
+                                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                </div>
+                                                            <?php } ?>
+                                                        </div>
+                                                    </div>
+                                                <?php else : ?>
+                                                    <div class="row mt-2">
+                                                        <div class="col-md-6">
+                                                            <p class="form-check-label">&nbsp;</p>
+                                                            <label class="form-check-label">
+                                                                Contract Signed <?= $mand ?>
+                                                                <input type="checkbox" <?= !empty($leg["contract_signed"]) && $leg["contract_signed"] == 1 ? 'checked' : '' ?> class="form-check-input" <?= $mand_re ?> name="contract_signed_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else : ?>
+                                        <p class="text-muted">No legalizations available.</p>
+                                    <?php endif; ?>
+                                </div>
+
+
+                            </form>
+                        <?php } else if ($track["show_div_name"] == "fees_deposite_div") {  ?>
+                            <form id="fees-deposite-form" class="form-disabled" onsubmit="return false;">
+                                <div class="fees_deposite_div">
+                                    <?php if (!empty($legalization)) : ?>
+                                        <?php foreach ($legalization as $leg) :
+                                            $mand = "";
+                                            $mand_re = "";
+                                            if ($leg["primary_university"] == 1) {
+                                                $mand = '<small class="text-danger">*</small>';
+                                                $mand_re = "required required-check";
+                                            }
+                                            $file_url_payment = !empty($leg["fees_deposite_slip"]) ? $leg["fees_deposite_slip"] : "";
+                                            $file_url_university_payment = !empty($leg["university_fees_payment_slip"]) ? $leg["university_fees_payment_slip"] : "";
+                                        ?>
+                                            <div class="feesDeposite-item card shadow-sm p-3 mb-3">
+                                                <h4 class="university-name">
+                                                    <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
+                                                </h4>
+                                                <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                <div class="row mt-2">
+                                                    <div class="col-md-3">
+                                                        <label>Date of Payment <?= $mand ?></label>
+                                                        <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["fees_deposite_date"]) ? $leg["fees_deposite_date"] : '' ?>" name="date_of_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label>Payment Proof <?= $mand ?></label>
+                                                        <input type="file" <?= empty($file_url_payment) ? $mand_re : '' ?> class="form-control" accept=".pdf,image/*" name="payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                        <?php if (!empty($file_url_payment)) { ?>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_payment) ?>');"></i>&nbsp;
+                                                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_payment) ?>', '_blank');"></i>
+                                                            </div>
+                                                        <?php } ?>
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label>Payment Amount <?= $mand ?></label>
+                                                        <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label>University Payment Receipt </label>
+                                                        <input type="file" <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" accept=".pdf,image/*" name="university_payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                        <?php if (!empty($file_url_university_payment)) { ?>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_university_payment) ?>');"></i>&nbsp;
+                                                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_university_payment) ?>', '_blank');"></i>
+                                                            </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else : ?>
+                                        <p class="text-muted">No Fees available.</p>
+                                    <?php endif; ?>
+                                </div>
+                            </form>
+
+                        <?php } else if ($track["show_div_name"] == "invitation_div") {  ?>
+                            <form id="invitation-form" class="form-disabled" onsubmit="return false;">
+
+                                <div class="invitation_div">
+                                    <?php if (!empty($legalization)) : ?>
+                                        <?php foreach ($legalization as $leg) :
+                                            $mand = "";
+                                            $mand_re = "";
+
+                                            $file_url = !empty($leg["invitation_letter"]) ? $leg["invitation_letter"] : '';
+                                            if ($leg["primary_university"] == 1) {
+                                                $mand = '<small class="text-danger">*</small>';
+                                                $mand_re = "required required-check";
+                                            }
+                                        ?>
+                                            <div class="invitation-item card shadow-sm p-3 mb-3">
+                                                <h4 class="university-name">
+                                                    <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
+
+                                                </h4>
+                                                <div class="text-right">
+                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                                                    <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
+                                                </div>
+                                                <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                <div class="row mt-2">
+                                                    <div class="col-md-3">
+                                                        <label>Date of Receiving <?= $mand ?></label>
+                                                        <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["invitation_receiving_date"]) ? $leg["invitation_receiving_date"] : '' ?>" name="invitation_receiving_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                    </div>
+
+                                                    <div class="col-md-3">
+                                                        <label>Invitation Letter Upload <?= $mand ?></label>
+                                                        <input type="file" <?= !empty($file_url) ? '' : $mand_re ?> class="form-control" accept=".pdf,image/*" name="invitation_letter_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                        <?php
+                                                        if (!empty($file_url)) { ?>
+                                                            <div class="margin-top">
+                                                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                            </div>
+                                                        <?php } ?>
+                                                    </div>
+                                                    <?php if (!empty($leg["telex_status"]) && $leg["telex_status"] == 1) { ?>
+                                                        <div class="col-md-3">
+                                                            <label>Telex No. <?= $mand ?></label>
+                                                            <input type="text" <?= $mand_re ?> class="form-control" name="telex_no_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["telex_no"]) ? $leg["telex_no"] : '' ?>">
+                                                        </div>
+                                                    <?php } ?>
+
+                                                    <div class="col-md-3">
+                                                        <label>Entry Date </label>
+                                                        <input type="date" class="form-control" name="entry_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["entry_date"]) ? $leg["entry_date"] : '' ?>">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else : ?>
+                                        <p class="text-muted">No Fees available.</p>
+                                    <?php endif; ?>
+                                </div>
+                            </form>
+                        <?php } else if ($track["show_div_name"] == "3_payment") {
+                        ?>
+                            <form id="3-payment-form" class="form-disabled" onsubmit="return false;">
+
+                                <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" class="form-check-input" required name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
+                            </form>
+                        <?php
+
+                        } else if ($track["show_div_name"] == "visa_div") { ?>
+                            <form id="visa-form" class="form-disabled" onsubmit="return false;">
+
+                                <div class="visa_div">
+
+                                    <div id="visa-details" class="visa-details row">
+                                        <?php if (!empty($visa_details)) {
+                                            foreach ($visa_details as $key => $visa) {
+                                                $visa_id = $visa["id"];
+                                                $file_url = !empty($visa["file"]) ? $visa["file"] : '';
+
+                                        ?>
+                                                <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
+                                                    <?php if ($key > 0 || ($key > 0 && is_admin())) { ?>
+                                                        <div class="text-right">
+                                                            <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
+                                                        </div>
+                                                    <?php } ?>
+                                                    <?php echo render_input('id', '', $visa["id"], 'hidden'); ?>
+
+                                                    <div class="d-flex">
+                                                        <div class="col-md-4">
+                                                            <label>Visa Vendor <small class='text-danger'>*</small></label>
+                                                            <?php
+                                                            array_unshift($visa_vendors, array());
+                                                            echo render_select('visa_vendor_' . $visa_id, $visa_vendors, ['id', 'name'], '', [$visa["vendor_id"]], [
+                                                                'data-width' => '100%',
+                                                                'data-none-selected-text' => 'Vendor',
+                                                                'data-actions-box' => true,
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required',
+                                                            ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label>Courier Date <small class='text-danger'>*</small></label>
+                                                            <?php echo render_input('visa_date_' . $visa_id, '', $visa["courier_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label>Courier Type <small class='text-danger'>*</small></label>
+                                                            <?php
+                                                            array_unshift($courier_type, array());
+                                                            echo render_select('visa_courier_type_' . $visa_id, $courier_type, ['id', 'name'], '', [$visa["courier_type"]], [
+                                                                'data-width' => '100%',
+                                                                'data-none-selected-text' => 'Courier Type',
+                                                                'data-actions-box' => true,
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required',
+                                                            ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex visa-payment-details">
+                                                        <div class="col-md-4">
+                                                            <label>Payment Date <small class='text-danger'>*</small></label>
+                                                            <?php echo render_input('visa_payment_date_' . $visa_id, '',  $visa["payment_date"], 'date', [
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required'
+                                                            ]); ?>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label>Cost <small class='text-danger'>*</small></label>
+                                                            <?php echo render_input('visa_cost_' . $visa_id, '',  !empty($visa["cost"]) ? $visa["cost"] : '', 'number', [
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required'
+                                                            ]); ?>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label>Payment Mode <small class='text-danger'>*</small></label>
+                                                            <?php
+                                                            array_unshift($payment_mode, array());
+                                                            echo render_select('visa_payment_mode_' . $visa_id, $payment_mode, ['id', 'name'], '', [$visa["payment_mode"]], [
+                                                                'data-width' => '100%',
+                                                                'data-none-selected-text' => 'Payment Mode',
+                                                                'data-actions-box' => true,
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required',
+                                                            ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex visa-receving-details">
+                                                        <div class="col-md-4">
+                                                            <label>Visa Received <small class='text-danger'>*</small></label>
+                                                            <?php echo render_input('visa_receiving_date_' . $visa_id, '',  $visa["receiving_date"], 'date', [
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required'
+                                                            ]); ?>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label>Visa Document <small class='text-danger'>*</small></label>
+                                                            <?php
+                                                            $re = !empty($file_url) ? 'false' : 'true';
+                                                            echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url, "required" => $re]); ?>
+                                                            <?php
+                                                            if (!empty($file_url)) { ?>
+                                                                <div class="margin-top">
+                                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                </div>
+                                                            <?php } ?>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label>Visa Entry Date <small class='text-danger'>*</small></label>
+                                                            <?php echo render_input('visa_entry_date_' . $visa_id, '',  $visa["entry_date"], 'date', [
+                                                                'required-check' => 'required-check',
+                                                                'required' => 'required'
+                                                            ]); ?>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-12 text-right">
+                                                        <label class="form-check-label">Visa Rejected
+
+                                                            <input type="checkbox" class="form-check-input"
+                                                                <?= ($visa["status"] && $visa["status"] == 4) ? 'checked' : '' ?>
+                                                                name="visa_rejected_<?= $visa_id ?>"
+                                                                id="visa_rejected_<?= $visa_id ?>">
                                                         </label>
                                                     </div>
                                                 </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php else : ?>
-                                    <p class="text-muted">No legalizations available.</p>
-                                <?php endif; ?>
-                            </div>
-
-
-                        </form>
-                    <?php } else if ($track["show_div_name"] == "fees_deposite_div") {  ?>
-                        <form id="fees-deposite-form" class="form-disabled" onsubmit="return false;">
-                            <div class="fees_deposite_div">
-                                <?php if (!empty($legalization)) : ?>
-                                    <?php foreach ($legalization as $leg) :
-                                        $mand = "";
-                                        $mand_re = "";
-                                        if ($leg["primary_university"] == 1) {
-                                            $mand = '<small class="text-danger">*</small>';
-                                            $mand_re = "required required-check";
-                                        }
-                                        $file_url_payment = !empty($leg["fees_deposite_slip"]) ? $leg["fees_deposite_slip"] : "";
-                                        $file_url_university_payment = !empty($leg["university_fees_payment_slip"]) ? $leg["university_fees_payment_slip"] : "";
-                                    ?>
-                                        <div class="feesDeposite-item card shadow-sm p-3 mb-3">
-                                            <h4 class="university-name">
-                                                <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
-                                            </h4>
-                                            <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-
-                                            <div class="row mt-2">
-                                                <div class="col-md-3">
-                                                    <label>Date of Payment <?= $mand ?></label>
-                                                    <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["fees_deposite_date"]) ? $leg["fees_deposite_date"] : '' ?>" name="date_of_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                </div>
-
-                                                <div class="col-md-3">
-                                                    <label>Payment Proof <?= $mand ?></label>
-                                                    <input type="file" <?= empty($file_url_payment) ? $mand_re : '' ?> class="form-control" accept=".pdf,image/*" name="payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                    <?php if (!empty($file_url_payment)) { ?>
-                                                        <div class="margin-top">
-                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_payment) ?>');"></i>&nbsp;
-                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_payment) ?>', '_blank');"></i>
-                                                        </div>
-                                                    <?php } ?>
-                                                </div>
-
-                                                <div class="col-md-3">
-                                                    <label>Payment Amount <?= $mand ?></label>
-                                                    <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
-                                                </div>
-                                                <div class="col-md-3">
-                                                    <label>University Payment Receipt </label>
-                                                    <input type="file" <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" accept=".pdf,image/*" name="university_payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-
-                                                    <?php if (!empty($file_url_university_payment)) { ?>
-                                                        <div class="margin-top">
-                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_university_payment) ?>');"></i>&nbsp;
-                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_university_payment) ?>', '_blank');"></i>
-                                                        </div>
-                                                    <?php } ?>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php else : ?>
-                                    <p class="text-muted">No Fees available.</p>
-                                <?php endif; ?>
-                            </div>
-                        </form>
-
-                    <?php } else if ($track["show_div_name"] == "invitation_div") {  ?>
-                        <form id="invitation-form" class="form-disabled" onsubmit="return false;">
-
-                            <div class="invitation_div">
-                                <?php if (!empty($legalization)) : ?>
-                                    <?php foreach ($legalization as $leg) :
-                                        $mand = "";
-                                        $mand_re = "";
-
-                                        $file_url = !empty($leg["invitation_letter"]) ? $leg["invitation_letter"] : '';
-                                        if ($leg["primary_university"] == 1) {
-                                            $mand = '<small class="text-danger">*</small>';
-                                            $mand_re = "required required-check";
-                                        }
-                                    ?>
-                                        <div class="invitation-item card shadow-sm p-3 mb-3">
-                                            <h4 class="university-name">
-                                                <?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?>
-
-                                            </h4>
-                                            <div class="text-right">
-                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 4,'','<?= htmlspecialchars($university) ?>')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
-                                                <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(<?= !empty($client_id) ? $client_id : '' ?>, 3,<?= $leg['invitation_letter'] ?>)"><i class="fa fa-envelope hide-client-type"></i></button>
-                                            </div>
-                                            <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-
-                                            <div class="row mt-2">
-                                                <div class="col-md-3">
-                                                    <label>Date of Receiving <?= $mand ?></label>
-                                                    <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["invitation_receiving_date"]) ? $leg["invitation_receiving_date"] : '' ?>" name="invitation_receiving_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                </div>
-
-                                                <div class="col-md-3">
-                                                    <label>Invitation Letter Upload <?= $mand ?></label>
-                                                    <input type="file" <?= !empty($file_url) ? '' : $mand_re ?> class="form-control" accept=".pdf,image/*" name="invitation_letter_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-
-                                                    <?php
-                                                    if (!empty($file_url)) { ?>
-                                                        <div class="margin-top">
-                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
-                                                        </div>
-                                                    <?php } ?>
-                                                </div>
-                                                <?php if (!empty($leg["telex_status"]) && $leg["telex_status"] == 1) { ?>
-                                                    <div class="col-md-3">
-                                                        <label>Telex No. <?= $mand ?></label>
-                                                        <input type="text" <?= $mand_re ?> class="form-control" name="telex_no_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["telex_no"]) ? $leg["telex_no"] : '' ?>">
-                                                    </div>
-                                                <?php } ?>
-
-                                                <div class="col-md-3">
-                                                    <label>Entry Date </label>
-                                                    <input type="date" class="form-control" name="entry_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>" value="<?= !empty($leg["entry_date"]) ? $leg["entry_date"] : '' ?>">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endforeach; ?>
-                                <?php else : ?>
-                                    <p class="text-muted">No Fees available.</p>
-                                <?php endif; ?>
-                            </div>
-                        </form>
-                    <?php } else if ($track["show_div_name"] == "3_payment") {
-                    ?>
-                        <form id="3-payment-form" class="form-disabled" onsubmit="return false;">
-
-                            <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" class="form-check-input" required name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
-                        </form>
-                    <?php
-
-                    } else if ($track["show_div_name"] == "visa_div") { ?>
-                        <form id="visa-form" class="form-disabled" onsubmit="return false;">
-
-                            <div class="visa_div">
-
-                                <div id="visa-details" class="visa-details row">
-                                    <?php if (!empty($visa_details)) {
-                                        foreach ($visa_details as $key => $visa) {
-                                            $visa_id = $visa["id"];
-                                            $file_url = !empty($visa["file"]) ? $visa["file"] : '';
-
-                                    ?>
-                                            <div class="col-md-12 visa_div_application <?= $visa['status'] == 4 ? 'visa-rejected-div' : '' ?>">
-                                                <?php if ($key > 0 || ($key > 0 && is_admin())) { ?>
-                                                    <div class="text-right">
-                                                        <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,<?= $visa_id ?>)"></i>
-                                                    </div>
-                                                <?php } ?>
-                                                <?php echo render_input('id', '', $visa["id"], 'hidden'); ?>
-
+                                            <?php }
+                                        } else { ?>
+                                            <div class="col-md-12 visa_div_application">
                                                 <div class="d-flex">
                                                     <div class="col-md-4">
                                                         <label>Visa Vendor <small class='text-danger'>*</small></label>
                                                         <?php
                                                         array_unshift($visa_vendors, array());
-                                                        echo render_select('visa_vendor_' . $visa_id, $visa_vendors, ['id', 'name'], '', [$visa["vendor_id"]], [
+                                                        echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
                                                             'data-width' => '100%',
                                                             'data-none-selected-text' => 'Vendor',
                                                             'data-actions-box' => true,
@@ -1341,13 +1478,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label>Courier Date <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_date_' . $visa_id, '', $visa["courier_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                                        <?php echo render_input('visa_date', '', '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label>Courier Type <small class='text-danger'>*</small></label>
                                                         <?php
                                                         array_unshift($courier_type, array());
-                                                        echo render_select('visa_courier_type_' . $visa_id, $courier_type, ['id', 'name'], '', [$visa["courier_type"]], [
+                                                        echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [], [
                                                             'data-width' => '100%',
                                                             'data-none-selected-text' => 'Courier Type',
                                                             'data-actions-box' => true,
@@ -1359,14 +1496,14 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <div class="d-flex visa-payment-details">
                                                     <div class="col-md-4">
                                                         <label>Payment Date <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_payment_date_' . $visa_id, '',  $visa["payment_date"], 'date', [
+                                                        <?php echo render_input('visa_payment_date', '', '', 'date', [
                                                             'required-check' => 'required-check',
                                                             'required' => 'required'
                                                         ]); ?>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label>Cost <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_cost_' . $visa_id, '',  !empty($visa["cost"]) ? $visa["cost"] : '', 'number', [
+                                                        <?php echo render_input('visa_cost', '', '', 'number', [
                                                             'required-check' => 'required-check',
                                                             'required' => 'required'
                                                         ]); ?>
@@ -1375,7 +1512,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         <label>Payment Mode <small class='text-danger'>*</small></label>
                                                         <?php
                                                         array_unshift($payment_mode, array());
-                                                        echo render_select('visa_payment_mode_' . $visa_id, $payment_mode, ['id', 'name'], '', [$visa["payment_mode"]], [
+                                                        echo render_select('visa_payment_mode', $payment_mode, ['id', 'name'], '', [], [
                                                             'data-width' => '100%',
                                                             'data-none-selected-text' => 'Payment Mode',
                                                             'data-actions-box' => true,
@@ -1387,240 +1524,142 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <div class="d-flex visa-receving-details">
                                                     <div class="col-md-4">
                                                         <label>Visa Received <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_receiving_date_' . $visa_id, '',  $visa["receiving_date"], 'date', [
+                                                        <?php echo render_input('visa_receiving_date', '', '', 'date', [
                                                             'required-check' => 'required-check',
                                                             'required' => 'required'
                                                         ]); ?>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label>Visa Document <small class='text-danger'>*</small></label>
-                                                        <?php
-                                                        $re = !empty($file_url) ? 'false' : 'true';
-                                                        echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url, "required" => $re]); ?>
-                                                        <?php
-                                                        if (!empty($file_url)) { ?>
-                                                            <div class="margin-top">
-                                                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
-                                                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
-                                                            </div>
-                                                        <?php } ?>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Visa Entry Date <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_entry_date_' . $visa_id, '',  $visa["entry_date"], 'date', [
+                                                        <?php echo render_input('visa_file', '', '', 'file', [
                                                             'required-check' => 'required-check',
                                                             'required' => 'required'
                                                         ]); ?>
                                                     </div>
+                                                    <div class="col-md-4">
+                                                        <label>Visa Entry Date <small class='text-danger'>*</small></label>
+                                                        <?php echo render_input('visa_entry_date', '', '', 'date', [
+                                                            'required-check' => 'required-check',
+                                                            'required' => 'required'
+                                                        ]); ?>
+                                                    </div>
+
                                                 </div>
                                                 <div class="col-md-12 text-right">
                                                     <label class="form-check-label">Visa Rejected
-
-                                                        <input type="checkbox" class="form-check-input"
-                                                            <?= ($visa["status"] && $visa["status"] == 4) ? 'checked' : '' ?>
-                                                            name="visa_rejected_<?= $visa_id ?>"
-                                                            id="visa_rejected_<?= $visa_id ?>">
+                                                        <input type="checkbox" class="form-check-input" name="visa_rejected" id="visa_rejected">
                                                     </label>
                                                 </div>
                                             </div>
-                                        <?php }
-                                    } else { ?>
-                                        <div class="col-md-12 visa_div_application">
-                                            <div class="d-flex">
-                                                <div class="col-md-4">
-                                                    <label>Visa Vendor <small class='text-danger'>*</small></label>
-                                                    <?php
-                                                    array_unshift($visa_vendors, array());
-                                                    echo render_select('visa_vendor', $visa_vendors, ['id', 'name'], '', [], [
-                                                        'data-width' => '100%',
-                                                        'data-none-selected-text' => 'Vendor',
-                                                        'data-actions-box' => true,
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required',
-                                                    ], [], 'no-mbot', '', false, 'visa_vendor'); ?>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label>Courier Date <small class='text-danger'>*</small></label>
-                                                    <?php echo render_input('visa_date', '', '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label>Courier Type <small class='text-danger'>*</small></label>
-                                                    <?php
-                                                    array_unshift($courier_type, array());
-                                                    echo render_select('visa_courier_type', $courier_type, ['id', 'name'], '', [], [
-                                                        'data-width' => '100%',
-                                                        'data-none-selected-text' => 'Courier Type',
-                                                        'data-actions-box' => true,
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required',
-                                                    ], [], 'no-mbot', '', false, 'visa_courier_type'); ?>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex visa-payment-details">
-                                                <div class="col-md-4">
-                                                    <label>Payment Date <small class='text-danger'>*</small></label>
-                                                    <?php echo render_input('visa_payment_date', '', '', 'date', [
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required'
-                                                    ]); ?>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label>Cost <small class='text-danger'>*</small></label>
-                                                    <?php echo render_input('visa_cost', '', '', 'number', [
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required'
-                                                    ]); ?>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label>Payment Mode <small class='text-danger'>*</small></label>
-                                                    <?php
-                                                    array_unshift($payment_mode, array());
-                                                    echo render_select('visa_payment_mode', $payment_mode, ['id', 'name'], '', [], [
-                                                        'data-width' => '100%',
-                                                        'data-none-selected-text' => 'Payment Mode',
-                                                        'data-actions-box' => true,
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required',
-                                                    ], [], 'no-mbot', '', false, 'visa_payment_mode'); ?>
-                                                </div>
-                                            </div>
-                                            <div class="d-flex visa-receving-details">
-                                                <div class="col-md-4">
-                                                    <label>Visa Received <small class='text-danger'>*</small></label>
-                                                    <?php echo render_input('visa_receiving_date', '', '', 'date', [
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required'
-                                                    ]); ?>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label>Visa Document <small class='text-danger'>*</small></label>
-                                                    <?php echo render_input('visa_file', '', '', 'file', [
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required'
-                                                    ]); ?>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label>Visa Entry Date <small class='text-danger'>*</small></label>
-                                                    <?php echo render_input('visa_entry_date', '', '', 'date', [
-                                                        'required-check' => 'required-check',
-                                                        'required' => 'required'
-                                                    ]); ?>
-                                                </div>
+                                        <?php } ?>
+                                    </div>
+                                    <div id="visa-details-add" class="visa-details-add row">
+                                    </div>
 
-                                            </div>
-                                            <div class="col-md-12 text-right">
-                                                <label class="form-check-label">Visa Rejected
-                                                    <input type="checkbox" class="form-check-input" name="visa_rejected" id="visa_rejected">
-                                                </label>
-                                            </div>
-                                        </div>
-                                    <?php } ?>
-                                </div>
-                                <div id="visa-details-add" class="visa-details-add row">
-                                </div>
-
-                            </div>
-                        </form>
-                        <?php } else if ($track["show_div_name"] == "sc_div") {
-
-                        if (!has_permission($track['check_permission'], '', 'edit')) {
-
-                            echo ' <div class="col-md-12"><h3>You do not have permission to continue to the next step.</h3></div>';
-                        } else {
-                        ?>
-                            <form id="final-form" class="form-disabled" onsubmit="return false;">
-                                <div class="col-md-12">
-                                    <?php $mand_re = "required required-check"; ?>
-                                    <?php if (!empty($client->sc_100) && $client->sc_100 == 1) { ?>
-                                        <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->primary_country ?></b> has been completed successfully.</h4>
-                                    <?php } ?>
-                                    <p class="form-check-label">&nbsp;</p>
-                                    <label class="form-check-label">
-                                        <?= $mand ?> Received 100% service charge clearance.
-                                        <input type="checkbox"
-                                            id="sc_100" class="form-check-input <?= $mand_re ?>"
-                                            name="sc_100"
-                                            <?= !has_permission($track['check_permission'], '', 'edit') ? 'disabled' : '' ?>
-                                            <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'checked' : '' ?>>
-                                    </label>
                                 </div>
                             </form>
+                            <?php } else if ($track["show_div_name"] == "sc_div") {
+
+                            if (!has_permission($track['check_permission'], '', 'edit')) {
+
+                                echo ' <div class="col-md-12"><h3>You do not have permission to continue to the next step.</h3></div>';
+                            } else {
+                            ?>
+                                <form id="final-form" class="form-disabled" onsubmit="return false;">
+                                    <div class="col-md-12">
+                                        <?php $mand_re = "required required-check"; ?>
+                                        <?php if (!empty($client->sc_100) && $client->sc_100 == 1) { ?>
+                                            <h4 class="text-success text-center">Congratulations! Your application to <b><?= $admissionpreferences->primary_university ?>, <?= $admissionpreferences->primary_country ?></b> has been completed successfully.</h4>
+                                        <?php } ?>
+                                        <p class="form-check-label">&nbsp;</p>
+                                        <label class="form-check-label">
+                                            <?= $mand ?> Received 100% service charge clearance.
+                                            <input type="checkbox"
+                                                id="sc_100" class="form-check-input <?= $mand_re ?>"
+                                                name="sc_100"
+                                                <?= !has_permission($track['check_permission'], '', 'edit') ? 'disabled' : '' ?>
+                                                <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'checked' : '' ?>>
+                                        </label>
+                                    </div>
+                                </form>
 
 
 
-                    <?php }
-                    } ?>
-                    <?php if ($k > 0 && $k < 5) { ?>
-                        <p class='col-12 margin-top'>
-                            <label class="margin-top">Secondary University Remarks</label>
-                            <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
+                        <?php }
+                        } ?>
+                        <?php if ($k > 0 && $k < 5) { ?>
+                            <p class='col-12 margin-top'>
+                                <label class="margin-top">Secondary University Remarks</label>
+                                <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
 
-                        </p>
-                    <?php } ?>
-
-                    <?php if ($k > 0) { ?>
-                        <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
-                    <?php } ?>
-                    <?php
-                    if (($k + 1) < count($applicant_tracker)) { ?>
-                        <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="<?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'Next' : 'Save & Next' ?>" />
-                        <?php if (!empty($track['save']) && $track['save'] == 1) { ?>
-                            <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
+                            </p>
                         <?php } ?>
 
-                        <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
-                            <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
+                        <?php if ($k > 0) { ?>
+                            <input type="button" name="previous" class="previous text-center action-button-previous" value="Previous" />
                         <?php } ?>
-                        <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
-                            <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
-                        <?php } ?>
-                    <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
-                        <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
-                    <?php } else {
-                    ?>
-                        <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>
-                            <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
-                        <?php } ?>
-                    <?php
-                    } ?>
+                        <?php
+                        if (($k + 1) < count($applicant_tracker)) { ?>
+                            <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="<?= !empty($client->sc_100) && $client->sc_100 == 1 ? 'Next' : 'Save & Next' ?>" />
+                            <?php if (!empty($track['save']) && $track['save'] == 1) { ?>
+                                <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-save-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,'','',1)" value="Save" />
+                            <?php } ?>
 
-                    <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['id'] == 2) { ?>
-                        <div class="col-lg-5 pull-right">
-                            <div class="form-group">
-                                <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
-                                <select class="form-control selectpicker" required-check name="primary_university" id="primary_university" required>
-                                    <option value="">Select University</option>
-                                    <?php
-                                    $university_p = json_decode($admissionpreferences->university, true);
+                            <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
+                                <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
+                            <?php } ?>
+                            <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
+                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
+                            <?php } ?>
+                        <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
+                            <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
+                        <?php } else {
+                        ?>
+                            <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>
+                                <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
+                            <?php } ?>
+                        <?php
+                        } ?>
 
-                                    if (!empty($university_p)) {
-                                        foreach ($university_p as $key => $country) {
-                                            $universities = array_filter(explode(",", $country)); // Remove empty values
-                                            foreach ($universities as $uni) { ?>
-                                                <option data-country="<?= $key ?>" <?= ($admissionpreferences->primary_university == $uni) ? 'selected' : '' ?> value="<?= htmlspecialchars($uni) ?>"><?= htmlspecialchars($uni) ?></option>
-                                    <?php }
+                        <?php if ((is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) && !empty($track['save']) && $track['id'] == 2) { ?>
+                            <div class="col-lg-5 pull-right">
+                                <div class="form-group">
+                                    <!-- <label for="primary_university">Primary University<small class="text-danger">*</small></label> -->
+                                    <select class="form-control selectpicker" required-check name="primary_university" id="primary_university" required>
+                                        <option value="">Select University</option>
+                                        <?php
+                                        $university_p = json_decode($admissionpreferences->university, true);
+
+                                        if (!empty($university_p)) {
+                                            foreach ($university_p as $key => $country) {
+                                                $universities = array_filter(explode(",", $country)); // Remove empty values
+                                                foreach ($universities as $uni) { ?>
+                                                    <option data-country="<?= $key ?>" <?= ($admissionpreferences->primary_university == $uni) ? 'selected' : '' ?> value="<?= htmlspecialchars($uni) ?>"><?= htmlspecialchars($uni) ?></option>
+                                        <?php }
+                                            }
                                         }
-                                    }
-                                    ?>
-                                </select>
+                                        ?>
+                                    </select>
 
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-lg-4 hide">
-                            <div class="form-group">
-                                <label for="primary_university">Primary Country<small class="text-danger">*</small></label>
-                                <input type="text" class="form-control" id="primary_country" name="primary_country" value="<?= $admissionpreferences->primary_country ?>">
+                            <div class="col-lg-4 hide">
+                                <div class="form-group">
+                                    <label for="primary_university">Primary Country<small class="text-danger">*</small></label>
+                                    <input type="text" class="form-control" id="primary_country" name="primary_country" value="<?= $admissionpreferences->primary_country ?>">
+                                </div>
                             </div>
-                        </div>
-                    <?php } ?>
+                        <?php } ?>
 
-                </fieldset>
-            <?php
-            }
-            ?>
+                    </fieldset>
+                <?php
+                }
+                ?>
 
 
-        </section>
+            </section>
+
+        <?php } ?>
 
         <!-- </form> -->
 

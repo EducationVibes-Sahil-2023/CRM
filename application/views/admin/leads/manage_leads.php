@@ -898,34 +898,32 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             </div>
          </div>
       </li>
-      <?php if (is_admin()) { ?>
-         <li class="">
-            <div class="leads-filter-column">
-               <div id="leads-filter-type">
-                  <?php
-                  echo render_select(
-                     'view_form[]',
-                     $view_form,
-                     array('id', 'name'),
-                     '',
-                     '',
-                     array(
-                        'data-width' => '100%',
-                        'data-none-selected-text' => "Form Name",
-                        'multiple' => true,
-                        'data-actions-box' => true
-                     ),
-                     array(),
-                     'no-mbot',
-                     '',
-                     false,
-                     "view_form"
-                  );
-                  ?>
-               </div>
+      <li class="">
+         <div class="leads-filter-column">
+            <div id="leads-filter-type">
+               <?php
+               echo render_select(
+                  'view_form[]',
+                  $view_form,
+                  array('id', 'name'),
+                  '',
+                  '',
+                  array(
+                     'data-width' => '100%',
+                     'data-none-selected-text' => "Form Name",
+                     'multiple' => true,
+                     'data-actions-box' => true
+                  ),
+                  array(),
+                  'no-mbot',
+                  '',
+                  false,
+                  "view_form"
+               );
+               ?>
             </div>
-         </li>
-      <?php } ?>
+         </div>
+      </li>
       <li class="">
          <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>

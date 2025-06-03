@@ -64,11 +64,26 @@
 
         let phonenumber = $("input[name='mobile']").val();
         let p_phonenumber = $("input[name='fathers_mobile']").val();
+        phonenumber = formatPhoneNumber(phonenumber);
+        p_phonenumber = formatPhoneNumber(p_phonenumber);
 
-        if (p_phonenumber !== "" && phonenumber == p_phonenumber) {
-            alert_float("danger", "Parent contact number and your phone number cannot be the same.");
+        // Assuming phonenumber and p_phonenumber are already defined and cleaned
+        if (phonenumber === p_phonenumber && phonenumber !== "") {
+            alert_float("danger", "Student contact number and your parent's contact number cannot be the same.");
             hide_loader();
-            return false; // prevent form submission or continue
+            return false;
+        }
+
+        if (phonenumber.length !== 10) {
+            alert_float("danger", "Student contact number must be exactly 10 digits.");
+            hide_loader();
+            return false;
+        }
+
+        if (p_phonenumber.length !== 10) {
+            alert_float("danger", "Parent's contact number must be exactly 10 digits.");
+            hide_loader();
+            return false;
         }
 
 
@@ -197,7 +212,9 @@
         });
 
 
-if(client_type!=1){        $(".hide-client-type").parent("button.btn").hide(); }
+        if (client_type != 1) {
+            $(".hide-client-type").parent("button.btn").hide();
+        }
 
 
         // Pre-fill with the nearest allowed month on page load
@@ -735,18 +752,18 @@ if(client_type!=1){        $(".hide-client-type").parent("button.btn").hide(); }
         let formData = new FormData(document.getElementById('welcome-information-form')); // Correct way to initialize FormData
         if (!form_status) {
             if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
-            $(".disabled-form-welcome").attr("disabled");
+                $(".disabled-form-welcome").attr("disabled");
             }
             appValidateForm($("#welcome-information-form"), additional_fields);
             hide_loader();
             return false;
         }
         if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {
-         $(".disabled-form-welcome").attr("disabled");
+            $(".disabled-form-welcome").attr("disabled");
         }
 
 
-       
+
 
         // Append CSRF token and client ID
         formData.append("csrf_token_name", csrfData.hash);

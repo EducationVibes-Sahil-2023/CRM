@@ -43,7 +43,6 @@ if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
 
 
 $applicant_documents =  get_clients_documents($client_id);
-
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
 
@@ -344,7 +343,7 @@ if ($lead_type_status == 2) {
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Mobile Number <small class="text-danger">*</small></label>
-                                                <input class="form-control check-phonenumber" <?= $read_only ?> type="tel" class="form-group" required-check required placeholder="Mobile Number" name="mobile" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                <input class="form-control check-phonenumber check-phonenumber-validation" <?= $read_only ?> type="tel" class="form-group" required-check required placeholder="Mobile Number" name="mobile" pattern="\d{10}" onkeypress="formatPhoneNumber(this.value)" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                                     maxlength="10" value='<?php echo (isset($basicdetails)) ? $basicdetails->mobile : $contact->phonenumber; ?>'>
                                             </div>
                                         </div>
@@ -394,7 +393,7 @@ if ($lead_type_status == 2) {
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Contact <small class="text-danger">*</small></label>
-                                                <input class="form-control check-phonenumber" required required-check type="tel" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                <input class="form-control check-phonenumber check-phonenumber-validation" onkeypress="formatPhoneNumber(this.value)" required required-check type="tel" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                                     maxlength="10" class="form-group" placeholder="Parents Contact" name="fathers_mobile" value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_mobile : ''; ?>'>
                                             </div>
                                         </div>
@@ -1232,7 +1231,7 @@ if ($lead_type_status == 2) {
                                 <div class="row">
                                     <div class="col-lg-4">
                                         <label class="form-check-label">Registration Amount Cash Deposite
-                                            <input type="checkbox" <?= !empty($final_sumbit)?'disabled':''?>  value="<?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 1 : 0 ?>" class="form-check-input <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" onclick="check_registration_cash_status(this,'hide-show-regi')" <?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 'checked' : '' ?> name="registration_slip_cash_status" <?= !empty($client->registration_slip_cash_status && $client->registration_slip_cash_status == 1) ? 'checked' : '' ?>>
+                                            <input type="checkbox" <?= !empty($final_sumbit) ? 'disabled' : '' ?> value="<?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 1 : 0 ?>" class="form-check-input <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" onclick="check_registration_cash_status(this,'hide-show-regi')" <?= !empty($client->registration_slip_cash_status) && $client->registration_slip_cash_status == 1 ? 'checked' : '' ?> name="registration_slip_cash_status" <?= !empty($client->registration_slip_cash_status && $client->registration_slip_cash_status == 1) ? 'checked' : '' ?>>
 
                                         </label>
                                     </div>
@@ -1241,7 +1240,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Date of payment <small class="text-danger">*</small></label>
-                                            <input <?= $text_danger_mbbs_required ?> <?= !empty($final_sumbit)?'disabled':''?>  class="form-control <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" type="date" name="date_of_payment" value="<?= $client->date_of_payment ?>">
+                                            <input <?= $text_danger_mbbs_required ?> <?= !empty($final_sumbit) ? 'disabled' : '' ?> class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" type="date" name="date_of_payment" value="<?= $client->date_of_payment ?>">
                                         </div>
                                     </div>
                                     <div class="col-lg-2">
@@ -1253,7 +1252,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Payment received from <small class="text-danger">*</small></label>
-                                            <input class="form-control <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" <?= !empty($final_sumbit)?'disabled':''?>   type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
+                                            <input class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" <?= !empty($final_sumbit) ? 'disabled' : '' ?> type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
                                         </div>
                                     </div>
 
@@ -1293,7 +1292,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2 hide-show-regi" style="display: <?= !empty($client->registration_slip_cash_status) ? 'none' : 'block' ?>;">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Registration Proof <small class="text-danger">*</small></label>
-                                            <input <?= !empty($final_sumbit)?'disabled':''?>  <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control <?= !empty($final_sumbit)?'disabled-form-welcome':''?>" type="file" accept=".pdf, image/*" name="registration_slip" value="">
+                                            <input <?= !empty($final_sumbit) ? 'disabled' : '' ?> <?= !empty($client->registration_slip) ? '' : $text_danger_mbbs_required ?> class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" type="file" accept=".pdf, image/*" name="registration_slip" value="">
                                             <?php
                                             if (!empty($client->registration_slip)) {
                                             ?>
@@ -1309,7 +1308,7 @@ if ($lead_type_status == 2) {
                                 </div>
                                 <div class="row row">
                                     <div class="col-md-12 ">
-                                        <button type="submit"  onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                        <button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right">Save changes</button>
                                     </div>
                                 </div>
                             </form>
@@ -1562,7 +1561,35 @@ if ($lead_type_status == 2) {
         $(".check-phonenumber").on("input", function() {
             this.value = this.value.replace(/\D/g, '').substring(0, 10);
         });
+
     });
+
+
+    function formatPhoneNumber(input) {
+        console.log("phonenumber validation");
+        // Remove all non-digit characters
+        const digits = input.replace(/\D/g, '');
+
+        // Remove country code if present (e.g., leading '91' or '0' for Indian numbers)
+        let trimmed = digits;
+
+        // If it starts with '91' and total is more than 10 digits, trim it
+        if (trimmed.length > 10 && trimmed.startsWith('91')) {
+            trimmed = trimmed.slice(2);
+        }
+
+        // If it starts with '0' and total is more than 10 digits, trim it
+        if (trimmed.length > 10 && trimmed.startsWith('0')) {
+            trimmed = trimmed.slice(1);
+        }
+
+        // Final check: return only if it's exactly 10 digits
+        if (trimmed.length === 10) {
+            return trimmed;
+        } else {
+            return null; // Invalid number
+        }
+    }
 
 
     function show_country_dropdown(select_segment) {
