@@ -122,7 +122,12 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'applicant_status ON ' . db_prefix() . 'applicant_status.id=' . db_prefix() . 'clients.active ',
     ' LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
 AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')',
-    'LEFT JOIN ' . db_prefix() . 'staff ON ' . db_prefix() . 'leads.assigned=' . db_prefix() . 'staff.staffid ',
+  'LEFT JOIN ' . db_prefix() . 'staff 
+ ON ' . db_prefix() . 'leads.assigned = ' . db_prefix() . 'staff.staffid 
+ OR (
+ FIND_IN_SET(' . db_prefix() . 'clients.agent_id,' . db_prefix() . 'staff.evp_partners)
+     AND ' . db_prefix() . 'staff.staffid = ' . get_staff_user_id() . '
+ )',
     'LEFT JOIN ' . db_prefix() . 'leads_status ON ' . db_prefix() . 'leads_status.id = ' . db_prefix() . 'leads.status',
     'LEFT JOIN ' . db_prefix() . 'leads_type ON ' . db_prefix() . 'leads_type.id = ' . db_prefix() . 'leads.type',
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
@@ -206,15 +211,59 @@ if ($role == 3) {
     $sids = implode(",", $idsarr);
 }
 
-if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
-    array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned = ' . get_staff_user_id() . ')');
+// if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
+//     array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned = ' . get_staff_user_id() . ')');
+// }
+
+// if (!is_admin()) {
+//     if (has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
+//         array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned IN ( ' . $sids . '))');
+//     }
+// }
+
+// If user does NOT have 'view' permission and is not in post-sales
+$current_staff_id = get_staff_user_id();
+
+if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) && $post_sales->post_sales != 1) {
+    $where[] = 'AND (
+        ' . db_prefix() . 'clients.userid IN (
+            SELECT customer_id 
+            FROM ' . db_prefix() . 'customer_admins 
+            WHERE staff_id = ' . $current_staff_id . '
+        ) 
+        OR ' . db_prefix() . 'leads.assigned = ' . $current_staff_id . '
+        OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
+    )';
 }
 
 if (!is_admin()) {
-    if (has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
-        array_push($where, 'AND (' . db_prefix() . 'clients.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')  or ' . db_prefix() . 'leads.assigned IN ( ' . $sids . '))');
+    if (has_permission('customers', '', 'view') && isset($post_sales->post_sales) && $post_sales->post_sales != 1) {
+        if (!empty($sids) && is_array($sids)) {
+            $escaped_sids = array_map('intval', $sids);
+
+            $where[] = 'AND (
+                ' . db_prefix() . 'clients.userid IN (
+                    SELECT customer_id 
+                    FROM ' . db_prefix() . 'customer_admins 
+                    WHERE staff_id = ' . $current_staff_id . '
+                )
+                OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')
+                OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
+            )';
+        } else {
+            $where[] = 'AND (
+                ' . db_prefix() . 'clients.userid IN (
+                    SELECT customer_id 
+                    FROM ' . db_prefix() . 'customer_admins 
+                    WHERE staff_id = ' . $current_staff_id . '
+                )
+                OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
+            )';
+        }
     }
 }
+
+
 
 if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
     array_push($where, 'AND  ' . db_prefix() . 'leads.assigned IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ')');
@@ -229,9 +278,9 @@ if ($this->ci->input->post('lead_type')) {
     array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
 }
 
-if (empty($this->ci->input->post('ev_partner_filter'))) {
-array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
-}
+// if (empty($this->ci->input->post('ev_partner_filter'))) {
+// array_push($where, ' OR ( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
+// }
 
 if ($this->ci->input->post('apostille_status')) {
     $apostille_status = array_map(function ($status) {

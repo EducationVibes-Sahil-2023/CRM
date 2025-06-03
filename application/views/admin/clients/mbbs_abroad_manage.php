@@ -46,7 +46,7 @@ $client_type = [
 
 ];
 array_unshift($office_location, array());
-array_unshift($ev_partner, array());
+// array_unshift($ev_partner, array());
 
 
 ?>
