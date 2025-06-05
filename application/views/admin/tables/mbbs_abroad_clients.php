@@ -200,7 +200,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
 
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 $post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
-
+$sids =[];
 if ($role == 3) {
     $sid = get_staff_user_id();
     $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
@@ -208,7 +208,7 @@ if ($role == 3) {
     $this->ci->db->initialize();
 
     $idsarr = array_column($teamids, 'staffid');
-    $sids = implode(",", $idsarr);
+    $sids =  $idsarr;
 }
 
 // if (!has_permission('customers', '', 'view') && $post_sales->post_sales != 1) {
@@ -250,16 +250,20 @@ if (!is_admin()) {
                 OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')
                 OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
             )';
-        } else {
+        }
+        else {
+
             $where[] = 'AND (
                 ' . db_prefix() . 'clients.userid IN (
                     SELECT customer_id 
                     FROM ' . db_prefix() . 'customer_admins 
                     WHERE staff_id = ' . $current_staff_id . '
                 )
+                
                 OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
             )';
-        }
+            }
+        
     }
 }
 

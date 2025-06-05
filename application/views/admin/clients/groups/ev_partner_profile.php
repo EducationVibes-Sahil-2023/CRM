@@ -477,7 +477,7 @@ if ($lead_type_status == 2) {
 									</div>
 									<div class="btn-save-fun">
 										<div class="col-md-12">
-											<button type="submit" onclick="save_basic_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
+											<button type="submit" onclick="save_basic_details(1)" class="btn btn-primary button-22 pull-right">Save changes</button>
 										</div>
 									</div>
 								</form>
@@ -1724,7 +1724,31 @@ if ($lead_type_status == 2) {
 	<?php
 	}
 	?>
+  function formatPhoneNumber(input) {
+        console.log("phonenumber validation");
+        // Remove all non-digit characters
+        const digits = input.replace(/\D/g, '');
 
+        // Remove country code if present (e.g., leading '91' or '0' for Indian numbers)
+        let trimmed = digits;
+
+        // If it starts with '91' and total is more than 10 digits, trim it
+        if (trimmed.length > 10 && trimmed.startsWith('91')) {
+            trimmed = trimmed.slice(2);
+        }
+
+        // If it starts with '0' and total is more than 10 digits, trim it
+        if (trimmed.length > 10 && trimmed.startsWith('0')) {
+            trimmed = trimmed.slice(1);
+        }
+
+        // Final check: return only if it's exactly 10 digits
+        if (trimmed.length === 10) {
+            return trimmed;
+        } else {
+            return null; // Invalid number
+        }
+    }
 
 	function updateSymbol(id) {
 		var selected = $(".currency-selector-" + id + " option:selected");
