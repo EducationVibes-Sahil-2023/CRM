@@ -87,12 +87,16 @@ class Settings extends AdminController
             $sequences = isset($_POST['sequence']) ? $_POST['sequence'] : [];
 
             // Sorting function: Moves null/blank values to the end
-            uasort($_POST["sequence"], function ($a, $b) {
-                if ($a === null || $a === '') return 1; // Move null/blank values to the end
-                if ($b === null || $b === '') return -1;
-                return $a <=> $b; // Sort in ascending order
-            });
-
+           if (!empty($_POST["sequence"])) {
+                // Sorting function: Moves null/blank values to the end
+                uasort($_POST["sequence"], function ($a, $b) {
+                    if ($a === null || $a === '') return 1; // Move null/blank values to the end
+                    if ($b === null || $b === '') return -1;
+                    return $a <=> $b; // Sort in ascending order
+                });
+            } else {
+                $_POST["sequence"] = [];
+            }
             // Reorder `column_ids` and `selected_ids` based on sorted `sequence`
             $sorted_column_ids = [];
             $sorted_selected_ids = [];

@@ -37,7 +37,7 @@
     }
 
     // student js 
-    async function save_basic_details() {
+    async function save_basic_details(status=0) {
 
         show_loader();
         var additional_fields = {};
@@ -67,6 +67,7 @@
         phonenumber = formatPhoneNumber(phonenumber);
         p_phonenumber = formatPhoneNumber(p_phonenumber);
 
+if(status == 0){
         // Assuming phonenumber and p_phonenumber are already defined and cleaned
         if (phonenumber === p_phonenumber && phonenumber !== "") {
             alert_float("danger", "Student contact number and your parent's contact number cannot be the same.");
@@ -86,6 +87,11 @@
             return false;
         }
 
+}
+else
+{
+    
+}
 
         let formData = new FormData($("#basic-information-form")[0]); // Create FormData from form
 
