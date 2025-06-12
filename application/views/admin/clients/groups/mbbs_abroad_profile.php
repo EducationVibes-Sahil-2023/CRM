@@ -382,14 +382,25 @@ if ($lead_type_status == 2) {
 
                                             </div>
                                         </div>
-                                        <div class="col-lg-3">
+                        
+                                    
+                                           <div class="col-lg-3">
+    <div class="form-group">
+        <label for="exampleInputMobileNumber">Address <small class="text-danger">*</small></label>
+        <textarea   <?= $read_only ?> name="address" class="form-control"><?php echo (isset($client)) ? $client->address : ''; ?></textarea>
+    </div>
+</div>
+
+                                     
+                                        
+                                    </div>
+                                    <div class="row">
+                                                        <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Name <small class="text-danger">*</small></label>
                                                 <input class="form-control" required required-check type="text" class="form-group" placeholder="Parents Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="row">
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Contact <small class="text-danger">*</small></label>
