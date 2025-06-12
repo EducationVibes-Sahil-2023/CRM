@@ -2142,7 +2142,7 @@ class Leads_model extends App_Model
 
 
 
-        if (has_permission('leads', $staff_id, 'view')) {
+        if (has_permission('leads', $staff_id, 'view') || has_permission('visit_leads', $staff_id, 'view_department')) {
 
             return true;
         }
