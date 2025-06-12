@@ -3540,6 +3540,7 @@ if($status== 2){                    // Check if client information is found
             $update_student_data = [];
             $update_applicant_custom_data["customers"] = [];
             $reference_name = $_POST["reference_name"];
+             $address = $_POST["address"];
             $agent_id_raw = trim($_POST["agent_id"] ?? '');
             $agent_id = trim($agent_id_raw);
             $state = trim($_POST["state"] ?? '');
@@ -3553,6 +3554,7 @@ if($status== 2){                    // Check if client information is found
             unset($_POST["files"]);
             unset($_POST["agent_id"]);
              unset($_POST["state"]);
+              unset($_POST["address"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -3636,7 +3638,7 @@ if($status== 2){                    // Check if client information is found
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
             }
 
-            if (!empty($reference_name) || !empty($state)) {
+            if (!empty($reference_name) || !empty($state) || !empty($address)) {
                 
                 $updateClientInfo=[];
                  if(!empty($reference_name)){
@@ -3644,6 +3646,9 @@ if($status== 2){                    // Check if client information is found
                  }
                 if(!empty($state)){
                 $updateClientInfo['state']=$state;
+                }
+                 if(!empty($address)){
+                $updateClientInfo['address']=$address;
                 }
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);
