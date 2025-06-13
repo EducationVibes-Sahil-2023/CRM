@@ -98,6 +98,7 @@ if (!empty($params["request_type"]) && $params["request_type"] == 1) {
                 if (has_permission('visit_leads', '', 'view_department')) {
                     $lead_type = $this->ci->db->where('staffid', $get_staff_user_id)->get(db_prefix() . 'staff')->row()->lead_type;
                     $where[] = "AND " . db_prefix() . "leads.type =" . $lead_type;
+                } else if (has_permission('visit_leads', '', 'view')) {
                 } else {
                     $_POST['assigned'][] = $get_staff_user_id;
                     $where[] = "AND " . $sTable . ".assigned IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
