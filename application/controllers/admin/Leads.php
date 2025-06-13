@@ -439,9 +439,14 @@ class Leads extends AdminController
         //     ajax_access_denied();
         // }
 
-        if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id) && !$this->leads_model->get_lead_visitor_request_exist($id)) || has_permission('visit_leads', '', 'view') || has_permission('visit_leads', '', 'view_department')) {
 
-            ajax_access_denied();
+        
+        if (has_permission('visit_leads', '', 'view') || has_permission('visit_leads', '', 'view_department')) {
+        } else {
+            if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id) && !$this->leads_model->get_lead_visitor_request_exist($id))) {
+
+                ajax_access_denied();
+            }
         }
 
 

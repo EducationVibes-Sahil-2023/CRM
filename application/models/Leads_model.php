@@ -3114,10 +3114,12 @@ class Leads_model extends App_Model
     public function get_lead_visitor_request_exist($lead_id)
     {
         $sid = get_staff_user_id();
-
+        $visit_leads_view = has_permission('visit_leads', '', 'view');
+        $visit_leads_global = has_permission('visit_leads', '', 'view_department');
         // Get reporting persons
         $query = $this->db->query('CALL GetReportingPersons(?)', array($sid));
         $teamids = $query->result_array();
+
 
 
         // Close and reinitialize DB after calling a stored procedure
@@ -3146,11 +3148,16 @@ class Leads_model extends App_Model
         $this->db->where(array("lead_id" => $lead_id));
 
         // Use where_in and or_where_in properly
-        if (!is_admin()) {
-            $this->db->group_start();
-            $this->db->where_in("created_by", $idsarr);
-            $this->db->or_where_in("assigned", $idsarr);
-            $this->db->group_end();
+
+        if ($visit_leads_view || $visit_leads_global) {
+        } else {
+            if (!is_admin()) {
+
+                $this->db->group_start();
+                $this->db->where_in("created_by", $idsarr);
+                $this->db->or_where_in("assigned", $idsarr);
+                $this->db->group_end();
+            }
         }
 
         // Fetch the result
