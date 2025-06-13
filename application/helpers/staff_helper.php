@@ -108,6 +108,7 @@ function get_available_staff_permissions($data = [])
             'name'         => _l('Leads Visit'),
             'capabilities' => [
                 'view_department' => "Department View (Global)",
+                'view' => "View (Global)",
                 'delete' => _l('permission_delete'),
             ],
         ],
