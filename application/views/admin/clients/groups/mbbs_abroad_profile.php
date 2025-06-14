@@ -964,7 +964,7 @@ if ($lead_type_status == 2) {
                                             <p>Roll No. <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'readonly' : ''; ?> class="form-group" pattern="\d{12}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                            <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="\d{12}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                                 minlength="12" maxlength="12" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
                                         </div>
 
@@ -992,7 +992,7 @@ if ($lead_type_status == 2) {
                                             <p>Marks <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2 ">
-                                            <input type="number" required-check <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'readonly' : ''; ?> class="form-control" placeholder="Marks" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+                                            <input type="number" required-check <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-control" placeholder="Marks" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 
                                             <?php
 
@@ -1001,7 +1001,7 @@ if ($lead_type_status == 2) {
                                                     if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
                                             ?>
                                                         <label class="multiple_score_label"><?= $column['name'] ?></label>
-                                                        <input required-check type="text" style="margin-top:3px" <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'disabled' : ''; ?> class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+                                                        <input required-check type="text" style="margin-top:3px" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
                                             <?php
                                                     }
@@ -1070,7 +1070,7 @@ if ($lead_type_status == 2) {
                                                 <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
                                                 <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
                                                 <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="file" name="files[<?= $doc_id ?>]" <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'readonly' : ''; ?> class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                <input type="file" name="files[<?= $doc_id ?>]" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                 <?php
                                                 if (!empty($file_url)) {
                                                 ?>

@@ -110,6 +110,7 @@ $neetResultStatus = [];
 $neetResultStatus[]["name"] = "Awaited";
 $neetResultStatus[]["name"] = "Declared";
 $neetResultStatus[]["name"] = "Not Appeared";
+$neetResultStatus[]["name"] = "Fail";
 array_unshift($neetResultStatus, array(""));
 
 ?>
@@ -966,7 +967,7 @@ if ($lead_type_status == 2) {
 
 										</div>
 
-										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Roll No. <?= $text_danger_mbbs ?></p>
 											</div>
@@ -976,7 +977,7 @@ if ($lead_type_status == 2) {
 											</div>
 
 										</div>
-										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Year <?= $text_danger_mbbs ?></p>
 											</div>
@@ -994,7 +995,7 @@ if ($lead_type_status == 2) {
 
 										</div>
 
-										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Marks <?= $text_danger_mbbs ?></p>
 											</div>
@@ -1021,7 +1022,7 @@ if ($lead_type_status == 2) {
 
 										</div>
 
-										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+										<div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
 											<div class="c1">
 												<p>Neet Status <?= $text_danger_mbbs ?></p>
 											</div>
@@ -1069,7 +1070,7 @@ if ($lead_type_status == 2) {
 											$required_attr = !empty($file_url) ? "" : $required_attr;
 										?>
 
-											<div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+											<div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
 												<div class="form-group">
 													<label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
 															&nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
