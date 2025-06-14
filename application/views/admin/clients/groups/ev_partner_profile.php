@@ -972,8 +972,8 @@ if ($lead_type_status == 2) {
 												<p>Roll No. <?= $text_danger_mbbs ?></p>
 											</div>
 											<div class="c2">
-												<input class="form-control check-phonenumber" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-													maxlength="15" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+												<input class="form-control " required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="\d{12}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+													minlength="12" maxlength="12" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
 											</div>
 
 										</div>
