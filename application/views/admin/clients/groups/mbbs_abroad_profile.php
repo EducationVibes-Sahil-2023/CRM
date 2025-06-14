@@ -102,6 +102,7 @@ $neetResultStatus = [];
 
 $neetResultStatus[]["name"] = "Awaited";
 $neetResultStatus[]["name"] = "Declared";
+$neetResultStatus[]["name"] = "Fail";
 $neetResultStatus[]["name"] = "Not Appeared";
 array_unshift($neetResultStatus, array(""));
 
@@ -382,20 +383,20 @@ if ($lead_type_status == 2) {
 
                                             </div>
                                         </div>
-                        
-                                    
-                                           <div class="col-lg-3">
-    <div class="form-group">
-        <label for="exampleInputMobileNumber">Address <small class="text-danger">*</small></label>
-        <textarea   <?= $read_only ?> name="address" class="form-control"><?php echo (isset($client)) ? $client->address : ''; ?></textarea>
-    </div>
-</div>
 
-                                     
-                                        
+
+                                        <div class="col-lg-3">
+                                            <div class="form-group">
+                                                <label for="exampleInputMobileNumber">Address <small class="text-danger">*</small></label>
+                                                <textarea <?= $read_only ?> name="address" class="form-control"><?php echo (isset($client)) ? $client->address : ''; ?></textarea>
+                                            </div>
+                                        </div>
+
+
+
                                     </div>
                                     <div class="row">
-                                                        <div class="col-lg-3">
+                                        <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber">Parent's Name <small class="text-danger">*</small></label>
                                                 <input class="form-control" required required-check type="text" class="form-group" placeholder="Parents Name" name="father_name" value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
@@ -958,17 +959,17 @@ if ($lead_type_status == 2) {
 
                                     </div>
 
-                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Roll No. <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
-                                            <input class="form-control check-phonenumber" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="\d{10}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                                maxlength="15" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
+                                            <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'readonly' : ''; ?> class="form-group" pattern="\d{12}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                                minlength="12" maxlength="12" placeholder="Enter Entrance Roll No" name="entrance_roll" value="<?= $academicdetails->entrance_roll; ?>">
                                         </div>
 
                                     </div>
-                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Year <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -980,18 +981,18 @@ if ($lead_type_status == 2) {
                                             <?php
                                             $selected = [];
                                             $selected[] = ($academicdetails->entrance_year) ? extractYear($academicdetails->entrance_year) : '';
-                                            echo render_select('entrance_year', $years_array_entrance, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check", "readonly" => "<?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'true' : 'false'; ?>"], [], "", "", "", "entrance_year");
+                                            echo render_select('entrance_year', $years_array_entrance, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check", "readonly" => "<?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status =='Fail') ? 'true' : 'false'; ?>"], [], "", "", "", "entrance_year");
                                             ?>
                                         </div>
 
                                     </div>
 
-                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Marks <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2 ">
-                                            <input type="number" required-check <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-control" placeholder="Marks" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
+                                            <input type="number" required-check <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'readonly' : ''; ?> class="form-control" placeholder="Marks" name="entrance_percentage" id="entrance_percentage" value="<?= $academicdetails->entrance_percentage; ?>">
 
                                             <?php
 
@@ -1000,7 +1001,7 @@ if ($lead_type_status == 2) {
                                                     if (!empty($entrance_data[$entrance_names[0]]["academic_type"]) && $entrance_data[$entrance_names[0]]["academic_type"] == $column["exam_type"]) {
                                             ?>
                                                         <label class="multiple_score_label"><?= $column['name'] ?></label>
-                                                        <input required-check type="text" style="margin-top:3px" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'disabled' : ''; ?> class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
+                                                        <input required-check type="text" style="margin-top:3px" <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'disabled' : ''; ?> class="form-control column_score multiple_score" placeholder="<?= $column['name'] ?>" name="score_column-<?= $column["id"] ?>" id="score_column-<?= $column["id"] ?>" value="<?= !empty($score_value[$column["id"]]["value"]) ? $score_value[$column["id"]]["value"] : '' ?>">
 
                                             <?php
                                                     }
@@ -1013,7 +1014,7 @@ if ($lead_type_status == 2) {
 
                                     </div>
 
-                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                    <div class="col-lg-3 border2 border1 hide_" style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
                                         <div class="c1">
                                             <p>Neet Status <?= $text_danger_mbbs ?></p>
                                         </div>
@@ -1061,7 +1062,7 @@ if ($lead_type_status == 2) {
                                         $required_attr = !empty($file_url) ? "" : $required_attr;
                                     ?>
 
-                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared') ? 'none' : '' ?>">
+                                        <div class="col-lg-3 border2 border1 media-files hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
                                             <div class="form-group">
                                                 <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
                                                         &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
@@ -1069,7 +1070,7 @@ if ($lead_type_status == 2) {
                                                 <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
                                                 <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
                                                 <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="file" name="files[<?= $doc_id ?>]" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                <input type="file" name="files[<?= $doc_id ?>]" <?= ($academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'readonly' : ''; ?> class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                 <?php
                                                 if (!empty($file_url)) {
                                                 ?>

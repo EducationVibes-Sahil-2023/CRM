@@ -37,7 +37,7 @@
     }
 
     // student js 
-    async function save_basic_details(status=0) {
+    async function save_basic_details(status = 0) {
 
         show_loader();
         var additional_fields = {};
@@ -67,31 +67,29 @@
         phonenumber = formatPhoneNumber(phonenumber);
         p_phonenumber = formatPhoneNumber(p_phonenumber);
 
-if(status == 0){
-        // Assuming phonenumber and p_phonenumber are already defined and cleaned
-        if (phonenumber === p_phonenumber && phonenumber !== "") {
-            alert_float("danger", "Student contact number and your parent's contact number cannot be the same.");
-            hide_loader();
-            return false;
-        }
+        if (status == 0) {
+            // Assuming phonenumber and p_phonenumber are already defined and cleaned
+            if (phonenumber === p_phonenumber && phonenumber !== "") {
+                alert_float("danger", "Student contact number and your parent's contact number cannot be the same.");
+                hide_loader();
+                return false;
+            }
 
-        if (phonenumber.length !== 10) {
-            alert_float("danger", "Student contact number must be exactly 10 digits.");
-            hide_loader();
-            return false;
-        }
+            if (phonenumber.length !== 10) {
+                alert_float("danger", "Student contact number must be exactly 10 digits.");
+                hide_loader();
+                return false;
+            }
 
-        if (p_phonenumber.length !== 10) {
-            alert_float("danger", "Parent's contact number must be exactly 10 digits.");
-            hide_loader();
-            return false;
-        }
+            if (p_phonenumber.length !== 10) {
+                alert_float("danger", "Parent's contact number must be exactly 10 digits.");
+                hide_loader();
+                return false;
+            }
 
-}
-else
-{
-    
-}
+        } else {
+
+        }
 
         let formData = new FormData($("#basic-information-form")[0]); // Create FormData from form
 
@@ -530,15 +528,15 @@ else
 
         $("#entrance_result_status").on("change", function() {
             let ers = $(this).val();
-            let isAwaitedOrNotAppeared = ers === "Awaited" || ers === "Not Appeared" || ers === "";
+            let isAwaitedOrNotAppeared = ers === "Awaited" || ers === "Not Appeared" || ers === "" || ers === "Fail";
 
             // Toggle visibility of the elements with class "hide_"
             $(".hide_").toggle(!isAwaitedOrNotAppeared); // Hide when either "Awaited" or "Not Appeared" is selected
 
-            $("input[name='entrance_roll'], input[name='entrance_year'], input[name='entrance_percentage'], input.multiple_score, #entrance_exam_div input[type='file'],select[name='neet_status']")
+            $("input[name='entrance_roll'], input[name='entrance_percentage'], input.multiple_score, #entrance_exam_div input[type='file'],select[name='neet_status'],select[name='entrance_year']")
                 .val(!isAwaitedOrNotAppeared ? "" : null)
                 .attr("required-check", !isAwaitedOrNotAppeared ? "required-check" : "");
-
+            $("#entrance_exam_div select[name='entrance_year']").val('').selectpicker("refresh");
             $("select[name='neet_status']").selectpicker('refresh');
             // Toggle multiple score inputs and labels
             $("input.multiple_score, .multiple_score_label").toggle(isAwaitedOrNotAppeared); // Show when either "Awaited" or "Not Appeared" is selected
@@ -814,6 +812,7 @@ else
             $(".tab-pane").find("input[type='file']").attr("disabled", false);
             $(".tab-pane").find("input[type='checkbox']").attr("disabled", false);
             $(".tab-pane").find("select").attr("disabled", false);
+            $(".tab-pane").find("textarea").attr("disabled", false);
             $("select").selectpicker('refresh');
             $(".tags-input-wrapper").css("pointer-events", "");
             $("#save_admission_preferences").attr("disabled", false);
@@ -834,6 +833,7 @@ else
             $(".tab-pane").find("input,select").attr("readonly", true);
             $(".tab-pane").find("input[type='file']").attr("disabled", true);
             $(".tab-pane").find("select").attr("disabled", true);
+            $(".tab-pane").find("textarea").attr("disabled", true);
             $(".tab-pane").find("input[type='checkbox']").attr("disabled", true);
             $("select").selectpicker('refresh');
             $(".btn-save-fun").hide();
@@ -863,7 +863,7 @@ else
                 if (isRequired && name) {
                     additional_fields[name] = "required";
                     if (!value) {
-                        // console.log(name);
+                        console.log(name);
                         form_status = false;
                     }
                 }
@@ -1418,6 +1418,48 @@ else
 
         } catch (error) {
             // console.error("An error occurred during university setup:", error);
+        }
+    }
+
+    function delete_documents(type, tracker_id, id) {
+        // Basic field validation before confirmation
+        if (!client_id || !tracker_id || !type || !id) {
+            alert_float("danger", "Missing required information. Please refresh the page and try again.");
+            return;
+        }
+
+        if (confirm("Are you sure you want to delete this document?")) {
+            show_loader();
+
+            let formData = new FormData();
+            formData.append("csrf_token_name", csrfData.hash);
+            formData.append("clientid", client_id);
+            formData.append("type", type);
+            formData.append("tracker_id", tracker_id);
+            formData.append("id", id);
+
+            $.ajax({
+                url: "<?php echo base_url() . 'admin/clients/delete_documents' ?>",
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                dataType: "JSON",
+                success: function(res) {
+                    hide_loader();
+                    if (res.resp_code === "RCS") {
+                        window_reload(); // Refresh the page or section
+                    } else if (res.resp_code && res.resp_desc) {
+                        alert_float("danger", res.resp_desc);
+                    } else {
+                        alert_float("danger", "Unexpected server response. Please try again.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hide_loader();
+                    alert_float("danger", "AJAX request failed. Please check your network and try again.");
+                }
+            });
         }
     }
 </script>

@@ -46,7 +46,7 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => $withNotApplicableViewOwn,
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("delete_documents" => "Delete Documents")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
@@ -108,7 +108,7 @@ function get_available_staff_permissions($data = [])
             'name'         => _l('Leads Visit'),
             'capabilities' => [
                 'view_department' => "Department View (Global)",
-                'view' => "View (Global)",
+                'view' => " View (Global)",
                 'delete' => _l('permission_delete'),
             ],
         ],

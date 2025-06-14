@@ -8,7 +8,7 @@ $applicant_status = !empty($client->tracker_id) ? $client->tracker_id : 0;
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 $university_partner_names = get_university_partner_names();
 // $documents_type =  get_documents($lead_type_status, [], 1);
-
+$delete_document_status = has_permission('customers', '', 'delete_documents');
 $documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
@@ -52,6 +52,14 @@ if (in_array(get_staff_user_id(), $staff_id)) {
 
     li.col-md-3.checkbox-select-doc.d-flex.align-items-center {
         padding: 10px 0px;
+    }
+
+    i.fa.btn.btn-xs {
+        height: 30px;
+        line-height: 20px;
+        margin-right: 3px;
+        margin-left: 3px;
+        /* margin: -1px; */
     }
 
     textarea#note_data {
@@ -672,37 +680,55 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <?php
 
 
-        if ($client_infomation->active == 4) {
+        if ($client_infomation->active == 4 || $client_infomation->active == 2) {
         ?>
-            <section>
-                <fieldset id="refund_stage">
-                    <h2 class="fs-title text-center mb-4">Refund Stage</h2>
-                    <div class="row margin-top">
+            <?php if ($client_infomation->active == 4) { ?>
+                <section>
+                    <fieldset id="refund_stage">
+                        <h2 class="fs-title text-center mb-4">Refund Stage</h2>
+                        <div class="row margin-top">
 
-                        <!-- Refund Date -->
-                        <div class="col-md-4 mb-3 margin-top ">
-                            <label class=" mb-2 margin-top"><b>Refund Date</b></label>
-                            <div><?= $client_infomation->refund_payment_date ?></div>
-                        </div>
-
-                        <!-- Refund Payment Proof -->
-                        <div class="col-md-4 mb-3 margin-top">
-                            <label class=" mb-2 margin-top"><b>Refund Payment Proof</b></label>
-                            <div>
-                                <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() . $client_infomation->refund_payment_proof ?>');"></i>&nbsp;
-                                <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() . $client_infomation->refund_payment_proof ?>', '_blank');"></i>
+                            <!-- Refund Date -->
+                            <div class="col-md-4 mb-3 margin-top ">
+                                <label class=" mb-2 margin-top"><b>Refund Date</b></label>
+                                <div><?= $client_infomation->refund_payment_date ?></div>
                             </div>
-                        </div>
 
-                        <!-- Comment -->
-                        <div class="col-md-4 mb-3 margin-top">
-                            <label class=" mb-2 margin-top"><b>Comment</b></label>
-                            <div><?= $client_infomation->canceled_comment ?></div>
-                        </div>
+                            <!-- Refund Payment Proof -->
+                            <div class="col-md-4 mb-3 margin-top">
+                                <label class=" mb-2 margin-top"><b>Refund Payment Proof</b></label>
+                                <div>
+                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url() . $client_infomation->refund_payment_proof ?>');"></i>&nbsp;
+                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url() . $client_infomation->refund_payment_proof ?>', '_blank');"></i>
+                                </div>
+                            </div>
 
-                    </div>
-                </fieldset>
-            </section>
+                            <!-- Comment -->
+                            <div class="col-md-4 mb-3 margin-top">
+                                <label class=" mb-2 margin-top"><b>Comment</b></label>
+                                <div><?= $client_infomation->canceled_comment ?></div>
+                            </div>
+
+                        </div>
+                    </fieldset>
+                </section>
+            <?php } ?>
+
+            <?php if ($client_infomation->active == 2) { ?>
+                <section>
+                    <fieldset id="refund_stage">
+                        <h2 class="fs-title text-center mb-4">Cancel Stage</h2>
+                        <div class="row margin-top">
+
+                            <div class="col-md-12 margin-top">
+                                <label class=" mb-2 margin-top"><b>Comment</b></label>
+                                <div><?= $client_infomation->canceled_comment ?></div>
+                            </div>
+
+                        </div>
+                    </fieldset>
+                </section>
+            <?php } ?>
 
         <?php
         } else {
@@ -805,8 +831,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         <?php if (!empty($file_url)) : ?>
                                                             <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                             <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
-                                                            <?php if (is_admin()) { ?>
-                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>)"><i class="fa fa-trash"></i></button>&nbsp;
+                                                            <?php if ($delete_document_status) { ?>
+                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
                                                             <?php } ?>
 
                                                             <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
@@ -1009,6 +1035,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <div class="margin-top">
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                                 <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                <?php if ($delete_document_status) { ?>
+                                                                    <button class="btn-xs btn btn-danger" onclick="delete_documents(1,<?= $track['id'] ?>,<?= $short_list['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                <?php } ?>
                                                             </div>
                                                         <?php } ?>
                                                     </div>
@@ -1186,6 +1215,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 <div class="margin-top">
                                                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                                     <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                    <?php if ($delete_document_status) { ?>
+                                                                        <button class="btn-xs btn btn-danger" onclick="delete_documents(2,<?= $track['id'] ?>,<?= $leg['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                    <?php } ?>
                                                                 </div>
                                                             <?php } ?>
                                                         </div>
@@ -1244,6 +1276,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <div class="margin-top">
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_payment) ?>');"></i>&nbsp;
                                                                 <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_payment) ?>', '_blank');"></i>
+                                                                <?php if ($delete_document_status) { ?>
+                                                                    <button class="btn-xs btn btn-danger" onclick="delete_documents(3,<?= $track['id'] ?>,<?= $leg['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                <?php } ?>
                                                             </div>
                                                         <?php } ?>
                                                     </div>
@@ -1260,6 +1295,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <div class="margin-top">
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_university_payment) ?>');"></i>&nbsp;
                                                                 <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_university_payment) ?>', '_blank');"></i>
+                                                                <?php if ($delete_document_status) { ?>
+                                                                    <button class="btn-xs btn btn-danger" onclick="delete_documents(4,<?= $track['id'] ?>,<?= $leg['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                <?php } ?>
                                                             </div>
                                                         <?php } ?>
                                                     </div>
@@ -1313,6 +1351,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <div class="margin-top">
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                                 <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                <?php if ($delete_document_status) { ?>
+                                                                    <button class="btn-xs btn btn-danger" onclick="delete_documents(5,<?= $track['id'] ?>,<?= $leg['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                <?php } ?>
                                                             </div>
                                                         <?php } ?>
                                                     </div>
@@ -1439,6 +1480,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 <div class="margin-top">
                                                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                                     <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                    <?php if ($delete_document_status) { ?>
+                                                                        <button class="btn-xs btn btn-danger" onclick="delete_documents(6,<?= $track['id'] ?>,<?= $visa['id'] ?>)"><i class="fa fa-trash"></i></button>
+                                                                    <?php } ?>
                                                                 </div>
                                                             <?php } ?>
                                                         </div>
@@ -1708,6 +1752,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }, 500);
 
     }
+    var delete_document_status = <?= $delete_document_status ?>;
     var admissionpreferences_freeze = 0;
     var base_url = "<?= base_url() ?>";
     //jQuery time
@@ -2235,7 +2280,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
 
                 if (id == 2) {
-                    set_application(response);
+                    set_application(response, id);
                 }
                 if (id == 3 && response.entrance_exams !== undefined) {
                     $(".entrance_div").html('');
@@ -2251,7 +2296,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     }
                 }
                 if (id == 4 && response.legalization !== undefined) {
-                    createLegalization(response.legalization);
+                    createLegalization(response.legalization, id);
                 }
                 if (id == 5 && response.fees_deposite !== undefined) {
                     createFeesDeposite(response.fees_deposite);
@@ -2260,7 +2305,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     createInvitationLetter(response.invitation);
                 }
                 if (response.visa_details !== undefined) {
-                    set_visa_section(response.visa_details);
+                    set_visa_section(response.visa_details, id);
                 }
 
 
@@ -2549,7 +2594,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     }
 
 
-    function createLegalization(legalizationData) {
+    function createLegalization(legalizationData, tracker_id) {
         let legalizationContainer = $(".legalization_div"); // Target container
 
         legalizationContainer.html('');
@@ -2579,7 +2624,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     let file = leg.ministry_payment;
                     if (file != "") {
                         media_view = `<div class='margin-top'><i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${base_url}${file}');"></i>&nbsp;
-                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url}${file}', '_blank');"></i></div>`;
+                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${base_url}${file}', '_blank');"></i>`;
+
+                        if (delete_document_status) {
+                            media_view += ` <button class="btn-xs btn btn-danger" onclick="delete_documents(1,${tracker_id},${leg.id})"><i class="fa fa-trash"></i></button>`;
+                        }
+                        media_view += `</div>`;
                     }
                     html += `
                     <div class="row mt-2">
@@ -2623,7 +2673,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }
     }
 
-    function createFeesDeposite(legalization) {
+    function createFeesDeposite(legalization, tracker_id) {
         let feesDepositeDiv = $(".fees_deposite_div");
         feesDepositeDiv.html(""); // Clear existing content
 
@@ -2634,7 +2684,17 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 let base_url = "<?= base_url() ?>";
                 let file_url_payment = leg.fees_deposite_slip ? base_url + leg.fees_deposite_slip : "";
                 let file_url_university_payment = leg.university_fees_payment_slip ? base_url + leg.university_fees_payment_slip : "";
+                let delete_pay = '';
 
+                let payment_delete = "";
+                if (delete_document_status) {
+                    payment_delete = '<button class="btn-xs btn btn-danger" onclick="delete_documents(3,${tracker_id})"><i class="fa fa-trash"></i></button>';
+                }
+
+                let univer_payment_delete = "";
+                if (delete_document_status) {
+                    univer_payment_delete = `<button class="btn-xs btn btn-danger" onclick="delete_documents(3,${tracker_id},${leg.id})"><i class="fa fa-trash"></i></button>`;
+                }
                 let itemHtml = `
                 <div class="feesDeposite-item card shadow-sm p-3 mb-3">
                     <h4 class="university-name">${$("<div>").text(leg.university_name).html()}</h4>
@@ -2653,6 +2713,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <div class="margin-top">
                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_payment}');"></i>&nbsp;
                                     <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file_url_payment}', '_blank');"></i>
+                                    ${payment_delete}
                                 </div>` : ""}
                         </div>
                         <div class="col-md-3">
@@ -2666,6 +2727,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <div class="margin-top">
                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_university_payment}');"></i>&nbsp;
                                     <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file_url_university_payment}', '_blank');"></i>
+        ${univer_payment_delete}
                                 </div>` : ""}
                         </div>
                     </div>
@@ -2678,9 +2740,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }
     }
 
-    function createInvitationLetter(legalization) {
+    function createInvitationLetter(legalization, tracker_id) {
         let container = $(".invitation_div");
         container.empty(); // Clear previous content
+
+
+
         if (legalization.length > 0) {
             legalization.forEach(leg => {
                 let mand = leg.primary_university == 1 ? '<small class="text-danger">*</small>' : "";
@@ -2693,6 +2758,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     </div>
                 ` :
                     "";
+
+                let invitation_letter = "";
+                if (delete_document_status) {
+                    invitation_letter = `<button class="btn-xs btn btn-danger" onclick="delete_documents(5,${tracker_id},${leg.id})"><i class="fa fa-trash"></i></button>`;
+                }
+
                 let file_url_university_payment = leg.invitation_letter ? leg.invitation_letter : "";
                 let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
                 let card = `
@@ -2717,6 +2788,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <div class="margin-top">
                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_university_payment}');"></i>&nbsp;
                                     <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file_url_university_payment}', '_blank');"></i>
+                                    ${invitation_letter}
                                 </div>` : ""}
                         </div>
 
@@ -3012,7 +3084,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     }
 
 
-    function set_application(update_university_status) {
+    function set_application(update_university_status, tracker_id) {
         let ids = update_university_status.ids;
 
         // Update existing university divs with new IDs
@@ -3042,7 +3114,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             let media_view = "";
             if (file != "") {
                 media_view = `<div class='margin-top'><i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file}');"></i>&nbsp;
-                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file}', '_blank');"></i></div>`;
+                                                        <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${file}', '_blank');"></i>`;
+                if (delete_document_status) {
+                    media_view += ` <button class="btn-xs btn btn-danger" onclick="delete_documents(1,${tracker_id},${university.id})"><i class="fa fa-trash"></i></button>`;
+                }
+
+                media_view += `</div>`;
             }
             html = `<div class="row university_div_application mt-2 d-flex">
         <div class="col-md-3">
@@ -3303,7 +3380,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     const courier_type = <?= json_encode($courier_type, true) ?>;
     const payment_mode = <?= json_encode($payment_mode, true) ?>;
 
-    function set_visa_section(visa_data = [], create = 0) {
+    function set_visa_section(visa_data = [], create = 0, tracker_id = "") {
         let container = document.getElementById('visa-details');
         if (create === 0) {
             container.innerHTML = ''; // Clear existing content
@@ -3336,8 +3413,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 media_view = `
                 <div class='margin-top'>
                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${visa.file}');"></i>&nbsp;
-                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${visa.file}', '_blank');"></i>
-                </div>`;
+                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('${visa.file}', '_blank');"></i>`;
+
+                if (delete_document_status) {
+                    media_view += `<button class="btn-xs btn btn-danger" onclick="delete_documents(6,${tracker_id},${visa.id})"><i class="fa fa-trash"></i></button>`;
+                }
+
+                media_view += `</div>`;
             }
             let delete_ = ``;
             if ((index > 0 && visa.id != "") || (index == 0 && <?= is_admin() ? 1 : 0 ?> == 1)) {
