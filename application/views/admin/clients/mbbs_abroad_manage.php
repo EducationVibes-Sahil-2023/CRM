@@ -40,7 +40,6 @@ $yes_no_status = [
 ];
 
 $client_type = [
-   ["id" => "", "name" => ""],
    ["id" => "1", "name" => "EV"],
    ["id" => "2", "name" => "EVP"],
 

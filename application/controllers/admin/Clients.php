@@ -240,7 +240,7 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id,1);
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
@@ -2135,6 +2135,15 @@ class Clients extends AdminController
                     $this->db->update(db_prefix() . 'client_documents', array("data" => json_encode($already_data, true)));
                     $rows_affected = $this->db->affected_rows();
                     if ($rows_affected > 0) {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => DOCUMENT,
+                            "applicant_sub_status" => DOCUMENT_APPROVAL_PENDING,
+                        ];
+                        if (!empty($update_client_data)) {
+                            $this->db->where("userid", $client_id);
+                            $this->db->update(db_prefix() . 'clients', $update_client_data);
+                        }
                         applicant_last_update($client_id);
                         $data['resp_code'] = 'RCS';
                         $data['resp_desc'] = "Document delete successfully";
@@ -2161,33 +2170,33 @@ class Clients extends AdminController
                     // if (!empty($client->email)) {
                     //     send_mail_template('Applicant_document_reject', $client->email, $client_id, get_staff_user_id(), get_staff_user_id(), $doc_id);
                     // }
-                    
-                       // Fetch client information by client ID
+
+                    // Fetch client information by client ID
                     $clientInformation = $this->clients_model->get($client_id);
-if($status== 2){                    // Check if client information is found
-                    if ($clientInformation && isset($clientInformation->addedfrom)) {
+                    if ($status == 2) {                    // Check if client information is found
+                        if ($clientInformation && isset($clientInformation->addedfrom)) {
 
-                        // Fetch staff details using client user ID
-                        $staffDetails = $this->staff_model->get($clientInformation->addedfrom);
-                        // Check if staff details and staff email are valid
-                        if ($staffDetails && !empty($staffDetails->email)) {
+                            // Fetch staff details using client user ID
+                            $staffDetails = $this->staff_model->get($clientInformation->addedfrom);
+                            // Check if staff details and staff email are valid
+                            if ($staffDetails && !empty($staffDetails->email)) {
 
-                            // Send rejection email using the template
-                            send_mail_template(
-                                'Applicant_document_reject',
-                                $staffDetails->email,
-                                $client_id,
-                                get_staff_user_id(),
-                                get_staff_user_id(),
-                                $doc_id
-                            );
+                                // Send rejection email using the template
+                                send_mail_template(
+                                    'Applicant_document_reject',
+                                    $staffDetails->email,
+                                    $client_id,
+                                    get_staff_user_id(),
+                                    get_staff_user_id(),
+                                    $doc_id
+                                );
+                            } else {
+                                log_message('error', 'Staff details not found or email missing for client ID: ' . $client_id);
+                            }
                         } else {
-                            log_message('error', 'Staff details not found or email missing for client ID: ' . $client_id);
+                            log_message('error', 'Client information not found for client ID: ' . $client_id);
                         }
-                    } else {
-                        log_message('error', 'Client information not found for client ID: ' . $client_id);
                     }
-}
                 }
 
                 $update = $this->db->where("id", $check_->id);
@@ -3540,7 +3549,7 @@ if($status== 2){                    // Check if client information is found
             $update_student_data = [];
             $update_applicant_custom_data["customers"] = [];
             $reference_name = $_POST["reference_name"];
-             $address = $_POST["address"];
+            $address = $_POST["address"];
             $agent_id_raw = trim($_POST["agent_id"] ?? '');
             $agent_id = trim($agent_id_raw);
             $state = trim($_POST["state"] ?? '');
@@ -3553,8 +3562,8 @@ if($status== 2){                    // Check if client information is found
             unset($_POST["reference_name"]);
             unset($_POST["files"]);
             unset($_POST["agent_id"]);
-             unset($_POST["state"]);
-              unset($_POST["address"]);
+            unset($_POST["state"]);
+            unset($_POST["address"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -3572,10 +3581,9 @@ if($status== 2){                    // Check if client information is found
 
                 // Check if unique_agent_id already exists
                 $this->db->where('unique_agent_id', $unique_agent_id);
-                
-                if(!empty($client_id))
-                {
-                     $this->db->where('userid!=', $client_id);
+
+                if (!empty($client_id)) {
+                    $this->db->where('userid!=', $client_id);
                 }
                 $exists = $this->db->get(db_prefix() . 'clients')->row();
 
@@ -3591,12 +3599,10 @@ if($status== 2){                    // Check if client information is found
                     $client_data = ["active" => 1, "datecreated" => date('Y-m-d H:i:s'), "addedfrom" => get_staff_user_id(), "applicant_status" => 0, "applicant_stage" => 1, "applicant_sub_status" => 1, "tracker_id" => 0, "client_type" => 2, "agent_id" => $agent_id, "unique_agent_id" => $unique_agent_id];
                     $this->db->insert(db_prefix() . 'clients', $client_data);
                     $client_id = $this->db->insert_id();
-                }
-                else
-                {
-                    $client_data =["agent_id"=>$agent_id];
-                    $this->db->where("userid",$client_id);
-                     $this->db->update(db_prefix() . 'clients', $client_data);
+                } else {
+                    $client_data = ["agent_id" => $agent_id];
+                    $this->db->where("userid", $client_id);
+                    $this->db->update(db_prefix() . 'clients', $client_data);
                 }
             }
 
@@ -3624,8 +3630,8 @@ if($status== 2){                    // Check if client information is found
 
             if (!empty($check_client->id)) {
                 $update_student_data["updated_at"] = date('Y-m-d H:i:s');
-               
-                
+
+
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'basic_details', $update_student_data);
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Basic Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
@@ -3639,22 +3645,22 @@ if($status== 2){                    // Check if client information is found
             }
 
             if (!empty($reference_name) || !empty($state) || !empty($address)) {
-                
-                $updateClientInfo=[];
-                 if(!empty($reference_name)){
-                $updateClientInfo['reference_name']=$reference_name;
-                 }
-                if(!empty($state)){
-                $updateClientInfo['state']=$state;
+
+                $updateClientInfo = [];
+                if (!empty($reference_name)) {
+                    $updateClientInfo['reference_name'] = $reference_name;
                 }
-                 if(!empty($address)){
-                $updateClientInfo['address']=$address;
+                if (!empty($state)) {
+                    $updateClientInfo['state'] = $state;
+                }
+                if (!empty($address)) {
+                    $updateClientInfo['address'] = $address;
                 }
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);
-                 if(!empty($reference_name)){
-                $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
-                 }
+                if (!empty($reference_name)) {
+                    $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Refrence Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                }
             }
 
 
@@ -4676,7 +4682,7 @@ if($status== 2){                    // Check if client information is found
 
                         // If partner or application date exists AND application_file exists → RECEIVED
                         if (
-                            (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date']!="0000-00-00"))
+                            (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date'] != "0000-00-00"))
                             && !empty($check_primary_university_exist['application_file'])
                         ) {
                             $this->db->where("userid", $client_id);
@@ -4926,13 +4932,13 @@ if($status== 2){                    // Check if client information is found
                     "applicant_stage"  => ADMISSION,
                     "applicant_sub_status" => ADMISSION_LETTER_PENDING
                 ]);
-                
-                
-       
+
+
+
 
                 // If partner or application date exists AND application_file is empty → APPLY
                 if (
-                    (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date']!="0000-00-00"))
+                    (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date'] != "0000-00-00"))
                     && empty($check_primary_university_exist['application_file'])
                 ) {
                     $this->db->where("userid", $client_id);
@@ -4945,7 +4951,7 @@ if($status== 2){                    // Check if client information is found
 
                 // If partner or application date exists AND application_file exists → RECEIVED
                 if (
-                    (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date']!="0000-00-00"))
+                    (!empty($check_primary_university_exist['partner']) || (!empty($check_primary_university_exist['application_date']) && $check_primary_university_exist['application_date'] != "0000-00-00"))
                     && !empty($check_primary_university_exist['application_file'])
                 ) {
                     $this->db->where("userid", $client_id);
@@ -6371,5 +6377,159 @@ if($status== 2){                    // Check if client information is found
             ]);
             exit;
         }
+    }
+
+    public function delete_documents()
+    {
+        // try {
+        $data = $this->input->post();
+
+        if (empty($data["clientid"]) || empty($data["tracker_id"]) || $data["id"] || $data["type"]) {
+            return $this->json_response('ERR', 'Missing required data');
+        }
+
+        $staff_id = get_staff_user_id();
+        $timestamp = date('Y-m-d H:i:s');
+        $shortlisting_tbl = db_prefix() . "client_university_shortlisting";
+        $client_id = $data["clientid"];
+        $tracker_id = $data["tracker_id"];
+        $update_client_data = [];
+        switch ((int)$data["type"]) {
+            case 1:
+                if (empty($data["id"])) {
+                    return $this->json_response('ERR', 'Missing shortlisting ID');
+                }
+                $this->db->update($shortlisting_tbl, [
+                    "application_file" => "",
+                    "updated_by" => $staff_id,
+                    "updated_date" => $timestamp
+                ], ['id' => $data["id"]]);
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage"  => ADMISSION,
+                    "applicant_sub_status" => ADMISSION_LETTER_APPLY
+                ];
+                break;
+
+            case 2:
+                if (empty($data["id"])) {
+                    return $this->json_response('ERR', 'Missing shortlisting ID');
+                }
+                $this->db->update($shortlisting_tbl, [
+                    "ministry_payment" => "",
+                    "ministry_payment_date" => "",
+                    "updated_by" => $staff_id,
+                    "updated_date" => $timestamp
+                ], ['id' => $data["id"]]);
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => LEGALIZATION,
+                    "applicant_sub_status" => LEGALIZATION_PENDING,
+                ];
+                break;
+
+            case 3:
+                if (empty($data["id"])) {
+                    return $this->json_response('ERR', 'Missing shortlisting ID');
+                }
+                $this->db->update($shortlisting_tbl, [
+                    "fees_deposite_slip" => "",
+                    "updated_by" => $staff_id,
+                    "updated_date" => $timestamp
+                ], ['id' => $data["id"]]);
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => FEES_DEPOSITE,
+                    "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                ];
+                break;
+
+            case 4:
+                if (empty($data["id"])) {
+                    return $this->json_response('ERR', 'Missing shortlisting ID');
+                }
+                $this->db->update($shortlisting_tbl, [
+                    "university_fees_payment_slip" => "",
+                    "updated_by" => $staff_id,
+                    "updated_date" => $timestamp
+                ], ['id' => $data["id"]]);
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => FEES_DEPOSITE,
+                    "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                ];
+                break;
+
+            case 5:
+                if (empty($data["id"])) {
+                    return $this->json_response('ERR', 'Missing shortlisting ID');
+                }
+                $this->db->update($shortlisting_tbl, [
+                    "invitation_letter" => "",
+                    "invitation_receiving_date" => "",
+                    "updated_by" => $staff_id,
+                    "updated_date" => $timestamp
+                ], ['id' => $data["id"]]);
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => INVITATION,
+                    "applicant_sub_status" => INVITATION_PENDING,
+                ];
+                break;
+
+            case 6:
+                if (empty($data["id"])) {
+                    return $this->json_response('ERR', 'Missing visa ID');
+                }
+                $visa_tbl = db_prefix() . "visa_details";
+                $this->db->update($visa_tbl, [
+                    "file" => "",
+                    "status" => 2,
+                    "receiving_date" => "",
+                    "entry_date" => "",
+                    "received_status" => 0,
+                    "updated_by" => $staff_id,
+                    "updated_at" => $timestamp
+                ], ['id' => $data["id"]]);
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => VISA,
+                    "applicant_sub_status" => VISA_APPLY
+                ];
+                break;
+
+            default:
+                return $this->json_response('ERR', 'Invalid document type');
+        }
+
+
+        if (!empty($update_client_data)) {
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
+        }
+
+        $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+        applicant_last_update($client_id);
+        echo json_encode([
+            'resp_code' => 'RCS',
+            'resp_desc' => 'Document deleted successfully'
+        ]);
+        // } catch (Exception $e) {
+        //     log_message('error', 'Delete document error: ' . $e->getMessage());
+        //     http_response_code(500);
+        //     echo json_encode([
+        //         'resp_code' => 'ERR',
+        //         'resp_desc' => 'An unexpected error occurred. Please try again later.'
+        //     ]);
+        // }
+    }
+
+    private function json_response($code, $message)
+    {
+        echo json_encode([
+            'resp_code' => $code,
+            'resp_desc' => $message
+        ]);
+        exit;
     }
 }
