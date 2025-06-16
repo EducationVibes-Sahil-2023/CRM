@@ -703,6 +703,7 @@
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
         formData.append("air_ticket_include", $('input[name="air_ticket_include"]').is(':checked') ? 1 : 0);
+        $("#air_ticket_include").attr("disabled", false);
 
 
         // Function to process media files
