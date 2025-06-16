@@ -6381,10 +6381,9 @@ class Clients extends AdminController
 
     public function delete_documents()
     {
-        // try {
+        try {
         $data = $this->input->post();
-
-        if (empty($data["clientid"]) || empty($data["tracker_id"]) || $data["id"] || $data["type"]) {
+        if (empty($data["clientid"]) || empty($data["tracker_id"]) ||  empty($data["id"]) ||  empty($data["type"])) {
             return $this->json_response('ERR', 'Missing required data');
         }
 
@@ -6514,14 +6513,14 @@ class Clients extends AdminController
             'resp_code' => 'RCS',
             'resp_desc' => 'Document deleted successfully'
         ]);
-        // } catch (Exception $e) {
-        //     log_message('error', 'Delete document error: ' . $e->getMessage());
-        //     http_response_code(500);
-        //     echo json_encode([
-        //         'resp_code' => 'ERR',
-        //         'resp_desc' => 'An unexpected error occurred. Please try again later.'
-        //     ]);
-        // }
+        } catch (Exception $e) {
+            log_message('error', 'Delete document error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'An unexpected error occurred. Please try again later.'
+            ]);
+        }
     }
 
     private function json_response($code, $message)
