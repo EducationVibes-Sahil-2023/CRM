@@ -245,6 +245,17 @@ $states = get_states();
                      ?>
                   </div>
                </div>
+               <div class="">
+                  <div class="col-12">
+                     <div class="checkbox">
+                        <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
+                        <input class="form-check-input checkbox-group" type="checkbox" id="air_ticket_include_check" name="air_ticket_include_check">
+                        <label class="form-check-label" for="air_ticket_include_check">
+                           Air ticket inc. in Service Charge <span class="text-danger">*</span>
+                        </label>
+                     </div>
+                  </div>
+               </div>
 
 
             <?php } ?>
@@ -306,6 +317,7 @@ $states = get_states();
    validate_lead_convert_to_client_form();
    init_selectpicker();
 
+ 
    $(document).ready(function() {
       let feesMandatory_single = "";
       <?php if ($lead->source == REFERENCE_ID) { ?>
@@ -361,6 +373,18 @@ $states = get_states();
             feeElement.addClass("external_requried").attr("required", true);
             feeLabel.addClass("external_requried_label").html("<small class='text-danger'>*</small>");
          });
+      }
+
+      if (countryName.toLowerCase() === "georgia") {
+         $("#air_ticket_include_check").removeAttr("disabled");
+         $("#air_ticket_include_check").prop("checked", false);
+         $("#air_ticket_include").val(0);
+
+      } else {
+         $("#air_ticket_include_check").attr("disabled", true);
+         $("#air_ticket_include_check").prop("checked", true);
+         $("#air_ticket_include").val(1);
+
       }
 
       $("#university_country").val(countryName || ""); // Set university country value, default to empty string if undefined

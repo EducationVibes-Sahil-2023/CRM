@@ -48,6 +48,14 @@ function app_init_admin_sidebar_menu_items()
         ]);
 
         $CI->app_menu->add_sidebar_children_item('customers', [
+                'slug'     => 'mbbs_abroad/customers',
+                'icon'     => 'fa fa-user-o',
+                'name'     => "Pend. Customers",
+                'href'     => admin_url('clients/customers/mbbs_abroad'),
+                'position' => 1,
+        ]);
+
+        $CI->app_menu->add_sidebar_children_item('customers', [
                 'slug'     => 'study_abroad',
                 'icon'     => 'fa fa-user-o',
                 'name'     => "SA Applicant",
@@ -185,7 +193,7 @@ function app_init_admin_sidebar_menu_items()
         }
 
 
-         if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
+        if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
                 $CI->app_menu->add_sidebar_menu_item('fly_batch', [
                         'href'     => admin_url('fly_batch'),
                         'name'     => "Fly Batch",
