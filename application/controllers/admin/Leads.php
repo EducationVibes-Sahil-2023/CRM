@@ -440,7 +440,7 @@ class Leads extends AdminController
         // }
 
 
-        
+
         if (has_permission('visit_leads', '', 'view') || has_permission('visit_leads', '', 'view_department')) {
         } else {
             if (!is_staff_member() || ($id != '' && !$this->leads_model->staff_can_access_lead($id) && !$this->leads_model->get_lead_visitor_request_exist($id))) {
@@ -1291,6 +1291,7 @@ class Leads extends AdminController
             $data['billing_state']   = $data['state'];
 
             $data['billing_zip']     = $data['zip'];
+            $data['convert_to_customer']     = $data['convert_to_customer'];
 
             $data['billing_country'] = $data['country'];
             $data['application_text'] = "Registration";
@@ -1317,6 +1318,7 @@ class Leads extends AdminController
             unset($data["university_name"]);
             unset($data["university_country"]);
             unset($data["Passport_status"]);
+            unset($data["convert_to_customer"]);
             unset($data["custom_fields"]["customers"][39]);
 
 
@@ -1340,6 +1342,8 @@ class Leads extends AdminController
                         // If no records exist, insert new ones
                         $this->db->insert_batch(db_prefix() . 'applicant_fees_details', $fees_array);
                     }
+
+                    $this->db->insert(db_prefix() . 'application_fees_activity_log', array("fees_details" => json_encode($fees_array), "description" => " Fess Information Insert by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $id));
                 }
 
 

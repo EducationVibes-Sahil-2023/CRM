@@ -74,6 +74,43 @@ class Clients extends AdminController
     }
 
 
+    public function customers()
+    {
+
+        // Permission check
+        if (!has_permission('customers', '', 'view')) {
+            return ajax_access_denied(); // Use return to stop further execution
+        }
+
+        // Load necessary models
+        $this->load->model('leads_model');
+
+        // Prepare data for view
+        $data['staff']     = $this->staff_model->get('', ['active' => 1]);
+        $data['sources']   = $this->leads_model->get_source();
+        $data['leadType']  = $this->leads_model->get_type();
+
+        // Determine correct view page
+        $view_page = 'admin/clients/customer'; // You can switch based on type if needed
+
+        // Load view
+        $this->load->view($view_page, $data);
+    }
+
+
+    public function customers_table()
+    {
+        // Permission check
+        if (!has_permission('customers', '', 'view')) {
+            return ajax_access_denied(); // Use return to stop execution
+        }
+
+        $view = "customers";
+
+        // Load the corresponding table data
+        $this->app->get_table_data($view);
+    }
+
 
     public function table($type = "")
     {
@@ -4213,7 +4250,7 @@ class Clients extends AdminController
             $data["total_amount"] = $total_amount;
             $data["registration_amount"] = $registration_amount;
             $data["pending_amount"] = $pending_amount;
-            $data["address"] = nl2br(htmlspecialchars($client->billing_street));
+            $data["address"] = nl2br(htmlspecialchars($client->address));
             $data["date_of_payment"] = $client->date_of_payment;
             $data["acadmic_year"] = $admission_prefrences->acadmic_year;
             $data["invoice_number"] = "BRCM-00" . $client_id;
@@ -6239,7 +6276,7 @@ class Clients extends AdminController
     {
         try {
             $data = $this->input->post();
-
+            $client_id = $data["clientid"];
             // Validate required fields
             if (empty($data["clientid"]) || empty($data["applicant_fees"])) {
 
@@ -6286,11 +6323,23 @@ class Clients extends AdminController
             // Insert new records
             if (!empty($fees_array)) {
                 $this->db->insert_batch(db_prefix() . 'applicant_fees_details', $fees_array);
+                $this->db->insert(db_prefix() . 'application_fees_activity_log', array("fees_details" => json_encode($fees_array_update), "description" => " Fess Information Insert by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
             }
+
 
             // Update existing records
             if (!empty($fees_array_update)) {
-                $this->db->update_batch(db_prefix() . 'applicant_fees_details', $fees_array_update, 'id');
+                $updated_rows = $this->db->update_batch(db_prefix() . 'applicant_fees_details', $fees_array_update, 'id');
+
+                if ($updated_rows > 0) {
+                    $this->db->insert(db_prefix() . 'application_fees_activity_log', [
+                        "fees_details" => json_encode($fees_array_update),
+                        "description"  => "Fees information updated by staff ID: " . get_staff_user_id(),
+                        "date"         => date('Y-m-d H:i:s'),
+                        "staffid"      => get_staff_user_id(),
+                        "client_id"    => $data["clientid"]
+                    ]);
+                }
             }
 
             // Commit transaction
@@ -6382,137 +6431,151 @@ class Clients extends AdminController
     public function delete_documents()
     {
         try {
-        $data = $this->input->post();
-        if (empty($data["clientid"]) || empty($data["tracker_id"]) ||  empty($data["id"]) ||  empty($data["type"])) {
-            return $this->json_response('ERR', 'Missing required data');
-        }
+            $data = $this->input->post();
+            if (empty($data["clientid"]) || empty($data["tracker_id"]) ||  empty($data["id"]) ||  empty($data["type"])) {
+                return $this->json_response('ERR', 'Missing required data');
+            }
 
-        $staff_id = get_staff_user_id();
-        $timestamp = date('Y-m-d H:i:s');
-        $shortlisting_tbl = db_prefix() . "client_university_shortlisting";
-        $client_id = $data["clientid"];
-        $tracker_id = $data["tracker_id"];
-        $update_client_data = [];
-        switch ((int)$data["type"]) {
-            case 1:
-                if (empty($data["id"])) {
-                    return $this->json_response('ERR', 'Missing shortlisting ID');
-                }
-                $this->db->update($shortlisting_tbl, [
-                    "application_file" => "",
-                    "updated_by" => $staff_id,
-                    "updated_date" => $timestamp
-                ], ['id' => $data["id"]]);
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage"  => ADMISSION,
-                    "applicant_sub_status" => ADMISSION_LETTER_APPLY
-                ];
-                break;
+            $staff_id = get_staff_user_id();
+            $timestamp = date('Y-m-d H:i:s');
+            $shortlisting_tbl = db_prefix() . "client_university_shortlisting";
+            $client_id = $data["clientid"];
+            $tracker_id = $data["tracker_id"];
+            $update_client_data = [];
+            $document_type = "";
+            switch ((int)$data["type"]) {
+                case 1:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "Application";
+                    $this->db->update($shortlisting_tbl, [
+                        "application_file" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage"  => ADMISSION,
+                        "applicant_sub_status" => ADMISSION_LETTER_APPLY
+                    ];
+                    break;
 
-            case 2:
-                if (empty($data["id"])) {
-                    return $this->json_response('ERR', 'Missing shortlisting ID');
-                }
-                $this->db->update($shortlisting_tbl, [
-                    "ministry_payment" => "",
-                    "ministry_payment_date" => "",
-                    "updated_by" => $staff_id,
-                    "updated_date" => $timestamp
-                ], ['id' => $data["id"]]);
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => LEGALIZATION,
-                    "applicant_sub_status" => LEGALIZATION_PENDING,
-                ];
-                break;
+                case 2:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "Ministry Payment";
 
-            case 3:
-                if (empty($data["id"])) {
-                    return $this->json_response('ERR', 'Missing shortlisting ID');
-                }
-                $this->db->update($shortlisting_tbl, [
-                    "fees_deposite_slip" => "",
-                    "updated_by" => $staff_id,
-                    "updated_date" => $timestamp
-                ], ['id' => $data["id"]]);
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => FEES_DEPOSITE,
-                    "applicant_sub_status" => FEES_DEPOSITE_PENDING,
-                ];
-                break;
+                    $this->db->update($shortlisting_tbl, [
+                        "ministry_payment" => "",
+                        "ministry_payment_date" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => LEGALIZATION,
+                        "applicant_sub_status" => LEGALIZATION_PENDING,
+                    ];
+                    break;
 
-            case 4:
-                if (empty($data["id"])) {
-                    return $this->json_response('ERR', 'Missing shortlisting ID');
-                }
-                $this->db->update($shortlisting_tbl, [
-                    "university_fees_payment_slip" => "",
-                    "updated_by" => $staff_id,
-                    "updated_date" => $timestamp
-                ], ['id' => $data["id"]]);
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => FEES_DEPOSITE,
-                    "applicant_sub_status" => FEES_DEPOSITE_PENDING,
-                ];
-                break;
+                case 3:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "Fees Deposite Slip";
 
-            case 5:
-                if (empty($data["id"])) {
-                    return $this->json_response('ERR', 'Missing shortlisting ID');
-                }
-                $this->db->update($shortlisting_tbl, [
-                    "invitation_letter" => "",
-                    "invitation_receiving_date" => "",
-                    "updated_by" => $staff_id,
-                    "updated_date" => $timestamp
-                ], ['id' => $data["id"]]);
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => INVITATION,
-                    "applicant_sub_status" => INVITATION_PENDING,
-                ];
-                break;
+                    $this->db->update($shortlisting_tbl, [
+                        "fees_deposite_slip" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => FEES_DEPOSITE,
+                        "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                    ];
+                    break;
 
-            case 6:
-                if (empty($data["id"])) {
-                    return $this->json_response('ERR', 'Missing visa ID');
-                }
-                $visa_tbl = db_prefix() . "visa_details";
-                $this->db->update($visa_tbl, [
-                    "file" => "",
-                    "status" => 2,
-                    "receiving_date" => "",
-                    "entry_date" => "",
-                    "received_status" => 0,
-                    "updated_by" => $staff_id,
-                    "updated_at" => $timestamp
-                ], ['id' => $data["id"]]);
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => VISA,
-                    "applicant_sub_status" => VISA_APPLY
-                ];
-                break;
+                case 4:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "University Fees Deposite";
 
-            default:
-                return $this->json_response('ERR', 'Invalid document type');
-        }
+                    $this->db->update($shortlisting_tbl, [
+                        "university_fees_payment_slip" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => FEES_DEPOSITE,
+                        "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                    ];
+                    break;
+
+                case 5:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "invitation Letter";
+
+                    $this->db->update($shortlisting_tbl, [
+                        "invitation_letter" => "",
+                        "invitation_receiving_date" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => INVITATION,
+                        "applicant_sub_status" => INVITATION_PENDING,
+                    ];
+                    break;
+
+                case 6:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing visa ID');
+                    }
+                    $document_type = "Visa Letter";
+
+                    $visa_tbl = db_prefix() . "visa_details";
+                    $this->db->update($visa_tbl, [
+                        "file" => "",
+                        "status" => 2,
+                        "receiving_date" => "",
+                        "entry_date" => "",
+                        "received_status" => 0,
+                        "updated_by" => $staff_id,
+                        "updated_at" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => VISA,
+                        "applicant_sub_status" => VISA_APPLY
+                    ];
+                    break;
+
+                default:
+                    return $this->json_response('ERR', 'Invalid document type');
+            }
 
 
-        if (!empty($update_client_data)) {
-            $this->db->where("userid", $client_id);
-            $this->db->update(db_prefix() . 'clients', $update_client_data);
-        }
+            if (!empty($update_client_data)) {
 
-        $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
-        applicant_last_update($client_id);
-        echo json_encode([
-            'resp_code' => 'RCS',
-            'resp_desc' => 'Document deleted successfully'
-        ]);
+                $this->db->insert(db_prefix() . 'application_document_activity_log', array("description" => $document_type . " Document Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $id));
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+            }
+
+            $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+            applicant_last_update($client_id);
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Document deleted successfully'
+            ]);
         } catch (Exception $e) {
             log_message('error', 'Delete document error: ' . $e->getMessage());
             http_response_code(500);
