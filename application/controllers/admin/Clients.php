@@ -6277,6 +6277,7 @@ class Clients extends AdminController
         try {
             $data = $this->input->post();
             $client_id = $data["clientid"];
+            $air_ticket_include = !empty($data["air_ticket_include"]) ? $data["air_ticket_include"] : 0;
             // Validate required fields
             if (empty($data["clientid"]) || empty($data["applicant_fees"])) {
 
@@ -6347,6 +6348,19 @@ class Clients extends AdminController
 
             if ($this->db->trans_status() === FALSE) {
                 throw new Exception("Database transaction failed.", 500);
+            }
+
+            $this->db->where('userid', $data['clientid']);
+            $this->db->update(db_prefix() . 'clients', ['air_ticket_include' => $air_ticket_include]);
+
+            if ($this->db->affected_rows() > 0) {
+                $this->db->insert(db_prefix() . 'application_fees_activity_log', [
+                    'fees_details' => json_encode($fees_array_update),
+                    'description'  => 'Fees and Air Ticket info updated by Staff ID: ' . get_staff_user_id(),
+                    'date'         => date('Y-m-d H:i:s'),
+                    'staffid'      => get_staff_user_id(),
+                    'client_id'    => $data['clientid']
+                ]);
             }
 
             // Return success response
