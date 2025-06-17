@@ -116,7 +116,7 @@ for ($i = 0; $i <= 5; $i++) {
             CustomersServerParams['assigned'] = "[name='view_assigned[]']";
             CustomersServerParams['source'] = "[name='view_source[]']";
             CustomersServerParams['lead_type'] = "[name='lead_type[]']";
-
+            CustomersServerParams['session_year'] = "[name='session_year']";
 
             tAPI = initDataTable('.table-clients-customers', admin_url + 'clients/customers_table', [0], [0], CustomersServerParams);
 
