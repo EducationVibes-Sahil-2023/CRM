@@ -75,10 +75,19 @@ if ($this->ci->input->post('lead_type')) {
     $where[] = "AND {$sTable}.type IN ($lead_type)";
 }
 
+if ($this->ci->input->post('session_year')) {
+    $session_year = (int) $this->ci->input->post('session_year');
+    $where[] = "AND YEAR({$sTable}.date_converted) = {$session_year}";
+}
+
+
+
 // Handle ordering logic for non-admin
 if (!is_admin() && !is_postSale() && $_POST["order"][0]["column"] == 0) {
     $_POST["order"][0]["column"] = count($aColumns);
 }
+
+
 
 // Run the datatable query
 $result = data_tables_init(
