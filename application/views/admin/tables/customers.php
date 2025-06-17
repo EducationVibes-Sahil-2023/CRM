@@ -20,7 +20,7 @@ $aColumns = [
     db_prefix() . "leads_status.color as status_color",
     db_prefix() . "leads_type.name as type_name",
     db_prefix() . "leads_sources.name as source_name",
-    db_prefix() . "staff.firstname as assigne_name"
+    "CONCAT(" . db_prefix() . "staff.firstname,' '," . db_prefix() . "staff.lastname )as assigne_name"
 ];
 
 $join = [
@@ -77,7 +77,7 @@ if ($this->ci->input->post('lead_type')) {
 
 if ($this->ci->input->post('session_year')) {
     $session_year = (int) $this->ci->input->post('session_year');
-    $where[] = "AND YEAR({$sTable}.date_converted) = {$session_year}";
+    $where[] = "AND YEAR({$sTable}.last_status_change) = {$session_year}";
 }
 
 
@@ -135,6 +135,7 @@ foreach ($rResult as $aRow) {
 
     $row[] = $aRow['type_name'] ?? '';
     $row[] = $aRow['source_name'] ?? '';
+    $row[] = $aRow['assigne_name'] ?? '';
 
     $output['aaData'][] = $row;
 }

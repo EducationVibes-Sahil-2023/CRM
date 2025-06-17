@@ -82,6 +82,9 @@ for ($i = 0; $i <= 5; $i++) {
                             array(
                                 'name' => _l('leads_source'),
                             ),
+                            array(
+                                'name' => _l('Assignation'),
+                            ),
 
                         );
 
