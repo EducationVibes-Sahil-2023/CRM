@@ -1,5 +1,14 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
+<?php
+$currentYear = date('Y');
+$years = [];
+
+for ($i = 0; $i <= 5; $i++) {
+    $year = $currentYear - $i;
+    $years[] = ['id' => $year, 'name' => $year];
+}
+?>
 <div id="wrapper">
     <div class="content">
         <div class="row">
@@ -34,6 +43,14 @@
                                         echo '</div>';
                                         ?>
                                     </div>
+                                    <div class="col-md-2  margin-top leads-filter-column">
+                                        <?php
+                                        echo '<div id="leads-filter-source">';
+                                        echo render_select('session_year', $years, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Session Year"), array(), 'no-mbot', '', false, "session_year");
+                                        echo '</div>';
+                                        ?>
+                                    </div>
+
                                     <div class="col-md-4 margin-top leads-filter-column">
                                         <div class="form-group">
                                             <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
