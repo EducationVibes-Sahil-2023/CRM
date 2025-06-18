@@ -1393,7 +1393,6 @@ if ($lead_type_status == 2) {
                                                                 <?php foreach ($get_currencies as $c) {
                                                                 ?>
                                                                     <option
-                                                                        <option
                                                                         data-symbol="<?= $c['symbol'] ?>"
                                                                         value="<?= $c['id'] ?>"
                                                                         data-placeholder="0.00"
