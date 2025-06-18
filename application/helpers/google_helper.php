@@ -238,13 +238,13 @@ function syncExcel($id = "")
         $CI->db->where("spreadsheetId", $id);
     }
 
-    $sheetData = $CI->db->order_by("id","asc")->get()->result_array();
+    $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
 
     if (empty($sheetData)) {
         return [];
     }
 
-$dataArray=[];
+    $dataArray = [];
     foreach ($sheetData as $sheet) {
 
         $currentId = $sheet['id'];
@@ -318,14 +318,14 @@ $dataArray=[];
 
         // Convert row data to values only, respecting column order
 
-$arrayDataValues = [];
-foreach ($arrayData as $row) {
-    $valuesOnly = [];
-    foreach ($row as $v) {
-        $valuesOnly[] = $v === null ? '' : $v; // Replace null with blank
-    }
-    $arrayDataValues[] = $valuesOnly;
-}
+        $arrayDataValues = [];
+        foreach ($arrayData as $row) {
+            $valuesOnly = [];
+            foreach ($row as $v) {
+                $valuesOnly[] = $v === null ? '' : $v; // Replace null with blank
+            }
+            $arrayDataValues[] = $valuesOnly;
+        }
 
 
         // Update last sync timestamp
@@ -335,20 +335,151 @@ foreach ($arrayData as $row) {
         ]);
 
         // Output JSON
-         $dataArray[] = array(
+        $dataArray[] = array(
             "columnName" => $columns,
-            "workSheetName"=>$sheet_name,
+            "workSheetName" => $sheet_name,
             "rowData" => $arrayDataValues
         );
-       
     }
-    
-    
 
-        header('Content-Type: application/json');
-        echo json_encode($dataArray);
-        die;
 
+
+    header('Content-Type: application/json');
+    echo json_encode($dataArray);
+    die;
+}
+
+
+function syncExcel_new($id = "")
+{
+    $CI = &get_instance();
+
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    // Fetch sheet config(s)
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("autoSync", 1);
+
+    if (!empty($id)) {
+        // $id = array_filter(explode(",", $id));
+        $CI->db->where("spreadsheetId", $id);
+    }
+
+    $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
+
+    if (empty($sheetData)) {
+        return [];
+    }
+
+    $dataArray = [];
+    foreach ($sheetData as $sheet) {
+
+        $currentId = $sheet['id'];
+        $fromDate = $sheet['fromDate'];
+        $toDate = $sheet['toDate'];
+        $acadmic_year = $sheet['acadmic_year'];
+        $spreadsheetId = $sheet['spreadsheetId'];
+        $sheet_name = $sheet['sheet_name'];
+        $sql_conditions = $sheet['sql_condition'];
+        $column_ids = explode(",", $sheet['column_ids']);
+
+        // Ensure $column_ids is a non-empty array
+
+        // Fetch selected column names ordered by sequence
+        $selectColumnName = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
+            ->fetch_column_name ?? '';
+
+        if (empty($selectColumnName)) {
+            continue; // Skip if no column names were returned
+        }
+
+
+        // Build WHERE conditions
+        $condition_sql = "";
+
+        if (!empty($fromDate) && !empty($toDate)) {
+            $condition_sql .= " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
+        }
+
+        if (!empty($acadmic_year)) {
+            $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+        }
+
+        if (!empty($sql_conditions)) {
+            $condition_sql .= " {$sql_conditions}";
+        }
+
+        // Main query
+        $sql = "SELECT {$selectColumnName}
+                FROM " . db_prefix() . "clients c
+                LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
+                LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+                LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+                LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+                LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+                LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = (c.applicant_stage)
+                LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = (c.applicant_sub_status)
+                LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+                LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid
+                LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
+                LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
+                LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+                LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
+                LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+                LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+                WHERE 1=1 {$condition_sql}
+                GROUP BY c.userid";
+
+        $arrayData = $CI->db->query($sql)->result_array();
+
+        // Fetch column headers (in order)
+        $sheetColumnName = $CI->db->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->order_by("FIELD(id, " . implode(',', array_map('intval', $column_ids)) . ")", "", false)
+            ->get()
+            ->result_array();
+
+
+        $columns = array_column($sheetColumnName, "name");
+
+        // Convert row data to values only, respecting column order
+
+        $arrayDataValues = [];
+        foreach ($arrayData as $row) {
+            $valuesOnly = [];
+            foreach ($row as $v) {
+                $valuesOnly[] = $v === null ? '' : $v; // Replace null with blank
+            }
+            $arrayDataValues[] = $valuesOnly;
+        }
+
+
+        // Update last sync timestamp
+        $CI->db->where('id', $currentId);
+        $CI->db->update(db_prefix() . "excel_data_update", [
+            'lastSync' => date('Y-m-d H:i:s')
+        ]);
+
+        // Output JSON
+        $dataArray[] = array(
+            "columnName" => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData" => $arrayDataValues
+        );
+    }
+
+
+
+    header('Content-Type: application/json');
+    echo json_encode($dataArray);
+    die;
 }
 
 

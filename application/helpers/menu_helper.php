@@ -350,6 +350,30 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
+
+        if (has_permission('partners', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('partner', [
+                        'collapse' => true,
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "Partners",
+                        'position' => 25,
+                ]);
+                $CI->app_menu->add_sidebar_children_item('partner', [
+                        'slug'     => 'university',
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "University Partner",
+                        'href'     => admin_url('partner/university'),
+                        'position' => 5,
+                ]);
+                $CI->app_menu->add_sidebar_children_item('partner', [
+                        'slug'     => 'ev_partner',
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "EV Partner",
+                        'href'     => admin_url('partner/ev_partner'),
+                        'position' => 5,
+                ]);
+        }
+
         // Setup menu
         if (has_permission('staff', '', 'view')) {
                 $CI->app_menu->add_setup_menu_item('staff', [
@@ -451,6 +475,9 @@ function app_init_admin_sidebar_menu_items()
                         'href'     => admin_url('leads/forms'),
                         'position' => 20,
                 ]);
+
+
+
 
                 $CI->app_menu->add_setup_menu_item('finance', [
                         'collapse' => true,
@@ -604,4 +631,10 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 40,
                 ]);
         }
+
+        $CI->app_menu->add_setup_menu_item('excel', [
+                'name'     => "Excel",
+                'href'     => admin_url('excel'),
+                'position' => 15,
+        ]);
 }

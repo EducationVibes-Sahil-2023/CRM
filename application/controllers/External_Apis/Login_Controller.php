@@ -525,7 +525,7 @@ class Login_Controller extends Api_Controller
 
     public function excel_sync($id = "")
     {
-        
+
         die;
 
         if (empty($id)) {
@@ -550,53 +550,101 @@ class Login_Controller extends Api_Controller
         echo  $this->json_output($response);
     }
 
-   public function applicant_sync_excel()
-{
-    
-    $this->load->helper('google');
+    public function applicant_sync_excel()
+    {
 
-    // Initialize response
-    $response = [
-        'status' => 0,
-        'message' => 'An unknown error occurred.',
-    ];
+        $this->load->helper('google');
 
-    try {
-        // Check if 'id' is provided
-        if (!isset($_REQUEST['id']) || empty($_REQUEST['id'])) {
-            throw new Exception('Missing required parameter: id');
-        }
-
-        // Decode the ID (from JavaScript encodeURIComponent)
-        $id = rawurldecode($_REQUEST['id']);
-
-        // Validate the format of the ID (optional, example: only allow alphanumeric and comma)
-        if (!preg_match('/^[a-zA-Z0-9,_\-]+$/', $id)) {
-            throw new Exception('Invalid sheet ID format.');
-        }
-
-        // Attempt to sync
-        $auto_sync = syncExcel($id);
-
-        if ($auto_sync === true) {
-            $response = [
-                'status' => 1,
-                'message' => 'Google sheet synced successfully.',
-            ];
-        } else {
-            // Assume syncExcel() returns false or an error string/array
-            $errorMessage = is_array($auto_sync) ? $auto_sync[0] : 'Sync failed due to unknown reason.';
-            throw new Exception($errorMessage);
-        }
-    } catch (Exception $e) {
+        // Initialize response
         $response = [
             'status' => 0,
-            'message' => $e->getMessage(),
+            'message' => 'An unknown error occurred.',
         ];
+
+        try {
+            // Check if 'id' is provided
+            if (!isset($_REQUEST['id']) || empty($_REQUEST['id'])) {
+                throw new Exception('Missing required parameter: id');
+            }
+
+            // Decode the ID (from JavaScript encodeURIComponent)
+            $id = rawurldecode($_REQUEST['id']);
+
+            // Validate the format of the ID (optional, example: only allow alphanumeric and comma)
+            if (!preg_match('/^[a-zA-Z0-9,_\-]+$/', $id)) {
+                throw new Exception('Invalid sheet ID format.');
+            }
+
+            // Attempt to sync
+            $auto_sync = syncExcel($id);
+
+            if ($auto_sync === true) {
+                $response = [
+                    'status' => 1,
+                    'message' => 'Google sheet synced successfully.',
+                ];
+            } else {
+                // Assume syncExcel() returns false or an error string/array
+                $errorMessage = is_array($auto_sync) ? $auto_sync[0] : 'Sync failed due to unknown reason.';
+                throw new Exception($errorMessage);
+            }
+        } catch (Exception $e) {
+            $response = [
+                'status' => 0,
+                'message' => $e->getMessage(),
+            ];
+        }
+
+        // Output JSON response
+        echo $this->json_output([$response]);
     }
 
-    // Output JSON response
-    echo $this->json_output([$response]);
-}
+    public function applicant_sync_excel_new()
+    {
 
+        $this->load->helper('google');
+
+        // Initialize response
+        $response = [
+            'status' => 0,
+            'message' => 'An unknown error occurred.',
+        ];
+
+        try {
+            // Check if 'id' is provided
+            if (!isset($_REQUEST['id']) || empty($_REQUEST['id'])) {
+                throw new Exception('Missing required parameter: id');
+            }
+
+            // Decode the ID (from JavaScript encodeURIComponent)
+            $id = rawurldecode($_REQUEST['id']);
+
+            // Validate the format of the ID (optional, example: only allow alphanumeric and comma)
+            if (!preg_match('/^[a-zA-Z0-9,_\-]+$/', $id)) {
+                throw new Exception('Invalid sheet ID format.');
+            }
+
+            // Attempt to sync
+            $auto_sync = syncExcel_new($id);
+
+            if ($auto_sync === true) {
+                $response = [
+                    'status' => 1,
+                    'message' => 'Google sheet synced successfully.',
+                ];
+            } else {
+                // Assume syncExcel() returns false or an error string/array
+                $errorMessage = is_array($auto_sync) ? $auto_sync[0] : 'Sync failed due to unknown reason.';
+                throw new Exception($errorMessage);
+            }
+        } catch (Exception $e) {
+            $response = [
+                'status' => 0,
+                'message' => $e->getMessage(),
+            ];
+        }
+
+        // Output JSON response
+        echo $this->json_output([$response]);
+    }
 }
