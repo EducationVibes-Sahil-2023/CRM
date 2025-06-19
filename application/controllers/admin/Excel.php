@@ -31,17 +31,20 @@ class Excel extends AdminController
             $data = $this->input->post();
 
             $sheetId = isset($data['sheetid']) ? intval($data['sheetid']) : 0;
+$fromDate = isset($data['fromDate']) && $data['fromDate'] != '' && $data['fromDate'] != '0000-00-00' ? $data['fromDate'] : null;
+$toDate   = isset($data['toDate']) && $data['toDate'] != '' && $data['toDate'] != '0000-00-00' ? $data['toDate'] : null;
 
             $sheetData = [
                 'spreadsheetId' => $data['spreadsheetId'] ?? '',
-                'fromDate'      => $data['fromDate'] ?? '',
-                'toDate'        => $data['toDate'] ?? '',
+                'fromDate'      => $fromDate,
+                'toDate'        => $toDate,
                 'acadmic_year'  => $data['acadmic_year'] ?? '',
                 'sheet_name'    => $data['sheet_name'] ?? '',
                 'sql_condition' => $data['sql_condition'] ?? '',
                 'status' => 1,
                 'autoSync' => 1,
-                'created_by' => get_staff_user_id()
+                'created_by' => get_staff_user_id(),
+                'created_at' => date('Y-m-d H:i:s')
             ];
 
             $sorted_data = [];
