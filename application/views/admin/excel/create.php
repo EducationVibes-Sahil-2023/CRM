@@ -11,12 +11,21 @@ $selected_column = [];
 $selected_sequence = [];
 
 if (!empty($excelInfo->column_ids)) {
-    $selected_column = column_array(explode(",", $excelInfo->column_ids));
+    $column_ids_array = explode(",", $excelInfo->column_ids);
+    $selected_column = column_array($column_ids_array); // assuming column_array is a helper function
 }
 
 if (!empty($excelInfo->sequence)) {
-    $selected_sequence = array_column(json_decode($excelInfo->sequence, true), 'sequence', 'column_id');
+    $sequence_data = json_decode($excelInfo->sequence, true);
+
+    if (json_last_error() === JSON_ERROR_NONE && is_array($sequence_data)) {
+        $selected_sequence = array_column($sequence_data, 'sequence', 'column_id');
+    } else {
+        // Optional: log or handle the JSON error
+        $selected_sequence = [];
+    }
 }
+
 ?>
 <div id="wrapper">
     <div class="content">
