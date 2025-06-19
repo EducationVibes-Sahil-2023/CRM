@@ -158,6 +158,11 @@ if (!empty($this->ci->input->post('source_type'))) {
 }
 
 
+if (!empty($this->ci->input->post('last_update_date'))) {
+    $last_update_date = $this->ci->db->escape_str($this->ci->input->post('last_update_date'));
+    array_push($where, ' AND lastupdate_date <= "' . $this->ci->db->escape_str($last_update_date) . '"');
+}
+
 
 if (!empty($this->ci->input->post('type'))) {
     $where[] = "AND " . $sTable . ".visitor_type IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('type'))) . ")";

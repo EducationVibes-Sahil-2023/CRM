@@ -403,6 +403,7 @@ if ($lead_type_status == 2) {
 												?>
 
 											</div>
+
 										</div>
 										<div class="col-lg-3">
 											<div class="form-group">
@@ -437,6 +438,13 @@ if ($lead_type_status == 2) {
 
 									</div>
 									<div class="row">
+
+										<div class="col-lg-3">
+											<div class="form-group">
+												<label for="exampleInputMobileNumber">Address </label>
+												<textarea <?= $read_only ?> name="address" class="form-control"><?php echo (isset($client)) ? $client->address : ''; ?></textarea>
+											</div>
+										</div>
 										<?php
 										foreach ($profile_section["student_details"] as $s_stage) {
 											$doc_type = $s_stage["name"] ?? '';
