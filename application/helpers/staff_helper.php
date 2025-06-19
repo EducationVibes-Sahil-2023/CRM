@@ -113,7 +113,7 @@ function get_available_staff_permissions($data = [])
             ],
         ],
 
-        'Partners' => [
+        'partners' => [
             'name'         => _l('Partners'),
             'capabilities' => $withNotApplicableViewOwn,
         ],
