@@ -103,7 +103,7 @@
             var button = $(event.relatedTarget)
             var id = button.data('id');
             $('#partner input[name="text"]').val('');
-            $('#partner input[name="status"]').val(1);
+            $('#partner select[name="status"]').val(1);
             $('#currency_modal .add-title').removeClass('hide');
             $('#currency_modal .edit-title').addClass('hide');
 
@@ -112,7 +112,7 @@
                 var name = $(button).data("name")
                 var status = $(button).data("status")
                 $('input[name="name"]').val(name);
-                $('input[name="status"]').val(status);
+                $('select[name="status"]').val(status);
                 $('#currency_modal .add-title').addClass('hide');
                 $('#currency_modal .edit-title').removeClass('hide');
                 $('#currency_modal input[name="name"]').val(name);

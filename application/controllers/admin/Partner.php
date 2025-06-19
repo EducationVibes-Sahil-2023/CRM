@@ -62,7 +62,7 @@ class partner extends AdminController
             if (strtolower($type) == 'university') {
                 $table = db_prefix() . 'university_partner';
                 $partner_type = 'name';
-            } else if (strtolower($type) == 'ev') {
+            } else if (strtolower($type) == 'ev_partner') {
                 $table = db_prefix() . 'ev_partner';
                 $partner_type = 'name';
             } else {
