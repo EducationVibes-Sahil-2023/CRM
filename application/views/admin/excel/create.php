@@ -26,6 +26,13 @@ if (!empty($excelInfo->sequence)) {
     }
 }
 
+$currentYear = date('Y');
+$academicYears = [
+    ($currentYear - 1) . ' - ' . $currentYear,
+    $currentYear . ' - ' . ($currentYear + 1),
+    ($currentYear + 1) . ' - ' . ($currentYear + 2)
+];
+
 ?>
 <div id="wrapper">
     <div class="content">
@@ -60,7 +67,14 @@ if (!empty($excelInfo->sequence)) {
 
                                     <div class="col-md-3 mb-3 form-group">
                                         <label for="acadmic_year">Academic Year</label>
-                                        <input type="text" class="form-control" name="acadmic_year" value="<?= $excelInfo->acadmic_year ?>" id="acadmic_year" placeholder="e.g., 2024-2025">
+                                        <select class="form-control" name="acadmic_year" id="acadmic_year" required>
+                                            <option value="">-- Select Academic Year --</option>
+                                            <?php foreach ($academicYears as $year): ?>
+                                                <option value="<?= $year ?>" <?= trim($excelInfo->acadmic_year) == $year ? 'selected' : '' ?>>
+                                                    <?= $year ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
                                 </div>
                                 <div class="row">
@@ -87,11 +101,6 @@ if (!empty($excelInfo->sequence)) {
                                 <input type="hidden" name="sheetid" value="<?= !empty($excelInfo->id) ? $excelInfo->id : '' ?>">
                                 <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>" value="<?php echo $this->security->get_csrf_hash(); ?>">
 
-                                <?php
-                                echo "<pre>";
-                                print_r($selected_sequence[12]);
-                                echo "</pre>";
-                                ?>
                                 <div id="orignal_documents" class="table-responsive col-12">
                                     <table class="table table-bordered table-striped">
                                         <thead class="thead-dark">
