@@ -89,6 +89,7 @@ $route['admin/clients/customers'] = 'admin/clients/customers'; // When type is p
 $route['admin/Google_sheet'] = 'admin/Google_sheet'; // When type is provided
 
 
+
 /**
  * @deprecated
  */
@@ -199,6 +200,7 @@ $route['external/re_assign_cron'] = 'Authentication/re_assign_cron';
 // Sync Excel
 $route['external/excel_sync'] = 'External_Apis/Login_Controller/excel_sync';
 $route['external/applicant_sync_excel'] = 'External_Apis/Login_Controller/applicant_sync_excel';
+$route['external/applicant_sync_excel_new'] = 'External_Apis/Login_Controller/applicant_sync_excel_new';
 
 
 

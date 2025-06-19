@@ -92,7 +92,7 @@ echo form_hidden('settings[ma_table_view]', 'true');
     var sequence = [];
     var selected_view = $("#table_view option:selected").val() || 0;
     $(document).ready(function() {
-        
+
         if (tbllead_performance_column_array[selected_view]) {
             show_column_array = (tbllead_performance_column_array[selected_view].column_ids || "").split(",");
             selected_column_array = (tbllead_performance_column_array[selected_view].selected_ids || "").split(",");
@@ -118,9 +118,9 @@ echo form_hidden('settings[ma_table_view]', 'true');
     function set_checkbox() {
         // Ensure arrays exist
         if (typeof show_column_array !== "undefined") {
-            show_column_array.forEach(function(show_c,key) {
+            show_column_array.forEach(function(show_c, key) {
                 $("#show_column_" + show_c).prop("checked", true);
-                 $("#sequence_column_" + show_c).val(sequence[key]);
+                $("#sequence_column_" + show_c).val(sequence[key]);
             });
         }
 
@@ -131,9 +131,9 @@ echo form_hidden('settings[ma_table_view]', 'true');
             });
 
         }
-        
-        
-      
+
+
+
     }
 
 

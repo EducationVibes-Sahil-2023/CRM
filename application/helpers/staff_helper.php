@@ -112,6 +112,11 @@ function get_available_staff_permissions($data = [])
                 'delete' => _l('permission_delete'),
             ],
         ],
+
+        'Partners' => [
+            'name'         => _l('Partners'),
+            'capabilities' => $withNotApplicableViewOwn,
+        ],
         'roles' => [
             'name'         => _l('roles'),
             'capabilities' => $withoutViewOwnPermissionsArray,
