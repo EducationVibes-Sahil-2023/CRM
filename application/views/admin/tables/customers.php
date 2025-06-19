@@ -1,6 +1,9 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+error_reporting(0);
+
+		ini_set('display_errors', 1);
 
 $this->ci->load->model('leads_model');
 
@@ -56,6 +59,12 @@ if ($role == 3) {
     $sids = implode(',', $idsarr);
     $where[] = !empty($sids) ? "AND {$sTable}.assigned IN ({$sid}, {$sids})" : "AND {$sTable}.assigned = {$sid}";
 }
+else
+{
+    if(!is_admin() && !is_postSale()){
+   $where[] = "AND {$sTable}.assigned IN ($get_staff_user_id)";  
+    }
+}
 
 // Filter: Assigned staff
 if ($this->ci->input->post('assigned')) {
@@ -84,7 +93,7 @@ if ($this->ci->input->post('session_year')) {
 
 // Handle ordering logic for non-admin
 if (!is_admin() && !is_postSale() && $_POST["order"][0]["column"] == 0) {
-    $_POST["order"][0]["column"] = count($aColumns);
+    $_POST["order"][0]["column"] = "id";
 }
 
 

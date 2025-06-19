@@ -894,29 +894,60 @@ init_tail();
    });
 
    // Update column name dropdown
-   function column_name_update() {
-      let columnSelect = $("[name='column_show[]']");
+function column_name_update() {
+    const columnSelect = $("[name='column_show[]']");
 
-      if (columnSelect.length === 0) {
-         //console.warn("Column select element not found.");
-         return;
-      }
+    if (columnSelect.length === 0) {
+        console.warn("Column select element not found.");
+        return;
+    }
 
-      columnSelect.empty();
-      //console.log(selected_column_array);
-      show_column_array.forEach(id => {
-         let value = default_columns[id];
-         // if (show_column_array.includes(value.id)) {
-         let isDisabled = selected_column_array.includes(String(value.id));
-         //console.log(isDisabled);
-         let option = `<option data-columns="${value.columns}" value="${value.id}" ${isDisabled ? 'disabled Selected' : ''} >${value.label_name}</option>`;
-         columnSelect.append(option);
-         // }
-      });
+    // Validate required arrays
+    if (typeof show_column_array === 'undefined' || !Array.isArray(show_column_array)) {
+        console.error("show_column_array is not defined or not an array.");
+        return;
+    }
 
-      columnSelect.selectpicker("refresh");
+    if (typeof default_columns === 'undefined' || typeof default_columns !== 'object') {
+        console.error("default_columns is not defined or not an object.");
+        return;
+    }
 
-   }
+    if (typeof selected_column_array === 'undefined' || !Array.isArray(selected_column_array)) {
+        console.error("selected_column_array is not defined or not an array.");
+        return;
+    }
+
+    // Clear existing options
+    columnSelect.empty();
+
+    show_column_array.forEach(id => {
+        const value = default_columns[id];
+
+        if (!value || typeof value !== 'object') {
+            console.warn(`No valid column data found for ID: ${id}`);
+            return;
+        }
+
+        const isDisabled = selected_column_array.includes(String(value.id));
+        const option = `
+            <option data-columns="${value.columns || ''}" 
+                    value="${value.id}" 
+                    ${isDisabled ? 'disabled selected' : ''}>
+                ${value.label_name || 'Unnamed Column'}
+            </option>`;
+
+        columnSelect.append(option);
+    });
+
+    // Refresh selectpicker safely
+    if (typeof columnSelect.selectpicker === "function") {
+        columnSelect.selectpicker("refresh");
+    } else {
+        console.warn("selectpicker plugin is not loaded.");
+    }
+}
+
 
 
 
