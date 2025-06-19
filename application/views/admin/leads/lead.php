@@ -1114,6 +1114,7 @@ $last_lead_request = last_lead_request($lead->id);
                $(".lead-modal").modal("hide");
                setTimeout(() => {
                   init_lead(res.lead_id, "", "#show_visitor_lead_div", 1);
+                  visitorStatus = 0;
                }, 200);
                if (window.filter_data) {
                   filter_data();
