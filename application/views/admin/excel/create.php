@@ -87,9 +87,10 @@ $academicYears = [
                                     <div class="col-md-3 mb-3 form-group">
                                         <label for="sql_condition">Select Type</label>
                                         <select name="sql_condition" required id="sql_condition" class="form-control">
-                                            <option value=" AND l.type = 2 " <?= $excelInfo->sql_condition == " AND l.type = 2 " ? 'checked' : '' ?>>EV</option>
-                                            <option value=" AND c.client_type = 2 " <?= $excelInfo->sql_condition == " AND c.client_type = 2 " ? 'checked' : '' ?>>EVP</option>
+                                            <option value=" AND l.type = 2 " data-id="1" <?= $excelInfo->type == "1" ? 'selected' : '' ?>>EV</option>
+                                            <option value=" AND c.client_type = 2 " data-id="2" <?= $excelInfo->type == "2" ? 'selected' : '' ?>>EVP</option>
                                         </select>
+
                                     </div>
                                     <div class="col-md-3 mb-3 form-group">
                                         <label for=""> </label><br>
@@ -194,6 +195,10 @@ $academicYears = [
         // Create FormData from the form
         const form = document.getElementById("table-view-form");
         const formData = new FormData(form);
+        const select = document.getElementById('sql_condition');
+        const selectedOption = select.options[select.selectedIndex];
+        const dataId = selectedOption.getAttribute('data-id');
+        formData.append('type', dataId);
 
         // Check if at least one column_ids checkbox is selected
         const selectedColumns = document.querySelectorAll('input.column_ids:checked');
