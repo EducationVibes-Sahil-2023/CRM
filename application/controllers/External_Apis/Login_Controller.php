@@ -550,7 +550,7 @@ class Login_Controller extends Api_Controller
         echo  $this->json_output($response);
     }
 
-    public function applicant_sync_excel()
+    public function applicant_sync_excel_old()
     {
 
         $this->load->helper('google');
@@ -599,7 +599,7 @@ class Login_Controller extends Api_Controller
         echo $this->json_output([$response]);
     }
 
-    public function applicant_sync_excel_new()
+    public function applicant_sync_excel()
     {
 
         $this->load->helper('google');
