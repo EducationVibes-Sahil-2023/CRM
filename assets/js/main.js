@@ -314,18 +314,19 @@ $(function () {
 
     // Custom option to show setup menu item only on hover, not applied on mobile
     if (app.options.show_setup_menu_item_only_on_hover == 1 && !is_mobile()) {
-        side_bar.hover(
-            function () {
-                setTimeout(function () {
-                    setup_menu_item.css("display", "block");
-                }, 200);
-            },
-            function () {
-                setTimeout(function () {
-                    setup_menu_item.css("display", "none");
-                }, 1000);
-            }
-        );
+        setup_menu_item.css("display", "block");
+        // side_bar.hover(
+        //     // function () {
+        //     //     setTimeout(function () {
+        //     //         setup_menu_item.css("display", "block");
+        //     //     }, 200);
+        //     // },
+        //     // function () {
+        //     //     setTimeout(function () {
+        //     //         setup_menu_item.css("display", "none");
+        //     //     }, 1000);
+        //     // }
+        // );
     }
 
     // Store navTabs, used multiple times.
