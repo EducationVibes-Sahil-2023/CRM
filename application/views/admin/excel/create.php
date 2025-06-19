@@ -87,9 +87,10 @@ $academicYears = [
                                     <div class="col-md-3 mb-3 form-group">
                                         <label for="sql_condition">Select Type</label>
                                         <select name="sql_condition" required id="sql_condition" class="form-control">
-                                            <option value=" AND l.type = 2 " data-id="1" <?= $excelInfo->type == 1 ? 'checked' : '' ?>>EV</option>
-                                            <option value=" AND c.client_type = 2 " data-id="2" <?= $excelInfo->type == 2 ? 'checked' : '' ?>>EVP</option>
+                                            <option value=" AND l.type = 2 " data-id="1" <?= $excelInfo->type == "1" ? 'selected' : '' ?>>EV</option>
+                                            <option value=" AND c.client_type = 2 " data-id="2" <?= $excelInfo->type == "2" ? 'selected' : '' ?>>EVP</option>
                                         </select>
+
                                     </div>
                                     <div class="col-md-3 mb-3 form-group">
                                         <label for=""> </label><br>
