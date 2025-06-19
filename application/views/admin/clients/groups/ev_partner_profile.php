@@ -1428,6 +1428,22 @@ if ($lead_type_status == 2) {
 												<?php
 												}
 												?>
+												<div class="col-lg-4 col-md-4 col-6 fees-block-8">
+													<label>&nbsp;</label>
+
+													<div class="form-check checkbox">
+														<input
+															class="form-check-input checkbox-group"
+															type="checkbox"
+															id="air_ticket_include"
+															name="air_ticket_include"
+															<?= ($client->air_ticket_include == 1) ? 'checked' : '' ?>
+															<?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabled' : '' ?>>
+														<label class="form-check-label" for="air_ticket_include">
+															Air ticket inc. in Service Charge <span class="text-danger">*</span>
+														</label>
+													</div>
+												</div>
 											</div>
 										</div>
 
@@ -1725,31 +1741,32 @@ if ($lead_type_status == 2) {
 	<?php
 	}
 	?>
-  function formatPhoneNumber(input) {
-        console.log("phonenumber validation");
-        // Remove all non-digit characters
-        const digits = input.replace(/\D/g, '');
 
-        // Remove country code if present (e.g., leading '91' or '0' for Indian numbers)
-        let trimmed = digits;
+	function formatPhoneNumber(input) {
+		console.log("phonenumber validation");
+		// Remove all non-digit characters
+		const digits = input.replace(/\D/g, '');
 
-        // If it starts with '91' and total is more than 10 digits, trim it
-        if (trimmed.length > 10 && trimmed.startsWith('91')) {
-            trimmed = trimmed.slice(2);
-        }
+		// Remove country code if present (e.g., leading '91' or '0' for Indian numbers)
+		let trimmed = digits;
 
-        // If it starts with '0' and total is more than 10 digits, trim it
-        if (trimmed.length > 10 && trimmed.startsWith('0')) {
-            trimmed = trimmed.slice(1);
-        }
+		// If it starts with '91' and total is more than 10 digits, trim it
+		if (trimmed.length > 10 && trimmed.startsWith('91')) {
+			trimmed = trimmed.slice(2);
+		}
 
-        // Final check: return only if it's exactly 10 digits
-        if (trimmed.length === 10) {
-            return trimmed;
-        } else {
-            return null; // Invalid number
-        }
-    }
+		// If it starts with '0' and total is more than 10 digits, trim it
+		if (trimmed.length > 10 && trimmed.startsWith('0')) {
+			trimmed = trimmed.slice(1);
+		}
+
+		// Final check: return only if it's exactly 10 digits
+		if (trimmed.length === 10) {
+			return trimmed;
+		} else {
+			return null; // Invalid number
+		}
+	}
 
 	function updateSymbol(id) {
 		var selected = $(".currency-selector-" + id + " option:selected");

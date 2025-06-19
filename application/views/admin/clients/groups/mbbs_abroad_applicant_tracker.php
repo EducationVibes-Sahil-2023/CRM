@@ -1005,7 +1005,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     </div>
 
                                                     <div class="col-md-3">
-                                                        <label>Partner Name <?= $mand ?></label>
+                                                        <label>University Partner <?= $mand ?></label>
                                                         <?php
                                                         $selected_value = [];
                                                         $selected_value[] =  !empty($short_list["partner"]) ? $short_list["partner"] : '';
@@ -3133,7 +3133,7 @@ var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
             <input type="text" name="university_${university.id}" class="form-control" disabled value="${university.university_name}">
         </div> 
         <div class="col-md-3">
-            <label>Partner Name ${mand}</label>
+            <label>University Partner ${mand}</label>
             <select name="partner_${university.id}" class="form-control" ${mand_re}>
                 <option value="">Select Partner</option>`;
 
