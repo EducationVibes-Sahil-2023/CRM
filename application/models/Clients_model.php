@@ -748,7 +748,7 @@ class Clients_model extends App_Model
 
         $last_activity = get_last_system_activity_id();
         $company       = get_company_name($id);
-
+        $basicDetails = $this->getBasicDetails($id);
         $this->db->where('userid', $id);
         $this->db->delete(db_prefix() . 'clients');
         if ($this->db->affected_rows() > 0) {
@@ -992,6 +992,9 @@ class Clients_model extends App_Model
             }
 
             log_activity('Client Deleted [ID: ' . $id . ']');
+
+            $client_name = $basicDetails->first_name . " " . $basicDetails->last_name;
+            $this->db->insert(db_prefix() . 'client_activity_log', array("description" => $client_name . " Client Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $id));
 
             return true;
         }

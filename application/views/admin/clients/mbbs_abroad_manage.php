@@ -33,6 +33,14 @@ $payment_mode = get_payment_mode();
 $fly_batch = fly_batch();
 $fly_departure = fly_departure();
 
+$neet_status = get_neet_status();
+$neet_status_new = [];
+$neet_status_new[] = ["id" => "Awaited", "name" => "Awaited"];
+$neet_status_new[] = ["id" => "Declared", "name" => "Declared"];
+$neet_status_new[] = ["id" => "Fail", "name" => "Fail"];
+$neet_status_new[] = ["id" => "Not Appeared", "name" => "Not Appeared"];
+
+$neet_status = array_merge($neet_status, $neet_status_new);
 $yes_no_status = [
    ["id" => "", "name" => ""],
    ["id" => "Yes", "name" => "Yes"],
@@ -44,7 +52,6 @@ $client_type = [
    ["id" => "2", "name" => "EVP"],
 
 ];
-array_unshift($office_location, array());
 // array_unshift($ev_partner, array());
 
 
@@ -370,6 +377,16 @@ array_unshift($office_location, array());
                                  echo '</div>';
                                  ?>
                               </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-neet">';
+                                 echo render_select('neet_status[]', $neet_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Neet Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "neet_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
                               <?php if (has_permission('leads', '', 'view')) { ?>
                                  <div class="col-md-2  margin-top leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Counsellor", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
@@ -493,6 +510,14 @@ array_unshift($office_location, array());
                                  ?>
                               </div>
 
+                              <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-org-location hide">
+                                 <?php
+                                 echo '<div id="leads-filter-neet">';
+                                 echo render_select('office_location_orignal_documents[]', $office_location, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc Location", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "office_location_orignal_documents");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-visa-vendor hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
@@ -587,7 +612,9 @@ array_unshift($office_location, array());
          </div>
          <div class="modal-body h-auto">
             <!-- Apostille Section -->
-
+            <?php
+            array_unshift($office_location, array());
+            ?>
             <?php if (is_admin()) { ?>
                <!-- <div class="mass_delete">
                   <div class="checkbox checkbox-danger">
@@ -1185,7 +1212,9 @@ init_tail();
          'fly_departure_filter': "[name='fly_departure_filter[]']",
          'fly_vendors_filter': "[name='fly_vendors_filter[]']",
          'fly_date': "[name='fly_date']",
-         'university_secondary': "[name='university_secondary[]']"
+         'university_secondary': "[name='university_secondary[]']",
+         'neet_status': "[name='neet_status[]']",
+         'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
       });
 
       applicant_table = initDataTable(

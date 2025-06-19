@@ -2182,6 +2182,9 @@ class Clients extends AdminController
                             $this->db->update(db_prefix() . 'clients', $update_client_data);
                         }
                         applicant_last_update($client_id);
+                        $doc_name = $documents_type[$doc_id]["name"];
+                        $this->db->insert(db_prefix() . 'application_document_activity_log', array("description" => $doc_name . " Document Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                         $data['resp_code'] = 'RCS';
                         $data['resp_desc'] = "Document delete successfully";
                         set_alert('success', "Document delete successfully");
@@ -6579,7 +6582,8 @@ class Clients extends AdminController
 
             if (!empty($update_client_data)) {
 
-                $this->db->insert(db_prefix() . 'application_document_activity_log', array("description" => $document_type . " Document Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $id));
+                $this->db->insert(db_prefix() . 'application_document_activity_log', array("description" => $document_type . " Document Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
             }

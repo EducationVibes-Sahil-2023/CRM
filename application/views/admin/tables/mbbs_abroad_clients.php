@@ -122,7 +122,7 @@ $join = [
     'LEFT JOIN ' . db_prefix() . 'applicant_status ON ' . db_prefix() . 'applicant_status.id=' . db_prefix() . 'clients.active ',
     ' LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
 AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')',
-  'LEFT JOIN ' . db_prefix() . 'staff 
+    'LEFT JOIN ' . db_prefix() . 'staff 
  ON ' . db_prefix() . 'leads.assigned = ' . db_prefix() . 'staff.staffid 
  OR (
  FIND_IN_SET(' . db_prefix() . 'clients.agent_id,' . db_prefix() . 'staff.evp_partners)
@@ -194,13 +194,14 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'vendor_list tc ON tc.id=td.vendor_id',
     'LEFT JOIN ' . db_prefix() . 'payment_mode tm ON tm.id=td.payment_mode',
     'LEFT JOIN ' . db_prefix() . 'departure_location dl ON dl.id=td.departure_location',
-    'LEFT JOIN ' . db_prefix() . 'ticket_batch tb ON tb.id=td.batch_id'
+    'LEFT JOIN ' . db_prefix() . 'ticket_batch tb ON tb.id=td.batch_id',
+    'LEFT JOIN ' . db_prefix() . 'university_partner u_p ON u_p.id=' . db_prefix() . 'client_university_shortlisting.partner'
 
 ];
 
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 $post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
-$sids =[];
+$sids = [];
 if ($role == 3) {
     $sid = get_staff_user_id();
     $teamids = $this->ci->db->query('CALL GetReportingPersons(?)', array($sid))->result_array();
@@ -250,8 +251,7 @@ if (!is_admin()) {
                 OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')
                 OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
             )';
-        }
-        else {
+        } else {
 
             $where[] = 'AND (
                 ' . db_prefix() . 'clients.userid IN (
@@ -262,8 +262,7 @@ if (!is_admin()) {
                 
                 OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
             )';
-            }
-        
+        }
     }
 }
 
@@ -275,6 +274,59 @@ if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
 
 if ($this->ci->input->post('source')) {
     array_push($where, 'AND ' . db_prefix() . 'leads.source IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ')');
+}
+
+
+if ($this->ci->input->post('neet_status')) {
+    $neet_status_input = $this->ci->input->post('neet_status');
+
+    // Ensure input is an array
+    if (!is_array($neet_status_input)) {
+        $neet_status_input = [$neet_status_input];
+    }
+
+    $neet_status_numeric = [];
+    $neet_status_string = [];
+
+    foreach ($neet_status_input as $status) {
+        if (is_numeric($status)) {
+            $neet_status_numeric[] = (int)$status;
+        } else {
+            $neet_status_string[] = $this->ci->db->escape_str(trim($status)); // Escape strings for safety
+        }
+    }
+
+    $conditions = [];
+
+    if (!empty($neet_status_numeric)) {
+        $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $neet_status_numeric) . ")";
+    }
+
+    if (!empty($neet_status_string)) {
+        $quoted_strings = array_map(function ($val) {
+            return "'" . $val . "'";
+        }, $neet_status_string);
+        $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $quoted_strings) . ")";
+    }
+
+    if (!empty($conditions)) {
+        $where[] = "AND (" . implode(" OR ", $conditions) . ")";
+    }
+}
+
+
+
+if ($this->ci->input->post('office_location_orignal_documents')) {
+    $location_ids = $this->ci->input->post('office_location_orignal_documents');
+
+    if (!is_array($location_ids)) {
+        $location_ids = [$location_ids];
+    }
+
+    // Cast to integers to ensure safety (assuming IDs are numeric)
+    $escaped_ids = array_map('intval', $location_ids);
+
+    $where[] = 'AND ' . db_prefix() . 'orignal_documents_received.location_id IN (' . implode(',', $escaped_ids) . ')';
 }
 
 

@@ -961,7 +961,7 @@ if ($lead_type_status == 2) {
 
                                     <div class="col-lg-3 border2 border1 hide_ " style="display: <?= ($academicdetails->entrance_result_status == 'Awaited' || $academicdetails->entrance_result_status == 'Not Appeared' || $academicdetails->entrance_result_status == 'Fail') ? 'none' : '' ?>">
                                         <div class="c1">
-                                            <p>Roll No. <?= $text_danger_mbbs ?></p>
+                                            <p>Registration Number <?= $text_danger_mbbs ?></p>
                                         </div>
                                         <div class="c2">
                                             <input class="form-control" required-check type="number" <?= ($academicdetails->entrance_result_status == 'Not Appeared') ? 'readonly' : ''; ?> class="form-group" pattern="\d{12}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"

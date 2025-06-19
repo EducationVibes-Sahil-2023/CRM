@@ -3214,11 +3214,15 @@ class Leads_model extends App_Model
 
         $normal_ids = [];
         $additional_ids = [];
+        $check_con = (is_admin() || is_postSale()) ? 1 : 0;
 
         if (!empty($ids)) {
             // First fetch columns field
             $this->db->select('id, columns');
             $this->db->where_in('id', $ids);
+            if (empty($check_con)) {
+                $this->db->where('is_postsale', 0);
+            }
 
             if (!empty($ids)) {
                 $this->db->order_by('FIELD(id, ' . implode(',', $ids) . ')');
@@ -3249,6 +3253,11 @@ class Leads_model extends App_Model
         if (!empty($ids)) { // Check if the $ids variable is not empty.
             $this->db->where_in('id', $columns_ids); // Add a condition to match multiple 'id' values in the $columns_ids array.
         }
+
+        if (empty($check_con)) {
+            $this->db->where('is_postsale', 0);
+        }
+
         // $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
         if (!empty($columns_ids)) {
             $this->db->order_by('FIELD(id, ' . implode(',', $columns_ids) . ')');
