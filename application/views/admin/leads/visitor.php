@@ -142,6 +142,12 @@ $category[] = array("id" => "2", "name" => "Upcoming");
                                         <?php echo render_select('category', $category, array('id', array('name')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Schedule'), 'data-actions-box' => true), array(), 'no-mbot', '', false, 'category'); ?>
                                     </div>
 
+                                   <div class="col-md-2 leads-filter-column margin-top">
+                                        <div class="form-group">
+                                            <input type="text" class="form-control datepicker" name="last_update_date" id="last_update_date" placeholder="Last Update Date" autocomplete="off">
+                                        </div>
+                                    </div>
+
 
                                     <div class="col-md-12 text-center leads-filter-column margin-top">
                                         <div class="form-group pull-right">
