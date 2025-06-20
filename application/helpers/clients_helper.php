@@ -364,6 +364,14 @@ function app_init_customer_profile_tabs()
             'view'     => 'admin/clients/groups/accommodation',
             'position' => 95,
         ]);
+
+        $CI->app_tabs->add_customer_profile_tab('activity_logs', [
+            'name'     => "Activity Logs",
+            'icon'     => 'fa fa-clock-o menu-icon',
+            'view'     => 'admin/clients/groups/activity_logs',
+            'visible'  => has_permission('customers', '', 'activity_logs'),
+            'position' => 95,
+        ]);
     }
 }
 
