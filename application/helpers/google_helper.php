@@ -387,12 +387,16 @@ function syncExcel_new($id = "")
         // Ensure $column_ids is a non-empty array
 
         // Fetch selected column names ordered by sequence
+        $order = implode(',', $column_ids); // convert array to comma-separated string
+
+
+
         $selectColumnName = $CI->db
-            ->select("GROUP_CONCAT(fetch_column_name) AS fetch_column_name", false)
-            ->from(db_prefix() . "excel_column_update")
-            ->where_in("id", $column_ids)
-            ->get()
-            ->row()
+           ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
+         ->from(db_prefix() . "excel_column_update")
+         ->where_in("id", $column_ids)
+         ->get()
+         ->row()
             ->fetch_column_name ?? '';
 
         if (empty($selectColumnName)) {
