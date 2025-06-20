@@ -1740,7 +1740,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 <?php init_tail(); ?>
 <!-- /.MultiStep Form -->
 <script>
-var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
+    var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
     var is_admin = <?= is_admin() ? 1 : 0 ?>;
     if (complete_application == 1) {
@@ -1753,7 +1753,7 @@ var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
         }, 500);
 
     }
-    var delete_document_status = <?= !empty($delete_document_status)?$delete_document_status:0 ?>;
+    var delete_document_status = <?= !empty($delete_document_status) ? $delete_document_status : 0 ?>;
     var admissionpreferences_freeze = 0;
     var base_url = "<?= base_url() ?>";
     //jQuery time
@@ -1765,7 +1765,7 @@ var client_id = <?= !empty($client_id) ? $client_id : '' ?>;
     var current_fs, next_fs, previous_fs; //fieldsets
     var left, opacity, scale; //fieldset properties which we will animate
     var animating; //flag to prevent quick multi-click glitches
-    
+
     var csrfToken = "<?= $this->security->get_csrf_hash() ?>"; // Replace with the actual CSRF token value
     var step_stage = 0;
     var get_university_list = <?= json_encode(array_column(get_university_list("mbbs abroad"), "university_id", "university_name"), true); ?>

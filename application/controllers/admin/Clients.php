@@ -6612,4 +6612,84 @@ class Clients extends AdminController
         ]);
         exit;
     }
+
+    public function activity_logs($client_id = "")
+    {
+
+        // Validate required POST inputs
+        if (!isset($_POST['type']) || !isset($client_id)) {
+            http_response_code(400);
+            echo "Missing required parameters.";
+            exit;
+        }
+
+        $type = (int) $_POST['type'];
+$like_query="";
+        // Resolve table name based on activity type
+        switch ($type) {
+            case 1:
+                $table = db_prefix() . "application_fees_activity_log";
+                break;
+            case 2:
+                $table = db_prefix() . "application_activity_log";
+                $like_query = "Welcome message";
+                break;
+            case 3:
+                $table = db_prefix() . "application_document_activity_log";
+                break;
+            case 4:
+                $table = db_prefix() . "application_activity_log";
+                break;
+            default:
+                http_response_code(400);
+                echo "Invalid activity type.";
+                exit;
+        }
+
+        $activity_log = $this->clients_model->activity_logs($table, $client_id, $like_query);
+
+        $html = '';
+
+        if (!empty($activity_log)) {
+            foreach ($activity_log as $log) {
+                $html .= '<div class="feed-item">';
+                $html .= '<div class="date">';
+                $html .= '<span class="text-has-action" data-toggle="tooltip" data-title="' . _dt($log['date']) . '">';
+                $html .= time_ago($log['datetime']);
+                $html .= '</span>';
+                $html .= '</div>';
+
+                $html .= '<div class="text">';
+
+                // Staff profile image
+                if ($log['staffid'] != 0) {
+                    $html .= '<a href="' . admin_url('profile/' . $log['staffid']) . '">';
+                    $html .= staff_profile_image($log['staffid'], ['staff-profile-xs-image', 'pull-left', 'mright5']);
+                    $html .= '</a>';
+                }
+
+                // Prepare description
+                if (!empty($log['datetime'])) {
+                    $datetime = unserialize($log['datetime']);
+                    $description = ($log['staffid'] == 0)
+                        ? _l($log['description'], $datetime)
+                        : $log['full_name'] . ' - ' . _l($log['description'], $datetime);
+                } else {
+                    $description = $log['full_name'] . ' - ';
+                    $description .= ($log['custom_activity'] == 0)
+                        ? _l($log['description'])
+                        : _l($log['description'], '', false);
+                }
+
+                $html .= $description;
+
+                $html .= '</div>'; // text
+                $html .= '</div>'; // feed-item
+            }
+        } else {
+            $html .= '<p class="text-muted">No activity logs found.</p>';
+        }
+
+        echo $html;
+    }
 }

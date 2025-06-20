@@ -388,7 +388,7 @@ function syncExcel_new($id = "")
 
         // Fetch selected column names ordered by sequence
         $selectColumnName = $CI->db
-            ->select("GROUP_CONCAT(fetch_column_name ORDER BY sequence ASC) AS fetch_column_name", false)
+            ->select("GROUP_CONCAT(fetch_column_name) AS fetch_column_name", false)
             ->from(db_prefix() . "excel_column_update")
             ->where_in("id", $column_ids)
             ->get()

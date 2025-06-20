@@ -260,6 +260,7 @@
             echo render_leads_source_select($sources, $selected, 'lead_add_edit_source');
             ?>
          </div>
+         <?php if (has_permission('leads', '', 'assign_update')) { ?>
          <div class="col-md-3 <?php echo $hide_change_assignee; ?>">
             <?php
             $assigned_attrs = array();
@@ -275,221 +276,222 @@
             }
             echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs); ?>
          </div>
-         <div class="clearfix"></div>
-         <hr class="mtop5 mbot10" />
-         <div class="col-md-12">
-            <div class="form-group no-mbot" id="inputTagsWrapper">
-               <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i> <?php echo _l('tags'); ?></label>
-               <input type="text" class="tagsinput" onkeyup="init_tags_inputs()" id="tags" name="tags" value="<?php echo (isset($lead) ? prep_tags_input(get_tags_in($lead->id, 'lead')) : ''); ?>" data-role="tagsinput">
-            </div>
+      <?php } ?>
+      <div class="clearfix"></div>
+      <hr class="mtop5 mbot10" />
+      <div class="col-md-12">
+         <div class="form-group no-mbot" id="inputTagsWrapper">
+            <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i> <?php echo _l('tags'); ?></label>
+            <input type="text" class="tagsinput" onkeyup="init_tags_inputs()" id="tags" name="tags" value="<?php echo (isset($lead) ? prep_tags_input(get_tags_in($lead->id, 'lead')) : ''); ?>" data-role="tagsinput">
          </div>
-         <div class="clearfix"></div>
-         <hr class="no-mtop mbot15" />
+      </div>
+      <div class="clearfix"></div>
+      <hr class="no-mtop mbot15" />
 
-         <div class="col-md-6">
-            <?php $value = (isset($lead) ? $lead->name : ''); ?>
-            <?php echo render_input('name', 'lead_add_edit_name', $value); ?>
-            <?php $value = (isset($lead) ? $lead->phonenumber : '');
-            ?>
-            <?php // echo render_input('phonenumber','lead_add_edit_phonenumber',$value); 
-            ?>
-            <?php if (is_admin() || empty($lead->id)) { ?>
-               <div class="form-group" app-field-wrapper="phonenumber">
-                  <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
-                  <input type="text" maxlength="10" pattern="\d{10}" id="phonenumber" name="phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
-                                                                                                                                                         echo 'maxlength="10"';
-                                                                                                                                                      } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
-               </div>
-            <?php } else { ?>
-               <div class="form-group" app-field-wrapper="phonenumber">
-                  <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
-                  <p style="border: 1px solid; padding: 8px; border-radius: 6px; border-color: #bebebe;"><?= $value ?></p>
-               </div>
-            <?php } ?>
-
-            <?php $value = (isset($lead) ? $lead->email : ''); ?>
-            <?php echo render_input('email', 'lead_add_edit_email', $value); ?>
-            <div class="hide">
-               <?php $value = (isset($lead) ? $lead->title : ''); ?>
-               <?php echo render_input('title', 'lead_title', $value); ?>
-
-               <?php if ((isset($lead) && empty($lead->website)) || !isset($lead)) {
-                  $value = (isset($lead) ? $lead->website : '');
-                  echo render_input('website', 'lead_website', $value);
-               } else { ?>
-                  <div class="form-group hide">
-                     <label for="website"><?php echo _l('lead_website'); ?></label>
-                     <div class="input-group">
-                        <input type="text" name="website" id="website" value="<?php echo $lead->website; ?>" class="form-control">
-                        <div class="input-group-addon">
-                           <span>
-                              <a href="<?php echo maybe_add_http($lead->website); ?>" target="_blank" tabindex="-1">
-                                 <i class="fa fa-globe"></i>
-                              </a>
-                           </span>
-                        </div>
-                     </div>
-                  </div>
-               <?php } ?>
-            </div>
-            <?php $value = (isset($lead) ? $lead->reference_name : ''); ?>
-            <?php echo render_input('reference_name', 'Reference Name', $value); ?>
-            <div class="form-group hide">
-               <label for="lead_value"><?php echo _l('lead_value'); ?></label>
-               <div class="input-group" data-toggle="tooltip" title="<?php echo _l('lead_value_tooltip'); ?>">
-                  <input type="text" maxlength="10" pattern="\d{10}" class="form-control" name="lead_value" value="<?php if (isset($lead)) {
-                                                                                                                        echo $lead->lead_value;
-                                                                                                                     } ?>">
-                  <div class="input-group-addon">
-                     <?php echo $base_currency->symbol; ?>
-                  </div>
-               </div>
-               </label>
-            </div>
-            <div class="hide">
-               <?php $value = (isset($lead) ? $lead->company : ''); ?>
-               <?php echo render_input('company', 'lead_company', $value); ?>
-            </div>
-         </div>
-         <div class="col-md-6">
-            <?php $value = (isset($lead) ? $lead->alternative_phonenumber : ''); ?>
-            <div class="form-group" app-field-wrapper="alternative_phonenumber">
-               <label for="alternative_phonenumber" class="control-label"><?= _l('lead_add_edit_alternative_phonenumber'); ?></label>
-               <input type="text" maxlength="10" pattern="\d{10}" id="alternative_phonenumber" name="alternative_phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
-                                                                                                                                                                              echo 'maxlength="10"';
-                                                                                                                                                                           } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>">
-            </div>
-            <?php // $value = (isset($lead) ? $lead->address : ''); 
-            ?>
-            <?php //echo render_textarea('address','lead_address',$value,array('rows'=>1,'style'=>'height:36px;font-size:100%;')); 
-            ?>
-            <?php $value = (isset($lead) ? $lead->city : ''); ?>
-            <?php echo render_input('city', 'lead_city', $value); ?>
-            <?php $value = (isset($lead) ? $lead->state : ''); ?>
-            <?php echo render_input('state', 'lead_state', $value); ?>
-            <?php
-            // $countries= get_all_countries();
-            // $customer_default_country = get_option('customer_default_country');
-            // $selected =( isset($lead) ? $lead->country : $customer_default_country);
-            // echo render_select( 'country',$countries,array( 'country_id',array( 'short_name')), 'lead_country',$selected,array('data-none-selected-text'=>_l('dropdown_non_selected_tex')));
-            ?>
-            <?php //$value = (isset($lead) ? $lead->zip : ''); 
-            ?>
-            <?php //echo render_input('zip','lead_zip',$value); 
-            ?>
-            <?php if (get_option('disable_language') == 0) { ?>
-               <div class="form-group">
-                  <label for="default_language" class="control-label"><?php echo _l('localization_default_language'); ?></label>
-                  <select name="default_language" data-live-search="true" id="default_language" class="form-control selectpicker" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
-                     <option value=""><?php echo _l('system_default_string'); ?></option>
-                     <?php foreach ($this->app->get_available_languages() as $availableLanguage) {
-                        $selected = '';
-                        if (isset($lead)) {
-                           if ($lead->default_language == $availableLanguage) {
-                              $selected = 'selected';
-                           }
-                        }
-                     ?>
-                        <option value="<?php echo $availableLanguage; ?>" <?php echo $selected; ?>><?php echo ucfirst($availableLanguage); ?></option>
-                     <?php } ?>
-                  </select>
-               </div>
-            <?php } ?>
-         </div>
-         <div class="clearfix"></div>
-         <hr class="mtop5 mbot10" />
-         <div class="col-md-12 mtop15">
-            <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
-            <?php echo render_custom_fields('leads', $rel_id,); ?>
-         </div>
-         <?php
-         $exam_details = !empty($lead->exam_details) ? json_decode($lead->exam_details, true) : [];
+      <div class="col-md-6">
+         <?php $value = (isset($lead) ? $lead->name : ''); ?>
+         <?php echo render_input('name', 'lead_add_edit_name', $value); ?>
+         <?php $value = (isset($lead) ? $lead->phonenumber : '');
          ?>
-         <div class="mtop15 multiple-exam-section row" style="display:<?= !empty($exam_details) ? '' : 'none' ?>;">
-            <?php if (!empty($exam_details)) {
-               unset($_POST["exam_name"]);
-               unset($_POST["exam_score"]);
-               $exam_index = 1;
-               foreach ($exam_details as $exam) {
-                  $examName = !empty($exam["exam_name"]) ? $exam["exam_name"] : '';
-                  $examScore = !empty($exam["exam_score"]) ? $exam["exam_score"] : '';
-                  if ($exam_index == 1) {
-            ?>
-                     <div class="exam-section child col-md-12">
-                        <div class="col-md-5 required">
-                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)"), [], '', '', 'exam_name_' . timestamp_create(), [], '', '', time()); ?>
-                        </div>
-                        <div class="col-md-5 required">
-                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>
-                        </div>
-                        <div class="col-md-2 add_btn"><button class="btn btn-primary" onclick="add_exam_block()" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button></div>
+         <?php // echo render_input('phonenumber','lead_add_edit_phonenumber',$value); 
+         ?>
+         <?php if (is_admin() || empty($lead->id)) { ?>
+            <div class="form-group" app-field-wrapper="phonenumber">
+               <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
+               <input type="text" maxlength="10" pattern="\d{10}" id="phonenumber" name="phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
+                                                                                                                                                      echo 'maxlength="10"';
+                                                                                                                                                   } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>" required>
+            </div>
+         <?php } else { ?>
+            <div class="form-group" app-field-wrapper="phonenumber">
+               <label for="phonenumber" class="control-label"><small class="req text-danger">* </small>Phone</label>
+               <p style="border: 1px solid; padding: 8px; border-radius: 6px; border-color: #bebebe;"><?= $value ?></p>
+            </div>
+         <?php } ?>
+
+         <?php $value = (isset($lead) ? $lead->email : ''); ?>
+         <?php echo render_input('email', 'lead_add_edit_email', $value); ?>
+         <div class="hide">
+            <?php $value = (isset($lead) ? $lead->title : ''); ?>
+            <?php echo render_input('title', 'lead_title', $value); ?>
+
+            <?php if ((isset($lead) && empty($lead->website)) || !isset($lead)) {
+               $value = (isset($lead) ? $lead->website : '');
+               echo render_input('website', 'lead_website', $value);
+            } else { ?>
+               <div class="form-group hide">
+                  <label for="website"><?php echo _l('lead_website'); ?></label>
+                  <div class="input-group">
+                     <input type="text" name="website" id="website" value="<?php echo $lead->website; ?>" class="form-control">
+                     <div class="input-group-addon">
+                        <span>
+                           <a href="<?php echo maybe_add_http($lead->website); ?>" target="_blank" tabindex="-1">
+                              <i class="fa fa-globe"></i>
+                           </a>
+                        </span>
                      </div>
-                  <?php
-                  } else {
-                  ?>
-                     <div class="exam-section child col-md-12">
-                        <div class="col-md-5 required">
-                           <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)", "required" => "required"), [], '', '', 'exam_name_' . timestamp_create(), [], '', '', time()); ?>
-                        </div>
-                        <div class="col-md-5 required">
-                           <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>
-                        </div>
-                        <div class="col-md-2 add_btn"><button class="btn btn-danger" onclick="remove_exam_block()" type="button"><i class="fa fa-minus" aria-hidden="true"></i></button></div>
-                     </div>
-                  <?php
-                  }
-                  $exam_index++;
-                  ?>
-            <?php
-               }
-            }
-            ?>
+                  </div>
+               </div>
+            <?php } ?>
          </div>
-         <div class="clearfix"></div>
-         <hr class="mtop5 mbot10" />
-         <div class="clearfix"></div>
-         <!-- <div class="col-md-12">
+         <?php $value = (isset($lead) ? $lead->reference_name : ''); ?>
+         <?php echo render_input('reference_name', 'Reference Name', $value); ?>
+         <div class="form-group hide">
+            <label for="lead_value"><?php echo _l('lead_value'); ?></label>
+            <div class="input-group" data-toggle="tooltip" title="<?php echo _l('lead_value_tooltip'); ?>">
+               <input type="text" maxlength="10" pattern="\d{10}" class="form-control" name="lead_value" value="<?php if (isset($lead)) {
+                                                                                                                     echo $lead->lead_value;
+                                                                                                                  } ?>">
+               <div class="input-group-addon">
+                  <?php echo $base_currency->symbol; ?>
+               </div>
+            </div>
+            </label>
+         </div>
+         <div class="hide">
+            <?php $value = (isset($lead) ? $lead->company : ''); ?>
+            <?php echo render_input('company', 'lead_company', $value); ?>
+         </div>
+      </div>
+      <div class="col-md-6">
+         <?php $value = (isset($lead) ? $lead->alternative_phonenumber : ''); ?>
+         <div class="form-group" app-field-wrapper="alternative_phonenumber">
+            <label for="alternative_phonenumber" class="control-label"><?= _l('lead_add_edit_alternative_phonenumber'); ?></label>
+            <input type="text" maxlength="10" pattern="\d{10}" id="alternative_phonenumber" name="alternative_phonenumber" class="form-control phonenumber-validation" <?php if ($value == '') {
+                                                                                                                                                                           echo 'maxlength="10"';
+                                                                                                                                                                        } ?> pattern="[6-9][0-9]{9}" value="<?php echo $value; ?>">
+         </div>
+         <?php // $value = (isset($lead) ? $lead->address : ''); 
+         ?>
+         <?php //echo render_textarea('address','lead_address',$value,array('rows'=>1,'style'=>'height:36px;font-size:100%;')); 
+         ?>
+         <?php $value = (isset($lead) ? $lead->city : ''); ?>
+         <?php echo render_input('city', 'lead_city', $value); ?>
+         <?php $value = (isset($lead) ? $lead->state : ''); ?>
+         <?php echo render_input('state', 'lead_state', $value); ?>
+         <?php
+         // $countries= get_all_countries();
+         // $customer_default_country = get_option('customer_default_country');
+         // $selected =( isset($lead) ? $lead->country : $customer_default_country);
+         // echo render_select( 'country',$countries,array( 'country_id',array( 'short_name')), 'lead_country',$selected,array('data-none-selected-text'=>_l('dropdown_non_selected_tex')));
+         ?>
+         <?php //$value = (isset($lead) ? $lead->zip : ''); 
+         ?>
+         <?php //echo render_input('zip','lead_zip',$value); 
+         ?>
+         <?php if (get_option('disable_language') == 0) { ?>
+            <div class="form-group">
+               <label for="default_language" class="control-label"><?php echo _l('localization_default_language'); ?></label>
+               <select name="default_language" data-live-search="true" id="default_language" class="form-control selectpicker" data-none-selected-text="<?php echo _l('dropdown_non_selected_tex'); ?>">
+                  <option value=""><?php echo _l('system_default_string'); ?></option>
+                  <?php foreach ($this->app->get_available_languages() as $availableLanguage) {
+                     $selected = '';
+                     if (isset($lead)) {
+                        if ($lead->default_language == $availableLanguage) {
+                           $selected = 'selected';
+                        }
+                     }
+                  ?>
+                     <option value="<?php echo $availableLanguage; ?>" <?php echo $selected; ?>><?php echo ucfirst($availableLanguage); ?></option>
+                  <?php } ?>
+               </select>
+            </div>
+         <?php } ?>
+      </div>
+      <div class="clearfix"></div>
+      <hr class="mtop5 mbot10" />
+      <div class="col-md-12 mtop15">
+         <?php $rel_id = (isset($lead) ? $lead->id : false); ?>
+         <?php echo render_custom_fields('leads', $rel_id,); ?>
+      </div>
+      <?php
+      $exam_details = !empty($lead->exam_details) ? json_decode($lead->exam_details, true) : [];
+      ?>
+      <div class="mtop15 multiple-exam-section row" style="display:<?= !empty($exam_details) ? '' : 'none' ?>;">
+         <?php if (!empty($exam_details)) {
+            unset($_POST["exam_name"]);
+            unset($_POST["exam_score"]);
+            $exam_index = 1;
+            foreach ($exam_details as $exam) {
+               $examName = !empty($exam["exam_name"]) ? $exam["exam_name"] : '';
+               $examScore = !empty($exam["exam_score"]) ? $exam["exam_score"] : '';
+               if ($exam_index == 1) {
+         ?>
+                  <div class="exam-section child col-md-12">
+                     <div class="col-md-5 required">
+                        <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)"), [], '', '', 'exam_name_' . timestamp_create(), [], '', '', time()); ?>
+                     </div>
+                     <div class="col-md-5 required">
+                        <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>
+                     </div>
+                     <div class="col-md-2 add_btn"><button class="btn btn-primary" onclick="add_exam_block()" type="button"><i class="fa fa-plus" aria-hidden="true"></i></button></div>
+                  </div>
+               <?php
+               } else {
+               ?>
+                  <div class="exam-section child col-md-12">
+                     <div class="col-md-5 required">
+                        <?php echo render_input('exam_name[]', 'lead_exam_name', $examName, 'text', array("onkeyup" => "check_exam_name(this)", "required" => "required"), [], '', '', 'exam_name_' . timestamp_create(), [], '', '', time()); ?>
+                     </div>
+                     <div class="col-md-5 required">
+                        <?php echo render_input('exam_score[]', 'lead_exam_score', $examScore, 'number', array("maxlength" => "3", "max" => "999", "min" => "1", "onkeyup" => "check_exam_score(this)", "required" => "required"), [], '', '', 'exam_score_' . timestamp_create()); ?>
+                     </div>
+                     <div class="col-md-2 add_btn"><button class="btn btn-danger" onclick="remove_exam_block()" type="button"><i class="fa fa-minus" aria-hidden="true"></i></button></div>
+                  </div>
+               <?php
+               }
+               $exam_index++;
+               ?>
+         <?php
+            }
+         }
+         ?>
+      </div>
+      <div class="clearfix"></div>
+      <hr class="mtop5 mbot10" />
+      <div class="clearfix"></div>
+      <!-- <div class="col-md-12">
             <?php $value = (isset($lead) ? $lead->address : '');
             ?>
             <?php echo render_textarea('address', 'lead_address', $value, array('rows' => 1, 'style' => 'height:36px;font-size:100%;'));
             ?>
          </div> -->
-         <div class="col-md-12">
+      <div class="col-md-12">
 
-            <div class="row ">
-               <div class="col-md-12">
-                  <?php $value = (isset($lead) ? $lead->description : ''); ?>
-                  <?php echo render_textarea('description', 'lead_description', $value); ?>
-                  <?php if (!isset($lead)) { ?>
-                     <div class="lead-select-date-contacted hide">
-                        <?php echo render_datetime_input('custom_contact_date', 'lead_add_edit_datecontacted', '', array('data-date-end-date' => date('Y-m-d'))); ?>
-                     </div>
-                  <?php } else { ?>
-                     <div class="hide">
-                        <?php echo render_datetime_input('lastcontact', 'leads_dt_last_contact', _dt($lead->lastcontact), array('data-date-end-date' => date('Y-m-d'))); ?>
-                     </div>
-                  <?php } ?>
-                  <div class="checkbox-inline checkbox checkbox-primary<?php if (isset($lead)) {
-                                                                           echo ' hide';
-                                                                        } ?><?php if (isset($lead) && (is_lead_creator($lead->id) || has_permission('leads', '', 'view'))) {
+         <div class="row ">
+            <div class="col-md-12">
+               <?php $value = (isset($lead) ? $lead->description : ''); ?>
+               <?php echo render_textarea('description', 'lead_description', $value); ?>
+               <?php if (!isset($lead)) { ?>
+                  <div class="lead-select-date-contacted hide">
+                     <?php echo render_datetime_input('custom_contact_date', 'lead_add_edit_datecontacted', '', array('data-date-end-date' => date('Y-m-d'))); ?>
+                  </div>
+               <?php } else { ?>
+                  <div class="hide">
+                     <?php echo render_datetime_input('lastcontact', 'leads_dt_last_contact', _dt($lead->lastcontact), array('data-date-end-date' => date('Y-m-d'))); ?>
+                  </div>
+               <?php } ?>
+               <div class="checkbox-inline checkbox checkbox-primary<?php if (isset($lead)) {
+                                                                        echo ' hide';
+                                                                     } ?><?php if (isset($lead) && (is_lead_creator($lead->id) || has_permission('leads', '', 'view'))) {
                                                                                  echo ' lead-edit';
                                                                               } ?>">
-                     <input type="checkbox" name="is_public" <?php if (isset($lead)) {
-                                                                  if ($lead->is_public == 1) {
-                                                                     echo 'checked';
-                                                                  }
-                                                               }; ?> id="lead_public">
-                     <label for="lead_public"><?php echo _l('lead_public'); ?></label>
-                  </div>
-                  <?php if (!isset($lead)) { ?>
-                     <div class="checkbox-inline checkbox checkbox-primary hide">
-                        <input type="checkbox" name="contacted_today" id="contacted_today" checked>
-                        <label for="contacted_today"><?php echo _l('lead_add_edit_contacted_today'); ?></label>
-                     </div>
-                  <?php } ?>
+                  <input type="checkbox" name="is_public" <?php if (isset($lead)) {
+                                                               if ($lead->is_public == 1) {
+                                                                  echo 'checked';
+                                                               }
+                                                            }; ?> id="lead_public">
+                  <label for="lead_public"><?php echo _l('lead_public'); ?></label>
                </div>
+               <?php if (!isset($lead)) { ?>
+                  <div class="checkbox-inline checkbox checkbox-primary hide">
+                     <input type="checkbox" name="contacted_today" id="contacted_today" checked>
+                     <label for="contacted_today"><?php echo _l('lead_add_edit_contacted_today'); ?></label>
+                  </div>
+               <?php } ?>
             </div>
          </div>
+      </div>
       </div>
    </div>
    <?php if (isset($lead)) { ?>
