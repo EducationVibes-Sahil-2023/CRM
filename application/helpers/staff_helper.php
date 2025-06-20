@@ -46,11 +46,10 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("delete_documents" => "Delete Documents")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("delete_documents" => "Delete Documents",'activity_logs' => "Activity Logs")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
-            'activity_logs' => "Activity Logs"
         ],
         'email_templates' => [
             'name'         => _l('email_templates'),
