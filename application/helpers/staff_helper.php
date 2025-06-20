@@ -50,6 +50,7 @@ function get_available_staff_permissions($data = [])
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
+            'activity_logs' => "Activity Logs"
         ],
         'email_templates' => [
             'name'         => _l('email_templates'),
@@ -208,6 +209,7 @@ function get_available_staff_permissions($data = [])
                 'mass_assign' => 'Mass Assignation',
                 'import' => 'Leads Import',
                 'approval' => 'Transfer Leads Approval',
+                'assign_update'=>"Lead Assignation Update"
             ],
             'help' => [
                 'view' => _l('help_leads_permission_view'),

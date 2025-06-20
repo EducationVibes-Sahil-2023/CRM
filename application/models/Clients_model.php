@@ -2473,4 +2473,22 @@ class Clients_model extends App_Model
 
         return false;
     }
+
+    function activity_logs($table, $client_id, $like_query = "")
+    {
+        $like_query = trim($like_query);
+
+        $this->db->select("l.*, CONCAT(s.firstname, ' ', s.lastname) AS full_name,max(l.date) datetime");
+        $this->db->from($table . ' l');
+        $this->db->join(db_prefix() . 'staff s', 'l.staffid = s.staffid', 'left');
+        $this->db->where('l.client_id', $client_id);
+
+        if (!empty($like_query)) {
+            $this->db->like('l.description', $like_query, 'both'); // same as '%value%'
+        }
+        $this->db->group_by('l.id');
+        $this->db->order_by('l.date', 'desc');
+
+        return $activity_logs = $this->db->get()->result_array();
+    }
 }
