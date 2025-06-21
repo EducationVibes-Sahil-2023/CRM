@@ -4512,7 +4512,7 @@ class Clients extends AdminController
                 return;
                 die;
             }
-            $this->check_documents_validation(($tracker_id + 1));
+
             $data = $this->Legalization();
         } else if ($tracker_id == 6) {
             $data = $this->feesDeposite();
@@ -5230,6 +5230,12 @@ class Clients extends AdminController
         $client_id = $this->input->post("client_id");
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $legalization = !empty($this->input->post("legalization")) ? json_decode($this->input->post("legalization"), true) : [];
+        $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
+
+
+        if ($save != 1) {
+            $this->check_documents_validation(($tracker_id + 1));
+        }
         $legalization_doc = [];
         $files = $_FILES;
 
@@ -5250,6 +5256,7 @@ class Clients extends AdminController
             $update_entry = [
                 'id'                => $row['id'],
                 'ministry_document_recived'           => $row['ministry_doc_received'] ?? 0,
+                'leg_payment_date'           => $row['leg_payment_date'] ?? '',
                 'contract_signed'  => $row['contract_signed'] ?? 0
             ];
 
@@ -5296,6 +5303,34 @@ class Clients extends AdminController
 
             $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
 
+            if ($save == 1) {
+                $data = [
+                    'resp_code'               => 'RCS',
+                    'resp_desc'               => "Legalization updated successfully.",
+                    'university_shortlisting' => $university_shortlisting_data
+                ];
+
+                if (($university_shortlisting_data[0]["contract_signed"]) || ($university_shortlisting_data[0]["ministry_document_recived"] == 1 && $university_shortlisting_data[0]["ministry_payment"] != "")) {
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => LEGALIZATION,
+                        "applicant_sub_status" => LEGALIZATION_COMPLETED,
+                    ];
+                } else {
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => LEGALIZATION,
+                        "applicant_sub_status" => LEGALIZATION_PENDING,
+                    ];
+                }
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_client_data);
+
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+                return $data;
+                die;
+            }
             $update_client_data = [
                 "applicant_status" => 0,
                 "applicant_stage" => FEES_DEPOSITE,
@@ -5344,6 +5379,8 @@ class Clients extends AdminController
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $fees_deposite = !empty($this->input->post("fees_deposite")) ? json_decode($this->input->post("fees_deposite"), true) : [];
         $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+        $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
+
 
         $legalization_doc = [];
         $files = $_FILES;
@@ -5441,17 +5478,27 @@ class Clients extends AdminController
             $update = $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $batch_update_data, 'id');
 
 
-            $update_client_data = [
-                "applicant_status" => 0,
-                "applicant_stage" => INVITATION,
-                "applicant_sub_status" => INVITATION_PENDING,
-            ];
+            if ($save == 1) {
+
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => FEES_DEPOSITE,
+                    "applicant_sub_status" => FEES_DEPOSITE_COMPLETED,
+                ];
+                $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+            } else {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => INVITATION,
+                    "applicant_sub_status" => INVITATION_PENDING,
+                ];
+                $this->update_applicant_tracker_stages($client_id, $tracker_id);
+            }
 
             $this->db->where("userid", $client_id);
             $this->db->update(db_prefix() . 'clients', $update_client_data);
 
             // Update applicant tracker stages
-            $this->update_applicant_tracker_stages($client_id, $tracker_id);
             $this->db->insert(db_prefix() . 'application_activity_log', array(
                 "description" => "Fees data updated by " . get_staff_full_name(get_staff_user_id()),
                 "date"        => date('Y-m-d H:i:s'),
@@ -6624,7 +6671,7 @@ class Clients extends AdminController
         }
 
         $type = (int) $_POST['type'];
-$like_query="";
+        $like_query = "";
         // Resolve table name based on activity type
         switch ($type) {
             case 1:
