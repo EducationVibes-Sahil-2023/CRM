@@ -249,7 +249,7 @@ $states = get_states();
                   <div class="col-12">
                      <div class="checkbox">
                         <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
-                        <input class="form-check-input checkbox-group" type="checkbox" id="air_ticket_include_check" name="air_ticket_include_check">
+                        <input class="form-check-input checkbox-group" type="checkbox" value="1" id="air_ticket_include_check" name="air_ticket_include_check">
                         <label class="form-check-label" for="air_ticket_include_check">
                            Air ticket inc. in Service Charge <span class="text-danger">*</span>
                         </label>
@@ -376,12 +376,14 @@ $states = get_states();
       }
 
       if (countryName.toLowerCase() === "georgia") {
-         $("#air_ticket_include_check").removeAttr("disabled");
+        //  $("#air_ticket_include_check").removeAttr("onclick="return false;");
+       $("#air_ticket_include_check").removeAttr("onclick");
          $("#air_ticket_include_check").prop("checked", false);
          $("#air_ticket_include").val(0);
 
       } else {
-         $("#air_ticket_include_check").attr("disabled", true);
+        //  $("#air_ticket_include_check").attr("disabled", true);
+         $("#air_ticket_include_check").attr("onclick", "return false;");
          $("#air_ticket_include_check").prop("checked", true);
          $("#air_ticket_include").val(1);
 

@@ -94,6 +94,8 @@ class Clients_model extends App_Model
      */
     public function add($data, $client_or_lead_convert_request = false)
     {
+     
+     
         $contact_data = [];
         foreach ($this->contact_columns as $field) {
             if (isset($data[$field])) {

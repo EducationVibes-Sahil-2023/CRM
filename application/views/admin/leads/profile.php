@@ -260,8 +260,14 @@
             echo render_leads_source_select($sources, $selected, 'lead_add_edit_source');
             ?>
          </div>
-         <?php if (has_permission('leads', '', 'assign_update')) { ?>
-         <div class="col-md-3 <?php echo $hide_change_assignee; ?>">
+                <?php
+         $assignee_class = $hide_change_assignee;
+         if (!has_permission('leads', '', 'assign_update')) {
+            $assignee_class .= ' hide';
+         }
+         ?>
+         <div class="col-md-3 <?php echo $assignee_class; ?>">
+
             <?php
             $assigned_attrs = array();
             $selected = (isset($lead) ? $lead->assigned : get_staff_user_id());
@@ -276,7 +282,6 @@
             }
             echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs); ?>
          </div>
-      <?php } ?>
       <div class="clearfix"></div>
       <hr class="mtop5 mbot10" />
       <div class="col-md-12">
