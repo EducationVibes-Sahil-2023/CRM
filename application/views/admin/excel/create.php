@@ -134,7 +134,13 @@ $academicYears = [
                                                         </td>
 
                                                         <td>
-                                                            <input class="form-control" id="sequence_column_<?= $col["id"] ?>" value="<?= !empty($selected_sequence[$col["id"]]) ? $selected_sequence[$col["id"]] : '' ?>" type="number" name="sequence[<?= $col["id"] ?>]">
+                                                            <input 
+  class="form-control" 
+  id="sequence_column_<?= $col["id"] ?>" 
+  value="<?= !empty($selected_sequence[$col["id"]]) ? $selected_sequence[$col["id"]] : '' ?>" 
+  type="number" 
+  step="any" 
+  name="sequence[<?= $col["id"] ?>]">
                                                         </td>
                                                     </tr>
                                                 <?php $index++;
