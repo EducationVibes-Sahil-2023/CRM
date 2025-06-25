@@ -253,6 +253,10 @@ if (!is_admin()) {
             )';
         } else {
 
+if(has_permission('customers', '', 'applicant_view')){
+    
+}
+else{
             $where[] = 'AND (
                 ' . db_prefix() . 'clients.userid IN (
                     SELECT customer_id 
@@ -262,6 +266,7 @@ if (!is_admin()) {
                 
                 OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
             )';
+}
         }
     }
 }

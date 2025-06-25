@@ -46,7 +46,7 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("delete_documents" => "Delete Documents",'activity_logs' => "Activity Logs")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only","delete_documents" => "Delete Documents",'activity_logs' => "Activity Logs")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],

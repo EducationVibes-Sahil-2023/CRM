@@ -1294,11 +1294,13 @@ class Leads extends AdminController
             $data['convert_to_customer']     = $data['convert_to_customer'];
 
             $data['billing_country'] = $data['country'];
+            $data['air_ticket_include'] = !empty($data["air_ticket_include_check"])?1:0;
             $data['application_text'] = "Registration";
             $data['applicant_stage'] = REGISTRATION;
             $data['applicant_status'] = "0";
             $data['applicant_sub_status'] = REGISTRATION_PENDING;
             $data['is_primary'] = 1;
+            $air_ticket_include = !empty($data["air_ticket_include_check"])?$data["air_ticket_include_check"]:0;
             $fees_array = [];
             foreach ($data["applicant_fees"] as $applicant_fee) {
                 if (!empty($data[$applicant_fee])) {
@@ -1320,10 +1322,11 @@ class Leads extends AdminController
             unset($data["Passport_status"]);
             unset($data["convert_to_customer"]);
             unset($data["custom_fields"]["customers"][39]);
+            unset($data["air_ticket_include_check"]);
 
 
             $id = $this->clients_model->add($data, true);
-
+// echo $this->db->last_query();
 
             if ($id) {
                 // Prepare the fees array for batch insert or update

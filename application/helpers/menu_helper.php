@@ -613,6 +613,12 @@ function app_init_admin_sidebar_menu_items()
                           'name'     => 'API',
                           'position' => 65,
                   ]);*/
+                  
+                      $CI->app_menu->add_setup_menu_item('excel', [
+                'name'     => "Excel",
+                'href'     => admin_url('excel'),
+                'position' => 15,
+        ]);
         }
 
 
@@ -632,9 +638,5 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
-        $CI->app_menu->add_setup_menu_item('excel', [
-                'name'     => "Excel",
-                'href'     => admin_url('excel'),
-                'position' => 15,
-        ]);
+    
 }
