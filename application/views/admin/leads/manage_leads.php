@@ -4,6 +4,7 @@
    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-daterangepicker/3.1/daterangepicker.css" />
 <?php init_head();
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
+$reference_name  = $this->db->select("reference_name as name")->where('reference_name!=', "")->get(db_prefix() . 'leads')->result_array();
 ?>
 
 <link href="<?= base_url("assets/css/uislider.css") ?>" rel="stylesheet">
@@ -924,6 +925,34 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             </div>
          </div>
       </li>
+      <?php if (is_admin() || $role == 3) { ?>
+         <li class="">
+            <div class="leads-filter-column">
+               <div id="leads-filter-refrence">
+                  <?php
+                  echo render_select(
+                     'reference_name[]',
+                     $reference_name,
+                     array('name', 'name'),
+                     '',
+                     '',
+                     array(
+                        'data-width' => '100%',
+                        'data-none-selected-text' => "Reference Name",
+                        'multiple' => true,
+                        'data-actions-box' => true
+                     ),
+                     array(),
+                     'no-mbot',
+                     '',
+                     false,
+                     "reference_name"
+                  );
+                  ?>
+               </div>
+            </div>
+         </li>
+      <?php } ?>
       <li class="">
          <div id="from_date_right" data-from="from_date" data-to="to_date" class="date-filter form-control">
             <i class="fa fa-calendar"></i>
@@ -1359,11 +1388,14 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       var element_view_status = document.getElementById("view_status");
       var element_lead_type = document.getElementById("lead_type");
       var element_form_name = document.getElementById("view_form");
+      var element_reference_name = document.getElementById("reference_name");
+
       var view_assigned_options = "";
       var view_source_options = "";
       var view_status_options = "";
       var view_lead_type_options = "";
       var view_view_form_options = "";
+      var view_reference_name_options = "";
       if (typeof(element_view_source) != 'undefined' && element_view_source != null) {
          view_source_options = document.getElementById('view_source').selectedOptions;
          view_source_options = Array.from(view_source_options).map(({
@@ -1393,6 +1425,12 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
       if (typeof(element_form_name) != 'undefined' && element_form_name != null) {
          view_view_form_options = document.getElementById('view_form').selectedOptions;
          view_view_form_options = Array.from(view_view_form_options).map(({
+            value
+         }) => value);
+      }
+      if (typeof(element_reference_name) != 'undefined' && element_reference_name != null) {
+         view_reference_name_options = document.getElementById('reference_name').selectedOptions;
+         view_reference_name_options = Array.from(view_reference_name_options).map(({
             value
          }) => value);
       }
@@ -1456,7 +1494,8 @@ $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'sta
             last_contact_date: last_contact_date,
             last_update_date: last_update_date,
             show_lead_status: status,
-            view_form: view_view_form_options
+            view_form: view_view_form_options,
+            reference_name: view_reference_name_options
          },
          dataType: "JSON",
          cache: false,
