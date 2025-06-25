@@ -1458,6 +1458,19 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
         // Merge both document arrays
         $document = array_merge($document, $document_country);
 
+
+        $unique = [];
+        $seen_ids = [];
+
+        foreach ($document as $item) {
+            if (!in_array($item['id'], $seen_ids)) {
+                $seen_ids[] = $item['id'];
+                $unique[] = $item;
+            }
+        }
+
+        $document = $unique;
+
         return $document;
     } catch (Exception $e) {
         log_message('error', 'Error fetching document: ' . $e->getMessage());

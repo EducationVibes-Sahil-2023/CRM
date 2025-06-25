@@ -258,6 +258,7 @@ define('SC_PENDING', '17');
 
 
 define('MAX_UNIVERSITY_MBBS_ABROAD', '2');
+define('MAX_UNIVERSITY_STUDY_ABROAD', '10');
 
 define('ORG_REST', 'original rest');
 define('ORG_GEORGIA', 'original georgia');

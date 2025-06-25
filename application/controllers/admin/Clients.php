@@ -153,7 +153,8 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        // $data["dropdown_courses"] = $this->s_db->query("SELECT id,course_name FROM tbl_courses where status = 0 group by course_name order by course_name asc")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
@@ -219,7 +220,7 @@ class Clients extends AdminController
 
         // Customer groups
         $data['groups'] = $this->clients_model->get_groups();
-
+     
 
         if ($id == '') {
             $title = _l('add_new', _l('client_lowercase'));
@@ -277,7 +278,12 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
+                if($data["lead_data"]->type == 1){
+                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
+                }
+                else{
                 $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
+                }
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
@@ -2095,6 +2101,65 @@ class Clients extends AdminController
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Admission Preferences Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
                 applicant_last_update($client_id);
+
+
+
+                if (!empty($_POST["application_universities"])) {
+                    $application_universities = $_POST["application_universities"];
+
+                    $insertData = [];
+                    $updateData = [];
+
+                    foreach ($application_universities as $application) {
+                        // Validate required fields
+                        if (
+                            !empty($application["country_id"]) &&
+                            !empty($application["university_id"]) &&
+                            !empty($application["course_id"])
+                        ) {
+                            $data = [
+                                "client_id"        => $client_id ?? '',
+                                "country_name"        => $application["country_name"] ?? '',
+                                "university_name"     => $application["university_name"] ?? '',
+                                "country_id"          => $application["country_id"],
+                                "university_id"       => $application["university_id"],
+                                "course_name"         => $application["course_name"] ?? '',
+                                "course_id"           => $application["course_id"],
+                                "session_intake"      => $application["session_intake"] ?? '',
+                                "status"              => 1,
+                                "applicant_stage"     => '',
+                                "applicant_sub_status" => '',
+                                "tracker_id"          => '',
+                            ];
+
+                            if (!empty($application["id"])) {
+                                // Update: add ID and updated fields
+                                $data["id"] = $application["id"];
+                                $data["updated_by"] = get_staff_user_id();
+                                $data["updated_date"] = date('Y-m-d H:i:s');
+                                $updateData[] = $data;
+                            } else {
+                                // Insert
+                                $data["created_by"] = get_staff_user_id();
+                                $data["created_date"] = date('Y-m-d H:i:s');
+                                $insertData[] = $data;
+                            }
+                        }
+                    }
+
+              
+                    // Insert new records
+                    if (!empty($insertData)) {
+                        $this->db->insert_batch(db_prefix() . 'client_university_shortlisting', $insertData);
+                    }
+
+                    // Update existing records
+                    if (!empty($updateData)) {
+                        // Use 'id' as the reference key for update_batch
+                        $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $updateData, 'id');
+                    }
+                }
+
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'Admission Preferences successfully updated';
                 $data['resp_id'] = $admissionPreferencesId;
@@ -6738,5 +6803,21 @@ class Clients extends AdminController
         }
 
         echo $html;
+    }
+
+    function get_courses()
+    {
+        $this->s_db->select('id, course_name');
+        $this->s_db->from('tbl_courses');
+        $this->s_db->where('status', 0);
+        if (!empty($_POST["search"])) {
+            $this->s_db->like("course_name", trim($_POST["search"]));
+        }
+        $this->s_db->group_by('course_name');
+        $this->s_db->order_by('course_name', 'asc');
+        $this->s_db->limit(50);
+        $response["filter_data"] = $this->s_db->get()->result_array();
+
+        echo json_encode($response);
     }
 }

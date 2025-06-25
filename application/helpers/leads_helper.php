@@ -7971,14 +7971,14 @@ function get_leads_summary_filter_new($params)
 
 function get_leads_summary_filter_neww($params)
 {
-    
-    $params['update_count_min'] = (isset($params['update_count_min']) && is_numeric($params['update_count_min']) && $params['update_count_min'] !== 'NaN')
-    ? $params['update_count_min']
-    : '';
 
-$params['update_count_max'] = (isset($params['update_count_max']) && is_numeric($params['update_count_max']) && $params['update_count_max'] !== 'NaN')
-    ? $params['update_count_max']
-    : '';
+    $params['update_count_min'] = (isset($params['update_count_min']) && is_numeric($params['update_count_min']) && $params['update_count_min'] !== 'NaN')
+        ? $params['update_count_min']
+        : '';
+
+    $params['update_count_max'] = (isset($params['update_count_max']) && is_numeric($params['update_count_max']) && $params['update_count_max'] !== 'NaN')
+        ? $params['update_count_max']
+        : '';
 
 
     $CI = &get_instance();
@@ -8078,7 +8078,7 @@ $params['update_count_max'] = (isset($params['update_count_max']) && is_numeric(
         $conditions[] = 'DATE(' . $tblleads . '.lastupdate_date) <= "' . $CI->db->escape_str($params['last_update_date']) . '"';
     }
 
-    if (isset($params['update_count_min']) && $params['update_count_min']!='') {
+    if (isset($params['update_count_min']) && $params['update_count_min'] != '') {
         $conditions[] =  $tblleads . '.update_count Between "' . $CI->db->escape_str($params['update_count_min']) . '" AND "' . $CI->db->escape_str($params['update_count_max']) . '"';
     }
 
@@ -8136,7 +8136,7 @@ $params['update_count_max'] = (isset($params['update_count_max']) && is_numeric(
 
         $where_c = "";
         $join_type = "";
-        if ($params['update_count_min']  && $params['update_count_min']!='') {
+        if ($params['update_count_min']  && $params['update_count_min'] != '') {
 
             $min = isset($params['update_count_min']) ? $params['update_count_min'] : 0;
             $max = isset($params['update_count_max']) ? $params['update_count_max'] : 0;
@@ -8767,9 +8767,76 @@ function get_states()
 }
 
 
-function visitor_status(){
+function visitor_status()
+{
     $CI = &get_instance();
 
     $CI->db->where('status', 1);
     return $CI->db->get(db_prefix() . 'visitor_status')->result_array();
 }
+
+function get_relationShip()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $board_dropdown = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'client_relationship')
+            ->get()
+            ->result_array();
+
+        return $board_dropdown; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching RelationShip: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+function get_degree()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $board_dropdown = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'degree')
+            ->get()
+            ->result_array();
+
+        return $board_dropdown; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching RelationShip: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
+function get_examList()
+{
+    $CI = &get_instance();
+
+    try {
+        // Fetch data from the `document_upload_type` table with a join to the `file_type` table
+        $board_dropdown = $CI->db
+            ->select("*")
+            ->where(array("status" => 1))
+            ->from(db_prefix() . 'exams_list')
+            ->get()
+            ->result_array();
+
+        return $board_dropdown; // Return the fetched data
+    } catch (Exception $e) {
+        // Log the error message if an exception occurs
+        log_message('error', 'Error fetching RelationShip: ' . $e->getMessage());
+
+        return []; // Return an empty array to ensure function fails gracefully
+    }
+}
+
