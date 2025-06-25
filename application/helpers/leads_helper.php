@@ -7698,7 +7698,7 @@ function calculate_call_duration_new($params = false, $max_status = 0)
             return "'" . trim($w) . "'";
         }, $reference_name);
 
-        $conditions[] = "  l.reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+        $sql .=" AND  l.reference_name IN (" . implode(',', $escaped_reference_name) . ")";
     }
 
     if (!empty($params['lead_type'])) {
