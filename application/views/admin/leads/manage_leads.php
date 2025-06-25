@@ -5,12 +5,12 @@
 <?php init_head();
 $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 $reference_name = $this->db
-    ->select("reference_name as name")
-    ->where('reference_name !=', "")
-    ->group_by("reference_name")
-    ->order_by("reference_name", "ASC")
-    ->get(db_prefix() . 'leads')
-    ->result_array();
+   ->select("reference_name as name")
+   ->where('reference_name !=', "")
+   ->group_by("reference_name")
+   ->order_by("reference_name", "ASC")
+   ->get(db_prefix() . 'leads')
+   ->result_array();
 
 ?>
 
@@ -68,10 +68,9 @@ $reference_name = $this->db
       bottom: unset !important;
       z-index: 9;
    }
-   
-   #filter-right-side .bootstrap-select .dropdown-menu
-   {
-              width: -webkit-fill-available !important;
+
+   #filter-right-side .bootstrap-select .dropdown-menu {
+      width: -webkit-fill-available !important;
    }
 </style>
 <style>
@@ -729,6 +728,14 @@ $reference_name = $this->db
                                  'name' => _l('lead_website'),
 
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-website')
+
+                              );
+                           }
+                           if (is_admin() || $role == 3) {
+                              $_table_data[] = array(
+                                 'name' => "Reference Name",
+
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-reference')
 
                               );
                            }
