@@ -275,6 +275,7 @@ if ($is_admin) {
 $aColumns = array_merge($aColumns, [
     $sTable . '.type as type',
     $sTable . '.website as website',
+    $sTable . '.reference_name as reference_name',
     $sTable . '.source as source',
     $sTable . '.email as email',
     $sTable . '.assigned as assigned',
@@ -555,6 +556,10 @@ foreach ($rResult as $aRow) {
     $row[] = $outputLeadType;
     if ($is_admin) {
         $row[] = $aRow['website'];
+    }
+
+    if ($is_admin || $role == 3) {
+        $row[] = $aRow['reference_name'];
     }
 
     $row[] = $aRow['source_name'];
