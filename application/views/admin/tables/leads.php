@@ -132,6 +132,16 @@ if ($this->ci->input->post('view_form')) {
     $where[] = "AND " . $sTable . ".website IN (" . implode(',', $escaped_websites) . ")";
 }
 
+if ($this->ci->input->post('reference_name')) {
+    $reference_name = $this->ci->input->post('reference_name');
+    $escaped_reference_name = array_map(function ($w) {
+        return "'" . $this->ci->db->escape_str(trim($w)) . "'";
+    }, $reference_name);
+
+    $where[] = "AND " . $sTable . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+}
+
+
 
 
 if ($this->ci->input->post('lead_type')) {
@@ -307,7 +317,7 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
 $search_column = [];
 // Define search and group-by clauses
 if (!empty($_POST["search"]["value"])) {
-    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber", $sTable . ".website", $sTable. ".name"];
+    $search_column = [$sTable . ".city", $sTable . ".phonenumber", $sTable . ".state", db_prefix() . 'tags.name', "alternative_phonenumber", $sTable . ".website", $sTable . ".name"];
 }
 
 $having_ = "";
