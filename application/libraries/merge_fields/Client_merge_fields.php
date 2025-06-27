@@ -111,13 +111,14 @@ class Client_merge_fields extends App_merge_fields
                 ],
             ],
             [
-                'name'      => 'Orignal Documents Received',
-                'key'       => '{orignal_documents_received}',
+                'name'      => 'Original Documents Received',
+                'key'       => '{original_documents_received}',
                 'available' => [
                     'client'
                 ],
                 'templates' => [
                     'client-document-reject',
+                    'client-original-document-notification'
                 ],
 
             ],
@@ -580,6 +581,7 @@ class Client_merge_fields extends App_merge_fields
         $documents_list = get_orignal_document_data_list(array($client_id));
         $documents_name_list = $documents_list[$client_id]["document_names"];
 
+
         if (!empty($client->addedfrom)) {
             $this->ci->db->select("email,firstname,lastname,phonenumber");
             $this->ci->db->where('staffid', $client->addedfrom);
@@ -641,7 +643,7 @@ class Client_merge_fields extends App_merge_fields
         }
 
         if (!empty($documents_name_list)) {
-            $fields['{orignal_documents_received}']       = $documents_name_list;
+            $fields['{original_documents_received}']       = $documents_name_list;
         }
 
         $this->ci->db->where('userid', $client_id);
