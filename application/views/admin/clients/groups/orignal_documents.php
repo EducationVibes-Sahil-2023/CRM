@@ -234,7 +234,7 @@ if (!is_postSale() && !is_admin()) {
             processData: false, // Prevents jQuery from converting FormData to a query string
             success: function(response) {
                 response = JSON.parse(response);
-                if (response.success) {
+                if (response.resp_code == "RCS") {
                     alert_float("success", response.message);
                     location.reload(); // Reload page after success
                 } else {
