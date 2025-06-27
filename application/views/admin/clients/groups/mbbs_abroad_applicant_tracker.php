@@ -9,7 +9,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 $university_partner_names = get_university_partner_names();
 // $documents_type =  get_documents($lead_type_status, [], 1);
 $delete_document_status = has_permission('customers', '', 'delete_documents');
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
+$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionprcountry_nameeferences->study_country) : [], 1);
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
@@ -1197,7 +1197,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             <div class="legalization-item card shadow-sm p-3 mb-3">
                                                 <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?></h4>
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                <?php if (!empty($leg["ministry_document_status"]) && $leg["ministry_document_status"] == 1) : ?>
+                                                <?php if (!empty($leg["country_name"]) && $leg["country_name"] == "Georgia") : ?>
                                                     <div class="row mt-2">
                                                         <div class="col-md-4">
                                                             <p class="form-check-label">&nbsp;</p>
@@ -2633,7 +2633,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <input type="hidden" name="id" value="${leg.id}">
             `;
 
-                if (leg.ministry_document_status && leg.ministry_document_status == 1) {
+                if (leg.country_name && leg.country_name == "Georgia") {
                     let check_min_doc = leg.ministry_document_recived == 1 ? 'checked' : '';
                     let media_view = "";
                     let file = leg.ministry_payment;
