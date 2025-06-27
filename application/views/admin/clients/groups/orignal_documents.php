@@ -30,7 +30,7 @@ if (!is_postSale() && !is_admin()) {
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
-                    <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                    <!-- <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button> -->
                     <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php } ?>
@@ -225,7 +225,7 @@ if (!is_postSale() && !is_admin()) {
         let formData = new FormData(); // Create a FormData object
         formData.append("client_id", <?= $client_id ?>); // Append corresponding location
         formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
-show_loader();
+        show_loader();
         $.ajax({
             url: "<?= base_url('admin/clients/orignal_document_received_notification') ?>", // Replace with your actual AJAX URL
             type: "POST",
@@ -239,14 +239,14 @@ show_loader();
                 if (response.resp_code == "RCS") {
                     hide_loader();
                     alert_float("success", response.resp_desc);
-                    location.reload(); // Reload page after success
+                    // location.reload(); // Reload page after success
                 } else {
                     hide_loader();
                     alert_float("danger", response.resp_desc);
                 }
             },
             error: function() {
-                    hide_loader();
+                hide_loader();
 
                 alert_float("danger", "Error updating documents.");
             },

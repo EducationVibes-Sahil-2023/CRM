@@ -581,6 +581,23 @@ class Client_merge_fields extends App_merge_fields
         $documents_list = get_orignal_document_data_list(array($client_id));
         $documents_name_list = $documents_list[$client_id]["document_names"];
 
+        if (!empty($documents_name_list)) {
+            $documents_name_list = explode(",", $documents_name_list);
+        }
+
+        $documents_name_list_li = `No documents found.`;
+        if (!empty($documents_name_list)) {
+            $documents_name_list_li = '<ul>';
+            foreach ($documents_name_list as $doc) {
+                $documents_name_list_li .= '<li>' . htmlspecialchars($doc) . '</li>';
+            }
+            $documents_name_list_li .= '</ul>';
+        } else {
+            $documents_name_list_li = '<p>No documents found.</p>';
+        }
+
+
+
 
         if (!empty($client->addedfrom)) {
             $this->ci->db->select("email,firstname,lastname,phonenumber");
@@ -642,9 +659,11 @@ class Client_merge_fields extends App_merge_fields
             $fields['{document_name}']       = $document_type->name;
         }
 
-        if (!empty($documents_name_list)) {
-            $fields['{orignal_documents_received}']       = $documents_name_list;
+
+        if (!empty($documents_name_list_li)) {
+            $fields['{orignal_documents_received}']       = $documents_name_list_li;
         }
+
 
         $this->ci->db->where('userid', $client_id);
         $admission_preferences = $this->ci->db->get(db_prefix() . 'admission_preferences')->row();
