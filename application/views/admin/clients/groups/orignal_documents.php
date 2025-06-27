@@ -31,7 +31,10 @@ if (!is_postSale() && !is_admin()) {
             <div class="text-right">
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
                     <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
+                    <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
+                    <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php } ?>
+
             </div>
             <hr>
 
@@ -216,5 +219,32 @@ if (!is_postSale() && !is_admin()) {
         });
 
         return false; // Prevent default form submission
+    }
+
+    function orignal_document_received_notification(client_id) {
+        let formData = new FormData(); // Create a FormData object
+        formData.append("client_id", <?= $client_id ?>); // Append corresponding location
+        formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
+
+        $.ajax({
+            url: "<?= base_url('admin/clients/orignal_document_received_notification') ?>", // Replace with your actual AJAX URL
+            type: "POST",
+            data: formData,
+            contentType: false, // Important for FormData
+            processData: false, // Prevents jQuery from converting FormData to a query string
+            success: function(response) {
+                response = JSON.parse(response);
+                if (response.success) {
+                    alert_float("success", response.message);
+                    location.reload(); // Reload page after success
+                } else {
+                    alert_float("danger", response.message);
+                    $(obj).removeClass("disabled");
+                }
+            },
+            error: function() {
+                alert_float("danger", "Error updating documents.");
+            },
+        });
     }
 </script>
