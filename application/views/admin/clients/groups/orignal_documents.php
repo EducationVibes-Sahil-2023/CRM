@@ -225,7 +225,7 @@ if (!is_postSale() && !is_admin()) {
         let formData = new FormData(); // Create a FormData object
         formData.append("client_id", <?= $client_id ?>); // Append corresponding location
         formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
-
+show_loader();
         $.ajax({
             url: "<?= base_url('admin/clients/orignal_document_received_notification') ?>", // Replace with your actual AJAX URL
             type: "POST",
@@ -234,15 +234,20 @@ if (!is_postSale() && !is_admin()) {
             processData: false, // Prevents jQuery from converting FormData to a query string
             success: function(response) {
                 response = JSON.parse(response);
+
+                console.log(response.resp_code);
                 if (response.resp_code == "RCS") {
-                    alert_float("success", response.message);
+                    hide_loader();
+                    alert_float("success", response.resp_desc);
                     location.reload(); // Reload page after success
                 } else {
-                    alert_float("danger", response.message);
-                    $(obj).removeClass("disabled");
+                    hide_loader();
+                    alert_float("danger", response.resp_desc);
                 }
             },
             error: function() {
+                    hide_loader();
+
                 alert_float("danger", "Error updating documents.");
             },
         });
