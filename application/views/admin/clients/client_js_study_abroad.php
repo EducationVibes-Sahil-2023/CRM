@@ -223,20 +223,22 @@
     // admission prefrencess 
 
     $(document).ready(function() {
-        $("#session_intake").on("change", function() {
-            let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
+        applicationIndex = $(".university-combinations").length
 
-            if (selectedDate) {
-                let [year, month] = selectedDate.split("-"); // Extract year and month
+        // $("#session_intake").on("change", function() {
+        //     let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
 
-                if (month !== "02" && month !== "09") {
-                    // If not February or September, auto-correct to the nearest allowed month
-                    // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
-                    $(this).val('');
-                    alert_float("danger", "Only February and September are allowed.");
-                }
-            }
-        });
+        //     if (selectedDate) {
+        //         let [year, month] = selectedDate.split("-"); // Extract year and month
+
+        //         // if (month !== "02" && month !== "09") {
+        //         //     // If not February or September, auto-correct to the nearest allowed month
+        //         //     // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+        //         //     $(this).val('');
+        //         //     alert_float("danger", "Only February and September are allowed.");
+        //         // }
+        //     }
+        // });
 
 
         if (client_type != 1) {
@@ -281,6 +283,16 @@
         }, 100);
 
 
+    });
+
+    $(document).on('shown.bs.select', 'select.study_courses', function() {
+        const $select = $(this);
+        setTimeout(() => {
+            $('.bs-searchbox input').off('input').on('input', function() {
+                let searchVal = $(this).val();
+                loadCourses(searchVal, $select); // Pass correct select element
+            });
+        }, 300);
     });
 
     function save_admission_preferences() {
@@ -340,20 +352,41 @@
             //     });
             // }
 
+            let isValid = true;
+            const seenCombinations = new Set();
+            params.application_universities = []; // Ensure it's initialized
+
             $(".university-combinations").each(function() {
                 const $combo = $(this);
 
                 const countryId = $combo.find("select.study_country").val();
-                const countryName = $combo.find("select.study_country option:selected").text();
+                const countryName = $combo.find("select.study_country option:selected").text().trim();
 
                 const universityId = $combo.find("select.study_universities").val();
-                const universityName = $combo.find("select.study_universities option:selected").text();
+                const universityName = $combo.find("select.study_universities option:selected").text().trim();
 
                 const courseId = $combo.find("select.study_courses").val();
-                const courseName = $combo.find("select.study_courses option:selected").text();
+                const courseName = $combo.find("select.study_courses option:selected").text().trim();
 
-                const sessionIntake = $combo.find(".session_intake_combination").val();
+                const sessionIntake = $combo.find(".session_intake_combination").val().trim();
                 const id = $combo.find(".shortlisting_id").val();
+
+                if (!countryId) {
+                    hide_loader();
+                    alert_float('danger', "Please select a country in all university combinations.");
+                    isValid = false;
+                    return false; // Break `.each` loop
+                }
+
+                const comboKey = `${countryId}_${universityId}_${courseId}_${sessionIntake}`;
+                if (seenCombinations.has(comboKey)) {
+                    hide_loader();
+                    alert_float('danger', "Duplicate university combination found. Please ensure each combination is unique.");
+                    isValid = false;
+                    return false;
+                }
+
+                seenCombinations.add(comboKey);
 
                 params.application_universities.push({
                     id: id,
@@ -366,6 +399,13 @@
                     session_intake: sessionIntake
                 });
             });
+
+            if (!isValid) {
+                hide_loader();
+                // Prevent form submission or further processing if needed
+                return;
+            }
+
 
 
             // Submit the form data via AJAX
@@ -543,6 +583,36 @@
     }
 
     $(document).ready(function() {
+
+        $('input[type=radio][name=after_x_status]').change(function() {
+            let selected_value = $(this).val();
+            $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
+            if (selected_value == 'Both') {
+                $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == '12th') {
+                // console.log("12 select");
+                $('#twelthAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Diploma') {
+                $('#diplomaAcademicDetails').removeClass("hide").addClass("show");
+            }
+        });
+
+        $('input[type=radio][name=after_xx_status]').change(function() {
+            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
+            // console.log(selected_value);
+            // Hide both academic details by default.
+            $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("show").addClass("hide");
+
+            if (selected_value == 'Both') {
+                $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Graduation') {
+                // console.log("12 select");
+                $('#graduationAcademicDetails').removeClass("hide").addClass("show");
+            } else if (selected_value == 'Post Graduation') {
+                $('#post_graduationAcademicDetails').removeClass("hide").addClass("show");
+            }
+        });
+
         $("#twelth_result_status").on("change", function() {
             let isDeclared = $(this).val() === "Declared";
             let targetDiv = $(".twelth_result_status_div");
@@ -562,6 +632,56 @@
                 targetDiv.find("input, select, input[type='file']").removeAttr("required-check");
             }
         });
+
+        $("#diploma_result_status").on('change', function() {
+            const drs = $(this).val();
+            const $detailsSection = $("#diplomaAcademicDetails .result-change-hide");
+
+            // Clear input, select, and file values within the section
+            $detailsSection.find("input, select").val('');
+            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
+
+            // Toggle visibility based on status
+            if (drs === 'Declared') {
+                $detailsSection.show();
+            } else {
+                $detailsSection.hide();
+            }
+        });
+
+        $("#graduation_result_status").on('change', function() {
+            const drs = $(this).val();
+            const $detailsSection = $("#graduationAcademicDetails .result-change-hide");
+
+            // Clear input, select, and file values within the section
+            $detailsSection.find("input, select").val('');
+            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
+
+            // Toggle visibility based on status
+            if (drs === 'Declared') {
+                $detailsSection.show();
+            } else {
+                $detailsSection.hide();
+            }
+        });
+
+        $("#post_graduation_result_status").on('change', function() {
+            const drs = $(this).val();
+            const $detailsSection = $("#post_graduationAcademicDetails .result-change-hide");
+
+            // Clear input, select, and file values within the section
+            $detailsSection.find("input, select").val('');
+            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
+
+            // Toggle visibility based on status
+            if (drs === 'Declared') {
+                $detailsSection.show();
+            } else {
+                $detailsSection.hide();
+            }
+        });
+
+
 
 
         $("#entrance_result_status").on("change", function() {

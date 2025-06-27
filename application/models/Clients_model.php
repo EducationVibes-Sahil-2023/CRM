@@ -1863,7 +1863,7 @@ class Clients_model extends App_Model
         $this->db->order_by('sequence', "asc");
         return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
     }
-    function university_shortlisting($client_id, $is_primary = 0)
+    function university_shortlisting($client_id, $is_primary = 0, $statusCheck = 0)
     {
 
         // Fetch shortlisted universities with vendor details
@@ -1875,6 +1875,10 @@ class Clients_model extends App_Model
                 'us.client_id' => $client_id,
                 'us.status' => 1
             ]);
+        if (!empty($statusCheck)) {
+            $this->db->or_where('us.status', 0);
+        }
+
 
         if (!empty($is_primary)) {
             $this->db->having('primary_university', 1);

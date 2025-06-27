@@ -8805,7 +8805,7 @@ function get_degree()
         $board_dropdown = $CI->db
             ->select("*")
             ->where(array("status" => 1))
-            ->from(db_prefix() . 'degree')
+            ->from(db_prefix() . 'admission_program')
             ->get()
             ->result_array();
 

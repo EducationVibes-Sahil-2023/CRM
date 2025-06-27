@@ -220,7 +220,7 @@ class Clients extends AdminController
 
         // Customer groups
         $data['groups'] = $this->clients_model->get_groups();
-     
+
 
         if ($id == '') {
             $title = _l('add_new', _l('client_lowercase'));
@@ -278,11 +278,12 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                if($data["lead_data"]->type == 1){
-                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id);
-                }
-                else{
-                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
+                if ($data["lead_data"]->type == 1) {
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
+                    $data['course_list_ug'] =  $this->get_courses("UG");
+                    $data['course_list_pg'] =  $this->get_courses("PG");
+                } else {
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
                 }
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
@@ -2113,10 +2114,18 @@ class Clients extends AdminController
                     foreach ($application_universities as $application) {
                         // Validate required fields
                         if (
-                            !empty($application["country_id"]) &&
-                            !empty($application["university_id"]) &&
-                            !empty($application["course_id"])
+                            !empty($application["country_id"])
                         ) {
+
+                            $status = 0;
+                            if (
+                                !empty($application["country_id"]) &&
+                                !empty($application["university_id"]) &&
+                                !empty($application["course_id"]) &&
+                                !empty($application["session_intake"])
+                            ) {
+                                $status = 1;
+                            }
                             $data = [
                                 "client_id"        => $client_id ?? '',
                                 "country_name"        => $application["country_name"] ?? '',
@@ -2126,7 +2135,7 @@ class Clients extends AdminController
                                 "course_name"         => $application["course_name"] ?? '',
                                 "course_id"           => $application["course_id"],
                                 "session_intake"      => $application["session_intake"] ?? '',
-                                "status"              => 1,
+                                "status"              => $status,
                                 "applicant_stage"     => '',
                                 "applicant_sub_status" => '',
                                 "tracker_id"          => '',
@@ -2147,7 +2156,7 @@ class Clients extends AdminController
                         }
                     }
 
-              
+
                     // Insert new records
                     if (!empty($insertData)) {
                         $this->db->insert_batch(db_prefix() . 'client_university_shortlisting', $insertData);
@@ -2176,6 +2185,59 @@ class Clients extends AdminController
     }
 
     // FREEZE ADMISSION PREFERENCES
+
+    public function delete_application()
+    {
+        $data = [
+            'resp_code' => 'ERR',
+            'resp_desc' => 'Unknown error occurred'
+        ];
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+
+            $params = $this->input->post();
+
+            $shortlisingId = isset($params['id']) ? $params['id'] : null;
+            $client_id = isset($params['client_id']) ? $params['client_id'] : null;
+
+            if (!$shortlisingId || !$client_id) {
+                throw new Exception('Missing required parameters: id or client_id');
+            }
+
+            // Delete operation
+            if (!$this->db->delete(db_prefix() . "client_university_shortlisting", ["id" => $shortlisingId])) {
+                throw new Exception('Failed to delete application');
+            }
+
+            // Activity log
+            $logData = [
+                "description" => "Application Deleted by - ",
+                "date" => date('Y-m-d H:i:s'),
+                "staffid" => get_staff_user_id(),
+                "client_id" => $client_id
+            ];
+
+            if (!$this->db->insert(db_prefix() . 'application_document_activity_log', $logData)) {
+                throw new Exception('Failed to insert activity log');
+            }
+
+            $data = [
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Application deleted successfully'
+            ];
+        } catch (Exception $e) {
+            $data = [
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ];
+        }
+
+        echo json_encode($data);
+    }
+
 
     public function freeze_admission_preferences()
     {
@@ -3870,6 +3932,55 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
+    public function student_acadmic_study_abroad()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $academicDetailsId = $this->input->post("academicDetailsId");
+
+                echo "<pre>";
+                print_r($_POST);
+                foreach ($_POST as $key => $value) {
+                    // print_r($_POST[$key]);
+                    // print_r($key);
+                    // print_r($value);
+                    if (strpos($key, 'score_column') !== false) {
+                        $score_data = explode("-", $key);
+                        if (!empty($score_data[1])) {
+                            array_push($scrore_update, array("client_id" => $client_id, "type" => $score_data[1], "value" => $value));
+                        }
+
+                        unset($_POST[$key]);
+                        $key = '';
+                    }
+                    if (!empty($key)) {
+                        if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                            // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                            foreach ($value as $k => $custom_value) {
+                                $update_applicant_custom_data["customers"] = $custom_value;
+                            }
+                        } else {
+                            // Otherwise, add to general data array
+                            if ($key != 'clientid') {
+                                $update_academic_data[$key] = $value;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
     public function student_acadmic()
     {
         $data = array();
@@ -3885,6 +3996,7 @@ class Clients extends AdminController
                 unset($_POST["doc_name"]);
                 unset($_POST["doc_url"]);
 
+           
                 $academicDetailsId = $this->input->post("academicDetailsId");
                 $update_academic_data = [];
                 $update_applicant_custom_data["customers"] = [];
@@ -6805,7 +6917,7 @@ class Clients extends AdminController
         echo $html;
     }
 
-    function get_courses()
+    function get_courses($degree = "")
     {
         $this->s_db->select('id, course_name');
         $this->s_db->from('tbl_courses');
@@ -6813,11 +6925,21 @@ class Clients extends AdminController
         if (!empty($_POST["search"])) {
             $this->s_db->like("course_name", trim($_POST["search"]));
         }
+        if (!empty($_POST["degree"])) {
+            $this->s_db->where("degree", trim($_POST["degree"]));
+        }
+        if (!empty($degree)) {
+            $this->s_db->where("degree", trim($degree));
+        }
         $this->s_db->group_by('course_name');
         $this->s_db->order_by('course_name', 'asc');
         $this->s_db->limit(50);
         $response["filter_data"] = $this->s_db->get()->result_array();
 
+        if (!empty($degree)) {
+            return $response["filter_data"];
+            die;
+        }
         echo json_encode($response);
     }
 }

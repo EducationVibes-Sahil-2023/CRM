@@ -1451,7 +1451,8 @@ unset($data["air_ticket_include_check"]);
                     "created_at"    => date('Y-m-d H:i:s'),
                     "primary_country" => !empty($temp_array["university_country"]) ? $temp_array["university_country"] : '',
                     "primary_university" =>   !empty($temp_array["university_name"]) ? $temp_array["university_name"] : '',
-                    "session_intake" => !empty($session_intake) ? $session_intake : ""
+                    "session_intake" => !empty($session_intake) ? $session_intake : "",
+                    "degree" => !empty($degree) ? $degree : ""
                 ];
 
                 $this->db->where('userid', $id);
