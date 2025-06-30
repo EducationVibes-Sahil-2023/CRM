@@ -27,6 +27,7 @@ $tblma_applicant_tracker = $this->ci->leads_model->tblma_applicant_tracker($this
 
 $tblma_applicant_tracker = array_column($tblma_applicant_tracker, null, "tbl_column_name");
 $fees_data = get_clients_fees(2);
+$post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
 
 
 
@@ -47,6 +48,10 @@ if (is_admin() || is_postSale()) {
     $aColumns[] = $sTable . ".userid as fid";
 }
 $aColumns_count = 0;
+$joinIn =' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) ';
+if ($post_sales->evp_partners == "all") {
+    $joinIn = ' ';
+}
 
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
@@ -167,8 +172,8 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
  OR (
    ' . db_prefix() . 'staff.evp_partners IS NOT NULL 
    AND ' . db_prefix() . 'staff.evp_partners != "" 
-   AND FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners)
- )',
+    ' . $joinIn . '
+ ) ',
     "LEFT JOIN (
         SELECT 
             userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
@@ -200,7 +205,6 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
 ];
 
 $role = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
-$post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
 $sids = [];
 if ($role == 3) {
     $sid = get_staff_user_id();
@@ -233,8 +237,8 @@ if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) &
             WHERE staff_id = ' . $current_staff_id . '
         ) 
         OR ' . db_prefix() . 'leads.assigned = ' . $current_staff_id . '
-        OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
-    )';
+        OR (  ' . db_prefix() . 'clients.agent_id = ev_partner.id ' . $joinIn . ')
+    ) ';
 }
 
 if (!is_admin()) {
@@ -249,24 +253,22 @@ if (!is_admin()) {
                     WHERE staff_id = ' . $current_staff_id . '
                 )
                 OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')
-                OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
-            )';
+                OR (  ' . db_prefix() . 'clients.agent_id = ev_partner.id ' . $joinIn . ')
+            ) ';
         } else {
 
-if(has_permission('customers', '', 'applicant_view')){
-    
-}
-else{
-            $where[] = 'AND (
+            if (has_permission('customers', '', 'applicant_view')) {
+            } else {
+                $where[] = 'AND (
                 ' . db_prefix() . 'clients.userid IN (
                     SELECT customer_id 
                     FROM ' . db_prefix() . 'customer_admins 
                     WHERE staff_id = ' . $current_staff_id . '
                 )
                 
-                OR ( FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) and ' . db_prefix() . 'clients.agent_id = ev_partner.id)
-            )';
-}
+                OR ( ' . db_prefix() . 'clients.agent_id = ev_partner.id ' . $joinIn . ')
+            ) ';
+            }
         }
     }
 }
