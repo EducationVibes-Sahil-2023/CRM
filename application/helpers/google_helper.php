@@ -298,6 +298,9 @@ function syncExcel($id = "")
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+                LEFT JOIN " . db_prefix() . "orignal_documents_received dr ON dr.userid = c.userid
+                LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = dr.location_id
+                LEFT JOIN " . db_prefix() . "orignal_documents od ON od.id = dr.doc_id
                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
@@ -392,11 +395,11 @@ function syncExcel_new($id = "")
 
 
         $selectColumnName = $CI->db
-           ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
-         ->from(db_prefix() . "excel_column_update")
-         ->where_in("id", $column_ids)
-         ->get()
-         ->row()
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
             ->fetch_column_name ?? '';
 
         if (empty($selectColumnName)) {

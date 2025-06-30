@@ -2495,4 +2495,25 @@ class Clients_model extends App_Model
 
         return $activity_logs = $this->db->get()->result_array();
     }
+
+
+    function get_entrance_exam_list()
+    {
+        $this->db->select("*");
+        $this->db->where('status', 1);
+        $this->db->from(db_prefix() . 'exams_list');
+        $this->db->order_by('id', 'asc');
+
+        return $get_entrance_exam_list = $this->db->get()->result_array();
+    }
+
+    function get_entrance_exam($clientid)
+    {
+        $this->db->select("id,client_id,exam_id,marks,file");
+        $this->db->from(db_prefix() . 'client_entrance');
+        $this->db->where('client_id', $clientid);
+        $this->db->order_by('id', 'asc');
+
+        return $get_entrance_exam = $this->db->get()->result_array();
+    }
 }

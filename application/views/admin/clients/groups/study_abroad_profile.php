@@ -13,6 +13,8 @@ $universities_list = get_universities_list();
 $diploma_board = [];
 $board_dropdown = get_board_dropdown();
 $staff_list              = $this->leads_model->get_staff_list();
+$get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
+$get_entrance_exam              = $this->clients_model->get_entrance_exam($client_id);
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
@@ -77,6 +79,8 @@ for ($i = 0; $i < 15; $i++) {
 array_unshift($years_array, array(""));
 
 array_unshift($diploma_board, array("id" => "1", "name" => "course 1"));
+
+array_unshift($get_entrance_exams_list, array("id" => "", "name" => "Select Entrance Exams"));
 
 
 
@@ -912,13 +916,13 @@ if ($lead_type_status == 1) {
                                                         <div class="form-group">
                                                             <p>&nbsp;</p>
                                                             <?php if ($key > 0) { ?>
-                                                                <button class="btn btn-danger"
+                                                                <span class="btn btn-danger"
                                                                     onclick="removeApplication(this,<?= $shortlisting['id'] ?>)"><i
-                                                                        class="fa fa-trash"></i></button>
+                                                                        class="fa fa-trash"></i></span>
                                                             <?php } else { ?>
-                                                                <button class="btn btn-ex btn-primary"
+                                                                <span class="btn btn-ex btn-primary"
                                                                     onclick="createNewApplication(this)"><i
-                                                                        class="fa fa-plus"></i></button>
+                                                                        class="fa fa-plus"></i></span>
                                                             <?php } ?>
                                                         </div>
                                                     </div>
@@ -979,9 +983,9 @@ if ($lead_type_status == 1) {
                                                     <div class="form-group">
                                                         <p>&nbsp;</p>
 
-                                                        <button class="btn btn-ex btn-primary"
+                                                        <span class="btn btn-ex btn-primary"
                                                             onclick="createNewApplication(this)"><i
-                                                                class="fa fa-plus"></i></button>
+                                                                class="fa fa-plus"></i></span>
 
                                                     </div>
                                                 </div>
@@ -1704,23 +1708,70 @@ if ($lead_type_status == 1) {
                                 </div>
 
 
-                                <?php
-
-                                ?>
 
 
 
 
-                                <div class="row" style="padding-top: 30px;padding-bottom: 20px;">
-                                    <div class="col-lg-6 col-xs-6" style="padding-left: 0px;">
+                                <div class="col-12" style="padding-top: 30px;padding-bottom: 20px;">
+                                    <label>ELT Status &nbsp;<input type="checkbox" value="1" name="elt_status" <?= !empty($academicdetails->elt_status) ? 'Checked' : '' ?>></label>
+                                    <?php if (!empty($get_entrance_exam)) { ?>
+                                        <h4>Entrance Exams <span class="text-danger">*</span></h4>
+                                        <hr>
+                                        <div id="entrance-exam-div">
+                                            <?php foreach ($get_entrance_exam as $key => $entrance) { ?>
+                                                <div class="entrance-exams row col-md-12">
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <input type="hidden" class="entrance_id"
+                                                                value="<?= $entrance["id"] ?>">
+                                                            <label for="entrance_exams">Exam Type <small class="text-danger">*</small></label>
+                                                            <?php
+                                                            echo render_select('entrance_exams', $get_entrance_exams_list, array('id', 'name'), "",  [$entrance["exam_id"]], [], [], "", "", "", "entrance_exams");
 
-                                    </div>
-                                    <div class="col-lg-6 col-xs-6" style="padding-right: 0px;">
+                                                            ?>
 
-                                    </div>
+
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="entrance_marks">Marks <small class="text-danger">*</small></label>
+                                                            <input type="number" class="form-control entrance_marks" value="<?= $entrance["marks"] ?>">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="study_courses">Marksheet <small class="text-danger">*</small></label>
+                                                            <input type="file" class="form-control">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-lg-1">
+                                                        <div class="form-group">
+                                                            <p>&nbsp;</p>
+
+
+
+                                                            <?php if ($key > 0) { ?>
+                                                                <span class="btn btn-danger"
+                                                                    onclick="removeEntrance(this,<?= $entrance['id'] ?>)"><i
+                                                                        class="fa fa-trash"></i></span>
+                                                            <?php } else { ?>
+                                                                <span class="btn btn-ex btn-primary"
+                                                                    onclick="createNewEntrance(this)"><i
+                                                                        class="fa fa-plus"></i></span>
+                                                            <?php } ?>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php } ?>
+
+                                        <?php } ?>
+                                        </div>
+
                                 </div>
-                                <?php // echo form_close(); 
-                                ?>
                             </div>
                         </div>
                     </div>
@@ -2439,17 +2490,17 @@ if ($lead_type_status == 1) {
         });
     }
 
-    function removeApplication(element, shortlistingId = "") {
+    function removeApplication(element, applicationId = "") {
         if (!confirm("Are you sure you want to delete the application?")) {
             return;
         }
 
-        if (shortlistingId && parseInt(shortlistingId) > 0) {
+        if (applicationId && parseInt(applicationId) > 0) {
             $.ajax({
                 url: '<?= base_url() ?>/admin/clients/delete_application',
                 method: 'POST',
                 data: {
-                    id: shortlistingId,
+                    id: applicationId,
                     client_id: <?= $client_id ?>
                 },
                 dataType: 'json',
@@ -2539,7 +2590,7 @@ if ($lead_type_status == 1) {
         <div class="col-lg-1">
             <div class="form-group">
                 <p>&nbsp;</p>
-                <button type="button" class="btn btn-danger" onclick="removeApplication(this)"><i class="fa fa-trash"></i></button>
+                <span class="btn btn-danger" onclick="removeApplication(this)"><i class="fa fa-trash"></i></span>
             </div>
         </div>
     </div>`;
@@ -2621,6 +2672,87 @@ if ($lead_type_status == 1) {
         $("select.study_courses").html('<option value="">Select Course</option>').selectpicker('refresh');
 
 
+
+    }
+    let entranceIndex = 0;
+
+    <?php
+    // Render the HTML once using PHP
+    $html = '<div class="entrance-exams row col-md-12">
+    <div class="col-lg-3">
+        <div class="form-group">
+            <label for="entrance_exams">Exam Type <small class="text-danger">*</small></label>' .
+        render_select('entrance_exams', $get_entrance_exams_list, array('id', 'name'), "", [], [], [], "", "", "", "entrance_exams") .
+        '</div>
+    </div>
+
+    <div class="col-lg-3">
+        <div class="form-group">
+            <label for="entrance_marks">Marks <small class="text-danger">*</small></label>
+            <input type="number" class="form-control entrance_marks" value="">
+        </div>
+    </div>
+    <div class="col-lg-3">
+        <div class="form-group">
+            <label for="study_courses">Marksheet <small class="text-danger">*</small></label>
+            <input type="file" class="form-control">
+        </div>
+    </div>
+
+    <div class="col-lg-1">
+        <div class="form-group">
+            <p>&nbsp;</p>
+            <span class="btn btn-danger" onclick="removeEntrance(this)"><i class="fa fa-trash"></i></span>
+        </div>
+    </div>
+</div>';
+    ?>
+
+
+    let entranceHTML = `<?= addslashes($html) ?>`;
+
+    function createNewEntrance(selectElement) {
+        entranceIndex++; // assuming this is declared globally
+        $("#entrance-exam-div").append(entranceHTML);
+        $("#entrance-exam-div").find("select").selectpicker('refresh');
+    }
+
+
+
+    function removeEntrance(element, entranceId = "") {
+        if (!confirm("Are you sure you want to delete the entrance?")) {
+            return;
+        }
+
+        if (entranceId && parseInt(entranceId) > 0) {
+            $.ajax({
+                url: '<?= base_url() ?>/admin/clients/delete_entrance',
+                method: 'POST',
+                data: {
+                    id: entranceId,
+                    client_id: <?= $client_id ?>
+                },
+                dataType: 'json',
+                success: function(response) {
+                    // response = JSON.parse(response);
+                    if (response.resp_code === 'RCS') {
+                        $(element).parents(".entrance-exams").remove();
+                        alert_float("success", response.resp_desc);
+                    } else {
+                        console.warn("Delete failed:", response.resp_desc);
+                        alert_float("danger", "Failed to delete entrance: " + response.resp_desc);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX error:", status, error);
+                    alert_float("danger",
+                        "An error occurred while trying to delete the entrance. Please try again.");
+                }
+            });
+        } else {
+            // No shortlisting ID, just remove the element from the DOM
+            $(element).parents(".entrance-exams").remove();
+        }
 
     }
 
