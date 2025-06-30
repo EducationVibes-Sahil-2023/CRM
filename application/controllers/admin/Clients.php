@@ -5317,11 +5317,20 @@ class Clients extends AdminController
                         "applicant_sub_status" => LEGALIZATION_COMPLETED,
                     ];
                 } else {
-                    $update_client_data = [
-                        "applicant_status" => 0,
-                        "applicant_stage" => LEGALIZATION,
-                        "applicant_sub_status" => LEGALIZATION_PENDING,
-                    ];
+
+                    if ($university_shortlisting_data[0]["ministry_payment"] != "") {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => LEGALIZATION,
+                            "applicant_sub_status" => LEGALIZATION_APPLIED,
+                        ];
+                    } else {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => LEGALIZATION,
+                            "applicant_sub_status" => LEGALIZATION_PENDING,
+                        ];
+                    }
                 }
 
                 $this->db->where("userid", $client_id);
