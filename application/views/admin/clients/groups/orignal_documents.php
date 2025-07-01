@@ -32,7 +32,7 @@ if (!is_postSale() && !is_admin()) {
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
                     <!-- <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button> -->
                     <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
-                    <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
+                    <button type="button" class="btn btn-primary btn-xs hide email-hide" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php } ?>
 
             </div>
@@ -59,7 +59,11 @@ if (!is_postSale() && !is_admin()) {
                             <?php if (!empty($orignal_document)) : ?>
                                 <?php
                                 $index = 1;
+                                $document_received = 0;
                                 foreach ($orignal_document as $key => $doc) :
+                                    if ($document_received == 0) {
+                                        $document_received = !empty($doc['received_id']) ? 1 : 0;
+                                    }
                                 ?>
                                     <tr>
                                         <td>
@@ -142,11 +146,30 @@ if (!is_postSale() && !is_admin()) {
 <?php init_tail(); ?>
 <script>
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+    var document_received = "<?= $document_received ?>";
+    if (document_received == 1) {
+        $(".email-hide").removeClass("hide");
+    }
     if (complete_application == 1) {
 
         $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
 
     }
+    <?php if ($client_infomation->orignal_document_status == 4 && !has_permission('customers', '', 'return_document')): ?>
+
+        $("select[name='status']").attr("disabled", true).selectpicker("refresh");
+
+
+    <?php elseif (!has_permission('customers', '', 'return_document')): ?>
+
+        $("select[name='status'] option[value='4']").attr("disabled", true);
+        $("select[name='status']").selectpicker("refresh");
+
+
+    <?php endif; ?>
+
+
+
 
     function check_update(obj) {
         $(obj).addClass("disabled");
@@ -154,7 +177,7 @@ if (!is_postSale() && !is_admin()) {
         let isValid_check = false;
         let formData = new FormData(); // Create a FormData object
         let status = $("select[name='status']").val();
-        let status_text = $("select[name='status']  option:selected").text();
+        let status_text = $("select[name='status'] option:selected").text();
         $(".document_upload_div tr").each(function() {
             let checkbox = $(this).find("input[type='checkbox']");
             let received_id = $(this).find("input[name='received_id']").val();
