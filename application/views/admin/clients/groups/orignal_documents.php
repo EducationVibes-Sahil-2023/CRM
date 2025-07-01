@@ -29,11 +29,11 @@ if (!is_postSale() && !is_admin()) {
         <div class="form-container">
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
-                <?php if ($client_infomation->orignal_document_status == 3) { ?>
-                    <!-- <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button> -->
-                    <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
-                    <button type="button" class="btn btn-primary btn-xs hide email-hide" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
-                <?php } ?>
+
+                <!-- <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button> -->
+                <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
+                <button type="button" class="btn btn-primary btn-xs hide email-hide" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
+
 
             </div>
             <hr>
@@ -62,7 +62,7 @@ if (!is_postSale() && !is_admin()) {
                                 $document_received = 0;
                                 foreach ($orignal_document as $key => $doc) :
                                     if ($document_received == 0) {
-                                        $document_received = !empty($doc['received_by']) ? 1 : 0;
+                                        $document_received = !empty($doc['received_id']) ? 1 : 0;
                                     }
                                 ?>
                                     <tr>
