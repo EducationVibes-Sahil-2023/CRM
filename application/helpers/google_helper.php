@@ -423,7 +423,7 @@ function syncExcel_new($id = "")
         }
 
         // Main query
-        $sql = "SELECT {$selectColumnName}
+      $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
                 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
@@ -437,6 +437,9 @@ function syncExcel_new($id = "")
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+                LEFT JOIN " . db_prefix() . "orignal_documents_received dr ON dr.userid = c.userid
+                LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = dr.location_id
+                LEFT JOIN " . db_prefix() . "orignal_documents od ON od.id = dr.doc_id
                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
