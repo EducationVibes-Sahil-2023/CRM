@@ -93,6 +93,14 @@ $academicYears = [
 
                                     </div>
                                     <div class="col-md-3 mb-3 form-group">
+                                        <label for="sql_condition">&nbsp;</label>
+                                        <div class="checkbox">
+
+                                            <input type="checkbox" name="original_document_status" id="original_document_status" <?= !empty($excelInfo->original_document_status) && $excelInfo->original_document_status == 1 ? 'checked' : '' ?>> <label>Orignal Document Status</label>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3 form-group">
                                         <label for=""> </label><br>
                                         <button type="submit" class="btn btn-primary margin-top" onclick="createSheet()">Create</button>
                                     </div>
@@ -134,13 +142,13 @@ $academicYears = [
                                                         </td>
 
                                                         <td>
-                                                            <input 
-  class="form-control" 
-  id="sequence_column_<?= $col["id"] ?>" 
-  value="<?= !empty($selected_sequence[$col["id"]]) ? $selected_sequence[$col["id"]] : '' ?>" 
-  type="number" 
-  step="any" 
-  name="sequence[<?= $col["id"] ?>]">
+                                                            <input
+                                                                class="form-control"
+                                                                id="sequence_column_<?= $col["id"] ?>"
+                                                                value="<?= !empty($selected_sequence[$col["id"]]) ? $selected_sequence[$col["id"]] : '' ?>"
+                                                                type="number"
+                                                                step="any"
+                                                                name="sequence[<?= $col["id"] ?>]">
                                                         </td>
                                                     </tr>
                                                 <?php $index++;
