@@ -32,7 +32,7 @@ if (!is_postSale() && !is_admin()) {
                 <?php if ($client_infomation->orignal_document_status == 3) { ?>
                     <!-- <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button> -->
                     <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
-                    <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
+                    <button type="button" class="btn btn-primary btn-xs hide email-hide" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php } ?>
 
             </div>
@@ -59,7 +59,11 @@ if (!is_postSale() && !is_admin()) {
                             <?php if (!empty($orignal_document)) : ?>
                                 <?php
                                 $index = 1;
+                                $document_received = 0;
                                 foreach ($orignal_document as $key => $doc) :
+                                    if ($document_received == 0) {
+                                        $document_received = !empty($doc['received_id']) ? 1 : 0;
+                                    }
                                 ?>
                                     <tr>
                                         <td>
@@ -142,114 +146,127 @@ if (!is_postSale() && !is_admin()) {
 <?php init_tail(); ?>
 <script>
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+    var document_received = "<?= $document_received ?>";
+    if (document_received == 1) {
+        $(".email-hide").removeClass("hide");
+    }
     if (complete_application == 1) {
 
         $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
 
     }
+    <?php if ($client_infomation->orignal_document_status == 4 && has_permission('customers', '', 'return_document')): ?>
+           
+        <?php else: ?> 
+        
+            $("input[name='status']").attr("disabled", true).selectpicker("refresh");
 
-    function check_update(obj) {
-        $(obj).addClass("disabled");
-        let isValid = true;
-        let isValid_check = false;
-        let formData = new FormData(); // Create a FormData object
-        let status = $("select[name='status']").val();
-        let status_text = $("select[name='status']  option:selected").text();
-        $(".document_upload_div tr").each(function() {
-            let checkbox = $(this).find("input[type='checkbox']");
-            let received_id = $(this).find("input[name='received_id']").val();
-            if (received_id != "") {
-                isValid_check = true;
-            }
-            if (checkbox.is(":checked")) {
-                let locationInput = $(this).find("select[name='location']");
+<?php endif; ?>
 
-                if (!locationInput.val()) {
-                    isValid = false;
-                    locationInput.focus();
-                    alert_float("danger", "Please enter a location for the selected document.");
-                    $(obj).removeClass("disabled");
-                    return false; // Exit loop early if validation fails
-                }
 
-                // Append data to formData
-                formData.append("received_id[]", received_id); // Append document ID
-                formData.append("document_ids[]", checkbox.val()); // Append document ID
-                formData.append("locations[]", locationInput.val()); // Append corresponding location
-                formData.append("document_name[]", checkbox.data("name")); // Append corresponding location
-                formData.append("locations_name[]", $(this).find("select[name='location'] option:selected").text()); // Append corresponding location
-            }
-        });
-        formData.append("client_id", <?= $client_id ?>); // Append corresponding location
-        formData.append("status", status); // Append corresponding location
-        formData.append("status_text", status_text); // Append corresponding location
-        formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
 
-        if (!isValid) {
-            $(obj).removeClass("disabled");
-            return false; // Stop form submission
-        }
+function check_update(obj) {
+$(obj).addClass("disabled");
+let isValid = true;
+let isValid_check = false;
+let formData = new FormData(); // Create a FormData object
+let status = $("select[name='status']").val();
+let status_text = $("select[name='status'] option:selected").text();
+$(".document_upload_div tr").each(function() {
+let checkbox = $(this).find("input[type='checkbox']");
+let received_id = $(this).find("input[name='received_id']").val();
+if (received_id != "") {
+isValid_check = true;
+}
+if (checkbox.is(":checked")) {
+let locationInput = $(this).find("select[name='location']");
 
-        if ($(".document_upload_div tr input[type='checkbox']:checked").length === 0 && isValid_check == false) {
-            alert_float("danger", "Please check at least one checkbox before saving!");
-            $(obj).removeClass("disabled");
+if (!locationInput.val()) {
+isValid = false;
+locationInput.focus();
+alert_float("danger", "Please enter a location for the selected document.");
+$(obj).removeClass("disabled");
+return false; // Exit loop early if validation fails
+}
 
-            return false;
-        }
+// Append data to formData
+formData.append("received_id[]", received_id); // Append document ID
+formData.append("document_ids[]", checkbox.val()); // Append document ID
+formData.append("locations[]", locationInput.val()); // Append corresponding location
+formData.append("document_name[]", checkbox.data("name")); // Append corresponding location
+formData.append("locations_name[]", $(this).find("select[name='location'] option:selected").text()); // Append corresponding location
+}
+});
+formData.append("client_id", <?= $client_id ?>); // Append corresponding location
+formData.append("status", status); // Append corresponding location
+formData.append("status_text", status_text); // Append corresponding location
+formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
 
-        $.ajax({
-            url: "<?= base_url('admin/clients/orignal_document') ?>", // Replace with your actual AJAX URL
-            type: "POST",
-            data: formData,
-            contentType: false, // Important for FormData
-            processData: false, // Prevents jQuery from converting FormData to a query string
-            success: function(response) {
-                response = JSON.parse(response);
-                if (response.success) {
-                    alert_float("success", response.message);
-                    location.reload(); // Reload page after success
-                } else {
-                    alert_float("danger", response.message);
-                    $(obj).removeClass("disabled");
-                }
-            },
-            error: function() {
-                alert_float("danger", "Error updating documents.");
-            },
-        });
+if (!isValid) {
+$(obj).removeClass("disabled");
+return false; // Stop form submission
+}
 
-        return false; // Prevent default form submission
-    }
+if ($(".document_upload_div tr input[type='checkbox']:checked").length === 0 && isValid_check == false) {
+alert_float("danger", "Please check at least one checkbox before saving!");
+$(obj).removeClass("disabled");
 
-    function orignal_document_received_notification(client_id) {
-        let formData = new FormData(); // Create a FormData object
-        formData.append("client_id", <?= $client_id ?>); // Append corresponding location
-        formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
-        show_loader();
-        $.ajax({
-            url: "<?= base_url('admin/clients/orignal_document_received_notification') ?>", // Replace with your actual AJAX URL
-            type: "POST",
-            data: formData,
-            contentType: false, // Important for FormData
-            processData: false, // Prevents jQuery from converting FormData to a query string
-            success: function(response) {
-                response = JSON.parse(response);
+return false;
+}
 
-                console.log(response.resp_code);
-                if (response.resp_code == "RCS") {
-                    hide_loader();
-                    alert_float("success", response.resp_desc);
-                    // location.reload(); // Reload page after success
-                } else {
-                    hide_loader();
-                    alert_float("danger", response.resp_desc);
-                }
-            },
-            error: function() {
-                hide_loader();
+$.ajax({
+url: "<?= base_url('admin/clients/orignal_document') ?>", // Replace with your actual AJAX URL
+type: "POST",
+data: formData,
+contentType: false, // Important for FormData
+processData: false, // Prevents jQuery from converting FormData to a query string
+success: function(response) {
+response = JSON.parse(response);
+if (response.success) {
+alert_float("success", response.message);
+location.reload(); // Reload page after success
+} else {
+alert_float("danger", response.message);
+$(obj).removeClass("disabled");
+}
+},
+error: function() {
+alert_float("danger", "Error updating documents.");
+},
+});
 
-                alert_float("danger", "Error updating documents.");
-            },
-        });
-    }
+return false; // Prevent default form submission
+}
+
+function orignal_document_received_notification(client_id) {
+let formData = new FormData(); // Create a FormData object
+formData.append("client_id", <?= $client_id ?>); // Append corresponding location
+formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
+show_loader();
+$.ajax({
+url: "<?= base_url('admin/clients/orignal_document_received_notification') ?>", // Replace with your actual AJAX URL
+type: "POST",
+data: formData,
+contentType: false, // Important for FormData
+processData: false, // Prevents jQuery from converting FormData to a query string
+success: function(response) {
+response = JSON.parse(response);
+
+console.log(response.resp_code);
+if (response.resp_code == "RCS") {
+hide_loader();
+alert_float("success", response.resp_desc);
+// location.reload(); // Reload page after success
+} else {
+hide_loader();
+alert_float("danger", response.resp_desc);
+}
+},
+error: function() {
+hide_loader();
+
+alert_float("danger", "Error updating documents.");
+},
+});
+}
 </script>

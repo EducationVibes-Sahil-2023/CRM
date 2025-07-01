@@ -46,7 +46,7 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only","delete_documents" => "Delete Documents",'activity_logs' => "Activity Logs")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
@@ -208,7 +208,7 @@ function get_available_staff_permissions($data = [])
                 'mass_assign' => 'Mass Assignation',
                 'import' => 'Leads Import',
                 'approval' => 'Transfer Leads Approval',
-                'assign_update'=>"Lead Assignation Update"
+                'assign_update' => "Lead Assignation Update"
             ],
             'help' => [
                 'view' => _l('help_leads_permission_view'),
