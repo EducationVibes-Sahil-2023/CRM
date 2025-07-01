@@ -1400,7 +1400,7 @@ init_tail();
    function customers_bulk_action(event) {
 
 
-     var mass_delete = $('#mass_delete').length ? $('#mass_delete').prop('checked') : 0;
+      var mass_delete = $('#mass_delete').length ? $('#mass_delete').prop('checked') : 0;
       var transit = $('#in_transit').prop('checked');
       var from_location = $('#from_location').val();
       var to_location = $('#to_location').val();
@@ -1487,7 +1487,7 @@ init_tail();
          visa_status,
       };
 
-      if (!confirm("Are you sure you want to delete the selected applicants?")) {
+      if (mass_delete == 1 && !confirm("Are you sure you want to delete the selected applicants?")) {
          hide_loader();
          return false;
       }
