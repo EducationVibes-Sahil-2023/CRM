@@ -360,7 +360,7 @@ function syncExcel_new($id = "")
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids,orignal_documents_status")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -384,7 +384,7 @@ function syncExcel_new($id = "")
         $acadmic_year            = isset($sheet['acadmic_year']) ? $sheet['acadmic_year'] : null;
         $spreadsheetId           = isset($sheet['spreadsheetId']) ? $sheet['spreadsheetId'] : null;
         $sheet_name              = isset($sheet['sheet_name']) ? $sheet['sheet_name'] : null;
-        $orignal_documents_status = isset($sheet['orignal_documents']) ? $sheet['orignal_documents'] : null;
+        $orignal_documents_status = isset($sheet['orignal_documents_status']) ? $sheet['orignal_documents_status'] : null;
         $sql_conditions          = isset($sheet['sql_condition']) ? $sheet['sql_condition'] : null;
 
         $column_ids_raw          = isset($sheet['column_ids']) ? $sheet['column_ids'] : '';
