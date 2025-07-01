@@ -360,7 +360,7 @@ function syncExcel_new($id = "")
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids,orignal_documents_status")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -378,14 +378,20 @@ function syncExcel_new($id = "")
     $dataArray = [];
     foreach ($sheetData as $sheet) {
 
-        $currentId = $sheet['id'];
-        $fromDate = $sheet['fromDate'];
-        $toDate = $sheet['toDate'];
-        $acadmic_year = $sheet['acadmic_year'];
-        $spreadsheetId = $sheet['spreadsheetId'];
-        $sheet_name = $sheet['sheet_name'];
-        $sql_conditions = $sheet['sql_condition'];
-        $column_ids = explode(",", $sheet['column_ids']);
+        $currentId               = isset($sheet['id']) ? $sheet['id'] : null;
+        $fromDate                = isset($sheet['fromDate']) ? $sheet['fromDate'] : null;
+        $toDate                  = isset($sheet['toDate']) ? $sheet['toDate'] : null;
+        $acadmic_year            = isset($sheet['acadmic_year']) ? $sheet['acadmic_year'] : null;
+        $spreadsheetId           = isset($sheet['spreadsheetId']) ? $sheet['spreadsheetId'] : null;
+        $sheet_name              = isset($sheet['sheet_name']) ? $sheet['sheet_name'] : null;
+        $orignal_documents_status = isset($sheet['orignal_documents_status']) ? $sheet['orignal_documents_status'] : null;
+        $sql_conditions          = isset($sheet['sql_condition']) ? $sheet['sql_condition'] : null;
+
+        $column_ids_raw          = isset($sheet['column_ids']) ? $sheet['column_ids'] : '';
+        $column_ids              = is_string($column_ids_raw) && !empty($column_ids_raw)
+            ? explode(",", $column_ids_raw)
+            : [];
+
 
         // Ensure $column_ids is a non-empty array
 
@@ -394,16 +400,44 @@ function syncExcel_new($id = "")
 
 
 
+        // Step 1: Fetch concatenated column names
         $selectColumnName = $CI->db
-           ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
-         ->from(db_prefix() . "excel_column_update")
-         ->where_in("id", $column_ids)
-         ->get()
-         ->row()
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
             ->fetch_column_name ?? '';
 
         if (empty($selectColumnName)) {
-            continue; // Skip if no column names were returned
+            // Skip this loop iteration if no columns found
+            continue;
+        }
+
+        $extra_columns = [];
+        if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
+            // Step 2: Fetch original documents
+            $orignal_documents = get_orignal_document_list(); // Returns an array
+
+            $queryPart = [];
+
+
+            if (!empty($orignal_documents)) {
+                foreach ($orignal_documents as $documents) {
+                    $short_name = trim($documents['short_name']); // Clean the short name
+                    $safe_column_name = str_replace(" ", "_", $short_name); // Sanitize column alias
+                    $extra_columns[] = $safe_column_name;
+
+                    // Add a CASE WHEN expression for each document
+                    $queryPart[] = "MAX(CASE WHEN od.short_name = '" . $CI->db->escape_str($short_name) . "' 
+                          THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
+                }
+            }
+
+            // Step 3: Append dynamic CASE columns to existing SELECT list
+            if (!empty($queryPart)) {
+                $selectColumnName .= ',' . implode(',', $queryPart);
+            }
         }
 
 
@@ -423,7 +457,7 @@ function syncExcel_new($id = "")
         }
 
         // Main query
-      $sql = "SELECT {$selectColumnName}
+        $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
                 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
@@ -458,6 +492,9 @@ function syncExcel_new($id = "")
 
 
         $columns = array_column($sheetColumnName, "name");
+        if (!empty($extra_columns)) {
+            $columns = array_merge($columns, $extra_columns);
+        }
 
         // Convert row data to values only, respecting column order
 
