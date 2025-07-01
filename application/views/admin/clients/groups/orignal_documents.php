@@ -62,7 +62,7 @@ if (!is_postSale() && !is_admin()) {
                                 $document_received = 0;
                                 foreach ($orignal_document as $key => $doc) :
                                     if ($document_received == 0) {
-                                        $document_received = !empty($doc['received_id']) ? 1 : 0;
+                                        $document_received = !empty($doc['received_by']) ? 1 : 0;
                                     }
                                 ?>
                                     <tr>
