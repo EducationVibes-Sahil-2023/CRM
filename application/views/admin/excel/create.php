@@ -96,7 +96,10 @@ $academicYears = [
                                         <label for="sql_condition">&nbsp;</label>
                                         <div class="checkbox">
 
-                                            <input type="checkbox" name="original_document_status" id="original_document_status" <?= !empty($excelInfo->original_document_status) && $excelInfo->original_document_status == 1 ? 'checked' : '' ?>> <label>Orignal Document Status</label>
+                                            <input type="checkbox" name="orignal_documents_status" id="orignal_documents_status"
+                                                <?= !empty($excelInfo->orignal_documents_status) && $excelInfo->orignal_documents_status == 1 ? 'checked' : '' ?>>
+                                            <label for="orignal_documents_status">Original Document Status</label>
+
 
                                         </div>
                                     </div>
