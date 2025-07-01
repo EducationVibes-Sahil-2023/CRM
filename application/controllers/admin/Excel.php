@@ -42,6 +42,7 @@ class Excel extends AdminController
                 'sheet_name'    => $data['sheet_name'] ?? '',
                 'sql_condition' => $data['sql_condition'] ?? '',
                 'type' => $data['type'] ?? '',
+                "orignal_documents_status" => !empty($data['orignal_documents_status']) ? 1 : 0,
                 'status' => 1,
                 'autoSync' => 1,
                 'created_by' => get_staff_user_id(),
