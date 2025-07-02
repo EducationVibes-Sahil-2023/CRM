@@ -29,9 +29,12 @@ if (!is_postSale() && !is_admin()) {
         <div class="form-container">
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
-                <?php if ($client_infomation->orignal_document_status == 3) { ?>
-                    <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button>
-                <?php } ?>
+
+                <!-- <?= getLastEmailWhatsappDate("whatsapp", 6, $client_id) ?><button type="button" class="btn btn-primary btn-xs " onclick="whatsapp_message_send(<?= !empty($client_id) ? $client_id : '' ?>, 6,'','')"><i class="fa fa-whatsapp hide-client-type"></i> </button> -->
+                <?= getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
+                <button type="button" class="btn btn-primary btn-xs hide email-hide" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
+
+
             </div>
             <hr>
 
@@ -56,7 +59,11 @@ if (!is_postSale() && !is_admin()) {
                             <?php if (!empty($orignal_document)) : ?>
                                 <?php
                                 $index = 1;
+                                $document_received = 0;
                                 foreach ($orignal_document as $key => $doc) :
+                                    if ($document_received == 0) {
+                                        $document_received = !empty($doc['received_id']) ? 1 : 0;
+                                    }
                                 ?>
                                     <tr>
                                         <td>
@@ -139,11 +146,30 @@ if (!is_postSale() && !is_admin()) {
 <?php init_tail(); ?>
 <script>
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
+    var document_received = "<?= $document_received ?>";
+    if (document_received == 1) {
+        $(".email-hide").removeClass("hide");
+    }
     if (complete_application == 1) {
 
         $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
 
     }
+    <?php if ($client_infomation->orignal_document_status == 4 && !has_permission('customers', '', 'return_document')): ?>
+
+        $("select[name='status']").attr("disabled", true).selectpicker("refresh");
+
+
+    <?php elseif (!has_permission('customers', '', 'return_document')): ?>
+
+        $("select[name='status'] option[value='4']").attr("disabled", true);
+        $("select[name='status']").selectpicker("refresh");
+
+
+    <?php endif; ?>
+
+
+
 
     function check_update(obj) {
         $(obj).addClass("disabled");
@@ -151,7 +177,7 @@ if (!is_postSale() && !is_admin()) {
         let isValid_check = false;
         let formData = new FormData(); // Create a FormData object
         let status = $("select[name='status']").val();
-        let status_text = $("select[name='status']  option:selected").text();
+        let status_text = $("select[name='status'] option:selected").text();
         $(".document_upload_div tr").each(function() {
             let checkbox = $(this).find("input[type='checkbox']");
             let received_id = $(this).find("input[name='received_id']").val();
@@ -216,5 +242,37 @@ if (!is_postSale() && !is_admin()) {
         });
 
         return false; // Prevent default form submission
+    }
+
+    function orignal_document_received_notification(client_id) {
+        let formData = new FormData(); // Create a FormData object
+        formData.append("client_id", <?= $client_id ?>); // Append corresponding location
+        formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
+        show_loader();
+        $.ajax({
+            url: "<?= base_url('admin/clients/orignal_document_received_notification') ?>", // Replace with your actual AJAX URL
+            type: "POST",
+            data: formData,
+            contentType: false, // Important for FormData
+            processData: false, // Prevents jQuery from converting FormData to a query string
+            success: function(response) {
+                response = JSON.parse(response);
+
+                console.log(response.resp_code);
+                if (response.resp_code == "RCS") {
+                    hide_loader();
+                    alert_float("success", response.resp_desc);
+                    // location.reload(); // Reload page after success
+                } else {
+                    hide_loader();
+                    alert_float("danger", response.resp_desc);
+                }
+            },
+            error: function() {
+                hide_loader();
+
+                alert_float("danger", "Error updating documents.");
+            },
+        });
     }
 </script>

@@ -1700,8 +1700,9 @@ function orignal_document_status()
     $CI = &get_instance();
     $CI->db->select("o.*")
         ->from(db_prefix() . 'orignal_document_status o');
-    return $CI->db->order_by("id", "asc")->get()->result_array();
+    return $CI->db->order_by("o.id", "asc")->get()->result_array();
 }
+
 
 function activity_orignal_document($id)
 {

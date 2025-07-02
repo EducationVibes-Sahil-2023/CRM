@@ -5648,11 +5648,20 @@ class Clients extends AdminController
                         "applicant_sub_status" => LEGALIZATION_COMPLETED,
                     ];
                 } else {
-                    $update_client_data = [
-                        "applicant_status" => 0,
-                        "applicant_stage" => LEGALIZATION,
-                        "applicant_sub_status" => LEGALIZATION_PENDING,
-                    ];
+
+                    if ($university_shortlisting_data[0]["ministry_payment"] != "") {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => LEGALIZATION,
+                            "applicant_sub_status" => LEGALIZATION_APPLIED,
+                        ];
+                    } else {
+                        $update_client_data = [
+                            "applicant_status" => 0,
+                            "applicant_stage" => LEGALIZATION,
+                            "applicant_sub_status" => LEGALIZATION_PENDING,
+                        ];
+                    }
                 }
 
                 $this->db->where("userid", $client_id);
@@ -7095,5 +7104,35 @@ class Clients extends AdminController
             die;
         }
         echo json_encode($response);
+    }
+
+    public function orignal_document_received_notification()
+    {
+        $data = $_POST;
+        $client_id = $_POST["client_id"];
+        $client = $this->clients_model->getBasicDetails($client_id);
+        if (!$client) {
+            http_response_code(404);
+            echo json_encode([
+                "resp_code" => "ERR",
+                "resp_desc" => "Client not found"
+            ]);
+            return;
+        }
+
+        $email_status = send_mail_template('Applicant_org_doc_received', $client->email, $client_id, get_staff_user_id());
+        if (!$email_status) {
+            $response = [
+                "resp_code" => "ERR",
+                "resp_desc" => "Failed to send email.",
+            ];
+        } else {
+            $response = [
+                "resp_code" => "RCS",
+                "resp_desc" => "Registration Email sent successfully.",
+            ];
+        }
+        echo json_encode($response);
+        return;
     }
 }

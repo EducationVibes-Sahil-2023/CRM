@@ -48,9 +48,9 @@ if (is_admin() || is_postSale()) {
     $aColumns[] = $sTable . ".userid as fid";
 }
 $aColumns_count = 0;
-$joinIn ='';
+$joinIn =' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) ';
 if ($post_sales->evp_partners == "all") {
-    $joinIn = ' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) ';
+    $joinIn = ' ';
 }
 
 if (!empty($tblma_applicant_tracker)) {

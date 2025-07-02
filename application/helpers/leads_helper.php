@@ -7692,6 +7692,14 @@ function calculate_call_duration_new($params = false, $max_status = 0)
     }
 
 
+    if (!empty($params['reference_name'])) {
+        $reference_name = $params['reference_name'];
+        $escaped_reference_name = array_map(function ($w) {
+            return "'" . trim($w) . "'";
+        }, $reference_name);
+
+        $sql .= " AND  l.reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    }
 
     if (!empty($params['lead_type'])) {
         $check_today = false;
@@ -8125,6 +8133,16 @@ function get_leads_summary_filter_neww($params)
 
         $conditions[] = " " . $tblleads . ".website IN (" . implode(',', $escaped_websites) . ")";
     }
+
+    if (!empty($params['reference_name'])) {
+        $reference_name = $params['reference_name'];
+        $escaped_reference_name = array_map(function ($w) {
+            return "'" . trim($w) . "'";
+        }, $reference_name);
+
+        $conditions[] = " " . $tblleads . ".reference_name IN (" . implode(',', $escaped_reference_name) . ")";
+    }
+
 
     if (!empty($params['up_to_date'])) {
         $up_to_date = $params['up_to_date'];
@@ -8839,4 +8857,3 @@ function get_examList()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
-

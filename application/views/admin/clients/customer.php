@@ -21,7 +21,7 @@ for ($i = 0; $i <= 5; $i++) {
                                     <div class="col-md-12">
                                         <p class="bold"><?php echo _l('filter_by'); ?></p>
                                     </div>
-                                    <?php if (has_permission('leads', '', 'view')) { ?>
+                                    <?php if (has_permission('leads', '', 'view') || is_postSale()) { ?>
                                         <div class="col-md-2  margin-top leads-filter-column">
                                             <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                         </div>

@@ -93,6 +93,17 @@ $academicYears = [
 
                                     </div>
                                     <div class="col-md-3 mb-3 form-group">
+                                        <label for="sql_condition">&nbsp;</label>
+                                        <div class="checkbox">
+
+                                            <input type="checkbox" name="orignal_documents_status" id="orignal_documents_status"
+                                                <?= !empty($excelInfo->orignal_documents_status) && $excelInfo->orignal_documents_status == 1 ? 'checked' : '' ?>>
+                                            <label for="orignal_documents_status">Original Document Status</label>
+
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 mb-3 form-group">
                                         <label for=""> </label><br>
                                         <button type="submit" class="btn btn-primary margin-top" onclick="createSheet()">Create</button>
                                     </div>
@@ -134,7 +145,13 @@ $academicYears = [
                                                         </td>
 
                                                         <td>
-                                                            <input class="form-control" id="sequence_column_<?= $col["id"] ?>" value="<?= !empty($selected_sequence[$col["id"]]) ? $selected_sequence[$col["id"]] : '' ?>" type="number" name="sequence[<?= $col["id"] ?>]">
+                                                            <input
+                                                                class="form-control"
+                                                                id="sequence_column_<?= $col["id"] ?>"
+                                                                value="<?= !empty($selected_sequence[$col["id"]]) ? $selected_sequence[$col["id"]] : '' ?>"
+                                                                type="number"
+                                                                step="any"
+                                                                name="sequence[<?= $col["id"] ?>]">
                                                         </td>
                                                     </tr>
                                                 <?php $index++;

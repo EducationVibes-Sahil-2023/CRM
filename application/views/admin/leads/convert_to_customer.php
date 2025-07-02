@@ -279,7 +279,7 @@ if ($lead->type == 1) {
                </div> -->
                      <div class="clearfix"></div>
                      <br>
-                     <div class="col-lg-12 col-md-12 col-12 row">
+                     <div class="col-lg-12 col-md-12 col-12">
                         <?php echo render_textarea('address', 'client_address', $lead->address); ?>
                      </div>
                      <div class="clearfix"></div>
@@ -400,7 +400,7 @@ if ($lead->type == 1) {
                         <div class="col-12">
                            <div class="checkbox">
                               <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
-                              <input class="form-check-input checkbox-group" type="checkbox" id="air_ticket_include_check" name="air_ticket_include_check">
+                              <input class="form-check-input checkbox-group" type="checkbox" ]value="1" id="air_ticket_include_check" name="air_ticket_include_check">
                               <label class="form-check-label" for="air_ticket_include_check">
                                  Air ticket inc. in Service Charge <span class="text-danger">*</span>
                               </label>
@@ -549,12 +549,12 @@ if ($lead->type == 1) {
          }
 
          if (countryName.toLowerCase() === "georgia") {
-            $("#air_ticket_include_check").removeAttr("disabled");
+            $("#air_ticket_include_check").removeAttr("onclick");
             $("#air_ticket_include_check").prop("checked", false);
             $("#air_ticket_include").val(0);
 
          } else {
-            $("#air_ticket_include_check").attr("disabled", true);
+            $("#air_ticket_include_check").removeAttr("onclick");
             $("#air_ticket_include_check").prop("checked", true);
             $("#air_ticket_include").val(1);
 
