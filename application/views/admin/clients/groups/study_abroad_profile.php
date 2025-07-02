@@ -52,17 +52,17 @@ if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
 
 $applicant_documents =  get_clients_documents($client_id);
 
-// if (!empty($applicant_documents[0]["data"])) {
-//     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
+if (!empty($applicant_documents[0]["data"])) {
+    $applicant_documents = json_decode($applicant_documents[0]["data"], true);
 
-//     array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
-//     array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
-//     array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
+    // array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
+    // array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
+    // array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
 
-//     if (!empty($applicant_documents)) {
-//         $applicant_documents = array_column($applicant_documents, null, "id");
-//     }
-// }
+    if (!empty($applicant_documents)) {
+        $applicant_documents = array_column($applicant_documents, null, "id");
+    }
+}
 
 
 
@@ -283,6 +283,7 @@ if ($lead_type_status == 1) {
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
+
     <input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
     <div class="additional"></div>
     <div class="col-md-12">
@@ -743,6 +744,7 @@ if ($lead_type_status == 1) {
                     </div>
                 </div>
             </div>
+
             <div role="tabpanel" class="tab-pane" id="admission_preferences">
                 <div class="row">
                     <div class="col-md-12">
@@ -916,13 +918,13 @@ if ($lead_type_status == 1) {
                                                         <div class="form-group">
                                                             <p>&nbsp;</p>
                                                             <?php if ($key > 0) { ?>
-                                                                <span class="btn btn-danger"
+                                                                <span class="btn btn-danger fa-fa-icons"
                                                                     onclick="removeApplication(this,<?= $shortlisting['id'] ?>)"><i
                                                                         class="fa fa-trash"></i></span>
                                                             <?php } else { ?>
-                                                                <span class="btn btn-ex btn-primary"
+                                                                <span class="btn btn-ex btn-primary fa-fa-icons"
                                                                     onclick="createNewApplication(this)"><i
-                                                                        class="fa fa-plus"></i></span>
+                                                                        class="fa-fa-icons fa fa-plus"></i></span>
                                                             <?php } ?>
                                                         </div>
                                                     </div>
@@ -985,7 +987,7 @@ if ($lead_type_status == 1) {
 
                                                         <span class="btn btn-ex btn-primary"
                                                             onclick="createNewApplication(this)"><i
-                                                                class="fa fa-plus"></i></span>
+                                                                class="fa-fa-icons fa fa-plus"></i></span>
 
                                                     </div>
                                                 </div>
@@ -1015,6 +1017,7 @@ if ($lead_type_status == 1) {
 
             <div role="tabpanel" class="tab-pane disabled-form" id="academic_details">
                 <form id="admission-details-form" class="form-disabled" onsubmit="return false;">
+                    <input name="academicDetailsId" type="hidden" value="<?= $academicdetails->id ?>">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card">
@@ -1133,9 +1136,6 @@ if ($lead_type_status == 1) {
                                 </div>
 
                                 <div class="row after accadmic-education-div">
-
-
-
                                     <div class="row qualification-div" id="twelthAcademicDetails"
                                         style="display:<?= ($academicdetails->after_x_status == '12th' || $academicdetails->after_x_status == 'Both' || empty($academicdetails->after_x_status)) ? 'block' : 'none' ?>">
                                         <h5>12<sup>th</sup> Academic Details <small class="text-danger">*</small></h5>
@@ -1282,6 +1282,7 @@ if ($lead_type_status == 1) {
 
                                     </div>
                                 </div>
+
                                 <div class="row accadmic-education-div" id="diplomaAcademicDetails"
                                     style="display:<?= ($academicdetails->after_x_status == 'Diploma' || $academicdetails->after_x_status == 'Both') ? 'block' : 'none' ?>">
                                     <h5>Diploma Academic Details <span class="text-danger">*</span></h5>
@@ -1498,7 +1499,7 @@ if ($lead_type_status == 1) {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row result-change-hide">
+                                        <div class="row result-change-hide" style="display:<?= ($academicdetails->graduation_result_status == 'Awaited') ? 'none' : '' ?>">
                                             <div class="col-lg-2 border2 border1" id="graduation_marking_scheme_div">
                                                 <div class="c1">
                                                     <p>Marking Scheme <?= $text_danger_mbbs ?></p>
@@ -1629,7 +1630,7 @@ if ($lead_type_status == 1) {
                                                 echo render_select('post_graduation_result_status', $resultStatus, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_result_status"); ?>
                                             </div>
                                         </div>
-                                        <div class="row result-change-hide">
+                                        <div class="row result-change-hide" style="display:<?= ($academicdetails->graduation_result_status == 'Awaited') ? 'none' : '' ?>">
                                             <div class="col-lg-2 border2 border1"
                                                 id="post_graduation_marking_scheme_div">
                                                 <div class="c1">
@@ -1707,71 +1708,104 @@ if ($lead_type_status == 1) {
                                     </div>
                                 </div>
 
+                                <div class="col-12" style="padding-top: 30px; padding-bottom: 20px;">
+                                    <label>
+                                        ELT Status &nbsp;
+                                        <input type="checkbox" value="1" onclick="changeELS_status(this)" name="elt_status" <?= !empty($academicdetails->elt_status) ? 'checked' : '' ?>>
+                                    </label>
 
+                                    <h4>Entrance Exams <span class="text-danger entrance-exam-div-title">*</span></h4>
+                                    <hr>
 
-
-
-
-                                <div class="col-12" style="padding-top: 30px;padding-bottom: 20px;">
-                                    <label>ELT Status &nbsp;<input type="checkbox" value="1" name="elt_status" <?= !empty($academicdetails->elt_status) ? 'Checked' : '' ?>></label>
-                                    <?php if (!empty($get_entrance_exam)) { ?>
-                                        <h4>Entrance Exams <span class="text-danger">*</span></h4>
-                                        <hr>
-                                        <div id="entrance-exam-div">
-                                            <?php foreach ($get_entrance_exam as $key => $entrance) { ?>
-                                                <div class="entrance-exams row col-md-12">
+                                    <div id="entrance-exam-div">
+                                        <?php if (!empty($get_entrance_exam)) { ?>
+                                            <?php foreach ($get_entrance_exam as $key => $entrance) {
+                                                $file_url = $entrance["file"] ?? '';
+                                                $required_attr = !empty($file_url) ? '' : 'required required-check';
+                                            ?>
+                                                <div class="entrance-exams row mb-3">
                                                     <div class="col-lg-3">
                                                         <div class="form-group">
-                                                            <input type="hidden" class="entrance_id"
-                                                                value="<?= $entrance["id"] ?>">
-                                                            <label for="entrance_exams">Exam Type <small class="text-danger">*</small></label>
-                                                            <?php
-                                                            echo render_select('entrance_exams', $get_entrance_exams_list, array('id', 'name'), "",  [$entrance["exam_id"]], [], [], "", "", "", "entrance_exams");
-
-                                                            ?>
-
-
+                                                            <input type="hidden" class="entrance_id" name="entrance_id[<?= $key ?>]" value="<?= htmlspecialchars($entrance["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <label for="entrance_exams_<?= $key ?>">Exam Type <small class="text-danger">*</small></label>
+                                                            <?= render_select("entrance_exams[$key]", $get_entrance_exams_list, ['id', 'name'], '', [$entrance["exam_id"]], ['required' => 'required', 'required-check' => 'required-check'], [], '', '', '', 'entrance_exams') ?>
                                                         </div>
                                                     </div>
 
                                                     <div class="col-lg-3">
                                                         <div class="form-group">
-                                                            <label for="entrance_marks">Marks <small class="text-danger">*</small></label>
-                                                            <input type="number" class="form-control entrance_marks" value="<?= $entrance["marks"] ?>">
+                                                            <label for="entrance_marks_<?= $key ?>">Marks <small class="text-danger">*</small></label>
+                                                            <input type="number" name="entrance_marks[<?= $key ?>]" class="form-control entrance_marks" value="<?= htmlspecialchars($entrance["marks"], ENT_QUOTES, 'UTF-8') ?>" required required-check>
                                                         </div>
                                                     </div>
+
                                                     <div class="col-lg-3">
                                                         <div class="form-group">
-                                                            <label for="study_courses">Marksheet <small class="text-danger">*</small></label>
-                                                            <input type="file" class="form-control">
+                                                            <label for="entrance_file_<?= $key ?>">Marksheet <small class="text-danger">*</small></label>
+                                                            <input type="file" name="entrance_file[<?= $key ?>]" data-fileurl="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>" class="form-control" <?= $required_attr ?> accept=".pdf,.jpg,.jpeg,.png">
+                                                            <?php if (!empty($file_url)) { ?>
+                                                                <div class="margin-top">
+                                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+                                                                </div>
+                                                            <?php } ?>
                                                         </div>
                                                     </div>
 
                                                     <div class="col-lg-1">
                                                         <div class="form-group">
                                                             <p>&nbsp;</p>
-
-
-
                                                             <?php if ($key > 0) { ?>
-                                                                <span class="btn btn-danger"
-                                                                    onclick="removeEntrance(this,<?= $entrance['id'] ?>)"><i
-                                                                        class="fa fa-trash"></i></span>
+                                                                <span class="btn btn-danger" onclick="removeEntrance(this, <?= $entrance['id'] ?>)">
+                                                                    <i class="fa fa-trash"></i>
+                                                                </span>
                                                             <?php } else { ?>
-                                                                <span class="btn btn-ex btn-primary"
-                                                                    onclick="createNewEntrance(this)"><i
-                                                                        class="fa fa-plus"></i></span>
+                                                                <span class="btn btn-primary" onclick="createNewEntrance()">
+                                                                    <i class="fa fa-plus"></i>
+                                                                </span>
                                                             <?php } ?>
-
                                                         </div>
                                                     </div>
                                                 </div>
                                             <?php } ?>
+                                        <?php } else { ?>
+                                            <div class="entrance-exams row mb-3">
+                                                <div class="col-lg-3">
+                                                    <div class="form-group">
+                                                        <input type="hidden" class="entrance_id" name="entrance_id[0]" value="">
+                                                        <label for="entrance_exams_0">Exam Type <small class="text-danger">*</small></label>
+                                                        <?= render_select('entrance_exams[0]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check'], [], '', '', '', 'entrance_exams') ?>
+                                                    </div>
+                                                </div>
 
+                                                <div class="col-lg-3">
+                                                    <div class="form-group">
+                                                        <label for="entrance_marks_0">Marks <small class="text-danger">*</small></label>
+                                                        <input type="number" class="form-control entrance_marks" name="entrance_marks[0]" value="" required required-check>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-lg-3">
+                                                    <div class="form-group">
+                                                        <label for="entrance_file_0">Marksheet <small class="text-danger">*</small></label>
+                                                        <input type="file" class="form-control" name="entrance_file[0]" required required-check accept=".pdf,.jpg,.jpeg,.png">
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-lg-1">
+                                                    <div class="form-group">
+                                                        <p>&nbsp;</p>
+                                                        <span class="btn btn-primary" onclick="createNewEntrance()">
+                                                            <i class="fa fa-plus"></i>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         <?php } ?>
-                                        </div>
+                                    </div>
 
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -1916,8 +1950,8 @@ if ($lead_type_status == 1) {
                             <form id="welcome-information-form" class="" onsubmit=" return false;">
                                 <?php
 
-                                $get_clients_fees = get_clients_fees_details($lead_type_status, $client_id, REGISTRATION_AMOUNT_ID);
-                                $registration_amount = !empty($get_clients_fees[0]["total_amount"]) ? $get_clients_fees[0]["total_amount"] : 0;
+                                $get_clients_fees = get_clients_fees_details($lead_type_status, $client_id, REGISTRATION_AMOUNT_STUDY_ID);
+                                $registration_amount = !empty($get_clients_fees[0]) ? $get_clients_fees[0] : [];
                                 ?>
 
                                 <div class="row">
@@ -1947,13 +1981,36 @@ if ($lead_type_status == 1) {
                                         </div>
                                     </div>
                                     <div class="col-lg-3">
-                                        <div class="form-group">
-                                            <label for="exampleInputMiddleName">Regisration amount <small
-                                                    class="text-danger">*</small> </label>
-                                            <input class="form-control" <?= $text_danger_mbbs_required ?> type="text"
-                                                value="<?= $registration_amount ?>">
+                                        <div class="mb-3">
+                                            <label for="registrationAmount" class="form-label">
+                                                Registration Amount <small class="text-danger">*</small>
+                                            </label>
+                                            <div class="f-flex">
+                                                <div class="row align-items-left mb-3">
+                                                    <div class="col-md-1">
+                                                        <label class="form-label" style="font-size: 20px;">
+                                                            <?= isset($registration_amount["symbol"]) ? htmlspecialchars($registration_amount["symbol"]) : '₹' ?>
+                                                        </label>
+                                                    </div>
+                                                    <div class="col-md-10" style="padding-left:3px;">
+                                                        <input
+                                                            type="text"
+                                                            class="form-control"
+                                                            id="registrationAmount"
+                                                            name="registration_amount"
+                                                            value="<?= htmlspecialchars($registration_amount["amount"]) ?>"
+                                                            data-currency_id="3"
+                                                            data-id="<?= isset($registration_amount["id"]) ? htmlspecialchars($registration_amount["id"]) : REGISTRATION_AMOUNT_STUDY_ID ?>"
+                                                            <?= $text_danger_mbbs_required ?>>
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
+
+
+
                                     <div class="col-lg-3">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Payment received from <small
@@ -1995,7 +2052,7 @@ if ($lead_type_status == 1) {
                                 <div class="row row">
                                     <div class="col-md-12 ">
                                         <button type="submit" onclick="save_welcome_info()"
-                                            class="btn btn-primary button-22 pull-right">Save changes</button>
+                                            class="btn btn-primary button-22 pull-right hide-btn btn-save-funn">Save changes</button>
                                     </div>
                                 </div>
                             </form>
@@ -2003,128 +2060,6 @@ if ($lead_type_status == 1) {
                     </div>
                 </div>
             </div>
-
-            <!-- <div role="tabpanel" class="tab-pane" id="fees_details">
-                <div class="row">
-                    <div class="col-md-12">
-                        <form id="fees-details-form" class="form-disabled" onsubmit=" return false;">
-
-                            <div class="card">
-                                <h4>Fees Details</h4>
-                                <hr>
-
-                                <?php
-                                $get_clients_fees = get_clients_fees((isset($lead_type_status) ? $lead_type_status : ''), $client_id);
-                                $get_currencies = get_currencies();
-                                $get_currencies = array_column($get_currencies, null, 'id');
-
-
-
-
-                                if (!empty($get_clients_fees) && !empty($get_currencies)) {
-                                ?>
-                                    <div id="applicant_fees">
-
-                                        <div class="row">
-                                            <?php
-                                            foreach ($get_clients_fees as $fees) {
-
-                                                $id = $fees["id"];
-                                                $amount = $fees["amount"];
-                                                // Prepare the field name by replacing spaces with underscores and converting to lowercase
-                                                $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
-                                                // Set the required attribute based on the "mandatry" field
-                                                $required = !empty($fees["mandatry"]) ? "required" : "false";
-                                                $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
-
-
-                                            ?>
-                                                <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
-                                                    <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
-                                                    <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                                        <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
-                                                        <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
-                                                        <input type="hidden" value="<?= $fees['detail_id'] ?>" name="<?= $field_name ?>_detail_id_<?= $fees['id'] ?>">
-
-                                                        <div class="input-group-addon currency-symbol-<?= $id ?>">
-                                                            <?php
-                                                            $symbol = '$'; // default
-
-                                                            if (!empty($fees["currency_id"]) && !empty($get_currencies[$fees["currency_id"]]["symbol"])) {
-                                                                $symbol = $get_currencies[$fees["currency_id"]]["symbol"];
-                                                            } elseif (empty($fees["currency_id"])) {
-                                                                $symbol = $get_currencies[$fees["default_currency"]]["symbol"];
-                                                            }
-                                                            ?>
-
-                                                            <?= $symbol ?>
-
-
-                                                        </div>
-                                                        <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
-                                                        <div class="input-group-addon currency-addon">
-
-                                                            <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
-                                                                <?php foreach ($get_currencies as $c) {
-                                                                ?>
-                                                                    <option
-                                                                        data-symbol="<?= $c['symbol'] ?>"
-                                                                        value="<?= $c['id'] ?>"
-                                                                        data-placeholder="0.00"
-                                                                        <?=
-                                                                        (!empty($fees['currency_id']) && $fees['currency_id'] == $c['id']) ||
-                                                                            (empty($fees['currency_id']) && !empty($fees['default_currency']) && $fees['default_currency'] == $c['id'])
-                                                                            ? 'selected'
-                                                                            : ''
-                                                                        ?>>
-                                                                        <?= $c['name'] ?>
-                                                                    </option>
-
-
-                                                                <?php
-                                                                }
-                                                                ?>
-
-                                                            </select>
-
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            <?php
-                                            }
-                                            ?>
-                                            <div class="col-lg-4 col-md-4 col-6 fees-block-8">
-                                                <label>&nbsp;</label>
-
-                                                <div class="form-check checkbox">
-                                                    <input
-                                                        class="form-check-input checkbox-group"
-                                                        type="checkbox"
-                                                        id="air_ticket_include"
-                                                        name="air_ticket_include"
-                                                        <?= ($client->air_ticket_include == 1) ? 'checked' : '' ?>
-                                                        <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabled' : '' ?>>
-                                                    <label class="form-check-label" for="air_ticket_include">
-                                                        Air ticket inc. in Service Charge <span class="text-danger">*</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-
-
-                                <?php } ?>
-                            </div>
-                            <div class="row btn-save-fun">
-                                <div class="col-md-12 ">
-                                    <button type="submit" onclick="fees_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div> -->
 
 
             <?php if (isset($client)) { ?>
@@ -2590,7 +2525,7 @@ if ($lead_type_status == 1) {
         <div class="col-lg-1">
             <div class="form-group">
                 <p>&nbsp;</p>
-                <span class="btn btn-danger" onclick="removeApplication(this)"><i class="fa fa-trash"></i></span>
+                <span class="btn btn-danger fa-fa-icons" onclick="removeApplication(this)"><i class="fa fa-trash"></i></span>
             </div>
         </div>
     </div>`;
@@ -2674,47 +2609,61 @@ if ($lead_type_status == 1) {
 
 
     }
-    let entranceIndex = 0;
-
     <?php
-    // Render the HTML once using PHP
-    $html = '<div class="entrance-exams row col-md-12">
+    $html = '<div class="entrance-exams row mb-3">
     <div class="col-lg-3">
         <div class="form-group">
             <label for="entrance_exams">Exam Type <small class="text-danger">*</small></label>' .
-        render_select('entrance_exams', $get_entrance_exams_list, array('id', 'name'), "", [], [], [], "", "", "", "entrance_exams") .
+        render_select('entrance_exams[__index__]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check'], [], '', '', '', 'entrance_exams') .
         '</div>
     </div>
 
     <div class="col-lg-3">
         <div class="form-group">
             <label for="entrance_marks">Marks <small class="text-danger">*</small></label>
-            <input type="number" class="form-control entrance_marks" value="">
+            <input type="number" name="entrance_marks[__index__]" class="form-control entrance_marks" value="" required required-check>
         </div>
     </div>
+
     <div class="col-lg-3">
         <div class="form-group">
             <label for="study_courses">Marksheet <small class="text-danger">*</small></label>
-            <input type="file" class="form-control">
+            <input type="file" name="entrance_file[__index__]" class="form-control" required required-check accept=".pdf,.jpg,.jpeg,.png">
         </div>
-    </div>
-
-    <div class="col-lg-1">
-        <div class="form-group">
-            <p>&nbsp;</p>
-            <span class="btn btn-danger" onclick="removeEntrance(this)"><i class="fa fa-trash"></i></span>
-        </div>
+    </div>';
+    $html_add = '<div class="col-lg-1">
+    <div class="form-group">
+        <p>&nbsp;</p>
+        <span class="btn btn-primary fa-fa-icons" onclick="createNewEntrance(this)"><i class="fa fa-plus"></i></span>
     </div>
 </div>';
+    $html_remove = '<div class="col-lg-1">
+    <div class="form-group">
+        <p>&nbsp;</p>
+        <span class="btn btn-danger fa-fa-icons" onclick="removeEntrance(this)"><i class="fa fa-trash"></i></span>
+    </div>
+</div>';
+
     ?>
 
+    var entranceHTMLTemplate = `<?= addslashes($html . $html_remove) ?>`;
+    var entranceHTMLAddTemplate = `<?= addslashes($html . $html_add) ?>`;
+    console.log(entranceHTMLTemplate);
+    var entranceIndex = "";
 
-    let entranceHTML = `<?= addslashes($html) ?>`;
+    function createNewEntrance(status = 0) {
+        entranceIndex = ($(".entrance-exams").length + 10);
 
-    function createNewEntrance(selectElement) {
-        entranceIndex++; // assuming this is declared globally
-        $("#entrance-exam-div").append(entranceHTML);
+        let template = (status === 1 ? entranceHTMLAddTemplate : entranceHTMLTemplate);
+        if (!template) {
+            console.error("Template is undefined!");
+            return;
+        }
+
+        let newHTML = template.replace(/__index__/g, entranceIndex);
+        $("#entrance-exam-div").append(newHTML);
         $("#entrance-exam-div").find("select").selectpicker('refresh');
+        entranceIndex++;
     }
 
 
@@ -2760,4 +2709,20 @@ if ($lead_type_status == 1) {
         $(".Qualification-section-div").removeClass("hide");
     }
     // Attach live search to selectpicker
+
+    function changeELS_status(event) {
+        // Clear the container
+        $("#entrance-exam-div").html("");
+        // Create a new entrance block
+        createNewEntrance(1);
+        // Use standard JavaScript/jQuery property to check if checkbox is checked
+        if ($(event).is(":checked")) {
+            $("#entrance-exam-div").removeClass("hide");
+            $("#entrance-exam-div-title").removeClass("hide");
+        } else {
+            $("#entrance-exam-div").addClass("hide");
+            $("#entrance-exam-div-title").addClass("hide");
+
+        }
+    }
 </script>

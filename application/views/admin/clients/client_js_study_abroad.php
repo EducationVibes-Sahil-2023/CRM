@@ -489,88 +489,132 @@
     // acadmic details
 
     async function save_admission_details() {
-
-        var additional_fields = {};
-        var form_status = true;
-        var formData = new FormData(); // Initialize FormData
+        const additional_fields = {};
+        let form_status = true;
+        const formData = new FormData();
 
         show_loader();
 
-        // Iterate through inputs, selects, and date fields
-        $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
-            const value = $.trim($(this).val()); // Trim spaces
-            const isRequired = $(this).attr("required-check") !== undefined;
-            const name = $(this).attr("name");
-            // console.log(name);
+        try {
+            // Step 1: Validate Required Fields
+            $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
+                const $el = $(this);
+                const name = $el.attr("name");
+                const value = $.trim($el.val());
+                const isRequired = $el.is("[required-check]");
 
-            if (isRequired) {
-                additional_fields[name] = "required";
-            }
+                if (!name) return;
 
-            // Validate required fields
-            if (isRequired && value === "") {
-                form_status = false;
-            } else {}
-        });
-
-        // console.log(additional_fields);
-
-        if (!form_status) {
-            appValidateForm($("#admission-details-form"), additional_fields);
-            hide_loader();
-            return false;
-        }
-
-
-        // Continue with form submission if valid
-        // Example: formData.append("key", value);
-        // Submit via AJAX or any other method
-
-
-        // Collect form data and append to FormData
-        $("#admission-details-form div > input, #admission-details-form div > textarea, #admission-details-form div > select").each(function() {
-            let name = $(this).attr("name");
-            let type = $(this).attr("type");
-
-            if (!name) return; // Skip if no name attribute
-
-            if (type === "radio" && !$(this).prop("checked")) return; // Only add checked radio buttons
-
-            let value = type === "file" ? $(this)[0].files[0] : $(this).val(); // Handle file input separately
-
-            if (value !== undefined && value !== null) {
-                formData.append(name, value);
-            }
-        });
-
-        // Get CSRF token and client ID
-        formData.append("csrf_token_name", csrfData.hash);
-        formData.append("clientid", $('input[name="clientid"]').val());
-
-        // Handle media files
-        await get_media_docs("admission-details-form .media-files", formData);
-
-
-        $.ajax({
-            url: "<?php echo base_url() . 'admin/clients/student_acadmic' ?>",
-            type: "POST",
-            data: formData,
-            dataType: "JSON",
-            processData: false, // Prevent jQuery from processing data
-            contentType: false, // Prevent jQuery from setting content type
-            success: function(res) {
-                hide_loader();
-                if (res.resp_code == 'RCS') {
-                    alert_float('success', res.resp_desc);
-                    window_reload();
-                } else {
-                    if (res.resp_code != '' && res.resp_desc != '') {
-                        alert_float('danger', res.resp_desc);
-                    }
+                if (isRequired && value === "") {
+                    additional_fields[name] = "required";
+                    form_status = false;
                 }
+            });
+
+            if (!form_status) {
+                appValidateForm($("#admission-details-form"), additional_fields);
+                alert_float('danger', 'Please fill all required fields.');
+                hide_loader();
+                return;
             }
-        })
+
+            // Step 2: Collect Form Data
+            $("#admission-details-form div > input, #admission-details-form div > textarea, #admission-details-form div > select").each(function() {
+                const $el = $(this);
+                const name = $el.attr("name");
+                const type = $el.attr("type");
+
+                if (!name) return;
+
+                if (type === "radio" && !$el.prop("checked")) return;
+
+                if (type === "file") {
+                    const file = $el[0].files[0];
+                    if (file) formData.append(name, file);
+                } else {
+                    formData.append(name, $el.val());
+                }
+            });
+
+            // Step 3: Static Hidden Values
+            formData.append("csrf_token_name", csrfData.hash);
+            formData.append("clientid", $('input[name="clientid"]').val());
+            formData.append("academicDetailsId", $('input[name="academicDetailsId"]').val());
+            formData.append("elt_status", $('input[name="elt_status"]').is(':checked') ? 1 : 0);
+
+            // Step 4: Extra Async File Data
+            await get_media_docs("admission-details-form .media-files", formData);
+            await get_entranceExams(formData);
+
+            // Step 5: AJAX Submission
+            $.ajax({
+                url: "<?php echo base_url('admin/clients/student_acadmic'); ?>",
+                type: "POST",
+                data: formData,
+                dataType: "JSON",
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    hide_loader();
+                    if (res.resp_code === 'RCS') {
+                        alert_float('success', res.resp_desc);
+                        window_reload();
+                    } else {
+                        alert_float('danger', res.resp_desc || 'Something went wrong.');
+                    }
+                },
+                error: function() {
+                    hide_loader();
+                    alert_float('danger', 'A network error occurred while saving admission details.');
+                }
+            });
+        } catch (e) {
+            console.error("Error in save_admission_details:", e);
+            alert_float('danger', 'Unexpected error occurred. Please try again.');
+            hide_loader();
+        }
     }
+
+
+
+    function get_entranceExams(formData) {
+        const entranceExamDetails = [];
+
+        return new Promise((resolve) => {
+            $("#entrance-exam-div .entrance-exams").each(function() {
+                const fileInput = $(this).find("input[type='file']")[0];
+                const fileUrl = $(fileInput).data("fileurl") || null;
+                const files = fileInput?.files || [];
+
+                const id = $(this).find("input.entrance_id").val()?.trim();
+                const examSelect = $(this).find("select");
+                const exam_id = examSelect.val()?.trim();
+                const entranceExam = examSelect.find("option:selected").text()?.trim();
+                const marks = $(this).find("input.entrance_marks").val()?.trim();
+
+                entranceExamDetails.push({
+                    id: id || null,
+                    exam_id: exam_id || null,
+                    entranceExam: entranceExam || null,
+                    marks: marks || null,
+                    hasFile: files.length > 0,
+                    fileUrl: fileUrl
+                });
+
+                if (files.length > 0) {
+                    Array.from(files).forEach((file, index) => {
+                        formData.append(`files_entrance_${exam_id}`, file);
+                    });
+                }
+            });
+
+            formData.append("entrance_exam_details", JSON.stringify(entranceExamDetails));
+            resolve();
+        });
+    }
+
+
+
 
     function check_registration_cash_status(element, className) {
         if ($(element).is(":checked")) {
@@ -745,6 +789,7 @@
 
         if (!form_status) {
             // Show validation errors
+            console.log(additional_fields);
             appValidateForm($("#documents-form"), additional_fields);
             hide_loader();
             return false; // Prevent form submission
@@ -869,6 +914,22 @@
         // Append CSRF token and client ID
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
+        let registrationAmount = $('#registrationAmount').val();
+        let currency_id = $('#registrationAmount').data("currency_id");
+        let fees_id = $('#registrationAmount').data("id");
+        let client_id = $('input[name="clientid"]').val();
+
+        let feesDetails = {
+            amount: registrationAmount,
+            currency_id: currency_id,
+            fees_id: fees_id,
+            client_id: client_id
+        };
+
+        // Convert the object to JSON string before appending
+        formData.append("feesDetails", JSON.stringify(feesDetails));
+
+
 
 
         // Function to process media files
@@ -914,6 +975,8 @@
             $(".tags-input-wrapper").css("pointer-events", "");
             $("#save_admission_preferences").attr("disabled", false);
             $(".btn-save-funn").show();
+            $(".fa-fa-icons").show();
+
         }
 
         if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {}
@@ -937,6 +1000,8 @@
             $(".btn-save-funn").hide();
             $(".tags-input-wrapper").css("pointer-events", "none");
             $("#save_admission_preferences").attr("disabled", true);
+            $(".fa-fa-icons").hide();
+
         }, 0);
 
     }
@@ -969,10 +1034,14 @@
             // Validate the form if any required field is missing
             if (!form_status) {
                 alert("First fill all requried fields");
+                $("#" + formId + " input:visible, #" + formId + " select:visible, #" + formId + " input[type='date']:visible").attr("disabled", true);
+
                 appValidateForm("#" + formId, additional_fields);
 
                 return false;
             }
+            $("#" + formId + " input:visible, #" + formId + " select:visible, #" + formId + " input[type='date']:visible").attr("disabled", true);
+
         });
 
         if (!form_status) {
