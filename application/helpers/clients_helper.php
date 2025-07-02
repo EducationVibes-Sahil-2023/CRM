@@ -1458,6 +1458,19 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
         // Merge both document arrays
         $document = array_merge($document, $document_country);
 
+
+        $unique = [];
+        $seen_ids = [];
+
+        foreach ($document as $item) {
+            if (!in_array($item['id'], $seen_ids)) {
+                $seen_ids[] = $item['id'];
+                $unique[] = $item;
+            }
+        }
+
+        $document = $unique;
+
         return $document;
     } catch (Exception $e) {
         log_message('error', 'Error fetching document: ' . $e->getMessage());
@@ -2690,3 +2703,34 @@ function get_ev_partner()
         return []; // Return an empty array to ensure function fails gracefully
     }
 }
+
+function get_universities_list($search = '')
+{
+    $CI = &get_instance();
+
+    try {
+        // Build query
+        $CI->db->select('*')
+            ->from(db_prefix() . 'universities_name')
+            ->where('status', 1);
+
+        // Add search condition if search term is provided
+        if (!empty($search)) {
+            $CI->db->like('name', $search);
+        }
+
+        // Order and limit
+        $CI->db->order_by('name', 'ASC');
+        $CI->db->limit(20);
+
+        // Execute query
+        $university_dropdown = $CI->db->get()->result_array();
+
+        return $university_dropdown;
+
+    } catch (Exception $e) {
+        log_message('error', 'Error fetching universities list: ' . $e->getMessage());
+        return [];
+    }
+}
+

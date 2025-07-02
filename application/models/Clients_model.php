@@ -94,8 +94,6 @@ class Clients_model extends App_Model
      */
     public function add($data, $client_or_lead_convert_request = false)
     {
-     
-     
         $contact_data = [];
         foreach ($this->contact_columns as $field) {
             if (isset($data[$field])) {
@@ -1865,7 +1863,7 @@ class Clients_model extends App_Model
         $this->db->order_by('sequence', "asc");
         return $update_button = $this->db->get(db_prefix() . 'document_status')->result_array();
     }
-    function university_shortlisting($client_id, $is_primary = 0)
+    function university_shortlisting($client_id, $is_primary = 0, $statusCheck = 0)
     {
 
         // Fetch shortlisted universities with vendor details
@@ -1877,6 +1875,10 @@ class Clients_model extends App_Model
                 'us.client_id' => $client_id,
                 'us.status' => 1
             ]);
+        if (!empty($statusCheck)) {
+            $this->db->or_where('us.status', 0);
+        }
+
 
         if (!empty($is_primary)) {
             $this->db->having('primary_university', 1);
@@ -2492,5 +2494,26 @@ class Clients_model extends App_Model
         $this->db->order_by('l.date', 'desc');
 
         return $activity_logs = $this->db->get()->result_array();
+    }
+
+
+    function get_entrance_exam_list()
+    {
+        $this->db->select("*");
+        $this->db->where('status', 1);
+        $this->db->from(db_prefix() . 'admission_entrance');
+        $this->db->order_by('id', 'asc');
+
+        return $get_entrance_exam_list = $this->db->get()->result_array();
+    }
+
+    function get_entrance_exam($clientid)
+    {
+        $this->db->select("id,client_id,exam_id,marks,file");
+        $this->db->from(db_prefix() . 'client_entrance');
+        $this->db->where('client_id', $clientid);
+        $this->db->order_by('id', 'asc');
+
+        return $get_entrance_exam = $this->db->get()->result_array();
     }
 }

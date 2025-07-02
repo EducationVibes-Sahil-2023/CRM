@@ -1294,13 +1294,40 @@ class Leads extends AdminController
             $data['convert_to_customer']     = $data['convert_to_customer'];
 
             $data['billing_country'] = $data['country'];
-            $data['air_ticket_include'] = !empty($data["air_ticket_include_check"])?1:0;
+            $data['air_ticket_include'] = !empty($data["air_ticket_include_check"]) ? 1 : 0;
             $data['application_text'] = "Registration";
             $data['applicant_stage'] = REGISTRATION;
             $data['applicant_status'] = "0";
             $data['applicant_sub_status'] = REGISTRATION_PENDING;
             $data['is_primary'] = 1;
-            $air_ticket_include = !empty($data["air_ticket_include_check"])?$data["air_ticket_include_check"]:0;
+
+            // SA Applicant 
+            $gender = $data['gender'];
+            $dob = $data['dob'];
+            $marital_status = $data['marital_status'];
+            $session_intake = $data['session_intake'];
+            $degree = $data['degree'];
+            $father_name = $data['father_name'];
+            $fathers_mobile = $data['fathers_mobile'];
+            $fathers_email = $data['fathers_email'];
+            $relationship_id = $data['relationship_id'];
+
+
+            $elt_status = !empty($data["exam_status"]) ? $data["exam_status"] : 0;
+            $exam_details_type = [];
+            $exam_details_marks = [];
+            if ($elt_status == 1) {
+                $exam_details_type = $data['exam_type'];
+                $exam_details_marks = $data['exam_marks'];
+            }
+
+            //
+
+            $leadData  = $this->leads_model->get($data["leadid"]);
+
+
+
+            $air_ticket_include = !empty($data["air_ticket_include_check"]) ? $data["air_ticket_include_check"] : 0;
             $fees_array = [];
             foreach ($data["applicant_fees"] as $applicant_fee) {
                 if (!empty($data[$applicant_fee])) {
@@ -1324,9 +1351,23 @@ class Leads extends AdminController
             unset($data["custom_fields"]["customers"][39]);
             unset($data["air_ticket_include_check"]);
 
+            // SA 
+            unset($data["exam_type"]);
+            unset($data["exam_marks"]);
+            unset($data["exam_status"]);
+            unset($data["gender"]);
+            unset($data["dob"]);
+            unset($data["marital_status"]);
+            unset($data["session_intake"]);
+            unset($data["degree"]);
+            unset($data["father_name"]);
+            unset($data["fathers_mobile"]);
+            unset($data["fathers_email"]);
+            unset($data["relationship_id"]);
+
 
             $id = $this->clients_model->add($data, true);
-// echo $this->db->last_query();
+            // echo $this->db->last_query();
 
             if ($id) {
                 // Prepare the fees array for batch insert or update
@@ -1354,12 +1395,17 @@ class Leads extends AdminController
                     "userid"      => $id,
                     "first_name"  => $data["firstname"],
                     "last_name"   => $data["lastname"],
+                    "father_name"   => $father_name,
+                    "fathers_mobile"   => $fathers_mobile,
+                    "fathers_email"   => $fathers_email,
+                    "relationship_id"   => $relationship_id,
                     "email"       => $data["email"],
-                    "country" => $temp_array["university_country"],
-                    "university_name" => $temp_array["university_name"],
+                    "country" => !empty($temp_array["university_country"]) ? $temp_array["university_country"] : "",
+                    "university_name" => !empty($temp_array["university_name"]) ? $temp_array["university_name"] : "",
                     "mobile"      => $data["phonenumber"],
-                    "gender"      => isset($data["custom_fields"]["customers"][CUSTUMER_GENDER]) ? $data["custom_fields"]["customers"][CUSTUMER_GENDER] : null,
-                    "dob"         => isset($data["custom_fields"]["customers"][CUSTUMER_DOB]) ? $data["custom_fields"]["customers"][CUSTUMER_DOB] : null,
+                    "gender"      => isset($gender) ? $gender : null,
+                    "dob"         => isset($dob) ? $dob : null,
+                    "marital_status"         => isset($marital_status) ? $marital_status : null,
                     "created_by"  => get_staff_user_id(),
                     "created_at"  => date('Y-m-d H:i:s')
                 ];
@@ -1392,17 +1438,23 @@ class Leads extends AdminController
                     $this->db->insert(db_prefix() . 'client_passport_details', $passport_details);
                 }
 
+                $courseType  = $leadData->type == 1 ? "STUDY" : "MBBS";
+                $entrance_exam_given  = $leadData->type == 1 ? "NO" : "YES";
+                $entrance_exam_details  = $leadData->type == 1 ? "" : "NEET";
+
                 $admission_pre = [
                     "userid"       => $id,
-                    "course" => "MBBS", // You may need a different value here
-                    "entrance_exam_given" => "YES", // You may need a different value here
-                    "entrance_exam_details" => "NEET", // You may need a different value here
+                    "course" => $courseType, // You may need a different value here
+                    "entrance_exam_given" => $entrance_exam_given, // You may need a different value here
+                    "entrance_exam_details" => $entrance_exam_details, // You may need a different value here
                     "study_country" => !empty($temp_array["university_country"]) ? $temp_array["university_country"] : '', // You may need a different value here
                     "university" =>  json_encode(array($temp_array["university_country"] => $temp_array["university_name"])),
                     "created_by"      => get_staff_user_id(),
                     "created_at"    => date('Y-m-d H:i:s'),
                     "primary_country" => !empty($temp_array["university_country"]) ? $temp_array["university_country"] : '',
-                    "primary_university" =>   !empty($temp_array["university_name"]) ? $temp_array["university_name"] : ''
+                    "primary_university" =>   !empty($temp_array["university_name"]) ? $temp_array["university_name"] : '',
+                    "session_intake" => !empty($session_intake) ? $session_intake : "",
+                    "degree" => !empty($degree) ? $degree : ""
                 ];
 
                 $this->db->where('userid', $id);
@@ -1415,6 +1467,58 @@ class Leads extends AdminController
                 }
 
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Applicant created successfully created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $id));
+
+
+
+                $academic_data = [
+                    "userid"          => $id,
+                    "elt_status"      => $elt_status,
+                    "added_by"      => get_staff_user_id(),
+                    "created_at"      => date('Y-m-d H:i:s')
+                ];
+
+                // Check if academic record exists
+                $this->db->where('userid', $id);
+                $existing_academic = $this->db->get(db_prefix() . 'academic_details')->row();
+
+                if ($existing_academic) {
+                    $this->db->update(db_prefix() . 'academic_details', $academic_data, ['userid' => $id]);
+                } else {
+                    $this->db->insert(db_prefix() . 'academic_details', $academic_data);
+                }
+
+                // Prepare exam mapping data with validation
+                $examMappingData = [];
+
+                if (
+                    !empty($exam_details_type) && is_array($exam_details_type) &&
+                    !empty($exam_details_marks) && is_array($exam_details_marks)
+                ) {
+
+                    foreach ($exam_details_type as $key => $eType) {
+                        $marks = isset($exam_details_marks[$key]) ? trim($exam_details_marks[$key]) : '';
+
+                        if (!empty($eType) && $marks !== '' && is_numeric($marks)) {
+                            $examMappingData[] = [
+                                "client_id"   => $id,
+                                "exam_id"     => $eType,
+                                "marks"       => $marks,
+                                "created_by"  => get_staff_user_id(),
+                                "created_at"  => date('Y-m-d H:i:s')
+                            ];
+                        }
+                    }
+
+                    // Optional: Delete existing records before re-inserting
+                    $this->db->where('client_id', $id);
+                    $this->db->delete(db_prefix() . 'client_entrance');
+
+                    if (!empty($examMappingData)) {
+                        $this->db->insert_batch(db_prefix() . 'client_entrance', $examMappingData);
+                    }
+                }
+
+
 
                 if (isset($notes)) {
 

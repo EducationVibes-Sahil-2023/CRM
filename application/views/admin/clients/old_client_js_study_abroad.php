@@ -223,22 +223,20 @@
     // admission prefrencess 
 
     $(document).ready(function() {
-        applicationIndex = $(".university-combinations").length
+        $("#session_intake").on("change", function() {
+            let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
 
-        // $("#session_intake").on("change", function() {
-        //     let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
+            if (selectedDate) {
+                let [year, month] = selectedDate.split("-"); // Extract year and month
 
-        //     if (selectedDate) {
-        //         let [year, month] = selectedDate.split("-"); // Extract year and month
-
-        //         // if (month !== "02" && month !== "09") {
-        //         //     // If not February or September, auto-correct to the nearest allowed month
-        //         //     // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
-        //         //     $(this).val('');
-        //         //     alert_float("danger", "Only February and September are allowed.");
-        //         // }
-        //     }
-        // });
+                if (month !== "02" && month !== "09") {
+                    // If not February or September, auto-correct to the nearest allowed month
+                    // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+                    $(this).val('');
+                    alert_float("danger", "Only February and September are allowed.");
+                }
+            }
+        });
 
 
         if (client_type != 1) {
@@ -285,20 +283,10 @@
 
     });
 
-    $(document).on('shown.bs.select', 'select.study_courses', function() {
-        const $select = $(this);
-        setTimeout(() => {
-            $('.bs-searchbox input').off('input').on('input', function() {
-                let searchVal = $(this).val();
-                loadCourses(searchVal, $select); // Pass correct select element
-            });
-        }, 300);
-    });
-
     function save_admission_preferences() {
         var additional_fields = {};
         var form_status = true;
-        // set_primary_enabled();
+        set_primary_enabled();
         show_loader();
         // Iterate through inputs, selects, and date fields
         $("#admission-preferences-form input, #admission-preferences-form select, #admission-preferences-form date").each(function() {
@@ -318,7 +306,7 @@
 
         // console.log(form_status);
         if (!form_status) {
-            // set_primary_diabled();
+            set_primary_diabled();
             appValidateForm($("#admission-preferences-form"), additional_fields);
             hide_loader();
             return false; // Prevent form submission if validation fails
@@ -327,85 +315,42 @@
         // Collect form data
         const params = {
             program: $('#program').val(),
-            course: "STUDY",
+            course: "MBBS",
             sessionIntake: $('#session_intake').val(),
             acadmic_year: $('#acadmic_year').val(),
+            countries: $('#study_country').val() ? $('#study_country').val().join(",") : "",
+            entranceExamDetails: $('#entrance_exam_details').val(),
             admissionPreferencesId: $('#admissionpreferencesid').val(),
             client_id: $('#client_id').val(),
-            application_universities: []
+            course_name: $('#course_name').val(),
+            universities: {}
         };
 
         // Conditionally add properties if they have values
+        const primaryUniversity = $('#primary_university').val();
+        if (primaryUniversity) {
+            params.primary_university = primaryUniversity;
+        }
+
+        const primaryCountry = $('#primary_country').val();
+        if (primaryCountry) {
+            params.primary_country = primaryCountry;
+        }
 
         try {
             // Validate selected universities for each country
-            // const countriesArr = $('#study_country').val();
-            // if (countriesArr) {
-            //     $.each(countriesArr, function(index, value) {
-            //         const key = value.replace(" ", "_");
-            //         params.universities[key] = $(`#university${index}`).val();
-            //         if (!params.universities[key]) {
-            //             hide_loader();
-            //             alert_float('danger', `Select a university for ${value}.`);
-            //             throw new Error(`University selection for ${value} is required.`);
-            //         }
-            //     });
-            // }
-
-            let isValid = true;
-            const seenCombinations = new Set();
-            params.application_universities = []; // Ensure it's initialized
-
-            $(".university-combinations").each(function() {
-                const $combo = $(this);
-
-                const countryId = $combo.find("select.study_country").val();
-                const countryName = $combo.find("select.study_country option:selected").text().trim();
-
-                const universityId = $combo.find("select.study_universities").val();
-                const universityName = $combo.find("select.study_universities option:selected").text().trim();
-
-                const courseId = $combo.find("select.study_courses").val();
-                const courseName = $combo.find("select.study_courses option:selected").text().trim();
-
-                const sessionIntake = $combo.find(".session_intake_combination").val().trim();
-                const id = $combo.find(".shortlisting_id").val();
-
-                if (!countryId) {
-                    hide_loader();
-                    alert_float('danger', "Please select a country in all university combinations.");
-                    isValid = false;
-                    return false; // Break `.each` loop
-                }
-
-                const comboKey = `${countryId}_${universityId}_${courseId}_${sessionIntake}`;
-                if (seenCombinations.has(comboKey)) {
-                    hide_loader();
-                    alert_float('danger', "Duplicate university combination found. Please ensure each combination is unique.");
-                    isValid = false;
-                    return false;
-                }
-
-                seenCombinations.add(comboKey);
-
-                params.application_universities.push({
-                    id: id,
-                    country_id: countryId,
-                    countryName: countryName,
-                    university_id: universityId,
-                    university_name: universityName,
-                    course_id: courseId,
-                    course_name: courseName,
-                    session_intake: sessionIntake
+            const countriesArr = $('#study_country').val();
+            if (countriesArr) {
+                $.each(countriesArr, function(index, value) {
+                    const key = value.replace(" ", "_");
+                    params.universities[key] = $(`#university${index}`).val();
+                    if (!params.universities[key]) {
+                        hide_loader();
+                        alert_float('danger', `Select a university for ${value}.`);
+                        throw new Error(`University selection for ${value} is required.`);
+                    }
                 });
-            });
-
-            if (!isValid) {
-                hide_loader();
-                // Prevent form submission or further processing if needed
-                return;
             }
-
 
 
             // Submit the form data via AJAX
@@ -416,7 +361,7 @@
                 dataType: "JSON",
                 success: function(res) {
                     hide_loader();
-                    // set_primary_diabled();
+                    set_primary_diabled();
                     if (res.resp_id !== undefined) {
                         $('#admissionpreferencesid').val(res.resp_id);
                     }
@@ -424,7 +369,7 @@
                     alert_float('success', res.resp_desc);
                 },
                 error: function(err) {
-                    // set_primary_diabled();
+                    set_primary_diabled();
                     hide_loader();
                     alert_float('danger', "An error occurred during submission.");
                     // console.error(err);
@@ -489,132 +434,88 @@
     // acadmic details
 
     async function save_admission_details() {
-        const additional_fields = {};
-        let form_status = true;
-        const formData = new FormData();
+
+        var additional_fields = {};
+        var form_status = true;
+        var formData = new FormData(); // Initialize FormData
 
         show_loader();
 
-        try {
-            // Step 1: Validate Required Fields
-            $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
-                const $el = $(this);
-                const name = $el.attr("name");
-                const value = $.trim($el.val());
-                const isRequired = $el.is("[required-check]");
+        // Iterate through inputs, selects, and date fields
+        $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
+            const value = $.trim($(this).val()); // Trim spaces
+            const isRequired = $(this).attr("required-check") !== undefined;
+            const name = $(this).attr("name");
+            // console.log(name);
 
-                if (!name) return;
-
-                if (isRequired && value === "") {
-                    additional_fields[name] = "required";
-                    form_status = false;
-                }
-            });
-
-            if (!form_status) {
-                appValidateForm($("#admission-details-form"), additional_fields);
-                alert_float('danger', 'Please fill all required fields.');
-                hide_loader();
-                return;
+            if (isRequired) {
+                additional_fields[name] = "required";
             }
 
-            // Step 2: Collect Form Data
-            $("#admission-details-form div > input, #admission-details-form div > textarea, #admission-details-form div > select").each(function() {
-                const $el = $(this);
-                const name = $el.attr("name");
-                const type = $el.attr("type");
-
-                if (!name) return;
-
-                if (type === "radio" && !$el.prop("checked")) return;
-
-                if (type === "file") {
-                    const file = $el[0].files[0];
-                    if (file) formData.append(name, file);
-                } else {
-                    formData.append(name, $el.val());
-                }
-            });
-
-            // Step 3: Static Hidden Values
-            formData.append("csrf_token_name", csrfData.hash);
-            formData.append("clientid", $('input[name="clientid"]').val());
-            formData.append("academicDetailsId", $('input[name="academicDetailsId"]').val());
-            formData.append("elt_status", $('input[name="elt_status"]').is(':checked') ? 1 : 0);
-
-            // Step 4: Extra Async File Data
-            await get_media_docs("admission-details-form .media-files", formData);
-            await get_entranceExams(formData);
-
-            // Step 5: AJAX Submission
-            $.ajax({
-                url: "<?php echo base_url('admin/clients/student_acadmic'); ?>",
-                type: "POST",
-                data: formData,
-                dataType: "JSON",
-                processData: false,
-                contentType: false,
-                success: function(res) {
-                    hide_loader();
-                    if (res.resp_code === 'RCS') {
-                        alert_float('success', res.resp_desc);
-                        window_reload();
-                    } else {
-                        alert_float('danger', res.resp_desc || 'Something went wrong.');
-                    }
-                },
-                error: function() {
-                    hide_loader();
-                    alert_float('danger', 'A network error occurred while saving admission details.');
-                }
-            });
-        } catch (e) {
-            console.error("Error in save_admission_details:", e);
-            alert_float('danger', 'Unexpected error occurred. Please try again.');
-            hide_loader();
-        }
-    }
-
-
-
-    function get_entranceExams(formData) {
-        const entranceExamDetails = [];
-
-        return new Promise((resolve) => {
-            $("#entrance-exam-div .entrance-exams").each(function() {
-                const fileInput = $(this).find("input[type='file']")[0];
-                const fileUrl = $(fileInput).data("fileurl") || null;
-                const files = fileInput?.files || [];
-
-                const id = $(this).find("input.entrance_id").val()?.trim();
-                const examSelect = $(this).find("select");
-                const exam_id = examSelect.val()?.trim();
-                const entranceExam = examSelect.find("option:selected").text()?.trim();
-                const marks = $(this).find("input.entrance_marks").val()?.trim();
-
-                entranceExamDetails.push({
-                    id: id || null,
-                    exam_id: exam_id || null,
-                    entranceExam: entranceExam || null,
-                    marks: marks || null,
-                    hasFile: files.length > 0,
-                    fileUrl: fileUrl
-                });
-
-                if (files.length > 0) {
-                    Array.from(files).forEach((file, index) => {
-                        formData.append(`files_entrance_${exam_id}`, file);
-                    });
-                }
-            });
-
-            formData.append("entrance_exam_details", JSON.stringify(entranceExamDetails));
-            resolve();
+            // Validate required fields
+            if (isRequired && value === "") {
+                form_status = false;
+            } else {}
         });
+
+        // console.log(additional_fields);
+
+        if (!form_status) {
+            appValidateForm($("#admission-details-form"), additional_fields);
+            hide_loader();
+            return false;
+        }
+
+
+        // Continue with form submission if valid
+        // Example: formData.append("key", value);
+        // Submit via AJAX or any other method
+
+
+        // Collect form data and append to FormData
+        $("#admission-details-form div > input, #admission-details-form div > textarea, #admission-details-form div > select").each(function() {
+            let name = $(this).attr("name");
+            let type = $(this).attr("type");
+
+            if (!name) return; // Skip if no name attribute
+
+            if (type === "radio" && !$(this).prop("checked")) return; // Only add checked radio buttons
+
+            let value = type === "file" ? $(this)[0].files[0] : $(this).val(); // Handle file input separately
+
+            if (value !== undefined && value !== null) {
+                formData.append(name, value);
+            }
+        });
+
+        // Get CSRF token and client ID
+        formData.append("csrf_token_name", csrfData.hash);
+        formData.append("clientid", $('input[name="clientid"]').val());
+
+        // Handle media files
+        await get_media_docs("admission-details-form .media-files", formData);
+
+
+        $.ajax({
+            url: "<?php echo base_url() . 'admin/clients/student_acadmic' ?>",
+            type: "POST",
+            data: formData,
+            dataType: "JSON",
+            processData: false, // Prevent jQuery from processing data
+            contentType: false, // Prevent jQuery from setting content type
+            success: function(res) {
+                hide_loader();
+                if (res.resp_code == 'RCS') {
+                    alert_float('success', res.resp_desc);
+                    window_reload();
+                } else {
+                    if (res.resp_code != '' && res.resp_desc != '') {
+                        alert_float('danger', res.resp_desc);
+                    }
+                }
+            }
+        })
     }
-
-
-
 
     function check_registration_cash_status(element, className) {
         if ($(element).is(":checked")) {
@@ -627,36 +528,6 @@
     }
 
     $(document).ready(function() {
-
-        $('input[type=radio][name=after_x_status]').change(function() {
-            let selected_value = $(this).val();
-            $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("show").addClass("hide");
-            if (selected_value == 'Both') {
-                $('#twelthAcademicDetails, #diplomaAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == '12th') {
-                // console.log("12 select");
-                $('#twelthAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == 'Diploma') {
-                $('#diplomaAcademicDetails').removeClass("hide").addClass("show");
-            }
-        });
-
-        $('input[type=radio][name=after_xx_status]').change(function() {
-            let selected_value = $(this).val(); // Use 'this' to get the value of the selected radio input.
-            // console.log(selected_value);
-            // Hide both academic details by default.
-            $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("show").addClass("hide");
-
-            if (selected_value == 'Both') {
-                $('#graduationAcademicDetails, #post_graduationAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == 'Graduation') {
-                // console.log("12 select");
-                $('#graduationAcademicDetails').removeClass("hide").addClass("show");
-            } else if (selected_value == 'Post Graduation') {
-                $('#post_graduationAcademicDetails').removeClass("hide").addClass("show");
-            }
-        });
-
         $("#twelth_result_status").on("change", function() {
             let isDeclared = $(this).val() === "Declared";
             let targetDiv = $(".twelth_result_status_div");
@@ -676,56 +547,6 @@
                 targetDiv.find("input, select, input[type='file']").removeAttr("required-check");
             }
         });
-
-        $("#diploma_result_status").on('change', function() {
-            const drs = $(this).val();
-            const $detailsSection = $("#diplomaAcademicDetails .result-change-hide");
-
-            // Clear input, select, and file values within the section
-            $detailsSection.find("input, select").val('');
-            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
-
-            // Toggle visibility based on status
-            if (drs === 'Declared') {
-                $detailsSection.show();
-            } else {
-                $detailsSection.hide();
-            }
-        });
-
-        $("#graduation_result_status").on('change', function() {
-            const drs = $(this).val();
-            const $detailsSection = $("#graduationAcademicDetails .result-change-hide");
-
-            // Clear input, select, and file values within the section
-            $detailsSection.find("input, select").val('');
-            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
-
-            // Toggle visibility based on status
-            if (drs === 'Declared') {
-                $detailsSection.show();
-            } else {
-                $detailsSection.hide();
-            }
-        });
-
-        $("#post_graduation_result_status").on('change', function() {
-            const drs = $(this).val();
-            const $detailsSection = $("#post_graduationAcademicDetails .result-change-hide");
-
-            // Clear input, select, and file values within the section
-            $detailsSection.find("input, select").val('');
-            $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
-
-            // Toggle visibility based on status
-            if (drs === 'Declared') {
-                $detailsSection.show();
-            } else {
-                $detailsSection.hide();
-            }
-        });
-
-
 
 
         $("#entrance_result_status").on("change", function() {
@@ -747,7 +568,7 @@
 
         setTimeout(() => {
             if (typeof set_primary_diabled === "function") {
-                // set_primary_diabled();
+                set_primary_diabled();
             } else {
                 // console.warn("set_primary_diabled function does not exist.");
             }
@@ -789,7 +610,6 @@
 
         if (!form_status) {
             // Show validation errors
-            console.log(additional_fields);
             appValidateForm($("#documents-form"), additional_fields);
             hide_loader();
             return false; // Prevent form submission
@@ -877,6 +697,69 @@
         });
     }
 
+    function fees_details() {
+        var additional_fields = {};
+        var form_status = true;
+        show_loader();
+        $("#fees-details-form input:visible, #fees-details-form select:visible, #fees-details-form input[type='date']:visible").each(function() {
+            const value = $(this).val()?.trim(); // Get trimmed value
+            const isRequired = $(this).attr("required-check") !== undefined; // Check if 'required-check' exists
+            const name = $(this).attr("name"); // Get name attribute
+            // console.log(isRequired);
+            if (isRequired && name) {
+                additional_fields[name] = "required";
+                if (!value) {
+                    form_status = false;
+                }
+            }
+        });
+
+        if (!form_status) {
+            appValidateForm($("#fees-details-form"), additional_fields);
+            hide_loader();
+            return false;
+        }
+
+        let formData = new FormData(document.getElementById('fees-details-form')); // Correct way to initialize FormData
+
+        // Append CSRF token and client ID
+        formData.append("csrf_token_name", csrfData.hash);
+        formData.append("clientid", $('input[name="clientid"]').val());
+        formData.append("air_ticket_include", $('input[name="air_ticket_include"]').is(':checked') ? 1 : 0);
+        $("#air_ticket_include").attr("disabled", false);
+
+
+        // Function to process media files
+
+
+        //
+
+        // AJAX request to upload documents
+        $.ajax({
+            url: "<?php echo base_url('admin/clients/fees_details'); ?>",
+            type: "POST",
+            data: formData,
+            processData: false, // Prevent jQuery from transforming FormData
+            contentType: false, // Ensure correct Content-Type is set for FormData
+            dataType: "JSON",
+            success: function(res) {
+                hide_loader();
+                if (res.resp_code === "RCS") {
+                    window_reload();
+                    alert_float("success", res.resp_desc);
+                } else {
+                    const message = res.resp_desc || "An unknown error occurred.";
+                    alert_float("danger", message);
+                }
+            },
+            error: function(xhr, status, error) {
+                // console.error("Error: ", error);
+                hide_loader();
+                alert_float("danger", "An error occurred while processing the request.");
+            },
+        });
+    }
+
     async function save_welcome_info() {
         var additional_fields = {};
         var form_status = true;
@@ -914,22 +797,6 @@
         // Append CSRF token and client ID
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
-        let registrationAmount = $('#registrationAmount').val();
-        let currency_id = $('#registrationAmount').data("currency_id");
-        let fees_id = $('#registrationAmount').data("id");
-        let client_id = $('input[name="clientid"]').val();
-
-        let feesDetails = {
-            amount: registrationAmount,
-            currency_id: currency_id,
-            fees_id: fees_id,
-            client_id: client_id
-        };
-
-        // Convert the object to JSON string before appending
-        formData.append("feesDetails", JSON.stringify(feesDetails));
-
-
 
 
         // Function to process media files
@@ -975,8 +842,6 @@
             $(".tags-input-wrapper").css("pointer-events", "");
             $("#save_admission_preferences").attr("disabled", false);
             $(".btn-save-funn").show();
-            $(".fa-fa-icons").show();
-
         }
 
         if (typeof final_sumbit !== "undefined" && final_sumbit == 1) {}
@@ -1000,8 +865,6 @@
             $(".btn-save-funn").hide();
             $(".tags-input-wrapper").css("pointer-events", "none");
             $("#save_admission_preferences").attr("disabled", true);
-            $(".fa-fa-icons").hide();
-
         }, 0);
 
     }
@@ -1034,14 +897,10 @@
             // Validate the form if any required field is missing
             if (!form_status) {
                 alert("First fill all requried fields");
-                $("#" + formId + " input:visible, #" + formId + " select:visible, #" + formId + " input[type='date']:visible").attr("disabled", true);
-
                 appValidateForm("#" + formId, additional_fields);
 
                 return false;
             }
-            $("#" + formId + " input:visible, #" + formId + " select:visible, #" + formId + " input[type='date']:visible").attr("disabled", true);
-
         });
 
         if (!form_status) {
@@ -1100,6 +959,7 @@
 
     }
 
+
     function window_reload(url = "") {
         // Get the current active tab ID (e.g., "passport", "documents")
         const activeTabTarget = $("ul.profile-tabs li.active a").attr("href")?.replace("#", "") || "";
@@ -1125,38 +985,466 @@
     }
 
 
+
+    function check_primary_university() {
+
+
+        let universitiesArray = {};
+        let countriesArrr = $('#study_country').val();
+        let primary_university = "<?= $admissionpreferences->primary_university ?>"; // Get selected value
+        $("#primary_country").val("");
+        if (countriesArrr) {
+            $.each(countriesArrr, function(index, value) {
+                const key = value.replace(/\s+/g, "_"); // Replace spaces with underscores
+                universitiesArray[key] = $(`#university${index}`).val();
+
+            });
+        }
+
+
+        var $select = $("#primary_university");
+
+        // Clear existing options except the first one
+        $select.find("option:not(:first)").remove();
+
+        // Loop through each country and add universities
+        $.each(universitiesArray, function(country, universities) {
+            var universityList = universities.split(",");
+
+            // Append new university options
+            $.each(universityList, function(index, university) {
+                let trimmedUniversity = university.trim();
+                let isSelected = primary_university === trimmedUniversity ? 'selected' : '';
+                if (isSelected === 'selected') {
+                    $("#primary_country").val(country);
+                }
+                $select.append(
+                    $("<option></option>")
+                    .val(trimmedUniversity)
+                    .text(trimmedUniversity).attr("data-country", country)
+                    .prop("selected", isSelected === 'selected') // Set selected option
+                );
+            });
+        });
+
+        // Refresh selectpicker UI if used
+        if ($select.hasClass("selectpicker")) {
+            $select.selectpicker("refresh");
+        }
+    }
+
+    function select_primary_university(obj) {
+        var country_name = $(obj).find("option:selected").data("country") || ""; // Default to empty if undefined
+        $("#primary_country").val(country_name);
+        // Debugging
+        // console.log("Selected Country:", country_name);
+    }
+    // set university
     var suggetions_university = [];
     const countriesArr = <?php echo !empty($admissionpreferences) ? json_encode(explode(",", $admissionpreferences->study_country)) : '[]' ?>;
     const universityArr = <?php echo !empty($admissionpreferences->university) ? $admissionpreferences->university : '{}' ?>;
 
     var selectedUniversityArr = [];
+    // const universityArr = {};
+    $('#study_country').on('change select2:opening', async function() {
+        set_primary_enabled();
+        let value = $(this).val();
+        if (value.length > 0) {
+            if (value.length <= 2) {
+                selectedUniversityArr = [];
+                $('#countries').val(value.join(','));
+                var str = '';
+                for (let k = 0; k < value.length; k++) {
+                    var v = value[k];
+                    var countryName = v.search("_") != -1 ? v.replace("_", " ") : v;
+                    let c = v.replace(" ", "_");
+                    str += `<div class="col-lg-6">
+          <div class="form-group">
+            <label for="university${k}">${countryName} University</label>
+            <input type="hidden" class="form-control suggest_university" data-country-name="${countryName}" name="university${k}" id="university${k}" value="" required>
+          </div>
+        </div>`;
 
-    // $(document).on('change', '.study_country', async function() {
-    //     let $this = $(this);
-    //     let selectedValue = $this.val();
-    //     let selectedTextValue = $this.text();
-    //     console.log(selectedValue);
-    //     console.log(selectedTextValue);
-    //     // Find the corresponding university select inside the same wrapper
-    //     let $universitySelect = $this.closest('.study_universities');
+                    if (Object.keys(universityArr).length > 0) {
+                        if (c in universityArr) {
+                            selectedUniversityArr[countryName] = universityArr[c];
+                        } else {
+                            selectedUniversityArr[countryName] = "";
+                        }
+                    }
+                }
 
-    //     $universitySelect.empty();
+                $('.universities').html(str);
 
-    //     let countryName = selectedValue.replace(/_/g, ' ');
-    //     let universityList = await show_university_dropdown(selectedValue);
-    //     console.log(universityList);
-    //     // Create options
-    //     let universityOptions = '<option value="">Select university</option>';
-    //     universityList.forEach(function(uni) {
-    //         $universitySelect.append(new Option(uni.university_name, uni.university_id));
+                if (Object.keys(selectedUniversityArr).length > 0) {
+                    // // console.log(selectedUniversityArr);
+                    var count2 = 0;
 
-    //     });
+                    for (const k in selectedUniversityArr) {
+                        const v = selectedUniversityArr[k];
+                        var countryName = k.search("_") != -1 ? k.replace("_", " ") : k;
+                        // // console.log(countryName);
 
-    //     // Inject and refresh the university select
-    //     $universitySelect.selectpicker('refresh');
-    // });
+                        let university_list = await show_university_dropdown(select_segment_default, k);
+                        //// console.log(university_list);
+                        //// console.log(university_list);
+                        var tagInput1 = new TagsInput({
+                            selector: `university${count2}`,
+                            duplicate: false,
+                            max: <?= MAX_UNIVERSITY_MBBS_ABROAD ?>,
+                            suggestions: university_list
+                        });
+
+                        if (v !== '') {
+                            //// console.log(v);
+                            if (typeof v !== 'undefined') {
+                                var defaultVal = v.split(",");
+                                defaultVal.forEach(function(k1, v1) {
+                                    tagInput1.addData([k1]);
+                                });
+                            }
+                        }
+                        count2++;
+                        suggetions_university[countryName] = university_list;
+                    }
+                } else {
+                    for (let k = 0; k < value.length; k++) {
+                        var v = value[k];
+                        //// console.log(value);
+                        let university_list = await show_university_dropdown(select_segment_default, v);
+                        //// console.log(university_list);
+                        var countryName = v.search("_") != -1 ? v.replace("_", " ") : v;
+
+                        //// console.log(university_list);
+                        var tagInput1 = new TagsInput({
+                            selector: `university${k}`,
+                            duplicate: false,
+                            max: 5,
+                            suggestions: university_list
+                        });
+
+                        suggetions_university[countryName] = university_list;
+                    }
+                }
+            }
+
+            if (value.length >= 2) {
+                $(`#study_country option`).prop('disabled', true);
+                for (let k = 0; k < value.length; k++) {
+                    var v = value[k];
+                    $(`#study_country option[value="${v}"]`).prop('disabled', false);
+                }
+            } else {
+                // $(`#study_country option`).prop('disabled', false);
+
+                // set staff configuration
+                $('#study_country option:not([not-change])').prop('disabled', false);
+
+            }
+            $('#study_country').selectpicker('refresh');
+        } else {
+            $('#countries').val("");
+            $('.universities').html("");
+        }
+        // setTimeout(() => {
+        set_primary_diabled();
+        // }, 300);
+        // set_university();
+    });
 
 
+
+    // Plugin Constructor
+    var TagsInput = function(opts) {
+        this.options = Object.assign(TagsInput.defaults, opts);
+        this.init();
+        set_university_diabled();
+    }
+
+    // Initialize the plugin
+    TagsInput.prototype.init = function(opts) {
+        this.options = opts ? Object.assign(this.options, opts) : this.options;
+
+        if (this.initialized)
+            this.destroy();
+        //// console.log(this)
+        if (!(this.orignal_input = document.getElementById(this.options.selector))) {
+            // console.error("tags-input couldn't find an element with the specified ID");
+            return this;
+        }
+
+        this.arr = [];
+        this.wrapper = document.createElement('div');
+        this.input = document.createElement('input');
+        init(this);
+        initEvents(this);
+
+        this.initialized = true;
+        return this;
+    }
+
+    // Add Tags
+    TagsInput.prototype.addTag = function(string) {
+
+        if (this.anyErrors(string))
+            return;
+
+        this.arr.push(string);
+        var tagInput = this;
+
+        var tag = document.createElement('span');
+        tag.className = this.options.tagClass;
+        tag.innerText = string;
+
+        var closeIcon = document.createElement('a');
+        closeIcon.innerHTML = '&times;';
+
+        // delete the tag when icon is clicked
+        closeIcon.addEventListener('click', function(e) {
+            e.preventDefault();
+            var tag = this.parentNode;
+
+            for (var i = 0; i < tagInput.wrapper.childNodes.length; i++) {
+                if (tagInput.wrapper.childNodes[i] == tag)
+                    tagInput.deleteTag(tag, i);
+            }
+        })
+
+
+        tag.appendChild(closeIcon);
+        this.wrapper.insertBefore(tag, this.input);
+        this.orignal_input.value = this.arr.join(',');
+        check_primary_university();
+        return this;
+    }
+
+    // Delete Tags
+    TagsInput.prototype.deleteTag = function(tag, i) {
+        tag.remove();
+        this.arr.splice(i, 1);
+        this.orignal_input.value = this.arr.join(',');
+        check_primary_university();
+        return this;
+    }
+
+    // Make sure input string have no error with the plugin
+    TagsInput.prototype.anyErrors = function(string) {
+        if (this.options.max != null && this.arr.length >= this.options.max) {
+            alert('max university limit reached for this country');
+            return true;
+        }
+
+        if (!this.options.duplicate && this.arr.indexOf(string) != -1) {
+            alert('duplicate found " ' + string + ' " ')
+            return true;
+        }
+
+        return false;
+    }
+
+    // Add tags programmatically 
+    TagsInput.prototype.addData = function(array) {
+        var plugin = this;
+
+        array.forEach(function(string) {
+            plugin.addTag(string);
+        })
+        return this;
+    }
+
+    // Get the Input String
+    TagsInput.prototype.getInputString = function() {
+        return this.arr.join(',');
+    }
+
+
+    // destroy the plugin
+    TagsInput.prototype.destroy = function() {
+        this.orignal_input.removeAttribute('hidden');
+
+        delete this.orignal_input;
+        var self = this;
+
+        Object.keys(this).forEach(function(key) {
+            if (self[key] instanceof HTMLElement)
+                self[key].remove();
+
+            if (key != 'options')
+                delete self[key];
+        });
+
+        this.initialized = false;
+    }
+
+    // Private function to initialize the tag input plugin
+    function init(tags) {
+        tags.wrapper.append(tags.input);
+        tags.wrapper.classList.add(tags.options.wrapperClass);
+        tags.orignal_input.setAttribute('hidden', 'true');
+        // tags.orignal_input.hide();
+        tags.orignal_input.parentNode.insertBefore(tags.wrapper, tags.orignal_input);
+    }
+
+    // initialize the Events
+    function initEvents(tags) {
+        tags.wrapper.addEventListener('click', function() {
+            tags.input.focus();
+        });
+
+        tags.input.addEventListener('click', function() {
+            var div_elements = document.querySelectorAll('.suggestions-container');
+            div_elements.forEach((div_elements) => {
+                div_elements.classList.add('hide_sugg');
+            });
+        });
+
+        tags.input.addEventListener('keyup', function(event) {
+            var closestFormGroup = event.target.closest('.form-group');
+            var suggestUniversityElement = "";
+            var country_name = "";
+
+            if (closestFormGroup) {
+                suggestUniversityElement = closestFormGroup.querySelector('.suggest_university').id;
+                country_name = closestFormGroup.querySelector('.suggest_university').getAttribute("data-country-name");
+            }
+
+            var str = event.target.value.trim();
+            var suggestions = suggetions_university[country_name];
+
+            if (suggestions && suggestions.length > 0) {
+                var matchedSuggestions = suggetions_university[country_name].filter(function(suggestion) {
+                    // return suggestion.toLowerCase().startsWith(str.toLowerCase());
+
+                    return suggestion.toLowerCase().includes(str.toLowerCase());
+                });
+
+                var div_elements = document.querySelectorAll('.suggestions-container');
+                div_elements.forEach((div_elements) => {
+                    div_elements.classList.add('hide_sugg');
+                });
+                if (str.trim() != "") {
+                    displaySuggestions(matchedSuggestions, suggestUniversityElement, event, tags);
+                }
+            }
+        });
+    }
+
+
+    // Display the auto-suggestions
+    function displaySuggestions(suggestions, id, event, tags) {
+
+        var suggestionsContainer = document.getElementById('suggestions-container-' + id);
+
+        if (!suggestionsContainer) {
+            suggestionsContainer = document.createElement('ul');
+            suggestionsContainer.id = 'suggestions-container-' + id;
+            suggestionsContainer.classList.add('suggestions-container');
+            suggestionsContainer.setAttribute('data-university', id);
+            document.getElementById(id).after(suggestionsContainer);
+        }
+        suggestionsContainer.closest(".suggestions-container").classList.remove('hide_sugg');
+        suggestionsContainer.innerHTML = '';
+
+        suggestions.forEach(function(suggestion) {
+            var suggestionItem = document.createElement('li');
+            suggestionItem.innerText = suggestion;
+
+            suggestionItem.addEventListener('click', function() {
+                var selectedSuggestion = this.innerText;
+                let u_id = $(this).closest(".suggestions-container").attr("data-university");
+                //// console.log(country_name);
+
+                tags.addTag(selectedSuggestion);
+                let country_name = $("#" + u_id).attr("data-country-name");
+                country_name = country_name.search("_") != -1 ? country_name.replace("_", " ") : country_name;
+                let selected_university = $("#" + u_id).val();
+                event.target.value = '';
+                selectedUniversityArr[country_name] = selected_university;
+                universityArr[country_name] = selected_university;
+                suggestionsContainer.closest(".suggestions-container").classList.add('hide_sugg');
+
+            });
+
+            suggestionsContainer.appendChild(suggestionItem);
+        });
+
+    }
+    // Set All the Default Values
+    TagsInput.defaults = {
+        selector: '',
+        wrapperClass: 'tags-input-wrapper',
+        tagClass: 'tag',
+        max: null,
+        duplicate: false,
+        suggestions: []
+    }
+
+    window.TagsInput = TagsInput;
+
+    // var count = 0;
+    function set_university_div() {
+        return new Promise((resolve, reject) => {
+            let set_count = 0;
+            let str = "";
+
+            for (const k in universityArr) {
+                var countryName = k.search("_") != -1 ? k.replace("_", " ") : k;
+
+                str += `<div class="col-lg-6">
+        <div class="form-group">
+          <label for="university${set_count}">${countryName} University</label>
+          <input type="hidden" class="form-control suggest_university" data-country-name="${countryName}" name="university${set_count}" id="university${set_count}" value="" required>
+        </div>
+      </div>`;
+
+                set_count++;
+            }
+
+            if (str !== "") {
+                resolve(str);
+            } else {
+                reject(new Error("Failed to generate university HTML."));
+            }
+        });
+    }
+
+    async function set_university() {
+        try {
+            const str = await set_university_div();
+            $('.universities').html(str);
+
+            let set_count = 0;
+            let leadTypeSelect = document.getElementById("lead_type");
+            let selectedValue = leadTypeSelect.options[leadTypeSelect.selectedIndex].text.trim().toLowerCase();
+
+            for (const k in universityArr) {
+                let university_list = await show_university_dropdown(selectedValue, k);
+                //// console.log(university_list);
+                var countryName = k.search("_") != -1 ? k.replace("_", " ") : k;
+                if (universityArr.hasOwnProperty(k)) {
+                    var tagInput1 = new TagsInput({
+                        selector: `university${set_count}`,
+                        duplicate: false,
+                        max: <?= MAX_UNIVERSITY_MBBS_ABROAD ?>,
+                        suggestions: university_list
+                    });
+
+                    var defaultVal = universityArr[k].split(",");
+
+                    if (defaultVal != "") {
+                        defaultVal.forEach(function(k1, v1) {
+                            tagInput1.addData([k1]);
+                        });
+                    }
+                    set_count++;
+                    suggetions_university[countryName] = university_list;
+                }
+            }
+
+        } catch (error) {
+            // console.error("An error occurred during university setup:", error);
+        }
+    }
 
     function delete_documents(type, tracker_id, id) {
         // Basic field validation before confirmation

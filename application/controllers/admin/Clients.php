@@ -153,7 +153,8 @@ class Clients extends AdminController
         if (!empty($id)) {
             $client = $this->clients_model->get($id);
         }
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') ")->result_array();
+        // $data["dropdown_courses"] = $this->s_db->query("SELECT id,course_name FROM tbl_courses where status = 0 group by course_name order by course_name asc")->result_array();
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
@@ -277,7 +278,13 @@ class Clients extends AdminController
             if ($group == 'profile') {
                 $data['customer_groups'] = $this->clients_model->get_customer_groups($id);
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
-                $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
+                if ($data["lead_data"]->type == 1) {
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
+                    $data['course_list_ug'] =  $this->get_courses("UG");
+                    $data['course_list_pg'] =  $this->get_courses("PG");
+                } else {
+                    $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
+                }
                 $data['passport_info'] = $this->clients_model->getPassportDetails($id);
                 $data['admissionpreferences'] = $this->clients_model->getAdmissionPreferences($id);
                 $data['parentdetails'] = $this->clients_model->getParentDetails($id);
@@ -2095,6 +2102,73 @@ class Clients extends AdminController
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Admission Preferences Information Created by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
                 applicant_last_update($client_id);
+
+
+
+                if (!empty($_POST["application_universities"])) {
+                    $application_universities = $_POST["application_universities"];
+
+                    $insertData = [];
+                    $updateData = [];
+
+                    foreach ($application_universities as $application) {
+                        // Validate required fields
+                        if (
+                            !empty($application["country_id"])
+                        ) {
+
+                            $status = 0;
+                            if (
+                                !empty($application["country_id"]) &&
+                                !empty($application["university_id"]) &&
+                                !empty($application["course_id"]) &&
+                                !empty($application["session_intake"])
+                            ) {
+                                $status = 1;
+                            }
+                            $data = [
+                                "client_id"        => $client_id ?? '',
+                                "country_name"        => $application["country_name"] ?? '',
+                                "university_name"     => $application["university_name"] ?? '',
+                                "country_id"          => $application["country_id"],
+                                "university_id"       => $application["university_id"],
+                                "course_name"         => $application["course_name"] ?? '',
+                                "course_id"           => $application["course_id"],
+                                "session_intake"      => $application["session_intake"] ?? '',
+                                "status"              => $status,
+                                "applicant_stage"     => '',
+                                "applicant_sub_status" => '',
+                                "tracker_id"          => '',
+                            ];
+
+                            if (!empty($application["id"])) {
+                                // Update: add ID and updated fields
+                                $data["id"] = $application["id"];
+                                $data["updated_by"] = get_staff_user_id();
+                                $data["updated_date"] = date('Y-m-d H:i:s');
+                                $updateData[] = $data;
+                            } else {
+                                // Insert
+                                $data["created_by"] = get_staff_user_id();
+                                $data["created_date"] = date('Y-m-d H:i:s');
+                                $insertData[] = $data;
+                            }
+                        }
+                    }
+
+
+                    // Insert new records
+                    if (!empty($insertData)) {
+                        $this->db->insert_batch(db_prefix() . 'client_university_shortlisting', $insertData);
+                    }
+
+                    // Update existing records
+                    if (!empty($updateData)) {
+                        // Use 'id' as the reference key for update_batch
+                        $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $updateData, 'id');
+                    }
+                }
+
                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'Admission Preferences successfully updated';
                 $data['resp_id'] = $admissionPreferencesId;
@@ -2112,6 +2186,109 @@ class Clients extends AdminController
 
     // FREEZE ADMISSION PREFERENCES
 
+    public function delete_application()
+    {
+        $data = [
+            'resp_code' => 'ERR',
+            'resp_desc' => 'Unknown error occurred'
+        ];
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+
+            $params = $this->input->post();
+
+            $shortlisingId = isset($params['id']) ? $params['id'] : null;
+            $client_id = isset($params['client_id']) ? $params['client_id'] : null;
+
+            if (!$shortlisingId || !$client_id) {
+                throw new Exception('Missing required parameters: id or client_id');
+            }
+
+            // Delete operation
+            if (!$this->db->delete(db_prefix() . "client_university_shortlisting", ["id" => $shortlisingId])) {
+                throw new Exception('Failed to delete application');
+            }
+
+            // Activity log
+            $logData = [
+                "description" => "Application Deleted by - ",
+                "date" => date('Y-m-d H:i:s'),
+                "staffid" => get_staff_user_id(),
+                "client_id" => $client_id
+            ];
+
+            if (!$this->db->insert(db_prefix() . 'application_document_activity_log', $logData)) {
+                throw new Exception('Failed to insert activity log');
+            }
+
+            $data = [
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Application deleted successfully'
+            ];
+        } catch (Exception $e) {
+            $data = [
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ];
+        }
+
+        echo json_encode($data);
+    }
+
+    public function delete_entrance()
+    {
+        $data = [
+            'resp_code' => 'ERR',
+            'resp_desc' => 'Unknown error occurred'
+        ];
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+
+            $params = $this->input->post();
+
+            $entranceId = isset($params['id']) ? $params['id'] : null;
+            $client_id = isset($params['client_id']) ? $params['client_id'] : null;
+
+            if (!$entranceId || !$client_id) {
+                throw new Exception('Missing required parameters: id or client_id');
+            }
+
+            // Delete operation
+            if (!$this->db->delete(db_prefix() . "client_entrance", ["id" => $entranceId, "client_id" => $client_id])) {
+                throw new Exception('Failed to delete entrance');
+            }
+
+            // Activity log
+            $logData = [
+                "description" => "Entrance Deleted by - ",
+                "date" => date('Y-m-d H:i:s'),
+                "staffid" => get_staff_user_id(),
+                "client_id" => $client_id
+            ];
+
+            if (!$this->db->insert(db_prefix() . 'application_activity_log', $logData)) {
+                throw new Exception('Failed to insert activity log');
+            }
+
+            $data = [
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Entrance deleted successfully'
+            ];
+        } catch (Exception $e) {
+            $data = [
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ];
+        }
+
+        echo json_encode($data);
+    }
     public function freeze_admission_preferences()
     {
         $data = array();
@@ -2401,6 +2578,8 @@ class Clients extends AdminController
             try {
                 $client_id = $this->input->post("clientid");
                 $update_student_data = [];
+                $feesDetails = !empty($_POST["feesDetails"]) ? json_decode($_POST["feesDetails"], true) : '';
+
                 $_update = [];
 
                 foreach ($_FILES as $key => $files) {
@@ -2425,6 +2604,38 @@ class Clients extends AdminController
                 $_update["payment_recevied_from"] = !empty($_POST["payment_recevied_from"]) ? $_POST["payment_recevied_from"] : '';
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $_update);
+
+                if (!empty($feesDetails)) {
+                    $tbl = db_prefix() . "applicant_fees_details";
+
+                    $client_id = $feesDetails['client_id'];
+                    $fees_id = $feesDetails['fees_id'];
+
+                    // Check if the record exists
+                    $this->db->where('client_id', $client_id);
+                    $this->db->where('fees_id', $fees_id);
+                    $existing = $this->db->get($tbl)->row();
+
+                    // Prepare data to insert/update
+                    $data = [
+                        'amount' => $feesDetails['amount'],
+                        'currency_id' => $feesDetails['currency_id'],
+                        'client_id' => $client_id,
+                        'fees_id' => $fees_id,
+                        'updated_at' => date('Y-m-d H:i:s')
+                    ];
+
+                    if ($existing) {
+                        // Update if exists
+                        $this->db->where('client_id', $client_id);
+                        $this->db->where('fees_id', $fees_id);
+                        $this->db->update($tbl, $data);
+                    } else {
+                        // Insert if not exists
+                        $data['created_at'] = date('Y-m-d H:i:s');
+                        $this->db->insert($tbl, $data);
+                    }
+                }
 
                 $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Welcome message data updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 applicant_last_update($client_id);
@@ -3805,6 +4016,55 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
+    public function student_acadmic_study_abroad()
+    {
+        $data = array();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $client_id = $this->input->post("clientid");
+                $academicDetailsId = $this->input->post("academicDetailsId");
+
+                echo "<pre>";
+                print_r($_POST);
+                foreach ($_POST as $key => $value) {
+                    // print_r($_POST[$key]);
+                    // print_r($key);
+                    // print_r($value);
+                    if (strpos($key, 'score_column') !== false) {
+                        $score_data = explode("-", $key);
+                        if (!empty($score_data[1])) {
+                            array_push($scrore_update, array("client_id" => $client_id, "type" => $score_data[1], "value" => $value));
+                        }
+
+                        unset($_POST[$key]);
+                        $key = '';
+                    }
+                    if (!empty($key)) {
+                        if (!empty($value) && strpos($key, 'custom_fields') !== false) {
+                            // If the key contains 'custom_fields' and the value is not empty, add to custom data array
+                            foreach ($value as $k => $custom_value) {
+                                $update_applicant_custom_data["customers"] = $custom_value;
+                            }
+                        } else {
+                            // Otherwise, add to general data array
+                            if ($key != 'clientid') {
+                                $update_academic_data[$key] = $value;
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'An error occurred: ' . $e->getMessage();
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
+
     public function student_acadmic()
     {
         $data = array();
@@ -3813,12 +4073,21 @@ class Clients extends AdminController
                 $client_id = $this->input->post("clientid");
                 $media_upload_data = $_POST;
                 $passpot_data = [];
+
+                // SA Appplicant Exams 
+                $entrance_exam_details = !empty($_POST["entrance_exam_details"]) ? json_decode($_POST["entrance_exam_details"], true) : [];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
                 unset($_POST["doc_type_name"]);
                 unset($_POST["doc_type"]);
                 unset($_POST["doc_name"]);
                 unset($_POST["doc_url"]);
+                unset($_POST["entrance_exam_details"]);
+                unset($_POST["entrance_exams"]);
+                unset($_POST["entrance_id"]);
+                unset($_POST["entrance_marks"]);
+
+
 
                 $academicDetailsId = $this->input->post("academicDetailsId");
                 $update_academic_data = [];
@@ -3886,10 +4155,72 @@ class Clients extends AdminController
                     }
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Acadmic Details Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 }
+
+                $entrance_exams_insert = [];
+
+                if (!empty($entrance_exam_details)) {
+                    foreach ($entrance_exam_details as $entrance) {
+                        // Handle file
+
+
+                        if (!empty($_FILES["files_entrance_" . $entrance["exam_id"]])) {
+                            $files = $_FILES["files_entrance_" . $entrance["exam_id"]];
+                            if (!empty($files['name'])) {
+                                // Get original filename and extract extension
+                                $originalFileName = $files['name'];
+                                $extension = pathinfo($originalFileName, PATHINFO_EXTENSION);
+
+                                // Sanitize base name from entrance exam name (without extension)
+                                $rawName = $entrance['entrnaceExam'] ?? 'document';
+                                $filenameWithoutExtension = pathinfo($rawName, PATHINFO_FILENAME);
+                                $sanitizedBaseName = str_replace(" ", "_", $filenameWithoutExtension);
+
+                                // Final safe filename with correct extension
+                                $finalName = $sanitizedBaseName . "." . $extension;
+
+                                $upload_data = [
+                                    "name" => $finalName,
+                                    "type" => $files['type'],
+                                    "tmp_name" => $files['tmp_name'],
+                                    "error" => $files['error'],
+                                    "size" => $files['size']
+                                ];
+
+
+                                if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                                    $file_info = upload_applicant_documents($client_id, $upload_data);
+                                    $entrance['file'] = $file_info["file_path"] ?? null;
+                                }
+                            } else if (!empty($files['fileUrl'])) {
+                                $entrance['file'] = $entrance["fileUrl"] ?? null;
+                            }
+                        } else {
+                            $entrance['file'] = $entrance["fileUrl"] ?? null;
+                        }
+
+                        $entrance_exams_insert[] = [
+                            "client_id" => $client_id,
+                            "exam_id" => $entrance["exam_id"] ?? '',
+                            "marks" => $entrance["marks"] ?? '',
+                            "file" => $entrance['file'] ?? '',
+                            "created_at" => date('Y-m-d H:i:s'),
+                            "created_by" => get_staff_user_id()
+                        ];
+                    }
+
+                    // Delete old and insert new
+                    $this->db->delete(db_prefix() . "client_entrance", ["client_id" => $client_id]);
+
+                    if (!empty($entrance_exams_insert)) {
+                        $this->db->insert_batch(db_prefix() . "client_entrance", $entrance_exams_insert);
+                        $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Acadmic Entrance Exams Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+                    }
+                }
                 if ($rows_affected) {
                     if (!empty($media_upload_data["doc_type"][0])) {
                         $this->media_upload($media_upload_data, $_FILES);
                     }
+
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     // $this->db->where("userid", $client_id);
                     // $this->db->update(db_prefix() . 'clients', array("applicant_stage" => 2, "applicant_sub_status" => 5));
@@ -6749,6 +7080,31 @@ class Clients extends AdminController
         echo $html;
     }
 
+    function get_courses($degree = "")
+    {
+        $this->s_db->select('id, course_name');
+        $this->s_db->from('tbl_courses');
+        $this->s_db->where('status', 0);
+        if (!empty($_POST["search"])) {
+            $this->s_db->like("course_name", trim($_POST["search"]));
+        }
+        if (!empty($_POST["degree"])) {
+            $this->s_db->where("degree", trim($_POST["degree"]));
+        }
+        if (!empty($degree)) {
+            $this->s_db->where("degree", trim($degree));
+        }
+        $this->s_db->group_by('course_name');
+        $this->s_db->order_by('course_name', 'asc');
+        $this->s_db->limit(50);
+        $response["filter_data"] = $this->s_db->get()->result_array();
+
+        if (!empty($degree)) {
+            return $response["filter_data"];
+            die;
+        }
+        echo json_encode($response);
+    }
 
     public function orignal_document_received_notification()
     {
