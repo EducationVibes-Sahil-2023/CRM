@@ -722,6 +722,7 @@ if ($lead_type_status == 2) {
 
             <div role="tabpanel" class="tab-pane disabled-form" id="academic_details">
                 <form id="admission-details-form" class="form-disabled" onsubmit="return false;">
+                    <input name="academicDetailsId" type="hidden" value="<?=$academicdetails->id?>" >
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card">
