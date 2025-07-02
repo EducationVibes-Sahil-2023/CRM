@@ -8845,7 +8845,7 @@ function get_examList()
         $board_dropdown = $CI->db
             ->select("*")
             ->where(array("status" => 1))
-            ->from(db_prefix() . 'exams_list')
+            ->from(db_prefix() . 'admission_entrance')
             ->get()
             ->result_array();
 

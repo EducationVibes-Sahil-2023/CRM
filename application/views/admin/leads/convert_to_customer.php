@@ -279,7 +279,7 @@ if ($lead->type == 1) {
                </div> -->
                      <div class="clearfix"></div>
                      <br>
-                     <div class="col-lg-12 col-md-12 col-12">
+                     <div class="col-lg-12 col-md-12 col-12 row">
                         <?php echo render_textarea('address', 'client_address', $lead->address); ?>
                      </div>
                      <div class="clearfix"></div>
@@ -638,7 +638,7 @@ if ($lead->type == 1) {
                 <label>Exam Marks <span class='text-danger req'>*</span></label>
                     <input type="number" step="any" name="exam_marks[]" class="form-control" required>
                 </div>
-                <div class="col-lg-4 col-md-12 col-12 d-flex align-items-end gap-2">
+                <div class="col-lg-4 col-md-12 col-12 align-items-end gap-2">
                 <label>&nbsp;</label>
                     <button type="button" class="btn btn-danger remove-exam"><i class="fa fa-trash"></i></button>
                     <button type="button" class="btn btn-primary add-exam-button" onclick="addExam()"><i class="fa fa-plus"></i></button>

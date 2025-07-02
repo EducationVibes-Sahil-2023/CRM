@@ -2501,7 +2501,7 @@ class Clients_model extends App_Model
     {
         $this->db->select("*");
         $this->db->where('status', 1);
-        $this->db->from(db_prefix() . 'exams_list');
+        $this->db->from(db_prefix() . 'admission_entrance');
         $this->db->order_by('id', 'asc');
 
         return $get_entrance_exam_list = $this->db->get()->result_array();
