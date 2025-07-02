@@ -260,7 +260,7 @@
             echo render_leads_source_select($sources, $selected, 'lead_add_edit_source');
             ?>
          </div>
-                <?php
+         <?php
          $assignee_class = $hide_change_assignee;
          if (!has_permission('leads', '', 'assign_update')) {
             $assignee_class .= ' hide';
@@ -282,12 +282,13 @@
             }
             echo render_select('assigned', $members, array('staffid', array('firstname', 'lastname')), 'lead_add_edit_assigned', $selected, $assigned_attrs); ?>
          </div>
-      <div class="clearfix"></div>
-      <hr class="mtop5 mbot10" />
-      <div class="col-md-12">
-         <div class="form-group no-mbot" id="inputTagsWrapper">
-            <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i> <?php echo _l('tags'); ?></label>
-            <input type="text" class="tagsinput" onkeyup="init_tags_inputs()" id="tags" name="tags" value="<?php echo (isset($lead) ? prep_tags_input(get_tags_in($lead->id, 'lead')) : ''); ?>" data-role="tagsinput">
+         <div class="clearfix"></div>
+         <hr class="mtop5 mbot10" />
+         <div class="col-md-12">
+            <div class="form-group no-mbot" id="inputTagsWrapper">
+               <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i> <?php echo _l('tags'); ?></label>
+               <input type="text" class="tagsinput" onkeyup="init_tags_inputs()" id="tags" name="tags" value="<?php echo (isset($lead) ? prep_tags_input(get_tags_in($lead->id, 'lead')) : ''); ?>" data-role="tagsinput">
+            </div>
          </div>
          <div class="clearfix"></div>
          <hr class="no-mtop mbot15" />
