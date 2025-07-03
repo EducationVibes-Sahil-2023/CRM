@@ -119,6 +119,7 @@ class Exam_model extends App_Model
                     "exam_date"  => $client_exam_data["exam_date"],
                     "exam_id"    => $client_exam_data["exam_id"],
                     "batch_id"   => $client_exam_data["batch_id"],
+                    "m_university_name" => $client_exam_data["m_university_name"],
                 ];
             }
 

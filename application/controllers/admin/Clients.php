@@ -280,7 +280,7 @@ class Clients extends AdminController
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 if ($data["lead_data"]->type == 1) {
                     $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
-            
+
                     $data['course_list_ug'] =  $this->get_courses("UG");
                     $data['course_list_pg'] =  $this->get_courses("PG");
                 } else {
@@ -5487,7 +5487,7 @@ class Clients extends AdminController
                 ];
             }
 
-            $client_exam_data[] = [
+            $client_exam_data = [
                 "client_id"  => $client_id,
                 "exam_date"  => $exam_date,
                 "exam_id"    => $exam_id,
@@ -5496,14 +5496,14 @@ class Clients extends AdminController
                 "m_university_id" => $exam["m_university_id"]
             ];
 
-            if ($exam["manually"] == 1) {
+            if (!empty($exam["manually"]) == 1) {
 
                 $this->db->where(array("batch_id" => $batch_id, "client_id" => $client_id))
                     ->delete(db_prefix() . 'clients_exam');
 
                 // Insert data into the database
                 if (!empty($client_exam_data)) {
-                    $this->db->insert_batch(db_prefix() . 'clients_exam', $client_exam_data);
+                    $this->db->insert(db_prefix() . 'clients_exam', $client_exam_data);
                 }
             }
         }

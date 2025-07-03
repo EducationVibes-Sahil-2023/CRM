@@ -1137,7 +1137,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             </div>
                                             <hr>
                                         <?php } ?>
-                                    <?php } else if ($admissionpreferences->primary_country == 'Georgia') { ?>
+                                    <?php }
+                                    
+                                    if ($admissionpreferences->primary_country == 'Georgia') { ?>
                                         <div class="entrance_exam_university_div shadow">
                                             <h4 class="text-left "><?= htmlspecialchars($admissionpreferences->primary_university) ?>
 

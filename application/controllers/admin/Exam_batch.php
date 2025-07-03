@@ -139,6 +139,7 @@ if ($check_exist) {
             $postData_Exam["exam_id"] = trim($_POST["exam_name"]);
             $postData_Exam["batch_id"] = trim($_POST["batch_id"]);
             $postData_Exam["exam_date"] = trim($_POST["batch_date"]);
+            $postData_Exam["m_university_name"] = trim($_POST["university_name"]);
             // Set timestamps and user info
             if (empty($postData['id'])) {
                 $postData['created_by'] = get_staff_user_id();
