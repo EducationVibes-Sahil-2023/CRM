@@ -275,7 +275,7 @@ if (!is_admin()) {
 
 
 
-if (has_permission('leads', '', 'view') && $this->ci->input->post('assigned')) {
+if ( $this->ci->input->post('assigned')) {
     array_push($where, 'AND  ' . db_prefix() . 'leads.assigned IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ')');
 }
 
