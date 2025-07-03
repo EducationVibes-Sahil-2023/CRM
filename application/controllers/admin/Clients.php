@@ -280,6 +280,7 @@ class Clients extends AdminController
                 $data['customer_admins'] = $this->clients_model->get_admins($id);
                 if ($data["lead_data"]->type == 1) {
                     $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
+            
                     $data['course_list_ug'] =  $this->get_courses("UG");
                     $data['course_list_pg'] =  $this->get_courses("PG");
                 } else {

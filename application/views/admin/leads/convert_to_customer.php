@@ -199,7 +199,7 @@ if ($lead->type == 1) {
 
                      </div>
                      <div class="row">
-                        <div class="col-lg-4 col-md-6 col-12">
+                        <div class="col-lg-4 col-md-6 col-12 form-group">
                            <label>Budget Range <small class="text-danger">*</small></label>
                            <select name="budget_range" required id="budget_range" class="form-control">
                               <option value="">Select Budget</option>
@@ -210,7 +210,7 @@ if ($lead->type == 1) {
                            </select>
                         </div>
 
-                        <div class="col-lg-4 col-md-6 col-12 ">
+                        <div class="col-lg-4 col-md-6 col-12 form-group ">
                            <label>Loan Requried <small class="text-danger">*</small></label>
                            <select name="loan_required" required id="loan_required" class="form-control">
                               <?php foreach ($yesNO_Array as $loan_s) {
@@ -222,7 +222,7 @@ if ($lead->type == 1) {
 
                            </select>
                         </div>
-                        <div class="col-lg-4 col-md-6 col-12 ">
+                        <div class="col-lg-4 col-md-6 col-12 form-group">
                            <label>Tagging <small class="text-danger">*</small></label>
                            <select name="tagging" required id="tagging" class="form-control">
                               <?php foreach ($yesNO_Array as $loan_s) {
@@ -235,7 +235,7 @@ if ($lead->type == 1) {
                            </select>
                         </div>
 
-                        <div class="col-lg-4">
+                        <div class="col-lg-4 form-group">
                            <div class="">
                               <label for="session_intake">Session Intake <small class="text-danger">*</small></label>
                               <input type="month" class="form-control" required required-check id="session_intake" name="session_intake"
@@ -244,7 +244,7 @@ if ($lead->type == 1) {
                            </div>
                         </div>
 
-                        <div class="col-lg-4">
+                        <div class="col-lg-4 form-group">
                            <div class="">
                               <label for="degree">Degree <small class="text-danger">*</small></label>
                               <select name="degree" required id="degree" class="form-control">
@@ -263,7 +263,7 @@ if ($lead->type == 1) {
                      </div>
 
                      <?php if ($lead->source == REFERENCE_ID) { ?>
-                        <div class="col-lg-4 col-md-6 col-12">
+                        <div class="col-lg-4 col-md-6 col-12 form-group">
                            <label></label>
                            <?php echo render_input('reference_name', 'Reference Name <small class="text-danger">*</small>', !empty($lead->reference_name) ? $lead->reference_name : '', '', ["required" => "required", "placeholder" => "reference Name"]); ?>
                         </div>
@@ -320,170 +320,172 @@ if ($lead->type == 1) {
                         <?php echo render_custom_fields('customers', $rel_id, "", "", (isset($lead->type) ? $lead->type : ''), $lead, 1); ?>
                      </div>
                </div>
-               <div class="clearfix"></div>
-               <br>
-               <div class="row">
-                  <?php
-                  $not_mergable_customer_fields  = array('userid', 'datecreated', 'leadid', 'default_language', 'default_currency', 'active');
-                  $not_mergable_contact_fields  = array('id', 'userid', 'datecreated', 'is_primary', 'password', 'new_pass_key', 'new_pass_key_requested', 'last_ip', 'last_login', 'last_password_change', 'active', 'profile_image', 'direction');
-                  $customer_fields = $this->db->list_fields(db_prefix() . 'clients');
-                  $contact_fields = $this->db->list_fields(db_prefix() . 'contacts');
-                  $custom_fields = get_custom_fields('leads');
-                  $found_custom_fields = false;
-                  foreach ($custom_fields as $field) {
-                     $value = get_custom_field_value($lead->id, $field['id'], 'leads');
-                     if ($value == '') {
-                        continue;
-                     } else {
-                        $found_custom_fields = true;
+
+               <div class="clearfix">
+
+                  <br>
+                  <div class="row">
+                     <?php
+                     $not_mergable_customer_fields  = array('userid', 'datecreated', 'leadid', 'default_language', 'default_currency', 'active');
+                     $not_mergable_contact_fields  = array('id', 'userid', 'datecreated', 'is_primary', 'password', 'new_pass_key', 'new_pass_key_requested', 'last_ip', 'last_login', 'last_password_change', 'active', 'profile_image', 'direction');
+                     $customer_fields = $this->db->list_fields(db_prefix() . 'clients');
+                     $contact_fields = $this->db->list_fields(db_prefix() . 'contacts');
+                     $custom_fields = get_custom_fields('leads');
+                     $found_custom_fields = false;
+                     foreach ($custom_fields as $field) {
+                        $value = get_custom_field_value($lead->id, $field['id'], 'leads');
+                        if ($value == '') {
+                           continue;
+                        } else {
+                           $found_custom_fields = true;
+                        }
                      }
-                  }
 
+                     ?>
+                  </div>
+
+                  <?php echo form_hidden('original_lead_email', $lead->email); ?>
+                  <?php
+                  $get_clients_fees = get_clients_fees((isset($lead) ? $lead->type : ''));
+
+                  $get_currencies = get_currencies();
+                  $get_currencies = array_column($get_currencies, null, 'id');
+
+                  if (!empty($get_clients_fees) && !empty($get_currencies)) {
                   ?>
-               </div>
-
-               <?php echo form_hidden('original_lead_email', $lead->email); ?>
-               <?php
-               $get_clients_fees = get_clients_fees((isset($lead) ? $lead->type : ''));
-
-               $get_currencies = get_currencies();
-               $get_currencies = array_column($get_currencies, null, 'id');
-
-               if (!empty($get_clients_fees) && !empty($get_currencies)) {
-               ?>
-                  <div id="applicant_fees" class="col-md-12">
-                     <label>Fees Details</label>
-                     <hr class="mtop5 mbot10" />
-                     <div class="row">
-                        <?php
-                        foreach ($get_clients_fees as $fees) {
-                           $id = $fees["id"];
-                           // Prepare the field name by replacing spaces with underscores and converting to lowercase
-                           $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
-                           // Set the required attribute based on the "mandatry" field
-                           $required = !empty($fees["mandatry"]) ? "required" : "false";
-                           $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
+                     <div id="applicant_fees" class="col-md-12">
+                        <label>Fees Details</label>
+                        <hr class="mtop5 mbot10" />
+                        <div class="row">
+                           <?php
+                           foreach ($get_clients_fees as $fees) {
+                              $id = $fees["id"];
+                              // Prepare the field name by replacing spaces with underscores and converting to lowercase
+                              $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
+                              // Set the required attribute based on the "mandatry" field
+                              $required = !empty($fees["mandatry"]) ? "required" : "false";
+                              $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
 
 
-                        ?>
-                           <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
-                              <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
-                              <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                 <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
-                                 <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
+                           ?>
+                              <div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
+                                 <label><?= $fees['name'] ?> <?= $mandatry ?><span class="fees_label_<?= $id ?>"></span></label><br>
+                                 <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                    <input type="hidden" value="<?= $field_name ?>" name="applicant_fees[]">
+                                    <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
 
-                                 <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["default_currency"]]["symbol"]) ? $get_currencies[$fees["default_currency"]]["symbol"] : '$' ?></div>
-                                 <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
-                                 <div class="input-group-addon currency-addon">
+                                    <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["default_currency"]]["symbol"]) ? $get_currencies[$fees["default_currency"]]["symbol"] : '$' ?></div>
+                                    <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
+                                    <div class="input-group-addon currency-addon">
 
-                                    <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
-                                       <?php foreach ($get_currencies as $c) {
+                                       <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                          <?php foreach ($get_currencies as $c) {
 
-                                       ?>
-                                          <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($fees["default_currency"]) && $fees["default_currency"] == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
-                                       <?php
-                                       }
-                                       ?>
+                                          ?>
+                                             <option data-symbol="<?= $c["symbol"] ?>" value="<?= $c['id'] ?>" data-placeholder="0.00" <?= !empty($fees["default_currency"]) && $fees["default_currency"] == $c["id"]  ? "selected" : "" ?>><?= $c["name"] ?></option>
+                                          <?php
+                                          }
+                                          ?>
 
-                                    </select>
+                                       </select>
 
+                                    </div>
                                  </div>
                               </div>
-                           </div>
-                        <?php
-                        }
-                        ?>
-                     </div>
-                  </div>
-                  <?php if ($lead->type == 2) { ?>
-                     <div class="">
-                        <div class="col-12">
-                           <div class="checkbox">
-                              <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
-                              <input class="form-check-input checkbox-group" type="checkbox" ]value="1" id="air_ticket_include_check" name="air_ticket_include_check">
-                              <label class="form-check-label" for="air_ticket_include_check">
-                                 Air ticket inc. in Service Charge <span class="text-danger">*</span>
-                              </label>
-                           </div>
+                           <?php
+                           }
+                           ?>
+
+                           <?php if ($lead->type == 2) { ?>
+                                 <div class="col-md-12">
+                                    <div class="checkbox">
+                                       <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
+                                       <input class="form-check-input checkbox-group" type="checkbox" value="1" id="air_ticket_include_check" name="air_ticket_include_check">
+                                       <label class="form-check-label" for="air_ticket_include_check">
+                                          Air ticket inc. in Service Charge <span class="text-danger">*</span>
+                                       </label>
+                                    </div>
+                              </div>
+                           <?php } ?>
                         </div>
                      </div>
                   <?php } ?>
-
-
-               <?php } ?>
-               <div class="clearfix"></div>
-               <hr class="mtop5 mbot10" />
-               <div class="mtop15 mbot10 col-md-12">
                   <div class="clearfix"></div>
-                  <label>Exam Details</label>
+                   <?php if ($lead->type == 1) { ?>
                   <hr class="mtop5 mbot10" />
-                  <div class="col-lg-4 col-md-6 col-12 ">
-                     <label>ELT Status <small class="text-danger">*</small></label>
-                     <select name="exam_status" required id="exam_status" class="form-control">
-                        <?php foreach ($yesNO_Array as $exam_s) {
-                        ?>
-                           <option value="<?= $exam_s['id'] ?>"><?= $exam_s["name"] ?></option>
-                        <?php
-                        }
-                        ?>
+                  <div class="mtop15 mbot10 col-md-12">
+                     <div class="clearfix"></div>
+                     <label>Exam Details</label>
+                     <hr class="mtop5 mbot10" />
+                     <div class="col-lg-4 col-md-6 col-12 ">
+                        <label>ELT Status <small class="text-danger">*</small></label>
+                        <select name="exam_status" required id="exam_status" class="form-control">
+                           <?php foreach ($yesNO_Array as $exam_s) {
+                           ?>
+                              <option value="<?= $exam_s['id'] ?>"><?= $exam_s["name"] ?></option>
+                           <?php
+                           }
+                           ?>
 
-                     </select>
+                        </select>
+                     </div>
+                     <div class="col-md-12 mtop5 mbot10 exams-details-section">
+
+                     </div>
+
                   </div>
-                  <div class="col-md-12 mtop5 mbot10 exams-details-section">
+                  <?php } ?>
 
-                  </div>
+                  <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
+                  <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
+                  <!--<input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />-->
 
+                  <!--<div class="client_password_set_wrapper">-->
+                  <!--   <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>-->
+                  <!--   <div class="input-group">-->
+                  <!--      <input type="password" class="form-control password" name="password" autocomplete="off">-->
+                  <!--      <span class="input-group-addon">-->
+                  <!--         <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>-->
+                  <!--      </span>-->
+                  <!--      <span class="input-group-addon">-->
+                  <!--         <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>-->
+                  <!--      </span>-->
+                  <!--   </div>-->
+                  <!--</div>-->
+                  <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
+                     <!--<div class="checkbox checkbox-primary">-->
+                     <!--   <input type="checkbox" name="send_set_password_email" id="send_set_password_email">-->
+                     <!--   <label for="send_set_password_email">-->
+                     <!--      <?php echo _l('client_send_set_password_email'); ?>-->
+                     <!--   </label>-->
+                     <!--</div>-->
+                  <?php } ?>
+                  <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
+                     <!--<div class="checkbox checkbox-primary hide">-->
+                     <!--   <input type="checkbox" checked name="donotsendwelcomeemail" id="donotsendwelcomeemail">-->
+                     <!--   <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>-->
+                     <!--</div>-->
+                  <?php } ?>
+                  <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
+                     <!--<div class="checkbox checkbox-primary">-->
+                     <!--   <input type="checkbox" name="transfer_notes" id="transfer_notes">-->
+                     <!--   <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>-->
+                     <!--</div>-->
+                  <?php } ?>
+                  <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
+                     <!--<div class="checkbox checkbox-primary">-->
+                     <!--   <input type="checkbox" name="transfer_consent" id="transfer_consent">-->
+                     <!--   <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>-->
+                     <!--</div>-->
+                  <?php } ?>
                </div>
-
-               <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
-               <input type="text" class="fake-autofill-field" name="fakeusernameremembered" value='' tabindex="-1" />
-               <!--<input type="password" class="fake-autofill-field" name="fakepasswordremembered" value='' tabindex="-1" />-->
-
-               <!--<div class="client_password_set_wrapper">-->
-               <!--   <label for="password" class="control-label"><?php echo _l('client_password'); ?></label>-->
-               <!--   <div class="input-group">-->
-               <!--      <input type="password" class="form-control password" name="password" autocomplete="off">-->
-               <!--      <span class="input-group-addon">-->
-               <!--         <a href="#password" class="show_password" onclick="showPassword('password');return false;"><i class="fa fa-eye"></i></a>-->
-               <!--      </span>-->
-               <!--      <span class="input-group-addon">-->
-               <!--         <a href="#" class="generate_password" onclick="generatePassword(this);return false;"><i class="fa fa-refresh"></i></a>-->
-               <!--      </span>-->
-               <!--   </div>-->
-               <!--</div>-->
-               <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'contact-set-password', 'active' => 0)) == 0) { ?>
-                  <!--<div class="checkbox checkbox-primary">-->
-                  <!--   <input type="checkbox" name="send_set_password_email" id="send_set_password_email">-->
-                  <!--   <label for="send_set_password_email">-->
-                  <!--      <?php echo _l('client_send_set_password_email'); ?>-->
-                  <!--   </label>-->
-                  <!--</div>-->
-               <?php } ?>
-               <?php if (total_rows(db_prefix() . 'emailtemplates', array('slug' => 'new-client-created', 'active' => 0)) == 0) { ?>
-                  <!--<div class="checkbox checkbox-primary hide">-->
-                  <!--   <input type="checkbox" checked name="donotsendwelcomeemail" id="donotsendwelcomeemail">-->
-                  <!--   <label for="donotsendwelcomeemail"><?php echo _l('client_do_not_send_welcome_email'); ?></label>-->
-                  <!--</div>-->
-               <?php } ?>
-               <?php if (total_rows(db_prefix() . 'notes', array('rel_type' => 'lead', 'rel_id' => $lead->id)) > 0) { ?>
-                  <!--<div class="checkbox checkbox-primary">-->
-                  <!--   <input type="checkbox" name="transfer_notes" id="transfer_notes">-->
-                  <!--   <label for="transfer_notes"><?php echo _l('transfer_lead_notes_to_customer'); ?></label>-->
-                  <!--</div>-->
-               <?php } ?>
-               <?php if (is_gdpr() && get_option('gdpr_enable_consent_for_contacts') == '1' && count($purposes) > 0) { ?>
-                  <!--<div class="checkbox checkbox-primary">-->
-                  <!--   <input type="checkbox" name="transfer_consent" id="transfer_consent">-->
-                  <!--   <label for="transfer_consent"><?php echo _l('transfer_consent'); ?></label>-->
-                  <!--</div>-->
-               <?php } ?>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-default" onclick="init_lead(<?php echo $lead->id; ?>); return false;" data-dismiss="modal"><?php echo _l('back_to_lead'); ?></button>
+                  <button type="submit" data-form="#lead_to_client_form" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" class="btn btn-info"><?php echo _l('submit'); ?></button>
+               </div>
             </div>
-            <div class="modal-footer">
-               <button type="button" class="btn btn-default" onclick="init_lead(<?php echo $lead->id; ?>); return false;" data-dismiss="modal"><?php echo _l('back_to_lead'); ?></button>
-               <button type="submit" data-form="#lead_to_client_form" autocomplete="off" data-loading-text="<?php echo _l('wait_text'); ?>" class="btn btn-info"><?php echo _l('submit'); ?></button>
-            </div>
+            <?php echo form_close(); ?>
          </div>
-         <?php echo form_close(); ?>
       </div>
    </div>
    <script>
@@ -549,12 +551,14 @@ if ($lead->type == 1) {
          }
 
          if (countryName.toLowerCase() === "georgia") {
+            // $("#air_ticket_include_check").removeAttr("onclick="return false;");
             $("#air_ticket_include_check").removeAttr("onclick");
             $("#air_ticket_include_check").prop("checked", false);
             $("#air_ticket_include").val(0);
 
          } else {
-            $("#air_ticket_include_check").removeAttr("onclick");
+            // $("#air_ticket_include_check").attr("disabled", true);
+            $("#air_ticket_include_check").attr("onclick", "return false;");
             $("#air_ticket_include_check").prop("checked", true);
             $("#air_ticket_include").val(1);
 
@@ -583,37 +587,37 @@ if ($lead->type == 1) {
 
          // Function to add an exam input group
          // function addExam() {
-         //    $(".add-exam-button").addClass("hide");
+         // $(".add-exam-button").addClass("hide");
 
-         //    let examGroup = `
-         //    <div class="exam-group row mb-2 mtop5 mbot10">
-         //        <div class="col-lg-4 col-md-6 col-12">
-         //            <select name="exam_type[]" required class="form-control selectpicker">
-         //                <?php foreach ($examList as $exams) { ?>
-         //                    <option value="<?= $exams['id'] ?>"><?= $exams["name"] ?></option>
-         //                <?php } ?>
-         //            </select>
-         //        </div>
-         //        <div class="col-lg-4 col-md-6 col-12">
-         //            <input type="number" step="any" name="exam_marks[]" class="form-control" required>
-         //        </div>
-         //        <div class="col-lg-4 col-md-12 col-12 d-flex align-items-end">
-         //            <button type="button" class="btn btn-danger remove-exam"><i class="fa fa-trash"></i></button>
-         //            <button type="button"  onclick="addExam()" class="btn btn-primary hide add-exam-button"><i class="fa fa-plus"></i></button>
-         //        </div>
-         //    </div>`;
-         //    $('.exams-details-section').append(examGroup);
+         // let examGroup = `
+         // <div class="exam-group row mb-2 mtop5 mbot10">
+         // <div class="col-lg-4 col-md-6 col-12">
+         // <select name="exam_type[]" required class="form-control selectpicker">
+         // <?php foreach ($examList as $exams) { ?>
+         // <option value="<?= $exams['id'] ?>"><?= $exams["name"] ?></option>
+         // <?php } ?>
+         // </select>
+         // </div>
+         // <div class="col-lg-4 col-md-6 col-12">
+         // <input type="number" step="any" name="exam_marks[]" class="form-control" required>
+         // </div>
+         // <div class="col-lg-4 col-md-12 col-12 d-flex align-items-end">
+         // <button type="button" class="btn btn-danger remove-exam"><i class="fa fa-trash"></i></button>
+         // <button type="button" onclick="addExam()" class="btn btn-primary hide add-exam-button"><i class="fa fa-plus"></i></button>
+         // </div>
+         // </div>`;
+         // $('.exams-details-section').append(examGroup);
 
-         //    $('.exams-details-section .selectpicker').selectpicker();
+         // $('.exams-details-section .selectpicker').selectpicker();
 
-         //    $('.exams-details-section .exam-group').first().find(".add-exam-button").removeClass("hide");
+         // $('.exams-details-section .exam-group').first().find(".add-exam-button").removeClass("hide");
          // }
 
          // // Delegated event handler for removing exam groups
          // $(document).on('click', '.remove-exam', function() {
-         //    $(this).closest('.exam-group').remove();
-         //    $(".add-exam-button").addClass("hide");
-         //    $('.exams-details-section .exam-group').first().find(".add-exam-button").removeClass("hide");
+         // $(this).closest('.exam-group').remove();
+         // $(".add-exam-button").addClass("hide");
+         // $('.exams-details-section .exam-group').first().find(".add-exam-button").removeClass("hide");
          // });
       });
 
@@ -624,27 +628,27 @@ if ($lead->type == 1) {
             $(".add-exam-button").addClass("hide");
 
             let examGroup = `
-            <div class="exam-group row mb-2 mtop5 mbot10">
-                <div class="col-lg-4 col-md-6 col-12">
-                <label>Exam Type <span class='text-danger req'>*</span></label>
-                    <select name="exam_type[]" required class="form-control selectpicker">
-                    <option value="" >Select Exam</option>
-                        <?php foreach ($examList as $exams) { ?>
-                            <option value="<?= $exams['id'] ?>"><?= $exams["name"] ?></option>
-                        <?php } ?>
-                    </select>
-                </div>
-                <div class="col-lg-4 col-md-6 col-12">
-                <label>Exam Marks <span class='text-danger req'>*</span></label>
-                    <input type="number" step="any" name="exam_marks[]" class="form-control" required>
-                </div>
-                <div class="col-lg-4 col-md-12 col-12 align-items-end gap-2">
-                <label>&nbsp;</label>
-                    <button type="button" class="btn btn-danger remove-exam"><i class="fa fa-trash"></i></button>
-                    <button type="button" class="btn btn-primary add-exam-button" onclick="addExam()"><i class="fa fa-plus"></i></button>
-                </div>
-            </div>
-        `;
+      <div class="exam-group row mb-2 mtop5 mbot10">
+         <div class="col-lg-4 col-md-6 col-12">
+            <label>Exam Type <span class='text-danger req'>*</span></label>
+            <select name="exam_type[]" required class="form-control selectpicker">
+               <option value="">Select Exam</option>
+               <?php foreach ($examList as $exams) { ?>
+                  <option value="<?= $exams['id'] ?>"><?= $exams["name"] ?></option>
+               <?php } ?>
+            </select>
+         </div>
+         <div class="col-lg-4 col-md-6 col-12">
+            <label>Exam Marks <span class='text-danger req'>*</span></label>
+            <input type="number" step="any" name="exam_marks[]" class="form-control" required>
+         </div>
+         <div class="col-lg-4 col-md-12 col-12 align-items-end gap-2">
+            <p>&nbsp;</p>
+            <button type="button" class="btn btn-danger remove-exam"><i class="fa fa-trash"></i></button>
+            <button type="button" class="btn btn-primary add-exam-button" onclick="addExam()"><i class="fa fa-plus"></i></button>
+         </div>
+      </div>
+      `;
 
             $('.exams-details-section').append(examGroup);
 

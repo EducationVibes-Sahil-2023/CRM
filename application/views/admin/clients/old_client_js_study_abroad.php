@@ -216,7 +216,8 @@
 
 
     function isValidARN($arn_number) {
-        return preg_match('/^[0-9]{15}$/', $arn_number);
+        return preg_match('/^[0-9-]{15,20}$/', $arn_number);
+
     }
 
 
