@@ -1719,7 +1719,7 @@ if ($lead_type_status == 1) {
                                     <h4>Entrance Exams <span class="text-danger entrance-exam-div-title <?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">*</span></h4>
                                     <hr>
 
-                                    <div id="entrance-exam-div <?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">
+                                    <div id="entrance-exam-div" class="<?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">
                                         <?php if (!empty($get_entrance_exam)) { ?>
                                             <?php foreach ($get_entrance_exam as $key => $entrance) {
                                                 $file_url = $entrance["file"] ?? '';
