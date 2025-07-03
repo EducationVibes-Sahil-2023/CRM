@@ -1871,13 +1871,24 @@ class Clients_model extends App_Model
             ->from(db_prefix() . 'client_university_shortlisting us')
             ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'left')
             ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
-            ->where([
-                'us.client_id' => $client_id,
-                'us.status' => 1
-            ]);
-        if (!empty($statusCheck)) {
-            $this->db->or_where('us.status', 0);
-        }
+                ->where('us.client_id', $client_id);
+
+        //     ->where([
+        //         'us.client_id' => $client_id,
+        //         'us.status' => 1
+        //     ]);
+        // if (!empty($statusCheck)) {
+        //     $this->db->or_where('us.status', 0);
+        // }
+        
+            if (!empty($statusCheck)) {
+            $this->db->group_start()
+            ->where('us.status', 1)
+            ->or_where('us.status', 0)
+            ->group_end();
+            } else {
+            $this->db->where('us.status', 1);
+            }
 
 
         if (!empty($is_primary)) {

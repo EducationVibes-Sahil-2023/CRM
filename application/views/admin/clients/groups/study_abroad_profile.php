@@ -1,5 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
+
+
 if (!empty($score_value)) {
     $score_value = array_column($score_value, null, "type");
 }
@@ -129,7 +131,6 @@ array_unshift($neetResultStatus, array(""));
 <script>
     var final_sumbit = <?= !empty($final_sumbit) ? $final_sumbit : 0 ?>;
     var admin_status = <?= $admin_status ?>;
-    console.log("final_sumbit", final_sumbit);
     var admissionpreferences_freeze = "<?= !empty($admissionpreferences->freeze) ? 1 : 0 ?>";
 </script>
 <?php
@@ -632,13 +633,14 @@ if ($lead_type_status == 1) {
                                         <div class="form-group">
                                             <label for="passport_number">Passport ARN <small
                                                     class="text-danger">*</small></label>
-                                            <input class="form-control passport-info capitalText" type="text"
-                                                placeholder="Enter Passport ARN" name="passport_arn" id="passport_arn"
-                                                pattern="^[A-Z0-9]{6,9}$"
-                                                title="Passport ARN must be 6 to 9 characters, only uppercase letters (A-Z) and numbers (0-9)."
-                                                pattern="\d{15}" maxlength="15" onkeyup="isValidARN()"
-                                                value="<?= isset($passport_info) ? htmlspecialchars($passport_info->passport_arn) : '' ?>"
-                                                required-check>
+                                            <input class="form-control passport-info text-uppercase" type="text"
+    placeholder="Enter Passport ARN" name="passport_arn" id="passport_arn"
+    pattern="^[A-Z0-9-]{15,20}$"
+    title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
+    maxlength="20" onkeyup="isValidARN()"
+    value="<?= isset($passport_info) ? htmlspecialchars($passport_info->passport_arn) : '' ?>"
+    required-check>
+
 
                                         </div>
                                     </div>
@@ -924,7 +926,7 @@ if ($lead_type_status == 1) {
                                                             <?php } else { ?>
                                                                 <span class="btn btn-ex btn-primary fa-fa-icons"
                                                                     onclick="createNewApplication(this)"><i
-                                                                        class="fa-fa-icons fa fa-plus"></i></span>
+                                                                        class="fa fa-plus"></i></span>
                                                             <?php } ?>
                                                         </div>
                                                     </div>
@@ -985,9 +987,9 @@ if ($lead_type_status == 1) {
                                                     <div class="form-group">
                                                         <p>&nbsp;</p>
 
-                                                        <span class="btn btn-ex btn-primary"
+                                                        <span class="btn btn-ex btn-primary fa-fa-icons"
                                                             onclick="createNewApplication(this)"><i
-                                                                class="fa-fa-icons fa fa-plus"></i></span>
+                                                                class=" fa fa-plus"></i></span>
 
                                                     </div>
                                                 </div>
@@ -1756,11 +1758,11 @@ if ($lead_type_status == 1) {
                                                         <div class="form-group">
                                                             <p>&nbsp;</p>
                                                             <?php if ($key > 0) { ?>
-                                                                <span class="btn btn-danger" onclick="removeEntrance(this, <?= $entrance['id'] ?>)">
+                                                                <span class="btn btn-danger fa-fa-icons" onclick="removeEntrance(this, <?= $entrance['id'] ?>)">
                                                                     <i class="fa fa-trash"></i>
                                                                 </span>
                                                             <?php } else { ?>
-                                                                <span class="btn btn-primary" onclick="createNewEntrance()">
+                                                                <span class="btn btn-primary fa-fa-icons" onclick="createNewEntrance()">
                                                                     <i class="fa fa-plus"></i>
                                                                 </span>
                                                             <?php } ?>
@@ -2215,7 +2217,6 @@ if ($lead_type_status == 1) {
 
 
     function formatPhoneNumber(input) {
-        console.log("phonenumber validation");
         // Remove all non-digit characters
         const digits = input.replace(/\D/g, '');
 
@@ -2359,7 +2360,6 @@ if ($lead_type_status == 1) {
         if (selectedCountry > 0) {
             // Set hidden input
 
-            console.log(selectedCountry);
             // Clear and prepare the university dropdown
 
 
@@ -2568,21 +2568,41 @@ if ($lead_type_status == 1) {
 
     const degree = "";
 
-    function loadCourses(searchTerm = '', courseSelect) {
-        degree = $("#degree option:selected").data("type").trim();
-        $.ajax({
-            url: '<?= base_url() ?>/admin/clients/get_courses', // Your backend endpoint
-            method: 'POST',
-            data: {
-                degree: degree,
-                search: searchTerm
-            },
-            success: function(response) {
-                response = JSON.parse(response);
-                const courseData = response.filter_data || [];
+   function loadCourses(searchTerm = '', courseSelect) {
+    const degreeElement = $("#degree option:selected");
+    const degreeType = degreeElement.data("type");
 
-                courseSelect.empty();
-                console.log(courseData);
+    if (!degreeType || !courseSelect || !courseSelect.length) {
+        console.warn("Degree type or courseSelect is invalid.");
+        return;
+    }
+
+    $.ajax({
+        url: '<?= base_url('admin/clients/get_courses') ?>', // Ensured clean base_url
+        method: 'POST',
+        data: {
+            degree: degreeType.trim(),
+            search: searchTerm
+        },
+        success: function(response) {
+            let courseData = [];
+
+            try {
+                response = typeof response === 'string' ? JSON.parse(response) : response;
+                courseData = response.filter_data || [];
+            } catch (e) {
+                console.error("Invalid JSON in response", e);
+                return;
+            }
+
+            courseSelect.empty(); // Clear old options
+
+            if (courseData.length === 0) {
+                courseSelect.append($('<option>', {
+                    value: '',
+                    text: '-- No Courses Found --'
+                }));
+            } else {
                 $.each(courseData, function(index, course) {
                     courseSelect.append(
                         $('<option>', {
@@ -2591,14 +2611,16 @@ if ($lead_type_status == 1) {
                         })
                     );
                 });
-
-                courseSelect.selectpicker('refresh'); // Update Bootstrap Select
-            },
-            error: function() {
-                console.error("Error loading courses");
             }
-        });
-    }
+
+            courseSelect.selectpicker('refresh'); // Refresh Bootstrap Select
+        },
+        error: function(xhr, status, error) {
+            console.error("Error loading courses:", status, error);
+        }
+    });
+}
+
 
 
     function degreeChange() {
@@ -2648,7 +2670,7 @@ if ($lead_type_status == 1) {
 
     var entranceHTMLTemplate = `<?= addslashes($html . $html_remove) ?>`;
     var entranceHTMLAddTemplate = `<?= addslashes($html . $html_add) ?>`;
-    console.log(entranceHTMLTemplate);
+
     var entranceIndex = "";
 
     function createNewEntrance(status = 0) {
