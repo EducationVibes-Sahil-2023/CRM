@@ -2105,7 +2105,7 @@ class Clients_model extends App_Model
         $this->db->where(db_prefix() . "clients_exam.client_id", $id);
         $this->db->group_by(db_prefix() . "clients_exam.id");
 
-        return $this->db->get()->result_array();
+       return  $this->db->get()->result_array();
     }
 
     public function get_university_data($university = [])
