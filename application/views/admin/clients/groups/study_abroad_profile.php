@@ -634,12 +634,12 @@ if ($lead_type_status == 1) {
                                             <label for="passport_number">Passport ARN <small
                                                     class="text-danger">*</small></label>
                                             <input class="form-control passport-info text-uppercase" type="text"
-    placeholder="Enter Passport ARN" name="passport_arn" id="passport_arn"
-    pattern="^[A-Z0-9-]{15,20}$"
-    title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
-    maxlength="20" onkeyup="isValidARN()"
-    value="<?= isset($passport_info) ? htmlspecialchars($passport_info->passport_arn) : '' ?>"
-    required-check>
+                                                placeholder="Enter Passport ARN" name="passport_arn" id="passport_arn"
+                                                pattern="^[A-Z0-9-]{15,20}$"
+                                                title="Passport ARN must be 15 to 20 characters, using uppercase letters (A-Z), numbers (0-9), and hyphens (-) only."
+                                                maxlength="20" onkeyup="isValidARN()"
+                                                value="<?= isset($passport_info) ? htmlspecialchars($passport_info->passport_arn) : '' ?>"
+                                                required-check>
 
 
                                         </div>
@@ -1716,10 +1716,10 @@ if ($lead_type_status == 1) {
                                         <input type="checkbox" value="1" onclick="changeELS_status(this)" name="elt_status" <?= !empty($academicdetails->elt_status) ? 'checked' : '' ?>>
                                     </label>
 
-                                    <h4>Entrance Exams <span class="text-danger entrance-exam-div-title">*</span></h4>
+                                    <h4>Entrance Exams <span class="text-danger entrance-exam-div-title <?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">*</span></h4>
                                     <hr>
 
-                                    <div id="entrance-exam-div">
+                                    <div id="entrance-exam-div <?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">
                                         <?php if (!empty($get_entrance_exam)) { ?>
                                             <?php foreach ($get_entrance_exam as $key => $entrance) {
                                                 $file_url = $entrance["file"] ?? '';
@@ -2568,58 +2568,58 @@ if ($lead_type_status == 1) {
 
     const degree = "";
 
-   function loadCourses(searchTerm = '', courseSelect) {
-    const degreeElement = $("#degree option:selected");
-    const degreeType = degreeElement.data("type");
+    function loadCourses(searchTerm = '', courseSelect) {
+        const degreeElement = $("#degree option:selected");
+        const degreeType = degreeElement.data("type");
 
-    if (!degreeType || !courseSelect || !courseSelect.length) {
-        console.warn("Degree type or courseSelect is invalid.");
-        return;
-    }
-
-    $.ajax({
-        url: '<?= base_url('admin/clients/get_courses') ?>', // Ensured clean base_url
-        method: 'POST',
-        data: {
-            degree: degreeType.trim(),
-            search: searchTerm
-        },
-        success: function(response) {
-            let courseData = [];
-
-            try {
-                response = typeof response === 'string' ? JSON.parse(response) : response;
-                courseData = response.filter_data || [];
-            } catch (e) {
-                console.error("Invalid JSON in response", e);
-                return;
-            }
-
-            courseSelect.empty(); // Clear old options
-
-            if (courseData.length === 0) {
-                courseSelect.append($('<option>', {
-                    value: '',
-                    text: '-- No Courses Found --'
-                }));
-            } else {
-                $.each(courseData, function(index, course) {
-                    courseSelect.append(
-                        $('<option>', {
-                            value: course.id,
-                            text: course.course_name
-                        })
-                    );
-                });
-            }
-
-            courseSelect.selectpicker('refresh'); // Refresh Bootstrap Select
-        },
-        error: function(xhr, status, error) {
-            console.error("Error loading courses:", status, error);
+        if (!degreeType || !courseSelect || !courseSelect.length) {
+            console.warn("Degree type or courseSelect is invalid.");
+            return;
         }
-    });
-}
+
+        $.ajax({
+            url: '<?= base_url('admin/clients/get_courses') ?>', // Ensured clean base_url
+            method: 'POST',
+            data: {
+                degree: degreeType.trim(),
+                search: searchTerm
+            },
+            success: function(response) {
+                let courseData = [];
+
+                try {
+                    response = typeof response === 'string' ? JSON.parse(response) : response;
+                    courseData = response.filter_data || [];
+                } catch (e) {
+                    console.error("Invalid JSON in response", e);
+                    return;
+                }
+
+                courseSelect.empty(); // Clear old options
+
+                if (courseData.length === 0) {
+                    courseSelect.append($('<option>', {
+                        value: '',
+                        text: '-- No Courses Found --'
+                    }));
+                } else {
+                    $.each(courseData, function(index, course) {
+                        courseSelect.append(
+                            $('<option>', {
+                                value: course.id,
+                                text: course.course_name
+                            })
+                        );
+                    });
+                }
+
+                courseSelect.selectpicker('refresh'); // Refresh Bootstrap Select
+            },
+            error: function(xhr, status, error) {
+                console.error("Error loading courses:", status, error);
+            }
+        });
+    }
 
 
 
