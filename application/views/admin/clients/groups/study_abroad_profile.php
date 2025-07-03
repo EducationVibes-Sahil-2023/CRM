@@ -1716,7 +1716,7 @@ if ($lead_type_status == 1) {
                                         <input type="checkbox" value="1" onclick="changeELS_status(this)" name="elt_status" <?= !empty($academicdetails->elt_status) ? 'checked' : '' ?>>
                                     </label>
 
-                                    <h4>Entrance Exams <span class="text-danger entrance-exam-div-title <?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">*</span></h4>
+                                    <h4 id="entrance-exam-div-title" class="<?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">Entrance Exams <span class="text-danger">*</span></h4>
                                     <hr>
 
                                     <div id="entrance-exam-div" class="<?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">
