@@ -479,7 +479,8 @@ function syncExcel_new($id = "")
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
-
+// echo $sql;
+// die;
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Fetch column headers (in order)
