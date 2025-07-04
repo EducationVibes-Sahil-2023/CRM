@@ -89,6 +89,7 @@ class Staff extends AdminController
             $data['google_source'] = !empty($this->input->post('google_source')) ? $this->input->post('google_source') : '';
             $data['office_location'] = !empty($this->input->post('office_location')) ? $this->input->post('office_location') : '';
             $data['department'] = !empty($this->input->post('department')) ? $this->input->post('department') : '';
+            $data['whatsapp_status'] = !empty($this->input->post('whatsapp_status')) ? $this->input->post('whatsapp_status') : '';
 
 
             if ($id == '') {

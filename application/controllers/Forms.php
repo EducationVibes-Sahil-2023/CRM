@@ -934,6 +934,10 @@ class Forms extends ClientsController
                     if ($lead_id) {
                         $success = true;
 
+                        if (ENABLE_WHATSAPP_MESSAGE) {
+                            welcome_whatsapp_message_send($post_data["phonenumber"], $form->responsible, $lead_id, WELCOME_WHATSAPP_MESSAGE);
+                        }
+
                         $this->leads_model->log_lead_activity($lead_id, 'not_lead_imported_from_form', true, serialize([
                             $form->name,
                         ]));

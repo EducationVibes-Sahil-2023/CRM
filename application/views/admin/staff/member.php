@@ -234,6 +234,16 @@
                            <label for="department_head"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Department head"></i>
                               Department head</label>
                         </div>
+
+                        <div class="checkbox checkbox-primary">
+                           <input type="checkbox" value="1" name="whatsapp_status" id="whatsapp_status" <?php if (isset($member->whatsapp_status) && $member->whatsapp_status == 1) {
+                                                                                                            echo ' checked';
+                                                                                                         } ?>>
+                           <label for="whatsapp_status">
+                              <i class="fa fa-question-circle" data-toggle="tooltip" data-title="After lead create whatsaap message send"></i>
+                              Whatsapp Status </label>
+                        </div>
+
                         <div class="form-group">
                            <?php
                            $select_source_array = explode(',', $member->google_source);
