@@ -314,14 +314,12 @@ if ($this->ci->input->post('neet_status')) {
         $quoted_strings = array_map(function ($val) {
             return "'" . $val . "'";
         }, $neet_status_string);
-        $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $quoted_strings) . ")";
+        $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $quoted_strings) . ") and  " . db_prefix() . "academic_details.neet_status = 0";
     }
 
     if (!empty($conditions)) {
         $where[] = "AND (" . implode(" OR ", $conditions) . ")";
     }
-
- 
 }
 
 
