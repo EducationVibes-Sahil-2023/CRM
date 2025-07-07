@@ -8545,10 +8545,13 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
             throw new Exception("Lead not found.");
         }
 
+
+
         // Skip if welcome message already sent
         if ($lead->welcome_message_status == 1) {
             return true;
         }
+
 
         // Get staff
         $staff_data = $CI->db->select("CONCAT(firstname,' ',lastname) as name, phonenumber, whatsapp_status")
@@ -8560,7 +8563,7 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
             throw new Exception("Staff details not found.");
         }
 
-        if ((int)$staff_data->whatsapp_status == 1) {
+        if ((int)$staff_data->whatsapp_status == 0) {
             return true;
         }
 
@@ -8688,7 +8691,8 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
             "type"       => "whatsapp",
             "template_id" => $whatsapp_template_id,
             "clientid"   => !empty($lead->clientid) ? $lead->clientid : 0,
-            "datetime"   => date("Y-m-d H:i:s")
+            "datetime"   => date("Y-m-d H:i:s"),
+             "contact"   => $toNumber
         ];
         $CI->db->insert(db_prefix() . 'whatsapp_email_logs', $insert_data);
 
