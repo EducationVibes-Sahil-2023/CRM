@@ -48,7 +48,7 @@ if (is_admin() || is_postSale()) {
     $aColumns[] = $sTable . ".userid as fid";
 }
 $aColumns_count = 0;
-$joinIn =' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) ';
+$joinIn = ' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) ';
 if ($post_sales->evp_partners == "all") {
     $joinIn = ' ';
 }
@@ -275,7 +275,7 @@ if (!is_admin()) {
 
 
 
-if ( $this->ci->input->post('assigned')) {
+if ($this->ci->input->post('assigned')) {
     array_push($where, 'AND  ' . db_prefix() . 'leads.assigned IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ')');
 }
 
@@ -303,10 +303,11 @@ if ($this->ci->input->post('neet_status')) {
         }
     }
 
+
     $conditions = [];
 
     if (!empty($neet_status_numeric)) {
-        $conditions[] = db_prefix() . "academic_details.entrance_result_status IN (" . implode(',', $neet_status_numeric) . ")";
+        $conditions[] = db_prefix() . "academic_details.neet_status IN (" . implode(',', $neet_status_numeric) . ")";
     }
 
     if (!empty($neet_status_string)) {
@@ -319,6 +320,8 @@ if ($this->ci->input->post('neet_status')) {
     if (!empty($conditions)) {
         $where[] = "AND (" . implode(" OR ", $conditions) . ")";
     }
+
+ 
 }
 
 

@@ -5589,6 +5589,7 @@ class Clients extends AdminController
                 'id'                => $row['id'],
                 'ministry_document_recived'           => $row['ministry_doc_received'] ?? 0,
                 'leg_payment_date'           => $row['leg_payment_date'] ?? '',
+                'leg_applied_date'           => $row['leg_applied_date'] ?? '',
                 'contract_signed'  => $row['contract_signed'] ?? 0
             ];
 
@@ -5642,7 +5643,8 @@ class Clients extends AdminController
                     'university_shortlisting' => $university_shortlisting_data
                 ];
 
-                if (($university_shortlisting_data[0]["contract_signed"]) || ($university_shortlisting_data[0]["ministry_document_recived"] == 1 && $university_shortlisting_data[0]["ministry_payment"] != "")) {
+                // if (($university_shortlisting_data[0]["contract_signed"]) || ($university_shortlisting_data[0]["ministry_document_recived"] == 1 && $university_shortlisting_data[0]["ministry_payment"] != "")) {
+                if (($university_shortlisting_data[0]["contract_signed"])) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => LEGALIZATION,
@@ -5650,7 +5652,8 @@ class Clients extends AdminController
                     ];
                 } else {
 
-                    if ($university_shortlisting_data[0]["ministry_payment"] != "") {
+                    // if ($university_shortlisting_data[0]["ministry_payment"] != "") {
+                    if ($university_shortlisting_data[0]["leg_applied_date"] != "") {
                         $update_client_data = [
                             "applicant_status" => 0,
                             "applicant_stage" => LEGALIZATION,

@@ -722,7 +722,7 @@ if ($lead_type_status == 2) {
 
             <div role="tabpanel" class="tab-pane disabled-form" id="academic_details">
                 <form id="admission-details-form" class="form-disabled" onsubmit="return false;">
-                    <input name="academicDetailsId" type="hidden" value="<?=$academicdetails->id?>" >
+                    <input name="academicDetailsId" type="hidden" value="<?= $academicdetails->id ?>">
                     <div class="row">
                         <div class="col-md-12">
                             <div class="card">
@@ -1272,7 +1272,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Quotation <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="quotation" value="">
+                                            <input <?= !empty($client->quotation) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="quotation" value="" <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>>
                                             <?php
                                             if (!empty($client->quotation)) {
                                             ?>
@@ -1289,7 +1289,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Fees Structure <small class="text-danger">*</small></label>
-                                            <input <?= !empty($client->fees_structure) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="fees_structure" value="">
+                                            <input <?= !empty($client->fees_structure) ? '' : $text_danger_mbbs_required ?> class="form-control" type="file" accept=".pdf, image/*" name="fees_structure" value="" <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>>
                                             <?php
                                             if (!empty($client->fees_structure)) {
                                             ?>
