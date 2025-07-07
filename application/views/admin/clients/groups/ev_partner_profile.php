@@ -618,9 +618,9 @@ if ($lead_type_status == 2) {
 								<h4>Admission Preferences</h4>
 								<hr>
 								<form id="admission-preferences-form" class="form-disabled" onsubmit=" return false;">
-									<input name="academicDetailsId" type="hidden" value="<?=$academicdetails->id?>" >
+									<input name="academicDetailsId" type="hidden" value="<?= $academicdetails->id ?>">
 									<div class="">
-									    
+
 										<div class="col-lg-4" style="display:none">
 											<div class="form-group">
 												<label for="program">Segment</label>

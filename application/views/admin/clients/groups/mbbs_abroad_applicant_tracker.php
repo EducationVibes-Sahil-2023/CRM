@@ -1138,7 +1138,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             <hr>
                                         <?php } ?>
                                     <?php }
-                                    
+
                                     if ($admissionpreferences->primary_country == 'Georgia') { ?>
                                         <div class="entrance_exam_university_div shadow">
                                             <h4 class="text-left "><?= htmlspecialchars($admissionpreferences->primary_university) ?>
@@ -1201,19 +1201,23 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                 <?php if (!empty($leg["country_name"]) && $leg["country_name"] == "Georgia") : ?>
                                                     <div class="row mt-2">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-3">
                                                             <p class="form-check-label">&nbsp;</p>
                                                             <label class="form-check-label">Ministry Order of Documents Received <?= $mand ?>
                                                                 <input type="checkbox" class="form-check-input" <?= $mand_re ?> <?= !empty($leg["ministry_document_recived"]) && $leg["ministry_document_recived"] == 1 ? 'checked' : '' ?> name="ministry_doc_received_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
                                                             </label>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-3">
                                                             <label>Leg Pay Date</label>
                                                             <input type="date" class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-3">
+                                                            <label>Leg Applied Date</label>
+                                                            <input type="date" class="form-control" value="<?= !empty($leg["leg_applied_date"]) ? $leg["leg_applied_date"] : '' ?>" name="leg_applied_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                        </div>
+                                                        <div class="col-md-3">
                                                             <label>MD Payment Proof <?= $mand ?> </label>
                                                             <input type="file" class="form-control" <?= empty($leg["ministry_payment"]) ? $mand_re : "" ?> accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                             <?php
@@ -2650,7 +2654,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     }
                     html += `
                     <div class="row mt-2">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <p class="form-check-label">&nbsp;</p>
                             <label class="form-check-label">
                                 Ministry Order of Documents Received  ${mand}
@@ -2658,7 +2662,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                
                             </label>
                         </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                             <label for="leg_payment_date_${leg.id}">Leg Pay Date</label>
                             <input 
                             type="date" 
@@ -2667,8 +2671,16 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             name="leg_payment_date_${leg.id}" 
                             value="${leg.leg_payment_date ? leg.leg_payment_date : ''}">
                             </div>
-
-                         <div class="col-md-4">
+ <div class="col-md-3">
+                            <label for="leg_applied_date_${leg.id}">Leg Applied Date</label>
+                            <input 
+                            type="date" 
+                            class="form-control" 
+                            id="leg_applied_date_${leg.id}" 
+                            name="leg_applied_date_${leg.id}" 
+                            value="${leg.leg_applied_date ? leg.leg_applied_date : ''}">
+                            </div>
+                         <div class="col-md-3">
                             <label>MD Payment Proof ${mand} </label>
                             <input type="file" class="form-control" ${(media_view ?? "") === "" ? mand_re : ""} accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
                             ${media_view}
@@ -3306,6 +3318,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 let ministry_doc_received = $(this).find("input[name='ministry_doc_received_" + id + "']").is(":checked") ? 1 : 0;
                 let contract_signed = $(this).find("input[name='contract_signed_" + id + "']").is(":checked") ? 1 : 0;
                 let leg_payment_date = $(this).find("input[name='leg_payment_date_" + id + "']").val();
+                let leg_applied_date = $(this).find("input[name='leg_applied_date_" + id + "']").val();
 
                 let ministryDocPaymentInput = $(this).find("input[name='ministry_doc_payment_" + id + "']")[0];
                 let ministry_doc_payment = ministryDocPaymentInput && ministryDocPaymentInput.files.length > 0 ?
@@ -3319,6 +3332,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         ministry_doc_received: ministry_doc_received,
                         contract_signed: contract_signed,
                         leg_payment_date: leg_payment_date,
+                        leg_applied_date: leg_applied_date
+
                     };
 
                     // Add file separately
