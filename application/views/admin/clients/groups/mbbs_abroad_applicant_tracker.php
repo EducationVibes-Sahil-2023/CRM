@@ -1218,8 +1218,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <input type="date" class="form-control" value="<?= !empty($leg["leg_applied_date"]) ? $leg["leg_applied_date"] : '' ?>" name="leg_applied_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                         </div>
                                                         <div class="col-md-3">
-                                                            <label>MD Payment Proof <?= $mand ?> </label>
-                                                            <input type="file" class="form-control" <?= empty($leg["ministry_payment"]) ? $mand_re : "" ?> accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <label>MD Payment Proof </label>
+                                                            <input type="file" class="form-control" accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                             <?php
                                                             $file_url = !empty($leg["ministry_payment"]) ? $leg["ministry_payment"] : "";
                                                             if (!empty($file_url)) { ?>
@@ -2206,6 +2206,31 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 if (skip == 1 || same_step == 1) {
 
                 } else {
+                    $(".legalization-item").each(function() {
+                        let fileInput = $(this).find("input[type='file']");
+
+                        // Check if the checkbox has the custom attribute 'required-check'
+                        let checkbox = $(this).find("input[type='checkbox']");
+
+                        // Only proceed if checkbox has attribute 'required-check'
+                        if (checkbox.attr("required-check") !== undefined) {
+                            // Get the unique index or ID from a hidden input
+                            let index = $(this).find("[name='id']").val();
+                            console.log(index);
+
+                            let dateInput = $("[name='leg_payment_date_" + index + "']");
+
+                            if (fileInput.length > 0 && fileInput.val() === "") {
+                                dateInput.removeAttr("required");
+                                dateInput.removeAttr("required-check");
+                            } else {
+                                dateInput.attr("required", true);
+                                dateInput.attr("required-check", "required-check");
+                            }
+                        }
+                    });
+
+
                     let check_validation = await check_required_fields("legalization-form");
                     console.log("check_validation:", check_validation);
                     if (!check_validation) {
@@ -2681,8 +2706,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             value="${leg.leg_applied_date ? leg.leg_applied_date : ''}">
                             </div>
                          <div class="col-md-3">
-                            <label>MD Payment Proof ${mand} </label>
-                            <input type="file" class="form-control" ${(media_view ?? "") === "" ? mand_re : ""} accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
+                            <label>MD Payment Proof </label>
+                            <input type="file" class="form-control" accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
                             ${media_view}
                         </div>
                     </div>

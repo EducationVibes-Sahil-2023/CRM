@@ -5644,7 +5644,7 @@ class Clients extends AdminController
                 ];
 
                 // if (($university_shortlisting_data[0]["contract_signed"]) || ($university_shortlisting_data[0]["ministry_document_recived"] == 1 && $university_shortlisting_data[0]["ministry_payment"] != "")) {
-                if (($university_shortlisting_data[0]["contract_signed"])) {
+                if (($university_shortlisting_data[0]["contract_signed"])  || ($university_shortlisting_data[0]["ministry_document_recived"] == 1)) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => LEGALIZATION,
