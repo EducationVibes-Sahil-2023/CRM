@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
 $orignal_document  = get_orignal_document_data($client_id);
+
 $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location();
 $activity_orignal_document = activity_orignal_document($client_id);

@@ -7112,31 +7112,87 @@ class Clients extends AdminController
 
     public function orignal_document_received_notification()
     {
-        $data = $_POST;
-        $client_id = $_POST["client_id"];
-        $client = $this->clients_model->getBasicDetails($client_id);
-        if (!$client) {
-            http_response_code(404);
+        try {
+            $data = $this->input->post(); // Use CodeIgniter input class
+            $client_id = $data["client_id"] ?? null;
+
+            if (empty($client_id)) {
+                http_response_code(400);
+                echo json_encode([
+                    "resp_code" => "ERR",
+                    "resp_desc" => "Client ID is missing."
+                ]);
+                return;
+            }
+
+            $client = $this->clients_model->getBasicDetails($client_id);
+            if (!$client) {
+                http_response_code(404);
+                echo json_encode([
+                    "resp_code" => "ERR",
+                    "resp_desc" => "Client not found."
+                ]);
+                return;
+            }
+
+            // Send email
+            $email_status = send_mail_template('Applicant_org_doc_received', $client->email, $client_id, get_staff_user_id());
+
+            if (!$email_status) {
+                log_message('error', "Failed to send email to client ID: {$client_id}");
+                echo json_encode([
+                    "resp_code" => "ERR",
+                    "resp_desc" => "Failed to send email."
+                ]);
+                return;
+            }
+
+            // Fetch documents
+            $documents_list = get_orignal_document_data_list([$client_id]);
+            $documentsList = $documents_list[$client_id]['document_names'] ?? '';
+
+            if (!empty($documentsList)) {
+                $email_template = $this->db
+                    ->select('emailtemplateid')
+                    ->where('name', 'Applicant_org_doc_received')
+                    ->get('tblemailtemplates')
+                    ->row();
+
+                if ($email_template) {
+                    $this->db->where([
+                        'type'        => 'email',
+                        'clientid'    => $client_id,
+                        'template_id' => $email_template->emailtemplateid
+                    ]);
+                    $this->db->order_by('id', 'DESC');
+                    $this->db->limit(1);
+
+                    $update = $this->db->update(db_prefix() . 'whatsapp_email_logs', [
+                        'documents' => $documentsList
+                    ]);
+
+                    if (!$update) {
+                        log_message('error', "Database update failed for client ID: {$client_id}");
+                    }
+                } else {
+                    log_message('error', "Email template 'Applicant_org_doc_received' not found.");
+                }
+            }
+
+            echo json_encode([
+                "resp_code" => "RCS",
+                "resp_desc" => "Original Document Email sent successfully."
+            ]);
+            return;
+        } catch (Exception $e) {
+            log_message('error', 'Exception in orignal_document_received_notification: ' . $e->getMessage());
+
+            http_response_code(500);
             echo json_encode([
                 "resp_code" => "ERR",
-                "resp_desc" => "Client not found"
+                "resp_desc" => "Internal server error. Please try again later."
             ]);
             return;
         }
-
-        $email_status = send_mail_template('Applicant_org_doc_received', $client->email, $client_id, get_staff_user_id());
-        if (!$email_status) {
-            $response = [
-                "resp_code" => "ERR",
-                "resp_desc" => "Failed to send email.",
-            ];
-        } else {
-            $response = [
-                "resp_code" => "RCS",
-                "resp_desc" => "Registration Email sent successfully.",
-            ];
-        }
-        echo json_encode($response);
-        return;
     }
 }

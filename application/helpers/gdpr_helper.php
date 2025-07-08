@@ -36,7 +36,11 @@ function getLastEmailWhatsappDate($type, $id, $clientid)
         // Capitalize the first letter of the type
         $capitalizedType = ucfirst($type);
         $message = $capitalizedType . " Last send - " . $formattedDate;
-
+        $documentList = "";
+        if (!empty($data->documents)) {
+            $documentList = "Document List : " . $data->documents;
+            $message = $documentList . " " . $message;
+        }
         return '<button type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="' . $message . '" class="btn btn-success btn-xs"><i class="fa fa-check"></i></button> &nbsp;';
     }
 }
