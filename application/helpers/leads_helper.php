@@ -8692,9 +8692,10 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
             "template_id" => $whatsapp_template_id,
             "clientid"   => !empty($lead->clientid) ? $lead->clientid : 0,
             "datetime"   => date("Y-m-d H:i:s"),
-             "contact"   => $toNumber
+            "contact"   => $toNumber
         ];
         $CI->db->insert(db_prefix() . 'whatsapp_email_logs', $insert_data);
+        $CI->leads_model->log_lead_activity($leadid, "WhatsApp message successfully triggered to {$toNumber}.", true);
 
         return json_encode(["success" => "Message sent successfully.", "response" => $responseArray]);
     } catch (Exception $e) {
