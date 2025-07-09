@@ -7152,17 +7152,11 @@ class Clients extends AdminController
             $documentsList = $documents_list[$client_id]['document_names'] ?? '';
 
             if (!empty($documentsList)) {
-                $email_template = $this->db
-                    ->select('emailtemplateid')
-                    ->where('name', 'Applicant_org_doc_received')
-                    ->get('tblemailtemplates')
-                    ->row();
-
-                if ($email_template) {
+                if (ORIGNAL_DOCUMENT_RECEIVED) {
                     $this->db->where([
                         'type'        => 'email',
                         'clientid'    => $client_id,
-                        'template_id' => $email_template->emailtemplateid
+                        'template_id' => ORIGNAL_DOCUMENT_RECEIVED
                     ]);
                     $this->db->order_by('id', 'DESC');
                     $this->db->limit(1);

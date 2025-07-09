@@ -64,7 +64,7 @@ $years_array = [];
 $currentYear = date("Y");
 
 // Generate an array of the last 15 years
-for ($i = 0; $i < 15; $i++) {
+for ($i = 0; $i < 25; $i++) {
     $years_array[]["year"] = $currentYear - $i;
 }
 array_unshift($years_array, array(""));
