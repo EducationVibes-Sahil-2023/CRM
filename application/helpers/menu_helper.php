@@ -147,6 +147,15 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
+        if (has_permission('school_board', '', 'view') || has_permission('school_board', '', 'view_own')) {
+                $CI->app_menu->add_sidebar_menu_item('school_board', [
+                        'name'     => "School Board",
+                        'href'     => admin_url('school_board'),
+                        'icon'     => 'fa fa-repeat',
+                        'position' => 15,
+                ]);
+        }
+
         // if (has_permission('expenses', '', 'view') || has_permission('expenses', '', 'view_own')) {
         //         $CI->app_menu->add_sidebar_menu_item('expenses', [
         //                 'name'     => _l('expenses'),
@@ -613,12 +622,12 @@ function app_init_admin_sidebar_menu_items()
                           'name'     => 'API',
                           'position' => 65,
                   ]);*/
-                  
-                      $CI->app_menu->add_setup_menu_item('excel', [
-                'name'     => "Excel",
-                'href'     => admin_url('excel'),
-                'position' => 15,
-        ]);
+
+                $CI->app_menu->add_setup_menu_item('excel', [
+                        'name'     => "Excel",
+                        'href'     => admin_url('excel'),
+                        'position' => 15,
+                ]);
         }
 
 
@@ -637,6 +646,4 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 40,
                 ]);
         }
-
-    
 }

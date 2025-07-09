@@ -117,6 +117,11 @@ function get_available_staff_permissions($data = [])
             'name'         => _l('Partners'),
             'capabilities' => $withNotApplicableViewOwn,
         ],
+
+        'school_board' => [
+            'name'         => "School Board",
+            'capabilities' => $withNotApplicableViewOwn,
+        ],
         'roles' => [
             'name'         => _l('roles'),
             'capabilities' => $withoutViewOwnPermissionsArray,
