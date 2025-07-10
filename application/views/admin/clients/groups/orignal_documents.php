@@ -30,9 +30,11 @@ if (!is_postSale() && !is_admin()) {
         <div class="form-container">
             <h4 class="fs-title">Orignal Documents</h4>
             <div class="text-right">
-                <?php if ($client->cllient_type == "1") {
-                    getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id) ?>
-                    <button type="button" class="btn btn-primary btn-xs hide email-hide" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
+
+                <?php if ($client->client_type == 1) {
+                    echo getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id);
+                ?>
+                    <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php } ?>
 
 
