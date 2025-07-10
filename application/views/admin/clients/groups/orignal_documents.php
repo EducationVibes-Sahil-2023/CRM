@@ -263,7 +263,7 @@ if (!is_postSale() && !is_admin()) {
                 if (response.resp_code == "RCS") {
                     hide_loader();
                     alert_float("success", response.resp_desc);
-                    // location.reload(); // Reload page after success
+                    location.reload(); // Reload page after success
                 } else {
                     hide_loader();
                     alert_float("danger", response.resp_desc);
