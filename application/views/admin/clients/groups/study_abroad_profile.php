@@ -857,8 +857,10 @@ if ($lead_type_status == 1) {
                                                         <div class="form-group">
                                                             <input type="hidden" class="shortlisting_id"
                                                                 value="<?= $shortlisting["id"] ?>">
-                                                            <label for="study_country">Country <small
+                                                            <label for="study_country"> <input type="checkbox" <?= $shortlisting["is_primary"] == 1 ? "checked" : "" ?> class="is_primary"
+                                                                    value="" onchange="isPrimaryUniversity(this)"> Country <small
                                                                     class="text-danger">*</small></label>
+
                                                             <select
                                                                 class="form-control selectpicker required required-check study_country"
                                                                 required-check name="study_country_<?= $key ?>"
@@ -2358,43 +2360,45 @@ if ($lead_type_status == 1) {
         const $universitySelect = $(universitySelected);
 
         if (selectedCountry > 0) {
-            // Set hidden input
+            try {
+                // Load universities based on selected country
+                const universityList = await show_university_dropdown(select_segment_default, selectedCountry);
 
-            // Clear and prepare the university dropdown
+                // Clear existing options
+                $universitySelect.empty();
 
+                // Find the course dropdown within the same container
+                const $coursesSelect = $universitySelect
+                    .closest(".university-combinations")
+                    .find("select.study_courses");
 
-            if (selectedCountry) {
-                try {
-                    const universityList = await show_university_dropdown(select_segment_default, selectedCountry);
-                    $universitySelect.empty();
-                    $universitySelect.parents(".university-combinations").find("select.study_courses").empty()
-                        .selectpicker('refresh');
+                // Save currently selected course value
+                const selectedCourseValue = $coursesSelect.val();
 
-                    universityList.forEach(function(uni) {
+                // Handle course dropdown based on university change
+                await handleUniversityChange($coursesSelect, selectedCourseValue);
 
-                        var option = $('<option>', {
-                            value: uni.id,
-                            text: uni.name,
-                            data: {
-                                country: uni.country_id
-                            }
-                        }).attr('data-country_id', uni.country_id);
-
-                        $universitySelect.append(option);
-
+                // Append new university options
+                universityList.forEach(function(uni) {
+                    const option = $('<option>', {
+                        value: uni.id,
+                        text: uni.name,
+                        'data-country_id': uni.country_id
                     });
+                    $universitySelect.append(option);
+                });
 
-
-
-                    $universitySelect.selectpicker('refresh');
-                } catch (error) {
-                    console.error("Error loading universities:", error);
-                }
-            } else {
+                // Refresh the university dropdown
                 $universitySelect.selectpicker('refresh');
+
+            } catch (error) {
+                console.error("Error loading universities:", error);
             }
+        } else {
+            $universitySelect.selectpicker('refresh');
         }
     }
+
 
 
     function show_university_dropdown(select_segment, countryid) {
@@ -2631,6 +2635,12 @@ if ($lead_type_status == 1) {
 
 
     }
+
+    // Attach an event handler for when the select is opened (using Bootstrap Select 'shown.bs.select' event)
+
+
+
+
     <?php
     $html = '<div class="entrance-exams row mb-3">
     <div class="col-lg-3">
@@ -2745,6 +2755,15 @@ if ($lead_type_status == 1) {
             $("#entrance-exam-div").addClass("hide");
             $("#entrance-exam-div-title").addClass("hide");
 
+        }
+    }
+
+    function isPrimaryUniversity(event) {
+        if ($(event).is(":checked")) {
+            $(".is_primary").prop("checked", false);
+            $(event).prop("checked", true);
+        } else {
+            $(event).prop("checked", false);
         }
     }
 </script>

@@ -58,6 +58,9 @@ class Settings extends AdminController
             if (isset($post_data['settings']['ma_table_view'])) {
                 $post_data['settings']['ma_table_view'] = $tmpData['settings']['ma_table_view'];
             }
+            if (isset($post_data['settings']['sa_table_view'])) {
+                $post_data['settings']['sa_table_view'] = $tmpData['settings']['sa_table_view'];
+            }
 
 
             $ids = isset($_POST['id']) ? $_POST['id'] : [];
@@ -87,7 +90,7 @@ class Settings extends AdminController
             $sequences = isset($_POST['sequence']) ? $_POST['sequence'] : [];
 
             // Sorting function: Moves null/blank values to the end
-           if (!empty($_POST["sequence"])) {
+            if (!empty($_POST["sequence"])) {
                 // Sorting function: Moves null/blank values to the end
                 uasort($_POST["sequence"], function ($a, $b) {
                     if ($a === null || $a === '') return 1; // Move null/blank values to the end
@@ -117,7 +120,7 @@ class Settings extends AdminController
             $table_view["sequence"] = implode(",", $_POST["sequence"]);
             $table_view["id"] = $view_id;
             $post_data["table_view"] = $table_view;
-    
+
 
             $success = $this->settings_model->update($post_data);
 

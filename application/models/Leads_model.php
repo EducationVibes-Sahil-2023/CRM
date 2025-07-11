@@ -3216,7 +3216,7 @@ class Leads_model extends App_Model
         $additional_ids = [];
         $check_con = (is_admin() || is_postSale()) ? 1 : 0;
 
-// $this->db->query("SET sql_mode = ''");
+        // $this->db->query("SET sql_mode = ''");
         if (!empty($ids)) {
             // First fetch columns field
             $this->db->select('id, columns,is_postsale');
@@ -3253,15 +3253,15 @@ class Leads_model extends App_Model
         $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence,is_postsale'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
         $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
 
-       if (empty($check_con)) {
+        if (empty($check_con)) {
             $this->db->where('is_postsale', 0);
         }
-      
+
         if (!empty($ids)) { // Check if the $ids variable is not empty.
             $this->db->where_in('id', $columns_ids); // Add a condition to match multiple 'id' values in the $columns_ids array.
         }
 
-       
+
 
         // $this->db->order_by('sequence', 'ASC'); // Order the results by 'sequence' in ascending order.
         if (!empty($columns_ids)) {
@@ -3270,17 +3270,83 @@ class Leads_model extends App_Model
             $this->db->order_by('sequence', 'ASC');
         }
         $column = $this->db->get(db_prefix() . 'ma_applicant_tracker')->result_array();
-          if(get_staff_user_id() == 243){
-        // echo $this->db->last_query();
-        // die;
-        
-        // print_r($column);
+        if (get_staff_user_id() == 243) {
+            // echo $this->db->last_query();
+            // die;
+
+            // print_r($column);
         }
-      
+
         // Execute the query on the table prefixed with 'performance_columns' and get the results as an array.
         return $column; // Return the resulting array.
     }
 
+
+    public function tblsa_applicant_tracker($ids = [])
+    {
+        // 1. Separate normal column ids and additional column ids first
+        $normal_ids = [];
+        $additional_ids = [];
+
+        $normal_ids = [];
+        $additional_ids = [];
+        $check_con = (is_admin() || is_postSale()) ? 1 : 0;
+
+        // $this->db->query("SET sql_mode = ''");
+        if (!empty($ids)) {
+            // First fetch columns field
+            $this->db->select('id, columns,is_postsale');
+            $this->db->where_in('id', $ids);
+            if (empty($check_con)) {
+                $this->db->where('is_postsale', 0);
+            }
+
+            if (!empty($ids)) {
+                $this->db->order_by('FIELD(id, ' . implode(',', $ids) . ')');
+            } else {
+                $this->db->order_by('sequence', 'ASC');
+            }
+            $column_data = $this->db->get(db_prefix() . 'sa_applicant_tracker')->result_array();
+
+
+            foreach ($column_data as $col) {
+                if ($col['columns'] == '') {
+                    $normal_ids[] = $col['id']; // Normal column
+                } else {
+                    if (!empty($col['columns'])) {
+                        $normal_ids = array_merge($normal_ids, explode(",", $col['columns'])); // Merge directly
+                    }
+                }
+            }
+        }
+
+        // Now merge normal + additional ids
+        $columns_ids = $normal_ids; // Unique to avoid duplicates
+
+
+
+
+        $this->db->select('*, columnid as tbl_column_name,if(sequence=0,999999,sequence) sequence,is_postsale'); // Select all columns (*) and alias 'columnid' as 'tbl_column_name'.
+        $this->db->where('show_column', '1'); // Add a condition where 'show_column' equals '1'.
+
+        if (empty($check_con)) {
+            $this->db->where('is_postsale', 0);
+        }
+
+        if (!empty($ids)) { // Check if the $ids variable is not empty.
+            $this->db->where_in('id', $columns_ids); // Add a condition to match multiple 'id' values in the $columns_ids array.
+        }
+
+
+        if (!empty($columns_ids)) {
+            $this->db->order_by('FIELD(id, ' . implode(',', $columns_ids) . ')');
+        } else {
+            $this->db->order_by('sequence', 'ASC');
+        }
+        $column = $this->db->get(db_prefix() . 'sa_applicant_tracker')->result_array();
+
+        return $column; // Return the resulting array.
+    }
     public function delete_visit($id)
     {
         $this->db->where('visit_id', $id);

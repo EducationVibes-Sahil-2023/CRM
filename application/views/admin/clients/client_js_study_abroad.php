@@ -396,7 +396,8 @@
                     university_name: universityName,
                     course_id: courseId,
                     course_name: courseName,
-                    session_intake: sessionIntake
+                    session_intake: sessionIntake,
+                    is_primary: $combo.find(".is_primary").is(":checked") ? 1 : 0
                 });
             });
 
@@ -757,7 +758,66 @@
             } else {
                 // console.warn("set_university_diabled function does not exist.");
             }
+
+            $(document).on('shown.bs.select', 'select.study_universities', async function(e) {
+                const $container = $(this).closest(".university-combinations");
+                const $countrySelect = $container.find("select.study_country");
+                const $universitySelect = $container.find("select.study_universities");
+                const $courseSelect = $container.find("select.study_courses");
+
+                const selectedCountryId = $countrySelect.val();
+                const selectedUniversity = $universitySelect.val();
+                const selectedCourse = $courseSelect.val();
+
+                console.log("Country ID:", selectedCountryId);
+
+                // Load universities based on selected country
+                await handleCountryChange($countrySelect.get(0), $universitySelect);
+
+                // Restore selected university
+                if (selectedUniversity) {
+                    $universitySelect.val(selectedUniversity).selectpicker('refresh').trigger("change");
+                }
+
+                // Restore selected course with slight delay (for dependent updates)
+                // if (selectedCourse) {
+                //     console.log("Restoring course:", selectedCourse);
+                //     setTimeout(() => {
+                //         $courseSelect.val(selectedCourse).selectpicker('refresh').trigger("change");
+                //     }, 200); // Reduced delay to make it more responsive
+                // }
+            });
+
+
+
+
+            // $(document).on('shown.bs.select', 'select.study_universities', function(e) {
+            //     const $container = $(this).closest(".university-combinations");
+            //     const $universitySelect = $container.find("select.study_universities");
+            //     const $countrySelect = $container.find("select.study_country");
+            //     const selectedCountryId = $countrySelect.val();
+
+            //     console.log("Country ID:", selectedCountryId);
+
+            //     // Pass the select element and the actual university select DOM object
+            //     handleCountryChange($countrySelect.get(0), $universitySelect.get(0));
+            // });
+            // $("select.study_country").each(function() {
+            //     var $select = $(this);
+
+            //     // Force re-selecting the current value
+            //     var currentVal = $select.val();
+            //     $select.val(currentVal).trigger("change");
+
+            //     // Optionally refresh the selectpicker UI if needed
+            //     $select.selectpicker('refresh');
+            // });
+
+
+
         }, 100);
+
+
 
 
     });

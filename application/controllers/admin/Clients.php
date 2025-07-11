@@ -123,6 +123,8 @@ class Clients extends AdminController
         $view = "clients";
         if ($type == 2) {
             $view = "mbbs_abroad_clients";
+        } else if ($type == 1) {
+            $view = "study_abroad_clients";
         }
         $this->app->get_table_data($view);
     }
@@ -2129,7 +2131,7 @@ class Clients extends AdminController
                             }
                             $data = [
                                 "client_id"        => $client_id ?? '',
-                                "country_name"        => $application["country_name"] ?? '',
+                                "country_name"        => $application["countryName"] ?? '',
                                 "university_name"     => $application["university_name"] ?? '',
                                 "country_id"          => $application["country_id"],
                                 "university_id"       => $application["university_id"],
@@ -2137,6 +2139,7 @@ class Clients extends AdminController
                                 "course_id"           => $application["course_id"],
                                 "session_intake"      => $application["session_intake"] ?? '',
                                 "status"              => $status,
+                                "is_primary"         => !empty($application["is_primary"]) ? $application["is_primary"] : 0,
                                 "applicant_stage"     => '',
                                 "applicant_sub_status" => '',
                                 "tracker_id"          => '',

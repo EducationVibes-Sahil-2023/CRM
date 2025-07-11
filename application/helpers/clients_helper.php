@@ -1812,6 +1812,16 @@ function get_view_columns()
         ->result_array();
 }
 
+function get_view_columns_sa()
+{
+    $CI = &get_instance();
+    return $passport_stages = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'sa_applicant_view')
+        ->get()
+        ->result_array();
+}
+
 function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "")
 {
     $CI = &get_instance();
