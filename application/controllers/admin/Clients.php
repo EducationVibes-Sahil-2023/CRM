@@ -5653,7 +5653,7 @@ class Clients extends AdminController
                 } else {
 
                     // if ($university_shortlisting_data[0]["ministry_payment"] != "") {
-                    if ($university_shortlisting_data[0]["leg_applied_date"] != "") {
+                    if ($university_shortlisting_data[0]["leg_applied_date"] != "" && $university_shortlisting_data[0]["leg_applied_date"] != "0000-00-00") {
                         $update_client_data = [
                             "applicant_status" => 0,
                             "applicant_stage" => LEGALIZATION,
