@@ -16,7 +16,7 @@ if (!empty($board_dropdown)) {
 	array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
 }
 
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
+$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->primary_country) ? explode(",", $admissionpreferences->primary_country) : [], 1);
 $profile_section = [];
 foreach ($documents_type as $documents) {
 	if (empty($profile_section[$documents["profile_stages"]][$documents['id']])) {
