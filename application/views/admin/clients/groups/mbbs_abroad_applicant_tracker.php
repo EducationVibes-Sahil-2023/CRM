@@ -9,7 +9,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 $university_partner_names = get_university_partner_names();
 // $documents_type =  get_documents($lead_type_status, [], 1);
 $delete_document_status = has_permission('customers', '', 'delete_documents');
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
+$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->primary_country) ? explode(",", $admissionpreferences->primary_country) : [], 1);
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
