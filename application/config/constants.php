@@ -256,6 +256,42 @@ define('VISA_REJECTED', '16');
 define('SC_PENDING', '17');
 
 
+// study abroad tracker
+define('STUDY_UNIVERSITY_SHORTLISTING', '3');
+define('ST3', '4');
+define('STU', '5');
+define('APPLICATION_STAGE', '6');
+define('OFFER_LETTER', '7');
+define('PRE_DEPOSITE', '8');
+
+
+
+
+define('STUDY_UNIVERSITY_SHORTLISTING_PENDING', '3');
+define('STUDY_UNIVERSITY_APPLIED', '4');
+
+define('ST3_PENDING', '5');
+define('ST3_APPLIED', '6');
+define('ST3_PENDENCY', '7');
+define('ST3_COMPLETED', '8');
+
+define('STU_PENDING', '9');
+define('STU_SUBMITTED', '10');
+define('STU_PENDENCY', '11');
+define('STU_COMPLETED', '12');
+
+define('APPLICATION_PROCESS', '13');
+
+define('OFFER_LETTER_PENDING', '14');
+define('OFFER_LETTER_RECEIVED', '15');
+define('OFFER_LETTER_REJECTED', '16');
+define('OFFER_LETTER_CONDITIONAL', '17');
+define('OFFER_LETTER_UNCONDITIONAL', '18');
+
+define('PRE_DEPOSITE_PENDING', '19');
+define('PRE_DEPOSITE_EXPECTED', '20');
+define('PRE_DEPOSITE_COMPLETED', '21');
+
 
 
 define('MAX_UNIVERSITY_MBBS_ABROAD', '2');

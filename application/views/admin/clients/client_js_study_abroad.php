@@ -418,11 +418,16 @@
                 success: function(res) {
                     hide_loader();
                     // set_primary_diabled();
-                    if (res.resp_id !== undefined) {
-                        $('#admissionpreferencesid').val(res.resp_id);
+                    if (res.resp_code != "ERR") {
+                        if (res.resp_id !== undefined) {
+                            $('#admissionpreferencesid').val(res.resp_id);
+                        }
+                        window_reload();
+                        alert_float('success', res.resp_desc);
+                    } else {
+                        alert_float('danger', res.resp_desc);
+
                     }
-                    window_reload();
-                    alert_float('success', res.resp_desc);
                 },
                 error: function(err) {
                     // set_primary_diabled();
@@ -747,19 +752,17 @@
         });
 
         setTimeout(() => {
+            // ✅ Call optional functions if they exist
             if (typeof set_primary_diabled === "function") {
-                // set_primary_diabled();
-            } else {
-                // console.warn("set_primary_diabled function does not exist.");
+                set_primary_diabled();
             }
 
             if (typeof set_university_diabled === "function") {
                 set_university_diabled();
-            } else {
-                // console.warn("set_university_diabled function does not exist.");
             }
 
-            $(document).on('shown.bs.select', 'select.study_universities', async function(e) {
+            // ✅ When University dropdown is opened
+            $(document).on('shown.bs.select', 'select.study_universities', async function() {
                 const $container = $(this).closest(".university-combinations");
                 const $countrySelect = $container.find("select.study_country");
                 const $universitySelect = $container.find("select.study_universities");
@@ -769,53 +772,29 @@
                 const selectedUniversity = $universitySelect.val();
                 const selectedCourse = $courseSelect.val();
 
-                console.log("Country ID:", selectedCountryId);
-
-                // Load universities based on selected country
+                // 🔁 Load universities based on selected country
                 await handleCountryChange($countrySelect.get(0), $universitySelect);
 
-                // Restore selected university
+                // 🔁 Restore selected university
                 if (selectedUniversity) {
                     $universitySelect.val(selectedUniversity).selectpicker('refresh').trigger("change");
                 }
-
-                // Restore selected course with slight delay (for dependent updates)
-                // if (selectedCourse) {
-                //     console.log("Restoring course:", selectedCourse);
-                //     setTimeout(() => {
-                //         $courseSelect.val(selectedCourse).selectpicker('refresh').trigger("change");
-                //     }, 200); // Reduced delay to make it more responsive
-                // }
             });
 
+            // ✅ When Course dropdown value is changed
+            $(document).on('shown.bs.select', 'select.study_courses', async function() {
+                const $container = $(this).closest(".university-combinations");
+                const $courseSelect = $(this);
+                const selectedCourse = $courseSelect.val();
+                const selectedText = $courseSelect.find("option:selected").text().trim();
+                const searchTerm = selectedText.split(" ")[0] || '';
 
+                console.log("Loading courses for:", searchTerm);
+                await loadCourses(searchTerm, $courseSelect, selectedCourse);
+            });
 
+        }, 200);
 
-            // $(document).on('shown.bs.select', 'select.study_universities', function(e) {
-            //     const $container = $(this).closest(".university-combinations");
-            //     const $universitySelect = $container.find("select.study_universities");
-            //     const $countrySelect = $container.find("select.study_country");
-            //     const selectedCountryId = $countrySelect.val();
-
-            //     console.log("Country ID:", selectedCountryId);
-
-            //     // Pass the select element and the actual university select DOM object
-            //     handleCountryChange($countrySelect.get(0), $universitySelect.get(0));
-            // });
-            // $("select.study_country").each(function() {
-            //     var $select = $(this);
-
-            //     // Force re-selecting the current value
-            //     var currentVal = $select.val();
-            //     $select.val(currentVal).trigger("change");
-
-            //     // Optionally refresh the selectpicker UI if needed
-            //     $select.selectpicker('refresh');
-            // });
-
-
-
-        }, 100);
 
 
 
@@ -1218,7 +1197,7 @@
 
 
 
-    function delete_documents(type, tracker_id, id) {
+    function delete_documents_study(type, tracker_id, id) {
         // Basic field validation before confirmation
         if (!client_id || !tracker_id || !type || !id) {
             alert_float("danger", "Missing required information. Please refresh the page and try again.");
@@ -1236,7 +1215,7 @@
             formData.append("id", id);
 
             $.ajax({
-                url: "<?php echo base_url() . 'admin/clients/delete_documents' ?>",
+                url: "<?php echo base_url() . 'admin/clients/delete_documents_study' ?>",
                 type: "POST",
                 data: formData,
                 contentType: false,
@@ -1259,4 +1238,32 @@
             });
         }
     }
+
+    $(document).ready(function() {
+        // Name: only letters and spaces
+        $(".name-validation-check").on("keyup", function() {
+            const name = $(this).val().trim();
+            if (!/^[A-Za-z\s]*$/.test(name)) {
+                // Remove any non-letter characters
+                $(this).val(name.replace(/[^A-Za-z\s]/g, ""));
+            }
+        });
+
+        // Email: prevent invalid characters (basic restriction)
+        $(".email-validation-check").on("keyup", function() {
+            let email = $(this).val();
+            // Allow only characters typically used in emails
+            email = email.replace(/[^\w@.\-_+]/g, "");
+            $(this).val(email);
+        });
+
+        // Phone: allow only digits, max 10 digits
+        $(".phone-validation-check").on("keyup", function() {
+            let phone = $(this).val().replace(/\D/g, "");
+            if (phone.length > 10) {
+                phone = phone.slice(0, 10);
+            }
+            $(this).val(phone);
+        });
+    });
 </script>

@@ -183,6 +183,7 @@ function app_init_customer_profile_tabs()
         'icon'     => 'fa fa-user-circle',
         'view'     => 'admin/clients/groups/profile',
         'position' => 5,
+        'leadType' => ''
     ]);
 
     $CI->app_tabs->add_customer_profile_tab('contacts', [
@@ -325,6 +326,7 @@ function app_init_customer_profile_tabs()
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/orignal_documents',
         'position' => 95,
+        'leadType' => '2'
     ]);
 
     $CI->app_tabs->add_customer_profile_tab('apostille', [
@@ -332,12 +334,22 @@ function app_init_customer_profile_tabs()
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/apostille',
         'position' => 95,
+        'leadType' => '2'
     ]);
     $CI->app_tabs->add_customer_profile_tab('tracker', [
         'name'     => _l('customer_tracker'),
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/applicant_tracker',
         'position' => 95,
+        'leadType' => '2'
+    ]);
+
+    $CI->app_tabs->add_customer_profile_tab('tracker', [
+        'name'     => _l('customer_tracker'),
+        'icon'     => 'fa fa-map-marker',
+        'view'     => 'admin/clients/groups/study_abroad_tracker',
+        'position' => 95,
+        'leadType' => '1'
     ]);
 
     $CI->app_tabs->add_customer_profile_tab('fly_ticket', [
@@ -345,6 +357,7 @@ function app_init_customer_profile_tabs()
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/fly_ticket',
         'position' => 95,
+
     ]);
 
 
@@ -1261,6 +1274,25 @@ function applicant_tracker_mbbs($lead_type)
 
     $CI->db->select("*")
         ->from(db_prefix() . 'applicant_tracker_mbbs')
+        ->where('status', 1);
+
+    if (!empty($lead_type)) {
+        $CI->db->where("FIND_IN_SET('$lead_type',lead_type) >", 0);
+    }
+
+    $CI->db->order_by("orderby", "asc");
+
+    return  $CI->db->get()->result_array(); // Execute and return result
+
+}
+
+
+function applicant_tracker_study($lead_type)
+{
+    $CI = &get_instance();
+
+    $CI->db->select("*")
+        ->from(db_prefix() . 'applicant_tracker_study')
         ->where('status', 1);
 
     if (!empty($lead_type)) {
@@ -2737,10 +2769,65 @@ function get_universities_list($search = '')
         $university_dropdown = $CI->db->get()->result_array();
 
         return $university_dropdown;
-
     } catch (Exception $e) {
         log_message('error', 'Error fetching universities list: ' . $e->getMessage());
         return [];
     }
 }
 
+
+function study_abroad_vendors()
+{
+    $CI = &get_instance();
+    return $study_abroad_vendors = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'vendor_study_abroad')
+        ->get()
+        ->result_array();
+}
+
+function applicant_pendency()
+{
+    $CI = &get_instance();
+    $applicationPendency = $CI->db->select("*")
+        ->from(db_prefix() . 'client_university_pendency')
+        ->get()
+        ->result_array();
+
+    $pendencyArray = [];
+    foreach ($applicationPendency as $pendency) {
+        if (isset($pendency["tracker_id"]) && $pendency["tracker_id"] !== null) {
+            $pendencyArray[$pendency["shortlisting_id"]][$pendency["tracker_id"]][] = $pendency;
+        }
+    }
+
+    return $pendencyArray;
+}
+
+function applicant_pendency_status()
+{
+    $CI = &get_instance();
+    return $applicationPendencyStatue = $CI->db->select("*")
+        ->from(db_prefix() . 'applicant_pendency_status')
+        ->get()
+        ->result_array();
+}
+
+
+function pendency_status()
+{
+    $CI = &get_instance();
+    return $PendencyStatue = $CI->db->select("*")
+        ->from(db_prefix() . 'pendency_status')
+        ->get()
+        ->result_array();
+}
+
+function offerletterStatus()
+{
+    $CI = &get_instance();
+    return $offerletterStatus = $CI->db->select("*")
+        ->from(db_prefix() . 'offer_letter_status')
+        ->get()
+        ->result_array();
+}

@@ -129,6 +129,25 @@ class Clients extends AdminController
         $this->app->get_table_data($view);
     }
 
+    public function study_aborad_table($type = "")
+    {
+
+        if (!has_permission('customers', '', 'view')) {
+            if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
+                ajax_access_denied();
+            }
+        }
+        $view = "clients";
+        if ($type == 2) {
+            $view = "application_study_abroad_clients";
+        } else if ($type == 1) {
+            $view = "study_abroad_clients";
+        }
+
+        $this->app->get_table_data($view);
+    }
+
+
     public function all_contacts()
     {
         if ($this->input->is_ajax_request()) {
@@ -2113,7 +2132,8 @@ class Clients extends AdminController
 
                     $insertData = [];
                     $updateData = [];
-
+                    $primary_university = "";
+                    $primary_country = "";
                     foreach ($application_universities as $application) {
                         // Validate required fields
                         if (
@@ -2145,6 +2165,11 @@ class Clients extends AdminController
                                 "tracker_id"          => '',
                             ];
 
+                            if (!empty($application["is_primary"]) && $application["is_primary"] == 1 && $status == 1) {
+                                $primary_university = $application["university_name"];
+                                $primary_country = $application["countryName"];
+                            }
+
                             if (!empty($application["id"])) {
                                 // Update: add ID and updated fields
                                 $data["id"] = $application["id"];
@@ -2161,6 +2186,17 @@ class Clients extends AdminController
                     }
 
 
+
+
+                    if (empty($primary_university) && empty($primary_country)) {
+
+                        $responseData['resp_code'] = 'ERR';
+                        $responseData['resp_desc'] = 'Select Primary University or fill all requried Fields';
+                        echo json_encode($responseData);
+                        die;
+                    }
+
+
                     // Insert new records
                     if (!empty($insertData)) {
                         $this->db->insert_batch(db_prefix() . 'client_university_shortlisting', $insertData);
@@ -2171,21 +2207,30 @@ class Clients extends AdminController
                         // Use 'id' as the reference key for update_batch
                         $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $updateData, 'id');
                     }
+
+
+                    if (!empty($primary_university) && !empty($primary_country)) {
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'admission_preferences', [
+                            "primary_university" => $primary_university,
+                            "primary_country"    => $primary_country
+                        ]);
+                    }
                 }
 
-                $data['resp_code'] = 'RCS';
-                $data['resp_desc'] = 'Admission Preferences successfully updated';
-                $data['resp_id'] = $admissionPreferencesId;
+                $responseData['resp_code'] = 'RCS';
+                $responseData['resp_desc'] = 'Admission Preferences successfully updated';
+                $responseData['resp_id'] = $admissionPreferencesId;
             } else {
-                $data['resp_code'] = 'ERR';
-                $data['resp_desc'] = 'Request failed!!';
+                $responseData['resp_code'] = 'ERR';
+                $responseData['resp_desc'] = 'Request failed!!';
             }
         } else {
-            $data['resp_code'] = 'ERR';
-            $data['resp_desc'] = 'Invalid request method';
+            $responseData['resp_code'] = 'ERR';
+            $responseData['resp_desc'] = 'Invalid request method';
         }
 
-        echo json_encode($data);
+        echo json_encode($responseData);
     }
 
     // FREEZE ADMISSION PREFERENCES
@@ -4680,7 +4725,848 @@ class Clients extends AdminController
             exit;
         }
     }
+    public function update_application_processing($client_id)
+    {
+        $this->db->where([
+            "userid" => $client_id
+        ]);
+        $this->db->update(db_prefix() . 'clients', [
+            "applicant_stage" => APPLICATION_STAGE,
+            "applicant_sub_status" => APPLICATION_PROCESS
+        ]);
+    }
 
+    public function checkPendency($clientid, $shortlistingid, $trackerid, $columnName)
+    {
+        try {
+            // Step 1: Check if there's any pending status for this shortlisting
+            $pendencyCount = $this->db->select("COUNT(1) as total")
+                ->from(db_prefix() . "client_university_shortlisting")
+                ->join(
+                    db_prefix() . "pendency_status",
+                    db_prefix() . "pendency_status.id = " . db_prefix() . "client_university_shortlisting.{$columnName}"
+                )
+                ->where(db_prefix() . "client_university_shortlisting.client_id", $clientid)
+                ->where(db_prefix() . "client_university_shortlisting.id", $shortlistingid)
+                ->where(db_prefix() . "pendency_status.pass_status !=", 1)
+                ->get()
+                ->row();
+
+            if ($pendencyCount && $pendencyCount->total > 0) {
+                // Step 2: Check if any pendency entries exist for this tracker
+                $numberOfPendency = $this->db->select("COUNT(1) as total")
+                    ->from(db_prefix() . "client_university_pendency")
+                    ->where(db_prefix() . "client_university_pendency.client_id", $clientid)
+                    ->where(db_prefix() . "client_university_pendency.shortlisting_id", $shortlistingid)
+                    ->where(db_prefix() . "client_university_pendency.tracker_id", $trackerid)
+                    ->get()
+                    ->row();
+
+                if ($numberOfPendency && $numberOfPendency->total > 0) {
+                    // Step 3: Check if pendency status has not been passed
+                    $applicantPendencyCount = $this->db->select("COUNT(1) as total")
+                        ->from(db_prefix() . "client_university_shortlisting")
+                        ->join(
+                            db_prefix() . "client_university_pendency",
+                            db_prefix() . "client_university_pendency.client_id = " . db_prefix() . "client_university_shortlisting.client_id 
+                        AND " . db_prefix() . "client_university_pendency.shortlisting_id = " . db_prefix() . "client_university_shortlisting.id"
+                        )
+                        ->join(
+                            db_prefix() . "applicant_pendency_status",
+                            db_prefix() . "applicant_pendency_status.id = " . db_prefix() . "client_university_pendency.status"
+                        )
+                        ->where(db_prefix() . "client_university_shortlisting.client_id", $clientid)
+                        ->where(db_prefix() . "client_university_shortlisting.id", $shortlistingid)
+                        ->where(db_prefix() . "client_university_pendency.tracker_id", $trackerid)
+                        ->where(db_prefix() . "applicant_pendency_status.pass_status !=", 1)
+                        ->get()
+                        ->row();
+
+                    if ($applicantPendencyCount && $applicantPendencyCount->total > 0) {
+                        // Pending not cleared
+                        // $data['resp_code'] = 'ERR';
+                        // $data['resp_desc'] = 'Please complete all required pendencies before proceeding.';
+                        // echo json_encode($data);
+                        // die;
+                        return false;
+                    }
+                } else {
+                    // Pendency exists but no remark added
+                    // $data['resp_code'] = 'ERR';
+                    // $data['resp_desc'] = 'Please add proper pendency remarks before proceeding.';
+                    // echo json_encode($data);
+                    // die;
+                    return false;
+                }
+            }
+
+            // All checks passed
+            return true;
+        } catch (Exception $e) {
+            // Exception handling
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'An unexpected error occurred: ' . $e->getMessage();
+            echo json_encode($data);
+            die;
+        }
+    }
+
+
+
+
+
+
+    public function study_tracker()
+    {
+        $data = array();
+
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+            echo json_encode($data);
+            return;
+        }
+
+        $client_id = $this->input->post("client_id");
+        $shortlisting_id = $this->input->post("shortlisting_id");
+        $lead_type = $this->input->post("lead_type");
+        $tracker_id = $this->input->post("tracker_id");
+        $skip_status = !empty($this->input->post("skip")) ? $this->input->post("skip") : 0;
+        $save_status = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
+        $completed = !empty($this->input->post("completed")) ? $this->input->post("completed") : 0;
+        $complete_application = !empty($this->input->post("complete_application")) && $this->input->post("complete_application") == 1 ? 1 : 0;
+
+        if (!empty($complete_application)) {
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = '';
+            echo json_encode($data);
+            return;
+        }
+
+        $post_data = $_POST;
+        if (empty($client_id)) {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid input data';
+            echo json_encode($data);
+            return;
+        }
+
+        $check_client = $this->db->select('tracker_id')
+            ->where('userid', $client_id)
+            ->get(db_prefix() . 'clients')
+            ->row();
+
+        if ($tracker_id == 1) {
+            $data = $this->document_verification($post_data);
+            $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+
+            // Check if no tracker ID is set
+            if (empty($check_client->tracker_id) || $check_client->tracker_id == 0) {
+                $update_data = [
+                    "applicant_stage" => STUDY_UNIVERSITY_SHORTLISTING,
+                    "applicant_sub_status" => !empty($university_shortlisting_data)
+                        ? STUDY_UNIVERSITY_APPLIED
+                        : STUDY_UNIVERSITY_SHORTLISTING_PENDING
+                ];
+
+                $this->db->where("userid", $client_id);
+                $this->db->update(db_prefix() . 'clients', $update_data);
+
+
+                $this->db->where("client_id", $client_id);
+                $this->db->update(db_prefix() . 'client_university_shortlisting', $update_data);
+            } else {
+                $data["pass_stage"] = $check_client->tracker_id;
+            }
+        } else if ($tracker_id == 2) {
+            if (!empty($shortlisting_id)) {
+
+
+                $this->update_application_processing($client_id);
+
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id" => $shortlisting_id
+                ]);
+                $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                    "applicant_stage" => ST3,
+                    "applicant_sub_status" => ST3_PENDING
+                ]);
+
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = 'University Applied Successfully';
+            } else {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'No university selected';
+                echo json_encode($data);
+                return;
+            }
+        } else if ($tracker_id == 3) {
+
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data'
+                ]);
+                return;
+            }
+
+            $st3Data = json_decode($_POST["st3"], true);
+
+            // Check if JSON decoding was successful and required keys exist
+            if (!is_array($st3Data) || empty($st3Data[0])) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid or missing ST3 data'
+                ]);
+                return;
+            }
+
+            $st3 = $st3Data[0]; // Assuming the first object in the array
+            $pendencyArray = $st3["pendencyArray"];
+            $updateArray = [
+                "application_date" => !empty($st3["application_date"]) ? $st3["application_date"] : '',
+                "vendor_id"         => !empty($st3["vendor_id"]) ? $st3["vendor_id"] : '',
+                "st3_pendency"      => isset($st3["st3_pendency"]) ? $st3["st3_pendency"] : '0'
+            ];
+            if (isset($_FILES["sop"]) && !empty($_FILES["sop"]['name'])) {
+                $document = $_FILES["sop"];
+
+                if ($document['error'] === UPLOAD_ERR_OK) {
+                    $file_extension = pathinfo($document['name'], PATHINFO_EXTENSION);
+                    $file_name = uniqid("SOP_") . "." . $file_extension;
+
+                    $uploaded_file = upload_applicant_documents($client_id, [
+                        "name"      => $file_name,
+                        "type"      => $document['type'],
+                        "tmp_name"  => $document['tmp_name'],
+                        "error"     => $document['error'],
+                        "size"      => $document['size']
+                    ]);
+
+                    if (!empty($uploaded_file["file_path"])) {
+                        $updateArray['sop'] = $uploaded_file["file_path"];
+                    }
+
+                    // Log file upload
+                    $this->db->insert(db_prefix() . 'application_activity_log', [
+                        "description" => "SOP File uploaded by staff ID: " . get_staff_user_id(),
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id
+                    ]);
+                }
+            }
+
+            $insertData = [];
+            $updateData = [];
+            foreach ($pendencyArray as $pendency) {
+                if (!empty($pendency["remark"])) {
+                    if (!empty($pendency["id"])) {
+                        $updateData[] = array(
+                            "id" => $pendency["id"],
+                            "remark" => $pendency["remark"],
+                            "tracker_id" => $tracker_id,
+                            "status" => $pendency["status"],
+                            "updated_by" => get_staff_user_id(),
+                            "updated_at" => date('Y-m-d H:i:s'),
+                            "client_id" => $client_id,
+                            "shortlisting_id" => $shortlisting_id
+                        );
+                    } else {
+                        $insertData[] = array(
+                            "remark" => $pendency["remark"],
+                            "tracker_id" => $tracker_id,
+                            "status" => $pendency["status"],
+                            "created_by" => get_staff_user_id(),
+                            "created_at" => date('Y-m-d H:i:s'),
+                            "client_id" => $client_id,
+                            "shortlisting_id" => $shortlisting_id
+                        );
+                    }
+                }
+            }
+
+
+
+            // Execute DB update
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ]);
+
+            $updateSuccess = $this->db->update(db_prefix() . 'client_university_shortlisting', $updateArray);
+
+            if (!$updateSuccess) {
+                $db_error = $this->db->error();
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Database error: ' . $db_error['message']
+                ]);
+                return;
+            }
+
+            // Batch insert new pendency records
+            if (!empty($insertData)) {
+                $this->db->insert_batch(db_prefix() . 'client_university_pendency', $insertData);
+            }
+
+            // Batch update existing pendency records
+            if (!empty($updateData)) {
+                $this->db->update_batch(db_prefix() . 'client_university_pendency', $updateData, 'id');
+            }
+
+            if ($save_status == 1) {
+
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id" => $shortlisting_id
+                ])->update(db_prefix() . 'client_university_shortlisting', [
+                    "applicant_stage" => ST3,
+                    "applicant_sub_status" => ST3_PENDENCY
+                ]);
+                // Case 1: Application date is provided
+                if (!empty($st3["application_date"]) || !empty($st3["vendor_id"])) {
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ])->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => ST3,
+                        "applicant_sub_status" => ST3_APPLIED
+                    ]);
+                }
+
+                $check_status = true;
+                // Case 2: Pendency exists and pendency array is provided
+                if (!empty($st3["st3_pendency"]) && (!empty($pendencyArray) && count($pendencyArray) > 0)) {
+
+                    $check_status = $this->checkPendency($client_id, $shortlisting_id, $tracker_id, "st3_pendency");
+
+                    if ($check_status === false) {
+                        $this->db->where([
+                            "client_id" => $client_id,
+                            "id" => $shortlisting_id
+                        ])->update(db_prefix() . 'client_university_shortlisting', [
+                            "applicant_stage" => ST3,
+                            "applicant_sub_status" => ST3_PENDENCY
+                        ]);
+                    }
+                }
+
+
+                // Case 3: Pendency field is set but no pendency array (means all conditions met)
+                if (!empty($st3["st3_pendency"]) && $check_status == true) {
+                    $this->db->select("id")
+                        ->where("application_date !=", "")
+                        ->where("vendor_id !=", "")
+                        ->where("sop !=", "")
+                        ->where("st3_pendency !=", 0)
+                        ->where("client_id", $client_id)
+                        ->where("id", $shortlisting_id);
+
+                    $query = $this->db->get(db_prefix() . 'client_university_shortlisting');
+
+                    if ($query->num_rows() > 0) {
+                        $this->db->where([
+                            "client_id" => $client_id,
+                            "id" => $shortlisting_id
+                        ])->update(db_prefix() . 'client_university_shortlisting', [
+                            "applicant_stage" => ST3,
+                            "applicant_sub_status" => ST3_COMPLETED
+                        ]);
+                    }
+                }
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = 'ST3 Applied Successfully';
+                echo json_encode($data);
+                die;
+            }
+
+
+
+            $this->update_application_processing($client_id);
+
+            $this->db->where([
+                "client_id" => $client_id,
+                "id" => $shortlisting_id
+            ]);
+            $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                "applicant_stage" => STU,
+                "applicant_sub_status" => STU_PENDING
+            ]);
+
+
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'ST3 Applied Successfully';
+        } else if ($tracker_id == 4) {
+
+
+
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data'
+                ]);
+                return;
+            }
+
+            $stuData = json_decode($_POST["stu"], true);
+
+            // Check if JSON decoding was successful and required keys exist
+            if (!is_array($stuData) || empty($stuData[0])) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid or missing STU data'
+                ]);
+                return;
+            }
+
+            $stu = $stuData[0]; // Assuming the first object in the array
+            $pendencyArray = $stu["pendencyArray"];
+            $updateArray = [
+                "submitted_date" => !empty($stu["submitted_date"]) ? $stu["submitted_date"] : '',
+                "stu_pendency"      => isset($stu["stu_pendency"]) ? $stu["stu_pendency"] : '0'
+            ];
+
+            $insertData = [];
+            $updateData = [];
+            foreach ($pendencyArray as $pendency) {
+                if (!empty($pendency["remark"])) {
+                    if (!empty($pendency["id"])) {
+                        $updateData[] = array(
+                            "id" => $pendency["id"],
+                            "remark" => $pendency["remark"],
+                            "tracker_id" => $tracker_id,
+                            "status" => $pendency["status"],
+                            "updated_by" => get_staff_user_id(),
+                            "updated_at" => date('Y-m-d H:i:s'),
+                            "client_id" => $client_id,
+                            "shortlisting_id" => $shortlisting_id
+                        );
+                    } else {
+                        $insertData[] = array(
+                            "remark" => $pendency["remark"],
+                            "tracker_id" => $tracker_id,
+                            "status" => $pendency["status"],
+                            "created_by" => get_staff_user_id(),
+                            "created_at" => date('Y-m-d H:i:s'),
+                            "client_id" => $client_id,
+                            "shortlisting_id" => $shortlisting_id
+                        );
+                    }
+                }
+            }
+
+
+
+            // Execute DB update
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ]);
+
+            $updateSuccess = $this->db->update(db_prefix() . 'client_university_shortlisting', $updateArray);
+
+            if (!$updateSuccess) {
+                $db_error = $this->db->error();
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Database error: ' . $db_error['message']
+                ]);
+                return;
+            }
+
+            // Batch insert new pendency records
+            if (!empty($insertData)) {
+                $this->db->insert_batch(db_prefix() . 'client_university_pendency', $insertData);
+            }
+
+            // Batch update existing pendency records
+            if (!empty($updateData)) {
+                $this->db->update_batch(db_prefix() . 'client_university_pendency', $updateData, 'id');
+            }
+
+            $this->update_application_processing($client_id);
+
+
+            if ($save_status == 1) {
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id" => $shortlisting_id
+                ])->update(db_prefix() . 'client_university_shortlisting', [
+                    "applicant_stage" => STU,
+                    "applicant_sub_status" => STU_PENDING
+                ]);
+
+                // Case 1: Application date is provided
+                if (!empty($stu["submitted_date"])) {
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ])->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => STU,
+                        "applicant_sub_status" => STU_SUBMITTED
+                    ]);
+                }
+
+                $check_status = true;
+                // Case 2: Pendency exists and pendency array is provided
+                if (!empty($stu["stu_pendency"]) && (!empty($pendencyArray) && count($pendencyArray) > 0)) {
+
+                    $check_status = $this->checkPendency($client_id, $shortlisting_id, $tracker_id, "stu_pendency");
+
+                    if ($check_status === false) {
+                        $this->db->where([
+                            "client_id" => $client_id,
+                            "id" => $shortlisting_id
+                        ])->update(db_prefix() . 'client_university_shortlisting', [
+                            "applicant_stage" => STU,
+                            "applicant_sub_status" => STU_PENDENCY
+                        ]);
+                    }
+                }
+
+
+                // Case 3: Pendency field is set but no pendency array (means all conditions met)
+                if (!empty($stu["stu_pendency"]) && $check_status == true) {
+                    $this->db->select("id")
+                        ->where("application_date !=", "")
+                        ->where("vendor_id !=", "")
+                        ->where("sop !=", "")
+                        ->where("stu_pendency !=", 0)
+                        ->where("client_id", $client_id)
+                        ->where("id", $shortlisting_id);
+
+                    $query = $this->db->get(db_prefix() . 'client_university_shortlisting');
+
+                    if ($query->num_rows() > 0) {
+                        $this->db->where([
+                            "client_id" => $client_id,
+                            "id" => $shortlisting_id
+                        ])->update(db_prefix() . 'client_university_shortlisting', [
+                            "applicant_stage" => STU,
+                            "applicant_sub_status" => STU_COMPLETED
+                        ]);
+                    }
+                }
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = 'STU Applied Successfully';
+                echo json_encode($data);
+                die;
+            }
+
+
+
+            $this->db->where([
+                "client_id" => $client_id,
+                "id" => $shortlisting_id
+            ]);
+            $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                "applicant_stage" => OFFER_LETTER,
+                "applicant_sub_status" => OFFER_LETTER_PENDING
+            ]);
+
+
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'STU Applied Successfully';
+        } else if ($tracker_id == 5) {
+
+
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data: client_id or shortlisting_id missing'
+                ]);
+                return;
+            }
+
+            // Sanitize and decode offer letter data
+            $offer_letter_data = json_decode($_POST["offer_letter_data"], true);
+
+            // Check if JSON decoding was successful and required keys exist
+            if (!is_array($offer_letter_data) || empty($offer_letter_data[0])) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid or missing STU data'
+                ]);
+                return;
+            }
+
+            $offer_letter_data = $offer_letter_data[0]; // Assuming the first object in the array
+
+
+            $updateArray = [
+                "offer_date" => !empty($offer_letter_data["offer_date"]) ? $offer_letter_data["offer_date"] : '',
+                "university_offer_status" => isset($offer_letter_data["university_offer_status"]) ? $offer_letter_data["university_offer_status"] : '0',
+                "conditional_notes" => isset($offer_letter_data["remark"]) ? $offer_letter_data["remark"] : ''
+            ];
+
+            // Handle file upload if present
+            if (!empty($_FILES["offer_letter"]['name'])) {
+                $document = $_FILES["offer_letter"];
+
+                if ($document['error'] === UPLOAD_ERR_OK) {
+                    $file_extension = pathinfo($document['name'], PATHINFO_EXTENSION);
+                    $file_name = uniqid("SOP_") . "." . $file_extension;
+
+                    $uploaded_file = upload_applicant_documents($client_id, [
+                        "name"      => $file_name,
+                        "type"      => $document['type'],
+                        "tmp_name"  => $document['tmp_name'],
+                        "error"     => $document['error'],
+                        "size"      => $document['size']
+                    ]);
+
+                    if (!empty($uploaded_file["file_path"])) {
+                        $updateArray['offer_letter'] = $uploaded_file["file_path"];
+                    } else {
+                        echo json_encode([
+                            'resp_code' => 'ERR',
+                            'resp_desc' => 'File uploaded but file path was not returned'
+                        ]);
+                        return;
+                    }
+
+                    // Log file upload
+                    $this->db->insert(db_prefix() . 'application_activity_log', [
+                        "description" => "Offer Letter File uploaded by staff ID: " . get_staff_user_id(),
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id
+                    ]);
+                } else {
+                    echo json_encode([
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'File upload error: ' . $document['error']
+                    ]);
+                    return;
+                }
+            } else {
+                // If no file uploaded, ensure it's cleared only if expected
+                if (empty($offer_letter_data["offer_letter_url"])) {
+                    $updateArray['offer_letter'] = '';
+                }
+            }
+
+            $this->db->where('client_id', $client_id);
+            $this->db->where('id', $shortlisting_id);
+            $this->db->update(db_prefix() . 'client_university_shortlisting', $updateArray);
+
+
+            $this->update_application_processing($client_id);
+
+            if ($save_status == 1) {
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id" => $shortlisting_id
+                ])->update(db_prefix() . 'client_university_shortlisting', [
+                    "applicant_stage" => OFFER_LETTER,
+                    "applicant_sub_status" => OFFER_LETTER_PENDING
+                ]);
+                // Case 1: Application date is provided
+                if (!empty($offer_letter_data["offer_date"]) && empty($offer_letter_data["university_offer_status"])) {
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ])->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => OFFER_LETTER,
+                        "applicant_sub_status" => OFFER_LETTER_RECEIVED
+                    ]);
+                }
+
+                if (!empty($offer_letter_data["university_offer_status"])) {
+                    $university_offer_status = $offer_letter_data["university_offer_status"];
+                    $updateStatus = "";
+                    if ($university_offer_status == 1) {
+                        $updateStatus = OFFER_LETTER_CONDITIONAL;
+                    } else if ($university_offer_status == 2) {
+                        $updateStatus = OFFER_LETTER_UNCONDITIONAL;
+                    } else if ($university_offer_status == 3) {
+                        $updateStatus = OFFER_LETTER_REJECTED;
+                    }
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ])->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => OFFER_LETTER,
+                        "applicant_sub_status" => $updateStatus
+                    ]);
+                }
+
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+
+
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = 'Offer Letter Applied Successfully';
+                echo json_encode($data);
+                die;
+            }
+
+            $this->db->where([
+                "client_id" => $client_id,
+                "id" => $shortlisting_id
+            ]);
+            $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                "applicant_stage" => PRE_DEPOSITE,
+                "applicant_sub_status" => PRE_DEPOSITE_PENDING
+            ]);
+
+
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'Offer letter updated successfully.';
+        } else if ($tracker_id == 6) {
+
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data: client_id or shortlisting_id missing'
+                ]);
+                return;
+            }
+
+            // Sanitize and decode offer letter data
+            $pre_deposite_data = json_decode($_POST["pre_deposite_data"], true);
+
+            // Check if JSON decoding was successful and required keys exist
+            if (!is_array($pre_deposite_data) || empty($pre_deposite_data[0])) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid or missing STU data'
+                ]);
+                return;
+            }
+
+            $pre_deposite_data = $pre_deposite_data[0]; // Assuming the first object in the array
+
+
+            $updateArray = [
+                "tentative_date" => !empty($pre_deposite_data["tentative_date"]) ? $pre_deposite_data["tentative_date"] : '',
+                "fees_deposite_date" => !empty($pre_deposite_data["fees_deposite_date"]) ? $pre_deposite_data["fees_deposite_date"] : '',
+                "payment_amount" => isset($pre_deposite_data["payment_amount"]) ? $pre_deposite_data["payment_amount"] : '',
+            ];
+
+            // Handle file upload if present
+            if (!empty($_FILES["fees_deposite_slip"]['name'])) {
+                $document = $_FILES["fees_deposite_slip"];
+
+                if ($document['error'] === UPLOAD_ERR_OK) {
+                    $file_extension = pathinfo($document['name'], PATHINFO_EXTENSION);
+                    $file_name = uniqid("Fees_Deposite_") . "." . $file_extension;
+
+                    $uploaded_file = upload_applicant_documents($client_id, [
+                        "name"      => $file_name,
+                        "type"      => $document['type'],
+                        "tmp_name"  => $document['tmp_name'],
+                        "error"     => $document['error'],
+                        "size"      => $document['size']
+                    ]);
+
+                    if (!empty($uploaded_file["file_path"])) {
+                        $updateArray['fees_deposite_slip'] = $uploaded_file["file_path"];
+                    } else {
+                        echo json_encode([
+                            'resp_code' => 'ERR',
+                            'resp_desc' => 'File uploaded but file path was not returned'
+                        ]);
+                        return;
+                    }
+
+                    // Log file upload
+                    $this->db->insert(db_prefix() . 'application_activity_log', [
+                        "description" => "Proof of deposit File uploaded by staff ID: " . get_staff_user_id(),
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id
+                    ]);
+                } else {
+                    echo json_encode([
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'File upload error: ' . $document['error']
+                    ]);
+                    return;
+                }
+            } else {
+                // If no file uploaded, ensure it's cleared only if expected
+                if (empty($pre_deposite_data["fees_deposite_slip_url"])) {
+                    $updateArray['fees_deposite_slip'] = '';
+                }
+            }
+
+            $this->db->where('client_id', $client_id);
+            $this->db->where('id', $shortlisting_id);
+            $this->db->update(db_prefix() . 'client_university_shortlisting', $updateArray);
+
+
+            if ($save_status == 1) {
+
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id" => $shortlisting_id
+                ])->update(db_prefix() . 'client_university_shortlisting', [
+                    "applicant_stage" => PRE_DEPOSITE,
+                    "applicant_sub_status" => PRE_DEPOSITE_PENDING
+                ]);
+
+                // Case 1: Application date is provided
+                if (!empty($pre_deposite_data["tentative_date"]) && (empty($pre_deposite_data["fees_deposite_date"]))) {
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ])->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => PRE_DEPOSITE,
+                        "applicant_sub_status" => PRE_DEPOSITE_EXPECTED
+                    ]);
+                }
+
+                if (!empty($pre_deposite_data["fees_deposite_date"])) {
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ])->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => PRE_DEPOSITE,
+                        "applicant_sub_status" => PRE_DEPOSITE_COMPLETED
+                    ]);
+                }
+
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+
+
+                $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = 'Offer Letter Applied Successfully';
+                echo json_encode($data);
+                die;
+            }
+
+
+            $this->db->where([
+                "client_id" => $client_id,
+                "id" => $shortlisting_id
+            ]);
+            $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                "applicant_stage" => PRE_DEPOSITE,
+                "applicant_sub_status" => PRE_DEPOSITE_COMPLETED
+            ]);
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'Pre Deposite updated successfully.';
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => "Invalid Stage",
+            ]);
+            return;
+        }
+
+
+
+        applicant_last_update($client_id);
+        $this->update_applicant_tracker_stages($client_id, $tracker_id);
+        $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, $tracker_id);
+        echo json_encode($data);
+    }
     public function mbbs_tracker()
     {
         $data = array();
@@ -4913,6 +5799,27 @@ class Clients extends AdminController
     {
         $this->db->where("userid", $client_id);
         $this->db->update(db_prefix() . 'clients', array("tracker_id" => $tracker_id));
+    }
+
+    private function update_applicant_tracker_stages_application($client_id, $shortlisting_id, $tracker_id)
+    {
+        try {
+            $this->db->where("client_id", $client_id);
+            $this->db->where("id", $shortlisting_id);
+            $success = $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                "tracker_id" => $tracker_id
+            ]);
+
+            if (!$success) {
+                log_message('error', 'Failed to update tracker_id for client_id: ' . $client_id . ', shortlisting_id: ' . $shortlisting_id);
+                return false;
+            }
+
+            return true;
+        } catch (Exception $e) {
+            log_message('error', 'Exception in update_applicant_tracker_stages_application: ' . $e->getMessage());
+            return false;
+        }
     }
 
     private function document_verification($data)
@@ -6998,6 +7905,161 @@ class Clients extends AdminController
         }
     }
 
+    public function delete_documents_study()
+    {
+        try {
+            $data = $this->input->post();
+            if (empty($data["clientid"]) || empty($data["tracker_id"]) ||  empty($data["id"]) ||  empty($data["type"])) {
+                return $this->json_response('ERR', 'Missing required data');
+            }
+
+            $staff_id = get_staff_user_id();
+            $timestamp = date('Y-m-d H:i:s');
+            $shortlisting_tbl = db_prefix() . "client_university_shortlisting";
+            $client_id = $data["clientid"];
+            $tracker_id = $data["tracker_id"];
+            $shortlisting_id = $data["id"];
+            $update_client_data = [];
+            $document_type = "";
+            switch ((int)$data["type"]) {
+                case 1:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "SOP";
+                    $this->db->update($shortlisting_tbl, [
+                        "sop" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_stage"  => ST3,
+                        "applicant_sub_status" => ST3_PENDING
+                    ];
+                    break;
+
+                case 2:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "Offer Letter";
+
+                    $this->db->update($shortlisting_tbl, [
+                        "offer_letter" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_stage" => OFFER_LETTER,
+                        "applicant_sub_status" => OFFER_LETTER_PENDING,
+                    ];
+                    break;
+
+                case 3:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing shortlisting ID');
+                    }
+                    $document_type = "Proof of deposit";
+
+                    $this->db->update($shortlisting_tbl, [
+                        "fees_deposite_slip" => "",
+                        "updated_by" => $staff_id,
+                        "updated_date" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_stage" => PRE_DEPOSITE,
+                        "applicant_sub_status" => PRE_DEPOSITE_PENDING,
+                    ];
+                    break;
+
+                    // case 4:
+                    //     if (empty($data["id"])) {
+                    //         return $this->json_response('ERR', 'Missing shortlisting ID');
+                    //     }
+                    //     $document_type = "University Fees Deposite";
+
+                    //     $this->db->update($shortlisting_tbl, [
+                    //         "university_fees_payment_slip" => "",
+                    //         "updated_by" => $staff_id,
+                    //         "updated_date" => $timestamp
+                    //     ], ['id' => $data["id"]]);
+                    //     $update_client_data = [
+                    //         "applicant_status" => 0,
+                    //         "applicant_stage" => FEES_DEPOSITE,
+                    //         "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                    //     ];
+                    //     break;
+
+                    // case 5:
+                    //     if (empty($data["id"])) {
+                    //         return $this->json_response('ERR', 'Missing shortlisting ID');
+                    //     }
+                    //     $document_type = "invitation Letter";
+
+                    //     $this->db->update($shortlisting_tbl, [
+                    //         "invitation_letter" => "",
+                    //         "invitation_receiving_date" => "",
+                    //         "updated_by" => $staff_id,
+                    //         "updated_date" => $timestamp
+                    //     ], ['id' => $data["id"]]);
+                    //     $update_client_data = [
+                    //         "applicant_status" => 0,
+                    //         "applicant_stage" => INVITATION,
+                    //         "applicant_sub_status" => INVITATION_PENDING,
+                    //     ];
+                    //     break;
+
+                    // case 6:
+                    if (empty($data["id"])) {
+                        return $this->json_response('ERR', 'Missing visa ID');
+                    }
+                    $document_type = "Visa Letter";
+
+                    $visa_tbl = db_prefix() . "visa_details";
+                    $this->db->update($visa_tbl, [
+                        "file" => "",
+                        "status" => 2,
+                        "receiving_date" => "",
+                        "entry_date" => "",
+                        "received_status" => 0,
+                        "updated_by" => $staff_id,
+                        "updated_at" => $timestamp
+                    ], ['id' => $data["id"]]);
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => VISA,
+                        "applicant_sub_status" => VISA_APPLY
+                    ];
+                    break;
+
+                default:
+                    return $this->json_response('ERR', 'Invalid document type');
+            }
+
+            if (!empty($update_client_data)) {
+
+                $this->db->insert(db_prefix() . 'application_document_activity_log', array("description" => $document_type . " Document Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
+
+                $this->db->where("client_id", $client_id);
+                $this->db->where("id", $shortlisting_id);
+                $this->db->update(db_prefix() . 'client_university_shortlisting', $update_client_data);
+            }
+
+            $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+            applicant_last_update($client_id);
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Document deleted successfully'
+            ]);
+        } catch (Exception $e) {
+            log_message('error', 'Delete document error: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'An unexpected error occurred. Please try again later.'
+            ]);
+        }
+    }
     private function json_response($code, $message)
     {
         echo json_encode([

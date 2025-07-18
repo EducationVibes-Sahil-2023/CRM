@@ -12,7 +12,7 @@ $relationshipArray = get_relationShip();
 $yesNO_Array = [array("id" => 0, "name" => "No"), array("id" => 1, "name" => "Yes")];
 $degreeArray = get_degree();
 $universities_list = get_universities_list();
-$diploma_board = [];
+$diploma_board = [array("id" => "1", "name" => "Diploma")];
 $board_dropdown = get_board_dropdown();
 $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
@@ -80,7 +80,7 @@ for ($i = 0; $i < 15; $i++) {
 }
 array_unshift($years_array, array(""));
 
-array_unshift($diploma_board, array("id" => "1", "name" => "course 1"));
+array_unshift($diploma_board, array("id" => "", "name" => "Select Diploma"));
 
 array_unshift($get_entrance_exams_list, array("id" => "", "name" => "Select Entrance Exams"));
 
@@ -468,7 +468,7 @@ if ($lead_type_status == 1) {
                                                     <div class="form-group">
                                                         <label for="exampleInputMobileNumber">Name <small
                                                                 class="text-danger">*</small></label>
-                                                        <input class="form-control" required required-check type="text"
+                                                        <input class="form-control name-validation-check" required required-check type="text"
                                                             class="form-group" placeholder="Parents Name"
                                                             name="father_name"
                                                             value='<?php echo (isset($basicdetails)) ? $basicdetails->father_name : ''; ?>'>
@@ -479,7 +479,7 @@ if ($lead_type_status == 1) {
                                                         <label for="exampleInputMobileNumber">Contact <small
                                                                 class="text-danger">*</small></label>
                                                         <input
-                                                            class="form-control check-phonenumber check-phonenumber-validation"
+                                                            class="form-control check-phonenumber check-phonenumber-validation PHONE-validation-check"
                                                             onkeypress="formatPhoneNumber(this.value)" required
                                                             required-check type="tel" pattern="\d{10}"
                                                             oninput="this.value = this.value.replace(/[^0-9]/g, '')"
@@ -492,7 +492,7 @@ if ($lead_type_status == 1) {
                                                 <div class="col-lg-3">
                                                     <div class="form-group">
                                                         <label for="exampleInputMobileNumber">Email</label>
-                                                        <input class="form-control" type="text" class="form-group"
+                                                        <input class="form-control" type="email" class="form-group email-validation-check"
                                                             placeholder="Parents Email" name="fathers_email"
                                                             value='<?php echo (isset($basicdetails)) ? $basicdetails->fathers_email : ''; ?>'>
                                                     </div>
@@ -846,7 +846,7 @@ if ($lead_type_status == 1) {
                                     </div>
 
 
-                                    <h5 class="mtop20">Application Shortlisting</h5>
+                                    <h5 class="mtop20">Application Shortlisting</h5> <small> Choose one university as the primary by selecting its checkbox <span class="text-danger">*</span></small>
                                     <hr class="mtop5 mbot10" />
                                     <div class="row applicantion-combinations mbot20">
                                         <?php if (!empty($university_shortlisting)) {
@@ -1339,7 +1339,7 @@ if ($lead_type_status == 1) {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row result-change-hide">
+                                    <div class="row result-change-hide" style="display:<?= ($academicdetails->diploma_result_status == 'Awaited') ? 'none' : '' ?>">
                                         <div class="col-lg-2 border2 border1" id="diploma_marking_scheme_div">
                                             <div class="c1">
                                                 <p>Marking Scheme <?= $text_danger_mbbs ?></p>
@@ -2354,50 +2354,56 @@ if ($lead_type_status == 1) {
         $(".currency-symbol-" + id).text(selected.data("symbol"));
     }
 
-    async function handleCountryChange(selectElement, universitySelected) {
+    async function handleCountryChange(selectElement, universitySelectElement) {
         const selectedCountry = selectElement.value;
-        const $select = $(selectElement);
-        const $universitySelect = $(universitySelected);
+        const $countrySelect = $(selectElement);
+        const $universitySelect = $(universitySelectElement);
 
         if (selectedCountry > 0) {
             try {
-                // Load universities based on selected country
                 const universityList = await show_university_dropdown(select_segment_default, selectedCountry);
-
-                // Clear existing options
                 $universitySelect.empty();
 
-                // Find the course dropdown within the same container
                 const $coursesSelect = $universitySelect
                     .closest(".university-combinations")
                     .find("select.study_courses");
 
-                // Save currently selected course value
                 const selectedCourseValue = $coursesSelect.val();
 
-                // Handle course dropdown based on university change
-                await handleUniversityChange($coursesSelect, selectedCourseValue);
-
-                // Append new university options
-                universityList.forEach(function(uni) {
-                    const option = $('<option>', {
-                        value: uni.id,
-                        text: uni.name,
-                        'data-country_id': uni.country_id
-                    });
-                    $universitySelect.append(option);
+                // Append university options
+                universityList.forEach(uni => {
+                    $universitySelect.append(
+                        $('<option>', {
+                            value: uni.id,
+                            text: uni.name,
+                            'data-country_id': uni.country_id
+                        })
+                    );
                 });
 
                 // Refresh the university dropdown
                 $universitySelect.selectpicker('refresh');
 
+                // 🔁 Delay needed to ensure UI selects any previously selected option (if auto-restored)
+                setTimeout(async () => {
+                    const selectedUniversityVal = $universitySelect.val(); // ✅ Check AFTER options rendered
+
+                    if (!selectedUniversityVal) {
+                        $coursesSelect.empty().selectpicker('refresh');
+                    } else {
+                        await handleUniversityChange($countrySelect, $coursesSelect, selectedCourseValue);
+                    }
+                }, 100); // Small timeout gives browser/UI time to update selectpicker
+
             } catch (error) {
                 console.error("Error loading universities:", error);
             }
         } else {
-            $universitySelect.selectpicker('refresh');
+            $universitySelect.empty().selectpicker('refresh');
         }
     }
+
+
 
 
 
@@ -2476,7 +2482,8 @@ if ($lead_type_status == 1) {
     <div class="university-combinations row col-md-12 mt-3">
         <div class="col-lg-3">
             <div class="form-group">
-                <label for="study_country_${applicationIndex}">Country <small class="text-danger">*</small></label>
+                <label for="study_country_${applicationIndex}"> <input type="checkbox" class="is_primary"
+                                                                    value="" onchange="isPrimaryUniversity(this)">  Country <small class="text-danger">*</small></label>
                 <select
                     class="form-control selectpicker required required-check study_country"
                     name="study_country[]"
@@ -2511,7 +2518,7 @@ if ($lead_type_status == 1) {
                     name="study_courses[]"
                     id="study_courses_${applicationIndex}"
                     data-live-search="true"
-                    title="Select a Course">
+                    title="Select a Course" >
                 </select>
             </div>
         </div>
@@ -2564,28 +2571,43 @@ if ($lead_type_status == 1) {
 
     }
 
-    function handleUniversityChange(select, coursesSelected) {
+    function handleUniversityChange(select, coursesSelected, selectedCourseValue = "") {
         let courseSelect = $(coursesSelected);
-        $(courseSelect).empty();
-        loadCourses("", courseSelect); // pass the specific select element
+        let selectedCourse = courseSelect.val();
+        let selectedCourseText = courseSelect.find("option:selected").text();
+        // Use JavaScript's split instead of PHP's explode
+        let searchTerm = selectedCourseText ? selectedCourseText.trim().split(" ")[0] : '';
+        loadCourses(searchTerm, courseSelect, selectedCourse); // pass the specific select element
     }
+
 
     const degree = "";
 
-    function loadCourses(searchTerm = '', courseSelect) {
+    function loadCourses(searchTerm = '', courseSelect, selectedCourse = '') {
         const degreeElement = $("#degree option:selected");
-        const degreeType = degreeElement.data("type");
+        const degreeType = degreeElement.data("type")?.trim();
 
-        if (!degreeType || !courseSelect || !courseSelect.length) {
+
+        const $container = $(courseSelect).closest(".university-combinations");
+        const $countrySelect = $container.find("select.study_country");
+        const $universitySelect = $container.find("select.study_universities");
+        const $courseSelect = $container.find("select.study_courses");
+
+        const selectedCountryId = $countrySelect.val();
+        const selectedUniversity = $universitySelect.val();
+
+        if (!degreeType || !courseSelect || courseSelect.length === 0 || !selectedCountryId || !selectedUniversity) {
             console.warn("Degree type or courseSelect is invalid.");
             return;
         }
 
+        courseSelect.empty(); // Clear any existing options
+
         $.ajax({
-            url: '<?= base_url('admin/clients/get_courses') ?>', // Ensured clean base_url
+            url: '<?= base_url('admin/clients/get_courses') ?>',
             method: 'POST',
             data: {
-                degree: degreeType.trim(),
+                degree: degreeType,
                 search: searchTerm
             },
             success: function(response) {
@@ -2599,31 +2621,35 @@ if ($lead_type_status == 1) {
                     return;
                 }
 
-                courseSelect.empty(); // Clear old options
-
                 if (courseData.length === 0) {
-                    courseSelect.append($('<option>', {
-                        value: '',
-                        text: '-- No Courses Found --'
-                    }));
+                    courseSelect.append(
+                        $('<option>', {
+                            value: '',
+                            text: '-- No Courses Found --'
+                        })
+                    );
                 } else {
-                    $.each(courseData, function(index, course) {
+                    courseData.forEach(course => {
                         courseSelect.append(
                             $('<option>', {
                                 value: course.id,
-                                text: course.course_name
+                                text: course.course_name,
+                                selected: selectedCourse == course.id // Mark as selected if it matches
                             })
                         );
                     });
                 }
 
-                courseSelect.selectpicker('refresh'); // Refresh Bootstrap Select
+                // Refresh after DOM update
+                courseSelect.selectpicker('refresh');
             },
             error: function(xhr, status, error) {
                 console.error("Error loading courses:", status, error);
             }
         });
     }
+
+
 
 
 

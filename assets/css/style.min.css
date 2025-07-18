@@ -4,6 +4,14 @@
     border-color: #e6e9eb
 }
 
+.mt-5 {
+    margin-top: 30px !important;
+}
+
+.mb-5 {
+    margin-bottom: 30px !important;
+}
+
 .btn-default.active,
 .btn-default:active,
 .btn-default:focus,

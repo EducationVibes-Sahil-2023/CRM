@@ -74,6 +74,15 @@ $table_view = array_column(get_view_columns_sa(), null, "id");
       div#customers_bulk_action .form-group {
          margin-bottom: 20px !important;
       }
+
+      td.details-control {
+         background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
+         cursor: pointer;
+      }
+
+      tr.shown td.details-control {
+         background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
+      }
    </style>
    <div class="content">
       <div class="row">
@@ -354,6 +363,16 @@ $table_view = array_column(get_view_columns_sa(), null, "id");
                                  <?php echo render_select('column_show[]', [], array('id', 'label_name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show'); ?>
                               </div>
 
+                              <div class="col-md-2  margin-top leads-filter-column hide  ">
+                                 <?php echo render_select('column_show_default[]', [], array('id', 'label_name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show_default'); ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column hide  ">
+                                 <?= render_input('requuestType', '', "2") ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column hide  ">
+                                 <?= render_input('requuestClient', '', "") ?>
+                              </div>
 
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
@@ -968,6 +987,7 @@ init_tail();
 
       Object.assign(CustomersServerParams, {
          'exclude_inactive': '[name="exclude_inactive"]:checked',
+         'type': "[name='table_view[]']",
          'columnNames': "[name='column_show[]']",
          'assigned': "[name='view_assigned[]']",
          'source': "[name='view_source[]']",
@@ -1001,19 +1021,20 @@ init_tail();
 
       applicant_table = initDataTable(
          '.table-clients',
-         admin_url + 'clients/table/1',
+         admin_url + 'clients/study_aborad_table/1',
          [0],
          [0],
          CustomersServerParams, {
             fixedHeader: true, // Enables fixed header
             scrollY: "400px", // Enables vertical scrolling
             scrollCollapse: true
-         }
+         }, [0, "DESC"]
       );
 
 
 
-      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
+
+      // applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
 
       // disabled_column();
 
@@ -1527,6 +1548,110 @@ init_tail();
             console.error("Error:", error);
          },
       });
+   }
+
+   var nestedTableIdArray = [];
+
+   function show_application($select, clientid) {
+      const $tr = $($select).closest('tr');
+      const mainTable = $('.table-clients').DataTable();
+      const row = mainTable.row($tr);
+      $("[name='requuestClient']").val(clientid);
+      // Clone server params safely
+      let CustomersServerParamsArray = {
+         ...CustomersServerParams
+      };
+
+
+      // Remove old key if exists
+      delete CustomersServerParamsArray.columnNames;
+
+      // Assign actual input values, not selectors
+      delete CustomersServerParamsArray.columnNames;
+      CustomersServerParamsArray.columnNames = "[name='column_show_default[]']";
+      CustomersServerParamsArray.clientid = "[name='requuestClient']";
+      CustomersServerParamsArray.type = "[name='requuestType']";
+      // Toggle child visibility
+      if (row.child.isShown()) {
+         row.child.hide();
+         $tr.removeClass('shown');
+         return;
+      }
+
+      // Get column config
+      const config = tbllead_performance_column_array?.[2] || {};
+      const show_column = (config.column_ids || "").split(",").filter(Boolean);
+      const selected_column = (config.selected_ids || "").split(",").filter(Boolean);
+      $("select#column_show_default").empty().selectpicker("refresh");
+      let secondaryTableColumns = [];
+
+      selected_column.forEach(colId => {
+         if (show_column.includes(colId)) {
+            const column = default_columns[colId];
+            if (column) {
+               secondaryTableColumns.push(`<th>${column.label_name || colId}</th>`);
+               const option = `
+            <option data-columns="${column.columns || ''}" 
+                    value="${column.id}" >
+                ${column.label_name || 'Unnamed Column'}
+            </option>`;
+
+               $("select#column_show_default").append(option);
+               // CustomersServerParamsArray.columnNames.colId = colId;
+            } else {
+               console.warn(`Column ID '${colId}' not found in default_columns.`);
+            }
+         }
+      });
+      console.log(selected_column);
+      $("select#column_show_default")
+         .val(selected_column) // Set selected values
+         .selectpicker("refresh");
+
+      // Fallback
+      if (secondaryTableColumns.length === 0) {
+         secondaryTableColumns.push(`<th>No columns configured</th>`);
+      }
+
+      const nestedTableId = `nested-applicant-table-${clientid}`;
+
+      const childHtml = `
+      <div style="padding:0;">
+         <table id="${nestedTableId}" class="table table-striped" style="width:100%; margin:0;">
+            <thead>
+               <tr>
+               <th>Select</th>
+               ${secondaryTableColumns.join("")}
+               </tr>
+            </thead>
+         </table>
+      </div>
+   `;
+
+      row.child(childHtml).show();
+      $tr.addClass('shown');
+
+
+
+      // Destroy existing nested table if exists
+      if ($.fn.DataTable.isDataTable(`#${nestedTableId}`)) {
+         $(`#${nestedTableId}`).DataTable().clear().destroy();
+      }
+
+      $(`#${nestedTableId} tbody`).empty();
+
+      // Initialize nested DataTable
+      nestedTableIdArray[nestedTableId] = initDataTable(
+         `#${nestedTableId}`,
+         admin_url + 'clients/study_aborad_table/1',
+         [0], // Orderable columns
+         [0], // Searchable columns
+         CustomersServerParamsArray, {
+            fixedHeader: true,
+            scrollY: "300px",
+            scrollCollapse: true
+         }
+      );
    }
 </script>
 </body>

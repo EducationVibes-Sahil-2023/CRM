@@ -35,8 +35,8 @@ $statuses = get_applicant_statuses();
 $statuses = array_column($statuses, null, 'id');
 
 $this->ci->db->query("SET sql_mode = ''");
-$sIndexColumn = 'userid';
-$sTable       = db_prefix() . 'clients';
+$sIndexColumn = 'client_id';
+$sTable       = db_prefix() . 'client_university_shortlisting';
 $where        = [];
 // Add blank where all filter can be stored
 $filter = [];
@@ -45,7 +45,7 @@ $filter = [];
 
 $aColumns = [];
 if (is_admin() || is_postSale()) {
-    $aColumns[] = $sTable . ".userid as fid";
+    $aColumns[] = $sTable . ".id as fid";
 }
 $aColumns_count = 0;
 $joinIn = ' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix() . 'staff.evp_partners) ';
@@ -60,7 +60,7 @@ if (!empty($tblsa_applicant_tracker)) {
             if ($value["column_name"] == "fees") {
                 if (!empty($fees_data)) {
                     foreach ($fees_data as $fees) {
-                        $aColumns[] = "MAX(CASE WHEN " . db_prefix() . "applicant_fees_details.fees_id = {$fees['id']} AND " . db_prefix() . "applicant_fees_details.client_id = {$sTable}.userid THEN CONCAT(" . db_prefix() . "currencies.symbol,'',ifnull(" . db_prefix() . "applicant_fees_details.amount,0)) END) as " . str_replace(" ", "_", strtolower($fees["name"]));
+                        $aColumns[] = "MAX(CASE WHEN " . db_prefix() . "applicant_fees_details.fees_id = {$fees['id']} AND " . db_prefix() . "applicant_fees_details.client_id = {$sTable}.client_id THEN CONCAT(" . db_prefix() . "currencies.symbol,'',ifnull(" . db_prefix() . "applicant_fees_details.amount,0)) END) as " . str_replace(" ", "_", strtolower($fees["name"]));
                         $aColumns_count++;
                     }
                 }
@@ -116,16 +116,17 @@ if (!empty($tblsa_applicant_tracker)) {
 
 if (is_admin() || is_postSale()) {
 } else {
-    $aColumns[] = $sTable . ".userid as fid";
+    $aColumns[] = $sTable . ".client_id as fid";
 }
 $aColumns[] = db_prefix() . "admission_preferences.primary_university as primary_university_select";
 
 
 
 $join = [
+    'JOIN' . db_prefix() . 'clients ON ' . db_prefix() . 'clients.userid = ' . $sTable . '.client_id',
     'LEFT JOIN ' . db_prefix() . 'basic_details ON ' . db_prefix() . 'basic_details.userid=' . db_prefix() . 'clients.userid ',
     'LEFT JOIN ' . db_prefix() . 'applicant_status ON ' . db_prefix() . 'applicant_status.id=' . db_prefix() . 'clients.active ',
-    ' LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
+    'LEFT JOIN ' . db_prefix() . 'leads ON ' . db_prefix() . 'leads.id = ' . db_prefix() . 'clients.leadid 
 AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')',
     'LEFT JOIN ' . db_prefix() . 'staff 
  ON ' . db_prefix() . 'leads.assigned = ' . db_prefix() . 'staff.staffid 
@@ -138,7 +139,6 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'leads_sources ON ' . db_prefix() . 'leads_sources.id = ' . db_prefix() . 'leads.source',
     'LEFT JOIN ' . db_prefix() . 'applicant_tracker ON ' . db_prefix() . 'applicant_tracker.id = (' . db_prefix() . 'clients.applicant_status+1)',
     'LEFT JOIN ' . db_prefix() . 'admission_preferences ON ' . db_prefix() . 'admission_preferences.userid = ' . db_prefix() . 'clients.userid',
-    'LEFT JOIN ' . db_prefix() . 'client_university_shortlisting ON (' . db_prefix() . 'client_university_shortlisting.client_id = ' . db_prefix() . 'clients.userid AND  ' . db_prefix() . 'client_university_shortlisting.status = 1) ',
     'LEFT JOIN ' . db_prefix() . 'applicant_fees_details ON ' . db_prefix() . 'applicant_fees_details.client_id = ' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'applicant_fees ON ' . db_prefix() . 'applicant_fees.id = ' . db_prefix() . 'applicant_fees_details.fees_id',
     'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'applicant_fees_details.currency_id',
@@ -148,9 +148,6 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
-
-    'LEFT JOIN ' . db_prefix() . 'sa_applicant_stages u_stage_category ON u_stage_category.id = ' . db_prefix() . 'client_university_shortlisting.applicant_stage',
-    'LEFT JOIN ' . db_prefix() . 'application_sub_category_study  u_stage_sub_category ON u_stage_sub_category.id = ' . db_prefix() . 'client_university_shortlisting.applicant_sub_status',
 
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
     'LEFT JOIN ' . db_prefix() . 'ev_partner ev_partner 
@@ -412,12 +409,6 @@ if ($this->ci->input->post('passport_status')) {
     }
 }
 
-if ($this->ci->input->post('clientid')) {
-    $clientid = $this->ci->input->post('clientid');
-
-    array_push($where, 'AND ' . db_prefix() . 'clients.userid = ' . $clientid);
-}
-
 if ($this->ci->input->post('doc_status')) {
     $doc_status = $this->ci->input->post('doc_status');
 
@@ -616,12 +607,8 @@ if (!empty($_POST["search"]["value"])) {
 // $aColumns = ["*"];
 // $additional_array =[];
 
-if ($this->ci->input->post('type') == 1) {
-    $groupBy = 'GROUP BY ' . db_prefix() . 'clients.userid';
-} else if ($this->ci->input->post('type') == 2) {
-    $groupBy = 'GROUP BY ' . db_prefix() . 'client_university_shortlisting.id order by ' . db_prefix() . 'client_university_shortlisting.client_id,' . db_prefix() . 'client_university_shortlisting.id DESC';
-}
-
+// $groupBy = 'GROUP BY ' . db_prefix() . 'clients.userid';
+$groupBy = 'GROUP BY ' . db_prefix() . 'client_university_shortlisting.id';
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], $groupBy, '', '', $search_column);
 
 $output  = $result['output'];
@@ -629,10 +616,7 @@ $rResult = $result['rResult'];
 
 foreach ($rResult as $aRow) {
     $row = [];
-    $showMore = '';
-    if ($this->ci->input->post('type') == 1) {
-        $showMore = '<div class="text-center"><button class="btn btn-default btn-xs" onclick="show_application(this,' . $aRow['userid'] . ')"><i class="fa fa-plus"></i></button></div>';
-    }
+
     if (!empty($aRow["name"])) {
         if ($aRow["client_type"] ==  2) {
             $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=tracker') . '" target="_blank">' . $aRow['name'] . '</a>' : '');
@@ -669,11 +653,10 @@ foreach ($rResult as $aRow) {
         $aRow["name"] = $company;
     }
 
-    $selection = '<div class="text-center">' . $showMore . '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"> <label></label></div></div>';
+    $selection = '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"><label></label></div>';
 
     if (is_admin() || is_postSale()) {
         $aRow["fid"] = $selection;
-    } else {
     }
 
     if (!empty($aRow["status"])) {
