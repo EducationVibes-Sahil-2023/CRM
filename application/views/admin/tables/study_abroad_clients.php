@@ -599,9 +599,10 @@ $additional_array = [
 if (is_admin() || is_postSale()) {
 } else {
     if ($_POST["order"][0]["column"] == 0) {
-        $_POST["order"][0]["column"] = count($aColumns);
+        $_POST["order"][0]["column"] = "";
     }
 }
+unset($_POST["order"]);
 
 $search_column = [];
 // Define search and group-by clauses
@@ -631,43 +632,53 @@ foreach ($rResult as $aRow) {
     $row = [];
     $showMore = '';
     if ($this->ci->input->post('type') == 1) {
-        $showMore = '<div class="text-center"><button class="btn btn-default btn-xs" onclick="show_application(this,' . $aRow['userid'] . ')"><i class="fa fa-plus"></i></button></div>';
+        $showMore = '<div class="text-center">
+                    <button class="btn btn-default btn-xs" onclick="show_application(this,' . $aRow['userid'] . ')">
+                        <i class="fa fa-plus"></i>
+                    </button>
+                 </div>';
     }
+
     if (!empty($aRow["name"])) {
-        if ($aRow["client_type"] ==  2) {
-            $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=tracker') . '" target="_blank">' . $aRow['name'] . '</a>' : '');
-
-            $url = admin_url('clients/ev_partner/' . $aRow['userid']);
+        // Set base URL and client name anchor
+        if ($aRow["client_type"] == 2) {
+            // EV Partner
+            $url = admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=tracker');
+            $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
         } else {
-            $company = ($aRow['userid'] ? '<a href="' . admin_url('clients/client/' . $aRow['userid'] . '?group=tracker') . '" target="_blank">' . $aRow['name'] . '</a>' : '');
-
-            $url = admin_url('clients/client/' . $aRow['userid']);
+            // Regular client
+            if ($this->ci->input->post('type') == 1) {
+                $url = admin_url('clients/client/' . $aRow['userid']);
+                $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
+            } else {
+                $url = admin_url('clients/client/' . $aRow['userid'] . '?group=tracker&shortlisting_id=' . $aRow['fid']);
+                $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
+            }
         }
 
-        // if ($isPerson && $aRow['contact_id']) {
-        //     $url .= '?contactid=' . $aRow['contact_id'];
-        // }
+        // Wrap everything with a primary anchor
+        $company = '<a href="' . $url . '">' . $companyLink . '</a>';
 
-        $company = '<a href="' . $url . '">' . $company . '</a>';
-
+        // Row options
         $company .= '<div class="row-options">';
         $company .= '<a href="' . $url . '">' . _l('view') . '</a>';
         $company .= ' | <a href="javascript:void(0);" onclick="download_documents(' . $aRow['userid'] . ', \'' . addslashes($aRow['name']) . '\')">' . _l('Download') . '</a>';
 
-        if ($aRow['registration_confirmed'] == 0 && is_admin()) {
-            // $company .= ' | <a href="' . admin_url('clients/confirm_registration/' . $aRow['userid']) . '" class="text-success bold">' . _l('confirm_registration') . '</a>';
-        }
-        if (!$isPerson) {
-            // $company .= ' | <a href="' . admin_url('clients/client/' . $aRow['userid'] . '?group=contacts') . '">' . _l('customer_contacts') . '</a>';
-        }
         if ($hasPermissionDelete) {
-            $company .= ' | <a href="' . admin_url('clients/delete/' . $aRow['userid']) . '" class="text-danger _delete">' . _l('delete') . '</a>';
+            if ($this->ci->input->post('type') == 1) {
+                $deleteUrl = admin_url('clients/delete/' . $aRow['userid']);
+            } else {
+                $deleteUrl = admin_url('clients/delete_university_shortlisting/' . $aRow['fid']);
+            }
+            $company .= ' | <a href="' . $deleteUrl . '" class="text-danger _delete">' . _l('delete') . '</a>';
         }
 
         $company .= '</div>';
 
+        // Assign formatted HTML back to the name column
         $aRow["name"] = $company;
     }
+
 
     $selection = '<div class="text-center">' . $showMore . '<div class="checkbox"><input type="checkbox" value="' . $aRow['userid'] . '"> <label></label></div></div>';
 

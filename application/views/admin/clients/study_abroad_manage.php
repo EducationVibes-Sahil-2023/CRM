@@ -1336,7 +1336,7 @@ init_tail();
       }
 
       show_loader("apply_filter");
-      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/1', [0], [0], CustomersServerParams, [0, "DESC"]);
       // disabled_column();
 
       hide_loader("apply_filter");
