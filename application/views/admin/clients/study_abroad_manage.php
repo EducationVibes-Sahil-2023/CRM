@@ -666,6 +666,39 @@ $table_view = array_column(get_view_columns_sa(), null, "id");
    </div>
 </div>
 
+
+
+<div class="modal fade bulk_actions" id="customers_bulk_action" tabindex="-1" role="dialog">
+   <div class="modal-dialog" role="document">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
+         </div>
+         <div class="modal-body h-auto">
+
+
+            <?php if (is_admin()) { ?>
+               <div class="mass_delete">
+                  <div class="checkbox checkbox-danger">
+                     <input type="checkbox" name="mass_delete" id="mass_delete">
+                     <label for="mass_delete">Mass Delete</label>
+                  </div>
+               </div>
+            <?php } ?>
+
+         </div>
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
+            <a href="#" class="btn btn-info" onclick="customers_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
+         </div>
+      </div>
+   </div>
+</div>
+
+
 <?php
 init_tail();
 ?>
@@ -1173,59 +1206,9 @@ init_tail();
 
 
       var mass_delete = $('#mass_delete').length ? $('#mass_delete').prop('checked') : 0;
-      var transit = $('#in_transit').prop('checked');
-      var from_location = $('#from_location').val();
-      var to_location = $('#to_location').val();
-      var office_location = $('#office_location').val();
-      // var document_status = $('#document_status').val();
-      var status_text = $("#document_status option:selected").text();
-      var locations_name = $("#office_location option:selected").text();
-      var apostille_status = $("#apostille_status_check").prop('checked');
-      var visa_status = $("#visa_status_check").prop('checked');
-      var is_valid = true;
-      var apostille_data = {};
-      var visa_data = {};
-
-      if (apostille_status === true) {
-         $('.apostille_status_update').find('input, select').each(function() {
-            var name = $(this).attr('name');
-            var value = $(this).val();
-            var required = $(this).attr('required') || $(this).attr('requried');
-            if (name) {
-               apostille_data[name] = value;
-            }
-            // console.log(value);
-            // console.log(required);
-            if (required && !String(value).trim()) {
-               $(this).focus();
-               alert_float("warning", "Please fill the required field: " + name);
-               is_valid = false;
-               return false; // Exit loop early
-            }
-         });
-      }
-
-      if (visa_status === true) {
-         $('.visa_status_update').find('input, select').each(function() {
-            var name = $(this).attr('name');
-            var value = $(this).val();
-            var required = $(this).attr('required') || $(this).attr('requried');
-            if (name) {
-               visa_data[name] = value;
-            }
-            // console.log(value);
-            // console.log(required);
-            if (required && !String(value).trim()) {
-               $(this).focus();
-               alert_float("warning", "Please fill the required field: " + name);
-               is_valid = false;
-               return false; // Exit loop early
-            }
-         });
-      }
 
       // console.log(apostille_status);
-
+      var is_valid = true;
       if (!is_valid) return false;
 
       if (!confirm(app.lang.confirm_action_prompt)) {
@@ -1248,24 +1231,12 @@ init_tail();
       var data = {
          ids,
          mass_delete,
-         in_transit: transit,
-         from_location,
-         to_location,
-         office_location,
-         // document_status,
-         status_text,
-         locations_name,
-         apostille_status,
-         visa_status,
       };
 
       if (mass_delete == 1 && !confirm("Are you sure you want to delete the selected applicants?")) {
          hide_loader();
          return false;
       }
-      // Merge Apostille data
-      Object.assign(data, apostille_data);
-      Object.assign(data, visa_data);
 
       $(event.target).prop('disabled', true);
 
