@@ -2082,6 +2082,7 @@ class Clients extends AdminController
             $primary_country = !empty($params['primary_country']) ? $params['primary_country'] : '';
             $dataArr = [
                 'program' => !empty($params['program']) ? $params['program'] : '',
+                'degree' => !empty($params['degree']) ? $params['degree'] : '',
                 'course' => $params['course'],
                 'entrance_exam_details' => (!empty($params['entranceExamDetails'])) ? implode(",", $params['entranceExamDetails']) : '',
                 'session_intake' => !empty($params['sessionIntake']) ? $params['sessionIntake'] : '',
@@ -4175,6 +4176,7 @@ class Clients extends AdminController
 
                 // SA Appplicant Exams 
                 $entrance_exam_details = !empty($_POST["entrance_exam_details"]) ? json_decode($_POST["entrance_exam_details"], true) : [];
+                $entrance_score_data = !empty($_POST["entrance_score_data"]) ? json_decode($_POST["entrance_score_data"], true) : [];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
                 unset($_POST["doc_type_name"]);
@@ -4185,6 +4187,7 @@ class Clients extends AdminController
                 unset($_POST["entrance_exams"]);
                 unset($_POST["entrance_id"]);
                 unset($_POST["entrance_marks"]);
+                unset($_POST["entrance_score_data"]);
 
 
 
@@ -4314,6 +4317,12 @@ class Clients extends AdminController
                         $this->db->insert_batch(db_prefix() . "client_entrance", $entrance_exams_insert);
                         $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Acadmic Entrance Exams Information Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                     }
+                }
+
+
+                if (!empty($entrance_score_data)) {
+                    $this->db->delete(db_prefix() . "academic_entrance_score", ["client_id" => $client_id]);
+                    $this->db->insert_batch(db_prefix() . 'academic_entrance_score', $entrance_score_data);
                 }
                 if ($rows_affected) {
                     if (!empty($media_upload_data["doc_type"][0])) {
@@ -5689,7 +5698,7 @@ class Clients extends AdminController
             ->row();
 
         if (!empty($skip_status) && $skip_status == 1) {
-             if ($tracker_id == 5) {
+            if ($tracker_id == 5) {
                 $this->db->select("count(1) check_count");
                 $this->db->where(array('client_id' => $client_id, "status" => 1));
                 $check_count = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();

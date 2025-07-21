@@ -2540,4 +2540,18 @@ class Clients_model extends App_Model
 
         return $get_entrance_exam = $this->db->get()->result_array();
     }
+
+    function get_entrance_exam_scrore($clientid)
+    {
+        $this->db->select("ty.*, ee.value");
+        $this->db->from(db_prefix() . 'academic_type ty');
+        $this->db->join(
+            db_prefix() . 'academic_entrance_score ee',
+            'ee.type = ty.id and ee.client_id = ' . $clientid,
+            'left'
+        );
+        $this->db->order_by('ty.id', 'asc');
+
+        return $this->db->get()->result_array();
+    }
 }

@@ -17,6 +17,8 @@ $board_dropdown = get_board_dropdown();
 $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
 $get_entrance_exam              = $this->clients_model->get_entrance_exam($client_id);
+$get_entrance_exam_scrore              = $this->clients_model->get_entrance_exam_scrore($client_id);
+
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
@@ -629,7 +631,7 @@ if ($lead_type_status == 1) {
                                         </div>
                                     </div>
                                     <div
-                                        class="col-lg-3 passport-div-ARN <?= !empty($show_passport_details && $show_passport_details == 1) ? '' : 'hide' ?>">
+                                        class="col-lg-3 passport-div-ARN <?= !empty($showPasswordArn && $showPasswordArn == 1) ? '' : 'hide' ?>">
                                         <div class="form-group">
                                             <label for="passport_number">Passport ARN <small
                                                     class="text-danger">*</small></label>
@@ -788,6 +790,7 @@ if ($lead_type_status == 1) {
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="degree">Degree</label>
+                                            
                                                 <select class="form-control selectpicker" onchange="degreeChange()"
                                                     name="degree" id="degree" required required-check>
                                                     <option value="">Select a Degree</option>
@@ -1725,6 +1728,7 @@ if ($lead_type_status == 1) {
                                     <div id="entrance-exam-div" class="<?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">
                                         <?php if (!empty($get_entrance_exam)) { ?>
                                             <?php foreach ($get_entrance_exam as $key => $entrance) {
+
                                                 $file_url = $entrance["file"] ?? '';
                                                 $required_attr = !empty($file_url) ? '' : 'required required-check';
                                             ?>
@@ -1733,7 +1737,7 @@ if ($lead_type_status == 1) {
                                                         <div class="form-group">
                                                             <input type="hidden" class="entrance_id" name="entrance_id[<?= $key ?>]" value="<?= htmlspecialchars($entrance["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                             <label for="entrance_exams_<?= $key ?>">Exam Type <small class="text-danger">*</small></label>
-                                                            <?= render_select("entrance_exams[$key]", $get_entrance_exams_list, ['id', 'name'], '', [$entrance["exam_id"]], ['required' => 'required', 'required-check' => 'required-check'], [], '', '', '', 'entrance_exams') ?>
+                                                            <?= render_select("entrance_exams[$key]", $get_entrance_exams_list, ['id', 'name'], '', [$entrance["exam_id"]], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') ?>
                                                         </div>
                                                     </div>
 
@@ -1771,7 +1775,37 @@ if ($lead_type_status == 1) {
                                                             <?php } ?>
                                                         </div>
                                                     </div>
+                                                    <?php
+                                                    if (!empty($get_entrance_exams_list[$entrance['exam_id']]['academic_type']) && $get_entrance_exams_list[$entrance['exam_id']]['academic_type'] > 0) {
+                                                    ?>
+                                                        <div class="row col-md-12 mb-5 entrance-score-div">
+
+                                                            <?php
+                                                            foreach ($get_entrance_exam_scrore as $entrance_exam_scrore) {
+                                                            ?>
+                                                                <div class="col-md-3 form-group">
+                                                                    <label><?= $entrance_exam_scrore["name"] ?> <span class="text-danger">*</span></label>
+                                                                    <input
+                                                                        class="form-control entrance-score-input"
+                                                                        data-name="<?= $entrance_exam_scrore["name"] ?>"
+                                                                        data-id="<?= $entrance_exam_scrore["id"] ?>"
+                                                                        type="text"
+                                                                        min="0"
+                                                                        step="any"
+                                                                        name="<?= bin2hex(random_bytes(16)) ?>"
+                                                                        value="<?= $entrance_exam_scrore["value"] ?>"
+                                                                        required
+                                                                        required-check>
+                                                                </div>
+                                                            <?php
+                                                            }
+                                                            ?>
+                                                        </div>
+                                                    <?php
+                                                    }
+                                                    ?>
                                                 </div>
+
                                             <?php } ?>
                                         <?php } else { ?>
                                             <div class="entrance-exams row mb-3">
@@ -1779,7 +1813,7 @@ if ($lead_type_status == 1) {
                                                     <div class="form-group">
                                                         <input type="hidden" class="entrance_id" name="entrance_id[0]" value="">
                                                         <label for="entrance_exams_0">Exam Type <small class="text-danger">*</small></label>
-                                                        <?= render_select('entrance_exams[0]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check'], [], '', '', '', 'entrance_exams') ?>
+                                                        <?= render_select('entrance_exams[0]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') ?>
                                                     </div>
                                                 </div>
 
@@ -2182,6 +2216,10 @@ if ($lead_type_status == 1) {
     var user_id = "<?= !empty($admissionpreferences->user_id) ? $admissionpreferences->user_id : '' ?>";
     var study_country_selected =
         <?= !empty(json_encode(explode(",", $admissionpreferences->study_country))) ? json_encode(explode(",", $admissionpreferences->study_country), true) : "" ?>;
+
+    var get_entrance_exams_list = <?= !empty($get_entrance_exams_list) ? json_encode(array_column($get_entrance_exams_list, null, 'id'), true) : [] ?>;
+
+    var get_entrance_exam_scrore = <?= !empty($get_entrance_exam_scrore) ? json_encode($get_entrance_exam_scrore, true) : [] ?>;
     // console.log(study_country_selected.length);
     if (study_country_selected.length > 0) {
         study_country_selected = study_country_selected.map(function(value) {
@@ -2673,7 +2711,7 @@ if ($lead_type_status == 1) {
     <div class="col-lg-3">
         <div class="form-group">
             <label for="entrance_exams">Exam Type <small class="text-danger">*</small></label>' .
-        render_select('entrance_exams[__index__]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check'], [], '', '', '', 'entrance_exams') .
+        render_select('entrance_exams[__index__]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') .
         '</div>
     </div>
 
@@ -2791,6 +2829,35 @@ if ($lead_type_status == 1) {
             $(event).prop("checked", true);
         } else {
             $(event).prop("checked", false);
+        }
+    }
+
+    function genrateEntranceBlock(getAcadmicType) {
+        let html = `<div class='row col-md-12 mb-5 entrance-score-div'>`;
+
+        get_entrance_exam_scrore.forEach(get_entr => {
+            let uniqueId = Math.floor(Date.now() / 1000) + Math.floor(Math.random() * 1000)
+            if (get_entr.exam_type == getAcadmicType) {
+                html += `<div class='col-md-3 form-group'>`;
+                html += `<label>${get_entr.name || ''} <span class='text-danger'>*</span></label>`;
+                html += `<input class="form-control entrance-score-input" data-name="${get_entr.name}" data-id="${get_entr.id}" value="" required-check required name="` + uniqueId + `" type="text" min="0" value="0" step="any">`;
+                html += `</div>`;
+            }
+        });
+
+        html += `</div>`; // close row
+
+        // Return HTML string instead of directly inserting into DOM
+        return html;
+    }
+
+    function changeEntranceExam(triggerElement) {
+        var entranceId = $(triggerElement).val()
+        let getAcadmicType = get_entrance_exams_list[entranceId]?.academic_type;
+        $(triggerElement).parents(".entrance-exams").find(".entrance-score-div").remove();
+        if (getAcadmicType && getAcadmicType.length > 0) {
+            const html = genrateEntranceBlock(getAcadmicType);
+            $(triggerElement).parents(".entrance-exams").append(html);
         }
     }
 </script>

@@ -327,6 +327,7 @@
         // Collect form data
         const params = {
             program: $('#program').val(),
+            degree: $('#degree').val(),
             course: "STUDY",
             sessionIntake: $('#session_intake').val(),
             acadmic_year: $('#acadmic_year').val(),
@@ -585,6 +586,8 @@
 
     function get_entranceExams(formData) {
         const entranceExamDetails = [];
+        const entrance_score_data = [];
+        const client_id = $('input[name="clientid"]').val();
 
         return new Promise((resolve) => {
             $("#entrance-exam-div .entrance-exams").each(function() {
@@ -598,6 +601,17 @@
                 const entranceExam = examSelect.find("option:selected").text()?.trim();
                 const marks = $(this).find("input.entrance_marks").val()?.trim();
 
+                // Handle entrance score inputs
+                $(this).find(".entrance-score-div .entrance-score-input").each(function() {
+                    const type = $(this).data("id");
+                    const value = $(this).val()?.trim();
+                    entrance_score_data.push({
+                        client_id: client_id,
+                        type: type,
+                        value: value
+                    });
+                });
+
                 entranceExamDetails.push({
                     id: id || null,
                     exam_id: exam_id || null,
@@ -607,6 +621,7 @@
                     fileUrl: fileUrl
                 });
 
+                // Handle file uploads
                 if (files.length > 0) {
                     Array.from(files).forEach((file, index) => {
                         formData.append(`files_entrance_${exam_id}`, file);
@@ -614,7 +629,10 @@
                 }
             });
 
+            // Append collected data after looping
+            formData.append("entrance_score_data", JSON.stringify(entrance_score_data));
             formData.append("entrance_exam_details", JSON.stringify(entranceExamDetails));
+
             resolve();
         });
     }
@@ -1238,6 +1256,4 @@
             });
         }
     }
-
-
 </script>
