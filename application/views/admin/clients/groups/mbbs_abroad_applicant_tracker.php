@@ -9,7 +9,7 @@ $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data
 $university_partner_names = get_university_partner_names();
 // $documents_type =  get_documents($lead_type_status, [], 1);
 $delete_document_status = has_permission('customers', '', 'delete_documents');
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
+$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->primary_country) ? explode(",", $admissionpreferences->primary_country) : [], 1);
 
 $documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
 $applicant_documents =  get_clients_documents($client_id);
@@ -1669,7 +1669,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                             <?php } ?>
                             <?php if (!empty($track['skip']) && $track['skip'] == 1 || !empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country) { ?>
-                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ? 1 : $track['skip'] ?>')" value="Skip" />
+                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>"onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ? 1 : $track['skip'] ?>')" value="Skip" />
                             <?php } ?>
                         <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
