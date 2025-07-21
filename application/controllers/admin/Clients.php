@@ -4748,6 +4748,21 @@ class Clients extends AdminController
             ->row();
 
         if (!empty($skip_status) && $skip_status == 1) {
+             if ($tracker_id == 5) {
+                $this->db->select("count(1) check_count");
+                $this->db->where(array('client_id' => $client_id, "status" => 1));
+                $check_count = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+                if (!empty($check_count->check_count) && $check_count->check_count > 1) {
+                    $data =  [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "Please select only one primary university in the Shortlisting section to proceed.",
+                    ];
+
+                    echo json_encode($data);
+                    return;
+                    die;
+                }
+            }
             if ($tracker_id == 6) {
                 $check_documents = $this->check_documents(8);
                 if (!empty($check_documents)) {
