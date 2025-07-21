@@ -290,14 +290,14 @@ if ($lead->type == 1) {
                            <hr class="mtop5 mbot10" />
                            <div class="row">
                               <div class="col-lg-3 col-md-6 col-12">
-                                 <?php echo render_input('father_name', 'Emergency Contact Name <span class="req text-danger">*</span>', '', '', ["required" => "required"]); ?>
+                                 <?php echo render_input('father_name', 'Emergency Contact Name <span class="req text-danger">*</span>', '', 'text', ["required" => "required"], [], '', 'name-validation-check'); ?>
                               </div>
                               <div class="col-lg-3 col-md-6 col-12">
-                                 <?php echo render_input('fathers_mobile', 'Emergency Contact Number <span class="req text-danger">*</span>', '', 'number', ["required" => "required"]); ?>
+                                 <?php echo render_input('fathers_mobile', 'Emergency Contact Number <span class="req text-danger">*</span>', '', 'number', ["required" => "required"], [], '', 'phone-validation-check'); ?>
                               </div>
 
                               <div class="col-lg-3 col-md-6 col-12">
-                                 <?php echo render_input('fathers_email', 'Emergency Contact Email <span class="req text-danger">*</span>', '', '', ["required" => "required"]); ?>
+                                 <?php echo render_input('fathers_email', 'Emergency Contact Email <span class="req text-danger">*</span>', '', 'email', ["required" => "required"], [], '', 'email-validation-check'); ?>
                               </div>
                               <div class="col-lg-3 col-md-6 col-12">
                                  <label>RelationShip <small class="text-danger">*</small></label>
@@ -397,43 +397,43 @@ if ($lead->type == 1) {
                            ?>
 
                            <?php if ($lead->type == 2) { ?>
-                                 <div class="col-md-12">
-                                    <div class="checkbox">
-                                       <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
-                                       <input class="form-check-input checkbox-group" type="checkbox" value="1" id="air_ticket_include_check" name="air_ticket_include_check">
-                                       <label class="form-check-label" for="air_ticket_include_check">
-                                          Air ticket inc. in Service Charge <span class="text-danger">*</span>
-                                       </label>
-                                    </div>
+                              <div class="col-md-12">
+                                 <div class="checkbox">
+                                    <input type="hidden" value="0" id="air_ticket_include" name="air_ticket_include">
+                                    <input class="form-check-input checkbox-group" type="checkbox" value="1" id="air_ticket_include_check" name="air_ticket_include_check">
+                                    <label class="form-check-label" for="air_ticket_include_check">
+                                       Air ticket inc. in Service Charge <span class="text-danger">*</span>
+                                    </label>
+                                 </div>
                               </div>
                            <?php } ?>
                         </div>
                      </div>
                   <?php } ?>
                   <div class="clearfix"></div>
-                   <?php if ($lead->type == 1) { ?>
-                  <hr class="mtop5 mbot10" />
-                  <div class="mtop15 mbot10 col-md-12">
-                     <div class="clearfix"></div>
-                     <label>Exam Details</label>
+                  <?php if ($lead->type == 1) { ?>
                      <hr class="mtop5 mbot10" />
-                     <div class="col-lg-4 col-md-6 col-12 ">
-                        <label>ELT Status <small class="text-danger">*</small></label>
-                        <select name="exam_status" required id="exam_status" class="form-control">
-                           <?php foreach ($yesNO_Array as $exam_s) {
-                           ?>
-                              <option value="<?= $exam_s['id'] ?>"><?= $exam_s["name"] ?></option>
-                           <?php
-                           }
-                           ?>
+                     <div class="mtop15 mbot10 col-md-12">
+                        <div class="clearfix"></div>
+                        <label>Exam Details</label>
+                        <hr class="mtop5 mbot10" />
+                        <div class="col-lg-4 col-md-6 col-12 ">
+                           <label>ELT Status <small class="text-danger">*</small></label>
+                           <select name="exam_status" required id="exam_status" class="form-control">
+                              <?php foreach ($yesNO_Array as $exam_s) {
+                              ?>
+                                 <option value="<?= $exam_s['id'] ?>"><?= $exam_s["name"] ?></option>
+                              <?php
+                              }
+                              ?>
 
-                        </select>
+                           </select>
+                        </div>
+                        <div class="col-md-12 mtop5 mbot10 exams-details-section">
+
+                        </div>
+
                      </div>
-                     <div class="col-md-12 mtop5 mbot10 exams-details-section">
-
-                     </div>
-
-                  </div>
                   <?php } ?>
 
                   <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->
@@ -515,6 +515,7 @@ if ($lead->type == 1) {
             });
             validate_lead_convert_to_client_form();
          }
+         loadValidations();
       })
 
       function updateSymbol(id) {

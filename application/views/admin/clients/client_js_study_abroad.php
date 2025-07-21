@@ -1239,31 +1239,5 @@
         }
     }
 
-    $(document).ready(function() {
-        // Name: only letters and spaces
-        $(".name-validation-check").on("keyup", function() {
-            const name = $(this).val().trim();
-            if (!/^[A-Za-z\s]*$/.test(name)) {
-                // Remove any non-letter characters
-                $(this).val(name.replace(/[^A-Za-z\s]/g, ""));
-            }
-        });
 
-        // Email: prevent invalid characters (basic restriction)
-        $(".email-validation-check").on("keyup", function() {
-            let email = $(this).val();
-            // Allow only characters typically used in emails
-            email = email.replace(/[^\w@.\-_+]/g, "");
-            $(this).val(email);
-        });
-
-        // Phone: allow only digits, max 10 digits
-        $(".phone-validation-check").on("keyup", function() {
-            let phone = $(this).val().replace(/\D/g, "");
-            if (phone.length > 10) {
-                phone = phone.slice(0, 10);
-            }
-            $(this).val(phone);
-        });
-    });
 </script>
