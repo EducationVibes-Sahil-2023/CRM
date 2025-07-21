@@ -2407,6 +2407,16 @@ class Clients extends AdminController
                             $this->db->where("userid", $client_id);
                             $this->db->update(db_prefix() . 'clients', $update_client_data);
                         }
+
+                        $update_client_data = [];
+                        $update_client_data = [
+                            "applicant_stage" => DOCUMENT,
+                            "applicant_sub_status" => DOCUMENT_APPROVAL_PENDING,
+                        ];
+                        if (!empty($update_client_data)) {
+                            $this->db->where("client_id", $client_id);
+                            $this->db->update(db_prefix() . 'client_university_shortlisting', $update_client_data);
+                        }
                         applicant_last_update($client_id);
                         $doc_name = $documents_type[$doc_id]["name"];
                         $this->db->insert(db_prefix() . 'application_document_activity_log', array("description" => $doc_name . " Document Deleted by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
@@ -3585,6 +3595,46 @@ class Clients extends AdminController
 
         echo $html;
     }
+
+
+    public function get_application_notes_study($client_id = "")
+    {
+        $application_note_list = $this->clients_model->application_note_list_study($client_id);
+
+        $html = '';
+        foreach ($application_note_list as $i => $note) {
+            $html .= "<div class='note-box'>";
+            $html .= '<a href="' . admin_url('profile/' . $note["created_by"]) . '" target="_blank">';
+            $html .= staff_profile_image($note['created_by'], array('staff-profile-image-small', 'pull-left mright10'));
+            $html .= '</a>';
+            $html .= '<div class="media-body">';
+            if ($note['created_by'] == get_staff_user_id() || is_admin()) {
+                // $html .= '<a href="#" class="pull-right text-danger" onclick="delete_lead_note(this, ' . $note['id'] . ', ' . $lead->id . '); return false;"><i class="fa fa fa-times"></i></a>';
+                $html .= '<a href="#" class="pull-right mright5"  data-id="' . $note['id'] . '" data-notes="' . check_for_links(app_happy_text($note['note'])) . '" onclick="edit_notes(' . $note['id'] . ',this); return false;"><i class="fa fa-pencil-square-o"></i></a>';
+            }
+            $html .= ' <span data-toggle="tooltip" data-title="' . _dt($note['datetime']) . '" data-original-title="" title="">
+            <i class="fa fa-phone-square text-success font-medium valign" aria-hidden="true"></i>
+         </span>';
+            $html .= '<small>' . _l('lead_note_date_added', _dt($note['datetime'])) . '</small>';
+            if ($note['editable_status'] == 1) {
+                $html .= '<small class="note-edit">Edited</small>';
+            }
+            $html .= '<a href="' . admin_url('profile/' . $note["created_by"]) . '" target="_blank">';
+            $html .= '<h5 class="media-heading bold">' . get_staff_full_name($note['created_by']) . '</h5>';
+            $html .= '<h6 class="media-heading bold text-warning">' . $note['application_stage_name'] . '</h6>';
+            $html .= '</a>';
+            $html .= '<div data-note-description="' . $note['id'] . '" class="text-muted">';
+            $html .= check_for_links(app_happy_text($note['note']));
+            $html .= '</div>';
+            $html .= '<div data-note-edit-textarea="' . $note['id'] . '" class="hide mtop15">';
+            $html .= '</div>';
+            $html .= '</div>';
+            $html .= "</div>";
+        }
+
+        echo $html;
+    }
+
 
     public function get_application_activity($client_id = "")
     {
@@ -5447,6 +5497,8 @@ class Clients extends AdminController
                 "tentative_date" => !empty($pre_deposite_data["tentative_date"]) ? $pre_deposite_data["tentative_date"] : '',
                 "fees_deposite_date" => !empty($pre_deposite_data["fees_deposite_date"]) ? $pre_deposite_data["fees_deposite_date"] : '',
                 "payment_amount" => isset($pre_deposite_data["payment_amount"]) ? $pre_deposite_data["payment_amount"] : '',
+                "payment_currency_id" => isset($pre_deposite_data["payment_currency_id"]) ? $pre_deposite_data["payment_currency_id"] : '',
+
             ];
 
             // Handle file upload if present
@@ -5637,6 +5689,21 @@ class Clients extends AdminController
             ->row();
 
         if (!empty($skip_status) && $skip_status == 1) {
+            if ($tracker_id == 5) {
+                $this->db->select("count(1) check_count");
+                $this->db->where(array('client_id' => $client_id, "status" => 1));
+                $check_count = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+                if (!empty($check_count->check_count) && $check_count->check_count > 1) {
+                    $data =  [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "Please select only one primary university in the Shortlisting section to proceed.",
+                    ];
+
+                    echo json_encode($data);
+                    return;
+                    die;
+                }
+            }
             if ($tracker_id == 6) {
                 $check_documents = $this->check_documents(8);
                 if (!empty($check_documents)) {

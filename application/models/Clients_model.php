@@ -1871,7 +1871,7 @@ class Clients_model extends App_Model
             ->from(db_prefix() . 'client_university_shortlisting us')
             ->join(db_prefix() . 'profile_creater_vendor cv', 'cv.id = us.vendor_id', 'left')
             ->join(db_prefix() . 'admission_preferences a', 'us.client_id = a.userid', 'left')
-                ->where('us.client_id', $client_id);
+            ->where('us.client_id', $client_id);
 
         //     ->where([
         //         'us.client_id' => $client_id,
@@ -1880,15 +1880,15 @@ class Clients_model extends App_Model
         // if (!empty($statusCheck)) {
         //     $this->db->or_where('us.status', 0);
         // }
-        
-            if (!empty($statusCheck)) {
+
+        if (!empty($statusCheck)) {
             $this->db->group_start()
-            ->where('us.status', 1)
-            ->or_where('us.status', 0)
-            ->group_end();
-            } else {
+                ->where('us.status', 1)
+                ->or_where('us.status', 0)
+                ->group_end();
+        } else {
             $this->db->where('us.status', 1);
-            }
+        }
 
 
         if (!empty($is_primary)) {
@@ -1960,7 +1960,20 @@ class Clients_model extends App_Model
     {
         $this->db->select("n.*, t.name AS application_stage_name, CONCAT(s.firstname, ' ', s.lastname) AS staffname,if(n.created_date > n.updated_date,n.created_date,n.updated_date) datetime");
         $this->db->from(db_prefix() . 'application_notes n');
-        $this->db->join(db_prefix() . 'applicant_tracker t', 'n.application_stage = t.id', 'inner');
+        $this->db->join(db_prefix() . 'applicant_tracker_mbbs t', 'n.application_stage = t.id', 'inner');
+        $this->db->join(db_prefix() . 'staff s', 'n.created_by = s.staffid', 'inner');
+        $this->db->where('n.client_id', $client_id);
+        $this->db->where('n.status', '1');
+        $this->db->order_by('n.id', 'desc');
+
+        return $application_note_list = $this->db->get()->result_array();
+    }
+
+    function application_note_list_study($client_id)
+    {
+        $this->db->select("n.*, t.name AS application_stage_name, CONCAT(s.firstname, ' ', s.lastname) AS staffname,if(n.created_date > n.updated_date,n.created_date,n.updated_date) datetime");
+        $this->db->from(db_prefix() . 'application_notes n');
+        $this->db->join(db_prefix() . 'applicant_tracker_study t', 'n.application_stage = t.id', 'inner');
         $this->db->join(db_prefix() . 'staff s', 'n.created_by = s.staffid', 'inner');
         $this->db->where('n.client_id', $client_id);
         $this->db->where('n.status', '1');
@@ -2105,7 +2118,7 @@ class Clients_model extends App_Model
         $this->db->where(db_prefix() . "clients_exam.client_id", $id);
         $this->db->group_by(db_prefix() . "clients_exam.id");
 
-       return  $this->db->get()->result_array();
+        return  $this->db->get()->result_array();
     }
 
     public function get_university_data($university = [])

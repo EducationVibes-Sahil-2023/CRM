@@ -8,7 +8,8 @@ $applicant_pendency = applicant_pendency();
 $pendency_status = applicant_pendency_status();
 $pendencyStaus = pendency_status();
 $offerLetterStatus = offerletterStatus();
-
+$get_currencies = get_currencies();
+$get_currencies = array_column($get_currencies, null, 'id');
 
 $applicant_status = !empty($client->tracker_id) ? $client->tracker_id : 0;
 $activeShortlistingId = "";
@@ -639,6 +640,10 @@ if (in_array(get_staff_user_id(), $staff_id)) {
     .row.pendency-div {
         margin-top: 20px;
     }
+
+    .ms-5 {
+        margin-left: 10px;
+    }
 </style>
 <!-- MultiStep Form -->
 <?php
@@ -658,6 +663,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 ?>
 <div class="row">
     <div id="msform" class="col-md-12 ">
+        <h1 class="text-center mb-5"><?= !empty($selected_university_shortlisting['university_name']) ? $selected_university_shortlisting['university_name'] : '' ?></h1>
+        <br>
+        <br>
         <!-- <form id="msform" onsubmit="return false;"> -->
         <ul id="progressbar" class="d-flex justify-content-center">
             <?php
@@ -670,6 +678,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
             ?>
         </ul>
+
+
+
         <?php
 
 
@@ -744,7 +755,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             </h2>
                             <?php if ($track["show_div_name"] == "document_div") { ?>
 
-                                <div class="text-right">
+                                <div class="text-right hide">
 
                                     <div class="registration-slip-invoice">
                                         <?php if (!empty($client_infomation->registration_slip_invoice)) { ?>
@@ -826,7 +837,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 <?php } ?>
 
                                                                 <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
-                                                                    <div class="action_button_<?= $doc_id ?>">
+                                                                    <div class="action_button_<?= $doc_id ?> m">
                                                                         <button class="btn-xs btn btn-success" onclick="document_approved(this, <?= $doc_id ?>, 1)"><i class="fa fa-check"></i></button>
                                                                         <button class="btn-xs btn btn-danger" onclick="document_approved(this, <?= $doc_id ?>, 2)"><i class="fa fa-times"></i></button>
                                                                     </div>
@@ -835,7 +846,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                     $status_text = ($approval_status == 1) ? 'Approved' : 'Rejected';
                                                                     $status_text_color = ($approval_status == 1) ? 'text-success' : 'text-danger';
                                                                 ?>
-                                                                    <span class="<?= $status_text_color ?>"><b><?= $status_text ?></b></span>
+                                                                    <span class="<?= $status_text_color ?> ms-5"><b><?= $status_text ?></b></span>
                                                                 <?php endif; ?>
                                                             <?php endif; ?>
 
@@ -881,7 +892,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                         <?php if (!empty($university_shortlisting) && is_array($university_shortlisting)): ?>
                                             <?php foreach ($university_shortlisting as $shortlisting): ?>
                                                 <tr>
-                                                    <td><input type="radio" name="universitySelection" onclick="universitySelection(<?= htmlspecialchars($shortlisting['id'] ?? '') ?>)"> &nbsp; <?= htmlspecialchars($shortlisting['country_name'] ?? '-') ?></td>
+                                                    <td><input type="radio" <?= !empty($activeShortlistingId) && $activeShortlistingId == $shortlisting['id'] ? "checked" : '' ?> name="universitySelection" onclick="universitySelection(<?= htmlspecialchars($shortlisting['id'] ?? '') ?>)"> &nbsp; <?= htmlspecialchars($shortlisting['country_name'] ?? '-') ?></td>
                                                     <td><?= htmlspecialchars($shortlisting['university_name'] ?? '-') ?></td>
                                                     <td><?= htmlspecialchars($shortlisting['course_name'] ?? '-') ?></td>
                                                     <td><?php
@@ -1170,8 +1181,41 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                             <?= render_input('tentative_date', "Tentative Date <small class='text-danger'>*</small>", isset($selected_university_shortlisting['tentative_date']) ? $selected_university_shortlisting['tentative_date'] : '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
                                         </div>
 
+
+
                                         <div class="col-md-3">
-                                            <?= render_input('payment_amount', "Payment Amount <small class='text-danger'>*</small>", !empty($selected_university_shortlisting['payment_amount']) ? $selected_university_shortlisting['payment_amount'] : '', 'number', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                            <!-- render_input('payment_amount', "Payment Amount <small class='text-danger'>*</small>", !empty($selected_university_shortlisting['payment_amount']) ? $selected_university_shortlisting['payment_amount'] : '', 'number', ['required-check' => 'required-check', 'required' => 'required']);  -->
+                                            <label>Payment Amount <small class='text-danger'>*</small></label>
+                                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                <input type="number" name="payment_amount" value="<?= !empty($selected_university_shortlisting['payment_amount']) ? $selected_university_shortlisting['payment_amount'] : '' ?>" required required-check class="form-control" placeholder="0.00" id="" value="" size="8">
+                                                <div class="input-group-addon currency-addon">
+
+                                                    <select name="payment_currency_id" id="<?= $field_name ?>" class="currency-selector">
+                                                        <?php foreach ($get_currencies as $c) {
+                                                        ?>
+                                                            <option
+
+                                                                value="<?= $c['id'] ?>"
+                                                                data-placeholder="0.00"
+                                                                <?=
+
+                                                                (!empty($selected_university_shortlisting['payment_currency_id']) && $selected_university_shortlisting['payment_currency_id'] == $c['id'])
+                                                                    ? 'selected'
+                                                                    : ''
+                                                                ?>>
+                                                                <?= $c['name'] ?>
+                                                            </option>
+
+
+                                                        <?php
+                                                        }
+                                                        ?>
+
+                                                    </select>
+
+                                                </div>
+                                            </div>
+
                                         </div>
 
                                         <div class="col-md-3">
@@ -1332,7 +1376,6 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     // console.log(lead_type_status);
     let documents_type_dropdown = <?= json_encode($documents_type_dropdown) ?>; // Get your data from PHP
     var applicant_status = "<?= $applicant_status ?>";
-    // console.log(applicant_status);
     var current_fs, next_fs, previous_fs; //fieldsets
     var left, opacity, scale; //fieldset properties which we will animate
     var animating; //flag to prevent quick multi-click glitches
@@ -1367,11 +1410,15 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var fee_status = "<?= !empty($short_list["fee_status"]) ? $short_list["fee_status"] : 0 ?> ";
 
 
-    if (applicant_status >= 2 && <?= !empty($activeShortlistingId) ? $activeShortlistingId : 0 ?> != 0) {
+    if (applicant_status >= 2 && activeShortlistingId == 0) {
         applicant_status = 1;
+        $('#university_div').show();
+        goToStep(applicant_status);
     }
 
-    notes_url = "<?= base_url() ?>admin/clients/get_application_notes/<?= $client_id ?>";
+
+
+    notes_url = "<?= base_url() ?>admin/clients/get_application_notes_study/<?= $client_id ?>";
     activity_url = "<?= base_url() ?>admin/clients/get_application_activity/<?= $client_id ?>";
 
     reloadNote_list(notes_url);
@@ -1799,6 +1846,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 params.set('shortlisting_id', selectedUniversityShortListing);
                 window.history.pushState({}, '', `${current_active_url.pathname}?${params.toString()}`);
 
+
             }
 
             let secondary_university_remark = $('.secondary_university_remark').first().val();
@@ -1832,6 +1880,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                 if (id == 2) {
                     location.reload();
+                    return false;
                 }
 
                 if (same_step == 1) {
@@ -2033,6 +2082,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 let tentative_date = $("#pre-deposite-form").find("input[name='tentative_date']").val() || '';
                 let fees_deposite_date = $("#pre-deposite-form").find("input[name='fees_deposite_date']").val() || '';
                 let payment_amount = $("#pre-deposite-form").find("input[name='payment_amount']").val() || '';
+                let payment_currency_id = $("#pre-deposite-form").find("select[name='payment_currency_id']").val() || '';
                 let fees_deposite_slip = $("#pre-deposite-form").find("input[name='fees_deposite_slip']")[0];
                 let fees_deposite_slip_url = $("#pre-deposite-form").find("input[name='fees_deposite_slip']").data("fileUrl");
 
@@ -2049,6 +2099,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     tentative_date: tentative_date,
                     fees_deposite_date: fees_deposite_date,
                     payment_amount: payment_amount,
+                    payment_currency_id: payment_currency_id,
                     fees_deposite_slip_url: fees_deposite_slip_url,
                 });
 

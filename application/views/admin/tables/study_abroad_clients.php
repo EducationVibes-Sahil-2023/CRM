@@ -593,6 +593,7 @@ $additional_array = [
     db_prefix() . 'clients.userid as userid',
     db_prefix() . 'clients.active as status_id',
     db_prefix() . 'applicant_status.color as color',
+    db_prefix() . 'client_university_shortlisting.id as shortlisting_id',
 ];
 
 
@@ -633,8 +634,8 @@ foreach ($rResult as $aRow) {
     $showMore = '';
     if ($this->ci->input->post('type') == 1) {
         $showMore = '<div class="text-center">
-                    <button class="btn btn-default btn-xs" onclick="show_application(this,' . $aRow['userid'] . ')">
-                        <i class="fa fa-plus"></i>
+                    <button class="btn btn-primary btn-xs" onclick="show_application(this,' . $aRow['userid'] . ')">
+                        <i class="fa fa-eye"></i>
                     </button>
                  </div>';
     }
@@ -651,7 +652,7 @@ foreach ($rResult as $aRow) {
                 $url = admin_url('clients/client/' . $aRow['userid']);
                 $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
             } else {
-                $url = admin_url('clients/client/' . $aRow['userid'] . '?group=tracker&shortlisting_id=' . $aRow['fid']);
+                $url = admin_url('clients/client/' . $aRow['userid'] . '?group=tracker&shortlisting_id=' . $aRow['shortlisting_id']);
                 $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
             }
         }

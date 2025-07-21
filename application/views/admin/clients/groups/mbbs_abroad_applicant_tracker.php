@@ -1668,8 +1668,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
                                 <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                             <?php } ?>
-                            <?php if (!empty($track['skip']) && $track['skip'] == 1) { ?>
-                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= $track['skip'] ?>')" value="Skip" />
+                            <?php if (!empty($track['skip']) && $track['skip'] == 1 || !empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country) { ?>
+                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ? 1 : $track['skip'] ?>')" value="Skip" />
                             <?php } ?>
                         <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
