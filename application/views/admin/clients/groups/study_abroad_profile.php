@@ -941,7 +941,8 @@ if ($lead_type_status == 1) {
                                                     <div class="form-group">
                                                         <input type="hidden" class="shortlisting_id"
                                                             value="<?= $shortlisting["id"] ?>">
-                                                        <label for="study_country">Country <small
+                                                        <label for="study_country"> <input type="checkbox" class="is_primary"
+                                                                value="" onchange="isPrimaryUniversity(this)"> Country <small
                                                                 class="text-danger">*</small></label>
                                                         <select
                                                             class="form-control selectpicker required required-check study_country"
