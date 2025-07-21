@@ -344,7 +344,7 @@ function app_init_customer_profile_tabs()
         'leadType' => '2'
     ]);
 
-    $CI->app_tabs->add_customer_profile_tab('tracker', [
+    $CI->app_tabs->add_customer_profile_tab('study_tracker', [
         'name'     => _l('customer_tracker'),
         'icon'     => 'fa fa-map-marker',
         'view'     => 'admin/clients/groups/study_abroad_tracker',

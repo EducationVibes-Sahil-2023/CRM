@@ -366,7 +366,7 @@ class Clients extends AdminController
                         ],
                     ]);
                 }
-            } elseif ($group == 'tracker') {
+            } elseif ($group == 'tracker' || $group == 'study_tracker') {
                 $this->load->model('exam_model');
                 $data['upload_documents'] = $this->clients_model->get_update_documents($id);
                 $data['upload_documents_button'] = $this->clients_model->upload_documents_button();
@@ -699,7 +699,7 @@ class Clients extends AdminController
                         ],
                     ]);
                 }
-            } elseif ($group == 'tracker') {
+            } elseif ($group == 'tracker'  || $group == 'study_tracker') {
                 $data["tab"]["view"] =  'admin/clients/groups/mbbs_abroad_applicant_tracker';
                 $this->load->model('exam_model');
                 $data['upload_documents'] = $this->clients_model->get_update_documents($id);

@@ -20,10 +20,6 @@ if (!empty($_GET['shortlisting_id'])) {
 }
 
 $study_abroad_vendors = study_abroad_vendors();
-
-
-
-
 $profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
 $university_partner_names = get_university_partner_names();
 // $documents_type =  get_documents($lead_type_status, [], 1);
