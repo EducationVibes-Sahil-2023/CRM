@@ -210,6 +210,16 @@ function app_init_settings_tabs()
         'position' => 55,
     ]);
 
+    $CI->app_tabs->add_settings_tab('sa_applicant_tracker', [
+        'name'     => 'Sa Applicant Tracker',
+        'view'     => 'admin/settings/includes/sa_applicant_tracker',
+        'position' => 55,
+    ]);
+    $CI->app_tabs->add_settings_tab('sa_table_view', [
+        'name'     => 'Sa Table View',
+        'view'     => 'admin/settings/includes/sa_table_view',
+        'position' => 55,
+    ]);
     $CI->app_tabs->add_settings_tab('calendar', [
         'name'     => _l('settings_calendar'),
         'view'     => 'admin/settings/includes/calendar',
@@ -301,4 +311,10 @@ function tbl_columns_ma_applicant_tracker()
 {
     $CI = &get_instance();
     return $CI->db->select("id,columnid as name,label_name,show_column,sql_condition,sequence,tbl,column_name as column")->where("status", 1)->order_by("tbl_sequence", "asc")->get(db_prefix() . "ma_applicant_tracker")->result_array();
+}
+
+function tbl_columns_sa_applicant_tracker()
+{
+    $CI = &get_instance();
+    return $CI->db->select("id,columnid as name,label_name,show_column,sql_condition,sequence,tbl,column_name as column")->where("status", 1)->order_by("tbl_sequence", "asc")->get(db_prefix() . "sa_applicant_tracker")->result_array();
 }

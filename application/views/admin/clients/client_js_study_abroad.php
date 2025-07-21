@@ -396,7 +396,8 @@
                     university_name: universityName,
                     course_id: courseId,
                     course_name: courseName,
-                    session_intake: sessionIntake
+                    session_intake: sessionIntake,
+                    is_primary: $combo.find(".is_primary").is(":checked") ? 1 : 0
                 });
             });
 
@@ -417,11 +418,16 @@
                 success: function(res) {
                     hide_loader();
                     // set_primary_diabled();
-                    if (res.resp_id !== undefined) {
-                        $('#admissionpreferencesid').val(res.resp_id);
+                    if (res.resp_code != "ERR") {
+                        if (res.resp_id !== undefined) {
+                            $('#admissionpreferencesid').val(res.resp_id);
+                        }
+                        window_reload();
+                        alert_float('success', res.resp_desc);
+                    } else {
+                        alert_float('danger', res.resp_desc);
+
                     }
-                    window_reload();
-                    alert_float('success', res.resp_desc);
                 },
                 error: function(err) {
                     // set_primary_diabled();
@@ -746,18 +752,51 @@
         });
 
         setTimeout(() => {
+            // ✅ Call optional functions if they exist
             if (typeof set_primary_diabled === "function") {
-                // set_primary_diabled();
-            } else {
-                // console.warn("set_primary_diabled function does not exist.");
+                set_primary_diabled();
             }
 
             if (typeof set_university_diabled === "function") {
                 set_university_diabled();
-            } else {
-                // console.warn("set_university_diabled function does not exist.");
             }
-        }, 100);
+
+            // ✅ When University dropdown is opened
+            $(document).on('shown.bs.select', 'select.study_universities', async function() {
+                const $container = $(this).closest(".university-combinations");
+                const $countrySelect = $container.find("select.study_country");
+                const $universitySelect = $container.find("select.study_universities");
+                const $courseSelect = $container.find("select.study_courses");
+
+                const selectedCountryId = $countrySelect.val();
+                const selectedUniversity = $universitySelect.val();
+                const selectedCourse = $courseSelect.val();
+
+                // 🔁 Load universities based on selected country
+                await handleCountryChange($countrySelect.get(0), $universitySelect);
+
+                // 🔁 Restore selected university
+                if (selectedUniversity) {
+                    $universitySelect.val(selectedUniversity).selectpicker('refresh').trigger("change");
+                }
+            });
+
+            // ✅ When Course dropdown value is changed
+            $(document).on('shown.bs.select', 'select.study_courses', async function() {
+                const $container = $(this).closest(".university-combinations");
+                const $courseSelect = $(this);
+                const selectedCourse = $courseSelect.val();
+                const selectedText = $courseSelect.find("option:selected").text().trim();
+                const searchTerm = selectedText.split(" ")[0] || '';
+
+                console.log("Loading courses for:", searchTerm);
+                await loadCourses(searchTerm, $courseSelect, selectedCourse);
+            });
+
+        }, 200);
+
+
+
 
 
     });
@@ -1158,7 +1197,7 @@
 
 
 
-    function delete_documents(type, tracker_id, id) {
+    function delete_documents_study(type, tracker_id, id) {
         // Basic field validation before confirmation
         if (!client_id || !tracker_id || !type || !id) {
             alert_float("danger", "Missing required information. Please refresh the page and try again.");
@@ -1176,7 +1215,7 @@
             formData.append("id", id);
 
             $.ajax({
-                url: "<?php echo base_url() . 'admin/clients/delete_documents' ?>",
+                url: "<?php echo base_url() . 'admin/clients/delete_documents_study' ?>",
                 type: "POST",
                 data: formData,
                 contentType: false,
@@ -1199,4 +1238,6 @@
             });
         }
     }
+
+
 </script>

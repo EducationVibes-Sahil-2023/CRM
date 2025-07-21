@@ -1,15 +1,93 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php init_head(); ?>
+<?php init_head();
+$tbllead_performance_column = $this->leads_model->tblsa_applicant_tracker();
+// Filter out columns where the value is 1
+$filtered_columns = array_filter($tbllead_performance_column, function ($row) {
+   return isset($row['selected']) && $row['selected'] == 1;
+});
+
+// Extract the 'id' column and limit to 5 results
+$selected_performance_column = [];
+$fees_data = get_clients_fees(2);
+// $orignal_document_list = get_orignal_document_list();
+// $orignal_document_list_rest = get_orignal_document_list(1);
+// $orignal_document_list_georgia = get_orignal_document_list(0, 1);
+// $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
+// $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
+// $apostille_documents = get_orignal_document_list(0, 0, 1);
+$office_location  = $this->staff_model->office_location();
+// $orignal_document_status  = orignal_document_status();
+$university_list = get_university_list("study abroad");
+$country_list = get_country_list(9);
+$statuses = get_applicant_statuses();
+$passport_stages = get_passport_stages();
+$table_view = array_column(get_view_columns_sa(), null, "id");
+// $ev_partner = get_ev_partner();
+
+// $apostille_vendors = get_vendor_list(1);
+
+// $visa_vendors = get_vendor_list(2);
+// $fly_vendors = get_vendor_list(3);
+// $courier_type = get_courier_list();
+// $payment_mode = get_payment_mode();
+// $fly_batch = fly_batch();
+// $fly_departure = fly_departure();
+
+// $neet_status = get_neet_status();
+// $neet_status_new = [];
+// $neet_status_new[] = ["id" => "Awaited", "name" => "Awaited"];
+// $neet_status_new[] = ["id" => "Declared", "name" => "Declared"];
+// $neet_status_new[] = ["id" => "Fail", "name" => "Fail"];
+// $neet_status_new[] = ["id" => "Not Appeared", "name" => "Not Appeared"];
+
+// $neet_status = array_merge($neet_status, $neet_status_new);
+// $yes_no_status = [
+//    ["id" => "", "name" => ""],
+//    ["id" => "Yes", "name" => "Yes"],
+//    ["id" => "No", "name" => "No"]
+// ];
+
+// $client_type = [
+//    ["id" => "1", "name" => "EV"],
+//    ["id" => "2", "name" => "EVP"],
+
+// ];
+// array_unshift($ev_partner, array());
+
+
+?>
 <div id="wrapper">
    <style>
       .margin-top {
          margin-top: 20px;
       }
+
+      .table>tbody>tr>td,
+      .table>tfoot>tr>td {
+         text-wrap: auto !important;
+      }
+
+      table.dataTable thead .sorting:after {
+         display: none;
+      }
+
+      div#customers_bulk_action .form-group {
+         margin-bottom: 20px !important;
+      }
+
+      td.details-control {
+         background: url('https://www.datatables.net/examples/resources/details_open.png') no-repeat center center;
+         cursor: pointer;
+      }
+
+      tr.shown td.details-control {
+         background: url('https://www.datatables.net/examples/resources/details_close.png') no-repeat center center;
+      }
    </style>
    <div class="content">
       <div class="row">
 
-          <?php if (!is_admin() && (has_permission('customers', '', 'customers_view') && has_permission('customers', '', 'customers_view_own'))) {
+         <?php if (!is_admin() && (has_permission('customers', '', 'customers_view') && has_permission('customers', '', 'customers_view_own'))) {
          ?>
             <div class="col-md-12">
                <div class="panel_s">
@@ -57,14 +135,14 @@
                <div class="panel-body">
                   <div class="_buttons">
                      <?php if (has_permission('customers', '', 'create')) { ?>
-                        <a href="<?php echo admin_url('clients/client'); ?>" class="btn btn-info mright5 test pull-left display-block">
-                           <?php echo _l('new_client'); ?></a>
-                        <a href="<?php echo admin_url('clients/import'); ?>" class="btn btn-info pull-left display-block mright5 hidden-xs">
+                        <!-- <a href="<?php echo admin_url('clients/ev_partner'); ?>" class="btn btn-info mright5 test pull-left display-block">
+                           <?php echo "New EVP Applicant"; ?></a> -->
+                        <a href="<?php echo admin_url('clients/import'); ?>" class="btn btn-info pull-left mright5 hidden-xs hide">
                            <?php echo _l('import_customers'); ?></a>
                      <?php } ?>
-                     <a href="<?php echo admin_url('clients/all_contacts'); ?>" class="btn btn-info pull-left display-block mright5">
-                        <?php echo _l('customer_contacts'); ?></a>
-                     <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('customers_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a>
+                     <!-- <a href="<?php echo admin_url('clients/all_contacts'); ?>" class="btn btn-info pull-left display-block mright5">
+                        <?php echo _l('customer_contacts'); ?></a> -->
+                     <!-- <a href="#" class="btn btn-default btn-with-tooltip" data-toggle="tooltip" data-title="<?php echo _l('customers_summary'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview'); return false;"><i class="fa fa-bar-chart"></i></a> -->
                      <div class="visible-xs">
                         <div class="clearfix"></div>
                      </div>
@@ -257,36 +335,9 @@
                      </div>
                   <?php } ?>
                   <hr class="hr-panel-heading" />
-                  <a href="#" data-toggle="modal" data-target="#customers_bulk_action" class="bulk-actions-btn table-btn hide" data-table=".table-clients"><?php echo _l('bulk_actions'); ?></a>
-                  <div class="modal fade bulk_actions" id="customers_bulk_action" tabindex="-1" role="dialog">
-                     <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                           <div class="modal-header">
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                              <h4 class="modal-title"><?php echo _l('bulk_actions'); ?></h4>
-                           </div>
-                           <div class="modal-body">
-                              <?php if (has_permission('customers', '', 'delete')) { ?>
-                                 <div class="checkbox checkbox-danger">
-                                    <input type="checkbox" name="mass_delete" id="mass_delete">
-                                    <label for="mass_delete"><?php echo _l('mass_delete'); ?></label>
-                                 </div>
-                                 <hr class="mass_delete_separator" />
-                              <?php } ?>
-                              <div id="bulk_change">
-                                 <?php echo render_select('move_to_groups_customers_bulk[]', $groups, array('id', 'name'), 'customer_groups', '', array('multiple' => true), array(), '', '', false); ?>
-                                 <p class="text-danger"><?php echo _l('bulk_action_customers_groups_warning'); ?></p>
-                              </div>
-                           </div>
-                           <div class="modal-footer">
-                              <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
-                              <a href="#" class="btn btn-info" onclick="customers_bulk_action(this); return false;"><?php echo _l('confirm'); ?></a>
-                           </div>
-                        </div>
-                        <!-- /.modal-content -->
-                     </div>
-                     <!-- /.modal-dialog -->
-                  </div>
+                  <?php if (is_admin() || is_postSale()) { ?>
+                     <a href="#" data-toggle="modal" data-target="#customers_bulk_action" class="bulk-actions-btn table-btn hide" data-table=".table-clients"><?php echo _l('bulk_actions'); ?></a>
+                  <?php } ?>
                   <!-- /.modal -->
                   <!-- <div class="checkbox">
                      <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
@@ -294,34 +345,82 @@
                   </div> -->
                   <div class="tab-content">
                      <div class="" id="leads-table ">
-                        <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p>
-                        <div class="checkbox">
+                        <!-- <p class="bold mFilterBtn"><?php echo _l('filter_by'); ?></p> -->
+                        <!-- <div class="checkbox">
                            <input type="checkbox" checked id="exclude_inactive" name="exclude_inactive">
                            <label for="exclude_inactive"><?php echo _l('exclude_inactive'); ?> <?php echo _l('clients'); ?></label>
-                        </div>
+                        </div> -->
                         <div id="filterArea" class=" hidden-xs">
                            <div class="row">
                               <div class="col-md-12">
                                  <p class="bold"><?php echo _l('filter_by'); ?></p>
                               </div>
-                              <?php if (has_permission('leads', '', 'view')) { ?>
+                              <div class="col-md-2  margin-top leads-filter-column filter_reset ">
+                                 <?php echo render_select('table_view[]', $table_view, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Table View'), array(), 'no-mbot', '', false, 'table_view'); ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter_reset ">
+                                 <?php echo render_select('column_show[]', [], array('id', 'label_name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show'); ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column hide  ">
+                                 <?php echo render_select('column_show_default[]', [], array('id', 'label_name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Show Column', 'multiple' => true, 'data-actions-box' => true, 'selected'), array(), 'no-mbot', '', false, 'column_show_default'); ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column hide  ">
+                                 <?= render_input('requuestType', '', "2") ?>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column hide  ">
+                                 <?= render_input('requuestClient', '', "") ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('university[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Primary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "university");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+                              <!-- <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('country[]', $country_list, array('country_name', 'country_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Country", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "country");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('university_secondary[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Secondary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "secondary_university");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-neet">';
+                                 echo render_select('neet_status[]', $neet_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Neet Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "neet_status");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+
+                              <?php if (has_permission('leads', '', 'view') || is_postSale()) { ?>
                                  <div class="col-md-2  margin-top leads-filter-column">
-                                    <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
+                                    <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Counsellor", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
                                  </div>
                               <?php } ?>
 
                               <div class="col-md-2  margin-top leads-filter-column hide ">
-                                            <?php
-                                            $selected = [];
-                                            $selected[] = 1;
-                                            echo '<div id="leads-filter-source">';
-                                            echo render_select('lead_type[]', $leadType, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
-                                            echo '</div>';
-
-                                            // die;
-                                            ?>
-                                        </div>
-
+                                 <?php
+                                 $selected = [];
+                                 $selected[] = 1;
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('lead_type[]', $leadType, array('id', 'name'), '', $selected, array('data-width' => '100%', 'data-none-selected-text' => _l('lead_import_type'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "lead_type");
+                                 echo '</div>';
+                                 ?>
+                              </div>
 
                               <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
@@ -331,7 +430,48 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <!-- <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('client_type[]', $client_type, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Client type", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "client_type");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+
+                              <!-- <div class="col-md-2 margin-top leads-filter-column ">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('minor', $yes_no_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Minor", 'data-actions-box' => true), array(), 'no-mbot', '', false, "minor");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <div class="col-md-2 margin-top leads-filter-column ">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('passport_status[]', $passport_stages, array('id', 'name'), '', '', array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => "Passport status", 'data-actions-box' => true), array(), 'no-mbot', '', false, "passport_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2 margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('status_[]', $statuses, array('id', 'name'), '', array(1), array('data-width' => '100%', 'data-none-selected-text' => "Applicant Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
+                              <div class="col-lg-2 margin-top leads-filter-column">
+                                 <input type="month" class="form-control" required-check id="session_intake" name="session_intake"
+                                    value=""
+                                    placeholder="Select Month and Year Session Intake">
+                              </div>
+
+
+                              <div class="col-md-2  margin-top leads-filter-column ">
                                  <?php
                                  array_unshift($application_stage, array());
                                  echo '<div id="leads-filter-source">';
@@ -340,36 +480,119 @@
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+                              <div class="col-md-2  margin-top leads-filter-column ">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Category'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+                                 echo render_select('view_application_sub_stage', [], array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Application Sub Stage'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
                                  echo '</div>';
                                  ?>
                               </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column">
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
                                  <?php
-                                 echo '<div id="leads-filter-vendor">';
-                                 echo render_select('vendor_type[]', $vendorType, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('Vendor'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "view_application_sub_stage");
+
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('apostille_vendors_filter[]', $apostille_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Vendors", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_vendors_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
+                                 <?php
+
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('ev_partner_filter[]', $ev_partner, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "EVP Partners", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "ev_partner_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
+                                 <?php
+                                 $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('apostille_status[]', $apostille_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_status");
                                  echo '</div>';
                                  ?>
                               </div>
-                              <div class="col-md-2  margin-top leads-filter-column">
-                                 <div class="form-group">
-                                    <input type="text" class="form-control datepicker" name="from_date" id="from_date" placeholder="From OnBoarding Date" autocomplete="off">
-                                 </div>
-                              </div>
-                              <div class="col-md-2  margin-top leads-filter-column">
-                                 <div class="form-group">
-                                    <input type="text" class="form-control datepicker" name="to_date" id="to_date" placeholder="To OnBoarding Date" autocomplete="off">
-                                 </div>
-                              </div>
-                              <div class="col-md-4 margin-top leads-filter-column">
-                                 <div class="form-group">
-                                    <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+ -->
 
-                                    <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
+
+                              <!-- <div class="col-md-2 margin-top leads-filter-column filter-hide-default filter-org-status hide">
+                                 <?php
+                                 $orignal_document_status[] = array("id" => "-1", "name" => "In-Transit");
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('doc_status[]', $orignal_document_status, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc. status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "doc_status");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-org-location hide">
+                                 <?php
+                                 echo '<div id="leads-filter-neet">';
+                                 echo render_select('office_location_orignal_documents[]', $office_location, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Org. Doc Location", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "office_location_orignal_documents");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-visa-vendor hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('visa_vendors_filter[]', $visa_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Visa Vendors", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "visa_vendors_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+                              <!-- <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-payment hide">
+                                 <div id="leads-filter-source">
+                                    <div class="form-group no-mbot">
+                                       <input type="text" class="form-control datepicker" name="visa_payment_date" id="visa_payment_date" placeholder="Visa Payment Update Date" autocomplete="off">
+                                    </div>
+                                 </div>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-batch hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('fly_batch_filter[]', $fly_batch, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Batch", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_batch_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-departure hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('fly_departure_filter[]', $fly_departure, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Departure", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_departure_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-vendor hide">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('fly_vendors_filter[]', $fly_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Vendors", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_vendors_filter");
+                                 echo '</div>';
+                                 ?>
+                              </div> -->
+                              <!-- <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-fly-date hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="fly_date" id="fly_date" placeholder="Fly Date" autocomplete="off">
+                                 </div>
+                              </div> -->
+
+                              <!-- <div class="col-md-2  margin-top leads-filter-column hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="last_from_date" id="last_from_date" placeholder="From Last Update Date" autocomplete="off">
+                                 </div>
+                              </div> -->
+                              <!-- <div class="col-md-2  margin-top leads-filter-column hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="last_to_date" id="last_to_date" placeholder="To Last Update Date" autocomplete="off">
+                                 </div>
+                              </div> -->
+
+                              <div class="col-md-2 margin-top ">
+                                 <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="apply_filter_">Apply Filter</button>
                                     <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                  </div>
                               </div>
@@ -378,258 +601,1057 @@
                      </div>
                   </div>
                   <div class="clearfix mtop20"></div>
-                  <?php
-                  $table_data = array();
-                  $_table_data = array(
-                     '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>',
-                     //   array(
-                     //     'name'=>_l('the_number_sign'),
-                     //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-number')
-                     //    ),
-                     //     array(
-                     //     'name'=>_l('clients_list_company'),
-                     //     'th_attrs'=>array('class'=>'toggleable', 'id'=>'th-company')
-                     //    ),
-                     array(
-                        'name' => _l('Student Name'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-primary-contact')
-                     ),
-                     array(
-                        'name' => _l('company_primary_email'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-primary-contact-email')
-                     ),
-                     array(
-                        'name' => _l('clients_list_phone'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-phone')
-                     ),
-                     array(
-                        'name' => _l('customer_active'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-active')
-                     ),
-                     // array(
-                     //    'name' => _l('customer_groups'),
-                     //    'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     // ),
-                     array(
-                        'name' => _l('applicant_name_table'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('applicant_status_table'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('applicant_updated_table'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('OnBoarding Date'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-                     array(
-                        'name' => _l('Assignee'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-groups')
-                     ),
-                     array(
-                        'name' => _l('leads_dt_status'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-                     array(
-                        'name' => _l('Lead Type'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-                     array(
-                        'name' => _l('leads_source'),
-                        'th_attrs' => array('class' => 'toggleable', 'id' => 'th-date-created')
-                     ),
-
-                  );
-
-                  foreach ($_table_data as $_t) {
-                     array_push($table_data, $_t);
-                  }
-
-                  $custom_fields = get_custom_fields('customers', array('show_on_table' => 1));
-
-                  foreach ($custom_fields as $field) {
-                     $showField = true;
-
-                     // if (!empty($user_lead_type)) {
-                     //    if (is_admin()) {
-                     //       // Do nothing; all fields are included for admin.
-                     //    } else {
-                     //       // Check conditions based on the user_lead_type.
-                     //       if (!empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                     //          $showField = false;
-                     //       } elseif ($user_lead_type == 1 && !in_array(strtolower(trim($field['name'])), ['course', 'degree'])) {
-                     //          $showField = false;
-                     //       } elseif ($user_lead_type == 2 && !in_array(strtolower(trim($field['name'])), ['neet score'])) {
-                     //          $showField = false;
-                     //       }
-                     //    }
-                     // } else {
-                     //    if (!is_admin() && !empty($this->session->userdata("staff_department")) && !empty($field['show_lead_type']) && $this->session->userdata("staff_department") != $field['show_lead_type']) {
-                     //       $showField = false;
-                     //    }
-
-
-                     if (!is_admin()) {
-                        $showField = false;
-                        if (!empty($user_lead_type) && !empty($field['show_lead_type'])) {
-                           if (in_array($user_lead_type, explode(",", $field['show_lead_type']))) {
-                              $showField = true;
-                           } else {
-                              $showField = false;
-                           }
-                        }
-                     }
-                     // }
-
-                     if ($showField) {
-                        array_push($table_data, $field['name']);
-                     }
-                  }
-
-                  $table_data = hooks()->apply_filters('customers_table_columns', $table_data);
-
-
-                  render_datatable($table_data, 'clients', [], [
-                     'data-last-order-identifier' => 'customers',
-                     'data-default-order'         => get_table_last_order('customers'),
-                  ]);
-                  ?>
+                  <div class="col-md-12 row">
+                     <div class="panel_s">
+                        <div class="panel-body">
+                           <table id="dynamicTable" class="table table-clients sticky-header" style="width:100%">
+                              <thead></thead>
+                              <tbody></tbody>
+                           </table>
+                        </div>
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
       </div>
    </div>
 </div>
+
+
+
+
+<div class="modal fade applicant_status_change" id="applicant_status_change" tabindex="-1" role="dialog" aria-labelledby="applicantStatusModal">
+   <div class="modal-dialog">
+      <div class="modal-content">
+         <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+               <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title" id="applicantStatusModal">Applicant Status</h4>
+         </div>
+
+         <div class="modal-body">
+            <form id="applicant_status_change_form" onsubmit="return false;">
+               <input type="hidden" name="userid" value="">
+               <input type="hidden" name="status" value="">
+
+               <!-- Canceled Comment Section -->
+               <div class="canceled_div applicant_status_modal_div">
+                  <div class="form-group">
+                     <?= render_textarea('canceled_comment', 'Cancellation Comment', '', ["required-check" => "required-check", "placeholder" => "Enter comment"]) ?>
+                  </div>
+               </div>
+
+
+
+               <!-- Refund Section -->
+               <div class="refund_div applicant_status_modal_div">
+                  <div class="form-group">
+                     <?= render_input('refund_payment_proof', 'Refund Proof', '', 'file', ["required-check" => "required-check"]) ?>
+                  </div>
+                  <div class="form-group">
+                     <?= render_input('refund_payment_date', 'Payment Date', '', 'date', ["required-check" => "required-check"]) ?>
+                  </div>
+               </div>
+            </form>
+         </div>
+
+         <!-- Modal Footer -->
+         <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal"><?php echo _l('close'); ?></button>
+            <button type="button" class="btn btn-info" onclick="applicant_status_change()"><?php echo _l('confirm'); ?></button>
+         </div>
+      </div>
+   </div>
+</div>
+
 <?php
-init_tail(); ?>
+init_tail();
+?>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+
 <script>
    var tAPI = "";
-   var sub_category = <?= !empty($application_sub_stage) ? json_encode($application_sub_stage) : [] ?>;
+   var applicant_table = "";
+   var sub_category = <?= !empty($application_sub_stage_mbbs) ? json_encode($application_sub_stage_mbbs) : '[]' ?>;
+   var columnHeaders = [];
+   var column_names = {};
+   var fees_array = <?= !empty($fees_data) ? json_encode($fees_data, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_list = <?= !empty($orignal_document_list) ? json_encode($orignal_document_list, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_list_rest = <?= !empty($orignal_document_list_rest) ? json_encode($orignal_document_list_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_visa_rest = <?= !empty($orignal_document_visa_rest) ? json_encode($orignal_document_visa_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var orignal_document_visa_georgia = <?= !empty($orignal_document_visa_georgia) ? json_encode($orignal_document_visa_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var apostille_documents = <?= !empty($apostille_documents) ? json_encode(array_values($apostille_documents), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var tbllead_performance_column = [];
+   var tbllead_performance_column_array = <?= !empty($table_view) ? json_encode($table_view, JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var selected_view = $("#table_view option:selected").val() || 0;
+   var show_column_array = [];
+   var selected_column_array = [];
+   var default_columns = <?= !empty($tbllead_performance_column) ? json_encode(array_column($tbllead_performance_column, null, "id"), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var group_selection = [];
 
-   $(function() {
-      var CustomersServerParams = {};
-      $.each($('._hidden_inputs._filters input'), function() {
+   $(document).ready(function() {
+
+
+
+      $(".filter-hide-default").find("select").val('').selectpicker("refresh");
+      $(".filter-hide-default").removeClass('hide');
+
+      if (tbllead_performance_column_array[selected_view]) {
+         show_column_array = (tbllead_performance_column_array[selected_view].column_ids || "").split(",");
+         selected_column_array = (tbllead_performance_column_array[selected_view].selected_ids || "").split(",");
+         selected_performance_column = selected_column_array;
+      } else {
+         //console.warn("No table view data found for selected view:", selected_view);
+      }
+      column_name_update();
+      $("#column_show").each(function() {
+         if ($(this).is(":input")) {
+            updateColumns($(this));
+         }
+      });
+      setTimeout(() => {
+         set_column_table();
+         set_table();
+      }, 500);
+   });
+
+   // Update column name dropdown
+   function column_name_update() {
+      const columnSelect = $("[name='column_show[]']");
+
+      if (columnSelect.length === 0) {
+         console.warn("Column select element not found.");
+         return;
+      }
+
+      // Validate required arrays
+      if (typeof show_column_array === 'undefined' || !Array.isArray(show_column_array)) {
+         console.error("show_column_array is not defined or not an array.");
+         return;
+      }
+
+      if (typeof default_columns === 'undefined' || typeof default_columns !== 'object') {
+         console.error("default_columns is not defined or not an object.");
+         return;
+      }
+
+      if (typeof selected_column_array === 'undefined' || !Array.isArray(selected_column_array)) {
+         console.error("selected_column_array is not defined or not an array.");
+         return;
+      }
+
+      // Clear existing options
+      columnSelect.empty();
+
+      show_column_array.forEach(id => {
+         const value = default_columns[id];
+
+         if (!value || typeof value !== 'object') {
+            console.warn(`No valid column data found for ID: ${id}`);
+            return;
+         }
+
+         const isDisabled = selected_column_array.includes(String(value.id));
+         const option = `
+            <option data-columns="${value.columns || ''}" 
+                    value="${value.id}" 
+                    ${isDisabled ? 'disabled selected' : ''}>
+                ${value.label_name || 'Unnamed Column'}
+            </option>`;
+
+         columnSelect.append(option);
+      });
+
+      // Refresh selectpicker safely
+      if (typeof columnSelect.selectpicker === "function") {
+         columnSelect.selectpicker("refresh");
+      } else {
+         console.warn("selectpicker plugin is not loaded.");
+      }
+   }
+
+
+
+
+   // Event Listener for Table View Change
+   $("#table_view").change(function() {
+      $(".filter-hide-default").find("select").val('').selectpicker("refresh");
+      $(".filter-hide-default").addClass('hide');
+      let select_view = $("#table_view option:selected").val() || 0;
+      if (tbllead_performance_column_array[select_view]) {
+         selected_performance_column = [];
+         show_column_array = (tbllead_performance_column_array[select_view].column_ids || "").split(",");
+         selected_column_array = (tbllead_performance_column_array[select_view].selected_ids || "").split(",");
+         selected_performance_column = selected_column_array;
+
+         let show_filters = tbllead_performance_column_array[select_view]?.filter_show;
+
+         // Check if show_filters is a non-empty string
+         if (typeof show_filters === 'string' && show_filters.trim() !== '') {
+            let filters = show_filters.split(',').map(f => f.trim()).filter(f => f !== '');
+
+            if (filters.length > 0) {
+               filters.forEach(function(filter) {
+                  $("." + filter).removeClass("hide");
+               });
+            }
+         }
+
+
+      }
+      column_name_update();
+      $("#column_show").each(function() {
+         if ($(this).is(":input")) {
+            updateColumns($(this));
+         }
+      });
+      setTimeout(() => {
+         enabled_column();
+         set_column_table();
+         set_table();
+      }, 500);
+   });
+
+   function enabled_column() {
+      let columnSelect = $("[name='column_show[]']");
+      if (columnSelect.length === 0) return;
+      columnSelect.find("option").prop("disabled", false);
+      columnSelect.selectpicker("refresh");
+   }
+
+   function disabled_column() {
+      let columnSelect = $("[name='column_show[]']");
+      if (columnSelect.length === 0) return;
+      columnSelect.find("option").each(function() {
+         $(this).prop("disabled", selected_performance_column.includes($(this).val()));
+      });
+
+      columnSelect.selectpicker("refresh");
+   }
+
+   // Listen for column selection change
+   // $("#column_show").on("change", function() {
+   //    updateColumns($(this));
+   // });
+
+   function updateColumns(element) {
+      enabled_column();
+      tbllead_performance_column = [];
+      group_selection = [];
+      <?php if (is_postSale() || is_admin()) { ?>
+         tbllead_performance_column.push({
+            tbl_column_name: " ",
+            label_name: '<div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="clients"><label></label></div>'
+         });
+      <?php } ?>
+
+
+      let selectedOptions = element.find('option:selected'); // Get selected option elements
+      let addedColumns = new Set();
+
+      selectedOptions.each(function() {
+         let value = $(this).val();
+         let text = $(this).text().trim().toLowerCase();
+         let additional_columns = $(this).attr("data-columns") || "";
+
+         if (text === "fees") {
+            fees_array.forEach(fees => addColumn(fees.name, fees.name));
+         } else if (text === "original documents") {
+            orignal_document_list.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (text.includes("<?= strtolower(ORG_REST) ?>")) {
+            orignal_document_list_rest.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (text.includes("<?= strtolower(ORG_GEORGIA) ?>")) {
+            orignal_document_list_georgia.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (text.includes("<?= strtolower(APOSTILE_DOC) ?>")) {
+            apostille_documents.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (text.includes("<?= strtolower(VISA_GEORGIA) ?>")) {
+            orignal_document_visa_georgia.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else if (text.includes("<?= strtolower(VISA_REST) ?>")) {
+            orignal_document_visa_rest.forEach(document => {
+               if (!addedColumns.has(document.short_name)) {
+                  addColumn(document.short_name, document.short_name);
+                  addedColumns.add(document.short_name);
+               }
+            });
+         } else {
+            if (additional_columns !== "") {
+               let columns = additional_columns.split(",");
+               columns.forEach(function(key) {
+                  let columnValue = key.trim();
+                  if (columnValue && default_columns[columnValue]) {
+                     let label = default_columns[columnValue].label_name;
+                     addColumn(columnValue, label);
+                     group_selection.push(columnValue);
+
+                  }
+               });
+            } else {
+               addColumn(value, $(this).text().trim());
+            }
+         }
+      });
+
+      // Finally call your function to disable columns
+      disabled_column();
+
+
+
+   }
+
+   function addColumn(tbl_column_name, label_name) {
+      tbllead_performance_column.push({
+         tbl_column_name,
+         label_name
+      });
+   }
+
+   function set_column_table() {
+      columnHeaders = [];
+
+      if (!Array.isArray(tbllead_performance_column) || tbllead_performance_column.length === 0) {
+         //console.warn("No column data available to set the table.");
+         return;
+      }
+
+      tbllead_performance_column.forEach(column => {
+         let label = column.label_name && column.label_name.trim() !== "" ? column.label_name : column.tbl_column_name.replace(".", "_");
+         column_names[column.tbl_column_name] = label.replace(/ /g, "_");
+
+         columnHeaders.push({
+            title: label,
+            data: label.toLowerCase().replace(/ /g, "_")
+         });
+      });
+
+      if (columnHeaders.length > 0) {
+         let thead = "<tr>";
+         columnHeaders.forEach(header => {
+            thead += "<th>" + header.title + "</th>";
+         });
+         thead += "</tr>";
+         $("#dynamicTable thead").html(thead);
+      } else {
+         //console.warn("No column headers available to populate the table.");
+      }
+   }
+   // Define configuration object
+   var CustomersServerParams = {};
+
+   function set_table() {
+
+      enabled_column();
+      // Destroy existing DataTable instance
+      if ($.fn.DataTable.isDataTable('.table-clients')) {
+         $('.table-clients').DataTable().clear().destroy();
+      }
+
+      $('.table-clients tbody').empty();
+
+      // Populate CustomersServerParams dynamically
+      $('._hidden_inputs._filters input').each(function() {
          CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
       });
-      CustomersServerParams['exclude_inactive'] = '[name="exclude_inactive"]:checked';
-      CustomersServerParams['assigned'] = "[name='view_assigned[]']";
-      CustomersServerParams['source'] = "[name='view_source[]']";
-      CustomersServerParams['lead_type'] = "[name='lead_type[]']";
-      CustomersServerParams['from_date'] = "[name='from_date']";
-      CustomersServerParams['to_date'] = "[name='to_date']";
-      CustomersServerParams['application_stage'] = "[name='view_application_stage']";
-      CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
-      CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
 
-
-      tAPI = initDataTable('.table-clients', admin_url + 'clients/table', [0], [0], CustomersServerParams, <?php echo hooks()->apply_filters('customers_table_default_order', json_encode(array(2, 'asc'))); ?>);
-      $('input[name="exclude_inactive"]').on('change', function() {
-         tAPI.ajax.reload();
+      Object.assign(CustomersServerParams, {
+         'exclude_inactive': '[name="exclude_inactive"]:checked',
+         'type': "[name='table_view[]']",
+         'columnNames': "[name='column_show[]']",
+         'assigned': "[name='view_assigned[]']",
+         'source': "[name='view_source[]']",
+         'apostille_status': "[name='apostille_status[]']",
+         'lead_type': "[name='lead_type[]']",
+         'last_from_date': "[name='last_from_date']",
+         'last_to_date': "[name='last_to_date']",
+         'application_stage': "[name='view_application_stage']",
+         'application_sub_stage': "[name='view_application_sub_stage']",
+         'vendor_type': "[name='vendor_type[]']",
+         'university': "[name='university[]']",
+         'country': "[name='country[]']",
+         'status_': "[name='status_[]']",
+         'doc_status': "[name='doc_status[]']",
+         'passport_status': "[name='passport_status[]']",
+         'minor_status': "[name='minor']",
+         'client_type': "[name='client_type[]']",
+         'session_intake': "[name='session_intake']",
+         'apostille_vendors_filter': "[name='apostille_vendors_filter[]']",
+         'ev_partner_filter': "[name='ev_partner_filter[]']",
+         'visa_vendors_filter': "[name='visa_vendors_filter[]']",
+         'visa_payment_date': "[name='visa_payment_date']",
+         'fly_batch_filter': "[name='fly_batch_filter[]']",
+         'fly_departure_filter': "[name='fly_departure_filter[]']",
+         'fly_vendors_filter': "[name='fly_vendors_filter[]']",
+         'fly_date': "[name='fly_date']",
+         'university_secondary': "[name='university_secondary[]']",
+         'neet_status': "[name='neet_status[]']",
+         'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
       });
 
+      applicant_table = initDataTable(
+         '.table-clients',
+         admin_url + 'clients/study_aborad_table/1',
+         [0],
+         [0],
+         CustomersServerParams, {
+            fixedHeader: true, // Enables fixed header
+            scrollY: "400px", // Enables vertical scrolling
+            scrollCollapse: true
+         }, [0, "DESC"]
+      );
+
+
+
+
+      // applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/2', [0], [0], CustomersServerParams, [0, "DESC"]);
+
+      // disabled_column();
 
 
       $('#view_application_stage').on('changed.bs.select', function(event, clickedIndex, newValue, oldValue) {
          let selectedValue = $(this).val();
-         // Populate the child dropdown with the data for the selected parent
          populateChildDropdown(selectedValue);
       });
 
-   });
+      setTimeout(() => {
+         $('.btn-dt-reload').on('click', function() {
+            enabled_column();
+            refreshApplicantTable();
+         });
+
+         $('[name="column_show[]"]').on('show.bs.select', disabled_column);
+         $('[name="column_show[]"]').on('hidden.bs.select', enabled_column);
+      }, 1000);
+
+
+   }
 
    function populateChildDropdown(parentValue) {
       let childDropdown = $('#view_application_sub_stage');
-      childDropdown.empty();
-      let childOptions = sub_category.filter(item => item.application_tracker === parentValue);;
-      childDropdown.append($('<option>', {
+      childDropdown.empty().append($('<option>', {
          value: '',
          text: ''
       }));
-      if (childOptions && childOptions.length > 0) {
+
+      let childOptions = sub_category.filter(item => item.application_tracker === parentValue);
+      if (childOptions.length > 0) {
          childOptions.forEach(option => {
             childDropdown.append($('<option>', {
-               value: option.name,
+               value: option.id,
                text: option.name
             }));
          });
       }
 
-
-      // Refresh the Bootstrap SelectPicker to update the UI
       childDropdown.selectpicker('refresh');
    }
 
-   function customers_bulk_action(event) {
-      var r = confirm(app.lang.confirm_action_prompt);
-      if (r == false) {
-         return false;
+   $('#mass_delete').change(function() {
+      let documentStatusUpdate = $('.document_status_update');
+      documentStatusUpdate.find("select").val("").trigger("change");
+      documentStatusUpdate.find("input[type=checkbox]").prop("checked", false);
+      $('.visa_update').toggle();
+      $(".visa_update").find("select").val("").selectpicker('refresh');
+      $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+      $(".apostille_update").toggle();
+      $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+      $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+      documentStatusUpdate.toggle();
+
+   });
+
+   function Update_apostille(obj) {
+      // Check if the checkbox is checked
+      if ($(obj).prop('checked')) {
+         // Hide elements related to document status update
+         $('.mass_delete').hide();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+         $('.document_status_update').hide();
+         $(".document_status_update").find("select").val("").selectpicker('refresh');
+         $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+         $('.visa_update').hide();
+         $(".visa_update").find("select").val("").selectpicker('refresh');
+         $(".visa_update").find("input[type=checkbox]").prop("checked", false);
+
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+         $(".apostille_status_update").show();
       } else {
-         var mass_delete = $('#mass_delete').prop('checked');
-         var ids = [];
-         var data = {};
-         if (mass_delete == false || typeof(mass_delete) == 'undefined') {
-            data.groups = $('select[name="move_to_groups_customers_bulk[]"]').selectpicker('val');
-            if (data.groups.length == 0) {
-               data.groups = 'remove_all';
-            }
-         } else {
-            data.mass_delete = true;
-         }
-         var rows = $('.table-clients').find('tbody tr');
-         $.each(rows, function() {
-            var checkbox = $($(this).find('td').eq(0)).find('input');
-            if (checkbox.prop('checked') == true) {
-               ids.push(checkbox.val());
-            }
-         });
-         data.ids = ids;
-         $(event).addClass('disabled');
-         setTimeout(function() {
-            $.post(admin_url + 'clients/bulk_action', data).done(function() {
-               window.location.reload();
-            });
-         }, 50);
+         // Hide elements related to document status update
+         $('.document_status_update').show();
+         $('.visa_update').show();
+         $('.mass_delete').show();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+         $(".apostille_status_update").hide();
+         $(".apostille_status_update").find("select").val("").selectpicker('refresh');
+         $(".apostille_status_update").find("input").val("");
+         $(".apostille_status_update").find("input[type=checkbox]").prop("checked", false);
+
       }
    }
 
-   $('#apply_filter').on('click', function() {
 
-      var from_date = document.getElementById("from_date").value;
-      var to_date = document.getElementById("to_date").value;
+   function Update_visa(obj) {
+      // Check if the checkbox is checked
+      if ($(obj).prop('checked')) {
+         // Hide elements related to document status update
+         $('.mass_delete').hide();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+
+         $('.document_status_update').hide();
+         $(".document_status_update").find("select").val("").selectpicker('refresh');
+         $(".document_status_update").find("input[type=checkbox]").prop("checked", false);
+
+         $('.apostille_update').hide();
+         $(".apostille_update").find("select").val("").selectpicker('refresh');
+         $(".apostille_update").find("input[type=checkbox]").prop("checked", false);
+
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+         $(".visa_status_update").show();
+      } else {
+         // Hide elements related to document status update
+         $('.document_status_update').show();
+         $('.mass_delete').show();
+         $(".mass_delete").find("select").val("").selectpicker('refresh');
+         $(".mass_delete").find("input[type=checkbox]").prop("checked", false);
+
+         // Toggle visibility of transition location elements
+         $(".is_transist_location").hide();
+         $(".no_is_transist_location").show();
+         $(".apostille_update").show();
+         $(".visa_status_update").find("select").val("").selectpicker('refresh');
+         $(".visa_status_update").find("input").val("");
+         $(".visa_status_update").find("input[type=checkbox]").prop("checked", false);
+         $(".visa_status_update").hide();
 
 
-      if (to_date != '') {
-         if (from_date == '') {
-            $("#from_date").focus();
-            return false;
-         }
+      }
+   }
+
+   function customers_bulk_action(event) {
+
+
+      var mass_delete = $('#mass_delete').length ? $('#mass_delete').prop('checked') : 0;
+      var transit = $('#in_transit').prop('checked');
+      var from_location = $('#from_location').val();
+      var to_location = $('#to_location').val();
+      var office_location = $('#office_location').val();
+      // var document_status = $('#document_status').val();
+      var status_text = $("#document_status option:selected").text();
+      var locations_name = $("#office_location option:selected").text();
+      var apostille_status = $("#apostille_status_check").prop('checked');
+      var visa_status = $("#visa_status_check").prop('checked');
+      var is_valid = true;
+      var apostille_data = {};
+      var visa_data = {};
+
+      if (apostille_status === true) {
+         $('.apostille_status_update').find('input, select').each(function() {
+            var name = $(this).attr('name');
+            var value = $(this).val();
+            var required = $(this).attr('required') || $(this).attr('requried');
+            if (name) {
+               apostille_data[name] = value;
+            }
+            // console.log(value);
+            // console.log(required);
+            if (required && !String(value).trim()) {
+               $(this).focus();
+               alert_float("warning", "Please fill the required field: " + name);
+               is_valid = false;
+               return false; // Exit loop early
+            }
+         });
       }
 
-      if (from_date != '') {
-         if (to_date == '') {
-            $("#to_date").focus();
-            return false;
-         }
+      if (visa_status === true) {
+         $('.visa_status_update').find('input, select').each(function() {
+            var name = $(this).attr('name');
+            var value = $(this).val();
+            var required = $(this).attr('required') || $(this).attr('requried');
+            if (name) {
+               visa_data[name] = value;
+            }
+            // console.log(value);
+            // console.log(required);
+            if (required && !String(value).trim()) {
+               $(this).focus();
+               alert_float("warning", "Please fill the required field: " + name);
+               is_valid = false;
+               return false; // Exit loop early
+            }
+         });
       }
 
+      // console.log(apostille_status);
 
-      show_loader("apply_filter");
-      periodFilter();
-      // summary();
-   });
+      if (!is_valid) return false;
 
-   function periodFilter() {
-      // $(".table-clients").DataTable().ajax.reload(null, false).on('draw.dt', function() {
-      //    hide_loader("apply_filter");
-      // });
-      tAPI.ajax.reload(null, false).on('draw.dt', function() {
-         hide_loader("apply_filter");
+      if (!confirm(app.lang.confirm_action_prompt)) {
+         return false;
+      }
+
+      var ids = [];
+      $('.table-clients tbody tr').each(function() {
+         var checkbox = $(this).find('td').eq(0).find('input[type="checkbox"]');
+         if (checkbox.prop('checked')) {
+            ids.push(checkbox.val());
+         }
       });
 
+      if (ids.length === 0) {
+         alert("Please select at least one customer.");
+         return false;
+      }
+
+      var data = {
+         ids,
+         mass_delete,
+         in_transit: transit,
+         from_location,
+         to_location,
+         office_location,
+         // document_status,
+         status_text,
+         locations_name,
+         apostille_status,
+         visa_status,
+      };
+
+      if (mass_delete == 1 && !confirm("Are you sure you want to delete the selected applicants?")) {
+         hide_loader();
+         return false;
+      }
+      // Merge Apostille data
+      Object.assign(data, apostille_data);
+      Object.assign(data, visa_data);
+
+      $(event.target).prop('disabled', true);
+
+      setTimeout(() => {
+         $.post(admin_url + 'clients/bulk_action', data)
+            .done(function(response) {
+               try {
+                  var res = JSON.parse(response);
+                  if (res.resp_code === "ERR") {
+                     alert_float("danger", res.resp_desc);
+                  } else {
+                     alert_float("success", res.resp_desc);
+                     $("#customers_bulk_action").modal('hide');
+                     applicant_reload();
+                  }
+               } catch (e) {
+                  alert_float("danger", "Unexpected error occurred.");
+               }
+            })
+            .fail(() => alert_float("danger", "Failed to process the request."))
+            .always(() => $(event.target).prop('disabled', false));
+      }, 50);
+   }
+
+
+   // Apply filter click event
+   $('#apply_filter_').on('click', async function() {
+      enabled_column();
+      $("#column_show").each(function() {
+         if ($(this).is(":input")) {
+            updateColumns($(this));
+         }
+      });
+      await applicant_reload();
+   });
+
+   async function applicant_reload() {
+      enabled_column();
+      var selectedValues = $("#column_show").selectpicker('val');
+
+      if (selectedValues.length < 3) {
+         alert("Select at least 3 columns");
+         return false;
+      }
+
+      $('.table-clients').DataTable().destroy();
+      $('.table-clients tbody').empty();
+
+      columnHeaders = [];
+      column_names = [];
+      await set_column_table();
+      filter_data = CustomersServerParams;
+
+      $("#leadSum").html('');
+      $(".leads-overview").hide();
+
+      var from_date = $("#last_from_date").val();
+      var to_date = $("#last_to_date").val();
+
+      if (to_date && !from_date) {
+         $("#last_from_date").focus();
+         return false;
+      }
+
+      if (from_date && !to_date) {
+         $("#last_to_date").focus();
+         return false;
+      }
+
+      show_loader("apply_filter");
+      applicant_table = initDataTable('.table-clients', admin_url + 'clients/table/1', [0], [0], CustomersServerParams, [0, "DESC"]);
+      // disabled_column();
+
+      hide_loader("apply_filter");
+      // disabled_column();
+   }
+
+   function change_transit(obj) {
+      $(".is_transist_location, .no_is_transist_location").toggle().find("select").val("").selectpicker("refresh");
+   }
+
+   $('#customers_bulk_action').on('show.bs.modal', function() {
+      $("#customers_bulk_action").find("select").val("").selectpicker('refresh');
+      $("#customers_bulk_action").find("input[type=checkbox]").prop("checked", false);
+      $("#customers_bulk_action").find("input").val("");
+
+      $(".document_status_update").show();
+      $(".no_is_transist_location").show();
+      $(".visa_update,.visa_update div.checkbox").show();
+      $(".apostille_update,.apostille_update div.checkbox").show();
+
+      $(".is_transist_location").hide();
+      $(".visa_status_update").hide();
+      $(".apostille_status_update").hide()
+      // $(".document_status_update").hide();
+
+      $(".doc-cost-section").html('');
+
+   });
+
+   function refreshApplicantTable() {
+      applicant_table.ajax.reload(null, false);
+   }
+
+   function applicant_status_change(status = 0) {
+      let additional_fields = {};
+      let form_status = true;
+
+      show_loader();
+
+      $("#applicant_status_change_form input:visible, #applicant_status_change_form textarea:visible, #applicant_status_change_form select:visible, #applicant_status_change_form input[type='date']:visible").each(function() {
+         const value = $(this).val()?.trim(); // Get trimmed value
+         const isRequired = $(this).is("[required-check]"); // Check if 'required-check' exists
+         const name = $(this).attr("name"); // Get name attribute
+         let label = $(this).closest("div.form-group").find("label").text().trim().replace(/\*/g, ""); // Remove * from label
+
+         if (isRequired && name) {
+            additional_fields[name] = "required";
+            if (!value) {
+               if (form_status && status == 0) {
+                  alert_float("danger", `"${label}" is mandatory.`);
+                  $(this).focus();
+               }
+               form_status = false;
+            }
+         }
+      });
+
+      if (!form_status) {
+         appValidateForm($("#applicant_status_change_form"), additional_fields);
+         hide_loader();
+         return false;
+      }
+
+      if (status === 1) {
+         hide_loader();
+         return false;
+      }
+
+      let formData = new FormData(document.getElementById("applicant_status_change_form"));
+
+      // Append CSRF token if it exists
+      formData.append(csrfData.token_name, csrfData.hash);
+
+      // AJAX request to update client status
+      $.ajax({
+         url: "<?php echo base_url('admin/clients/update_client_status'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false, // Prevent jQuery from transforming FormData
+         contentType: false, // Ensure correct Content-Type is set for FormData
+         dataType: "JSON",
+         success: function(res) {
+            hide_loader();
+            if (res.resp_code === "RCS") {
+               $("#applicant_status_change").modal("hide");
+               applicant_reload();
+               alert_float("success", res.resp_desc);
+            } else {
+               alert_float("danger", res.resp_desc || "An unknown error occurred.");
+            }
+         },
+         error: function(xhr, status, error) {
+            hide_loader();
+            let errorMessage = xhr.responseText ? xhr.responseText : "An error occurred while processing the request.";
+            alert_float("danger", errorMessage);
+            console.error("Error:", error);
+         },
+      });
+   }
+
+   function document_cost_div(obj) {
+      let selected_documents = $(obj).val() || [];
+
+      // Clear all existing doc cost sections
+      $(".doc-cost-section").empty();
+
+      // Re-add only the selected ones
+      selected_documents.forEach(function(doc_id) {
+         let doc = apostille_documents_list[doc_id];
+
+         $(".doc-cost-section").append(`
+            <div class='col-md-4' id='cost-doc-div-${doc_id}'>
+                <label>${doc.name} Cost</label>
+                <div class='form-group'>
+                    <input class='form-control' type='number' placeholder='100' name='document_cost[${doc.id}]'>
+                </div>
+            </div>
+        `);
+      });
+   }
+
+   $(document).ready(function() {
+      $("#session_intake").on("change", function() {
+         let selectedDate = $(this).val(); // Get selected value (YYYY-MM)
+
+         if (selectedDate) {
+            let [year, month] = selectedDate.split("-"); // Extract year and month
+
+            if (month !== "02" && month !== "09") {
+               // If not February or September, auto-correct to the nearest allowed month
+               // let correctedMonth = (month < "06") ? "02" : "09"; // Before June → February, After → September
+               $(this).val('');
+               alert_float("danger", "Only February and September are allowed.");
+            }
+         }
+      });
+
+   });
+
+
+   function downloadAndZipFiles(files, zipFileName = "documents.zip") {
+      const zip = new JSZip();
+      const folder = zip.folder("files");
+
+      const downloadPromises = files.map(({
+            url,
+            name
+         }, index) =>
+         fetch(url)
+         .then(response => {
+            if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
+            return response.blob().then(blob => {
+               const originalName = url.split('/').pop().split('?')[0] || `file${index}`;
+               const extension = originalName.includes('.') ? '.' + originalName.split('.').pop() : '';
+
+               // Use the provided name if available, or default to 'fileX' where X is the index
+               const finalName = (name || `file${index}`) + extension;
+
+               folder.file(finalName, blob);
+            });
+         })
+         .catch(err => console.error("Error downloading file:", err))
+      );
+
+      Promise.all(downloadPromises).then(() => {
+         // Generate the zip and save it with the provided name (or default to 'documents.zip')
+         zip.generateAsync({
+            type: "blob"
+         }).then(content => {
+            saveAs(content, zipFileName);
+         });
+      });
+   }
+
+
+
+
+   function download_documents(userid, userName) {
+      let formData = new FormData();
+
+      // Append CSRF token if it exists
+      formData.append(csrfData.token_name, csrfData.hash);
+      formData.append("userid", userid);
+
+      // AJAX request to fetch approved documents
+      $.ajax({
+         url: "<?php echo base_url('admin/clients/download_approved_documents'); ?>",
+         type: "POST",
+         data: formData,
+         processData: false,
+         contentType: false,
+         dataType: "json",
+         success: function(res) {
+            hide_loader();
+            // console.log(res);
+
+            if (res.resp_code === "RCS") {
+               let files = res.data;
+               downloadAndZipFiles(files, userName + '.zip'); // Assuming this function handles zipping and downloading
+               alert_float("success", res.resp_desc);
+            } else {
+               alert_float("danger", res.resp_desc || "An unknown error occurred.");
+            }
+         },
+         error: function(xhr, status, error) {
+            hide_loader();
+            let errorMessage = xhr.responseText ? xhr.responseText : "An error occurred while processing the request.";
+            alert_float("danger", errorMessage);
+            console.error("Error:", error);
+         },
+      });
+   }
+
+   var nestedTableIdArray = [];
+
+   function show_application($select, clientid) {
+      const $tr = $($select).closest('tr');
+      const mainTable = $('.table-clients').DataTable();
+      const row = mainTable.row($tr);
+      $("[name='requuestClient']").val(clientid);
+      // Clone server params safely
+      let CustomersServerParamsArray = {
+         ...CustomersServerParams
+      };
+
+
+      // Remove old key if exists
+      delete CustomersServerParamsArray.columnNames;
+
+      // Assign actual input values, not selectors
+      delete CustomersServerParamsArray.columnNames;
+      CustomersServerParamsArray.columnNames = "[name='column_show_default[]']";
+      CustomersServerParamsArray.clientid = "[name='requuestClient']";
+      CustomersServerParamsArray.type = "[name='requuestType']";
+      // Toggle child visibility
+      if (row.child.isShown()) {
+         row.child.hide();
+         $tr.removeClass('shown');
+         return;
+      }
+
+      // Get column config
+      const config = tbllead_performance_column_array?.[2] || {};
+      const show_column = (config.column_ids || "").split(",").filter(Boolean);
+      const selected_column = (config.selected_ids || "").split(",").filter(Boolean);
+      $("select#column_show_default").empty().selectpicker("refresh");
+      let secondaryTableColumns = [];
+
+      selected_column.forEach(colId => {
+         if (show_column.includes(colId)) {
+            const column = default_columns[colId];
+            if (column) {
+               secondaryTableColumns.push(`<th>${column.label_name || colId}</th>`);
+               const option = `
+            <option data-columns="${column.columns || ''}" 
+                    value="${column.id}" >
+                ${column.label_name || 'Unnamed Column'}
+            </option>`;
+
+               $("select#column_show_default").append(option);
+               // CustomersServerParamsArray.columnNames.colId = colId;
+            } else {
+               console.warn(`Column ID '${colId}' not found in default_columns.`);
+            }
+         }
+      });
+      console.log(selected_column);
+      $("select#column_show_default")
+         .val(selected_column) // Set selected values
+         .selectpicker("refresh");
+
+      // Fallback
+      if (secondaryTableColumns.length === 0) {
+         secondaryTableColumns.push(`<th>No columns configured</th>`);
+      }
+
+      const nestedTableId = `nested-applicant-table-${clientid}`;
+
+      const childHtml = `
+      <div style="padding:0;">
+         <table id="${nestedTableId}" class="table table-striped" style="width:100%; margin:0;">
+            <thead>
+               <tr>
+               <th>Select</th>
+               ${secondaryTableColumns.join("")}
+               </tr>
+            </thead>
+         </table>
+      </div>
+   `;
+
+      row.child(childHtml).show();
+      $tr.addClass('shown');
+
+
+
+      // Destroy existing nested table if exists
+      if ($.fn.DataTable.isDataTable(`#${nestedTableId}`)) {
+         $(`#${nestedTableId}`).DataTable().clear().destroy();
+      }
+
+      $(`#${nestedTableId} tbody`).empty();
+
+      // Initialize nested DataTable
+      nestedTableIdArray[nestedTableId] = initDataTable(
+         `#${nestedTableId}`,
+         admin_url + 'clients/study_aborad_table/1',
+         [0], // Orderable columns
+         [0], // Searchable columns
+         CustomersServerParamsArray, {
+            fixedHeader: true,
+            scrollY: "300px",
+            scrollCollapse: true
+         }
+      );
    }
 </script>
 </body>

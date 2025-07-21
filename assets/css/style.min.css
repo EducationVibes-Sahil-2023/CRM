@@ -4,6 +4,14 @@
     border-color: #e6e9eb
 }
 
+.mt-5 {
+    margin-top: 30px !important;
+}
+
+.mb-5 {
+    margin-bottom: 30px !important;
+}
+
 .btn-default.active,
 .btn-default:active,
 .btn-default:focus,
@@ -9237,4 +9245,16 @@ ul#side-filter>li {
 .is_fixed::-webkit-scrollbar {
     display: none;
     /* Safari and Chrome */
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
