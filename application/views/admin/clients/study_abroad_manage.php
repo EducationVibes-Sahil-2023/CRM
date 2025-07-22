@@ -9,50 +9,20 @@ $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
 // Extract the 'id' column and limit to 5 results
 $selected_performance_column = [];
 $fees_data = get_clients_fees(2);
-// $orignal_document_list = get_orignal_document_list();
-// $orignal_document_list_rest = get_orignal_document_list(1);
-// $orignal_document_list_georgia = get_orignal_document_list(0, 1);
-// $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
-// $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
-// $apostille_documents = get_orignal_document_list(0, 0, 1);
+
 $office_location  = $this->staff_model->office_location();
-// $orignal_document_status  = orignal_document_status();
-$university_list = get_university_list("study abroad");
-$country_list = get_country_list(9);
+// $university_list = get_university_list("study abroad");
+// $country_list = get_country_list(9);
+
+$filter_data = filter_country_university_array(1);
+$university_list = $filter_data['universities'];
+$country_list = $filter_data['countries'];
+$staff = $filter_data['counselor'];
+$sources = $filter_data['source'];
+
 $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
 $table_view = array_column(get_view_columns_sa(), null, "id");
-// $ev_partner = get_ev_partner();
-
-// $apostille_vendors = get_vendor_list(1);
-
-// $visa_vendors = get_vendor_list(2);
-// $fly_vendors = get_vendor_list(3);
-// $courier_type = get_courier_list();
-// $payment_mode = get_payment_mode();
-// $fly_batch = fly_batch();
-// $fly_departure = fly_departure();
-
-// $neet_status = get_neet_status();
-// $neet_status_new = [];
-// $neet_status_new[] = ["id" => "Awaited", "name" => "Awaited"];
-// $neet_status_new[] = ["id" => "Declared", "name" => "Declared"];
-// $neet_status_new[] = ["id" => "Fail", "name" => "Fail"];
-// $neet_status_new[] = ["id" => "Not Appeared", "name" => "Not Appeared"];
-
-// $neet_status = array_merge($neet_status, $neet_status_new);
-// $yes_no_status = [
-//    ["id" => "", "name" => ""],
-//    ["id" => "Yes", "name" => "Yes"],
-//    ["id" => "No", "name" => "No"]
-// ];
-
-// $client_type = [
-//    ["id" => "1", "name" => "EV"],
-//    ["id" => "2", "name" => "EVP"],
-
-// ];
-// array_unshift($ev_partner, array());
 
 
 ?>
@@ -373,23 +343,23 @@ $table_view = array_column(get_view_columns_sa(), null, "id");
                               <div class="col-md-2  margin-top leads-filter-column hide  ">
                                  <?= render_input('requuestClient', '', "") ?>
                               </div>
-
                               <div class="col-md-2  margin-top leads-filter-column">
-                                 <?php
-                                 echo '<div id="leads-filter-source">';
-                                 echo render_select('university[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Primary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "university");
-                                 echo '</div>';
-                                 ?>
-                              </div>
-                              <!-- <div class="col-md-2  margin-top leads-filter-column">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('country[]', $country_list, array('country_name', 'country_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Country", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "country");
                                  echo '</div>';
                                  ?>
                               </div>
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('university[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "university");
+                                 echo '</div>';
+                                 ?>
+                              </div>
 
-                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
+
+                              <!--<div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('university_secondary[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Secondary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "secondary_university");
