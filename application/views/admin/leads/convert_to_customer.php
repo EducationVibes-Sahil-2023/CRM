@@ -279,9 +279,11 @@ if ($lead->type == 1) {
                </div> -->
                      <div class="clearfix"></div>
                      <br>
-                     <div class="col-lg-12 col-md-12 col-12 row">
-                        <?php echo render_textarea('address', 'client_address', $lead->address); ?>
-                     </div>
+                     <?php if ($lead->type == 2) { ?>
+                        <div class="col-lg-12 col-md-12 col-12 row">
+                           <?php echo render_textarea('address', 'client_address', $lead->address); ?>
+                        </div>
+                     <?php } ?>
                      <div class="clearfix"></div>
                      <div class="mtop15 mbot10 col-md-12 row">
 
