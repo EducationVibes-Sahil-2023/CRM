@@ -539,7 +539,12 @@
                     const file = $el[0].files[0];
                     if (file) formData.append(name, file);
                 } else {
-                    formData.append(name, $el.val());
+                    if ($(this).hasClass("entrance-score-input")) {
+                        // Handle entrance score inputs separately (if needed)
+                    } else {
+                        formData.append(name, $el.val());
+                    }
+
                 }
             });
 
