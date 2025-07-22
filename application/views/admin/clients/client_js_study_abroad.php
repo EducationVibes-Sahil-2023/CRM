@@ -339,23 +339,12 @@
         // Conditionally add properties if they have values
 
         try {
-            // Validate selected universities for each country
-            // const countriesArr = $('#study_country').val();
-            // if (countriesArr) {
-            //     $.each(countriesArr, function(index, value) {
-            //         const key = value.replace(" ", "_");
-            //         params.universities[key] = $(`#university${index}`).val();
-            //         if (!params.universities[key]) {
-            //             hide_loader();
-            //             alert_float('danger', `Select a university for ${value}.`);
-            //             throw new Error(`University selection for ${value} is required.`);
-            //         }
-            //     });
-            // }
+
 
             let isValid = true;
             const seenCombinations = new Set();
-            params.application_universities = []; // Ensure it's initialized
+            params.application_universities = [];
+            let priorityCheck = [];
 
             $(".university-combinations").each(function() {
                 const $combo = $(this);
@@ -371,24 +360,45 @@
 
                 const sessionIntake = $combo.find(".session_intake_combination").val().trim();
                 const id = $combo.find(".shortlisting_id").val();
+                const priorityValue = parseInt($combo.find("select.priority-selection").val());
 
-                if (!countryId) {
-                    hide_loader();
-                    alert_float('danger', "Please select a country in all university combinations.");
-                    isValid = false;
-                    return false; // Break `.each` loop
+                // Check if priority is selected and unique
+                if (!priorityValue || priorityValue <= 0) {
+
                 }
 
+                if (priorityCheck.includes(priorityValue)) {
+                    hide_loader();
+                    alert_float("danger", universityName + " has a duplicate priority value. Please choose a unique one.");
+                    isValid = false;
+                    return false;
+                } else {
+                    if (priorityValue > 0) {
+                        priorityCheck.push(priorityValue);
+                    }
+                    console.log(priorityCheck);
+                }
+
+                // Validate required fields
+                if (!countryId) {
+                    hide_loader();
+                    alert_float("danger", "Please complete all required fields in university combinations.");
+                    isValid = false;
+                    return false;
+                }
+
+                // Check for duplicate combination
                 const comboKey = `${countryId}_${universityId}_${courseId}_${sessionIntake}`;
                 if (seenCombinations.has(comboKey)) {
                     hide_loader();
-                    alert_float('danger', "Duplicate university combination found. Please ensure each combination is unique.");
+                    alert_float("danger", "Duplicate university combination found. Please ensure each combination is unique.");
                     isValid = false;
                     return false;
                 }
 
                 seenCombinations.add(comboKey);
 
+                // Push valid combination
                 params.application_universities.push({
                     id: id,
                     country_id: countryId,
@@ -398,9 +408,11 @@
                     course_id: courseId,
                     course_name: courseName,
                     session_intake: sessionIntake,
-                    is_primary: $combo.find(".is_primary").is(":checked") ? 1 : 0
+                    is_primary: priorityValue
                 });
             });
+
+
 
             if (!isValid) {
                 hide_loader();
