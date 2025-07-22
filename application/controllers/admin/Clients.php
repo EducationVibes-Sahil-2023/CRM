@@ -4468,9 +4468,7 @@ class Clients extends AdminController
             return;
         }
         $media_upload_data = $_POST;
-        echo "<pre>";
-        print_r($_FILES);
-        die;
+
         try {
             $client_id = $this->input->post("clientid");
             $academicDetailsId = $this->input->post("academicDetailsId");
