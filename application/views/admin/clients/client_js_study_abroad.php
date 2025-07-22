@@ -723,7 +723,7 @@
             const $detailsSection = $("#diplomaAcademicDetails .result-change-hide");
 
             // Clear input, select, and file values within the section
-            $detailsSection.find("input, select").val('');
+            $detailsSection.find("input:not([type='hidden']), select").val('');
             $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
 
             // Toggle visibility based on status
@@ -739,7 +739,8 @@
             const $detailsSection = $("#graduationAcademicDetails .result-change-hide");
 
             // Clear input, select, and file values within the section
-            $detailsSection.find("input, select").val('');
+            $detailsSection.find("input:not([type='hidden']), select").val('');
+
             $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
 
             // Toggle visibility based on status
@@ -755,7 +756,7 @@
             const $detailsSection = $("#post_graduationAcademicDetails .result-change-hide");
 
             // Clear input, select, and file values within the section
-            $detailsSection.find("input, select").val('');
+            $detailsSection.find("input:not([type='hidden']), select").val('');
             $detailsSection.find("input[type='file']").val(null); // Proper way to clear file input
 
             // Toggle visibility based on status
