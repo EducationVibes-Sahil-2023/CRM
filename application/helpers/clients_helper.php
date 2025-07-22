@@ -2831,3 +2831,75 @@ function offerletterStatus()
         ->get()
         ->result_array();
 }
+
+function filter_country_university_array($leadType)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('s.country_name, s.university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name');
+    $CI->db->from(db_prefix() . 'clients c');
+    $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id');
+    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id');
+    $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid');
+    $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id');
+    $CI->db->where('l.type', $leadType);
+    $CI->db->where('s.status', 1);
+    $query = $CI->db->get();
+    $result = $query->result_array();
+
+    $countries = [];
+    $universities = [];
+    $counselor = [];
+    $sources = [];
+
+    $seenCountries = [];
+    $seenUniversities = [];
+    $seenCounselor = [];
+    $seenSources = [];
+
+    foreach ($result as $row) {
+        if (!empty($row['country_name']) && !isset($seenCountries[$row['country_name']])) {
+            $countries[] = [
+                "id" => $row['country_id'],
+                "country_name" => $row['country_name']
+            ];
+            $seenCountries[$row['country_name']] = true;
+        }
+
+        if (!empty($row['university_name']) && !isset($seenUniversities[$row['university_name']])) {
+            $universities[] = [
+                "id" => $row['university_id'],
+                "university_name" => $row['university_name']
+            ];
+            $seenUniversities[$row['university_name']] = true;
+        }
+        if (!empty($row['staffid']) && !isset($seenCounselor[$row['staffid']])) {
+            $counselor[] = [
+                "staffid" => $row['staffid'],
+                "firstname" => $row['firstname'],
+                "lastname" => $row['lastname']
+            ];
+            $seenCounselor[$row['staffid']] = true;
+        }
+        if (!empty($row['source_id']) && !isset($seenSources[$row['source_id']])) {
+            $sources[] = [
+                "id" => $row['source_id'],
+                "name" => $row['source_name']
+            ];
+            $seenSources[$row['source_id']] = true;
+        }
+    }
+
+    // Optional: Sort alphabetically by name
+    usort($countries, fn($a, $b) => strcmp($a['country_name'], $b['country_name']));
+    usort($universities, fn($a, $b) => strcmp($a['university_name'], $b['university_name']));
+    usort($counselor, fn($a, $b) => strcmp($a['staffid'], $b['staffid']));
+    usort($sources, fn($a, $b) => strcmp($a['id'], $b['id']));
+
+    return [
+        'countries' => $countries,
+        'universities' => $universities,
+        'counselor' => $counselor,
+        'source' => $sources,
+    ];
+}
