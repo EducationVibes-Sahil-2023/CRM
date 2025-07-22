@@ -6990,7 +6990,6 @@ class Clients extends AdminController
         $client_id = $this->input->post("client_id");
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $fees_deposite = !empty($this->input->post("fees_deposite")) ? json_decode($this->input->post("fees_deposite"), true) : [];
-        $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
         $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
 
 
@@ -7089,14 +7088,30 @@ class Clients extends AdminController
         if (!empty($batch_update_data)) {
             $update = $this->db->update_batch(db_prefix() . 'client_university_shortlisting', $batch_update_data, 'id');
 
+            $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id, 1);
 
             if ($save == 1) {
 
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => FEES_DEPOSITE,
-                    "applicant_sub_status" => FEES_DEPOSITE_COMPLETED,
-                ];
+                if (
+                    empty($university_shortlisting_data['fees_deposite_date']) ||
+                    $university_shortlisting_data['fees_deposite_date'] == "0000-00-00" ||
+                    empty($university_shortlisting_data['payment_amount']) ||
+                    empty($update_entry['university_fees_payment_slip'])
+                ) {
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => FEES_DEPOSITE,
+                        "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                    ];
+                } else {
+                    $update_client_data = [
+                        "applicant_status" => 0,
+                        "applicant_stage" => FEES_DEPOSITE,
+                        "applicant_sub_status" => FEES_DEPOSITE_COMPLETED,
+                    ];
+                }
+
+
                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
             } else {
                 $update_client_data = [
