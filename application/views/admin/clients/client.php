@@ -36,7 +36,7 @@
             </div>
          <?php } ?>
          <?php if (isset($client)) { ?>
-            <div class="col-md-2">
+            <div class="col-md-12">
                <div class="panel_s mbot5">
                   <div class="panel-body padding-10">
                      <h4 class="bold">
@@ -79,7 +79,7 @@
             </div>
          <?php } ?>
          <div class="col-md-<?php if (isset($client)) {
-                                 echo 10;
+                                 echo 12;
                               } else {
                                  echo 12;
                               } ?>">
@@ -97,6 +97,10 @@
                            <style>
                               .complete {
                                  color: blue;
+                              }
+
+                              .customer-tabs li {
+                                 display: inline-block;
                               }
                            </style>
                         </div>

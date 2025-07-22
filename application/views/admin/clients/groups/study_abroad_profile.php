@@ -30,6 +30,18 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
+$priority_array = [];
+for ($i = 1; $i <= 5; $i++) {
+    $priority_array[] = [
+        'id' => $i,
+        'name' => "P $i",
+    ];
+}
+array_unshift($priority_array, array("id" => "", "name" => ""));
+
+
+
+
 // array_push($documents_type, array("id" => "application", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
 // array_push($documents_type, array("id" => "invitation", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
 // array_push($documents_type, array("id" => "visa", "name" => "Visa", "file_type" => ".pdf,image/*"));
@@ -73,13 +85,14 @@ if (!empty($applicant_documents[0]["data"])) {
 
 
 
+$startYear = 2000;
+$currentYear = date('Y');
 $years_array = [];
-$currentYear = date("Y");
 
-// Generate an array of the last 15 years
-for ($i = 0; $i < 15; $i++) {
-    $years_array[]["year"] = $currentYear - $i;
+for ($year = $currentYear; $year >= $startYear; $year--) {
+    $years_array[] = ["year" => $year];
 }
+
 array_unshift($years_array, array(""));
 
 array_unshift($diploma_board, array("id" => "", "name" => "Select Diploma"));
@@ -244,6 +257,10 @@ if ($lead_type_status == 1) {
 </style>
 
 <style>
+    .p-0 {
+        padding: 0px;
+    }
+
     .currency-selector {
         position: absolute;
         left: 0;
@@ -754,7 +771,7 @@ if ($lead_type_status == 1) {
                     <div class="col-md-12">
                         <div class="card">
 
-                            <h4>Admission Preferences</h4>
+                            <h4>Admission Preferences <span class="float-right h4">Budget Range : <?= !empty($client->budget_range) ? $client->budget_range . " LPA " : '' ?></span></h4>
                             <hr>
                             <form id="admission-preferences-form" class="form-disabled" onsubmit=" return false;">
                                 <div class="">
@@ -790,7 +807,7 @@ if ($lead_type_status == 1) {
                                         <div class="col-lg-3">
                                             <div class="form-group">
                                                 <label for="degree">Degree</label>
-                                            
+
                                                 <select class="form-control selectpicker" onchange="degreeChange()"
                                                     name="degree" id="degree" required required-check>
                                                     <option value="">Select a Degree</option>
@@ -855,13 +872,17 @@ if ($lead_type_status == 1) {
                                         <?php if (!empty($university_shortlisting)) {
                                             foreach ($university_shortlisting as $key => $shortlisting) { ?>
 
-                                                <div class="university-combinations row col-md-12">
-                                                    <div class="col-lg-3">
+                                                <div class="university-combinations col-md-12">
+
+                                                    <div class="col-lg-1 p-0">
+
+                                                        <?= render_select('priority', $priority_array, array('id', 'name'), "Priority", [$shortlisting["is_primary"]], ["onchange" => "isPrimaryUniversity(this)"], [], "", "priority-selection", "", "priority") ?>
+                                                    </div>
+                                                    <div class="col-lg-2">
                                                         <div class="form-group">
                                                             <input type="hidden" class="shortlisting_id"
                                                                 value="<?= $shortlisting["id"] ?>">
-                                                            <label for="study_country"> <input type="checkbox" <?= $shortlisting["is_primary"] == 1 ? "checked" : "" ?> class="is_primary"
-                                                                    value="" onchange="isPrimaryUniversity(this)"> Country <small
+                                                            <label for="study_country"> Country <small
                                                                     class="text-danger">*</small></label>
 
                                                             <select
@@ -939,13 +960,14 @@ if ($lead_type_status == 1) {
 
                                             <?php }
                                         } else { ?>
-                                            <div class="university-combinations row col-md-12">
-                                                <div class="col-lg-3">
+                                            <div class="university-combinations  col-md-12">
+                                                <div class="col-lg-1 p-0">
+
+                                                    <?= render_select('priority', $priority_array, array('id', 'name'), "Priority", [], ["onchange" => "isPrimaryUniversity(this)"], [], "", "priority-selection", "", "priority") ?>
+                                                </div>
+                                                <div class="col-lg-2">
                                                     <div class="form-group">
-                                                        <input type="hidden" class="shortlisting_id"
-                                                            value="<?= $shortlisting["id"] ?>">
-                                                        <label for="study_country"> <input type="checkbox" class="is_primary"
-                                                                value="" onchange="isPrimaryUniversity(this)"> Country <small
+                                                        <label for="study_country"> Country <small
                                                                 class="text-danger">*</small></label>
                                                         <select
                                                             class="form-control selectpicker required required-check study_country"
@@ -1034,98 +1056,113 @@ if ($lead_type_status == 1) {
                                 <div class="row accadmic-education-div">
                                     <h5> 10<sup>th</sup> Academic Details <small class="text-danger">*</small></h5>
                                     <hr>
-                                    <div class="col-lg-3 border2 border1">
-                                        <div class="c1">
-                                            <p>Board <?= $text_danger_mbbs ?> </p>
-                                        </div>
-                                        <div class="c2">
-                                            <?php
-                                            $selected = [];
-                                            $selected[] = $academicdetails->tenth_board;
-                                            echo render_select('tenth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_board"); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2 border2 border1">
-                                        <div class="c1">
-                                            <p>Year of Passing <?= $text_danger_mbbs ?></p>
-                                        </div>
-                                        <div class="c2">
-                                            <?php
-                                            $selected = [];
-                                            $selected[] = $academicdetails->tenth_passing_year;
-                                            echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_passing_year"); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2 border2 border1">
-                                        <div class="c1">
-                                            <p>Marking Scheme <?= $text_danger_mbbs ?></p>
-                                        </div>
-                                        <div class="c2">
-                                            <?php
-                                            $selected = [];
-                                            $selected[] = $academicdetails->tenth_marking_scheme;
-                                            echo render_select('tenth_marking_scheme', $markingSchemes, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_marking_scheme"); ?>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2 border2 border1">
-                                        <div class="c1">
-                                            <p>Percentage / CGPA <?= $text_danger_mbbs ?></p>
-                                        </div>
-                                        <div class="c2">
-                                            <input class="form-control" type="float" <?= $text_danger_mbbs_required ?>
-                                                class="form-group" placeholder="Enter Marks" name="tenth_percentage"
-                                                value="<?= $academicdetails->tenth_percentage; ?>">
-                                        </div>
-                                    </div>
-                                    <?php
-                                    foreach ($profile_section["10_stage"] as $s_stage) {
-                                        $doc_type = $s_stage["name"] ?? '';
-                                        $doc_id = $s_stage["id"] ?? '';
-                                        $info = $s_stage["info"] ?? '';
-                                        $accept = $s_stage["file_type"] ?? '';
-                                        $is_mandatory = !empty($s_stage["mandatry"]);
-                                        $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
-                                        $required_attr = $is_mandatory ? "required required-check" : '';
-                                        $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
-                                        $required_attr = !empty($file_url) ? "" : $required_attr;
-
-                                    ?>
-                                        <div class="col-lg-3 media-files  ">
-                                            <div class="form-group">
-                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?>
-                                                    <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?>
-                                                    <?php if (!empty($info)) : ?>
-                                                        &nbsp;<i class="fa fa-info-circle"
-                                                            title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
-                                                    <?php endif; ?></label>
-                                                <input type="hidden" name="doc_type[]"
-                                                    value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="hidden" name="doc_name[]"
-                                                    value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="hidden" name="doc_url[]"
-                                                    value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
-                                                <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
-                                                    class="form-control"
-                                                    accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
-                                                    <?= $required_attr ?>>
+                                    <div class="row">
+                                        <div class="col-lg-4 border2 border1">
+                                            <div class="c1">
+                                                <p>Board <?= $text_danger_mbbs ?> </p>
+                                            </div>
+                                            <div class="c2">
                                                 <?php
-                                                if (!empty($file_url)) {
-                                                ?>
-                                                    <div class="margin-top">
-                                                        <i class="fa fa-eye  btn btn-xs btn-primary"
-                                                            onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                        <i class="fa fa-download  btn btn-xs btn-primary"
-                                                            onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
-                                                    </div>
-                                                <?php
-                                                }
-                                                ?>
-
+                                                $selected = [];
+                                                $selected[] = $academicdetails->tenth_board;
+                                                echo render_select('tenth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_board"); ?>
                                             </div>
                                         </div>
-                                    <?php
-                                    }
-                                    ?>
+                                        <div class="col-lg-2 border2 border1">
+                                            <div class="c1">
+                                                <p>Year of Starting <?= $text_danger_mbbs ?></p>
+                                            </div>
+                                            <div class="c2">
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->tenth_starting_year;
+                                                echo render_select('tenth_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_starting_year"); ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 border2 border1">
+                                            <div class="c1">
+                                                <p>Year of Passing <?= $text_danger_mbbs ?></p>
+                                            </div>
+                                            <div class="c2">
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->tenth_passing_year;
+                                                echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_passing_year"); ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 border2 border1">
+                                            <div class="c1">
+                                                <p>Marking Scheme <?= $text_danger_mbbs ?></p>
+                                            </div>
+                                            <div class="c2">
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->tenth_marking_scheme;
+                                                echo render_select('tenth_marking_scheme', $markingSchemes, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_marking_scheme"); ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 border2 border1">
+                                            <div class="c1">
+                                                <p>Percentage / CGPA <?= $text_danger_mbbs ?></p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control" type="float" <?= $text_danger_mbbs_required ?>
+                                                    class="form-group" placeholder="Enter Marks" name="tenth_percentage"
+                                                    value="<?= $academicdetails->tenth_percentage; ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <?php
+                                        foreach ($profile_section["10_stage"] as $s_stage) {
+                                            $doc_type = $s_stage["name"] ?? '';
+                                            $doc_id = $s_stage["id"] ?? '';
+                                            $info = $s_stage["info"] ?? '';
+                                            $accept = $s_stage["file_type"] ?? '';
+                                            $is_mandatory = !empty($s_stage["mandatry"]);
+                                            $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+                                            $required_attr = $is_mandatory ? "required required-check" : '';
+                                            $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+                                            $required_attr = !empty($file_url) ? "" : $required_attr;
+
+                                        ?>
+                                            <div class="col-lg-4 media-files  ">
+                                                <div class="form-group">
+                                                    <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?>
+                                                        <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?>
+                                                        <?php if (!empty($info)) : ?>
+                                                            &nbsp;<i class="fa fa-info-circle"
+                                                                title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                        <?php endif; ?></label>
+                                                    <input type="hidden" name="doc_type[]"
+                                                        value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="hidden" name="doc_name[]"
+                                                        value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="hidden" name="doc_url[]"
+                                                        value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
+                                                        class="form-control"
+                                                        accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
+                                                        <?= $required_attr ?>>
+                                                    <?php
+                                                    if (!empty($file_url)) {
+                                                    ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye  btn btn-xs btn-primary"
+                                                                onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                            <i class="fa fa-download  btn btn-xs btn-primary"
+                                                                onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                        </div>
+                                                    <?php
+                                                    }
+                                                    ?>
+
+                                                </div>
+                                            </div>
+                                        <?php
+                                        }
+                                        ?>
+                                    </div>
                                 </div>
 
                                 <div class=" after accadmic-education-div">
@@ -1160,7 +1197,19 @@ if ($lead_type_status == 1) {
                                                     echo render_select('twelth_board', $board_dropdown, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_board"); ?>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 border2 border1">
+                                            <div class="col-lg-2 border2 border1">
+                                                <div class="c1">
+                                                    <p>Year of Starting <?= $text_danger_mbbs ?></p>
+                                                </div>
+                                                <div class="c2">
+                                                    <?php
+                                                    $selected = [];
+                                                    $selected[] = $academicdetails->twelth_starting_year;
+                                                    echo render_select('twelth_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_starting_year"); ?>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1172,7 +1221,7 @@ if ($lead_type_status == 1) {
 
                                                 </div>
                                             </div>
-                                            <div class="col-lg-3 border2 border1">
+                                            <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Result Status <?= $text_danger_mbbs ?></p>
 
@@ -1291,12 +1340,12 @@ if ($lead_type_status == 1) {
                                     </div>
                                 </div>
 
-                                <div class="row accadmic-education-div" id="diplomaAcademicDetails"
+                                <div class="accadmic-education-div" id="diplomaAcademicDetails"
                                     style="display:<?= ($academicdetails->after_x_status == 'Diploma' || $academicdetails->after_x_status == 'Both') ? 'block' : 'none' ?>">
                                     <h5>Diploma Academic Details <span class="text-danger">*</span></h5>
                                     <hr>
                                     <div class="row">
-                                        <div class="col-lg-4 border2 border1">
+                                        <div class="col-lg-3 border2 border1">
                                             <div class="c1">
                                                 <p>Institute Name <?= $text_danger_mbbs ?></p>
                                             </div>
@@ -1306,7 +1355,7 @@ if ($lead_type_status == 1) {
                                                     value="<?= $academicdetails->diploma_institute; ?>">
                                             </div>
                                         </div>
-                                        <div class="col-lg-4 border2 border1">
+                                        <div class="col-lg-2 border2 border1">
                                             <div class="c1">
                                                 <p>University <?= $text_danger_mbbs ?></p>
                                             </div>
@@ -1317,6 +1366,18 @@ if ($lead_type_status == 1) {
                                                 $selected = [];
                                                 $selected[] = $academicdetails->diploma_board;
                                                 echo render_select('diploma_board', $diploma_board, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_board"); ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-2 border2 border1">
+                                            <div class="c1">
+                                                <p>Year of Starting <?= $text_danger_mbbs ?></p>
+                                            </div>
+                                            <div class="c2">
+                                                <!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="diploma_passing_year" value="<?= $academicdetails->diploma_starting_year; ?>"> -->
+                                                <?php
+                                                $selected = [];
+                                                $selected[] = $academicdetails->diploma_starting_year;
+                                                echo render_select('diploma_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_starting_year"); ?>
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1340,6 +1401,17 @@ if ($lead_type_status == 1) {
                                                 $selected = [];
                                                 $selected[] = $academicdetails->diploma_result_status;
                                                 echo render_select('diploma_result_status', $resultStatus, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_result_status"); ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-1 border2 border1 p-0">
+                                            <div class="c1">
+                                                <p>Backlogs <?= $text_danger_mbbs ?></p>
+                                            </div>
+                                            <div class="c2">
+                                                <input class="form-control" required type="number" class="form-group"
+                                                    placeholder="Backlock" name="diploma_backlock"
+                                                    id="diploma_backlock"
+                                                    value="<?= $academicdetails->diploma_backlock; ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -1438,7 +1510,7 @@ if ($lead_type_status == 1) {
                                     </div>
                                 </div>
 
-                                <div id="Qualification-section-div hide">
+                                <div id="Qualification-section-div" style="display:none;">
                                     <div class="after accadmic-education-div">
                                         <h4>Qualification <span class="text-danger">*</span></h4>
                                         <hr>
@@ -1459,7 +1531,7 @@ if ($lead_type_status == 1) {
                                         <h5>Graduation Details <span class="text-danger">*</span></h5>
                                         <hr>
                                         <div class="row">
-                                            <div class="col-lg-4 border2 border1">
+                                            <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Course Name <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1470,7 +1542,7 @@ if ($lead_type_status == 1) {
                                                     echo render_select('graduation_course', $course_list_ug, array('id', 'course_name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_course"); ?>
                                                 </div>
                                             </div>
-                                            <div class="col-lg-4 border2 border1">
+                                            <div class="col-lg-3 border2 border1">
                                                 <div class="c1">
                                                     <p>University <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1480,6 +1552,18 @@ if ($lead_type_status == 1) {
                                                     $selected = [];
                                                     $selected[] = $academicdetails->graduation_board;
                                                     echo render_select('graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_board"); ?>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 border2 border1">
+                                                <div class="c1">
+                                                    <p>Year of Starting <?= $text_danger_mbbs ?> </p>
+                                                </div>
+                                                <div class="c2">
+                                                    <?php
+                                                    $selected = [];
+                                                    $selected[] = $academicdetails->graduation_starting_year;
+                                                    echo render_select('graduation_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_starting_year"); ?>
 
                                                 </div>
                                             </div>
@@ -1504,6 +1588,17 @@ if ($lead_type_status == 1) {
                                                     $selected = [];
                                                     $selected[] = $academicdetails->graduation_result_status;
                                                     echo render_select('graduation_result_status', $resultStatus, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_result_status"); ?>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-1 border2 border1 p-0">
+                                                <div class="c1">
+                                                    <p>Backlogs <?= $text_danger_mbbs ?></p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" required type="number" class="form-group"
+                                                        placeholder="Backlock" name="graduation_backlock"
+                                                        id="graduation_backlock"
+                                                        value="<?= $academicdetails->graduation_backlock; ?>">
                                                 </div>
                                             </div>
                                         </div>
@@ -1589,7 +1684,7 @@ if ($lead_type_status == 1) {
                                         <h5>Post Graduation Details <span class="text-danger">*</span></h5>
                                         <hr>
                                         <div class="row">
-                                            <div class="col-lg-4 border2 border1">
+                                            <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Course Name <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1605,7 +1700,7 @@ if ($lead_type_status == 1) {
                                                 echo render_select('post_graduation_course', $course_list_pg, array('id', 'course_name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_course"); ?>
 
                                             </div>
-                                            <div class="col-lg-4 border2 border1">
+                                            <div class="col-lg-3 border2 border1">
                                                 <div class="c1">
                                                     <p>University <?= $text_danger_mbbs ?></p>
                                                 </div>
@@ -1614,6 +1709,18 @@ if ($lead_type_status == 1) {
                                                     $selected = [];
                                                     $selected[] = $academicdetails->post_graduation_board;
                                                     echo render_select('post_graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_board"); ?>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-2 border2 border1">
+                                                <div class="c1">
+                                                    <p>Year of Starting <?= $text_danger_mbbs ?></p>
+                                                </div>
+                                                <div class="c2">
+                                                    <?php
+                                                    $selected = [];
+                                                    $selected[] = $academicdetails->post_graduation_starting_year;
+                                                    echo render_select('post_graduation_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_starting_year"); ?>
+
                                                 </div>
                                             </div>
                                             <div class="col-lg-2 border2 border1">
@@ -1628,6 +1735,7 @@ if ($lead_type_status == 1) {
 
                                                 </div>
                                             </div>
+
                                             <div class="col-lg-2 border2 border1">
                                                 <div class="c1">
                                                     <p>Result Status <?= $text_danger_mbbs ?></p>
@@ -1636,6 +1744,17 @@ if ($lead_type_status == 1) {
                                                 $selected = [];
                                                 $selected[] = $academicdetails->post_graduation_result_status;
                                                 echo render_select('post_graduation_result_status', $resultStatus, array('name', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_result_status"); ?>
+                                            </div>
+                                            <div class="col-lg-1 border2 border1 p-0">
+                                                <div class="c1">
+                                                    <p>Backlogs <?= $text_danger_mbbs ?></p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input class="form-control" required type="number" class="form-group"
+                                                        placeholder="Backlock" name="post_graduation_backlock"
+                                                        id="post_graduation_backlock"
+                                                        value="<?= $academicdetails->post_graduation_backlock; ?>">
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="row result-change-hide" style="display:<?= ($academicdetails->graduation_result_status == 'Awaited') ? 'none' : '' ?>">
@@ -2254,6 +2373,10 @@ if ($lead_type_status == 1) {
             this.value = this.value.replace(/\D/g, '').substring(0, 10);
         });
 
+        if ($("#degree option:selected").data("type") == "PG") {
+            $("#Qualification-section-div").show();
+        }
+
     });
 
 
@@ -2518,11 +2641,13 @@ if ($lead_type_status == 1) {
         applicationIndex++;
 
         let html = `
-    <div class="university-combinations row col-md-12 mt-3">
-        <div class="col-lg-3">
+    <div class="university-combinations  col-md-12 mt-3">
+     <div class="col-lg-1 p-0">
+        <?= render_select('priority', $priority_array, array('id', 'name'), "Priority", [], ["onchange" => "isPrimaryUniversity(this)"], [], "", "priority-selection", "", "priority") ?>
+            </div>
+        <div class="col-lg-2">
             <div class="form-group">
-                <label for="study_country_${applicationIndex}"> <input type="checkbox" class="is_primary"
-                                                                    value="" onchange="isPrimaryUniversity(this)">  Country <small class="text-danger">*</small></label>
+                <label for="study_country_${applicationIndex}"> Country <small class="text-danger">*</small></label>
                 <select
                     class="form-control selectpicker required required-check study_country"
                     name="study_country[]"
@@ -2802,9 +2927,7 @@ if ($lead_type_status == 1) {
 
     }
 
-    if (degree == "PG") {
-        $(".Qualification-section-div").removeClass("hide");
-    }
+
     // Attach live search to selectpicker
 
     function changeELS_status(event) {
@@ -2824,13 +2947,14 @@ if ($lead_type_status == 1) {
     }
 
     function isPrimaryUniversity(event) {
-        if ($(event).is(":checked")) {
-            $(".is_primary").prop("checked", false);
-            $(event).prop("checked", true);
-        } else {
-            $(event).prop("checked", false);
-        }
+
     }
+
+
+
+
+
+
 
     function genrateEntranceBlock(getAcadmicType) {
         let html = `<div class='row col-md-12 mb-5 entrance-score-div'>`;
