@@ -831,9 +831,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         <?php if (!empty($file_url)) : ?>
                                                             <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                             <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
-                                                            <?php if ($delete_document_status) { ?>
-                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
-                                                            <?php } ?>
+
 
                                                             <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                                 <div class="action_button_<?= $doc_id ?>">
@@ -845,6 +843,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 $status_text = ($approval_status == 1) ? 'Approved' : 'Rejected';
                                                                 $status_text_color = ($approval_status == 1) ? 'text-success' : 'text-danger';
                                                             ?>
+                                                                &nbsp;
+                                                                <?php if ($delete_document_status) { ?>
+                                                                    <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
+                                                                <?php } ?>
                                                                 <span class="<?= $status_text_color ?>"><b><?= $status_text ?></b></span>
                                                             <?php endif; ?>
                                                         <?php endif; ?>
@@ -1669,7 +1671,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                             <?php } ?>
                             <?php if (!empty($track['skip']) && $track['skip'] == 1 || !empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country) { ?>
-                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>"onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ? 1 : $track['skip'] ?>')" value="Skip" />
+                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ? 1 : $track['skip'] ?>')" value="Skip" />
                             <?php } ?>
                         <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
