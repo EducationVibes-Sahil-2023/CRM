@@ -843,12 +843,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 $status_text = ($approval_status == 1) ? 'Approved' : 'Rejected';
                                                                 $status_text_color = ($approval_status == 1) ? 'text-success' : 'text-danger';
                                                             ?>
-                                                                &nbsp;
-                                                                <?php if ($delete_document_status) { ?>
-                                                                    <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
-                                                                <?php } ?>
                                                                 <span class="<?= $status_text_color ?>"><b><?= $status_text ?></b></span>
                                                             <?php endif; ?>
+                                                            &nbsp;
+                                                            <?php if ($delete_document_status) { ?>
+                                                                <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
+                                                            <?php } ?>
                                                         <?php endif; ?>
 
                                                     </td>
