@@ -828,9 +828,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             <?php if (!empty($file_url)) : ?>
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
                                                                 <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>&nbsp;
-                                                                <?php if ($delete_document_status) { ?>
-                                                                    <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
-                                                                <?php } ?>
+
 
                                                                 <?php if (empty($applicant_documents[$doc_id]["approval_status"])) : ?>
                                                                     <div class="action_button_<?= $doc_id ?> m">
@@ -842,6 +840,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                     $status_text = ($approval_status == 1) ? 'Approved' : 'Rejected';
                                                                     $status_text_color = ($approval_status == 1) ? 'text-success' : 'text-danger';
                                                                 ?>
+                                                                    &nbsp;
+                                                                    <?php if ($delete_document_status) { ?>
+                                                                        <button class="btn-xs btn btn-danger" onclick="document_approved(this,<?= $doc_id ?>)"><i class="fa fa-trash"></i></button>
+                                                                    <?php } ?>
                                                                     <span class="<?= $status_text_color ?> ms-5"><b><?= $status_text ?></b></span>
                                                                 <?php endif; ?>
                                                             <?php endif; ?>
