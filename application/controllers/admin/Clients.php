@@ -5408,7 +5408,7 @@ class Clients extends AdminController
 
                     $query = $this->db->get(db_prefix() . 'client_university_shortlisting');
 
-                    if ($query->num_rows() > 0) {
+                    if ($query && $query->num_rows() > 0) {
                         $this->db->where([
                             "client_id" => $client_id,
                             "id" => $shortlisting_id
@@ -5582,7 +5582,7 @@ class Clients extends AdminController
 
                     $query = $this->db->get(db_prefix() . 'client_university_shortlisting');
 
-                    if ($query->num_rows() > 0) {
+                    if ($query && $query->num_rows() > 0) {
                         $this->db->where([
                             "client_id" => $client_id,
                             "id" => $shortlisting_id

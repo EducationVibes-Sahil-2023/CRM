@@ -327,14 +327,22 @@ if ($this->ci->input->post('apostille_status')) {
 }
 
 
-if ($this->ci->input->post('application_stage')) {
-    array_push($where, 'AND ' . db_prefix() . 'clients.applicant_stage = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage'))));
-}
+if ($this->ci->input->post('type') == 1) {
+    if ($this->ci->input->post('application_stage')) {
+        array_push($where, 'AND ' . db_prefix() . 'clients.applicant_stage = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage'))));
+    }
 
+    if ($this->ci->input->post('application_sub_stage')) {
+        array_push($where, 'AND ' . db_prefix() . 'clients.applicant_sub_status = ' . $this->ci->db->escape($this->ci->input->post('application_sub_stage')));
+    }
+} else {
+    if ($this->ci->input->post('application_stage')) {
+        array_push($where, 'AND ' . db_prefix() . 'client_university_shortlisting.applicant_stage = ' . ($this->ci->db->escape_str($this->ci->input->post('application_stage'))));
+    }
 
-
-if ($this->ci->input->post('application_sub_stage')) {
-    array_push($where, 'AND ' . db_prefix() . 'clients.applicant_sub_status = ' . $this->ci->db->escape($this->ci->input->post('application_sub_stage')));
+    if ($this->ci->input->post('application_sub_stage')) {
+        array_push($where, 'AND ' . db_prefix() . 'client_university_shortlisting.applicant_sub_status = ' . $this->ci->db->escape($this->ci->input->post('application_sub_stage')));
+    }
 }
 
 if ($this->ci->input->post('university')) {
@@ -525,13 +533,24 @@ if ($this->ci->input->post('to_date')) {
     array_push($where, 'AND DATE(' . db_prefix() . 'clients.datecreated) BETWEEN "' . $this->ci->db->escape_str($from_date) . '" AND "' . $this->ci->db->escape_str($to_date) . '"');
 }
 
-if ($this->ci->input->post('session_intake')) {
-    $session_intake = $this->ci->input->post('session_intake');
-    array_push(
-        $where,
-        "AND " . db_prefix() . "admission_preferences.session_intake
+if ($this->ci->input->post('type') == 1) {
+    if ($this->ci->input->post('session_intake')) {
+        $session_intake = $this->ci->input->post('session_intake');
+        array_push(
+            $where,
+            "AND " . db_prefix() . "admission_preferences.session_intake
         = '" . $this->ci->db->escape_str($session_intake) . "'"
-    );
+        );
+    }
+} else {
+    if ($this->ci->input->post('session_intake')) {
+        $session_intake = $this->ci->input->post('session_intake');
+        array_push(
+            $where,
+            "AND " . db_prefix() . "client_university_shortlisting.session_intake
+        = '" . $this->ci->db->escape_str($session_intake) . "'"
+        );
+    }
 }
 
 if ($this->ci->input->post('last_to_date')) {
@@ -644,7 +663,7 @@ foreach ($rResult as $aRow) {
         // Set base URL and client name anchor
         if ($aRow["client_type"] == 2) {
             // EV Partner
-            $url = admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=tracker');
+            $url = admin_url('clients/ev_partner/' . $aRow['userid'] . '?group=study_tracker');
             $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
         } else {
             // Regular client
@@ -652,7 +671,7 @@ foreach ($rResult as $aRow) {
                 $url = admin_url('clients/client/' . $aRow['userid']);
                 $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
             } else {
-                $url = admin_url('clients/client/' . $aRow['userid'] . '?group=tracker&shortlisting_id=' . $aRow['shortlisting_id']);
+                $url = admin_url('clients/client/' . $aRow['userid'] . '?group=study_tracker&shortlisting_id=' . $aRow['shortlisting_id']);
                 $companyLink = '<a href="' . $url . '" target="_blank">' . $aRow['name'] . '</a>';
             }
         }
