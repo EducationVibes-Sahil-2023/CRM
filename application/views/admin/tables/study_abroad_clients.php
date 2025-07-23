@@ -640,7 +640,9 @@ if (!empty($_POST["search"]["value"])) {
 if ($this->ci->input->post('type') == 1) {
     $groupBy = 'GROUP BY ' . db_prefix() . 'clients.userid';
 } else if ($this->ci->input->post('type') == 2) {
-    $groupBy = 'GROUP BY ' . db_prefix() . 'client_university_shortlisting.id order by ' . db_prefix() . 'client_university_shortlisting.client_id,' . db_prefix() . 'client_university_shortlisting.id DESC';
+    $groupBy = 'GROUP BY ' . db_prefix() . 'client_university_shortlisting.id 
+                     ORDER BY ' . db_prefix() . 'client_university_shortlisting.client_id DESC, 
+                              ' . db_prefix() . 'client_university_shortlisting.is_primary ASC';
 }
 
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], $groupBy, '', '', $search_column);
