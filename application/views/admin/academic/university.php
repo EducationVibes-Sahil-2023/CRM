@@ -6,11 +6,13 @@
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
-                        <div class="_buttons">
-                            <a href="#" onclick="new_university(); return false;" class="btn btn-info pull-left display-block">
-                                <?php echo "New University"; ?>
-                            </a>
-                        </div>
+                        <?php if (has_permission('academic', '', 'create')) { ?>
+                            <div class="_buttons">
+                                <a href="#" onclick="new_university(); return false;" class="btn btn-info pull-left display-block">
+                                    <?php echo "New University"; ?>
+                                </a>
+                            </div>
+                        <?php } ?>
                         <div class="clearfix"></div>
                         <hr class="hr-panel-heading" />
                         <div class="clearfix"></div>
