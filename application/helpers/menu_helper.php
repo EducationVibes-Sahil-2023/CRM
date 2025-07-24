@@ -383,6 +383,29 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
+        if (has_permission('academic', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('academic', [
+                        'collapse' => true,
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "Academic Data",
+                        'position' => 25,
+                ]);
+                $CI->app_menu->add_sidebar_children_item('academic', [
+                        'slug'     => 'universities',
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "Universities",
+                        'href'     => admin_url('academic/university'),
+                        'position' => 5,
+                ]);
+                $CI->app_menu->add_sidebar_children_item('academic', [
+                        'slug'     => 'courses',
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "Courses",
+                        'href'     => admin_url('academic/courses'),
+                        'position' => 5,
+                ]);
+        }
+
         // Setup menu
         if (has_permission('staff', '', 'view')) {
                 $CI->app_menu->add_setup_menu_item('staff', [

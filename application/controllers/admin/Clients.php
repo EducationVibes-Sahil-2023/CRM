@@ -302,8 +302,8 @@ class Clients extends AdminController
                 if ($data["lead_data"]->type == 1) {
                     $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, '', 1);
 
-                    $data['course_list_ug'] =  $this->get_courses("UG");
-                    $data['course_list_pg'] =  $this->get_courses("PG");
+                    $data['course_list_ug'] =  $this->get_courses("Bachelor");
+                    $data['course_list_pg'] =  $this->get_courses("Master");
                 } else {
                     $data['university_shortlisting'] = $this->clients_model->university_shortlisting($id, 1);
                 }
@@ -8524,22 +8524,23 @@ class Clients extends AdminController
 
     function get_courses($degree = "")
     {
-        $this->s_db->select('id, course_name');
-        $this->s_db->from('tbl_courses');
-        $this->s_db->where('status', 0);
+        $this->db->select('id, course_name');
+        $this->db->from('tbl_courses');
+        $this->db->where('status', 1);
         if (!empty($_POST["search"])) {
-            $this->s_db->like("course_name", trim($_POST["search"]));
+            $this->db->like("course_name", trim($_POST["search"]));
         }
         if (!empty($_POST["degree"])) {
-            $this->s_db->where("degree", trim($_POST["degree"]));
+            $this->db->like("course_name", trim($_POST["degree"]));
         }
         if (!empty($degree)) {
-            $this->s_db->where("degree", trim($degree));
+            $this->db->like("course_name", trim($degree));
         }
-        $this->s_db->group_by('course_name');
-        $this->s_db->order_by('course_name', 'asc');
-        $this->s_db->limit(50);
-        $response["filter_data"] = $this->s_db->get()->result_array();
+
+        $this->db->group_by('course_name');
+        $this->db->order_by('course_name', 'asc');
+        $this->db->limit(50);
+        $response["filter_data"] = $this->db->get()->result_array();
 
         if (!empty($degree)) {
             return $response["filter_data"];
