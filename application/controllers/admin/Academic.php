@@ -12,7 +12,7 @@ class Academic extends AdminController
     public function university()
     {
 
-        if (!has_permission('Academic', '', 'view')) {
+        if (!has_permission('academic', '', 'view')) {
             access_denied('Academic view');
             die;
         }
@@ -27,7 +27,7 @@ class Academic extends AdminController
 
     public function courses()
     {
-        if (!has_permission('Academic', '', 'view')) {
+        if (!has_permission('academic', '', 'view')) {
             access_denied('Academic view');
             die;
         }
@@ -40,7 +40,7 @@ class Academic extends AdminController
 
     public function university_name()
     {
-        if (!has_permission('Academic', '', 'create')) {
+        if (!has_permission('academic', '', 'create')) {
             access_denied('Academic create');
             die;
         }
@@ -131,7 +131,7 @@ class Academic extends AdminController
 
     public function courses_name()
     {
-        if (!has_permission('Academic', '', 'create')) {
+        if (!has_permission('academic', '', 'create')) {
             access_denied('Academic create');
             die;
         }
@@ -141,7 +141,7 @@ class Academic extends AdminController
                 $data = $this->input->post();
                 $table = db_prefix() . '_courses';
                 $name = trim($data['name']);
-                 unset($data['name']);
+                unset($data['name']);
                 $success = false;
                 $message = '';
 
