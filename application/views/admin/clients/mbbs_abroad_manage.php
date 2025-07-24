@@ -17,8 +17,8 @@ $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
-$university_list = get_university_list("mbbs abroad");
-$country_list = get_country_list(7);
+$university_list_secondary = get_university_list("mbbs abroad");
+// $country_list = get_country_list(7);
 $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
 $table_view = array_column(get_view_columns(), null, "id");
@@ -32,6 +32,16 @@ $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
 $fly_batch = fly_batch();
 $fly_departure = fly_departure();
+
+
+
+$filter_data = filter_country_university_array(2);
+$university_list = $filter_data['universities'];
+$country_list = $filter_data['countries'];
+$staff = $filter_data['counselor'];
+$sources = $filter_data['source'];
+
+
 
 $neet_status = get_neet_status();
 $neet_status_new = [];
@@ -373,7 +383,7 @@ $client_type = [
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-secondary-university hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('university_secondary[]', $university_list, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Secondary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "secondary_university");
+                                 echo render_select('university_secondary[]', $university_list_secondary, array('university_name', 'university_name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Secondary University", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "secondary_university");
                                  echo '</div>';
                                  ?>
                               </div>

@@ -113,6 +113,11 @@ function get_available_staff_permissions($data = [])
             ],
         ],
 
+        'academic' => [
+            'name'         => _l('Academic Data'),
+            'capabilities' => $withNotApplicableViewOwn,
+        ],
+
         'partners' => [
             'name'         => _l('Partners'),
             'capabilities' => $withNotApplicableViewOwn,

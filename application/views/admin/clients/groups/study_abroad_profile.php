@@ -2765,6 +2765,11 @@ if ($lead_type_status == 1) {
             return;
         }
 
+        if (degreeType == "UG") {
+            degreeType = "Bachelor";
+        } else {
+            degreeType = "Master";
+        }
         courseSelect.empty(); // Clear any existing options
 
         $.ajax({
