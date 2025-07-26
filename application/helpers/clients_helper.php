@@ -2782,12 +2782,12 @@ function get_universities_list($search = '')
         $CI->db->limit(50);
 
         return $CI->db->get()->result_array();
-
     } catch (Exception $e) {
         log_message('error', 'Error fetching universities list: ' . $e->getMessage());
         return [];
     }
 }
+
 
 
 function study_abroad_vendors()
@@ -2931,7 +2931,7 @@ function get_diploma_board_list()
 
         // Order and limit
         $CI->db->order_by('name', 'ASC');
-        $CI->db->limit(50);
+        $CI->db->limit(100);
 
         // Execute query
         $university_dropdown = $CI->db->get()->result_array();
@@ -2941,4 +2941,30 @@ function get_diploma_board_list()
         log_message('error', 'Error fetching diploma list: ' . $e->getMessage());
         return [];
     }
+}
+
+function get_offer_letters($client_id, $shortlisting_id)
+{
+
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->from(db_prefix() . 'university_offer_letter');
+    $CI->db->where('client_id', $client_id);
+    $CI->db->where('shortlisting_id', $shortlisting_id);
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}
+
+
+function get_pre_deposite($client_id, $shortlisting_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->from(db_prefix() . 'applicntion_pre_deposite');
+    $CI->db->where('client_id', $client_id);
+    $CI->db->where('shortlisting_id', $shortlisting_id);
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
 }
