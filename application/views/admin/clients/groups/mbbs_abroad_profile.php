@@ -260,6 +260,11 @@ if ($lead_type_status == 2) {
         padding: 0px;
     }
 
+    .scholarship-details .dropdown.bootstrap-select {
+        width: 100% !important;
+        padding: 0px;
+    }
+
     #applicant_fees .bootstrap-select>.dropdown-toggle {
         /* border: 0px !important; */
     }
@@ -470,9 +475,9 @@ if ($lead_type_status == 2) {
                                         }
                                         ?>
                                     </div>
-                                    <div class="btn-save-fun">
+                                    <div class="btn-save-fun margin-top">
                                         <div class="col-md-12">
-                                            <button type="submit" onclick="save_basic_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                            <button type="submit" onclick="save_basic_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                         </div>
                                     </div>
                                 </form>
@@ -586,9 +591,9 @@ if ($lead_type_status == 2) {
                                     }
                                     ?>
                                 </div>
-                                <div class="btn-save-fun">
+                                <div class="btn-save-fun margin-top">
                                     <div class="col-md-12">
-                                        <button type="submit" onclick="save_passport_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                        <button type="submit" onclick="save_passport_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                     </div>
                                 </div>
                             </form>
@@ -709,8 +714,8 @@ if ($lead_type_status == 2) {
 
                                     </div>
                                 </div>
-                                <div class="row btn-save-fun">
-                                    <div class="col-md-12 text-right  btn-save-fun">
+                                <div class="row btn-save-fun margin-top">
+                                    <div class="col-md-12 text-right  btn-save-fun margin-top">
                                         &nbsp; <button type="submit" onclick="save_admission_preferences()" class="btn btn-primary button-22">Save changes</button>
                                         &nbsp;
                                         <!-- <button type="button" id="freeze_admission_preferences" class="btn btn-warning button-22"><?php echo $admissionpreferences->freeze == 0 ? 'Freeze' : 'Unfreeze'; ?></button> -->
@@ -1110,9 +1115,9 @@ if ($lead_type_status == 2) {
                             </div>
                         </div>
                     </div>
-                    <div class="btn-save-fun">
+                    <div class="btn-save-fun margin-top">
                         <div class="col-md-12">
-                            <button type="submit" onclick="save_admission_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                            <button type="submit" onclick="save_admission_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                         </div>
                     </div>
                 </form>
@@ -1221,7 +1226,7 @@ if ($lead_type_status == 2) {
                             </div>
                             <div class="row ">
                                 <div class="col-md-12">
-                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right hide-btn btn-save-funn">Save changes</button>
+                                    <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right margin-top hide-btn btn-save-fun margin-topn">Save changes</button>
                                 </div>
                             </div>
                         </form>
@@ -1323,7 +1328,7 @@ if ($lead_type_status == 2) {
                                 </div>
                                 <div class="row row">
                                     <div class="col-md-12 ">
-                                        <button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right">Save changes</button>
+                                        <button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                     </div>
                                 </div>
                             </form>
@@ -1444,76 +1449,145 @@ if ($lead_type_status == 2) {
 
                                 <?php } ?>
                             </div>
-                            <div class="row btn-save-fun">
-                                <div class="col-md-12 ">
-                                    <button type="submit" onclick="fees_details()" class="btn btn-primary button-22 pull-right">Save changes</button>
+
+                            <div class="card scholarship-details margin-top">
+                                <h4>Scholarship Details</h4>
+                                <hr>
+                                <div class="col-md-12">
+                                    <div class="form-check checkbox">
+                                        <checkbox class="form-check">
+                                            <input type="checkbox" value="1" onchange="scholarshipCase(this)" class="form-check-input checkbox-group" id="scholarship_status" name="scholarship_status" <?= !empty($client->scholarship_status) && $client->scholarship_status == 1 ? 'checked' : '' ?> <?= !empty($final_sumbit) ? 'disabled' : '' ?>>
+                                            <label class="form-check-label" for="scholarship_status">Scholarship Case</label>
+
+                                    </div>
+
+                                    <div class="row scholarship-case <?= !empty($client->scholarship_status) && $client->scholarship_status == 1 ? '' : 'hide' ?> margin-top">
+                                        <div class="col-md-4 fees-block-scholarship">
+                                            <label>Scholarship Amount</label>
+                                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+
+                                                <div class="input-group-addon currency-symbol-scholarship">
+                                                    <?php
+                                                    $symbol = '$'; // default
+
+                                                    if (!empty($client->scholarship_currency) && !empty($get_currencies[$client->scholarship_currency]["symbol"])) {
+                                                        $symbol = $get_currencies[$client->scholarship_currency]["symbol"];
+                                                    } elseif (empty($client->scholarship_currency)) {
+                                                        $symbol = $get_currencies[3]["symbol"];
+                                                    }
+                                                    ?>
+
+                                                    <?= $symbol ?>
+
+
+                                                </div>
+
+                                                <input type="text" name="scholarship_amount" <?= $required ?> class="form-control scholarship_amount" placeholder="0.00" id="scholarship_amount" value="<?= $client->scholarship_amount ?>" size="8">
+
+                                                <div class="input-group-addon currency-addon">
+                                                    <select name="scholarship_currency_type" id="scholarship_currency_type" class="currency-selector currency-selector-scholarship" onchange="updateSymbol('scholarship')">
+                                                        <?php foreach ($get_currencies as $c) {
+                                                        ?>
+                                                            <option
+                                                                data-symbol="<?= $c['symbol'] ?>"
+                                                                value="<?= $c['id'] ?>"
+                                                                data-placeholder="0.00"
+                                                                <?=
+                                                                (!empty($client->scholarship_currency) && $client->scholarship_currency == $c['id']) ||
+                                                                    (empty($client->scholarship_currency) && !empty(3) && 3 == $c['id'])
+                                                                    ? 'selected'
+                                                                    : ''
+                                                                ?>>
+                                                                <?= $c['name'] ?>
+                                                            </option>
+                                                        <?php
+                                                        }
+                                                        ?>
+                                                    </select>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-8">
+                                            <label for="scholarship_reason">Scholarship Reason</label>
+                                            <textarea name="scholarship_reason" id="scholarship_reason" class="form-control" rows="3" <?= !empty($final_sumbit) ? 'disabled' : '' ?>><?= !empty($client->scholarship_reason) ? $client->scholarship_reason : '' ?></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                    </div>
+                    <div class=" row btn-save-fun margin-top">
+                        <div class="col-md-12 ">
+                            <button type="submit" onclick="fees_details()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
+                        </div>
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <?php if (isset($client)) { ?>
+            <div role="tabpanel" class="tab-pane hide" id="customer_admins">
+                <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit') && (isset($final_sumbit) && $final_sumbit == 0)) { ?>
+                    <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
+                        <a href="#" data-toggle="modal" data-target="#customer_admins_assign" class="btn btn-info mbot30"><?php echo _l('assign_admin'); ?></a>
+                    <?php } ?>
+                    <table class="table dt-table">
+                        <thead>
+                            <tr>
+                                <th><?php echo _l('staff_member'); ?></th>
+                                <th><?php echo _l('customer_admin_date_assigned'); ?></th>
+                                <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
+                                    <th><?php echo _l('options'); ?></th>
+                                <?php } ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($customer_admins as $c_admin) { ?>
+                                <tr>
+                                    <td><a href="<?php echo admin_url('profile/' . $c_admin['staff_id']); ?>">
+                                            <?php echo staff_profile_image($c_admin['staff_id'], array(
+                                                'staff-profile-image-small',
+                                                'mright5'
+                                            ));
+                                            echo get_staff_full_name($c_admin['staff_id']); ?></a>
+                                    </td>
+                                    <td data-order="<?php echo $c_admin['date_assigned']; ?>"><?php echo _dt($c_admin['date_assigned']); ?></td>
+                                    <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
+                                        <td>
+                                            <a href="<?php echo admin_url('clients/delete_customer_admin/' . $client->userid . '/' . $c_admin['staff_id']); ?>" class="btn btn-danger _delete btn-icon"><i class="fa fa-remove"></i></a>
+                                        </td>
+                                    <?php } ?>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                <?php } ?>
+            </div>
+        <?php } ?>
+        <div role="tabpanel" class="tab-pane" id="final-form">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <br>
+                        <br>
+                        <form id="final-form" onsubmit="return false;" class="<?= !empty($final_sumbit || is_Admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) ? 'hide' : '' ?>">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-
-
-            <?php if (isset($client)) { ?>
-                <div role="tabpanel" class="tab-pane hide" id="customer_admins">
-                    <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit') && (isset($final_sumbit) && $final_sumbit == 0)) { ?>
-                        <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-                            <a href="#" data-toggle="modal" data-target="#customer_admins_assign" class="btn btn-info mbot30"><?php echo _l('assign_admin'); ?></a>
-                        <?php } ?>
-                        <table class="table dt-table">
-                            <thead>
-                                <tr>
-                                    <th><?php echo _l('staff_member'); ?></th>
-                                    <th><?php echo _l('customer_admin_date_assigned'); ?></th>
-                                    <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-                                        <th><?php echo _l('options'); ?></th>
-                                    <?php } ?>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($customer_admins as $c_admin) { ?>
-                                    <tr>
-                                        <td><a href="<?php echo admin_url('profile/' . $c_admin['staff_id']); ?>">
-                                                <?php echo staff_profile_image($c_admin['staff_id'], array(
-                                                    'staff-profile-image-small',
-                                                    'mright5'
-                                                ));
-                                                echo get_staff_full_name($c_admin['staff_id']); ?></a>
-                                        </td>
-                                        <td data-order="<?php echo $c_admin['date_assigned']; ?>"><?php echo _dt($c_admin['date_assigned']); ?></td>
-                                        <?php if (has_permission('customers', '', 'create') || has_permission('customers', '', 'edit')) { ?>
-                                            <td>
-                                                <a href="<?php echo admin_url('clients/delete_customer_admin/' . $client->userid . '/' . $c_admin['staff_id']); ?>" class="btn btn-danger _delete btn-icon"><i class="fa fa-remove"></i></a>
-                                            </td>
-                                        <?php } ?>
-                                    </tr>
-                                <?php } ?>
-                            </tbody>
-                        </table>
-                    <?php } ?>
-                </div>
-            <?php } ?>
-            <div role="tabpanel" class="tab-pane" id="final-form">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <br>
-                            <br>
-                            <form id="final-form" onsubmit="return false;" class="<?= !empty($final_sumbit) ? 'hide' : '' ?>">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right">Final Submit</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </div>
+
     </div>
+</div>
 
 </div>
 <?php if (isset($client)) { ?>
@@ -1765,5 +1839,14 @@ if ($lead_type_status == 2) {
     function updateSymbol(id) {
         var selected = $(".currency-selector-" + id + " option:selected");
         $(".currency-symbol-" + id).text(selected.data("symbol"));
+    }
+
+    function scholarshipCase(event) {
+        if (event.checked) {
+            $(".scholarship-case").removeClass("hide");
+        } else {
+            $(".scholarship-case").addClass("hide");
+            $(".scholarship-case").find("input, select, textarea").val("");
+        }
     }
 </script>

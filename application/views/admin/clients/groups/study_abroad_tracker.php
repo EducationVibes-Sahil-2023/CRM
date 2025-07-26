@@ -1,681 +1,110 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
-$staff_list              = $this->leads_model->get_staff_list();
-$staff_list = array_column($staff_list, null, "staffid");
-$selected_university_shortlisting = array_column($university_shortlisting, null, "id");
-$applicant_tracker = applicant_tracker_study($lead_type_status);
-$applicant_pendency = applicant_pendency();
-$pendency_status = applicant_pendency_status();
-$pendencyStaus = pendency_status();
-$offerLetterStatus = offerletterStatus();
-$get_currencies = get_currencies();
-$get_currencies = array_column($get_currencies, null, 'id');
-
+// Initialize and sanitize main values
+$selected_university_shortlisting = array_column($university_shortlisting ?? [], null, "id");
 $applicant_status = !empty($client->tracker_id) ? $client->tracker_id : 0;
-$activeShortlistingId = "";
-if (!empty($_GET['shortlisting_id'])) {
-    $activeShortlistingId = $_GET['shortlisting_id'];
-    $selected_university_shortlisting = $selected_university_shortlisting[$_GET['shortlisting_id']];
-    $applicant_status = $selected_university_shortlisting["tracker_id"];
+$activeShortlistingId = $_GET['shortlisting_id'] ?? '';
+
+// Handle shortlisting logic
+if (!empty($activeShortlistingId) && isset($selected_university_shortlisting[$activeShortlistingId])) {
+    $selected = $selected_university_shortlisting[$activeShortlistingId];
+    $selected_university_shortlisting = $selected;
+    $applicant_status = $selected['tracker_id'] ?? $applicant_status;
 }
 
-$study_abroad_vendors = study_abroad_vendors();
-$profile_creation_data = !empty($profile_creation_data) ? $profile_creation_data : "";
-$university_partner_names = get_university_partner_names();
-// $documents_type =  get_documents($lead_type_status, [], 1);
-$delete_document_status = has_permission('customers', '', 'delete_documents');
-$documents_type =  get_documents($lead_type_status, !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [], 1);
+// Staff list and mapping
+$staff_list_raw = $this->leads_model->get_staff_list();
+$staff_list = array_column($staff_list_raw, null, "staffid");
 
-$documents_type_dropdown = $documents_type =  array_column($documents_type, null, 'id');
-$applicant_documents =  get_clients_documents($client_id);
-$visa_details =  visa_details($client_id, 0, 1);
+// Tracker & pendency
+$applicant_tracker   = applicant_tracker_study($lead_type_status);
+$applicant_pendency  = applicant_pendency();
+$pendency_status     = applicant_pendency_status();
+$pendencyStaus       = pendency_status(); // Consider renaming for clarity
+$offerLetterStatus   = offerletterStatus();
+
+// Currency list
+$get_currencies_raw = get_currencies();
+$get_currencies     = array_column($get_currencies_raw, null, 'id');
+
+// Offer letter and pre-deposit retrieval (only if shortlisting ID exists)
+$offer_letters = !empty($activeShortlistingId) ? get_offer_letters($client_id, $activeShortlistingId) : [];
+$fessDeposite  = !empty($activeShortlistingId) ? get_pre_deposite($client_id, $activeShortlistingId) : [];
+
+// Other supporting data
+$study_abroad_vendors   = study_abroad_vendors();
+$profile_creation_data  = $profile_creation_data ?? '';
+$university_partner_names = get_university_partner_names();
+
+// Document permissions and types
+$delete_document_status = has_permission('customers', '', 'delete_documents');
+
+$country_ids = !empty($admissionpreferences->study_country) ? explode(",", $admissionpreferences->study_country) : [];
+$documents_type_list = get_documents($lead_type_status, $country_ids, 1);
+$documents_type = array_column($documents_type_list, null, 'id');
+$documents_type_dropdown = $documents_type;
+
+// Applicant documents
+$applicant_documents_raw = get_clients_documents($client_id);
+$applicant_documents = [];
+
+if (!empty($applicant_documents_raw[0]['data'])) {
+    $decoded = json_decode($applicant_documents_raw[0]['data'], true);
+    if (json_last_error() === JSON_ERROR_NONE && !empty($decoded)) {
+        $applicant_documents = array_column($decoded, null, "id");
+    }
+}
+
+// Visa-related
+$visa_details = visa_details($client_id, 0, 1);
 $visa_vendors = get_vendor_list(2);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
 
-if (!empty($applicant_documents[0]["data"])) {
-    $applicant_documents = json_decode($applicant_documents[0]["data"], true);
-
-    if (!empty($applicant_documents)) {
-        $applicant_documents = array_column($applicant_documents, null, "id");
-    }
-}
-
-$staff_id = array_column($customer_admins, "staff_id");
-$final_sumbit = $client->submission_status;
+// Final submit and access logic
+$staff_id_list = array_column($customer_admins ?? [], "staff_id");
+$final_sumbit = $client->submission_status ?? 0;
 $read_only = "readonly";
-if (is_admin()) {
-    $final_sumbit = 0;
-    $read_only = "";
-}
-if (in_array(get_staff_user_id(), $staff_id)) {
+
+if (is_admin() || in_array(get_staff_user_id(), $staff_id_list)) {
     $final_sumbit = 0;
     $read_only = "";
 }
 
 ?>
-<style>
-    /*basic reset*/
-    * {
-        margin: 0;
-        padding: 0;
-    }
 
-    .margin-top {
-        margin-top: 10px;
-    }
+<link rel="stylesheet" href="<?= base_url() ?>assets/css/study_abroad.css">
 
-    li.col-md-3.checkbox-select-doc.d-flex.align-items-center {
-        padding: 10px 0px;
-    }
-
-    i.fa.btn.btn-xs {
-        height: 30px;
-        line-height: 20px;
-        margin-right: 3px;
-        margin-left: 3px;
-        /* margin: -1px; */
-    }
-
-    textarea#note_data {
-        height: 70px;
-        resize: none;
-    }
-
-    .table-loading table thead tr {
-        min-height: 44px;
-        height: 44px;
-    }
-
-    .table-loading {
-        background: none !important;
-    }
-
-    html {
-        height: 100%;
-        background: #eee;
-    }
-
-    .dt-table-loading.table,
-    .table-loading .dataTables_filter,
-    .table-loading .dataTables_length,
-    .table-loading .dt-buttons,
-    .table-loading table tbody tr,
-    .table-loading table thead th {
-        opacity: none !important;
-        opacity: unset !important;
-    }
-
-    body {
-        font-family: Montserrat, arial, verdana;
-        background: transparent;
-    }
-
-    /*form styles*/
-    #msform {
-        /* text-align: center; */
-        position: relative;
-        margin-top: 30px;
-    }
-
-    #msform fieldset {
-        background: white;
-        border: 0 none;
-        border-radius: 8px;
-        box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.4);
-        padding: 20px 30px;
-        box-sizing: border-box;
-        width: 100%;
-        /* margin: 0 10%; */
-
-        /*stacking fieldsets above each other*/
-        position: relative;
-    }
-
-    #msform input:focus,
-    #msform textarea:focus {
-        -moz-box-shadow: none !important;
-        -webkit-box-shadow: none !important;
-        box-shadow: none !important;
-        border: 1px solid #2098ce;
-        outline-width: 0;
-        transition: All 0.5s ease-in;
-        -webkit-transition: All 0.5s ease-in;
-        -moz-transition: All 0.5s ease-in;
-        -o-transition: All 0.5s ease-in;
-    }
-
-
-
-    #university_div .add_university_div_block .university_div {
-        padding: 10px;
-        margin-top: 10px;
-        margin-bottom: 10px;
-    }
-
-    .university_div.bg-success {
-        background-color: #dff0d8;
-    }
-
-    .university_div.bg-danger {
-        background-color: #f2dede;
-    }
-
-    .university_div.bg-warning {
-        background-color: #fcf8e3;
-    }
-
-    /*buttons*/
-    #msform .action-button {
-        width: 100px;
-        background: #2098ce;
-        font-weight: bold;
-        color: white;
-        border: 0 none;
-        border-radius: 25px;
-        cursor: pointer;
-        padding: 10px 5px;
-        margin: 10px 5px;
-    }
-
-    #msform .action-button:hover,
-    #msform .action-button:focus {
-        box-shadow: 0 0 0 2px white, 0 0 0 3px #2098ce;
-    }
-
-    #msform .action-button-previous {
-        width: 100px;
-        background: #aCbEd0;
-        font-weight: bold;
-        color: white;
-        border: 0 none;
-        border-radius: 25px;
-        cursor: pointer;
-        padding: 10px 5px;
-        margin: 10px 5px;
-    }
-
-    #msform .action-button-previous:hover,
-    #msform .action-button-previous:focus {
-        box-shadow: 0 0 0 2px white, 0 0 0 3px #aCbEd0;
-    }
-
-    /*headings*/
-    .fs-title {
-        font-size: 18px;
-        text-transform: uppercase;
-        color: #2C3E50;
-        margin-bottom: 10px;
-        letter-spacing: 2px;
-        font-weight: bold;
-    }
-
-    .fs-subtitle {
-        font-weight: normal;
-        font-size: 13px;
-        color: #666;
-        margin-bottom: 20px;
-    }
-
-    /*progressbar*/
-    #progressbar {
-        margin-bottom: 30px;
-        overflow: hidden;
-        /*CSS counters to number the steps*/
-        counter-reset: step;
-    }
-
-    #progressbar li {
-        list-style-type: none;
-        color: #666;
-        text-transform: uppercase;
-        font-size: 9px;
-        /* width: 33.33%; */
-        float: left;
-        position: relative;
-        letter-spacing: 1px;
-        cursor: pointer;
-    }
-
-    #progressbar li:before {
-        content: counter(step);
-        counter-increment: step;
-        width: 24px;
-        height: 24px;
-        line-height: 26px;
-        /* width: 35px;
-        height: 35px;
-        line-height: 35px; */
-        display: block;
-        font-size: 12px;
-        color: #333;
-        background: white;
-        border-radius: 25px;
-        margin: 0 auto 10px auto;
-    }
-
-    /*progressbar connectors*/
-    #progressbar li:after {
-        content: '';
-        width: 100%;
-        height: 2px;
-        background: white;
-        position: absolute;
-        left: -50%;
-        top: 9px;
-        z-index: -1;
-        /*put it behind the numbers*/
-    }
-
-    #progressbar li:first-child:after {
-        /*connector not needed before the first step*/
-        content: none;
-    }
-
-    /*marking active/completed steps blue*/
-    /*The number of the step and the connector before it = blue*/
-    #progressbar li.active:before,
-    #progressbar li.active:after {
-        background: #2098ce;
-        color: white;
-    }
-
-    #progressbar {
-        text-align: center;
-    }
-
-    #progressbar li {
-        display: block;
-        width: 20%;
-        text-align: center;
-    }
-
-    #progressbar li {
-        display: inline-block;
-        text-align: center;
-        color: grey;
-    }
-
-    #progressbar li.active {
-        color: orange !important;
-    }
-
-    #progressbar li.active:before {
-        background-color: orange !important;
-    }
-
-    #progressbar li.previous {}
-
-    #progressbar li.permanent_previous {
-        color: green;
-    }
-
-
-
-
-    #progressbar li.previous:before {
-        background-color: green !important;
-    }
-
-    #progressbar li.inactive:before {
-        background-color: #E7ECF1 !important;
-    }
-
-    #progressbar li.inactive:before {
-        color: #666 !important;
-    }
-
-    .add_document,
-    .download_document {
-        padding: 7px;
-        width: 33px;
-        /* line-height: 33px; */
-    }
-
-    #profile_div .download_document {
-        line-height: 33px;
-    }
-
-    #profile_creation_div .fa-pencil-square-o,
-    #profile_creation_div .fa-file {
-        line-height: 40px;
-    }
-
-
-    .document_upload_files {
-        margin: 15px 0px;
-    }
-
-    /* .message-notification {
-        background: orange;
-        padding: 25px;
-        font-size: 15px;
-        color: white;
-        border-radius: 7px;
-        box-shadow: 0px 1px 5px 1px grey;
-        margin-bottom: 20px;
-    } */
-
-    .message-notification {
-        padding: 0px;
-        font-size: 14px;
-        color: orange;
-        border-radius: 7px;
-    }
-
-    .message-notification.success {
-        color: #84c529 !important;
-    }
-
-    .message-notification.danger {
-        color: #dc3545 !important;
-    }
-
-    i.fa {
-        cursor: pointer;
-    }
-
-    #profile_div i.fa {
-        font-size: 18px;
-
-    }
-
-    .edit_save_block {
-        position: absolute;
-        right: 4%;
-        line-height: 55px;
-    }
-
-    .next.action-button:disabled {
-        background: #aCbEd0 !important;
-        cursor: not-allowed !important;
-        box-shadow: unset !important;
-    }
-
-    .document-file-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 100%;
-        text-align: left;
-    }
-
-    #progressbar li.previous:before {
-        background-color: green;
-        color: white;
-    }
-
-    .application_div div.university_div_application,
-    .visa_div_application,
-    .entrance_exam_university_div,
-    .legalization-item,
-    .feesDeposite-item,
-    .invitation-item {
-        margin-top: 10px !important;
-        margin-top: 30px !important;
-        /* border: 1px solid black; */
-        box-shadow: 1px 0px 5px 1px lightgrey;
-        padding: 20px 10px;
-    }
-
-    .margin-bottom {
-        margin-bottom: 5px;
-    }
-
-    .file-download-block .download_document {
-        padding: 0px !important;
-    }
-
-    .add_document_btn,
-    .add_university_btn {
-        margin-left: 5px;
-    }
-
-    textarea.conditional_textarea {
-        width: 100%;
-        height: 50px;
-        resize: none;
-        padding: 10px;
-        margin: 5px 0px;
-    }
-
-    .text-area-field-div {
-        display: flex;
-        align-items: center;
-    }
-
-    #offer_div .university_div_application {
-        /* border: 1px solid black; */
-        padding: 10px 0px;
-        margin-top: 25px;
-        box-shadow: 0px 1px 5px -2px black;
-    }
-
-    .note_activity_section {
-        margin-top: 20px;
-        background: white;
-        border: 0 none;
-        border-radius: 8px;
-        box-shadow: 0 0 15px 1px rgba(0, 0, 0, 0.4);
-        padding: 20px 30px;
-        box-sizing: border-box;
-        width: 100%;
-        /* margin: 0 10%; */
-        position: relative;
-    }
-
-    .table-application-notes thead tr th {
-        width: 100%;
-    }
-
-    .lead-note .note-box {
-        margin-left: 1%;
-        width: 98%;
-        /* text-align: center; */
-        margin-bottom: 10px;
-        margin-top: 5px;
-        padding: 10px;
-        box-shadow: 1px 1px 5px -1px black;
-        border-radius: 10px;
-    }
-
-    .btn-toggle {
-        margin: 0 7rem;
-        padding: 0;
-        position: relative;
-        border: none;
-        height: 1.5rem;
-        width: 3rem;
-        border-radius: 1.5rem;
-        color: #6b7381;
-        background: #bdc1c8;
-    }
-
-    .btn-toggle:focus,
-    .btn-toggle.focus,
-    .btn-toggle:focus.active,
-    .btn-toggle.focus.active {
-        outline: none;
-    }
-
-    .btn-toggle:before,
-    .btn-toggle:after {
-        line-height: 1.5rem;
-        width: 4rem;
-        text-align: center;
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        position: absolute;
-        bottom: 0;
-        transition: opacity 0.25s;
-    }
-
-    .btn-toggle:before {
-        content: 'Notes';
-        left: -7rem;
-    }
-
-    .btn-toggle:after {
-        content: 'Activity';
-        right: -5rem;
-        opacity: 0.5;
-    }
-
-    .btn-toggle:before,
-    .btn-toggle:after {
-        color: #6b7381;
-    }
-
-    .btn-toggle.active {
-        background-color: #29b5a8;
-    }
-
-    .btn-toggle>.handle {
-        position: absolute;
-        top: 0.1875rem;
-        left: 0.1875rem;
-        width: 1.125rem;
-        height: 1.125rem;
-        border-radius: 1.125rem;
-        background: #fff;
-        transition: left 0.25s;
-    }
-
-    .btn-toggle.active {
-        transition: background-color 0.25s;
-    }
-
-    .btn-toggle.active>.handle {
-        left: 1.6875rem;
-        transition: left 0.25s;
-    }
-
-    .btn-toggle.active:before {
-        opacity: 0.5;
-    }
-
-    .btn-toggle.active:after {
-        opacity: 1;
-    }
-
-    small.note-edit {
-        /* border: 0px solid green; */
-        margin-left: 10px;
-        color: green;
-        padding: 2px 10px;
-        font-weight: 700;
-        border-radius: 10px;
-        box-shadow: 1px 1px 4px 0px;
-    }
-
-    .document_approval_message_action,
-    .university_approval_message_action,
-    .profile_approval_message_action,
-    .acceptance_text_approval_message_action {
-        display: inline-block !important;
-    }
-
-    .acceptance_text_approval_message_action {
-        padding-top: 14px;
-        margin: 0px;
-    }
-
-    .hide-fee-div {
-        border-top: 1px solid #b4b4b4;
-        /* background: black; */
-        margin-top: 25px;
-        line-height: 10px;
-    }
-
-
-    #offer_div .university_div_application.bg-success {
-        background-color: #dff0d8;
-    }
-
-    .list-autocomplete {
-        padding: 0;
-    }
-
-    .list-autocomplete em {
-        font-style: normal;
-        background-color: #e1f2f9;
-    }
-
-    .hasNoResults {
-        color: #aaa;
-    }
-
-    .hasNoResults {
-        display: block;
-        padding: 30px 15px;
-    }
-
-    .hasNoResults {
-        color: #aaa;
-    }
-
-    .dropdown-menu {
-        padding: 0;
-    }
-
-    .dropdown-item {
-        background: transparent;
-        border: none;
-        width: 100%;
-        text-align: left;
-        padding: 5px 5px;
-        border-top: 1px solid;
-    }
-
-    .dropdown-menu hr {
-        margin: 0;
-    }
-
-    .row.pendency-div {
-        margin-top: 20px;
-    }
-
-    .ms-5 {
-        margin-left: 10px;
-    }
-</style>
 <!-- MultiStep Form -->
+<?php if ($client->submission_status != 1): ?>
+    <h2 class="text-center">No final submission from counselor.</h2>
+    <?php die; ?>
+<?php endif; ?>
+
 <?php
-if ($client->submission_status != 1) {
-?>
-    <h2 class='text-center'>No final submission from counselor.</h2>
-<?php
-    die;
-}
-?>
-<?php
-if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
+$staffData = $staff_list[get_staff_user_id()] ?? [];
+if (empty($staffData["post_sales"]) && !is_admin()):
 ?>
     <h2 class="text-center">Applicant Tracker - Accessible Only for Post-Sale & Admin</h2>
-<?php
-}
-?>
+<?php endif; ?>
+
 <div class="row">
     <div id="msform" class="col-md-12 ">
         <h1 class="text-center mb-5"><?= !empty($selected_university_shortlisting['university_name']) ? $selected_university_shortlisting['university_name'] : '' ?></h1>
         <br>
         <br>
-        <!-- <form id="msform" onsubmit="return false;"> -->
         <ul id="progressbar" class="d-flex justify-content-center">
-            <?php
-            foreach ($applicant_tracker as $key => $track) {
-                if ($track["show_stages"] == 0 || ($track["show_stages"] == 1 && $activeShortlistingId > 0)) {
-            ?>
-                    <li data-id="<?= $track['id'] ?>" onclick="goToStep(<?= $key ?>)" data-show="<?= !empty($track["show_div_name"]) ? $track["show_div_name"] : '' ?>"><?= $track["name"] ?></li>
-            <?php
-                }
-            }
-            ?>
+            <?php foreach ($applicant_tracker as $key => $track): ?>
+                <?php if ((int)$track["show_stages"] === 0 || ((int)$track["show_stages"] === 1 && (int)$activeShortlistingId > 0)): ?>
+                    <li
+                        data-id="<?= (int)$track['id'] ?>"
+                        onclick="goToStep(<?= (int)$key ?>)"
+                        data-show="<?= htmlspecialchars($track["show_div_name"] ?? '', ENT_QUOTES) ?>">
+                        <?= htmlspecialchars($track["name"], ENT_QUOTES) ?>
+                    </li>
+                <?php endif; ?>
+            <?php endforeach; ?>
         </ul>
-
-
 
         <?php
 
@@ -745,7 +174,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                 <?php
                                 if ($track["show_div_name"] == "visa_div") { ?>
-                                    <button style="display:block!important;" class="col-md-2 add_document add_university_btn float-right" style="display:none;" type="button" onclick="add_visa_div()"><i class="fa fa-plus" aria-hidden="true"></i></button>
+                                    <p class="text-right"><button style="display:block!important;" class="col-md-2 add_document add_university_btn" style="display:none;" type="button" onclick="add_visa_div()"><i class="fa fa-plus" aria-hidden="true"></i></button></p>
 
                                 <?php } ?>
                             </h2>
@@ -1109,145 +538,283 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                     </div>
                                 </form>
                             <?php } else if ($track["show_div_name"] == "offer_letter_div") {
-                                $file_url_offer_letter = isset($selected_university_shortlisting['offer_letter']) ? $selected_university_shortlisting['offer_letter'] : '';
                             ?>
-                                <form id="offer-letter-form" class="form-disabled mb-5" onsubmit=" return false;">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <?= render_input('offer_date', "Offer Letter Receving <small class='text-danger'>*</small>", isset($selected_university_shortlisting['offer_date']) ? $selected_university_shortlisting['offer_date'] : '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                        </div>
-                                        <div class="col-md-3 form-group">
-                                            <label for="university_offer_status">
-                                                Status <small class="text-danger">*</small>
-                                            </label>
-                                            <select
-                                                name="university_offer_status"
-                                                id="university_offer_status"
-                                                class="form-control selectpicker required-check"
-                                                required-check
-                                                required
-                                                onchange="changeOfferStatus(this)">
-                                                <option value="">Select an option</option>
-                                                <?php foreach ($offerLetterStatus as $item): ?>
-                                                    <?php
-                                                    // Skip the 'upload_status' non-array element
-                                                    if (!is_array($item)) continue;
-                                                    ?>
-                                                    <option
-                                                        data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>"
-                                                        value="<?= htmlspecialchars($item['id']) ?>"
-                                                        <?= isset($selected_university_shortlisting['university_offer_status']) && $item['id'] == $selected_university_shortlisting['university_offer_status'] ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($item['name']) ?>
-                                                    </option>
-
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
-
-                                        <div class="col-md-3 offer-letter-div <?= !empty($offerLetterStatus[$selected_university_shortlisting['university_offer_status']]) ? "" : "hide" ?> form-group">
-                                            <label for="university_offer_letter">
-                                                Offer Upload <small class="text-danger">*</small>
-                                            </label>
-                                            <input type="file" data-fileUrl="<?= $file_url_offer_letter ?>" class="form-control" <?= !empty($selected_university_shortlisting['offer_letter']) ? '' : 'required required-check' ?> accept=".pdf,image/*" name="offer_letter">
-                                            <?php
-
-                                            if (!empty($file_url_offer_letter)) { ?>
-                                                <div class="margin-top">
-                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_offer_letter) ?>');"></i>&nbsp;
-                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_offer_letter) ?>', '_blank');"></i>
-                                                    <?php if ($delete_document_status) { ?>
-                                                        <button class="btn-xs btn btn-danger" onclick="delete_documents_study(2,<?= $track['id'] ?>,<?= $activeShortlistingId ?>)"><i class="fa fa-trash"></i></button>
-                                                    <?php } ?>
+                                <form id="offer-letter-form" class="form-disabled mb-5" onsubmit="return false;">
+                                    <?php if (!empty($offer_letters)): ?>
+                                        <?php foreach ($offer_letters as $key => $o_letter):
+                                            $file_url_offer_letter = $o_letter['offer_letter'] ?? '';
+                                        ?>
+                                            <div class="row offer-letter-form">
+                                                <!-- Offer Date -->
+                                                <div class="col-md-3">
+                                                    <?= render_input(
+                                                        "offer_date[]",
+                                                        "Offer Letter Receiving <small class='text-danger'>*</small>",
+                                                        $o_letter['offer_date'] ?? '',
+                                                        'date',
+                                                        ['required-check' => 'required-check', 'required' => 'required']
+                                                    ); ?>
                                                 </div>
-                                            <?php } ?>
+
+                                                <!-- Offer Status -->
+                                                <div class="col-md-3 form-group">
+                                                    <label>Status <small class="text-danger">*</small></label>
+                                                    <select name="university_offer_status[]"
+                                                        class="form-control selectpicker required-check"
+                                                        required
+                                                        onchange="changeOfferStatus(this)">
+                                                        <option value="">Select an option</option>
+                                                        <?php foreach ($offerLetterStatus as $item): ?>
+                                                            <?php if (!is_array($item)) continue; ?>
+                                                            <option
+                                                                data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>"
+                                                                value="<?= htmlspecialchars($item['id']) ?>"
+                                                                <?= ($item['id'] == ($o_letter['university_offer_status'] ?? '')) ? 'selected' : '' ?>>
+                                                                <?= htmlspecialchars($item['name']) ?>
+                                                            </option>
+                                                        <?php endforeach; ?>
+                                                    </select>
+                                                </div>
+
+                                                <!-- Offer Upload -->
+                                                <div class="col-md-3 offer-letter-div <?= !empty($offerLetterStatus[$o_letter['university_offer_status']]) ? '' : 'hide' ?> form-group">
+                                                    <label>Offer Upload <small class="text-danger">*</small></label>
+                                                    <input type="file"
+                                                        data-fileUrl="<?= $file_url_offer_letter ?>"
+                                                        class="form-control"
+                                                        name="offer_letter_<?= $key ?>"
+                                                        accept=".pdf,image/*"
+                                                        <?= !empty($o_letter['offer_letter']) ? '' : 'required required-check' ?>>
+                                                    <?php if (!empty($file_url_offer_letter)): ?>
+                                                        <div class="margin-top">
+                                                            <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_offer_letter) ?>');"></i>
+                                                            <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_offer_letter) ?>', '_blank');"></i>
+                                                            <?php if ($delete_document_status): ?>
+                                                                <button class="btn-xs btn btn-danger" type="button" onclick="delete_documents_study(2, <?= $track['id'] ?>, <?= $activeShortlistingId ?>)">
+                                                                    <i class="fa fa-trash"></i>
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <!-- Add/Remove Buttons -->
+                                                <div class="col-md-3">
+                                                    <label>&nbsp;</label>
+                                                    <p class="text-right">
+                                                        <?php if ($key == 0): ?>
+                                                            <button class="col-md-2 add_document add_university_btn pull-right" type="button" onclick="addofferLetter(this)">
+                                                                <i class="fa fa-plus" aria-hidden="true"></i>
+                                                            </button>
+                                                        <?php else: ?>
+                                                            <button class="btn btn-danger add_document add_university_btn" type="button" onclick="removeOfferLetter(this)">
+                                                                <i class="fa fa-trash" aria-hidden="true"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                </div>
+
+                                                <!-- Condition -->
+                                                <div class="col-md-12 form-group condition_div">
+                                                    <label>Condition</label>
+                                                    <textarea rows="4"
+                                                        class="form-control"
+                                                        name="remark_offer_letter[]"><?= trim($o_letter['conditional_notes'] ?? '') ?></textarea>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <!-- Blank default row -->
+                                        <div class="row offer-letter-form">
+                                            <div class="col-md-3">
+                                                <?= render_input(
+                                                    "offer_date[]",
+                                                    "Offer Letter Receiving <small class='text-danger'>*</small>",
+                                                    '',
+                                                    'date',
+                                                    ['required-check' => 'required-check', 'required' => 'required']
+                                                ); ?>
+                                            </div>
+
+                                            <div class="col-md-3 form-group">
+                                                <label>Status <small class="text-danger">*</small></label>
+                                                <select name="university_offer_status[]"
+                                                    class="form-control selectpicker required-check"
+                                                    required
+                                                    onchange="changeOfferStatus(this)">
+                                                    <option value="">Select an option</option>
+                                                    <?php foreach ($offerLetterStatus as $item): ?>
+                                                        <?php if (!is_array($item)) continue; ?>
+                                                        <option data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>" value="<?= htmlspecialchars($item['id']) ?>">
+                                                            <?= htmlspecialchars($item['name']) ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-3 offer-letter-div hide form-group">
+                                                <label>Offer Upload <small class="text-danger">*</small></label>
+                                                <input type="file"
+                                                    data-fileUrl=""
+                                                    class="form-control"
+                                                    name="offer_letter_0"
+                                                    accept=".pdf,image/*"
+                                                    required required-check>
+                                            </div>
+
+                                            <div class="col-md-3">
+                                                <label>&nbsp;</label>
+                                                <p class="text-right">
+                                                    <button class="col-md-2 add_document add_university_btn pull-right" type="button" onclick="addofferLetter(this)">
+                                                        <i class="fa fa-plus" aria-hidden="true"></i>
+                                                    </button>
+                                                </p>
+                                            </div>
+
+                                            <div class="col-md-12 form-group condition_div offer-letter-div hide">
+                                                <label>Condition</label>
+                                                <textarea rows="4"
+                                                    class="form-control"
+                                                    name="remark_offer_letter[]"></textarea>
+                                            </div>
                                         </div>
-
-                                    </div>
-                                    <div>
-                                        <label>Remark</label>
-                                        <textarea rows="4" class="form-control" id="remark_offer_letter"><?= !empty($selected_university_shortlisting['conditional_notes']) ? trim($selected_university_shortlisting['conditional_notes']) : '' ?>
-                                    </textarea>
-                                    </div>
-
-
+                                    <?php endif; ?>
                                 </form>
+
                             <?php } else if ($track["show_div_name"] == "pre_deposite_div") {
                                 $file_url_fees_deposite_slip = isset($selected_university_shortlisting['fees_deposite_slip']) ? $selected_university_shortlisting['fees_deposite_slip'] : '';
                             ?>
-                                <form id="pre-deposite-form" class="form-disabled mb-5" onsubmit=" return false;">
+                                <form id="pre-deposite-form" class="form-disabled mb-5" onsubmit="return false;">
                                     <div class="row">
                                         <div class="col-md-3">
-                                            <?= render_input('tentative_date', "Tentative Date <small class='text-danger'>*</small>", isset($selected_university_shortlisting['tentative_date']) ? $selected_university_shortlisting['tentative_date'] : '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                        </div>
-
-
-
-                                        <div class="col-md-3">
-                                            <!-- render_input('payment_amount', "Payment Amount <small class='text-danger'>*</small>", !empty($selected_university_shortlisting['payment_amount']) ? $selected_university_shortlisting['payment_amount'] : '', 'number', ['required-check' => 'required-check', 'required' => 'required']);  -->
-                                            <label>Payment Amount <small class='text-danger'>*</small></label>
-                                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                                <input type="number" name="payment_amount" value="<?= !empty($selected_university_shortlisting['payment_amount']) ? $selected_university_shortlisting['payment_amount'] : '' ?>" required required-check class="form-control" placeholder="0.00" id="" value="" size="8">
-                                                <div class="input-group-addon currency-addon">
-
-                                                    <select name="payment_currency_id" id="<?= $field_name ?>" class="currency-selector">
-                                                        <?php foreach ($get_currencies as $c) {
-                                                        ?>
-                                                            <option
-
-                                                                value="<?= $c['id'] ?>"
-                                                                data-placeholder="0.00"
-                                                                <?=
-
-                                                                (!empty($selected_university_shortlisting['payment_currency_id']) && $selected_university_shortlisting['payment_currency_id'] == $c['id'])
-                                                                    ? 'selected'
-                                                                    : ''
-                                                                ?>>
-                                                                <?= $c['name'] ?>
-                                                            </option>
-
-
-                                                        <?php
-                                                        }
-                                                        ?>
-
-                                                    </select>
-
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="col-md-3">
-                                            <?= render_input('fees_deposite_date', "Date of Deposite <small class='text-danger'>*</small>", isset($selected_university_shortlisting['fees_deposite_date']) ? $selected_university_shortlisting['fees_deposite_date'] : '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                        </div>
-
-
-
-
-
-
-                                        <div class="col-md-3 offer-letter-div form-group">
-                                            <label for="proof_deposite">
-                                                Proof of deposit <small class="text-danger">*</small>
-                                            </label>
-                                            <input type="file" data-fileUrl="<?= $file_url_offer_letter ?>" class="form-control" <?= !empty($selected_university_shortlisting['fees_deposite_slip']) ? '' : 'required required-check' ?> accept=".pdf,image/*" name="fees_deposite_slip">
-                                            <?php
-
-                                            if (!empty($file_url_fees_deposite_slip)) { ?>
-                                                <div class="margin-top">
-                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_fees_deposite_slip) ?>');"></i>&nbsp;
-                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url_fees_deposite_slip) ?>', '_blank');"></i>
-                                                    <?php if ($delete_document_status) { ?>
-                                                        <button class="btn-xs btn btn-danger" onclick="delete_documents_study(3,<?= $track['id'] ?>,<?= $activeShortlistingId ?>)"><i class="fa fa-trash"></i></button>
-                                                    <?php } ?>
-                                                </div>
-                                            <?php } ?>
+                                            <?= render_input(
+                                                'tentative_date',
+                                                "Tentative Date <small class='text-danger'>*</small>",
+                                                $selected_university_shortlisting['tentative_date'] ?? '',
+                                                'date',
+                                                ['required-check' => 'required-check', 'required' => 'required']
+                                            ); ?>
                                         </div>
                                     </div>
+
+                                    <div class="fees-deposite-section">
+                                        <?php if (!empty($fessDeposite)): ?>
+                                            <?php foreach ($fessDeposite as $key => $deposite): ?>
+                                                <div class="row fees-deposite-item">
+                                                    <!-- Payment -->
+                                                    <div class="col-md-3">
+                                                        <label>Payment Amount <small class='text-danger'>*</small></label>
+                                                        <div class="input-group form-group">
+                                                            <input type="number" name="payment_amount[<?= $key ?>]" value="<?= ($deposite['payment_amount'] ?? '') ?>" required required-check class="form-control" placeholder="0.00">
+                                                            <div class="input-group-addon currency-addon">
+                                                                <select name="payment_currency_id[<?= $key ?>]" class="currency-selector" required required-check>
+                                                                    <?php foreach ($get_currencies as $c): ?>
+                                                                        <option value="<?= $c['id'] ?>" <?= (!empty($deposite['currency_type']) && $deposite['currency_type'] == $c['id']) ? 'selected' : '' ?>>
+                                                                            <?= ($c['name']) ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Deposit Date -->
+                                                    <div class="col-md-3">
+                                                        <?= render_input(
+                                                            "fees_deposite_date[$key]",
+                                                            "Date of Deposit <small class='text-danger'>*</small>",
+                                                            $deposite['date_of_deposite'] ?? '',
+                                                            'date',
+                                                            ['required' => 'required', 'required-check' => 'required-check']
+                                                        ); ?>
+                                                    </div>
+
+                                                    <!-- File Upload -->
+                                                    <div class="col-md-3 form-group">
+                                                        <label>Proof of Deposit <small class="text-danger">*</small></label>
+                                                        <input type="file"
+                                                            name="proof_of_deposite[<?= $key ?>]"
+                                                            class="form-control"
+                                                            accept=".pdf,image/*"
+                                                            data-fileUrl="<?= ($deposite['proof_of_deposite'] ?? '') ?>"
+                                                            <?= empty($deposite['proof_of_deposite']) ? 'required required-check' : '' ?>>
+
+                                                        <?php if (!empty($deposite['proof_of_deposite'])): ?>
+                                                            <div class="margin-top">
+                                                                <button type="button" class="btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($deposite['proof_of_deposite']) ?>');">
+                                                                    <i class="fa fa-eye"></i>
+                                                                </button>
+                                                                <button type="button" class="btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($deposite['proof_of_deposite']) ?>', '_blank');">
+                                                                    <i class="fa fa-download"></i>
+                                                                </button>
+                                                                <?php if ($delete_document_status): ?>
+                                                                    <button type="button" class="btn btn-xs btn-danger" onclick="delete_documents_study(3, <?= $track['id'] ?? 0 ?>, <?= $activeShortlistingId ?>)">
+                                                                        <i class="fa fa-trash"></i>
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <!-- Controls -->
+                                                    <div class="col-md-3 form-group">
+                                                        <label>&nbsp;</label>
+                                                        <p class="text-right">
+                                                            <?php if ($key === 0): ?>
+                                                                <button type="button" class="btn btn-success" onclick="addFeesDeposite(this)">
+                                                                    <i class="fa fa-plus"></i>
+                                                                </button>
+                                                            <?php else: ?>
+                                                                <button type="button" class="btn btn-danger" onclick="removeFeesDeposite(this)">
+                                                                    <i class="fa fa-trash"></i>
+                                                                </button>
+                                                            <?php endif; ?>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <!-- Default Blank -->
+                                            <div class="row fees-deposite-item">
+                                                <div class="col-md-3">
+                                                    <label>Payment Amount <small class="text-danger">*</small></label>
+                                                    <div class="input-group form-group">
+                                                        <input type="number" name="payment_amount[0]" class="form-control" placeholder="0.00" required required-check>
+                                                        <div class="input-group-addon currency-addon">
+                                                            <select name="payment_currency_id[0]" class="currency-selector" required required-check>
+                                                                <?php foreach ($get_currencies as $c): ?>
+                                                                    <option value="<?= $c['id'] ?>"><?= ($c['name']) ?></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3">
+                                                    <?= render_input('fees_deposite_date[0]', "Date of Deposit <small class='text-danger'>*</small>", '', 'date', ['required' => 'required', "required-check" => "required-check"]); ?>
+                                                </div>
+
+                                                <div class="col-md-3 form-group">
+                                                    <label>Proof of Deposit <small class="text-danger">*</small></label>
+                                                    <input type="file" class="form-control" name="fees_deposite_slip[0]" accept=".pdf,image/*" required required-check>
+                                                </div>
+
+                                                <div class="col-md-3 form-group">
+                                                    <label>&nbsp;</label>
+                                                    <p class="text-right">
+                                                        <button type="button" class="btn btn-success" onclick="addFeesDeposite(this)">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 </form>
+
                             <?php } ?>
                             <?php if ($k > 0 && $k < 5) { ?>
-                                <p class='col-12 margin-top hide'>
+                                <p class='col-md-12 margin-top hide'>
                                     <label class="margin-top">Secondary University Remarks</label>
                                     <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
 
@@ -1322,7 +889,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         <!-- </form> -->
 
         <section class="note_activity_section mt-5">
-            <div class="col-12 text-right" style="margin:25px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
+            <div class="col-md-12 text-right" style="margin:25px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
                     <div class="handle"></div>
                 </button></div>
             <div class="note_section">
@@ -1417,8 +984,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
 
 
-    notes_url = "<?= base_url() ?>admin/clients/get_application_notes_study/<?= $client_id ?>";
-    activity_url = "<?= base_url() ?>admin/clients/get_application_activity/<?= $client_id ?>";
+    notes_url = "<?= base_url() ?>admin/clients/get_application_notes_study/<?= $client_id ?>/<?= !empty($activeShortlistingId) ? $activeShortlistingId : '' ?>";
+    activity_url = "<?= base_url() ?>admin/clients/get_application_activity/<?= $client_id ?>/<?= !empty($activeShortlistingId) ? $activeShortlistingId : '' ?>";
 
     reloadNote_list(notes_url);
     reloadActivity_list(activity_url);
@@ -1605,6 +1172,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 upload_data.append("stage_id", stage_id);
                 upload_data.append("applicant_notes", notes);
                 upload_data.append("notes_id", notes_id);
+                upload_data.append("shortlisting_id", selectedUniversityShortListing);
 
                 let response = await $.ajax({
                     url: "<?= base_url("admin/clients/update_notes") ?>",
@@ -2041,28 +1609,31 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         return new Promise((resolve, reject) => {
             try {
                 let offer_letter_array = [];
-                let offer_date = $("#offer-letter-form").find("input[name='offer_date']").val() || '';
-                let university_offer_status = $("#offer-letter-form").find("select[name='university_offer_status']").val() || '';
-                let selectedOption = $("#offer-letter-form").find("select[name='university_offer_status'] option:selected");
-                let upload_status = selectedOption.data('upload_status') || '';
-                let offer_letter = $("#offer-letter-form").find("input[name='offer_letter']")[0];
-                let offer_letter_url = $("#offer-letter-form").find("input[name='offer_letter']").data("fileurl");
-                let remark = $("#remark_offer_letter").val();
-                if (offer_letter && offer_letter.files.length > 0 && upload_status == 1) {
-                    upload_data.append("offer_letter", offer_letter.files[0]);
-                } else {
-                    if (offer_letter_url == "") {
-                        upload_data.append("offer_letter_url", "");
+
+                $("#offer-letter-form div.offer-letter-form").each(function(index) {
+                    let offer_date = $(this).find("input[type='date']").val() || '';
+                    let university_offer_status = $(this).find("select.selectpicker").val() || '';
+                    let selectedOption = $(this).find("select.selectpicker option:selected");
+                    let upload_status = selectedOption.data('upload_status') || '';
+                    let offer_letter = $(this).find("input[type='file']")[0];
+                    let offer_letter_url = $(this).find("input[type='file']").data("fileurl") || '';
+                    let remark = $(this).find("textarea").val() || '';
+
+                    if (offer_letter && offer_letter.files.length > 0 && upload_status == 1) {
+                        upload_data.append(`offer_letter_${index}`, offer_letter.files[0]);
+                    } else {
+                        if (offer_letter_url === "") {
+                            upload_data.append(`offer_letter_url_${index}`, "");
+                        }
                     }
-                }
 
-
-                offer_letter_array.push({
-                    offer_date: offer_date,
-                    university_offer_status: university_offer_status,
-                    offer_letter_url: offer_letter_url,
-                    remark: remark,
-                    upload_status: upload_status
+                    offer_letter_array.push({
+                        offer_date: offer_date,
+                        university_offer_status: university_offer_status,
+                        offer_letter_url: offer_letter_url,
+                        remark: remark,
+                        upload_status: upload_status
+                    });
                 });
 
                 upload_data.append("offer_letter_data", JSON.stringify(offer_letter_array));
@@ -2074,42 +1645,49 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         });
     }
 
+
     function check_pre_deposite_form(upload_data) {
         return new Promise((resolve, reject) => {
             try {
                 let pre_deposite_array = [];
                 let tentative_date = $("#pre-deposite-form").find("input[name='tentative_date']").val() || '';
-                let fees_deposite_date = $("#pre-deposite-form").find("input[name='fees_deposite_date']").val() || '';
-                let payment_amount = $("#pre-deposite-form").find("input[name='payment_amount']").val() || '';
-                let payment_currency_id = $("#pre-deposite-form").find("select[name='payment_currency_id']").val() || '';
-                let fees_deposite_slip = $("#pre-deposite-form").find("input[name='fees_deposite_slip']")[0];
-                let fees_deposite_slip_url = $("#pre-deposite-form").find("input[name='fees_deposite_slip']").data("fileUrl");
+                upload_data.append("tentative_date", tentative_date);
 
-                if (fees_deposite_slip && fees_deposite_slip.files.length > 0) {
-                    upload_data.append("fees_deposite_slip", fees_deposite_slip.files[0]);
-                } else {
-                    if (fees_deposite_slip_url == "") {
-                        upload_data.append("fees_deposite_slip_url", "");
+                $(".fees-deposite-item").each(function(index) {
+                    const $row = $(this); // current row context
+
+                    let fees_deposite_date = $row.find("input[type='date']").val() || '';
+                    let payment_amount = $row.find("input[type='number']").val() || '';
+                    let payment_currency_id = $row.find("select.currency-selector").val() || '';
+                    let fileInput = $row.find("input[type='file']")[0];
+                    let fileUrl = $row.find("input[type='file']").data("fileurl") || '';
+
+                    if (fileInput && fileInput.files.length > 0) {
+                        // Use indexed field name for multiple file uploads
+                        upload_data.append(`fees_deposite_slip_${index}`, fileInput.files[0]);
+                    } else {
+                        // Send file URL if no new upload
+                        upload_data.append(`fees_deposite_slip_url_${index}`, fileUrl);
                     }
-                }
 
-
-                pre_deposite_array.push({
-                    tentative_date: tentative_date,
-                    fees_deposite_date: fees_deposite_date,
-                    payment_amount: payment_amount,
-                    payment_currency_id: payment_currency_id,
-                    fees_deposite_slip_url: fees_deposite_slip_url,
+                    pre_deposite_array.push({
+                        fees_deposite_date: fees_deposite_date,
+                        payment_amount: payment_amount,
+                        payment_currency_id: payment_currency_id,
+                        fees_deposite_slip_url: fileUrl
+                    });
                 });
 
                 upload_data.append("pre_deposite_data", JSON.stringify(pre_deposite_array));
-
                 resolve(upload_data);
+
             } catch (error) {
                 reject(error);
             }
         });
     }
+
+
 
     function select_reinit() {
         $(".selectpicker").selectpicker('refresh');
@@ -2595,8 +2173,164 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
         if (upload_status == '1') {
             $(".offer-letter-div").removeClass("hide");
+            $(".offer-letter-div").val('');
         } else {
             $(".offer-letter-div").addClass("hide");
+            $(".offer-letter-div").val('');
+
         }
+    }
+
+    function renderInput(name, labelHTML, value = '', type = 'text') {
+        return `
+        <div class="form-group">
+            <label for="${name}">${labelHTML}</label>
+            <input type="${type}" name="${name}" class="form-control required-check" required value="${value}">
+        </div>
+    `;
+    }
+
+
+    const offerLetterStatus = <?= json_encode($offerLetterStatus) ?>;
+
+    function generateOfferLetterOptions() {
+        let options = '';
+        offerLetterStatus.forEach(item => {
+            if (typeof item === 'object') {
+                options += `<option data-upload_status="${item.upload_status || ''}" value="${item.id}">${item.name}</option>`;
+            }
+        });
+        return options;
+    }
+
+    function removeOfferLetter(event) {
+        $(event).parents(".offer-letter-form").remove();
+    }
+
+    function addofferLetter() {
+        const offerLetterHTML = `
+        <div class="row offer-letter-form">
+            <!-- Offer Date -->
+            <div class="col-md-3">
+                <?= render_input(
+                    'offer_date_' . time(),
+                    "Offer Letter Receiving <small class='text-danger'>*</small>",
+                    $o_letter['receving_date'] ?? '',
+                    'date',
+                    ['required-check' => 'required-check', 'required' => 'required']
+                ); ?>
+
+            </div>
+
+         <div class="col-md-3 form-group">
+    <label for="university_offer_status">
+        Status <small class="text-danger">*</small>
+    </label>
+    <select
+        name="university_offer_status_<?= time() ?>"
+        class="form-control selectpicker required-check"
+        required
+        onchange="changeOfferStatus(this)">
+        <option value="">Select an option</option>
+        <?php foreach ($offerLetterStatus as $item): ?>
+            <?php if (!is_array($item)) continue; ?>
+            <option
+                data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>"
+                value="<?= htmlspecialchars($item['id']) ?>">
+                <?= htmlspecialchars($item['name']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
+
+
+            <div class="col-md-3 offer-letter-div hide form-group">
+                <label for="university_offer_letter">
+                    Offer Upload <small class="text-danger">*</small>
+                </label>
+                <input
+                    type="file"
+                    data-fileUrl=""
+                    class="form-control"
+                    name="offer_letter_<?= time() ?>"
+                    accept=".pdf,image/*" required-check required>
+            </div>
+
+            <div class="col-md-3">
+                <label>&nbsp;</label>
+               <p class="text-right"> <button class="btn btn-danger add_document add_university_btn" type="button" onclick="removeOfferLetter(this)">
+                    <i class="fa fa-trash" aria-hidden="true"></i>
+                </button></p>
+            </div>
+            <div class="col-md-12 form-group condition_div offer-letter-div hide">
+                <label>Condition</label>
+                <textarea
+                    rows="4"
+                    class="form-control"
+                    id="remark_offer_letter"
+                    name="remark_offer_letter"></textarea>
+            </div>
+        </div>
+    `;
+
+        $('#offer-letter-form').append(offerLetterHTML); // Append to a container in your HTML
+        $('.selectpicker').selectpicker('refresh'); // If using Bootstrap select
+    }
+
+    window.currencyOptions = <?= json_encode($get_currencies) ?>;
+    let currencyOptions = '';
+
+    if (typeof window.currencyOptions === 'object' && window.currencyOptions !== null) {
+        currencyOptions = Object.values(window.currencyOptions).map(c =>
+            `<option value="${c.id}">${c.name}</option>`
+        ).join('');
+    }
+
+
+    function addFeesDeposite() {
+        const uniqueId = Date.now();
+
+        const html = `
+        <div class="row mt-3 fees-deposite-item" id="fees_row_${uniqueId}">
+            <div class="col-md-3">
+                                                    <label>Payment Amount <small class='text-danger'>*</small></label>
+                                                    <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                        <input type="number" name="payment_amount_${uniqueId}[]" value="" required required-check class="form-control" placeholder="0.00" size="8">
+                                                        <div class="input-group-addon currency-addon">
+                                                            <select name="payment_currency_id_${uniqueId}[]" required required-check class="currency-selector">
+                                                                <?php foreach ($get_currencies as $c): ?>
+                                                                    <option value="<?= $c['id'] ?>"><?= $c['name'] ?></option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+            <div class="col-md-3">
+                <label>Date of Deposit <small class='text-danger'>*</small></label>
+                <input type="date" name="fees_deposite_date_${uniqueId}" required required-check class="form-control">
+            </div>
+
+            <div class="col-md-3 offer-letter-div form-group">
+                <label>Proof of deposit <small class="text-danger">*</small></label>
+                <input type="file" name="fees_deposite_slip_${uniqueId}" class="form-control" accept=".pdf,image/*" required required-check>
+            </div>
+
+            <div class="col-md-3 form-group">
+                <label>&nbsp;</label>
+                <p class="text-right">
+                    <button class="btn btn-danger" type="button" onclick="removeFeesDeposite(this)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                </p>
+            </div>
+        </div>
+    `;
+
+        document.querySelector('.fees-deposite-section').insertAdjacentHTML('beforeend', html);
+    }
+
+    function removeFeesDeposite(event) {
+        $(event).parents(".fees-deposite-item").remove();
     }
 </script>

@@ -2758,12 +2758,23 @@ function get_universities_list($search = '')
 
         // Add search condition if search term is provided
         if (!empty($search)) {
-            $CI->db->like('name', $search);
+            $search = trim($search);
+
+            $CI->db->group_start();
+            if (ctype_digit($search)) {
+                $CI->db->where('id', (int)$search)
+                    ->or_like('name', 'a');  // allow name match even when numeric
+            } else {
+                $CI->db->like('name', $search);  // text-only: match name
+            }
+            $CI->db->group_end();
         }
+
+
 
         // Order and limit
         $CI->db->order_by('name', 'ASC');
-        $CI->db->limit(20);
+        $CI->db->limit(50);
 
         // Execute query
         $university_dropdown = $CI->db->get()->result_array();
@@ -2775,6 +2786,30 @@ function get_universities_list($search = '')
     }
 }
 
+
+function get_diploma_board_list()
+{
+    $CI = &get_instance();
+
+    try {
+        // Build query
+        $CI->db->select('*')
+            ->from(db_prefix() . 'diploma_board')
+            ->where('status', 1);
+
+        // Order and limit
+        $CI->db->order_by('name', 'ASC');
+        $CI->db->limit(50);
+
+        // Execute query
+        $university_dropdown = $CI->db->get()->result_array();
+
+        return $university_dropdown;
+    } catch (Exception $e) {
+        log_message('error', 'Error fetching diploma list: ' . $e->getMessage());
+        return [];
+    }
+}
 
 function study_abroad_vendors()
 {
@@ -2902,4 +2937,31 @@ function filter_country_university_array($leadType)
         'counselor' => $counselor,
         'source' => $sources,
     ];
+}
+
+
+function get_offer_letters($client_id, $shortlisting_id)
+{
+
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->from(db_prefix() . 'university_offer_letter');
+    $CI->db->where('client_id', $client_id);
+    $CI->db->where('shortlisting_id', $shortlisting_id);
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}
+
+
+function get_pre_deposite($client_id, $shortlisting_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->from(db_prefix() . 'applicntion_pre_deposite');
+    $CI->db->where('client_id', $client_id);
+    $CI->db->where('shortlisting_id', $shortlisting_id);
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
 }

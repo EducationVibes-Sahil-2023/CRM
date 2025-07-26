@@ -295,6 +295,70 @@
         }, 300);
     });
 
+    $(document).on('shown.bs.select', 'select.universityLoad', function() {
+        const $select = $(this);
+        setTimeout(() => {
+            $('.bs-searchbox input').off('input').on('input', function() {
+                let searchVal = $(this).val();
+                loadCoursesUniversity(searchVal, $select, 1);
+            });
+        }, 300);
+    });
+
+    $(document).on('shown.bs.select', 'select.coursesLoads', function() {
+        const $select = $(this);
+        setTimeout(() => {
+            $('.bs-searchbox input').off('input').on('input', function() {
+                let searchVal = $(this).val();
+                loadCoursesUniversity(searchVal, $select, 2);
+            });
+        }, 300);
+    });
+
+    $(document).ready(function() {
+        console.log("check start");
+        // Load universities (type 1)
+        $("select.universityLoad").each(async function() {
+            const $select = $(this);
+            const searchVal = $select.data("select");
+            console.log(searchVal);
+            await loadCoursesUniversity(searchVal, $select, 1);
+        });
+
+        // Load courses (type 2 or 3) — assuming you want both, use data-attribute to differentiate
+        $("select.coursesLoads").each(async function() {
+            const $select = $(this);
+            const searchVal = $select.data("select");
+            console.log(searchVal);
+
+            // You need a way to distinguish type 2 vs 3. Assume it's a data-type attribute:
+            const type = 2; // fallback to 2 if not specified
+
+            await loadCoursesUniversity(searchVal, $select, type);
+        });
+
+        $("select.coursesLoadsPG").each(async function() {
+            const $select = $(this);
+            const searchVal = $select.data("select");
+            console.log(searchVal);
+
+            // You need a way to distinguish type 2 vs 3. Assume it's a data-type attribute:
+            const type = 3; // fallback to 2 if not specified
+
+            await loadCoursesUniversity(searchVal, $select, type);
+        });
+    });
+
+    $(document).on('shown.bs.select', 'select.coursesLoadsPG', function() {
+        const $select = $(this);
+        setTimeout(() => {
+            $('.bs-searchbox input').off('input').on('input', function() {
+                let searchVal = $(this).val();
+                loadCoursesUniversity(searchVal, $select, 3);
+            });
+        }, 300);
+    });
+
     function save_admission_preferences() {
         var additional_fields = {};
         var form_status = true;
