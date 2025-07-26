@@ -8568,7 +8568,7 @@ class Clients extends AdminController
         echo $html;
     }
 
-    function get_courses($degree = "")
+   function get_courses($degree = "")
     {
         $this->db->select('id, course_name,course_name name');
         $this->db->from('tbl_courses');
@@ -8579,7 +8579,6 @@ class Clients extends AdminController
             $this->db->group_start();
             if (ctype_digit($search)) {
                 $this->db->where("id", (int)$search);
-                $this->db->or_like("course_name", "a"); // in case it's a numeric course name
             } else {
                 $this->db->like("course_name", $search);
             }
@@ -8684,8 +8683,8 @@ class Clients extends AdminController
             return;
         }
     }
-
-    public function get_universities_course_list()
+    
+       public function get_universities_course_list()
     {
         header('Content-Type: application/json');
 

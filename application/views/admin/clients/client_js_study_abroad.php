@@ -571,7 +571,7 @@
 
     // acadmic details
 
-    async function save_admission_details() {
+    async function save_admission_details(saveStatus = 0) {
         const additional_fields = {};
         let form_status = true;
         const formData = new FormData();
@@ -579,28 +579,29 @@
         show_loader();
 
         try {
-            // Step 1: Validate Required Fields
-            $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
-                const $el = $(this);
-                const name = $el.attr("name");
-                const value = $.trim($el.val());
-                const isRequired = $el.is("[required-check]");
+            if (saveStatus == 0) {
+                // Step 1: Validate Required Fields
+                $("#admission-details-form input:visible, #admission-details-form select:visible").each(function() {
+                    const $el = $(this);
+                    const name = $el.attr("name");
+                    const value = $.trim($el.val());
+                    const isRequired = $el.is("[required-check]");
 
-                if (!name) return;
+                    if (!name) return;
 
-                if (isRequired && value === "") {
-                    additional_fields[name] = "required";
-                    form_status = false;
+                    if (isRequired && value === "") {
+                        additional_fields[name] = "required";
+                        form_status = false;
+                    }
+                });
+
+                if (!form_status) {
+                    appValidateForm($("#admission-details-form"), additional_fields);
+                    alert_float('danger', 'Please fill all required fields.');
+                    hide_loader();
+                    return;
                 }
-            });
-
-            if (!form_status) {
-                appValidateForm($("#admission-details-form"), additional_fields);
-                alert_float('danger', 'Please fill all required fields.');
-                hide_loader();
-                return;
             }
-
             // Step 2: Collect Form Data
             $("#admission-details-form div > input, #admission-details-form div > textarea, #admission-details-form div > select").each(function() {
                 const $el = $(this);
@@ -646,7 +647,9 @@
                     hide_loader();
                     if (res.resp_code === 'RCS') {
                         alert_float('success', res.resp_desc);
-                        window_reload();
+                        if (saveStatus == 0) {
+                            window_reload();
+                        }
                     } else {
                         alert_float('danger', res.resp_desc || 'Something went wrong.');
                     }

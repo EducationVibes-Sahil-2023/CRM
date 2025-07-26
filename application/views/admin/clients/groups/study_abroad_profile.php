@@ -1972,9 +1972,11 @@ if ($lead_type_status == 1) {
                         </div>
                     </div>
                     <div class="btn-save-fun">
-                        <div class="col-md-12">
-                            <button type="submit" onclick="save_admission_details()"
-                                class="btn btn-primary button-22 pull-right">Save & Next</button>
+                        <div class="col-md-12 text-right">
+                            <button type="submit" onclick="save_admission_details(1)"
+                                class="btn btn-primary button-22 ">Save</button> &nbsp;
+                            &nbsp; <button type="submit" onclick="save_admission_details()"
+                                class="btn btn-primary button-22">Save & Next</button> &nbsp;
                         </div>
                     </div>
                 </form>
@@ -3026,9 +3028,12 @@ if ($lead_type_status == 1) {
     }
 
     function loadCoursesUniversity(searchTerm = '', $select, type = "") {
-        degreeType = ""
+        let degreeType = ""
         if (type == 2) {
-            degreeType = ""
+            degreeType = "Bachelor";
+        }
+        if (type == 3) {
+            degreeType = "Master";
         }
         $.ajax({
             url: '<?= base_url('admin/clients/get_universities_course_list') ?>',
