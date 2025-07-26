@@ -889,7 +889,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
         <!-- </form> -->
 
         <section class="note_activity_section mt-5">
-            <div class="col-md-12 text-right" style="margin:25px;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
+            <div class="col-md-12 text-right" style="margin:25px; z-index:999;"><button type="checked" class="btn btn-lg btn-toggle btn-switch-toggle" data-toggle="button" aria-pressed="false" autocomplete="off">
                     <div class="handle"></div>
                 </button></div>
             <div class="note_section">
