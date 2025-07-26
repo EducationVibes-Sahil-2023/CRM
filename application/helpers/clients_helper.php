@@ -2751,24 +2751,38 @@ function get_universities_list($search = '')
     $CI = &get_instance();
 
     try {
-        // Build query
         $CI->db->select('*')
             ->from(db_prefix() . 'universities_name')
             ->where('status', 1);
 
-        // Add search condition if search term is provided
+        $search = trim($search);
+
         if (!empty($search)) {
-            $CI->db->like('name', $search);
+            $CI->db->group_start(); // Begin search grouping
+
+            if (ctype_digit($search)) {
+                $CI->db->where('id', (int)$search);
+
+                if (strlen($search) >= 3) {
+                    $CI->db->or_like('name', $search);
+                }
+            } else {
+                $CI->db->like('name', $search);
+            }
+
+            $CI->db->group_end(); // End search grouping
         }
 
-        // Order and limit
+        // Order: prioritize exact ID match if numeric
+        if (ctype_digit($search)) {
+            $CI->db->order_by("CASE WHEN id = " . (int)$search . " THEN 0 ELSE 1 END", "ASC", false);
+        }
+
         $CI->db->order_by('name', 'ASC');
-        $CI->db->limit(20);
+        $CI->db->limit(50);
 
-        // Execute query
-        $university_dropdown = $CI->db->get()->result_array();
+        return $CI->db->get()->result_array();
 
-        return $university_dropdown;
     } catch (Exception $e) {
         log_message('error', 'Error fetching universities list: ' . $e->getMessage());
         return [];
@@ -2902,4 +2916,29 @@ function filter_country_university_array($leadType)
         'counselor' => $counselor,
         'source' => $sources,
     ];
+}
+
+
+function get_diploma_board_list()
+{
+    $CI = &get_instance();
+
+    try {
+        // Build query
+        $CI->db->select('*')
+            ->from(db_prefix() . 'diploma_board')
+            ->where('status', 1);
+
+        // Order and limit
+        $CI->db->order_by('name', 'ASC');
+        $CI->db->limit(50);
+
+        // Execute query
+        $university_dropdown = $CI->db->get()->result_array();
+
+        return $university_dropdown;
+    } catch (Exception $e) {
+        log_message('error', 'Error fetching diploma list: ' . $e->getMessage());
+        return [];
+    }
 }

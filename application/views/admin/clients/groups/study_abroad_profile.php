@@ -12,7 +12,7 @@ $relationshipArray = get_relationShip();
 $yesNO_Array = [array("id" => 0, "name" => "No"), array("id" => 1, "name" => "Yes")];
 $degreeArray = get_degree();
 $universities_list = get_universities_list();
-$diploma_board = [array("id" => "1", "name" => "Diploma")];
+$diploma_board = get_diploma_board_list();
 $board_dropdown = get_board_dropdown();
 $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
@@ -596,7 +596,7 @@ if ($lead_type_status == 1) {
                                     <div class="btn-save-fun">
                                         <div class="col-md-12">
                                             <button type="submit" onclick="save_basic_details()"
-                                                class="btn btn-primary button-22 pull-right">Save changes</button>
+                                                class="btn btn-primary button-22 pull-right">Save & Next</button>
                                         </div>
                                     </div>
                                 </form>
@@ -757,7 +757,7 @@ if ($lead_type_status == 1) {
                                 <div class="btn-save-fun">
                                     <div class="col-md-12">
                                         <button type="submit" onclick="save_passport_details()"
-                                            class="btn btn-primary button-22 pull-right">Save changes</button>
+                                            class="btn btn-primary button-22 pull-right">Save & Next</button>
                                     </div>
                                 </div>
                             </form>
@@ -1034,7 +1034,7 @@ if ($lead_type_status == 1) {
                                 <div class="row btn-save-fun">
                                     <div class="col-md-12 text-right  btn-save-fun">
                                         &nbsp; <button type="submit" onclick="save_admission_preferences()"
-                                            class="btn btn-primary button-22">Save changes</button>
+                                            class="btn btn-primary button-22">Save & Next</button>
                                         &nbsp;
                                         <!-- <button type="button" id="freeze_admission_preferences" class="btn btn-warning button-22"><?php echo $admissionpreferences->freeze == 0 ? 'Freeze' : 'Unfreeze'; ?></button> -->
                                     </div>
@@ -1076,7 +1076,10 @@ if ($lead_type_status == 1) {
                                                 <?php
                                                 $selected = [];
                                                 $selected[] = $academicdetails->tenth_starting_year;
-                                                echo render_select('tenth_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_starting_year"); ?>
+                                                echo render_select('tenth_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_starting_year");
+                                                ?>
+
+
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1539,7 +1542,7 @@ if ($lead_type_status == 1) {
                                                     <?php
                                                     $selected = [];
                                                     $selected[] = $academicdetails->graduation_course;
-                                                    echo render_select('graduation_course', $course_list_ug, array('id', 'course_name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_course"); ?>
+                                                    echo render_select('graduation_course', $course_list_ug, array('id', 'course_name'), "", $selected, ["required" => "required", "required-check" => "required-check", "data-select" => !empty($academicdetails->graduation_course) ? $academicdetails->graduation_course : ''], [], "", "coursesLoads", "", "graduation_course"); ?>
                                                 </div>
                                             </div>
                                             <div class="col-lg-3 border2 border1">
@@ -1551,8 +1554,9 @@ if ($lead_type_status == 1) {
                                                     <?php
                                                     $selected = [];
                                                     $selected[] = $academicdetails->graduation_board;
-                                                    echo render_select('graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_board"); ?>
+                                                    echo render_select('graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check", "data-select" => !empty($academicdetails->graduation_board) ? $academicdetails->graduation_board : ''], [], "", "universityLoad", "", "graduation_board"); ?>
 
+                                                    </dsiv>
                                                 </div>
                                             </div>
                                             <div class="col-lg-2 border2 border1">
@@ -1697,7 +1701,7 @@ if ($lead_type_status == 1) {
                                                 <?php
                                                 $selected = [];
                                                 $selected[] = $academicdetails->post_graduation_course;
-                                                echo render_select('post_graduation_course', $course_list_pg, array('id', 'course_name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_course"); ?>
+                                                echo render_select('post_graduation_course', $course_list_pg, array('id', 'course_name'), "", $selected, ["required" => "required", "required-check" => "required-check", "data-select" => !empty($academicdetails->post_graduation_course) ? $academicdetails->post_graduation_course : ''], [], "", "coursesLoadsPG", "", "post_graduation_course"); ?>
 
                                             </div>
                                             <div class="col-lg-3 border2 border1">
@@ -1708,7 +1712,7 @@ if ($lead_type_status == 1) {
                                                     <?php
                                                     $selected = [];
                                                     $selected[] = $academicdetails->post_graduation_board;
-                                                    echo render_select('post_graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_board"); ?>
+                                                    echo render_select('post_graduation_board', $universities_list, array('id', 'name'), "", $selected, ["required" => "required", "required-check" => "required-check", "data-select" =>  !empty($academicdetails->post_graduation_board) ? $academicdetails->post_graduation_board : ''], [], "", "universityLoad", "", "post_graduation_board"); ?>
                                                 </div>
                                             </div>
                                             <div class="col-lg-2 border2 border1">
@@ -1855,7 +1859,7 @@ if ($lead_type_status == 1) {
                                                     <div class="col-lg-3">
                                                         <div class="form-group">
                                                             <input type="hidden" class="entrance_id" name="entrance_id[<?= $key ?>]" value="<?= htmlspecialchars($entrance["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                            <label for="entrance_exams_<?= $key ?>">Exam Type <small class="text-danger">*</small></label>
+                                                            <label for="entrance_exams_<?= $key ?>">Exam Name <small class="text-danger">*</small></label>
                                                             <?= render_select("entrance_exams[$key]", $get_entrance_exams_list, ['id', 'name'], '', [$entrance["exam_id"]], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') ?>
                                                         </div>
                                                     </div>
@@ -1968,9 +1972,13 @@ if ($lead_type_status == 1) {
                         </div>
                     </div>
                     <div class="btn-save-fun">
-                        <div class="col-md-12">
-                            <button type="submit" onclick="save_admission_details()"
-                                class="btn btn-primary button-22 pull-right">Save changes</button>
+                        <div class="col-md-12 text-right">
+                             <button type="submit" onclick="save_admission_details(1)"
+                                class="btn btn-primary button-22 ">Save</button> &nbsp;
+                              &nbsp; <button type="submit" onclick="save_admission_details()"
+                                class="btn btn-primary button-22">Save & Next</button> &nbsp;
+                           
+                           
                         </div>
                     </div>
                 </form>
@@ -2210,7 +2218,7 @@ if ($lead_type_status == 1) {
                                 <div class="row row">
                                     <div class="col-md-12 ">
                                         <button type="submit" onclick="save_welcome_info()"
-                                            class="btn btn-primary button-22 pull-right hide-btn btn-save-funn">Save changes</button>
+                                            class="btn btn-primary button-22 pull-right hide-btn btn-save-funn">Save & Next</button>
                                     </div>
                                 </div>
                             </form>
@@ -2748,75 +2756,106 @@ if ($lead_type_status == 1) {
     const degree = "";
 
     function loadCourses(searchTerm = '', courseSelect, selectedCourse = '') {
-        const degreeElement = $("#degree option:selected");
-        const degreeType = degreeElement.data("type")?.trim();
+        try {
+            console.log("searchTerm:", searchTerm);
+            console.log("courseSelect:", courseSelect);
+            console.log("selectedCourse:", selectedCourse);
 
+            const degreeElement = $("#degree option:selected");
+            let degreeType = degreeElement.data("type")?.trim();
 
-        const $container = $(courseSelect).closest(".university-combinations");
-        const $countrySelect = $container.find("select.study_country");
-        const $universitySelect = $container.find("select.study_universities");
-        const $courseSelect = $container.find("select.study_courses");
+            console.log("Selected degree element:", degreeElement);
+            console.log("Raw degree type:", degreeType);
 
-        const selectedCountryId = $countrySelect.val();
-        const selectedUniversity = $universitySelect.val();
+            if (!degreeType) {
+                console.warn("No degree type found.");
+                return;
+            }
 
-        if (!degreeType || !courseSelect || courseSelect.length === 0 || !selectedCountryId || !selectedUniversity) {
-            console.warn("Degree type or courseSelect is invalid.");
-            return;
-        }
+            // Normalize degree type
+            degreeType = degreeType === "UG" ? "Bachelor" : "Master";
 
-        if (degreeType == "UG") {
-            degreeType = "Bachelor";
-        } else {
-            degreeType = "Master";
-        }
-        courseSelect.empty(); // Clear any existing options
+            if (!courseSelect || courseSelect.length === 0) {
+                console.warn("Invalid courseSelect element.");
+                return;
+            }
 
-        $.ajax({
-            url: '<?= base_url('admin/clients/get_courses') ?>',
-            method: 'POST',
-            data: {
-                degree: degreeType,
-                search: searchTerm
-            },
-            success: function(response) {
-                let courseData = [];
+            const $container = $(courseSelect).closest(".university-combinations");
+            const $countrySelect = $container.find("select.study_country");
+            const $universitySelect = $container.find("select.study_universities");
+            const $courseSelect = $container.find("select.study_courses");
 
-                try {
-                    response = typeof response === 'string' ? JSON.parse(response) : response;
-                    courseData = response.filter_data || [];
-                } catch (e) {
-                    console.error("Invalid JSON in response", e);
-                    return;
-                }
+            const selectedCountryId = $countrySelect.val();
+            const selectedUniversity = $universitySelect.val();
 
-                if (courseData.length === 0) {
-                    courseSelect.append(
-                        $('<option>', {
-                            value: '',
-                            text: '-- No Courses Found --'
-                        })
-                    );
-                } else {
-                    courseData.forEach(course => {
-                        courseSelect.append(
+            if (!selectedCountryId || !selectedUniversity) {
+                console.warn("Country or university not selected.");
+                return;
+            }
+
+            $courseSelect.empty(); // Clear existing options
+
+            $.ajax({
+                url: '<?= base_url('admin/clients/get_courses') ?>',
+                method: 'POST',
+                data: {
+                    degree: degreeType,
+                    search: searchTerm
+                },
+                dataType: 'json',
+                success: function(response) {
+                    const courseData = Array.isArray(response?.filter_data) ? response.filter_data : [];
+
+                    if (courseData.length === 0) {
+                        $courseSelect.append(
                             $('<option>', {
-                                value: course.id,
-                                text: course.course_name,
-                                selected: selectedCourse == course.id // Mark as selected if it matches
+                                value: '',
+                                text: '-- No Courses Found --'
                             })
                         );
-                    });
-                }
+                    } else {
+                        courseData.forEach(course => {
+                            $courseSelect.append(
+                                $('<option>', {
+                                    value: course.id,
+                                    text: course.course_name,
+                                    selected: selectedCourse == course.id
+                                })
+                            );
+                        });
+                    }
 
-                // Refresh after DOM update
-                courseSelect.selectpicker('refresh');
-            },
-            error: function(xhr, status, error) {
-                console.error("Error loading courses:", status, error);
+                    // Refresh the select picker if using Bootstrap Select
+                    $courseSelect.selectpicker('refresh');
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error loading courses:", {
+                        status: status,
+                        error: error,
+                        response: xhr.responseText
+                    });
+
+                    $courseSelect.empty().append(
+                        $('<option>', {
+                            value: '',
+                            text: '-- Error Loading Courses --'
+                        })
+                    ).selectpicker('refresh');
+                }
+            });
+        } catch (err) {
+            console.error("Unexpected error in loadCourses:", err);
+            if ($(courseSelect).length) {
+                $(courseSelect).empty().append(
+                    $('<option>', {
+                        value: '',
+                        text: '-- Unexpected Error --'
+                    })
+                ).selectpicker('refresh');
             }
-        });
+        }
     }
+
 
 
 
@@ -2987,6 +3026,64 @@ if ($lead_type_status == 1) {
         if (getAcadmicType && getAcadmicType.length > 0) {
             const html = genrateEntranceBlock(getAcadmicType);
             $(triggerElement).parents(".entrance-exams").append(html);
+        }
+    }
+
+    function loadCoursesUniversity(searchTerm = '', $select, type = "") {
+        if(searchTerm!=""){
+        degreeType = ""
+        if (type == 2) {
+            degreeType = ""
+        }
+        $.ajax({
+            url: '<?= base_url('admin/clients/get_universities_course_list') ?>',
+            method: 'POST',
+            data: {
+                search: searchTerm,
+                type: type,
+                degree: degreeType
+            },
+            dataType: 'json',
+            success: function(response) {
+                const dataArray = Array.isArray(response?.filter_data) ? response.filter_data : [];
+
+                $select.empty();
+
+                if (dataArray.length === 0) {
+                    $select.append($('<option>', {
+                        value: '',
+                        text: '-- No Found --'
+                    }));
+                } else {
+                     $select.append($('<option>', {
+                            value: "",
+                            text: "Select Option"
+                        }));
+                    dataArray.forEach(data => {
+                        $select.append($('<option>', {
+                            value: data.id,
+                            text: data.name
+                        }));
+                    });
+                }
+
+if (!isNaN(searchTerm) && $.trim(searchTerm) !== "") {
+    $select.selectpicker('val', searchTerm);  // ✅ Correct syntax
+} else {
+    console.log("It's text");
+}
+
+$select.selectpicker('refresh');
+
+            },
+            error: function(xhr) {
+                console.error("Error fetching", xhr);
+                $select.empty().append($('<option>', {
+                    value: '',
+                    text: '-- Error Loading --'
+                })).selectpicker('refresh');
+            }
+        });
         }
     }
 </script>

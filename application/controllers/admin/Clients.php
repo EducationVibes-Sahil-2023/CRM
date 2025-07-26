@@ -8522,14 +8522,23 @@ class Clients extends AdminController
         echo $html;
     }
 
-    function get_courses($degree = "")
+   function get_courses($degree = "")
     {
-        $this->db->select('id, course_name');
+        $this->db->select('id, course_name,course_name name');
         $this->db->from('tbl_courses');
         $this->db->where('status', 1);
         if (!empty($_POST["search"])) {
-            $this->db->like("course_name", trim($_POST["search"]));
+            $search = trim($_POST["search"]);
+
+            $this->db->group_start();
+            if (ctype_digit($search)) {
+                $this->db->where("id", (int)$search);
+            } else {
+                $this->db->like("course_name", $search);
+            }
+            $this->db->group_end();
         }
+
         if (!empty($_POST["degree"])) {
             $this->db->like("course_name", trim($_POST["degree"]));
         }
@@ -8627,5 +8636,29 @@ class Clients extends AdminController
             ]);
             return;
         }
+    }
+    
+       public function get_universities_course_list()
+    {
+        header('Content-Type: application/json');
+
+        $search = filter_input(INPUT_POST, 'search', FILTER_SANITIZE_STRING) ?? '';
+        $type = $_POST["type"] ?? '';
+
+        $dataList["filter_data"] = [];
+
+        if ($type == 1 && function_exists('get_universities_list')) {
+            $dataList["filter_data"] = get_universities_list($search);
+        } else if ($type == 2 && function_exists('get_universities_list')) {
+            $dataList["filter_data"] = $this->get_courses("Bachelor");
+        } else if ($type == 3 && function_exists('get_universities_list')) {
+            $dataList["filter_data"] = $this->get_courses("Master");
+        } else {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid request type or function not found']);
+            return;
+        }
+
+        echo json_encode($dataList);
     }
 }
