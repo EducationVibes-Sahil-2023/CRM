@@ -31,7 +31,7 @@ foreach ($documents_type as $documents) {
 }
 
 $priority_array = [];
-for ($i = 1; $i <= 5; $i++) {
+for ($i = 1; $i <= PRIORITY_ARRAY_STUDY_ABROAD; $i++) {
     $priority_array[] = [
         'id' => $i,
         'name' => "P $i",
@@ -158,6 +158,10 @@ if ($lead_type_status == 1) {
 
 ?>
 <style>
+    select.ui-datepicker-year {
+        color: black;
+    }
+
     .margin-top {
         margin-top: 5px;
     }
@@ -300,6 +304,12 @@ if ($lead_type_status == 1) {
         /* border: 0px !important; */
     }
 </style>
+
+<!-- Flatpickr CSS -->
+<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
+
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
@@ -1073,11 +1083,14 @@ if ($lead_type_status == 1) {
                                                 <p>Year of Starting <?= $text_danger_mbbs ?></p>
                                             </div>
                                             <div class="c2">
-                                                <?php
-                                                $selected = [];
-                                                $selected[] = $academicdetails->tenth_starting_year;
-                                                echo render_select('tenth_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_starting_year");
-                                                ?>
+                                                <input type="text"
+                                                    class="form-control yearpicker"
+                                                    name="tenth_starting_year"
+                                                    id="tenth_starting_year"
+                                                    value="<?= htmlspecialchars($academicdetails->tenth_starting_year ?? '') ?>"
+                                                    required
+                                                    data-required-check="required-check"
+                                                    placeholder="Select Year">
 
 
                                             </div>
@@ -1087,10 +1100,15 @@ if ($lead_type_status == 1) {
                                                 <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                             </div>
                                             <div class="c2">
-                                                <?php
-                                                $selected = [];
-                                                $selected[] = $academicdetails->tenth_passing_year;
-                                                echo render_select('tenth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "tenth_passing_year"); ?>
+                                                <input type="text"
+                                                    name="tenth_passing_year"
+                                                    id="tenth_passing_year"
+                                                    class="form-control yearpicker"
+                                                    value="<?= htmlspecialchars($academicdetails->tenth_passing_year ?? '') ?>"
+                                                    placeholder="Select Year"
+                                                    required
+                                                    readonly>
+
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1205,10 +1223,15 @@ if ($lead_type_status == 1) {
                                                     <p>Year of Starting <?= $text_danger_mbbs ?></p>
                                                 </div>
                                                 <div class="c2">
-                                                    <?php
-                                                    $selected = [];
-                                                    $selected[] = $academicdetails->twelth_starting_year;
-                                                    echo render_select('twelth_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_starting_year"); ?>
+                                                    <input type="text"
+                                                        name="twelth_starting_year"
+                                                        id="twelth_starting_year"
+                                                        class="form-control yearpicker"
+                                                        value="<?= htmlspecialchars($academicdetails->twelth_starting_year ?? '') ?>"
+                                                        placeholder="Select Year"
+                                                        required
+                                                        readonly>
+
 
                                                 </div>
                                             </div>
@@ -1217,10 +1240,15 @@ if ($lead_type_status == 1) {
                                                     <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                                 </div>
                                                 <div class="c2">
-                                                    <?php
-                                                    $selected = [];
-                                                    $selected[] = $academicdetails->twelth_passing_year;
-                                                    echo render_select('twelth_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "twelth_passing_year"); ?>
+                                                    <input type="text"
+                                                        name="twelth_passing_year"
+                                                        id="twelth_passing_year"
+                                                        class="form-control yearpicker"
+                                                        value="<?= htmlspecialchars($academicdetails->twelth_passing_year ?? '') ?>"
+                                                        placeholder="Select Year"
+                                                        required
+                                                        readonly>
+
 
                                                 </div>
                                             </div>
@@ -1377,10 +1405,15 @@ if ($lead_type_status == 1) {
                                             </div>
                                             <div class="c2">
                                                 <!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="diploma_passing_year" value="<?= $academicdetails->diploma_starting_year; ?>"> -->
-                                                <?php
-                                                $selected = [];
-                                                $selected[] = $academicdetails->diploma_starting_year;
-                                                echo render_select('diploma_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_starting_year"); ?>
+                                                <input type="text"
+                                                    name="diploma_starting_year"
+                                                    id="diploma_starting_year"
+                                                    class="form-control yearpicker"
+                                                    value="<?= htmlspecialchars($academicdetails->diploma_starting_year ?? '') ?>"
+                                                    placeholder="Select Year"
+                                                    required
+                                                    readonly>
+
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1389,10 +1422,15 @@ if ($lead_type_status == 1) {
                                             </div>
                                             <div class="c2">
                                                 <!-- <input class="form-control" type="text" placeholder="Enter Passing Year"  name="diploma_passing_year" value="<?= $academicdetails->diploma_passing_year; ?>"> -->
-                                                <?php
-                                                $selected = [];
-                                                $selected[] = $academicdetails->diploma_passing_year;
-                                                echo render_select('diploma_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "diploma_passing_year"); ?>
+                                                <input type="text"
+                                                    name="diploma_passing_year"
+                                                    id="diploma_passing_year"
+                                                    class="form-control yearpicker"
+                                                    value="<?= htmlspecialchars($academicdetails->diploma_passing_year ?? '') ?>"
+                                                    placeholder="Select Year"
+                                                    required
+                                                    readonly>
+
                                             </div>
                                         </div>
                                         <div class="col-lg-2 border2 border1">
@@ -1564,10 +1602,15 @@ if ($lead_type_status == 1) {
                                                     <p>Year of Starting <?= $text_danger_mbbs ?> </p>
                                                 </div>
                                                 <div class="c2">
-                                                    <?php
-                                                    $selected = [];
-                                                    $selected[] = $academicdetails->graduation_starting_year;
-                                                    echo render_select('graduation_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_starting_year"); ?>
+                                                    <input type="text"
+                                                        name="graduation_starting_year"
+                                                        id="graduation_starting_year"
+                                                        class="form-control yearpicker"
+                                                        value="<?= htmlspecialchars($academicdetails->graduation_starting_year ?? '') ?>"
+                                                        placeholder="Select Year"
+                                                        required
+                                                        readonly>
+
 
                                                 </div>
                                             </div>
@@ -1576,10 +1619,15 @@ if ($lead_type_status == 1) {
                                                     <p>Year of Passing <?= $text_danger_mbbs ?> </p>
                                                 </div>
                                                 <div class="c2">
-                                                    <?php
-                                                    $selected = [];
-                                                    $selected[] = $academicdetails->graduation_passing_year;
-                                                    echo render_select('graduation_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "graduation_passing_year"); ?>
+                                                    <input type="text"
+                                                        name="graduation_passing_year"
+                                                        id="graduation_passing_year"
+                                                        class="form-control yearpicker"
+                                                        value="<?= htmlspecialchars($academicdetails->graduation_passing_year ?? '') ?>"
+                                                        placeholder="Select Year"
+                                                        required
+                                                        readonly>
+
 
                                                 </div>
                                             </div>
@@ -1720,10 +1768,15 @@ if ($lead_type_status == 1) {
                                                     <p>Year of Starting <?= $text_danger_mbbs ?></p>
                                                 </div>
                                                 <div class="c2">
-                                                    <?php
-                                                    $selected = [];
-                                                    $selected[] = $academicdetails->post_graduation_starting_year;
-                                                    echo render_select('post_graduation_starting_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_starting_year"); ?>
+                                                    <input type="text"
+                                                        name="post_graduation_starting_year"
+                                                        id="post_graduation_starting_year"
+                                                        class="form-control yearpicker"
+                                                        value="<?= htmlspecialchars($academicdetails->post_graduation_starting_year ?? '') ?>"
+                                                        placeholder="Select Year"
+                                                        required
+                                                        readonly>
+
 
                                                 </div>
                                             </div>
@@ -1732,10 +1785,15 @@ if ($lead_type_status == 1) {
                                                     <p>Year of Passing <?= $text_danger_mbbs ?></p>
                                                 </div>
                                                 <div class="c2">
-                                                    <?php
-                                                    $selected = [];
-                                                    $selected[] = $academicdetails->post_graduation_passing_year;
-                                                    echo render_select('post_graduation_passing_year', $years_array, array('year', 'year'), "", $selected, ["required" => "required", "required-check" => "required-check"], [], "", "", "", "post_graduation_passing_year"); ?>
+                                                    <input type="text"
+                                                        name="post_graduation_passing_year"
+                                                        id="post_graduation_passing_year"
+                                                        class="form-control yearpicker"
+                                                        value="<?= htmlspecialchars($academicdetails->post_graduation_passing_year ?? '') ?>"
+                                                        placeholder="Select Year"
+                                                        required
+                                                        readonly>
+
 
                                                 </div>
                                             </div>
