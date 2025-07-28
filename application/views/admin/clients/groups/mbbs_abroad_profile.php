@@ -1326,7 +1326,7 @@ if ($lead_type_status == 2) {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row row">
+                                <div class="row btn-save-fun">
                                     <div class="col-md-12 ">
                                         <button type="submit" onclick="save_welcome_info()" class="btn btn-primary button-22 pull-right margin-top">Save changes</button>
                                     </div>
@@ -1526,24 +1526,25 @@ if ($lead_type_status == 2) {
                     </form>
                 </div>
             </div>
-
-            <div role="tabpanel" class="tab-pane" id="preview">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <br>
-                            <br>
-                            <form id="preview-form" onsubmit="return false;" class="<?= !empty($final_sumbit) ? 'hide' : '' ?>">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
-                                    </div>
+            
+               <div role="tabpanel" class="tab-pane" id="preview">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <br>
+                        <br>
+                        <form id="preview-form" onsubmit="return false;" class="<?= !empty($final_sumbit) ? 'hide' : '' ?>">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
                                 </div>
-                            </form>
-                        </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
+        </div>
+
         </div>
 
 
@@ -1586,8 +1587,7 @@ if ($lead_type_status == 2) {
                 <?php } ?>
             </div>
         <?php } ?>
-
-
+     
     </div>
 </div>
 
