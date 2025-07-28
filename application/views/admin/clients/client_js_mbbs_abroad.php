@@ -810,6 +810,8 @@
     }
 
     $(".nav-tabs li").on("click", function() {
+        $(".btn-save-fun").show();
+        $(".btn-save-funn").show();
         if (typeof final_sumbit !== "undefined" && final_sumbit != 1) {
             $(".btn-save-fun").show(); // Show the save button
             $(".tab-pane").find("input,select").attr("readonly", false);
