@@ -305,11 +305,6 @@ if ($lead_type_status == 1) {
     }
 </style>
 
-<!-- Flatpickr CSS -->
-<link href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" rel="stylesheet">
-
-<!-- Flatpickr JS -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
 <div class="row">
