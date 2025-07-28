@@ -98,7 +98,7 @@
 
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
-        
+
 
         $.ajax({
             url: "<?php echo base_url() . 'admin/clients/student_update' ?>",
@@ -469,7 +469,7 @@
         // Get CSRF token and client ID
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
-         formData.append("academicDetailsId", $('input[name="academicDetailsId"]').val());
+        formData.append("academicDetailsId", $('input[name="academicDetailsId"]').val());
 
         // Handle media files
         await get_media_docs("admission-details-form .media-files", formData);
