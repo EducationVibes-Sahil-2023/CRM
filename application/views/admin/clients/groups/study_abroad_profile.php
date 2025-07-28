@@ -143,6 +143,7 @@ array_unshift($neetResultStatus, array(""));
 
 ?>
 <!-- <script src="https://code.jquery.com/jquery-3.6.3.js"></script> -->
+
 <script>
     var final_sumbit = <?= !empty($final_sumbit) ? $final_sumbit : 0 ?>;
     var admin_status = <?= $admin_status ?>;
@@ -924,10 +925,10 @@ if ($lead_type_status == 1) {
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <div class="form-group">
-                                                            <label for="study_courses">Cources</label>
+                                                            <label for="study_courses">Courses</label>
                                                             <select class="form-control selectpicker study_courses "
                                                                 name="study_courses_<?= $key ?>" id="study_courses_<?= $key ?>"
-                                                                data-live-search="true" title="Select a Cources">
+                                                                data-live-search="true" title="Select a Courses">
                                                                 <?php if (!empty($shortlisting["course_id"])) { ?>
                                                                     <option selected value="<?= $shortlisting["course_id"] ?>">
                                                                         <?= $shortlisting["course_name"] ?></option>
@@ -998,10 +999,10 @@ if ($lead_type_status == 1) {
                                                 </div>
                                                 <div class="col-lg-3">
                                                     <div class="form-group">
-                                                        <label for="study_courses">Cources</label>
+                                                        <label for="study_courses">Courses</label>
                                                         <select class="form-control selectpicker study_courses "
                                                             name="study_courses" id="study_courses" data-live-search="true"
-                                                            title="Select a Cources">
+                                                            title="Select a Courses">
                                                         </select>
                                                     </div>
                                                 </div>
