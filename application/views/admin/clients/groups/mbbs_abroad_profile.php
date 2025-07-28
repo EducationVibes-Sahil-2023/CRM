@@ -1526,6 +1526,24 @@ if ($lead_type_status == 2) {
                     </form>
                 </div>
             </div>
+
+            <div role="tabpanel" class="tab-pane" id="preview">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <br>
+                            <br>
+                            <form id="preview-form" onsubmit="return false;" class="<?= !empty($final_sumbit) ? 'hide' : '' ?>">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
 
@@ -1568,23 +1586,7 @@ if ($lead_type_status == 2) {
                 <?php } ?>
             </div>
         <?php } ?>
-        <div role="tabpanel" class="tab-pane" id="final-form">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <br>
-                        <br>
-                        <form id="final-form" onsubmit="return false;" class="<?= !empty($final_sumbit || is_Admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) ? 'hide' : '' ?>">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
     </div>
 </div>
