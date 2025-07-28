@@ -1224,7 +1224,7 @@ if ($lead_type_status == 2) {
 
 
                             </div>
-                            <div class="row ">
+                            <div class="row btn-save-fun margin-top">
                                 <div class="col-md-12">
                                     <button type="submit" onclick="save_documents()" class="btn btn-primary button-22 pull-right margin-top hide-btn btn-save-fun margin-topn">Save changes</button>
                                 </div>
