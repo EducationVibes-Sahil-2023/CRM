@@ -2857,13 +2857,12 @@ function filter_country_university_array($leadType)
     $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid', "LEFT");
     $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id', "LEFT");
     $CI->db->where('l.type', $leadType);
-    if ($leadType == 1) {
+    if ($leadType == 2) {
         $CI->db->or_where('c.client_type ', 2);
     }
 
     $query = $CI->db->get();
     $result = $query->result_array();
-
     $countries = [];
     $universities = [];
     $counselor = [];
