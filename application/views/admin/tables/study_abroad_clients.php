@@ -205,7 +205,6 @@ if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) &
             WHERE staff_id = ' . $current_staff_id . '
         ) 
         OR ' . db_prefix() . 'leads.assigned = ' . $current_staff_id . '
-        OR (  ' . db_prefix() . 'clients.agent_id = ev_partner.id ' . $joinIn . ')
     ) ';
 }
 
