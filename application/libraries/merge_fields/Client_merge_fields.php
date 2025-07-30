@@ -581,8 +581,16 @@ class Client_merge_fields extends App_merge_fields
         $documents_list = get_orignal_document_data_list(array($client_id));
         $documents_name_list = $documents_list[$client_id]["document_names"];
 
+
+        $documents_list_return = get_orignal_document_data_list(array($client_id), "1");
+        $documents_name_list_return = $documents_list_return[$client_id]["document_names"];
+
         if (!empty($documents_name_list)) {
             $documents_name_list = explode(",", $documents_name_list);
+        }
+
+        if (!empty($documents_name_list_return)) {
+            $documents_name_list_return = explode(",", $documents_name_list_return);
         }
 
         $documents_name_list_li = `No documents found.`;
@@ -594,6 +602,18 @@ class Client_merge_fields extends App_merge_fields
             $documents_name_list_li .= '</ul>';
         } else {
             $documents_name_list_li = '<p>No documents found.</p>';
+        }
+
+
+        $documents_name_list_li_return = `No documents found.`;
+        if (!empty($documents_name_list)) {
+            $documents_name_list_li_return = '<ul>';
+            foreach ($documents_name_list as $doc) {
+                $documents_name_list_li_return .= '<li>' . htmlspecialchars($doc) . '</li>';
+            }
+            $documents_name_list_li_return .= '</ul>';
+        } else {
+            $documents_name_list_li_return = '<p>No documents found.</p>';
         }
 
 
@@ -663,6 +683,12 @@ class Client_merge_fields extends App_merge_fields
         if (!empty($documents_name_list_li)) {
             $fields['{orignal_documents_received}']       = $documents_name_list_li;
         }
+
+
+        if (!empty($documents_name_list_li_return)) {
+            $fields['{orignal_documents_return}']       = $documents_name_list_li_return;
+        }
+
 
 
         $this->ci->db->where('userid', $client_id);

@@ -1719,7 +1719,7 @@ function get_clients_fees_details_ids($lead_type, $client_id = [], $fees_id = ""
 function get_orignal_document_data($client_id)
 {
     $CI = &get_instance();
-    $CI->db->select("o.*,r.received_date,CONCAT(firstname,' ',lastname) as received_by,r.id as received_id,l.name received_location,r.in_transit")
+    $CI->db->select("o.*,r.received_date,CONCAT(firstname,' ',lastname) as received_by,r.id as received_id,l.name received_location,r.in_transit,l.status l_status")
         ->from(db_prefix() . 'orignal_documents o')
         ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
         ->join(db_prefix() . 'staff s', "s.staffid = r.received_by ", "LEFT")
@@ -1787,14 +1787,20 @@ function get_applicant_statuses($id = "")
     }
 }
 
-function get_orignal_document_data_list($client_ids_array = [])
+function get_orignal_document_data_list($client_ids_array = [], $return = 0)
 {
     $client_ids = implode(",", $client_ids_array);
     $CI = &get_instance();
-    $CI->db->select("r.userid,group_concat(o.id) document_ids,group_concat(o.name) document_names,group_concat(r.id) received_id")
+    $CI->db->select("r.userid,group_concat(o.id) document_ids,group_concat(o.name) document_names,group_concat(r.id) received_id,l.status l_status")
         ->from(db_prefix() . 'orignal_documents_received r')
         ->join(db_prefix() . 'orignal_documents o', "o.id = r.doc_id AND r.userid IN ({$client_ids})")
         ->join(db_prefix() . 'office_location l', "l.id = r.location_id ", "LEFT");
+    if (!empty($return) && $return == 1) {
+        $CI->db->where("l.status", 2);
+    } else {
+        $CI->db->where("l.status", 1);
+    }
+
     $CI->db->group_by("r.userid");
     $result = $CI->db->order_by("r.userid", "asc")->get()->result_array();
 

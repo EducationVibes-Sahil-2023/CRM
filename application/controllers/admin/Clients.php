@@ -8568,7 +8568,7 @@ class Clients extends AdminController
         echo $html;
     }
 
-   function get_courses($degree = "")
+    function get_courses($degree = "")
     {
         $this->db->select('id, course_name,course_name name');
         $this->db->from('tbl_courses');
@@ -8628,9 +8628,13 @@ class Clients extends AdminController
                 ]);
                 return;
             }
-
-            // Send email
-            $email_status = send_mail_template('Applicant_org_doc_received', $client->email, $client_id, get_staff_user_id());
+            $status = $_POST["status"] ?? 0;
+            if (!empty($status) && $status == 1) {
+                $email_status = send_mail_template('Applicant_org_doc_return', $client->email, $client_id, get_staff_user_id());
+            } else {
+                // Send email
+                $email_status = send_mail_template('Applicant_org_doc_received', $client->email, $client_id, get_staff_user_id());
+            }
 
             if (!$email_status) {
                 log_message('error', "Failed to send email to client ID: {$client_id}");
@@ -8642,7 +8646,7 @@ class Clients extends AdminController
             }
 
             // Fetch documents
-            $documents_list = get_orignal_document_data_list([$client_id]);
+            $documents_list = get_orignal_document_data_list([$client_id], !empty($status) ? $status : 0);
             $documentsList = $documents_list[$client_id]['document_names'] ?? '';
 
             if (!empty($documentsList)) {
@@ -8650,7 +8654,7 @@ class Clients extends AdminController
                     $this->db->where([
                         'type'        => 'email',
                         'clientid'    => $client_id,
-                        'template_id' => ORIGNAL_DOCUMENT_RECEIVED
+                        'template_id' => !empty($status) ? ORIGNAL_DOCUMENT_RECEIVED : ORIGNAL_DOCUMENT_RETURN,
                     ]);
                     $this->db->order_by('id', 'DESC');
                     $this->db->limit(1);
@@ -8683,8 +8687,8 @@ class Clients extends AdminController
             return;
         }
     }
-    
-       public function get_universities_course_list()
+
+    public function get_universities_course_list()
     {
         header('Content-Type: application/json');
 
