@@ -1193,7 +1193,7 @@ if ($lead_type_status == 2) {
 
                                                     </td>
                                                     <td>
-                                                        <?php if (!empty($doc_files["lead_type"])) { ?>
+                                                         <?php if (!empty($doc_files["lead_type"]) && $doc_files["disabled"] == 0) { ?>
                                                             <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                         <?php } ?>
                                                     </td>
@@ -1526,24 +1526,24 @@ if ($lead_type_status == 2) {
                     </form>
                 </div>
             </div>
-            
-               <div role="tabpanel" class="tab-pane" id="preview">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card">
-                        <br>
-                        <br>
-                        <form id="preview-form" onsubmit="return false;" class="<?= !empty($final_sumbit) ? 'hide' : '' ?>">
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
+
+            <div role="tabpanel" class="tab-pane" id="preview">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <br>
+                            <br>
+                            <form id="preview-form" onsubmit="return false;" class="<?= !empty($final_sumbit) ? 'hide' : '' ?>">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button type="submit" onclick="final_submission()" class="btn btn-primary button-22 pull-right margin-top">Final Submit</button>
+                                    </div>
                                 </div>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
         </div>
 
@@ -1587,7 +1587,7 @@ if ($lead_type_status == 2) {
                 <?php } ?>
             </div>
         <?php } ?>
-     
+
     </div>
 </div>
 
