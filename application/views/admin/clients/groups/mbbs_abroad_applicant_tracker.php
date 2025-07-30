@@ -1193,13 +1193,15 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                         <?php foreach ($legalization as $leg) :
                                             $mand = "";
                                             $mand_re = "";
+                                            $file_url_payment = !empty($leg["fees_deposite_slip"]) ? $leg["fees_deposite_slip"] : "";
                                             if ($leg["primary_university"] == 1) {
                                                 $mand = '<small class="text-danger">*</small>';
                                                 $mand_re = "required required-check";
                                             }
                                         ?>
                                             <div class="legalization-item card shadow-sm p-3 mb-3">
-                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?></h4>
+                                                <h4 class="university-name"><?= htmlspecialchars($leg["university_name"], ENT_QUOTES, 'UTF-8') ?> <span class="pull-right h6 fw-bold">Fees Deposite Proof Uploaded : <?= !empty($file_url_payment) ? "Yes" : "No" ?></span></h4>
+
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                 <?php if (!empty($leg["country_name"]) && $leg["country_name"] == "Georgia") : ?>
                                                     <div class="row mt-2">

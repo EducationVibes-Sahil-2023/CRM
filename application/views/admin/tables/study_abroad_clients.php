@@ -148,18 +148,14 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'passport_stages ON ' . db_prefix() . 'passport_stages.id=' . db_prefix() . 'client_passport_details.passport_status',
     'LEFT JOIN ' . db_prefix() . 'academic_details ON ' . db_prefix() . 'academic_details.userid=' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'visa_details ON ' . db_prefix() . 'visa_details.userid=' . db_prefix() . 'clients.userid',
-
     'LEFT JOIN ' . db_prefix() . 'sa_applicant_stages u_stage_category ON u_stage_category.id = ' . db_prefix() . 'client_university_shortlisting.applicant_stage',
     'LEFT JOIN ' . db_prefix() . 'application_sub_category_study  u_stage_sub_category ON u_stage_sub_category.id = ' . db_prefix() . 'client_university_shortlisting.applicant_sub_status',
 
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
-    'LEFT JOIN ' . db_prefix() . 'ev_partner ev_partner 
- ON ev_partner.id = ' . db_prefix() . 'clients.agent_id 
- OR (
-   ' . db_prefix() . 'staff.evp_partners IS NOT NULL 
-   AND ' . db_prefix() . 'staff.evp_partners != "" 
-    ' . $joinIn . '
- ) ',
+    'LEFT JOIN ' . db_prefix() . 'vendor_study_abroad ON ' . db_prefix() . 'vendor_study_abroad.id=' . db_prefix() . 'client_university_shortlisting.vendor_id',
+    'LEFT JOIN ' . db_prefix() . 'admission_program ON ' . db_prefix() . 'admission_program.id=' . db_prefix() . 'admission_preferences.degree',
+    'LEFT JOIN ' . db_prefix() . 'applicntion_pre_deposite ON ' . db_prefix() . 'applicntion_pre_deposite.client_id=' . db_prefix() . 'clients.userid  AND ' . db_prefix() . 'applicntion_pre_deposite.shortlisting_id = ' . db_prefix() . 'client_university_shortlisting.id',
+    'LEFT JOIN ' . db_prefix() . 'offer_condition ON ' . db_prefix() . 'offer_condition.client_id=' . db_prefix() . 'clients.userid AND ' . db_prefix() . 'offer_condition.university_id = ' . db_prefix() . 'client_university_shortlisting.university_id',
     'LEFT JOIN (
         SELECT td1.*,td2.total_cost
         FROM ' . db_prefix() . 'ticket_data td1
@@ -224,9 +220,7 @@ if (!is_admin()) {
                     FROM ' . db_prefix() . 'customer_admins 
                     WHERE staff_id = ' . $current_staff_id . '
                 )
-                OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')
-                OR (  ' . db_prefix() . 'clients.agent_id = ev_partner.id ' . $joinIn . ')
-            ) ';
+                OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')) ';
         } else {
 
             if (has_permission('customers', '', 'applicant_view')) {
@@ -236,10 +230,7 @@ if (!is_admin()) {
                     SELECT customer_id 
                     FROM ' . db_prefix() . 'customer_admins 
                     WHERE staff_id = ' . $current_staff_id . '
-                )
-                
-                OR ( ' . db_prefix() . 'clients.agent_id = ev_partner.id ' . $joinIn . ')
-            ) ';
+                )) ';
             }
         }
     }

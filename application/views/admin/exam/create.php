@@ -89,11 +89,20 @@ array_unshift($exams, array("id" => "", "name" => "Select Exam"))
                         </div>
 
                         <div class="form-group col-md-12 ">
-                            <label><small class='text-danger'>*</small> Applicants</label>
-                            <div id="client_list">
+                            <div>
+                                <label for="client_search">
+                                    <small class="text-danger">*</small> Applicants
+                                </label>
+                                <div class="pull-right col-md-3">
+                                    <input type="search" id="client_search" class="form-control" name="client_search" placeholder="Search Applicant" onkeyup="search_Applicant()">
+                                </div>
+
+                            </div>
+                            <br>
+                            <div id="client_list" class="col-md-12 margin-top mt-4">
                             </div>
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-12 ">
                             <div class="pull-end">
                                 <button type="submit" onclick="create_batch()" class="btn btn-info">Create Batch</button>
                             </div>
@@ -287,6 +296,25 @@ array_unshift($exams, array("id" => "", "name" => "Select Exam"))
     }
 
     validate_exam_batch_form();
+
+    function search_Applicant() {
+        let searchValue = $("input[name='client_search']").val().toLowerCase();
+        let clientList = $("#client_list ul li");
+
+        if (searchValue.length >= 3) {
+            clientList.each(function() {
+                let clientName = $(this).text().toLowerCase();
+                console.log(clientName);
+                if (clientName.includes(searchValue)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        } else {
+            clientList.show(); // Show all if search is empty
+        }
+    }
 </script>
 </body>
 
