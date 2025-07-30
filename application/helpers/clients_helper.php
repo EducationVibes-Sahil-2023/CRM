@@ -1905,20 +1905,20 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
     $query = $CI->db->get();
     $invitation_result = $query->result_array();
 
-    if (!empty($invitation_result)) {
-        foreach ($invitation_result as $letter) {
-            if (empty($letter['invitation_letter'])) {
-                $client_name = get_client_name($letter["userid"]);
-                $errors[] = "User '{$client_name}' has not received Invitation Letter.";
+    // if (!empty($invitation_result)) {
+    //     foreach ($invitation_result as $letter) {
+    //         if (empty($letter['invitation_letter'])) {
+    //             $client_name = get_client_name($letter["userid"]);
+    //             $errors[] = "User '{$client_name}' has not received Invitation Letter.";
 
-                return [
-                    "error" => true,
-                    "message" => $errors, // Return first error message (optional: return all as list)
-                ];
-                die;
-            }
-        }
-    }
+    //             return [
+    //                 "error" => true,
+    //                 "message" => $errors, // Return first error message (optional: return all as list)
+    //             ];
+    //             die;
+    //         }
+    //     }
+    // }
 
     // Step 2: Check if document already apostilled
     if ($check_status == 1) {
