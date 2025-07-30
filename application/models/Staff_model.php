@@ -970,13 +970,16 @@ class Staff_model extends App_Model
         return $this->db->where(["post_sales" => 1, "active" => 1])->get(db_prefix() . 'staff')->result_array();
     }
 
-    public function office_location($id = "")
+    public function office_location($id = "", $all = "")
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
         }
 
-        $this->db->where('status', 1);
+        if (!empty($all) && $all == 1) {
+        } else {
+            $this->db->where('status', 1);
+        }
 
         return $this->db->get(db_prefix() . 'office_location')->result_array();
     }
@@ -1003,24 +1006,23 @@ class Staff_model extends App_Model
         $this->db->where('status', 1);
         return $this->db->get(db_prefix() . 'visitor_status')->result_array();
     }
-    
-    public function cities($search="",$id="")
+
+    public function cities($search = "", $id = "")
     {
         $limit = 20;
         $this->db->select('*')
-        ->from(db_prefix().'cities_')
-        ->order_by('name', 'desc')
-        ->limit($limit);
-        
+            ->from(db_prefix() . 'cities_')
+            ->order_by('name', 'desc')
+            ->limit($limit);
+
         if (!empty($search)) {
-        $this->db->like('name', trim($search)); // Apply LIKE condition if search is provided
+            $this->db->like('name', trim($search)); // Apply LIKE condition if search is provided
         }
-        
+
         if (!empty($id)) {
-        $this->db->like('id', $id); // Apply LIKE condition if search is provided
+            $this->db->like('id', $id); // Apply LIKE condition if search is provided
         }
 
-return $this->db->get()->result_array();
-
+        return $this->db->get()->result_array();
     }
 }

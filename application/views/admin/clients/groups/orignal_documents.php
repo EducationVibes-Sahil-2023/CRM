@@ -1,11 +1,10 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
 $orignal_document  = get_orignal_document_data($client_id);
-
 $orignal_document_status  = orignal_document_status();
-$office_location  = $this->staff_model->office_location();
+$office_location  = $this->staff_model->office_location("", 1);
 $activity_orignal_document = activity_orignal_document($client_id);
-
+$return_document_status = 0;
 // $client = $this->clients_model->get($id);
 
 array_unshift($office_location, array());
@@ -32,11 +31,23 @@ if (!is_postSale() && !is_admin()) {
             <div class="text-right">
 
                 <?php if ($client->client_type == 1) {
+                    echo "Document Received Notification";
+
                     echo getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id);
                 ?>
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php } ?>
 
+                <?php
+                echo "<br> <div class='mt-5 margin-top return-documents'  style='display:none'>";
+                if ($client->client_type == 1) {
+                    echo "Document Return Notification";
+                    getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RETURN, $client_id);
+                ?>
+                    <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>,1)"><i class="fa fa-envelope"></i> </button>
+                <?php }
+                echo "</div>";
+                ?>
 
             </div>
             <hr>
@@ -67,12 +78,19 @@ if (!is_postSale() && !is_admin()) {
                                     if ($document_received == 0) {
                                         $document_received = !empty($doc['received_id']) ? 1 : 0;
                                     }
+
+                                    if ($doc["l_status"] == 2) {
+                                        $return_document_status = 1;
+                                    }
+
                                 ?>
                                     <tr>
-                                        <td>
+                                        <td class="d-flex align-items-center">
                                             <div class="checkbox">
                                                 <input type="hidden" name="received_id" value="<?= !empty($doc['received_id']) ? $doc['received_id'] : '' ?>">
                                                 <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
+
+
                                             </div>
                                         </td>
                                         <td><?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
@@ -150,11 +168,17 @@ if (!is_postSale() && !is_admin()) {
 <script>
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
     var document_received = "<?= $document_received ?>";
+    var return_document_status = "<?= $return_document_status ?>";
+    if (return_document_status == 1) {
+        $(".return-documents").show();
+    } else {
+        $(".return-documents").hide();
+    }
+
     if (document_received == 1) {
         $(".email-hide").removeClass("hide");
     }
     if (complete_application == 1) {
-
         $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
 
     }
@@ -247,9 +271,10 @@ if (!is_postSale() && !is_admin()) {
         return false; // Prevent default form submission
     }
 
-    function orignal_document_received_notification(client_id) {
+    function orignal_document_received_notification(client_id, status = "") {
         let formData = new FormData(); // Create a FormData object
         formData.append("client_id", <?= $client_id ?>); // Append corresponding location
+        formData.append("status", status); // Append corresponding location
         formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
         show_loader();
         $.ajax({
