@@ -585,6 +585,7 @@ class Client_merge_fields extends App_merge_fields
         $documents_list_return = get_orignal_document_data_list(array($client_id), "1");
         $documents_name_list_return = $documents_list_return[$client_id]["document_names"];
 
+
         if (!empty($documents_name_list)) {
             $documents_name_list = explode(",", $documents_name_list);
         }
@@ -606,9 +607,9 @@ class Client_merge_fields extends App_merge_fields
 
 
         $documents_name_list_li_return = `No documents found.`;
-        if (!empty($documents_name_list)) {
+        if (!empty($documents_name_list_return)) {
             $documents_name_list_li_return = '<ul>';
-            foreach ($documents_name_list as $doc) {
+            foreach ($documents_name_list_return as $doc) {
                 $documents_name_list_li_return .= '<li>' . htmlspecialchars($doc) . '</li>';
             }
             $documents_name_list_li_return .= '</ul>';
