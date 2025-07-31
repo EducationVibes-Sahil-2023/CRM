@@ -489,6 +489,18 @@ function syncExcel_new($id = "")
                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+                 LEFT JOIN (
+        SELECT 
+            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
+            CASE 
+                WHEN COUNT(*) = 0 THEN 'Pending'
+                WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+                WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+                ELSE 'Pending'
+            END AS apostille_status
+        FROM " . db_prefix() . "client_apostille_data
+        GROUP BY userid
+    ) AS apostille_summary ON apostille_summary.userid = c.userid
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
         // echo $sql;
