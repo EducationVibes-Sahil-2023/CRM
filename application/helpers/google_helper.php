@@ -316,7 +316,7 @@ function syncExcel($id = "")
         FROM " . db_prefix() . "client_apostille_data
         GROUP BY userid
     ) AS apostille_summary ON apostille_summary.userid = c.userid
-                WHERE 1=1 
+                WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
 
         $arrayData = $CI->db->query($sql)->result_array();
