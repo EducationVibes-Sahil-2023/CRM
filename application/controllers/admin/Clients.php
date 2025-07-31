@@ -7131,12 +7131,12 @@ class Clients extends AdminController
                     empty($university_shortlisting_data['fees_deposite_date']) ||
                     $university_shortlisting_data['fees_deposite_date'] == "0000-00-00" ||
                     empty($university_shortlisting_data['payment_amount']) ||
-                    empty($update_entry['university_fees_payment_slip'])
+                    empty($university_shortlisting_data['fees_deposite_slip'])
                 ) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => FEES_DEPOSITE,
-                        "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                        "applicant_sub_status" => FEES_DEPOSITE_COMPLETED,
                     ];
                 } else {
                     $update_client_data = [
