@@ -270,7 +270,13 @@ if ($lead_type_status == 2) {
     }
 </style>
 
-<h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?></h4>
+<h4 class="customer-profile-group-heading"><?php echo _l('client_add_edit_profile'); ?>
+    <?php if (is_admin()) { ?>
+        <div class="col-md-3 pull-right" style="top: -10px;">
+            <?php echo render_select('view_assigned[]', $staff_list, array('staffid', array('firstname', 'lastname')), '', [$client->addedfrom], array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'data-actions-box' => true, "onchange" => "ChangeAssignation(this)"), array(), 'no-mbot', '', false, 'view_assigned'); ?>
+        </div>
+    <?php } ?>
+</h4>
 <div class="row">
     <input type="hidden" name="clientid" id="clientid" value="<?php echo $client_id ?>">
     <div class="additional"></div>
@@ -1193,7 +1199,7 @@ if ($lead_type_status == 2) {
 
                                                     </td>
                                                     <td>
-                                                         <?php if (!empty($doc_files["lead_type"]) && $doc_files["disabled"] == 0) { ?>
+                                                        <?php if (!empty($doc_files["lead_type"]) && $doc_files["disabled"] == 0) { ?>
                                                             <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                         <?php } ?>
                                                     </td>
@@ -1849,6 +1855,40 @@ if ($lead_type_status == 2) {
         } else {
             $(".scholarship-case").addClass("hide");
             $(".scholarship-case").find("input, select, textarea").val("");
+        }
+    }
+
+    function ChangeAssignation(event) {
+        var value = event.value;
+        var staffname = event.options[event.selectedIndex].text;
+
+        if (value != "") {
+            // Confirmation dialog
+            if (!confirm("Are you sure you want to change the assignation to " + staffname + "?")) {
+                // User clicked "No"
+                event.value = ""; // Reset the select box if needed
+                return;
+            }
+
+            $.ajax({
+                url: "<?= admin_url('clients/change_assignation') ?>",
+                type: "POST",
+                data: {
+                    clientid: $("#clientid").val(),
+                    staffid: value,
+                    leadid: <?= !empty($client->leadid) ? $client->leadid : 'null' ?>,
+                    staffname: staffname
+                },
+                success: function(response) {
+                    console.log(response);
+                    response = JSON.parse(response);
+                    if (response.resp_code == "RCS") {
+                        alert_float('success', response.resp_desc);
+                    } else {
+                        alert_float('danger', response.resp_desc);
+                    }
+                }
+            });
         }
     }
 </script>
