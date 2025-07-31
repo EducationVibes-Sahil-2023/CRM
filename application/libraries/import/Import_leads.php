@@ -105,6 +105,10 @@ class Import_leads extends App_import
                             $insert['assigned'] = $this->ci->input->post('responsible');
                         }
 
+                        if ($this->ci->input->post('reference_name')) {
+                            $insert['reference_name'] = $this->ci->input->post('reference_name');
+                        }
+
                         $tags = '';
                         if (isset($insert['tags']) || is_null($insert['tags'])) {
                             if (!is_null($insert['tags'])) {
