@@ -8711,4 +8711,61 @@ class Clients extends AdminController
 
         echo json_encode($dataList);
     }
+
+    function change_assignation()
+    {
+        $this->load->model('leads_model');
+        $data = $this->input->post();
+        $client_id = $data["clientid"] ?? '';
+        $staff_id = $data["staffid"] ?? '';
+        $staff_name = $data["staffname"] ?? '';
+        $leadid = $data["leadid"] ?? '';
+
+        if (empty($client_id) || empty($staff_id)) {
+            http_response_code(400);
+            echo json_encode([
+                "resp_code" => "ERR",
+                "resp_desc" => "Client ID or Staff ID is missing."
+            ]);
+            return;
+        }
+
+        // Update the client with the new staff assignment
+        $this->db->where('userid', $client_id);
+        $this->db->update(db_prefix() . 'clients', ['addedfrom' => $staff_id]);
+
+        $activity_data = [
+            "date" => date('Y-m-d H:i:s'),
+            "staffid" => get_staff_user_id(),
+            "client_id" => $client_id,
+            "description" =>  get_staff_full_name() . " assigned to " . $staff_name
+        ];
+
+        $this->db->insert(db_prefix() . 'application_activity_log', $activity_data);
+        if (!empty($leadid)) {
+            $this->db->where('id', $leadid);
+            $this->db->update(db_prefix() . 'leads', ['assigned' => $staff_id]);
+
+            $this->leads_model->log_lead_activity($leadid, 'not_lead_activity_assigned_to', false, serialize([
+
+                get_staff_full_name(),
+
+                '<a href="' . admin_url('profile/' . $staff_id) . '" target="_blank">' . get_staff_full_name($staff_id) . '</a>',
+
+
+            ]));
+        }
+
+        if ($this->db->affected_rows() > 0) {
+            echo json_encode([
+                "resp_code" => "RCS",
+                "resp_desc" => "Client assigned successfully."
+            ]);
+        } else {
+            echo json_encode([
+                "resp_code" => "ERR",
+                "resp_desc" => "Failed to assign client."
+            ]);
+        }
+    }
 }

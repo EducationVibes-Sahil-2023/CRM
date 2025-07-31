@@ -281,6 +281,10 @@ $last_lead_request = last_lead_request($lead->id);
                                  $additional_data = '';
                                  if (!empty($log['additional_data'])) {
                                     $additional_data = unserialize($log['additional_data']);
+
+                                    // echo $log['description'];
+                                    // print_r($log);
+                                    // print_r($additional_data);
                                     echo ($log['staffid'] == 0) ? _l($log['description'], $additional_data) : $log['full_name'] . ' - ' . _l($log['description'], $additional_data);
                                  } else {
                                     echo $log['full_name'] . ' - ';
