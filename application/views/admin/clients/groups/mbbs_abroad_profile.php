@@ -1861,14 +1861,22 @@ if ($lead_type_status == 2) {
     function ChangeAssignation(event) {
         var value = event.value;
         var staffname = event.options[event.selectedIndex].text;
+
         if (value != "") {
+            // Confirmation dialog
+            if (!confirm("Are you sure you want to change the assignation to " + staffname + "?")) {
+                // User clicked "No"
+                event.value = ""; // Reset the select box if needed
+                return;
+            }
+
             $.ajax({
                 url: "<?= admin_url('clients/change_assignation') ?>",
                 type: "POST",
                 data: {
                     clientid: $("#clientid").val(),
                     staffid: value,
-                    leadid: <?= !empty($client->leadid) ? $client->leadid : '' ?>,
+                    leadid: <?= !empty($client->leadid) ? $client->leadid : 'null' ?>,
                     staffname: staffname
                 },
                 success: function(response) {
