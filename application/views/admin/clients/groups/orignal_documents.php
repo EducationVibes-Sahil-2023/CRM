@@ -1,6 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
 $orignal_document  = get_orignal_document_data($client_id);
+
 $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location("", 1);
 $activity_orignal_document = activity_orignal_document($client_id);
@@ -36,9 +37,8 @@ if (!is_postSale() && !is_admin()) {
                     echo getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id);
                 ?>
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
-                <?php } ?>
-
-                <?php
+                <?php } 
+                
                 echo "<br> <div class='mt-5 margin-top return-documents'  style='display:none'>";
                 if ($client->client_type == 1) {
                     echo "Document Return Notification";
