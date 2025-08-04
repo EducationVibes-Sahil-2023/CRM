@@ -2126,8 +2126,8 @@ class Clients_model extends App_Model
 
     //     return  $this->db->get()->result_array();
     // }
-    
-     public function entrance_exams($id)
+
+    public function entrance_exams($id)
     {
         $clients_exam = db_prefix() . "clients_exam";
         $exam_batch = db_prefix() . "exam_batch";
@@ -2678,6 +2678,7 @@ class Clients_model extends App_Model
     {
         $this->db->select("*");
         $this->db->from(db_prefix() . 'work_experience');
+        $this->db->where('client_id', $clientid);
         $this->db->order_by('id', 'asc');
         return $this->db->get()->result_array();
     }

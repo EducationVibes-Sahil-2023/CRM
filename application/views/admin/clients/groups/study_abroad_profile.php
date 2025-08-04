@@ -21,12 +21,12 @@ $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
 $get_entrance_exam              = $this->clients_model->get_entrance_exam($client_id);
 $get_entrance_exam_scrore              = $this->clients_model->get_entrance_exam_scrore($client_id);
-$get_entrance_exams_status = [array("id" => "", "selected" => "0", "name" => "Select Status"), array("id" => "1", "selected" => "1", "name" => "Not Given"), array("id" => "2", "selected" => "1", "name" => "Given")];
+$get_entrance_exams_status = [array("id" => "1", "selected" => "0", "name" => "Not Given"), array("id" => "2", "selected" => "1", "name" => "Given")];
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
 }
-$getWorkExperience              = $this->clients_model->getWorkExperience($client_id);
+$getWorkExperience    = $this->clients_model->getWorkExperience($client_id);
 
 $documents_type =  get_documents($lead_type_status, [], 1);
 $profile_section = [];

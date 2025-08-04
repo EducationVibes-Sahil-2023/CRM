@@ -415,7 +415,7 @@ if ($lead->type == 1) {
                   <div class="clearfix"></div>
                   <?php if ($lead->type == 1) { ?>
                      <hr class="mtop5 mbot10" />
-                     <div class="mtop15 mbot10 col-md-12">
+                     <!-- <div class="mtop15 mbot10 col-md-12">
                         <div class="clearfix"></div>
                         <label>Exam Details</label>
                         <hr class="mtop5 mbot10" />
@@ -435,7 +435,7 @@ if ($lead->type == 1) {
 
                         </div>
 
-                     </div>
+                     </div> -->
                   <?php } ?>
 
                   <!-- fake fields are a workaround for chrome autofill getting the wrong fields -->

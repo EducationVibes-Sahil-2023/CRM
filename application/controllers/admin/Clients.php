@@ -6024,7 +6024,7 @@ class Clients extends AdminController
             ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
 
             $this->db->where([
-                "client_id" => $client_id,
+                "userid" => $client_id,
             ])->update(db_prefix() . 'clients', $stage_data);
 
 
