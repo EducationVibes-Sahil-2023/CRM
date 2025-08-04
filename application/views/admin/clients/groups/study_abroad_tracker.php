@@ -928,7 +928,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                         </div>
                                                     </div>
 
-                                                    <div class="interview-section-hide row hide">
+                                                    <div class="interview-section-hide hide">
                                                         <div class="col-md-3">
                                                             <?= render_input('interview_date[]', "Interview Date <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
                                                         </div>
@@ -953,7 +953,8 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-md-1 d-flex align-items-end">
+                                                    <div class="col-md-1">
+                                                        <p>&nbsp;</p>
                                                         <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
                                                             <i class="fa fa-plus"></i>
                                                         </button>
