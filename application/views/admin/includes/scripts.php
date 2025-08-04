@@ -39,6 +39,8 @@ if (get_option('pusher_realtime_notifications') == 1) { ?>
    </script>
 <?php } ?>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <?php
 if (is_admin()) {
 ?>

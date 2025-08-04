@@ -37,8 +37,8 @@ if (!is_postSale() && !is_admin()) {
                     echo getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RECEIVED, $client_id);
                 ?>
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
-                <?php } 
-                
+                <?php }
+
                 echo "<br> <div class='mt-5 margin-top return-documents'  style='display:none'>";
                 if ($client->client_type == 1) {
                     echo "Document Return Notification";
@@ -116,12 +116,11 @@ if (!is_postSale() && !is_admin()) {
                 <br>
                 <br>
                 <br>
-                <div class="col-md-12 text-right">
-
-                    <div class="pull-right">
-                        <button type="button" class="btn btn-primary" onclick="check_update(this)">Update</button>
+                <div class="row col-md-12">
+                    <div class="col-md-8 ">
+                        <textarea rows="3" cols="50" id="description" name="description" class="form-control" placeholder="Add a note about the document update (optional)"><?= !empty($client->orignal_doc_remark) ? $client->orignal_doc_remark : '' ?></textarea>
                     </div>
-                    <div class="col-md-3 pull-right">
+                    <div class="col-md-3 ">
                         <?php
                         $selected_value = [1];
                         if (!empty($client_infomation->orignal_document_status)) {
@@ -132,12 +131,17 @@ if (!is_postSale() && !is_admin()) {
 
                         ?>
                     </div>
+                    <div class="col-md-1 text-right ">
+                        <button type=" button" class="btn btn-primary" onclick="check_update(this)">Update</button>
+                    </div>
+
+
                 </div>
             </form>
             <br>
             <br>
             <br>
-            <div class="activity-feed">
+            <div class="activity-feed margin-top">
                 <?php foreach ($activity_orignal_document as $log) { ?>
                     <div class="feed-item">
                         <div class="date">
@@ -233,6 +237,12 @@ if (!is_postSale() && !is_admin()) {
         formData.append("client_id", <?= $client_id ?>); // Append corresponding location
         formData.append("status", status); // Append corresponding location
         formData.append("status_text", status_text); // Append corresponding location
+        var description = $("#description").val();
+        if (description) {
+            formData.append("description", description); // Append description if provided
+        } else {
+            formData.append("description", ""); // Append empty string if no description
+        }
         formData.append("<?= $this->security->get_csrf_token_name(); ?>", "<?= $this->security->get_csrf_hash(); ?>"); // Append corresponding location
 
         if (!isValid) {

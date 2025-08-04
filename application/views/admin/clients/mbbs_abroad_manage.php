@@ -850,8 +850,7 @@ $client_type = [
 init_tail();
 ?>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
 
 
 <script>
@@ -1714,40 +1713,6 @@ init_tail();
 
    });
 
-
-   function downloadAndZipFiles(files, zipFileName = "documents.zip") {
-      const zip = new JSZip();
-      const folder = zip.folder("files");
-
-      const downloadPromises = files.map(({
-            url,
-            name
-         }, index) =>
-         fetch(url)
-         .then(response => {
-            if (!response.ok) throw new Error(`Failed to fetch: ${url}`);
-            return response.blob().then(blob => {
-               const originalName = url.split('/').pop().split('?')[0] || `file${index}`;
-               const extension = originalName.includes('.') ? '.' + originalName.split('.').pop() : '';
-
-               // Use the provided name if available, or default to 'fileX' where X is the index
-               const finalName = (name || `file${index}`) + extension;
-
-               folder.file(finalName, blob);
-            });
-         })
-         .catch(err => console.error("Error downloading file:", err))
-      );
-
-      Promise.all(downloadPromises).then(() => {
-         // Generate the zip and save it with the provided name (or default to 'documents.zip')
-         zip.generateAsync({
-            type: "blob"
-         }).then(content => {
-            saveAs(content, zipFileName);
-         });
-      });
-   }
 
 
 

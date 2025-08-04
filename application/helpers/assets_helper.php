@@ -61,6 +61,9 @@ function _init_admin_assets()
     $CI->app_scripts->add('common-js', 'assets/builds/common.js');
     $CI->app_scripts->add('whatsapp-js', 'assets/js/whatsapp.js');
 
+    $CI->app_scripts->add('jszip-js', 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js');
+    $CI->app_scripts->add('FileSaver-js', 'https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js');
+
     $CI->app_scripts->add(
         'app-js',
         base_url($CI->app_scripts->core_file('assets/js', 'main.js')) . '?v=' . $CI->app_css->core_version(),

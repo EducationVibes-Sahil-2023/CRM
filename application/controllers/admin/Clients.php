@@ -4480,6 +4480,7 @@ class Clients extends AdminController
             $media_upload_data = $_POST;
             $entrance_exam_details = !empty($_POST["entrance_exam_details"]) ? json_decode($_POST["entrance_exam_details"], true) : [];
             $entrance_score_data = !empty($_POST["entrance_score_data"]) ? json_decode($_POST["entrance_score_data"], true) : [];
+            $work_experience_details = !empty($_POST["work_experience_details"]) ? json_decode($_POST["work_experience_details"], true) : [];
 
             // Clean POST
             $excluded_keys = [
@@ -4494,7 +4495,8 @@ class Clients extends AdminController
                 "entrance_exams",
                 "entrance_id",
                 "entrance_marks",
-                "entrance_score_data"
+                "entrance_score_data",
+                "work_experience_details"
             ];
             foreach ($excluded_keys as $key) {
                 unset($_POST[$key]);
@@ -4561,8 +4563,10 @@ class Clients extends AdminController
             foreach ($entrance_exam_details as $entrance) {
                 $exam_id = $entrance["exam_id"] ?? '';
                 $marks = $entrance["marks"] ?? '';
+                $exam_status = $entrance["exam_status"] ?? '';
+                $exam_date = $entrance["exam_date"] ?? '';
                 $entranceExam = $entrance["entranceExam"] ?? 'document';
-                $file_url = $entrance["fileUrl"] ?? null;
+                $file_url = $entrance["fileUrl"] ?? '';
                 $uploaded_file_path = $file_url;
 
                 $input_key = "files_entrance_" . $exam_id;
@@ -4590,6 +4594,9 @@ class Clients extends AdminController
                     "client_id" => $client_id,
                     "exam_id" => $exam_id,
                     "marks" => $marks,
+                    "date" => $exam_date,
+                    "status" => $exam_status,
+                    "marks" => $marks,
                     "file" => $uploaded_file_path,
                     "created_at" => date('Y-m-d H:i:s'),
                     "created_by" => get_staff_user_id()
@@ -4607,6 +4614,9 @@ class Clients extends AdminController
                 $this->db->insert_batch(db_prefix() . 'academic_entrance_score', $entrance_score_data);
             }
 
+
+
+
             // Delete and insert client entrance exams
             $this->db->delete(db_prefix() . "client_entrance", ["client_id" => $client_id]);
 
@@ -4619,6 +4629,34 @@ class Clients extends AdminController
                     "client_id" => $client_id
                 ]);
             }
+
+
+
+            $workData = [];
+            foreach ($work_experience_details as $work) {
+
+                $workData[] = [
+                    "currently_working" => $work['current_working'],
+                    "year" => $work['year'],
+                    "remark" => $work['profile'],
+                    "client_id" => $client_id
+                ];
+            }
+
+            // Delete existing work experience for the client
+            $this->db->delete(db_prefix() . "work_experience", ["client_id" => $client_id]);
+
+            if (!empty($workData)) {
+                $this->db->insert_batch(db_prefix() . "work_experience", $workData);
+                $this->db->insert(db_prefix() . 'application_activity_log', [
+                    "description" => "Work experience Information Updated by - ",
+                    "date" => date('Y-m-d H:i:s'),
+                    "staffid" => get_staff_user_id(),
+                    "client_id" => $client_id
+                ]);
+            }
+
+
 
             applicant_last_update($client_id);
 
@@ -5905,6 +5943,10 @@ class Clients extends AdminController
                 return;
             }
 
+            $stage_data = [
+                "applicant_stage"      => FUNDS,
+                "applicant_sub_status" => FUNDS_IN_PROGRESS
+            ];
             // Default update if not saving as final stage
             $this->db->where([
                 "client_id" => $client_id,
@@ -5913,6 +5955,179 @@ class Clients extends AdminController
 
             $data['resp_code'] = 'RCS';
             $data['resp_desc'] = 'Pre Deposite updated successfully.';
+        } else if ($tracker_id == 7) {
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data: client_id or shortlisting_id missing'
+                ]);
+                return;
+            }
+
+            $funds_status = $_POST["funds_status"] ?? null;
+            $funds_remark = $_POST["funds_remark"] ?? null;
+
+
+            // Execute DB update
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ]);
+
+            $updateArray = [
+                "funds_status" => !empty($_POST["funds_status"]) ? $_POST["funds_status"] : '',
+                "funds_remark"      => isset($_POST["funds_remark"]) ? $_POST["funds_remark"] : ''
+            ];
+
+            $updateSuccess = $this->db->update(db_prefix() . 'client_university_shortlisting', $updateArray);
+
+            if ($save_status == 1) {
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+                $stage_data = [
+                    "applicant_stage"      => FUNDS,
+                    "applicant_sub_status" => FUNDS_IN_PROGRESS
+                ];
+
+                if (!empty($_POST["funds_status"]) ? $_POST["funds_status"] : ''    == '1') {
+                    $stage_data["applicant_sub_status"] = FUNDS_IN_PROGRESS;
+                } else if (!empty($_POST["funds_status"]) ? $_POST["funds_status"] : ''    == '2') {
+                    $stage_data["applicant_sub_status"] = FUNDS_COMPLETED;
+                } else {
+                    $stage_data["applicant_sub_status"] = FUNDS_IN_SUFFICIENT;
+                }
+
+
+                $this->db->where([
+                    "userid" => $client_id,
+                ])->update(db_prefix() . 'clients', $stage_data);
+
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id"        => $shortlisting_id
+                ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Funds submitted successfully'
+                ]);
+                return;
+            }
+
+
+            // Handle applicant stage status
+            $stage_data = [
+                "applicant_stage"      => INVITATION,
+                "applicant_sub_status" => INVITATION_PENDING
+            ];
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
+
+            $this->db->where([
+                "client_id" => $client_id,
+            ])->update(db_prefix() . 'clients', $stage_data);
+
+
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'Funds updated successfully.';
+        } else if ($tracker_id == 8) {
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data: client_id or shortlisting_id missing'
+                ]);
+                return;
+            }
+
+            $interview_data = json_decode($_POST["interview_data"] ?? '', true);
+
+            if (!is_array($interview_data) || empty($interview_data)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid or missing interview data'
+                ]);
+                return;
+            }
+
+
+
+            // Delete old pre-deposit entries
+            $this->db->where([
+                'client_id' => $client_id,
+                'shortlisting_id' => $shortlisting_id
+            ])->delete(db_prefix() . 'application_interview');
+
+            $batchInsertData = [];
+
+            foreach ($interview_data as $index => $interview) {
+                // Ensure is an array and assign fields
+                $interview['client_id'] = $client_id;
+                $interview['shortlisting_id'] = $shortlisting_id;
+                $batchInsertData[] = $interview;   // Appending as FLAT associative array
+            }
+
+            if (!empty($batchInsertData)) {
+                $this->db->insert_batch(db_prefix() . 'application_interview', $batchInsertData);
+            }
+
+
+
+
+            $stage_data = [
+                "applicant_stage"      => INTERVIEW
+            ];
+
+            if ($save_status == 1) {
+
+
+                $lastInterview = end($interview_data);
+                $completed = !empty($lastInterview["interview_status"]) ? $lastInterview["interview_status"] : 0;
+                $stage_data["applicant_sub_status"] = INTERVIEW_IN_PROGRESS;
+                if ($completed == 1) {
+                    $stage_data["applicant_sub_status"] = INTERVIEW_IN_PROGRESS;
+                } else if ($completed == 2) {
+                    $stage_data["applicant_sub_status"] = INTERVIEW_NOT_REQUIRED;
+                } else if ($completed == 3) {
+                    $stage_data["applicant_sub_status"] = INTERVIEW_COMPLETED;
+                } else if ($completed == 4) {
+                    $stage_data["applicant_sub_status"] = INTERVIEW_SCHEDULED;
+                }
+
+                $this->db->where([
+                    "client_id" => $client_id,
+                    "id"        => $shortlisting_id
+                ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
+
+                $this->db->where([
+                    "userid" => $client_id,
+                ])->update(db_prefix() . 'clients', $stage_data);
+
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Interview submitted successfully.'
+                ]);
+                return;
+            }
+
+
+            // Handle applicant stage status
+            $stage_data = [
+                "applicant_stage"      => CONFORMATION,
+                "applicant_sub_status" => CONFORMATION_PENDING
+            ];
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
+
+            $this->db->where([
+                "userid" => $client_id,
+            ])->update(db_prefix() . 'clients', $stage_data);
+
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'Interview updated successfully.';
         } else {
             echo json_encode([
                 'resp_code' => 'ERR',
@@ -6849,8 +7064,8 @@ class Clients extends AdminController
     //         "legalization" => $legalization
     //     ];
     // }
-    
-       private function entrance_exam()
+
+    private function entrance_exam()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return [
@@ -6975,6 +7190,7 @@ class Clients extends AdminController
             "legalization" => $legalization
         ];
     }
+
 
     private function Legalization()
     {
@@ -8098,6 +8314,12 @@ class Clients extends AdminController
     {
         $data = $_POST;
         $client_id = $_POST["client_id"];
+        $description = !empty($_POST["description"]) ? $_POST["description"] : '';
+        unset($data["description"]);
+        $this->db->where('userid', $client_id);
+        $this->db->update(db_prefix() . 'clients', array("orignal_doc_remark" => $description));
+
+
         $response = $this->clients_model->update_documents($data, $client_id);
         applicant_last_update($client_id);
         echo json_encode($response);
@@ -8107,6 +8329,13 @@ class Clients extends AdminController
     {
         if ($this->input->post() && $this->input->is_ajax_request()) {
             return $this->clients_model->update_client_status($this->input->post());
+        }
+    }
+
+    public function update_application_status()
+    {
+        if ($this->input->post() && $this->input->is_ajax_request()) {
+            return $this->clients_model->update_application_status($this->input->post());
         }
     }
 

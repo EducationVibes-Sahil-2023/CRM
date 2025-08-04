@@ -34,6 +34,10 @@ $post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefi
 $statuses = get_applicant_statuses();
 $statuses = array_column($statuses, null, 'id');
 
+
+$application_statuses = get_application_statuses();
+$application_statuses = array_column($application_statuses, null, 'id');
+
 $this->ci->db->query("SET sql_mode = ''");
 $sIndexColumn = 'userid';
 $sTable       = db_prefix() . 'clients';
@@ -143,6 +147,8 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'applicant_tracker ON ' . db_prefix() . 'applicant_tracker.id = (' . db_prefix() . 'clients.applicant_status+1)',
     'LEFT JOIN ' . db_prefix() . 'admission_preferences ON ' . db_prefix() . 'admission_preferences.userid = ' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'client_university_shortlisting ON (' . db_prefix() . 'client_university_shortlisting.client_id = ' . db_prefix() . 'clients.userid AND  ' . db_prefix() . 'client_university_shortlisting.status = 1) ',
+    'LEFT JOIN ' . db_prefix() . 'application_status ON ' . db_prefix() . 'application_status.id=' . db_prefix() . 'client_university_shortlisting.application_status ',
+
     'LEFT JOIN ' . db_prefix() . 'applicant_fees_details ON ' . db_prefix() . 'applicant_fees_details.client_id = ' . db_prefix() . 'clients.userid',
     'LEFT JOIN ' . db_prefix() . 'applicant_fees ON ' . db_prefix() . 'applicant_fees.id = ' . db_prefix() . 'applicant_fees_details.fees_id',
     'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'applicant_fees_details.currency_id',
@@ -158,8 +164,22 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'visa_status ON ' . db_prefix() . 'visa_status.id=' . db_prefix() . 'visa_details.status',
     'LEFT JOIN ' . db_prefix() . 'vendor_study_abroad ON ' . db_prefix() . 'vendor_study_abroad.id=' . db_prefix() . 'client_university_shortlisting.vendor_id',
     'LEFT JOIN ' . db_prefix() . 'admission_program ON ' . db_prefix() . 'admission_program.id=' . db_prefix() . 'admission_preferences.degree',
-    'LEFT JOIN ' . db_prefix() . 'applicntion_pre_deposite ON ' . db_prefix() . 'applicntion_pre_deposite.client_id=' . db_prefix() . 'clients.userid  AND ' . db_prefix() . 'applicntion_pre_deposite.shortlisting_id = ' . db_prefix() . 'client_university_shortlisting.id',
+    // 'LEFT JOIN ' . db_prefix() . 'applicntion_pre_deposite ON (' . db_prefix() . 'applicntion_pre_deposite.client_id=' . db_prefix() . 'clients.userid  AND ' . db_prefix() . 'applicntion_pre_deposite.shortlisting_id = ' . db_prefix() . 'client_university_shortlisting.id) ',
+    'LEFT JOIN (
+    SELECT 
+        client_id, 
+        shortlisting_id, 
+        SUM(payment_amount) AS total_payment_amount,
+        MAX(id) AS latest_deposite_id,
+        MAX(date_of_deposite) AS latest_deposite_date,
+        MAX(currency_type) AS currency_type
+    FROM ' . db_prefix() . 'applicntion_pre_deposite
+    GROUP BY client_id, shortlisting_id
+) AS deposit_summary ON (
+    deposit_summary.client_id = ' . db_prefix() . 'clients.userid 
+) ',
     'LEFT JOIN ' . db_prefix() . 'offer_condition ON ' . db_prefix() . 'offer_condition.client_id=' . db_prefix() . 'clients.userid AND ' . db_prefix() . 'offer_condition.university_id = ' . db_prefix() . 'client_university_shortlisting.university_id',
+    'LEFT JOIN ' . db_prefix() . 'university_offer_letter ON ' . db_prefix() . 'university_offer_letter.client_id=' . db_prefix() . 'clients.userid',
     'LEFT JOIN (
         SELECT td1.*,td2.total_cost
         FROM ' . db_prefix() . 'ticket_data td1
@@ -607,6 +627,8 @@ $additional_array = [
     db_prefix() . 'clients.active as status_id',
     db_prefix() . 'applicant_status.color as color',
     db_prefix() . 'client_university_shortlisting.id as shortlisting_id',
+    db_prefix() . 'client_university_shortlisting.application_status as application_status_id',
+    db_prefix() . 'application_status.color as application_status_color',
 ];
 
 
@@ -645,6 +667,7 @@ $output  = $result['output'];
 $rResult = $result['rResult'];
 
 foreach ($rResult as $aRow) {
+
     $row = [];
     $showMore = '';
     if ($this->ci->input->post('type') == 1) {
@@ -745,6 +768,48 @@ foreach ($rResult as $aRow) {
         $aRow["status"] = $outputStatus;
     }
 
+
+    if (!empty($aRow["app_status"])) {
+        $color = !empty($aRow['application_status_color']) ? $aRow['application_status_color'] : 'default';
+
+        $outputStatus = '<span class="inline-block text-' . $color . ' lead-status-' . $aRow['app_status'] . ' label label-' . $color . '" style="color:' . $color . '; border:1px solid ' . $color . ';">' . $aRow['app_status'];
+
+        if (!$locked) {
+            $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
+            $outputStatus .= '<a href="#" style="font-size:14px; vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
+            $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
+            $outputStatus .= '</a>';
+
+            if ((is_admin() || is_postSale()) && $application_statuses[$aRow["application_status_id"]]['refund'] != 1) {
+                $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['shortlisting_id'] . '">';
+
+                $canceled_status = !empty($application_statuses[$aRow["application_status_id"]]['canceled']);
+                $refunded_status = !empty($application_statuses[$aRow["application_status_id"]]['refund']);
+
+                foreach ($application_statuses as $leadChangeStatus) {
+                    if ($aRow['application_status_id'] != $leadChangeStatus['id']) {
+                        $is_refunded = !empty($leadChangeStatus["refund"]);
+
+                        // If the current status is canceled, allow only refund transitions.
+                        if ($canceled_status && $is_refunded) {
+                            $outputStatus .= '<li><a onclick="application_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $aRow['shortlisting_id'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                        }
+                        // If the current status is refunded, do nothing.
+                        else if (!$refunded_status && !$is_refunded && !$canceled_status) {
+                            $outputStatus .= '<li><a onclick="application_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $aRow['shortlisting_id'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                        }
+                    }
+                }
+
+                $outputStatus .= '</ul>';
+            }
+
+            $outputStatus .= '</div>';
+        }
+
+        $outputStatus .= '</span>';
+        $aRow["app_status"] = $outputStatus;
+    }
 
     if (!empty($aRow["secondary_university"])) {
         $primary_university = trim($aRow["primary_university_select"]);
