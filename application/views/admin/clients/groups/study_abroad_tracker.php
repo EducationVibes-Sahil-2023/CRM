@@ -31,6 +31,7 @@ $get_currencies     = array_column($get_currencies_raw, null, 'id');
 $offer_letters = !empty($activeShortlistingId) ? get_offer_letters($client_id, $activeShortlistingId) : [];
 $fessDeposite  = !empty($activeShortlistingId) ? get_pre_deposite($client_id, $activeShortlistingId) : [];
 
+$interviewDetails = !empty($activeShortlistingId) ? get_interview($client_id, $activeShortlistingId) : [];
 // Other supporting data
 $study_abroad_vendors   = study_abroad_vendors();
 $profile_creation_data  = $profile_creation_data ?? '';
@@ -60,6 +61,15 @@ $visa_details = visa_details($client_id, 0, 1);
 $visa_vendors = get_vendor_list(2);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
+$fundsStatus = get_status_table("funds_status");
+$interviewType = get_status_table("interview_status");
+$conformation_letter_status = get_status_table("application_conformation_letter_status");
+
+$interviewResultStatus = [
+    array("id" => "Pass", "name" => "Pass"),
+    array("id" => "Fail", "name" => "Fail"),
+    array("id" => "Pending", "name" => "Pending")
+];
 
 // Final submit and access logic
 $staff_id_list = array_column($customer_admins ?? [], "staff_id");
@@ -812,10 +822,179 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                     </div>
                                 </form>
 
+                            <?php } else if ($track["show_div_name"] == "funds_div") { ?>
+                                <form id="funds-form" class="form-disabled mb-5" onsubmit="return false;">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <?= render_select(
+                                                'funds_status',
+                                                $fundsStatus,
+                                                ['id', 'name'],
+                                                "Funds Status <small class='text-danger'>*</small>",
+                                                isset($selected_university_shortlisting['funds_status']) ? $selected_university_shortlisting['funds_status'] : '',
+                                                ['required-check' => 'required-check', 'required' => 'required']
+                                            ); ?>
+                                        </div>
+                                        <div class="col-md-9">
+                                            <label for="funds_remark">Funds Remark <small class='text-danger'>*</small></label>
+                                            <textarea rows="4" name="funds_remark" class="form-control funds_remark" required><?= isset($selected_university_shortlisting['funds_remark']) ? $selected_university_shortlisting['funds_remark'] : '' ?></textarea>
+                                        </div>
+                                    </div>
+                                </form>
+                            <?php } else if ($track["show_div_name"] == "interview_div") { ?>
+
+                                <form id="interview-form" class="form-disabled mb-5" onsubmit="return false;">
+
+                                    <div class="interview-section-div">
+                                        <?php if (!empty($interviewDetails)) {
+                                            foreach ($interviewDetails as $key => $interview) {
+                                                $checkHide_Show = 0; ?>
+                                                <div class="interview-section-inter mb-3 border p-3 rounded col-md-12">
+
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Interview Status <small class="text-danger">*</small></label>
+                                                            <select name="interview_status[]" class="form-control selectpicker interview_status" data-live-search="true" data-none-selected-text="Non selected" onchange="changeInterviewStatus(this)" required required-check>
+                                                                <option value="">Select...</option>
+                                                                <?php
+
+                                                                foreach ($interviewType as $type):
+                                                                    $isSelected = ($interview['interview_status'] ?? '') == $type['id'];
+                                                                    if ($isSelected) {
+                                                                        $checkHide_Show = $type['show_status'];
+                                                                    }
+                                                                ?>
+                                                                    <option
+                                                                        data-show-status="<?= $type['show_status'] ?>"
+                                                                        value="<?= htmlspecialchars($type['id'], ENT_QUOTES, 'UTF-8') ?>"
+                                                                        <?= $isSelected ? 'selected' : '' ?>>
+                                                                        <?= htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="interview-section-hide <?= ($checkHide_Show == 1) ? '' : 'hide' ?>">
+                                                        <div class="col-md-3">
+                                                            <?= render_input('interview_date[]', "Interview Date <small class='text-danger'>*</small>", $interview['interview_date'] ?? '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            <label>Remark <small class="text-danger">*</small></label>
+                                                            <textarea name="interview_remark[]" class="form-control interview_remark" required><?= htmlspecialchars($interview['interview_remark'] ?? '') ?></textarea>
+                                                        </div>
+
+                                                        <div class="col-md-2">
+                                                            <div class="form-group">
+                                                                <label for="result_status">Result <small class="text-danger">*</small></label>
+                                                                <select name="result_status_<?= $key ?>" class="form-control selectpicker result_status" required required-check>
+                                                                    <option value="">Select...</option>
+                                                                    <?php foreach ($interviewResultStatus as $status): ?>
+                                                                        <option value="<?= htmlspecialchars($status['id'], ENT_QUOTES, 'UTF-8') ?>"
+                                                                            <?= (isset($interview['interview_result_status']) && $interview['interview_result_status'] == $status['id']) ? 'selected' : '' ?>>
+                                                                            <?= htmlspecialchars($status['name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                        </option>
+                                                                    <?php endforeach; ?>
+                                                                </select>
+                                                            </div>
+
+
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-1">
+                                                        <p>&nbsp;</p>
+                                                        <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            <?php }
+                                        } else { ?>
+                                            <div class="interview-section-inter mb-3 border p-3 rounded">
+                                                <div class="row">
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <label>Interview Status <small class="text-danger">*</small></label>
+                                                            <select name="interview_status" class="form-control selectpicker interview_status" data-live-search="true" data-none-selected-text="Non selected" onchange="changeInterviewStatus(this)" required required-check>
+                                                                <option value="">Select...</option>
+                                                                <?php foreach ($interviewType as $type): ?>
+                                                                    <option data-show-status="<?= $type['show_status'] ?>" value="<?= htmlspecialchars($type['id'], ENT_QUOTES, 'UTF-8') ?>">
+                                                                        <?= htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="interview-section-hide row hide">
+                                                        <div class="col-md-3">
+                                                            <?= render_input('interview_date[]', "Interview Date <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            <label>Remark <small class="text-danger">*</small></label>
+                                                            <textarea name="interview_remark[]" class="form-control interview_remark" required></textarea>
+                                                        </div>
+
+                                                        <div class="col-md-2">
+                                                            <?= render_select(
+                                                                'result_status',
+                                                                $interviewResultStatus,
+                                                                ['id', 'name'],
+                                                                "Result <small class='text-danger'>*</small>",
+                                                                '',
+                                                                ['required-check' => 'required-check', 'required' => 'required'],
+                                                                [],
+                                                                '',
+                                                                'result_status'
+                                                            ); ?>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-md-1 d-flex align-items-end">
+                                                        <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php } ?>
+                                    </div>
+
+
+                                </form>
+                            <?php } else if ($track["show_div_name"] == "confirmation_div") { ?>
+                                <form id="confirmation-form" class="form-disabled mb-5" onsubmit="return false;">
+                                    <div class="row col-md-12">
+                                        <div class="col-md-3">
+                                            <?= render_input('confirmation_date', "Date of Application <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <?= render_input('confirmation_receving_date', "Receiving Date <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                        </div>
+
+                                        <div class="col-md-2">
+                                            <?= render_select(
+                                                'confirmation_status',
+                                                $conformation_letter_status,
+                                                ['id', 'name'],
+                                                "Result <small class='text-danger'>*</small>",
+                                                '',
+                                                ['required-check' => 'required-check', 'required' => 'required'],
+                                                [],
+                                                '',
+                                                'confirmation_status'
+                                            ); ?>
+                                        </div>
+                                    </div>
+                                </form>
                             <?php } ?>
                             <?php if ($k > 0 && $k < 5) { ?>
                                 <p class='col-md-12 margin-top hide'>
-                                    <label class="margin-top">Secondary University Remarks</label>
+                                    <label class=" margin-top">Secondary University Remarks</label>
                                     <textarea rows="4" class="form-control secondary_university_remark" onkeyup="update_remark(this.value)"><?= !empty($client->secondary_university_remark) ? $client->secondary_university_remark : '' ?></textarea>
 
                                 </p>
@@ -1393,6 +1572,29 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
             await check_pre_deposite_form(upload_data);
         }
+        if (id == 7) {
+            if (same_step == 0) {
+                let check_validation = await check_required_fields("funds-form");
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
+            }
+
+            await check_funds_form(upload_data);
+        }
+        if (id == 8) {
+            if (same_step == 0) {
+                let check_validation = await check_required_fields("interview-form");
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
+            }
+
+            await check_interview_form(upload_data);
+        }
+
         try {
             upload_data.append("shortlisting_id", selectedUniversityShortListing);
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
@@ -1687,6 +1889,57 @@ if (empty($staffData["post_sales"]) && !is_admin()):
         });
     }
 
+    function check_funds_form(upload_data) {
+        return new Promise((resolve, reject) => {
+            try {
+                let pre_deposite_array = [];
+                let funds_status = $("#funds-form").find("select[name='funds_status']").val() || '';
+                let funds_remark = $("#funds-form").find("textarea[name='funds_remark']").val() || '';
+                upload_data.append("funds_status", funds_status);
+                upload_data.append("funds_remark", funds_remark);
+
+
+
+                upload_data.append("pre_deposite_data", JSON.stringify(pre_deposite_array));
+                resolve(upload_data);
+
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+    function check_interview_form(upload_data) {
+        return new Promise((resolve, reject) => {
+            try {
+                let interview_array_data = [];
+
+                $(".interview-section-inter").each(function() {
+                    const $row = $(this);
+
+                    const interview_status = $row.find("select.interview_status").val()?.trim() || '';
+                    const interview_date = $row.find("input[type='date']").val()?.trim() || '';
+                    const interview_remark = $row.find("textarea.interview_remark").val()?.trim() || '';
+                    const interview_result_status = $row.find("select.result_status").val()?.trim() || '';
+
+                    interview_array_data.push({
+                        interview_status,
+                        interview_date,
+                        interview_remark,
+                        interview_result_status
+                    });
+                });
+
+                upload_data.append("interview_data", JSON.stringify(interview_array_data));
+                resolve(upload_data);
+
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
+
 
 
     function select_reinit() {
@@ -1696,49 +1949,63 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
 
     function check_required_fields(id = "application-form") {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             let form_status = true;
-            let additional_fields = {}; // Ensure additional_fields is defined
+            let additional_fields = {};
 
-            // Validate visible input, select, and date fields
-            $("#" + id + " input:visible, #" + id + " select:visible, #" + id + " date:visible").each(function() {
-                const value = $(this).val(); // Get the value of the field
-                const isRequired = $(this).attr("required-check") !== undefined; // Check for 'required-check' attribute
-                const name = $(this).attr("name"); // Get the name attribute
+            const $formElements = $("#" + id).find(
+                "input:visible, select:visible, textarea:visible, input[type='date']:visible"
+            );
 
-                if ($(this).is(":checkbox") && isRequired) {
-                    if (!$(this).is(":checked")) { // Check if checkbox is NOT checked
+            $formElements.each(function() {
+                const $field = $(this);
+                const value = $field.val();
+                const isRequired = $field.is("[required-check]");
+                const name = $field.attr("name");
+
+                if (!isRequired || !name) return;
+
+                additional_fields[name] = "required";
+
+                // Handle checkboxes
+                if ($field.is("textarea")) {
+                    const value = $.trim($field.val()); // Use .val() to get the value of a textarea
+                    if (value === "") {
                         form_status = false;
-                        $(this).addClass("error"); // Highlight the checkbox
+                        $field.addClass("error");
                     } else {
-                        $(this).removeClass("error"); // Remove error highlight if checked
+                        $field.removeClass("error");
                     }
                 }
 
-
-                if (isRequired && name) {
-                    additional_fields[name] = "required";
-                    // console.log(additional_fields);
+                if ($field.is(":checkbox")) {
+                    if (!$field.is(":checked")) {
+                        form_status = false;
+                        $field.addClass("error");
+                    } else {
+                        $field.removeClass("error");
+                    }
+                } else {
+                    // For text, select, textarea, date inputs
                     if ($.trim(value) === "") {
                         form_status = false;
-                        $(this).addClass("error"); // Highlight invalid fields
+                        $field.addClass("error");
                     } else {
-                        $(this).removeClass("error");
+                        $field.removeClass("error");
                     }
                 }
             });
 
             if (!form_status) {
                 appValidateForm($("#" + id), additional_fields);
-                $("#" + id).submit()
-
-
+                $("#" + id).submit(); // If desired, remove this line to prevent auto-submit
                 resolve(false);
             } else {
                 resolve(true);
             }
         });
     }
+
 
 
     const visa_vendors = <?= json_encode($visa_vendors, true) ?>;
@@ -2332,5 +2599,85 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
     function removeFeesDeposite(event) {
         $(event).parents(".fees-deposite-item").remove();
+    }
+
+
+    const interviewTypeOptions = <?= json_encode($interviewType) ?>;
+    const interviewResultStatusOptions = <?= json_encode($interviewResultStatus) ?>;
+
+
+    function changeInterviewStatus(selectElement) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const showStatus = selectedOption.dataset.showStatus;
+
+        const $section = $(selectElement).closest('.interview-section-inter');
+
+        // Clear all input, select, and textarea values inside this section (excluding the one just changed)
+        $section.find("input, select, textarea").not(selectElement).val('').prop('checked', false);
+
+        // Toggle visibility based on showStatus
+        if (showStatus === '1') {
+            $section.find('.interview-section-hide').removeClass('hide');
+        } else {
+            $section.find('.interview-section-hide').addClass('hide');
+        }
+    }
+
+
+    function addInterview() {
+        const uniqueId = Date.now();
+
+        // Build Interview Status Options
+        let interviewStatusHTML = `<option value="">Select...</option>`;
+        interviewTypeOptions.forEach(type => {
+            interviewStatusHTML += `<option value="${type.id}" data-show-status="${type.show_status}">${type.name}</option>`;
+        });
+
+        // Build Result Status Options
+        let resultStatusHTML = `<option value="">Select...</option>`;
+        interviewResultStatusOptions.forEach(status => {
+            resultStatusHTML += `<option value="${status.id}">${status.name}</option>`;
+        });
+
+        const html = `
+    <div class="interview-section-inter col-md-12">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label>Interview Status <small class="text-danger">*</small></label>
+                <select name="interview_status_${uniqueId}" class="form-control selectpicker interview_status"
+                        data-live-search="true" data-none-selected-text="Non selected"
+                        required required-check onchange="changeInterviewStatus(this)">
+                    ${interviewStatusHTML}
+                </select>
+            </div>
+        </div>
+<div class="interview-section-hide hide">
+        <div class="col-md-3">
+            <label>Date of Interview</label>
+            <input type="date" name="interview_date_${uniqueId}" class="form-control interview_date" required required-check>
+        </div>
+
+        <div class="col-md-3">
+            <label>Remark</label>
+            <textarea name="interview_remark_${uniqueId}" class="form-control interview_remark"></textarea>
+        </div>
+
+        <div class="col-md-2">
+            <label>Result <small class="text-danger">*</small></label>
+            <select name="result_status_${uniqueId}" class="form-control result_status selectpicker" required required-check>
+                ${resultStatusHTML}
+            </select>
+        </div>
+</div>
+        <div class="col-md-1">
+            <p>&nbsp;</p>
+            <button type="button" class="btn btn-danger" onclick="$(this).closest('.interview-section-inter').remove()">
+                <i class='fa fa-trash'></i>
+            </button>
+        </div>
+    </div>`;
+
+        document.querySelector('.interview-section-div').insertAdjacentHTML('beforeend', html);
+        $('.interview-section-div select.selectpicker').selectpicker('refresh');
     }
 </script>

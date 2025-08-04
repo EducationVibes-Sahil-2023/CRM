@@ -42,6 +42,10 @@ $where        = [];
 $filter = [];
 
 
+$where[] = 'AND (
+        ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')
+    ) ';
+
 
 $aColumns = [];
 if (is_admin() || is_postSale()) {

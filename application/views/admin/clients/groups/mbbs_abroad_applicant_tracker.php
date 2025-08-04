@@ -1057,8 +1057,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <?php } else if ($track["show_div_name"] == "entrance_div") { ?>
                             <form id="entrance-form" class="form-disabled" onsubmit=" return false;">
                                 <div class="entrance_div">
-                                    <?php if (!empty($entrance_exams)) { ?>
-                                        <?php foreach ($entrance_exams as $university => $exams) { ?>
+                                    <?php if (!empty($entrance_exams)) {
+                                        $showStatus = 1; ?>
+                                        <?php foreach ($entrance_exams as $university => $exams) {
+                                            if (empty($university) ? $exams[0]["m_university_name"] : $university == $admissionpreferences->primary_university) {
+                                                $showStatus = 0;
+                                            }
+                                        ?>
                                             <div class="entrance_exam_university_div shadow">
                                                 <h4 class="text-left "><?= htmlspecialchars(empty($university) ? $exams[0]["m_university_name"] : $university) ?>
                                                     <?php if ($exams[0]["batch_id"] == 0) { ?>
@@ -1141,7 +1146,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                         <?php } ?>
                                     <?php }
 
-                                    if ($admissionpreferences->primary_country == 'Georgia') { ?>
+                                    if ($admissionpreferences->primary_country == 'Georgia' && $showStatus == 1) { ?>
                                         <div class="entrance_exam_university_div shadow">
                                             <h4 class="text-left "><?= htmlspecialchars($admissionpreferences->primary_university) ?>
 

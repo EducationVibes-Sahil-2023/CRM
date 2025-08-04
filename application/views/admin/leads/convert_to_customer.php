@@ -633,7 +633,7 @@ if ($lead->type == 1) {
             let examGroup = `
       <div class="exam-group row mb-2 mtop5 mbot10">
          <div class="col-lg-4 col-md-6 col-12">
-            <label>Exam Type <span class='text-danger req'>*</span></label>
+            <label>Exam Name <span class='text-danger req'>*</span></label>
             <select name="exam_type[]" required class="form-control selectpicker">
                <option value="">Select Exam</option>
                <?php foreach ($examList as $exams) { ?>
@@ -711,12 +711,12 @@ if ($lead->type == 1) {
       // Optional: check as user changes a select
       $(document).on("change", "select[name='exam_type[]']", function() {
          if (hasDuplicateExamTypes()) {
-            alert("You cannot select the same exam type more than once.");
+            alert("You cannot select the same exam name more than once.");
             $(this).val('');
             e.preventDefault();
          }
       });
-      // Check for duplicate exam types
+      // Check for duplicate exam name
       function hasDuplicateExamTypes() {
          let values = [];
          let isDuplicate = false;

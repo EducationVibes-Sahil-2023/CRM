@@ -1787,6 +1787,21 @@ function get_applicant_statuses($id = "")
     }
 }
 
+function get_application_statuses($id = "")
+{
+    $CI = &get_instance();
+    $CI->db->select("*")
+        ->from(db_prefix() . 'application_status o');
+    if (!empty($id)) {
+        $CI->db->where('id', $id);
+    }
+    if (!empty($id)) {
+        return $CI->db->order_by("id", "asc")->get()->row();
+    } else {
+        return $CI->db->order_by("id", "asc")->get()->result_array();
+    }
+}
+
 function get_orignal_document_data_list($client_ids_array = [], $return = 0)
 {
     $client_ids = implode(",", $client_ids_array);
@@ -2973,6 +2988,53 @@ function get_pre_deposite($client_id, $shortlisting_id)
     $CI->db->where('client_id', $client_id);
     $CI->db->where('shortlisting_id', $shortlisting_id);
     $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}
+
+function get_status_table($table_name)
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->from(db_prefix() . $table_name);
+    $CI->db->where('status', 1);
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}
+
+function get_interview($client_id, $shortlisting_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('*');
+    $CI->db->from(db_prefix() . 'application_interview');
+    $CI->db->where('client_id', $client_id);
+    $CI->db->where('shortlisting_id', $shortlisting_id);
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}
+
+function get_offerLetters($client_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('o.offer_letter file,s.university_name,s.country_name,s.course_name');
+    $CI->db->from(db_prefix() . 'university_offer_letter o');
+    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 's.client_id = o.client_id AND s.id = o.shortlisting_id', 'LEFT');
+    $CI->db->where('o.client_id', $client_id);
+    $CI->db->order_by("o.id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}
+
+function get_preDeposite($client_id)
+{
+    $CI = &get_instance();
+    $CI->db->select('pd.proof_of_deposite file,s.university_name,s.country_name,s.course_name');
+    $CI->db->from(db_prefix() . 'applicntion_pre_deposite pd');
+    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 's.client_id = pd.client_id AND s.id = pd.shortlisting_id', 'LEFT');
+    $CI->db->where('pd.client_id', $client_id);
+    $CI->db->order_by("pd.id", "asc");
     $query = $CI->db->get();
     return $result = $query->result_array();
 }

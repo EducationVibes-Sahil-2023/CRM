@@ -2099,33 +2099,70 @@ class Clients_model extends App_Model
         return $this->s_db->get('universities')->result_array();
     }
 
+    // public function entrance_exams($id)
+    // {
+    //     $this->db->select([
+    //         db_prefix() . "clients_exam.*",
+    //         db_prefix() . "university_exams.name AS exam_name",
+    //         db_prefix() . "exam_batch.name AS batch_name",
+    //         db_prefix() . "exam_batch.university_name",
+    //         db_prefix() . "clients_exam_status.status AS status",
+    //         db_prefix() . "clients_exam.m_university_name AS m_university_name"
+
+    //     ]);
+
+    //     $this->db->from(db_prefix() . 'clients_exam');
+    //     $this->db->join(db_prefix() . 'exam_batch', db_prefix() . 'exam_batch.id = ' . db_prefix() . 'clients_exam.batch_id', "left");
+    //     $this->db->join(db_prefix() . 'university_exams', db_prefix() . 'university_exams.id = ' . db_prefix() . 'clients_exam.exam_id', "left");
+    //     $this->db->join(
+    //         db_prefix() . 'clients_exam_status',
+    //         db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
+    //             db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id AND' .
+    //             db_prefix() . 'clients_exam_status.exam_date = ' . db_prefix() . 'clients_exam.exam_date',
+    //         "left"
+    //     );
+
+    //     $this->db->where(db_prefix() . "clients_exam.client_id", $id);
+    //     $this->db->group_by(db_prefix() . "clients_exam.id");
+
+    //     return  $this->db->get()->result_array();
+    // }
+
     public function entrance_exams($id)
     {
-        $this->db->select([
-            db_prefix() . "clients_exam.*",
-            db_prefix() . "university_exams.name AS exam_name",
-            db_prefix() . "exam_batch.name AS batch_name",
-            db_prefix() . "exam_batch.university_name",
-            db_prefix() . "clients_exam_status.status AS status",
-            db_prefix() . "clients_exam.m_university_name AS m_university_name"
+        $clients_exam = db_prefix() . "clients_exam";
+        $exam_batch = db_prefix() . "exam_batch";
+        $university_exams = db_prefix() . "university_exams";
+        $exam_status = db_prefix() . "clients_exam_status";
 
+        $this->db->select([
+            "$clients_exam.*",
+            "$university_exams.name AS exam_name",
+            "$exam_batch.name AS batch_name",
+            "$exam_batch.university_name",
+            "$exam_status.status AS status",
+            "$clients_exam.m_university_name"
         ]);
 
-        $this->db->from(db_prefix() . 'clients_exam');
-        $this->db->join(db_prefix() . 'exam_batch', db_prefix() . 'exam_batch.id = ' . db_prefix() . 'clients_exam.batch_id', "left");
-        $this->db->join(db_prefix() . 'university_exams', db_prefix() . 'university_exams.id = ' . db_prefix() . 'clients_exam.exam_id', "left");
+        $this->db->from($clients_exam);
+        $this->db->join("$exam_batch", "$exam_batch.id = $clients_exam.batch_id", "left");
+        $this->db->join("$university_exams", "$university_exams.id = $clients_exam.exam_id", "left");
+
+        // NOTE: Removed exam_date from join for better reliability unless necessary
         $this->db->join(
-            db_prefix() . 'clients_exam_status',
-            db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
-                db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id',
+            "$exam_status",
+            "$exam_status.exam_id = $clients_exam.exam_id 
+         AND $exam_status.client_id = $clients_exam.client_id
+         AND $exam_status.exam_date = $clients_exam.exam_date",
             "left"
         );
 
-        $this->db->where(db_prefix() . "clients_exam.client_id", $id);
-        $this->db->group_by(db_prefix() . "clients_exam.id");
+        $this->db->where("$clients_exam.client_id", $id);
+        $this->db->group_by("$clients_exam.id");
 
-        return  $this->db->get()->result_array();
+        return $this->db->get()->result_array();
     }
+
 
     public function get_university_data($university = [])
     {
@@ -2508,6 +2545,83 @@ class Clients_model extends App_Model
         return false;
     }
 
+
+    function update_application_status($data_post = [])
+    {
+
+        $shortlisting_id = !empty($data_post["shortlisting_id"]) ? $data_post["shortlisting_id"] : '';
+        $data["application_status"] = !empty($data_post["status"]) ? $data_post["status"] : '';
+        $client_id = !empty($data_post["client_id"]) ? $data_post["client_id"] : '';
+        if (!empty($data_post["canceled_comment"])) {
+            $data["canceled_comment"] = !empty($data_post["canceled_comment"]) ? $data_post["canceled_comment"] : '';
+        }
+
+
+        $this->db->select('application_status');
+        $this->db->where('id', $data['shortlisting_id']);
+
+        $_old = $this->db->get(db_prefix() . 'client_university_shortlisting')->row();
+
+        $old_status = '';
+
+        if ($_old) {
+
+            $old_status = get_application_statuses($_old->application_status);
+
+
+            if ($old_status) {
+
+                $old_status = $old_status->name;
+            }
+        }
+
+        unset($data["shortlisting_id"]);
+        $affectedRows   = 0;
+
+        $current_status = get_application_statuses($data['status']);
+
+        $this->db->where('id', $shortlisting_id);
+
+        $this->db->update(db_prefix() . 'client_university_shortlisting', $data);
+        $_log_message = '';
+
+        if ($this->db->affected_rows() > 0) {
+
+            $affectedRows++;
+
+            if ($current_status != $old_status && $old_status != '') {
+                $_log_message    = 'not_lead_activity_status_updated';
+            }
+        }
+
+
+        if ($affectedRows > 0) {
+
+            if ($_log_message == '') {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => "Application status updated successfully."
+                ]);
+                return true;
+            }
+
+            $this->db->insert(db_prefix() . 'application_activity_log', array("description" => " {$current_status->name} Status Updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id, "shortlisting_id" => $shortlisting_id));
+
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => "Application status updated successfully."
+            ]);
+            return true;
+        }
+
+        echo json_encode([
+            'resp_code' => 'ERR',
+            'resp_desc' => "Application status failed."
+        ]);
+
+        return false;
+    }
+
     function activity_logs($table, $client_id, $like_query = "")
     {
         $like_query = trim($like_query);
@@ -2539,7 +2653,7 @@ class Clients_model extends App_Model
 
     function get_entrance_exam($clientid)
     {
-        $this->db->select("id,client_id,exam_id,marks,file");
+        $this->db->select("*");
         $this->db->from(db_prefix() . 'client_entrance');
         $this->db->where('client_id', $clientid);
         $this->db->order_by('id', 'asc');
@@ -2558,6 +2672,14 @@ class Clients_model extends App_Model
         );
         $this->db->order_by('ty.id', 'asc');
 
+        return $this->db->get()->result_array();
+    }
+
+    function getWorkExperience($clientid)
+    {
+        $this->db->select("*");
+        $this->db->from(db_prefix() . 'work_experience');
+        $this->db->order_by('id', 'asc');
         return $this->db->get()->result_array();
     }
 }

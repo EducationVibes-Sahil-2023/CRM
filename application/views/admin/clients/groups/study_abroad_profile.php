@@ -14,15 +14,19 @@ $degreeArray = get_degree();
 $universities_list = get_universities_list();
 $diploma_board = get_diploma_board_list();
 $board_dropdown = get_board_dropdown();
+$offerLetersDownload = get_offerLetters($client_id);
+$PreDepositeDownload = get_preDeposite($client_id);
+
 $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
 $get_entrance_exam              = $this->clients_model->get_entrance_exam($client_id);
 $get_entrance_exam_scrore              = $this->clients_model->get_entrance_exam_scrore($client_id);
-
+$get_entrance_exams_status = [array("id" => "", "selected" => "0", "name" => "Select Status"), array("id" => "1", "selected" => "1", "name" => "Not Given"), array("id" => "2", "selected" => "1", "name" => "Given")];
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
 }
+$getWorkExperience              = $this->clients_model->getWorkExperience($client_id);
 
 $documents_type =  get_documents($lead_type_status, [], 1);
 $profile_section = [];
@@ -1893,130 +1897,372 @@ if ($lead_type_status == 1) {
                                     </div>
                                 </div>
 
-                                <div class="col-12" style="padding-top: 30px; padding-bottom: 20px;">
-                                    <label>
+                                <div class="col-md-12">
+                                    <div class="form-check mb-3">
+                                        <input type="checkbox" class="form-check-input" id="work_status" value="1" name="work_status" onclick="changework_status(this)" <?= !empty($academicdetails->work_status) ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="work_status">Work Experience</label>
+                                    </div>
+
+                                    <!-- Work Experience Container -->
+                                    <div id="work-div" class="col-md-12 <?= !empty($academicdetails->work_status) ? '' : 'hide' ?>">
+                                        <div id="work-experience-container" class="w-100">
+                                            <?php if (!empty($getWorkExperience)) { ?>
+                                                <?php foreach ($getWorkExperience as $key => $work) { ?>
+                                                    <div class="row work-exp-div mb-3">
+                                                        <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                                                            <label for="currently_working_<?= $key ?>" class="form-label">Working</label>
+                                                            <input type="checkbox"
+                                                                name="currently_working[]"
+                                                                id="currently_working_<?= $key ?>"
+                                                                onchange="currently_working(this)"
+                                                                value="1"
+                                                                class="mt-1"
+                                                                <?= !empty($work['currently_working']) && $work['currently_working'] == 1 ? 'checked' : '' ?>>
+                                                        </div>
+
+                                                        <div class="form-group col-md-1">
+                                                            <label for="work_experience_<?= $key ?>">Years <span class="text-danger">*</span></label>
+                                                            <input type="number"
+                                                                class="form-control"
+                                                                name="work_experience[]"
+                                                                id="work_experience_<?= $key ?>"
+                                                                value="<?= htmlspecialchars($work['year'] ?? '') ?>"
+                                                                required>
+                                                        </div>
+
+                                                        <div class="form-group col-md-9">
+                                                            <label for="work_profile_<?= $key ?>">Role/Profile <span class="text-danger">*</span></label>
+                                                            <textarea class="form-control"
+                                                                name="work_profile[]"
+                                                                id="work_profile_<?= $key ?>"
+                                                                rows="3"
+                                                                required><?= htmlspecialchars($work['remark'] ?? '') ?></textarea>
+                                                        </div>
+                                                        <?php if ($key == 0) { ?>
+                                                            <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                                                                <label>&nbsp;</label>
+                                                                <button type="button" class="btn btn-primary" onclick="createNewWorkExperience()">
+                                                                    <i class="fa fa-plus"></i>
+                                                                </button>
+                                                            </div>
+                                                        <?php } else { ?>
+                                                            <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                                                                <label>&nbsp;</label>
+                                                                <button type="button" class="btn btn-danger" onclick="removeWorkExperience(this)">
+                                                                    <i class="fa fa-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        <?php } ?>
+
+                                                    </div>
+                                                <?php } ?>
+                                            <?php } else { ?>
+                                                <div class="row work-exp-div mb-3">
+                                                    <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                                                        <label for="currently_working_0" class="form-label">Working</label>
+                                                        <input type="checkbox"
+                                                            name="currently_working[]"
+                                                            id="currently_working_0"
+                                                            onchange="currently_working(this)"
+                                                            value="1"
+                                                            class="mt-1"
+                                                            <?= !empty($academicdetails->currently_working) ? 'checked' : '' ?>>
+                                                    </div>
+
+                                                    <div class="form-group col-md-1">
+                                                        <label for="work_experience_0">Years <span class="text-danger">*</span></label>
+                                                        <input type="number"
+                                                            class="form-control"
+                                                            name="work_experience[]"
+                                                            id="work_experience_0"
+                                                            value="<?= htmlspecialchars($academicdetails->work_experience ?? '') ?>"
+                                                            required>
+                                                    </div>
+
+                                                    <div class="form-group col-md-9">
+                                                        <label for="work_profile_0">Role/Profile <span class="text-danger">*</span></label>
+                                                        <textarea class="form-control"
+                                                            name="work_profile[]"
+                                                            id="work_profile_0"
+                                                            rows="3"
+                                                            required><?= htmlspecialchars($academicdetails->work_profile ?? '') ?></textarea>
+                                                    </div>
+
+                                                    <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                                                        <label>&nbsp;</label>
+                                                        <button type="button" class="btn btn-primary" onclick="createNewWorkExperience()">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            <?php } ?>
+
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-12" style="padding-top: 30px; padding-bottom: 20px;">
+                                    <!-- <label>
                                         ELT Status &nbsp;
                                         <input type="checkbox" value="1" onclick="changeELS_status(this)" name="elt_status" <?= !empty($academicdetails->elt_status) ? 'checked' : '' ?>>
-                                    </label>
+                                    </label> -->
 
-                                    <h4 id="entrance-exam-div-title" class="<?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">Entrance Exams <span class="text-danger">*</span></h4>
+                                    <h4 id="entrance-exam-div-title">Entrance Exams <span class="text-danger">*</span></h4>
                                     <hr>
 
-                                    <div id="entrance-exam-div" class="<?= !empty($academicdetails->elt_status) ? '' : 'hide' ?>">
+                                    <div id="entrance-exam-div">
                                         <?php if (!empty($get_entrance_exam)) { ?>
                                             <?php foreach ($get_entrance_exam as $key => $entrance) {
-
+                                                $show_entrance_div = 0;
                                                 $file_url = $entrance["file"] ?? '';
                                                 $required_attr = !empty($file_url) ? '' : 'required required-check';
                                             ?>
-                                                <div class="entrance-exams row mb-3">
-                                                    <div class="col-lg-3">
+                                                <div class="entrance-exams row mb-4" id="entrance-exam-<?= $key ?>">
+                                                    <!-- Hidden ID -->
+                                                    <input type="hidden" class="entrance_id" name="entrance_id[<?= $key ?>]" value="<?= htmlspecialchars($entrance["id"], ENT_QUOTES, 'UTF-8') ?>">
+
+                                                    <!-- Exam Status -->
+                                                    <div class="col-lg-2">
                                                         <div class="form-group">
-                                                            <input type="hidden" class="entrance_id" name="entrance_id[<?= $key ?>]" value="<?= htmlspecialchars($entrance["id"], ENT_QUOTES, 'UTF-8') ?>">
-                                                            <label for="entrance_exams_<?= $key ?>">Exam Name <small class="text-danger">*</small></label>
-                                                            <?= render_select("entrance_exams[$key]", $get_entrance_exams_list, ['id', 'name'], '', [$entrance["exam_id"]], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') ?>
+                                                            <label for="entrance_exams_status_<?= $key ?>">Exam Status <small class="text-danger">*</small></label>
+                                                            <select
+                                                                name="entrance_exams_status[<?= $key ?>]"
+                                                                id="entrance_exams_status_<?= $key ?>"
+                                                                data="entrance_exams_status_<?= $key ?>"
+                                                                class="form-control entrance_exams_status"
+                                                                required
+                                                                required-check
+                                                                onchange="changeEntranceStatus(this)">
+                                                                <option value="">Select...</option>
+                                                                <?php foreach ($get_entrance_exams_status as $status):
+                                                                    if (!empty($status['selected']) && $status['id'] == $entrance['status']) {
+                                                                        $show_entrance_div = 1;
+                                                                    }
+                                                                ?>
+                                                                    <option
+                                                                        data-selected="<?= htmlspecialchars($status['selected'], ENT_QUOTES, 'UTF-8') ?>"
+                                                                        value="<?= htmlspecialchars($status['id'], ENT_QUOTES, 'UTF-8') ?>"
+                                                                        <?= $status['id'] == $entrance['status'] ? 'selected' : '' ?>>
+                                                                        <?= htmlspecialchars($status['name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-lg-3">
-                                                        <div class="form-group">
-                                                            <label for="entrance_marks_<?= $key ?>">Marks <small class="text-danger">*</small></label>
-                                                            <input type="number" name="entrance_marks[<?= $key ?>]" class="form-control entrance_marks" value="<?= htmlspecialchars($entrance["marks"], ENT_QUOTES, 'UTF-8') ?>" required required-check>
+                                                    <!-- Dependent Fields -->
+                                                    <div class="entrance-exams-status-active row col-lg-9 ms-0 ps-0 <?= $show_entrance_div == 1 ? '' : 'hide' ?>">
+                                                        <!-- Exam Name -->
+                                                        <div class="col-lg-3">
+                                                            <div class="form-group">
+                                                                <label for="entrance_exams_<?= $key ?>">Exam Name <small class="text-danger">*</small></label>
+                                                                <?= render_select(
+                                                                    "entrance_exams[$key]",
+                                                                    $get_entrance_exams_list,
+                                                                    ['id', 'name'],
+                                                                    '',
+                                                                    [$entrance["exam_id"]],
+                                                                    [
+                                                                        'required' => 'required',
+                                                                        'required-check' => 'required-check',
+                                                                        'onchange' => 'changeEntranceExam(this)',
+                                                                        'id' => "entrance_exams_$key"
+                                                                    ],
+                                                                    [],
+                                                                    '',
+                                                                    'entrance_exams',
+                                                                    '',
+                                                                    'entrance_exams'
+                                                                ) ?>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Exam Date -->
+                                                        <div class="col-lg-3">
+                                                            <div class="form-group">
+                                                                <label for="entrance_date_<?= $key ?>">Exam Date <small class="text-danger">*</small></label>
+                                                                <input type="date"
+                                                                    class="form-control entrance_date"
+                                                                    name="entrance_date[<?= $key ?>]"
+                                                                    id="entrance_date_<?= $key ?>"
+                                                                    value="<?= htmlspecialchars($entrance["date"], ENT_QUOTES, 'UTF-8') ?>"
+                                                                    required
+                                                                    required-check>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Marks -->
+                                                        <div class="col-lg-2">
+                                                            <div class="form-group">
+                                                                <label for="entrance_marks_<?= $key ?>">Marks <small class="text-danger">*</small></label>
+                                                                <input type="number"
+                                                                    class="form-control entrance_marks"
+                                                                    name="entrance_marks[<?= $key ?>]"
+                                                                    id="entrance_marks_<?= $key ?>"
+                                                                    value="<?= htmlspecialchars($entrance["marks"], ENT_QUOTES, 'UTF-8') ?>"
+                                                                    required
+                                                                    required-check>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Marksheet Upload -->
+                                                        <div class="col-lg-3">
+                                                            <div class="form-group">
+                                                                <label for="entrance_file_<?= $key ?>">Marksheet <small class="text-danger">*</small></label>
+                                                                <input type="file"
+                                                                    class="form-control"
+                                                                    name="entrance_file[<?= $key ?>]"
+                                                                    id="entrance_file_<?= $key ?>"
+                                                                    data-fileurl="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>"
+                                                                    <?= $required_attr ?>
+                                                                    accept=".pdf,.jpg,.jpeg,.png">
+                                                                <?php if (!empty($file_url)) { ?>
+                                                                    <div class="mt-2 margin-top">
+                                                                        <button type="button" class="btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>')">
+                                                                            <i class="fa fa-eye"></i>
+                                                                        </button>
+                                                                        <button type="button" class="btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank')">
+                                                                            <i class="fa fa-download"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                <?php } ?>
+                                                            </div>
                                                         </div>
                                                     </div>
 
-                                                    <div class="col-lg-3">
+                                                    <!-- Add / Remove Buttons -->
+                                                    <div class="col-lg-1 d-flex align-items-end">
                                                         <div class="form-group">
-                                                            <label for="entrance_file_<?= $key ?>">Marksheet <small class="text-danger">*</small></label>
-                                                            <input type="file" name="entrance_file[<?= $key ?>]" data-fileurl="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>" class="form-control" <?= $required_attr ?> accept=".pdf,.jpg,.jpeg,.png">
-                                                            <?php if (!empty($file_url)) { ?>
-                                                                <div class="margin-top">
-                                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
-                                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
-                                                                </div>
-                                                            <?php } ?>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="col-lg-1">
-                                                        <div class="form-group">
-                                                            <p>&nbsp;</p>
+                                                            <p></p>
                                                             <?php if ($key > 0) { ?>
-                                                                <span class="btn btn-danger fa-fa-icons" onclick="removeEntrance(this, <?= $entrance['id'] ?>)">
+                                                                <button type="button" class="btn btn-danger" onclick="removeEntrance(this, <?= $entrance['id'] ?>)">
                                                                     <i class="fa fa-trash"></i>
-                                                                </span>
+                                                                </button>
                                                             <?php } else { ?>
-                                                                <span class="btn btn-primary fa-fa-icons" onclick="createNewEntrance()">
+                                                                <button type="button" class="btn btn-primary" onclick="createNewEntrance()">
                                                                     <i class="fa fa-plus"></i>
-                                                                </span>
+                                                                </button>
                                                             <?php } ?>
                                                         </div>
                                                     </div>
-                                                    <?php
-                                                    if (!empty($get_entrance_exams_list[$entrance['exam_id']]['academic_type']) && $get_entrance_exams_list[$entrance['exam_id']]['academic_type'] > 0) {
-                                                    ?>
-                                                        <div class="row col-md-12 mb-5 entrance-score-div">
 
-                                                            <?php
-                                                            foreach ($get_entrance_exam_scrore as $entrance_exam_scrore) {
-                                                            ?>
+                                                    <!-- Optional Entrance Score Section -->
+                                                    <?php if (
+                                                        !empty($get_entrance_exams_list[$entrance['exam_id']]['academic_type']) &&
+                                                        $get_entrance_exams_list[$entrance['exam_id']]['academic_type'] > 0
+                                                    ): ?>
+                                                        <div class="row col-md-12 mt-3 entrance-score-div">
+                                                            <?php foreach ($get_entrance_exam_scrore as $score): ?>
                                                                 <div class="col-md-3 form-group">
-                                                                    <label><?= $entrance_exam_scrore["name"] ?> <span class="text-danger">*</span></label>
+                                                                    <label><?= htmlspecialchars($score["name"]) ?> <span class="text-danger">*</span></label>
                                                                     <input
-                                                                        class="form-control entrance-score-input"
-                                                                        data-name="<?= $entrance_exam_scrore["name"] ?>"
-                                                                        data-id="<?= $entrance_exam_scrore["id"] ?>"
                                                                         type="text"
-                                                                        min="0"
-                                                                        step="any"
+                                                                        class="form-control entrance-score-input"
                                                                         name="<?= bin2hex(random_bytes(16)) ?>"
-                                                                        value="<?= $entrance_exam_scrore["value"] ?>"
+                                                                        data-name="<?= htmlspecialchars($score["name"]) ?>"
+                                                                        data-id="<?= $score["id"] ?>"
+                                                                        value="<?= htmlspecialchars($score["value"], ENT_QUOTES, 'UTF-8') ?>"
                                                                         required
                                                                         required-check>
                                                                 </div>
-                                                            <?php
-                                                            }
-                                                            ?>
+                                                            <?php endforeach; ?>
                                                         </div>
-                                                    <?php
-                                                    }
-                                                    ?>
+                                                    <?php endif; ?>
                                                 </div>
+
+
 
                                             <?php } ?>
                                         <?php } else { ?>
-                                            <div class="entrance-exams row mb-3">
-                                                <div class="col-lg-3">
+                                            <div class="entrance-exams row mb-3" id="entrance-exam-0">
+
+                                                <!-- Exam Status -->
+                                                <div class="col-lg-2">
                                                     <div class="form-group">
-                                                        <input type="hidden" class="entrance_id" name="entrance_id[0]" value="">
-                                                        <label for="entrance_exams_0">Exam Type <small class="text-danger">*</small></label>
-                                                        <?= render_select('entrance_exams[0]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') ?>
+                                                        <label for="entrance_exams_status_0">Exam Status <small class="text-danger">*</small></label>
+                                                        <select
+                                                            name="entrance_exams_status[0]"
+                                                            id="entrance_exams_status_0"
+                                                            data="entrance_exams_status_0"
+                                                            class="form-control entrance_exams_status"
+                                                            required
+                                                            required-check
+                                                            onchange="changeEntranceStatus(this)">
+                                                            <option value="">Select...</option>
+                                                            <?php foreach ($get_entrance_exams_status as $status): ?>
+                                                                <option data-selected="<?= htmlspecialchars($status['selected'], ENT_QUOTES, 'UTF-8') ?>" value="<?= htmlspecialchars($status['id'], ENT_QUOTES, 'UTF-8') ?>">
+                                                                    <?= htmlspecialchars($status['name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+
                                                     </div>
                                                 </div>
 
-                                                <div class="col-lg-3">
-                                                    <div class="form-group">
-                                                        <label for="entrance_marks_0">Marks <small class="text-danger">*</small></label>
-                                                        <input type="number" class="form-control entrance_marks" name="entrance_marks[0]" value="" required required-check>
+                                                <!-- Dependent Fields (hidden until status is selected) -->
+                                                <div class="entrance-exams-status-active row col-lg-9 ms-0 ps-0 hide">
+                                                    <!-- Exam Name -->
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="entrance_exams_0">Exam Name <small class="text-danger">*</small></label>
+                                                            <?= render_select(
+                                                                'entrance_exams[0]',
+                                                                $get_entrance_exams_list,
+                                                                ['id', 'name'],
+                                                                '',
+                                                                [],
+                                                                [
+                                                                    'required' => 'required',
+                                                                    'required-check' => 'required-check',
+                                                                    'onchange' => 'changeEntranceExam(this)',
+                                                                    'id' => 'entrance_exams_0'
+                                                                ],
+                                                                [],
+                                                                '',
+                                                                'entrance_exams',
+                                                                '',
+                                                                'entrance_exams'
+                                                            ) ?>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Exam Date -->
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="entrance_date_0">Exam Date <small class="text-danger">*</small></label>
+                                                            <input type="date" class="form-control entrance_date" name="entrance_date[0]" id="entrance_date_0" required required-check>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Marks -->
+                                                    <div class="col-lg-2">
+                                                        <div class="form-group">
+                                                            <label for="entrance_marks_0">Marks <small class="text-danger">*</small></label>
+                                                            <input type="number" class="form-control entrance_marks" name="entrance_marks[0]" id="entrance_marks_0" required required-check>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Marksheet File -->
+                                                    <div class="col-lg-3">
+                                                        <div class="form-group">
+                                                            <label for="entrance_file_0">Marksheet <small class="text-danger">*</small></label>
+                                                            <input type="file" class="form-control" name="entrance_file[0]" id="entrance_file_0" required required-check accept=".pdf,.jpg,.jpeg,.png">
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                <div class="col-lg-3">
-                                                    <div class="form-group">
-                                                        <label for="entrance_file_0">Marksheet <small class="text-danger">*</small></label>
-                                                        <input type="file" class="form-control" name="entrance_file[0]" required required-check accept=".pdf,.jpg,.jpeg,.png">
-                                                    </div>
-                                                </div>
-
+                                                <!-- Add Button -->
                                                 <div class="col-lg-1">
                                                     <div class="form-group">
                                                         <p>&nbsp;</p>
-                                                        <span class="btn btn-primary" onclick="createNewEntrance()">
+                                                        <button type="button" class="btn btn-primary" onclick="createNewEntrance()">
                                                             <i class="fa fa-plus"></i>
-                                                        </span>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </div>
+
                                         <?php } ?>
                                     </div>
 
@@ -2143,6 +2389,107 @@ if ($lead_type_status == 1) {
                                         <?php endif; ?>
                                     </tbody>
                                 </table>
+
+                                <hr>
+                                <div class="row">
+                                    <?php if (!empty($offerLetersDownload)) { ?>
+                                        <div class="col-md-12">
+                                            <h4>Offer Letters</h4>
+                                            <table class="table table-bordered table-striped">
+                                                <thead class="thead-dark">
+                                                    <tr></tr>
+                                                    <th>S.No</th>
+                                                    <th>Country Name</th>
+                                                    <th>University Name</th>
+                                                    <th>Course Name</th>
+                                                    <th> <a href="javascript:void(0);" onclick="multiple_document_download('offer-letter-download','<?= sanitizeFileName($basicdetails->first_name . '_' . $basicdetails->last_name . '_Offer_Letters.zip') ?>'); return false;"
+                                                            class="btn btn-xs btn-primary"><i class="fa fa-download"></i></a></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php if (!empty($offerLetersDownload)) : ?>
+                                                        <?php foreach ($offerLetersDownload as $key => $offerLetter) : ?>
+                                                            <tr>
+                                                                <td>
+                                                                    <?= ($key + 1) ?>
+                                                                    <div class="offer-letter-download">
+                                                                        <input type="hidden" class="file-path"
+                                                                            value="<?= base_url(htmlspecialchars($offerLetter['file'], ENT_QUOTES, 'UTF-8')) ?>">
+                                                                        <input type="hidden" class="file-name" value="offer_letter_<?= str_replace(' ', '_', htmlspecialchars($offerLetter['university_name'] ?? '', ENT_QUOTES, 'UTF-8')) ?>_<?= (int)($key + 1) ?>">
+
+
+                                                                    </div>
+                                                                </td>
+                                                                <td><?= htmlspecialchars($offerLetter['country_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td><?= htmlspecialchars($offerLetter['university_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td><?= htmlspecialchars($offerLetter['course_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td class="text-center">
+                                                                    <a href="javascript:void(0);" onclick="show_media_files('<?= base_url($offerLetter['file']) ?>');"
+                                                                        class="btn btn-xs btn-primary"><i class="fa fa-eye"></i></a>
+                                                                    <a href="javascript:void(0);" onclick="download_media_files(`<?= base_url($offerLetter['file']) ?>`, '_blank'); return false;"
+                                                                        class="btn btn-xs btn-primary"><i class="fa fa-download"></i></a>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    <?php else : ?>
+                                                        <tr>
+                                                            <td colspan="3" class="text-center">No Offer Letters Available</td>
+                                                        </tr>
+                                                    <?php endif; ?>
+                                            </table>
+
+                                        </div>
+                                    <?php } ?>
+
+                                    <?php if (!empty($PreDepositeDownload)) { ?>
+                                        <div class="col-md-12">
+                                            <h4>Pre-deposite</h4>
+                                            <table class="table table-bordered table-striped">
+                                                <thead class="thead-dark">
+                                                    <tr></tr>
+                                                    <th>S.No</th>
+                                                    <th>Country Name</th>
+                                                    <th>University Name</th>
+                                                    <th>Course Name</th>
+                                                    <th><a href="javascript:void(0);" onclick="multiple_document_download('pre-deposite-download','<?= sanitizeFileName($basicdetails->first_name . '_' . $basicdetails->last_name . '_Pre_Deposite.zip') ?>'); return false;"
+                                                            class="btn btn-xs btn-primary"><i class="fa fa-download"></i></a></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <?php if (!empty($PreDepositeDownload)) : ?>
+                                                        <?php foreach ($PreDepositeDownload as $key => $preDeposite) : ?>
+                                                            <tr>
+                                                                <td><?= ($key + 1) ?>
+                                                                    <div class="pre-deposite-download">
+                                                                        <input type="hidden" class="file-path"
+                                                                            value="<?= base_url(htmlspecialchars($preDeposite['file'], ENT_QUOTES, 'UTF-8')) ?>">
+                                                                        <input type="hidden" class="file-name" value="pre_deposit_<?= str_replace(' ', '_', htmlspecialchars($preDeposite['university_name'] ?? '', ENT_QUOTES, 'UTF-8')) ?>_<?= (int)($key + 1) ?>">
+
+
+                                                                    </div>
+                                                                </td>
+                                                                <td><?= htmlspecialchars($preDeposite['country_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td><?= htmlspecialchars($preDeposite['university_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td><?= htmlspecialchars($preDeposite['course_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                                <td class="text-center">
+                                                                    <a href="javascript:void(0);" onclick="show_media_files('<?= base_url($preDeposite['file']) ?>');"
+                                                                        class="btn btn-xs btn-primary"><i class="fa fa-eye"></i></a>
+                                                                    <a href="javascript:void(0);" onclick="download_media_files(`<?= base_url($preDeposite['file']) ?>`, '_blank'); return false;"
+                                                                        class="btn btn-xs btn-primary"><i class="fa fa-download"></i></a>
+                                                                </td>
+                                                            </tr>
+                                                        <?php endforeach; ?>
+                                                    <?php else : ?>
+                                                        <tr>
+                                                            <td colspan="3" class="text-center">No Offer Letters Available</td>
+                                                        </tr>
+                                                    <?php endif; ?>
+                                            </table>
+
+                                        </div>
+                                    <?php } ?>
+
+                                </div>
 
 
                             </div>
@@ -2414,6 +2761,31 @@ if ($lead_type_status == 1) {
         setTimeout(function() {
             $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }, 1500);
+    }
+
+
+    function multiple_document_download(className, zipFileName = '<?= sanitizeFileName($basicdetails->first_name . ' ' . $basicdetails->last_name) ?>.zip') {
+        const files = [];
+
+        $("." + className).each(function() {
+            const filePath = $(this).find(".file-path").val();
+            const fileNameRaw = $(this).find(".file-name").val();
+
+            if (filePath && fileNameRaw) {
+                const safeName = sanitizeFileName(fileNameRaw);
+                files.push({
+                    url: filePath,
+                    name: safeName
+                });
+            }
+        });
+
+        if (files.length === 0) {
+            alert("No valid files found to download.");
+            return;
+        }
+
+        downloadAndZipFiles(files, zipFileName);
     }
 
 
@@ -2928,41 +3300,115 @@ if ($lead_type_status == 1) {
 
 
     <?php
-    $html = '<div class="entrance-exams row mb-3">
-    <div class="col-lg-3">
+    // Build entrance status options first
+    $entrance_status_options = '<option value="">Select...</option>';
+    foreach ($get_entrance_exams_status as $status) {
+        $value = htmlspecialchars($status['id'], ENT_QUOTES, 'UTF-8');
+        $selected = htmlspecialchars($status['selected'], ENT_QUOTES, 'UTF-8');
+        $label = htmlspecialchars($status['name'], ENT_QUOTES, 'UTF-8');
+        $entrance_status_options .= "<option  data-selected=\"$selected\" value=\"$value\">$label</option>";
+    }
+
+    // Main HTML block
+    $html = '
+<div class="entrance-exams row mb-3" id="entrance-exam-__index__">
+    <!-- Hidden Entrance ID -->
+    <input type="hidden" class="entrance_id" name="entrance_id[__index__]" value="">
+
+    <!-- Exam Status -->
+    <div class="col-lg-2">
         <div class="form-group">
-            <label for="entrance_exams">Exam Type <small class="text-danger">*</small></label>' .
-        render_select('entrance_exams[__index__]', $get_entrance_exams_list, ['id', 'name'], '', [], ['required' => 'required', 'required-check' => 'required-check', "onchange" => "changeEntranceExam(this)"], [], '', '', '', 'entrance_exams') .
+            <label for="entrance_exams_status___index__">Exam Status <small class="text-danger">*</small></label>
+            <select
+                name="entrance_exams_status[__index__]"
+                id="entrance_exams_status___index__"
+                class="form-control entrance_exams_status"
+                required
+                required-check
+                onchange="changeEntranceStatus(this)">
+                ' . $entrance_status_options . '
+            </select>
+        </div>
+    </div>
+
+    <!-- Dependent Fields (hidden until status is selected) -->
+    <div class="entrance-exams-status-active row col-lg-9 ms-0 ps-0 hide">
+        <!-- Exam Name -->
+        <div class="col-lg-3">
+            <div class="form-group">
+                <label for="entrance_exams___index__">Exam Name <small class="text-danger">*</small></label>' .
+        render_select(
+            'entrance_exams[__index__]',
+            $get_entrance_exams_list,
+            ['id', 'name'],
+            '',
+            [],
+            [
+                'required' => 'required',
+                'required-check' => 'required-check',
+                'onchange' => 'changeEntranceExam(this)',
+                'id' => 'entrance_exams___index__'
+            ],
+            [],
+            '',
+            'entrance_exams',
+            '',
+            'entrance_exams'
+        ) .
         '</div>
-    </div>
+        </div>
 
-    <div class="col-lg-3">
-        <div class="form-group">
-            <label for="entrance_marks">Marks <small class="text-danger">*</small></label>
-            <input type="number" name="entrance_marks[__index__]" class="form-control entrance_marks" value="" required required-check>
+        <!-- Exam Date -->
+        <div class="col-lg-3">
+            <div class="form-group">
+                <label for="entrance_date___index__">Exam Date <small class="text-danger">*</small></label>
+                <input type="date" class="form-control entrance_date" name="entrance_date[__index__]" id="entrance_date___index__" required required-check>
+            </div>
+        </div>
+
+        <!-- Marks -->
+        <div class="col-lg-2">
+            <div class="form-group">
+                <label for="entrance_marks___index__">Marks <small class="text-danger">*</small></label>
+                <input type="number" class="form-control entrance_marks" name="entrance_marks[__index__]" id="entrance_marks___index__" required required-check>
+            </div>
+        </div>
+
+        <!-- Marksheet File -->
+        <div class="col-lg-3">
+            <div class="form-group">
+                <label for="entrance_file___index__">Marksheet <small class="text-danger">*</small></label>
+                <input type="file" class="form-control" name="entrance_file[__index__]" id="entrance_file___index__" required required-check accept=".pdf,.jpg,.jpeg,.png">
+            </div>
         </div>
     </div>
+';
 
-    <div class="col-lg-3">
-        <div class="form-group">
-            <label for="study_courses">Marksheet <small class="text-danger">*</small></label>
-            <input type="file" name="entrance_file[__index__]" class="form-control" required required-check accept=".pdf,.jpg,.jpeg,.png">
-        </div>
-    </div>';
-    $html_add = '<div class="col-lg-1">
+    // Add/Remove buttons
+    $html_add = '
+<div class="col-lg-1">
     <div class="form-group">
-        <p>&nbsp;</p>
-        <span class="btn btn-primary fa-fa-icons" onclick="createNewEntrance(this)"><i class="fa fa-plus"></i></span>
+    <p>&nbsp;</p>
+        <button type="button" class="btn btn-primary" onclick="createNewEntrance(this)">
+            <i class="fa fa-plus"></i>
+        </button>
     </div>
-</div>';
-    $html_remove = '<div class="col-lg-1">
+</div> </div>';
+
+    $html_remove = '
+<div class="col-lg-1">
     <div class="form-group">
-        <p>&nbsp;</p>
-        <span class="btn btn-danger fa-fa-icons" onclick="removeEntrance(this)"><i class="fa fa-trash"></i></span>
+    <p>&nbsp;</p>
+        <button type="button" class="btn btn-danger" onclick="removeEntrance(this)">
+            <i class="fa fa-trash"></i>
+        </button>
     </div>
-</div>';
+</div> </div>';
+
 
     ?>
+
+
 
     var entranceHTMLTemplate = `<?= addslashes($html . $html_remove) ?>`;
     var entranceHTMLAddTemplate = `<?= addslashes($html . $html_add) ?>`;
@@ -3081,6 +3527,52 @@ if ($lead_type_status == 1) {
         }
     }
 
+    function currently_working(event) {
+        // Uncheck all other checkboxes except the one clicked
+        $(".work-exp-div input[name='currently_working[]']").not(event).prop("checked", false);
+    }
+
+
+
+
+    function createNewWorkExperience() {
+        const timestamp = Date.now(); // Unique suffix for IDs and names
+
+        let html = `
+        <div class="row work-exp-div mb-3" id="work-exp-${timestamp}">
+            <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                <label for="currently_working_${timestamp}" class="form-label">Working</label>
+                <input type="checkbox" name="currently_working[]" onchange = "currently_working(this)" id="currently_working_${timestamp}" value="1" class="mt-1">
+            </div>
+
+            <div class="form-group col-md-1">
+                <label for="work_experience_${timestamp}">Years <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" name="work_experience[]" id="work_experience_${timestamp}" required>
+            </div>
+
+            <div class="form-group col-md-9">
+                <label for="work_profile_${timestamp}">Role/Profile <span class="text-danger">*</span></label>
+                <textarea class="form-control" name="work_profile[]" id="work_profile_${timestamp}" rows="3" required></textarea>
+            </div>
+
+            <div class="form-group col-md-1 d-flex flex-column justify-content-center">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-danger" onclick="deleteWorkExp(this)">
+                    <i class="fa fa-trash"></i>
+                </button>
+            </div>
+        </div>`;
+
+        document.getElementById('work-experience-container').insertAdjacentHTML('beforeend', html);
+    }
+
+
+    function removeWorkExperience(element) {
+        if (confirm("Are you sure you want to delete this work experience?")) {
+            $(element).parents(".work-exp-div").remove();
+        }
+    }
+
     function loadCoursesUniversity(searchTerm = '', $select, type = "") {
         let degreeType = ""
         if (type == 2) {
@@ -3137,5 +3629,31 @@ if ($lead_type_status == 1) {
                 })).selectpicker('refresh');
             }
         });
+    }
+
+    function changework_status(event) {
+        $("#work-div .work-exp-div").remove();
+        createNewWorkExperience();
+        if ($(event).is(":checked")) {
+            $("#work-div").removeClass("hide");
+            $("#work-div").find(".work-exp-div").removeClass("hide");
+        } else {
+            $("#work-div").addClass("hide");
+            $("#work-div").find(".work-exp-div").addClass("hide");
+        }
+
+    }
+
+    function changeEntranceStatus(event) {
+        const $parent = $(event).closest(".entrance-exams");
+        const $selectedOption = $(event).find("option:selected");
+        const selectedData = $selectedOption.data("selected");
+
+        // Assuming data-selected="1" indicates active
+        if (selectedData === "1" || selectedData === 1) {
+            $parent.find(".entrance-exams-status-active").removeClass("hide");
+        } else {
+            $parent.find(".entrance-exams-status-active").addClass("hide");
+        }
     }
 </script>

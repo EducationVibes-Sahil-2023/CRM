@@ -634,6 +634,7 @@
             // Step 4: Extra Async File Data
             await get_media_docs("admission-details-form .media-files", formData);
             await get_entranceExams(formData);
+            await get_workExperience(formData);
 
             // Step 5: AJAX Submission
             $.ajax({
@@ -674,19 +675,29 @@
         const client_id = $('input[name="clientid"]').val();
 
         return new Promise((resolve) => {
-            $("#entrance-exam-div .entrance-exams").each(function() {
-                const fileInput = $(this).find("input[type='file']")[0];
+            $("#entrance-exam-div .entrance-exams").each(function(index) {
+                const $entry = $(this);
+
+                // Delete previously set FormData keys for this index
+
+
+                // File handling
+                const fileInput = $entry.find("input[type='file']")[0];
                 const fileUrl = $(fileInput).data("fileurl") || null;
                 const files = fileInput?.files || [];
 
-                const id = $(this).find("input.entrance_id").val()?.trim();
-                const examSelect = $(this).find("select");
-                const exam_id = examSelect.val()?.trim();
-                const entranceExam = examSelect.find("option:selected").text()?.trim();
-                const marks = $(this).find("input.entrance_marks").val()?.trim();
+                const id = $entry.find("input.entrance_id").val()?.trim() || null;
+                const examStatus = $entry.find("select.entrance_exams_status").val()?.trim() || null;
 
-                // Handle entrance score inputs
-                $(this).find(".entrance-score-div .entrance-score-input").each(function() {
+                const examSelect = $entry.find("select.entrance_exams");
+                const exam_id = examSelect.val()?.trim() || null;
+                const entranceExam = examSelect.find("option:selected").text()?.trim() || null;
+
+                const examDate = $entry.find("input.entrance_date").val()?.trim() || null;
+                const marks = $entry.find("input.entrance_marks").val()?.trim() || null;
+
+                // Collect entrance score data if present
+                $entry.find(".entrance-score-div .entrance-score-input").each(function() {
                     const type = $(this).data("id");
                     const value = $(this).val()?.trim();
                     entrance_score_data.push({
@@ -696,31 +707,78 @@
                     });
                 });
 
+                // Add to main data array
                 entranceExamDetails.push({
-                    id: id || null,
-                    exam_id: exam_id || null,
-                    entranceExam: entranceExam || null,
-                    marks: marks || null,
+                    id: id,
+                    exam_status: examStatus,
+                    exam_id: exam_id,
+                    entranceExam: entranceExam,
+                    exam_date: examDate,
+                    marks: marks,
                     hasFile: files.length > 0,
                     fileUrl: fileUrl
                 });
 
                 // Handle file uploads
                 if (files.length > 0) {
-                    Array.from(files).forEach((file, index) => {
+                    Array.from(files).forEach((file) => {
                         formData.append(`files_entrance_${exam_id}`, file);
                     });
                 }
             });
 
+
+
             // Append collected data after looping
             formData.append("entrance_score_data", JSON.stringify(entrance_score_data));
             formData.append("entrance_exam_details", JSON.stringify(entranceExamDetails));
+
+            for (let key of formData.keys()) {
+                if (
+                    key.startsWith('entrance_exams_status[') ||
+                    key.startsWith('entrance_exams[') ||
+                    key.startsWith('entrance_date[') ||
+                    key.startsWith('entrance_marks[')
+                ) {
+                    formData.delete(key);
+                }
+            }
 
             resolve();
         });
     }
 
+
+    function get_workExperience(formData) {
+        const work = [];
+        const client_id = $('input[name="clientid"]').val(); // Used if needed later
+
+        return new Promise((resolve) => {
+            $("#work-div .work-exp-div").each(function() {
+                const current_working = $(this).find("input[name='currently_working[]']").is(":checked") ? 1 : 0;
+                const year = $(this).find("input[name='work_experience[]']").val();
+                const profile = $(this).find("textarea[name='work_profile[]']").val();
+                formData.delete('ssss');
+
+                work.push({
+                    current_working,
+                    year,
+                    profile
+                });
+            });
+
+            formData.delete('currently_working[]');
+            formData.delete('work_experience[]');
+            formData.delete('work_profile[]');
+
+
+
+            // Append collected data to formData
+            formData.append("work_experience_details", JSON.stringify(work));
+
+            resolve();
+        });
+    }
 
 
 

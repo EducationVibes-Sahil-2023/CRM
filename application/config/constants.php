@@ -263,6 +263,9 @@ define('STU', '5');
 define('APPLICATION_STAGE', '6');
 define('OFFER_LETTER', '7');
 define('PRE_DEPOSITE', '8');
+define('FUNDS', '9');
+define('INTERVIEW', '10');
+define('CONFORMATION', '11');
 
 
 
@@ -291,6 +294,23 @@ define('OFFER_LETTER_UNCONDITIONAL', '18');
 define('PRE_DEPOSITE_PENDING', '19');
 define('PRE_DEPOSITE_EXPECTED', '20');
 define('PRE_DEPOSITE_COMPLETED', '21');
+
+
+define('FUNDS_IN_PROGRESS', '22');
+define('FUNDS_IN_SUFFICIENT', '23');
+define('FUNDS_COMPLETED', '24');
+
+
+define('INTERVIEW_IN_PROGRESS', '25');
+define('INTERVIEW_NOT_REQUIRED', '26');
+define('INTERVIEW_SCHEDULED', '27');
+define('INTERVIEW_COMPLETED', '28');
+
+
+define('CONFORMATION_PENDING', '29');
+define('CONFORMATION_APPLIED', '30');
+define('CONFORMATION_RECEIVED', '31');
+define('CONFORMATION_NOT_REQURIED', '32');
 
 
 
