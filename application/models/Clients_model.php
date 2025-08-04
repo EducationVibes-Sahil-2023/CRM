@@ -2117,8 +2117,7 @@ class Clients_model extends App_Model
     //     $this->db->join(
     //         db_prefix() . 'clients_exam_status',
     //         db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
-    //             db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id AND' .
-    //             db_prefix() . 'clients_exam_status.exam_date = ' . db_prefix() . 'clients_exam.exam_date',
+    //             db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id',
     //         "left"
     //     );
 
@@ -2127,8 +2126,8 @@ class Clients_model extends App_Model
 
     //     return  $this->db->get()->result_array();
     // }
-
-    public function entrance_exams($id)
+    
+     public function entrance_exams($id)
     {
         $clients_exam = db_prefix() . "clients_exam";
         $exam_batch = db_prefix() . "exam_batch";

@@ -7064,9 +7064,8 @@ class Clients extends AdminController
     //         "legalization" => $legalization
     //     ];
     // }
-
-
-    private function entrance_exam()
+    
+       private function entrance_exam()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return [
