@@ -39,9 +39,13 @@ $sIndexColumn = 'userid';
 $sTable       = db_prefix() . 'clients';
 $where        = [];
 // Add blank where all filter can be stored
+
 $filter = [];
 
+if (!is_admin() && isset($user_lead_type) && $user_lead_type != $this->ci->db->escape_str($this->ci->input->post('lead_type'))[0]) {
 
+    $where[]        = " AND 1 = 2 ";
+}
 
 $aColumns = [];
 if (is_admin() || is_postSale()) {

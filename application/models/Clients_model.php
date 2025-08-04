@@ -2099,32 +2099,67 @@ class Clients_model extends App_Model
         return $this->s_db->get('universities')->result_array();
     }
 
-    public function entrance_exams($id)
-    {
-        $this->db->select([
-            db_prefix() . "clients_exam.*",
-            db_prefix() . "university_exams.name AS exam_name",
-            db_prefix() . "exam_batch.name AS batch_name",
-            db_prefix() . "exam_batch.university_name",
-            db_prefix() . "clients_exam_status.status AS status",
-            db_prefix() . "clients_exam.m_university_name AS m_university_name"
+    // public function entrance_exams($id)
+    // {
+    //     $this->db->select([
+    //         db_prefix() . "clients_exam.*",
+    //         db_prefix() . "university_exams.name AS exam_name",
+    //         db_prefix() . "exam_batch.name AS batch_name",
+    //         db_prefix() . "exam_batch.university_name",
+    //         db_prefix() . "clients_exam_status.status AS status",
+    //         db_prefix() . "clients_exam.m_university_name AS m_university_name"
 
+    //     ]);
+
+    //     $this->db->from(db_prefix() . 'clients_exam');
+    //     $this->db->join(db_prefix() . 'exam_batch', db_prefix() . 'exam_batch.id = ' . db_prefix() . 'clients_exam.batch_id', "left");
+    //     $this->db->join(db_prefix() . 'university_exams', db_prefix() . 'university_exams.id = ' . db_prefix() . 'clients_exam.exam_id', "left");
+    //     $this->db->join(
+    //         db_prefix() . 'clients_exam_status',
+    //         db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
+    //             db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id',
+    //         "left"
+    //     );
+
+    //     $this->db->where(db_prefix() . "clients_exam.client_id", $id);
+    //     $this->db->group_by(db_prefix() . "clients_exam.id");
+
+    //     return  $this->db->get()->result_array();
+    // }
+    
+     public function entrance_exams($id)
+    {
+        $clients_exam = db_prefix() . "clients_exam";
+        $exam_batch = db_prefix() . "exam_batch";
+        $university_exams = db_prefix() . "university_exams";
+        $exam_status = db_prefix() . "clients_exam_status";
+
+        $this->db->select([
+            "$clients_exam.*",
+            "$university_exams.name AS exam_name",
+            "$exam_batch.name AS batch_name",
+            "$exam_batch.university_name",
+            "$exam_status.status AS status",
+            "$clients_exam.m_university_name"
         ]);
 
-        $this->db->from(db_prefix() . 'clients_exam');
-        $this->db->join(db_prefix() . 'exam_batch', db_prefix() . 'exam_batch.id = ' . db_prefix() . 'clients_exam.batch_id', "left");
-        $this->db->join(db_prefix() . 'university_exams', db_prefix() . 'university_exams.id = ' . db_prefix() . 'clients_exam.exam_id', "left");
+        $this->db->from($clients_exam);
+        $this->db->join("$exam_batch", "$exam_batch.id = $clients_exam.batch_id", "left");
+        $this->db->join("$university_exams", "$university_exams.id = $clients_exam.exam_id", "left");
+
+        // NOTE: Removed exam_date from join for better reliability unless necessary
         $this->db->join(
-            db_prefix() . 'clients_exam_status',
-            db_prefix() . 'clients_exam_status.exam_id = ' . db_prefix() . 'clients_exam.exam_id AND ' .
-                db_prefix() . 'clients_exam_status.client_id = ' . db_prefix() . 'clients_exam.client_id',
+            "$exam_status",
+            "$exam_status.exam_id = $clients_exam.exam_id 
+         AND $exam_status.client_id = $clients_exam.client_id
+         AND $exam_status.exam_date = $clients_exam.exam_date",
             "left"
         );
 
-        $this->db->where(db_prefix() . "clients_exam.client_id", $id);
-        $this->db->group_by(db_prefix() . "clients_exam.id");
+        $this->db->where("$clients_exam.client_id", $id);
+        $this->db->group_by("$clients_exam.id");
 
-        return  $this->db->get()->result_array();
+        return $this->db->get()->result_array();
     }
 
     public function get_university_data($university = [])

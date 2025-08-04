@@ -479,7 +479,7 @@ function syncExcel_new($id = "")
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = (c.applicant_stage)
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = (c.applicant_sub_status)
                 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
-                LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid
+                LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid and u.status=1
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status

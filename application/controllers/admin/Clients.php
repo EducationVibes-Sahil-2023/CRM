@@ -6696,9 +6696,162 @@ class Clients extends AdminController
         }
     }
 
-    private function entrance_exam()
+    // private function entrance_exam()
+    // {
+    //     // Ensure the request is a POST request
+    //     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    //         return [
+    //             'resp_code' => 'ERR',
+    //             'resp_desc' => 'Invalid request method',
+    //         ];
+    //     }
+
+    //     // Retrieve input values
+    //     $client_id = $this->input->post("client_id");
+    //     $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
+    //     $entrance_exam_data = $this->input->post("entrance_exam");
+    //     $legalization =  $this->clients_model->legalization_data($client_id);
+
+    //     // Validate client_id
+    //     if (empty($client_id)) {
+    //         return [
+    //             "resp_code" => "ERR",
+    //             "resp_desc" => "Client ID is required",
+    //         ];
+    //     }
+
+    //     // Validate entrance exam data
+    //     if (empty($entrance_exam_data)) {
+    //         return [
+    //             "resp_code" => "ERR",
+    //             "resp_desc" => "No entrance exam data received",
+    //         ];
+    //     }
+
+    //     // Decode entrance exam data properly
+    //     $entrance_exam_data = json_decode($entrance_exam_data, true);
+
+    //     if (!is_array($entrance_exam_data)) {
+    //         return [
+    //             "resp_code" => "ERR",
+    //             "resp_desc" => "Invalid entrance exam data format",
+    //         ];
+    //     }
+
+    //     $update_data = [];
+    //     $insert_data = [];
+
+    //     foreach ($entrance_exam_data as $exam) {
+    //         // Validate required fields
+    //         if ($exam["manually"] == 1) {
+    //             if (empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
+    //                 return [
+    //                     "resp_code" => "ERR",
+    //                     "resp_desc" => "Missing required entrance exam fields",
+    //                 ];
+    //             }
+    //         } else {
+    //             if (empty($exam["batch_id"]) || empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
+    //                 return [
+    //                     "resp_code" => "ERR",
+    //                     "resp_desc" => "Missing required entrance exam fields",
+    //                 ];
+    //             }
+    //         }
+
+    //         $batch_id = $exam["batch_id"];
+    //         $exam_id = $exam["exam_id"];
+    //         $status = $exam["status"];
+    //         $exam_date = $exam["exam_date"];
+
+    //         // Check if the record exists
+    //         $existing_exam = $this->db->get_where(db_prefix() . "clients_exam_status", [
+    //             "exam_id" => $exam_id,
+    //             "client_id" => $client_id,
+    //             "batch_id" => $batch_id,
+    //         ])->row_array();
+
+    //         if ($existing_exam) {
+    //             // Prepare data for batch update
+    //             $update_data[] = [
+    //                 "id" => $existing_exam["id"],
+    //                 "exam_id" => $exam_id,
+    //                 "client_id" => $client_id,
+    //                 "batch_id" => $batch_id,
+    //                 "status" => $status,
+    //             ];
+    //         } else {
+    //             // Prepare data for batch insert
+    //             $insert_data[] = [
+    //                 "exam_id" => $exam_id,
+    //                 "client_id" => $client_id,
+    //                 "batch_id" => $batch_id,
+    //                 "status" => $status,
+    //             ];
+    //         }
+
+    //         $client_exam_data = [
+    //             "client_id"  => $client_id,
+    //             "exam_date"  => $exam_date,
+    //             "exam_id"    => $exam_id,
+    //             "batch_id"   => $batch_id,
+    //             "m_university_name" => $exam["m_university_name"],
+    //             "m_university_id" => $exam["m_university_id"]
+    //         ];
+
+    //         if (!empty($exam["manually"]) == 1) {
+
+    //             $this->db->where(array("batch_id" => $batch_id, "client_id" => $client_id))
+    //                 ->delete(db_prefix() . 'clients_exam');
+
+    //             // Insert data into the database
+    //             if (!empty($client_exam_data)) {
+    //                 $this->db->insert(db_prefix() . 'clients_exam', $client_exam_data);
+    //             }
+    //         }
+    //     }
+
+
+
+    //     if (!empty($update_data)) {
+    //         $this->db->update_batch(db_prefix() . "clients_exam_status", $update_data, "id");
+    //     }
+
+    //     // Execute batch insert
+    //     if (!empty($insert_data)) {
+    //         $this->db->insert_batch(db_prefix() . "clients_exam_status", $insert_data);
+    //     }
+
+    //     // Update client applicant status
+    //     $update_client_data = [
+    //         "applicant_status" => 0,
+    //         "applicant_stage" => LEGALIZATION,
+    //         "applicant_sub_status" => LEGALIZATION_PENDING,
+    //     ];
+
+
+
+    //     $this->db->where("userid", $client_id);
+    //     $this->db->update(db_prefix() . 'clients', $update_client_data);
+
+    //     // Update applicant tracker stages
+    //     $this->update_applicant_tracker_stages($client_id, $tracker_id);
+    //     $this->db->insert(db_prefix() . 'application_activity_log', array(
+    //         "description" => "Entrance Exam updated by " . get_staff_full_name(get_staff_user_id()),
+    //         "date"        => date('Y-m-d H:i:s'),
+    //         "staffid"     => get_staff_user_id(),
+    //         "client_id"   => $client_id
+    //     ));
+
+    //     return [
+    //         "resp_code" => "RCS",
+    //         "resp_desc" => "Entrance exam data processed successfully",
+    //         "legalization" => $legalization
+    //     ];
+    // }
+    
+       private function entrance_exam()
     {
-        // Ensure the request is a POST request
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return [
                 'resp_code' => 'ERR',
@@ -6706,13 +6859,10 @@ class Clients extends AdminController
             ];
         }
 
-        // Retrieve input values
         $client_id = $this->input->post("client_id");
-        $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
-        $entrance_exam_data = $this->input->post("entrance_exam");
-        $legalization =  $this->clients_model->legalization_data($client_id);
+        $tracker_id = $this->input->post("tracker_id") ?? 1;
+        $entrance_exam_raw = $this->input->post("entrance_exam");
 
-        // Validate client_id
         if (empty($client_id)) {
             return [
                 "resp_code" => "ERR",
@@ -6720,16 +6870,14 @@ class Clients extends AdminController
             ];
         }
 
-        // Validate entrance exam data
-        if (empty($entrance_exam_data)) {
+        if (empty($entrance_exam_raw)) {
             return [
                 "resp_code" => "ERR",
                 "resp_desc" => "No entrance exam data received",
             ];
         }
 
-        // Decode entrance exam data properly
-        $entrance_exam_data = json_decode($entrance_exam_data, true);
+        $entrance_exam_data = json_decode($entrance_exam_raw, true);
 
         if (!is_array($entrance_exam_data)) {
             return [
@@ -6738,114 +6886,92 @@ class Clients extends AdminController
             ];
         }
 
-        $update_data = [];
-        $insert_data = [];
+        // Delete old exam status and manual data for this client
+        $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam_status');
+        $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam');
+
+        $status_insert_data = [];
+        $manual_insert_data = [];
 
         foreach ($entrance_exam_data as $exam) {
-            // Validate required fields
-            if ($exam["manually"] == 1) {
-                if (empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
+            $exam_id  = (int)($exam['exam_id'] ?? 0);
+            $status   = trim($exam['status'] ?? '');
+            $exam_date = $exam['exam_date'] ?? null;
+            $batch_id = isset($exam['batch_id']) ? (int)$exam['batch_id'] : 0;
+            $is_manual = isset($exam['manually']) && (int)$exam['manually'] === 1;
+
+            if ($is_manual) {
+                if (empty($exam_id) || empty($status)) {
                     return [
                         "resp_code" => "ERR",
-                        "resp_desc" => "Missing required entrance exam fields",
+                        "resp_desc" => "Missing required fields for manual exam entry",
                     ];
                 }
             } else {
-                if (empty($exam["batch_id"]) || empty($exam["client_id"]) || empty($exam["exam_id"]) || empty($exam["status"])) {
+                if (empty($exam_id) || empty($status) || empty($batch_id)) {
                     return [
                         "resp_code" => "ERR",
-                        "resp_desc" => "Missing required entrance exam fields",
+                        "resp_desc" => "Missing required fields for exam entry",
                     ];
                 }
             }
 
-            $batch_id = $exam["batch_id"];
-            $exam_id = $exam["exam_id"];
-            $status = $exam["status"];
-            $exam_date = $exam["exam_date"];
-
-            // Check if the record exists
-            $existing_exam = $this->db->get_where(db_prefix() . "clients_exam_status", [
-                "exam_id" => $exam_id,
-                "client_id" => $client_id,
-                "batch_id" => $batch_id,
-            ])->row_array();
-
-            if ($existing_exam) {
-                // Prepare data for batch update
-                $update_data[] = [
-                    "id" => $existing_exam["id"],
-                    "exam_id" => $exam_id,
-                    "client_id" => $client_id,
-                    "batch_id" => $batch_id,
-                    "status" => $status,
-                ];
-            } else {
-                // Prepare data for batch insert
-                $insert_data[] = [
-                    "exam_id" => $exam_id,
-                    "client_id" => $client_id,
-                    "batch_id" => $batch_id,
-                    "status" => $status,
-                ];
-            }
-
-            $client_exam_data = [
-                "client_id"  => $client_id,
-                "exam_date"  => $exam_date,
-                "exam_id"    => $exam_id,
-                "batch_id"   => $batch_id,
-                "m_university_name" => $exam["m_university_name"],
-                "m_university_id" => $exam["m_university_id"]
+            // Collect for status insert
+            $status_insert_data[] = [
+                'exam_id' => $exam_id,
+                'client_id' => $client_id,
+                'batch_id' => $batch_id,
+                'status' => $status,
+                "exam_date" => $exam_date,
             ];
 
-            if (!empty($exam["manually"]) == 1) {
-
-                $this->db->where(array("batch_id" => $batch_id, "client_id" => $client_id))
-                    ->delete(db_prefix() . 'clients_exam');
-
-                // Insert data into the database
-                if (!empty($client_exam_data)) {
-                    $this->db->insert(db_prefix() . 'clients_exam', $client_exam_data);
-                }
+            // If manual, collect for manual insert
+            if ($is_manual) {
+                $manual_insert_data[] = [
+                    "client_id" => $client_id,
+                    "exam_date" => $exam_date,
+                    "exam_id" => $exam_id,
+                    "batch_id" => $batch_id,
+                    "m_university_name" => $exam["m_university_name"] ?? '',
+                    "m_university_id" => $exam["m_university_id"] ?? ''
+                ];
             }
         }
 
-
-
-        if (!empty($update_data)) {
-            $this->db->update_batch(db_prefix() . "clients_exam_status", $update_data, "id");
+        // Insert all fresh status records
+        if (!empty($status_insert_data)) {
+            $this->db->insert_batch(db_prefix() . 'clients_exam_status', $status_insert_data);
         }
 
-        // Execute batch insert
-        if (!empty($insert_data)) {
-            $this->db->insert_batch(db_prefix() . "clients_exam_status", $insert_data);
+        // Insert all manual records
+        if (!empty($manual_insert_data)) {
+            $this->db->insert_batch(db_prefix() . 'clients_exam', $manual_insert_data);
         }
 
-        // Update client applicant status
-        $update_client_data = [
+        // Update applicant status
+        $this->db->where("userid", $client_id);
+        $this->db->update(db_prefix() . 'clients', [
             "applicant_status" => 0,
             "applicant_stage" => LEGALIZATION,
             "applicant_sub_status" => LEGALIZATION_PENDING,
-        ];
+        ]);
 
-
-
-        $this->db->where("userid", $client_id);
-        $this->db->update(db_prefix() . 'clients', $update_client_data);
-
-        // Update applicant tracker stages
+        // Update tracker and log
         $this->update_applicant_tracker_stages($client_id, $tracker_id);
-        $this->db->insert(db_prefix() . 'application_activity_log', array(
+
+        $this->db->insert(db_prefix() . 'application_activity_log', [
             "description" => "Entrance Exam updated by " . get_staff_full_name(get_staff_user_id()),
-            "date"        => date('Y-m-d H:i:s'),
-            "staffid"     => get_staff_user_id(),
-            "client_id"   => $client_id
-        ));
+            "date" => date('Y-m-d H:i:s'),
+            "staffid" => get_staff_user_id(),
+            "client_id" => $client_id
+        ]);
+
+        // Fetch updated legalization status
+        $legalization = $this->clients_model->legalization_data($client_id);
 
         return [
             "resp_code" => "RCS",
-            "resp_desc" => "Entrance exam data processed successfully",
+            "resp_desc" => "Entrance exam data updated successfully",
             "legalization" => $legalization
         ];
     }
