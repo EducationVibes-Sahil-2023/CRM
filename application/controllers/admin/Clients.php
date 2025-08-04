@@ -7064,8 +7064,8 @@ class Clients extends AdminController
     //         "legalization" => $legalization
     //     ];
     // }
-    
-       private function entrance_exam()
+
+    private function entrance_exam()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             return [
@@ -8314,6 +8314,12 @@ class Clients extends AdminController
     {
         $data = $_POST;
         $client_id = $_POST["client_id"];
+        $description = !empty($_POST["description"]) ? $_POST["description"] : '';
+        unset($data["description"]);
+        $this->db->where('userid', $client_id);
+        $this->db->update(db_prefix() . 'clients', array("orignal_doc_remark" => $description));
+
+
         $response = $this->clients_model->update_documents($data, $client_id);
         applicant_last_update($client_id);
         echo json_encode($response);
