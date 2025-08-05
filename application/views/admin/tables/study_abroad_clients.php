@@ -192,7 +192,8 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
     'LEFT JOIN ' . db_prefix() . 'ticket_status ts ON ts.id=td.ticket_status',
     'LEFT JOIN ' . db_prefix() . 'departure_location dl ON dl.id=td.departure_location',
     'LEFT JOIN ' . db_prefix() . 'ticket_batch tb ON tb.id=td.batch_id',
-    'LEFT JOIN ' . db_prefix() . 'university_partner u_p ON u_p.id=' . db_prefix() . 'client_university_shortlisting.partner'
+    'LEFT JOIN ' . db_prefix() . 'university_partner u_p ON u_p.id=' . db_prefix() . 'client_university_shortlisting.partner',
+    'LEFT JOIN ' . db_prefix() . 'client_university_pendency c_u_p ON (c_u_p.client_id=' . db_prefix() . 'client_university_shortlisting.client_id and c_u_p.shortlisting_id=' . db_prefix() . 'client_university_shortlisting.id and c_u_p.tracker_id = ' . db_prefix() . 'client_university_shortlisting.tracker_id)',
 
 ];
 
