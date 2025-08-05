@@ -118,8 +118,20 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
         <?php
 
-
-        if ($client_infomation->active == 4 || $client_infomation->active == 2) {
+if($selected_university_shortlisting["application_status"]!=1)
+{
+    ?>
+    <section>
+                    <fieldset id="refund_stage">
+                         <h2 class="fs-title text-center mb-4"><?=($selected_university_shortlisting["application_status"] == 2)?"Application Hold":"Application Closed"?></h2>
+                        <div class="row margin-top">
+                            </fieldset>
+                            </section>
+                        
+    <?php
+  
+}
+        if ($client_infomation->active == 4 || $client_infomation->active == 2 || $selected_university_shortlisting["application_status"]!=1) {
         ?>
             <?php if ($client_infomation->active == 4) { ?>
                 <section>

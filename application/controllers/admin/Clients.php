@@ -5970,9 +5970,15 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
             $stage_data = [
                 "applicant_stage"      => FUNDS,
                 "applicant_sub_status" => FUNDS_IN_PROGRESS,
-                "pre_deposite_status"  => 1,
             ];
             // Default update if not saving as final stage
+            
+             $this->db->where([
+                "userid" => $client_id,
+            ])->update(db_prefix() . 'clients', $stage_data);
+            
+             $stage_data["pre_deposite_status"]  = 1;
+            
             $this->db->where([
                 "client_id" => $client_id,
                 "id"        => $shortlisting_id,
@@ -6014,13 +6020,16 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
                     "applicant_sub_status" => FUNDS_IN_PROGRESS
                 ];
 
-                if (!empty($_POST["funds_status"]) ? $_POST["funds_status"] : ''    == '1') {
-                    $stage_data["applicant_sub_status"] = FUNDS_IN_PROGRESS;
-                } else if (!empty($_POST["funds_status"]) ? $_POST["funds_status"] : ''    == '2') {
-                    $stage_data["applicant_sub_status"] = FUNDS_COMPLETED;
-                } else {
-                    $stage_data["applicant_sub_status"] = FUNDS_IN_SUFFICIENT;
-                }
+           $funds_status = isset($_POST["funds_status"]) ? $_POST["funds_status"] : '';
+
+            if ($funds_status == '1') {
+                $stage_data["applicant_sub_status"] = FUNDS_IN_PROGRESS;
+            } elseif ($funds_status == '2') {
+                $stage_data["applicant_sub_status"] = FUNDS_COMPLETED;
+            } else {
+                $stage_data["applicant_sub_status"] = FUNDS_IN_SUFFICIENT;
+            }
+
 
 
                 $this->db->where([
@@ -6041,8 +6050,8 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
 
             // Handle applicant stage status
             $stage_data = [
-                "applicant_stage"      => INVITATION,
-                "applicant_sub_status" => INVITATION_PENDING
+                "applicant_stage"      => INTERVIEW,
+                "applicant_sub_status" => INTERVIEW_IN_PROGRESS
             ];
             $this->db->where([
                 "client_id" => $client_id,
@@ -6100,7 +6109,7 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
 
 
             $stage_data = [
-                "applicant_stage"      => INTERVIEW
+                "applicant_stage"=> INTERVIEW
             ];
 
             if ($save_status == 1) {
