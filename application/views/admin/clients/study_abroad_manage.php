@@ -608,6 +608,7 @@ $table_view = array_column(get_view_columns_sa(), null, "id");
          <div class="modal-body">
             <form id="applicant_status_change_form" onsubmit="return false;">
                <input type="hidden" name="userid" value="">
+               <input type="hidden" name="shortlisting_id" value="">
                <input type="hidden" name="status" value="">
 
                <!-- Canceled Comment Section -->

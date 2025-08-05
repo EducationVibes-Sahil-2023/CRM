@@ -584,8 +584,9 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                     <?php if (!empty($offer_letters)): ?>
                                         <?php foreach ($offer_letters as $key => $o_letter):
                                             $file_url_offer_letter = $o_letter['offer_letter'] ?? '';
+                                            $showCondition = 0;
                                         ?>
-                                            <div class="row offer-letter-form">
+                                            <div class="row offer-letter-inner">
                                                 <!-- Offer Date -->
                                                 <div class="col-md-3">
                                                     <?= render_input(
@@ -601,18 +602,22 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                 <div class="col-md-3 form-group">
                                                     <label>Status <small class="text-danger">*</small></label>
                                                     <select name="university_offer_status_<?= $key ?>"
-                                                        class="form-control selectpicker required-check"
+                                                        class="form-control selectpicker required-check offer-status"
                                                         required
                                                         onchange="changeOfferStatus(this)">
                                                         <option value="">Select an option</option>
-                                                        <?php foreach ($offerLetterStatus as $item): ?>
+                                                        <?php foreach ($offerLetterStatus as $item):  if ($item['id'] == ($o_letter['university_offer_status'] ?? '')) {
+                                                                $showCondition = $item['condition_status'];
+                                                            } ?>
                                                             <?php if (!is_array($item)) continue; ?>
                                                             <option
                                                                 data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>"
+                                                                data-condition_status="<?= htmlspecialchars($item['condition_status'] ?? '') ?>"
                                                                 value="<?= htmlspecialchars($item['id']) ?>"
                                                                 <?= ($item['id'] == ($o_letter['university_offer_status'] ?? '')) ? 'selected' : '' ?>>
                                                                 <?= htmlspecialchars($item['name']) ?>
                                                             </option>
+
                                                         <?php endforeach; ?>
                                                     </select>
                                                 </div>
@@ -638,9 +643,24 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                         </div>
                                                     <?php endif; ?>
                                                 </div>
-
+                                                <div class="col-md-2 offer-letter-div-status <?= !empty($showCondition) && $showCondition == 1 ? '' : 'hide' ?>">
+                                                    <?= render_select(
+                                                        "offer_pendency_status_{$o_letter['id']}",
+                                                        $pendency_status,
+                                                        ['id', 'name'],
+                                                        "Offer Pendency <small class='text-danger'>*</small>",
+                                                        [isset($o_letter['condition_status']) ? $o_letter['condition_status'] : ''],
+                                                        [
+                                                            "required" => "required",
+                                                            "required-check" => "required-check",
+                                                        ],
+                                                        [],
+                                                        "",
+                                                        "condition-status"
+                                                    ) ?>
+                                                </div>
                                                 <!-- Add/Remove Buttons -->
-                                                <div class="col-md-3">
+                                                <div class="col-md-1">
                                                     <label>&nbsp;</label>
                                                     <p class="text-right">
                                                         <?php if ($key == 0): ?>
@@ -656,9 +676,9 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                 </div>
 
                                                 <!-- Condition -->
-                                                <div class="col-md-12 form-group condition_div">
+                                                <div class="col-md-12 form-group condition_div offer-letter-div <?= !empty($showCondition) && $showCondition == 1 ? '' : 'hide' ?>">
                                                     <label>Condition</label>
-                                                    <textarea rows="4"
+                                                    <textarea rows=" 4"
                                                         class="form-control"
                                                         name="remark_offer_letter[]"><?= trim($o_letter['conditional_notes'] ?? '') ?></textarea>
                                                 </div>
@@ -666,7 +686,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                         <?php endforeach; ?>
                                     <?php else: ?>
                                         <!-- Blank default row -->
-                                        <div class="row offer-letter-form">
+                                        <div class="row offer-letter-inner">
                                             <div class="col-md-3">
                                                 <?= render_input(
                                                     "offer_date[]",
@@ -680,13 +700,13 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                             <div class="col-md-3 form-group">
                                                 <label>Status <small class="text-danger">*</small></label>
                                                 <select name="university_offer_status[]"
-                                                    class="form-control selectpicker required-check"
+                                                    class="form-control selectpicker required-check offer-status"
                                                     required
                                                     onchange="changeOfferStatus(this)">
                                                     <option value="">Select an option</option>
                                                     <?php foreach ($offerLetterStatus as $item): ?>
                                                         <?php if (!is_array($item)) continue; ?>
-                                                        <option data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>" value="<?= htmlspecialchars($item['id']) ?>">
+                                                        <option data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>" data-condition_status="<?= htmlspecialchars($item['condition_status'] ?? '') ?>" value="<?= htmlspecialchars($item['id']) ?>">
                                                             <?= htmlspecialchars($item['name']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
@@ -702,8 +722,23 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                                                     accept=".pdf,image/*"
                                                     required required-check>
                                             </div>
-
-                                            <div class="col-md-3">
+                                            <div class="col-md-2 offer-letter-div-status hide">
+                                                <?= render_select(
+                                                    "offer_pendency_status",
+                                                    $pendency_status,
+                                                    ['id', 'name'],
+                                                    "Offer Pendency <small class='text-danger'>*</small>",
+                                                    [],
+                                                    [
+                                                        "required" => "required",
+                                                        "required-check" => "required-check",
+                                                    ],
+                                                    [],
+                                                    "",
+                                                    "condition-status"
+                                                ) ?>
+                                            </div>
+                                            <div class="col-md-1">
                                                 <label>&nbsp;</label>
                                                 <p class="text-right">
                                                     <button class="col-md-2 add_document add_university_btn pull-right" type="button" onclick="addofferLetter(this)">
@@ -1859,10 +1894,12 @@ if (empty($staffData["post_sales"]) && !is_admin()):
             try {
                 let offer_letter_array = [];
 
-                $("#offer-letter-form div.offer-letter-form").each(function(index) {
+                $("#offer-letter-form div.offer-letter-inner").each(function(index) {
                     let offer_date = $(this).find("input[type='date']").val() || '';
-                    let university_offer_status = $(this).find("select.selectpicker").val() || '';
-                    let selectedOption = $(this).find("select.selectpicker option:selected");
+                    let university_offer_status = $(this).find("select.selectpicker.offer-status").val() || '';
+                    let condition_status = $(this).find("select.selectpicker.condition-status").val() || '';
+
+                    let selectedOption = $(this).find("select.selectpicker.offer-status option:selected");
                     let upload_status = selectedOption.data('upload_status') || '';
                     let offer_letter = $(this).find("input[type='file']")[0];
                     let offer_letter_url = $(this).find("input[type='file']").data("fileurl") || '';
@@ -1881,7 +1918,8 @@ if (empty($staffData["post_sales"]) && !is_admin()):
                         university_offer_status: university_offer_status,
                         offer_letter_url: offer_letter_url,
                         remark: remark,
-                        upload_status: upload_status
+                        upload_status: upload_status,
+                        condition_status: condition_status
                     });
                 });
 
@@ -2534,20 +2572,35 @@ if (empty($staffData["post_sales"]) && !is_admin()):
     }
 
     function changeOfferStatus(selectElement) {
+        const $select = $(selectElement);
         const selectedOption = selectElement.options[selectElement.selectedIndex];
         const upload_status = selectedOption.dataset.upload_status;
+        const condition_status = selectedOption.dataset.condition_status;
 
-        console.log('upload_status:', upload_status);
+        const $offerContainer = $select.closest(".offer-letter-inner");
 
-        if (upload_status == '1') {
-            $(".offer-letter-div").removeClass("hide");
-            $(".offer-letter-div").val('');
+        // Clear inputs, selects, and textareas
+        $offerContainer.find("input,textarea").val('');
+
+        // Handle upload status (show offer letter div if needed)
+        if (upload_status === '1') {
+            $offerContainer.find(".offer-letter-div").removeClass("hide");
         } else {
-            $(".offer-letter-div").addClass("hide");
-            $(".offer-letter-div").val('');
+            $offerContainer.find(".offer-letter-div").addClass("hide");
+        }
+
+        // Handle condition status (show condition div if needed)
+        if (condition_status === '1') {
+            $offerContainer.find(".condition_div").removeClass("hide");
+            $offerContainer.find(".offer-letter-status-div").removeClass("hide");
+
+        } else {
+            $offerContainer.find(".condition_div").addClass("hide");
+            $offerContainer.find(".offer-letter-status-div").addClass("hide");
 
         }
     }
+
 
     function renderInput(name, labelHTML, value = '', type = 'text') {
         return `
@@ -2572,78 +2625,101 @@ if (empty($staffData["post_sales"]) && !is_admin()):
     }
 
     function removeOfferLetter(event) {
-        $(event).parents(".offer-letter-form").remove();
+        $(event).parents(".offer-letter-div").remove();
     }
 
-    function addofferLetter() {
-        const offerLetterHTML = `
-        <div class="row offer-letter-form">
-            <!-- Offer Date -->
-            <div class="col-md-3">
-                <?= render_input(
-                    'offer_date_' . time(),
-                    "Offer Letter Receiving <small class='text-danger'>*</small>",
-                    $o_letter['receving_date'] ?? '',
-                    'date',
-                    ['required-check' => 'required-check', 'required' => 'required']
-                ); ?>
+    const offerLetterOptions = `<?php
+                                foreach ($offerLetterStatus as $item) {
+                                    if (!is_array($item)) continue;
+                                    echo '<option data-upload_status="' . htmlspecialchars($item['upload_status'] ?? '') . '" data-condition_status="' . htmlspecialchars($item['condition_status'] ?? '') . '" value="' . htmlspecialchars($item['id']) . '">' . htmlspecialchars($item['name']) . '</option>';
+                                }
+                                ?>`;
 
+    const pendencyOptions = `<?php
+                                foreach ($pendency_status as $p) {
+                                    echo '<option value="' . htmlspecialchars($p['id']) . '">' . htmlspecialchars($p['name']) . '</option>';
+                                }
+                                ?>`;
+
+    function addofferLetter() {
+        const timestamp = Date.now(); // unique identifier instead of PHP's time()
+
+        const offerLetterHTML = `
+        <div class="row offer-letter-inner">
+            <!-- Offer Date -->
+            <div class="col-md-3 form-group">
+                <label for="offer_date_${timestamp}">
+                    Offer Letter Receiving <small class="text-danger">*</small>
+                </label>
+                <input type="date" class="form-control required-check" name="offer_date_${timestamp}" required />
             </div>
 
-         <div class="col-md-3 form-group">
-    <label for="university_offer_status">
-        Status <small class="text-danger">*</small>
-    </label>
-    <select
-        name="university_offer_status_<?= time() ?>"
-        class="form-control selectpicker required-check"
-        required
-        onchange="changeOfferStatus(this)">
-        <option value="">Select an option</option>
-        <?php foreach ($offerLetterStatus as $item): ?>
-            <?php if (!is_array($item)) continue; ?>
-            <option
-                data-upload_status="<?= htmlspecialchars($item['upload_status'] ?? '') ?>"
-                value="<?= htmlspecialchars($item['id']) ?>">
-                <?= htmlspecialchars($item['name']) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-</div>
+            <!-- Offer Status -->
+            <div class="col-md-3 form-group">
+                <label for="university_offer_status_${timestamp}">
+                    Status <small class="text-danger">*</small>
+                </label>
+                <select
+                    name="university_offer_status_${timestamp}"
+                    class="form-control selectpicker required-check offer-status"
+                    required
+                    onchange="changeOfferStatus(this)">
+                       ${offerLetterOptions}
+                </select>
+            </div>
 
-
+            <!-- Offer Upload -->
             <div class="col-md-3 offer-letter-div hide form-group">
-                <label for="university_offer_letter">
+                <label for="offer_letter_${timestamp}">
                     Offer Upload <small class="text-danger">*</small>
                 </label>
                 <input
                     type="file"
-                    data-fileUrl=""
-                    class="form-control"
-                    name="offer_letter_<?= time() ?>"
-                    accept=".pdf,image/*" required-check required>
+                    class="form-control required-check"
+                    name="offer_letter_${timestamp}"
+                    accept=".pdf,image/*"
+                    required />
             </div>
 
-            <div class="col-md-3">
-                <label>&nbsp;</label>
-               <p class="text-right"> <button class="btn btn-danger add_document add_university_btn" type="button" onclick="removeOfferLetter(this)">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                </button></p>
+            <!-- Offer Pendency -->
+            <div class="col-md-2 form-group offer-letter-div-status hide">
+                <label for="offer_pendency_status_${timestamp}">
+                    Offer Pendency <small class="text-danger">*</small>
+                </label>
+                <select
+                    name="offer_pendency_status_${timestamp}"
+                    class="form-control selectpicker required-check condition-status"
+                    required>
+    ${pendencyOptions}
+                </select>
             </div>
+
+            <!-- Remove button -->
+            <div class="col-md-1 form-group">
+                <label>&nbsp;</label>
+                <p class="text-right">
+                    <button class="btn btn-danger" type="button" onclick="removeOfferLetter(this)">
+                        <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                </p>
+            </div>
+
+            <!-- Condition Textarea -->
             <div class="col-md-12 form-group condition_div offer-letter-div hide">
-                <label>Condition</label>
+                <label for="remark_offer_letter_${timestamp}">Condition</label>
                 <textarea
                     rows="4"
                     class="form-control"
-                    id="remark_offer_letter"
-                    name="remark_offer_letter"></textarea>
+                    name="remark_offer_letter_${timestamp}"
+                    id="remark_offer_letter_${timestamp}"></textarea>
             </div>
         </div>
     `;
 
-        $('#offer-letter-form').append(offerLetterHTML); // Append to a container in your HTML
-        $('.selectpicker').selectpicker('refresh'); // If using Bootstrap select
+        $('#offer-letter-form').append(offerLetterHTML);
+        $('.selectpicker').selectpicker('refresh');
     }
+
 
     window.currencyOptions = <?= json_encode($get_currencies) ?>;
     let currencyOptions = '';
