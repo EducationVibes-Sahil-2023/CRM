@@ -905,66 +905,70 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
                                                     <div class="col-md-1">
                                                         <p>&nbsp;</p>
-                                                        <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
-                                                            <i class="fa fa-plus"></i>
-                                                        </button>
+                                                        <?php if ($key == 0) { ?>
+                                                            <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
+                                                                <i class="fa fa-plus"></i>
+                                                            </button>
+                                                        <?php } else { ?>
+                                                            <button type="button" class="btn btn-danger" onclick="$(this).closest('.interview-section-inter').remove()">
+                                                                <i class='fa fa-trash'></i>
+                                                            </button>
+                                                        <?php } ?>
+
                                                     </div>
                                                 </div>
                                             <?php }
                                         } else { ?>
                                             <div class="interview-section-inter mb-3 border p-3 rounded">
-                                                <div class="row">
+
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <label>Interview Status <small class="text-danger">*</small></label>
+                                                        <select name="interview_status" class="form-control selectpicker interview_status" data-live-search="true" data-none-selected-text="Non selected" onchange="changeInterviewStatus(this)" required required-check>
+                                                            <option value="">Select...</option>
+                                                            <?php foreach ($interviewType as $type): ?>
+                                                                <option data-show-status="<?= $type['show_status'] ?>" value="<?= htmlspecialchars($type['id'], ENT_QUOTES, 'UTF-8') ?>">
+                                                                    <?= htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8') ?>
+                                                                </option>
+                                                            <?php endforeach; ?>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="interview-section-hide hide">
                                                     <div class="col-md-3">
-                                                        <div class="form-group">
-                                                            <label>Interview Status <small class="text-danger">*</small></label>
-                                                            <select name="interview_status" class="form-control selectpicker interview_status" data-live-search="true" data-none-selected-text="Non selected" onchange="changeInterviewStatus(this)" required required-check>
-                                                                <option value="">Select...</option>
-                                                                <?php foreach ($interviewType as $type): ?>
-                                                                    <option data-show-status="<?= $type['show_status'] ?>" value="<?= htmlspecialchars($type['id'], ENT_QUOTES, 'UTF-8') ?>">
-                                                                        <?= htmlspecialchars($type['name'], ENT_QUOTES, 'UTF-8') ?>
-                                                                    </option>
-                                                                <?php endforeach; ?>
-                                                            </select>
-                                                        </div>
+                                                        <?= render_input('interview_date[]', "Interview Date <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
                                                     </div>
 
-                                                    <div class="interview-section-hide hide">
-                                                        <div class="col-md-3">
-                                                            <?= render_input('interview_date[]', "Interview Date <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
-                                                        </div>
-
-                                                        <div class="col-md-3">
-                                                            <label>Remark <small class="text-danger">*</small></label>
-                                                            <textarea name="interview_remark[]" class="form-control interview_remark" required></textarea>
-                                                        </div>
-
-                                                        <div class="col-md-2">
-                                                            <?= render_select(
-                                                                'result_status',
-                                                                $interviewResultStatus,
-                                                                ['id', 'name'],
-                                                                "Result <small class='text-danger'>*</small>",
-                                                                '',
-                                                                ['required-check' => 'required-check', 'required' => 'required'],
-                                                                [],
-                                                                '',
-                                                                'result_status'
-                                                            ); ?>
-                                                        </div>
+                                                    <div class="col-md-3">
+                                                        <label>Remark <small class="text-danger">*</small></label>
+                                                        <textarea name="interview_remark[]" class="form-control interview_remark" required></textarea>
                                                     </div>
 
-                                                    <div class="col-md-1">
-                                                        <p>&nbsp;</p>
-                                                        <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
-                                                            <i class="fa fa-plus"></i>
-                                                        </button>
+                                                    <div class="col-md-2">
+                                                        <?= render_select(
+                                                            'result_status',
+                                                            $interviewResultStatus,
+                                                            ['id', 'name'],
+                                                            "Result <small class='text-danger'>*</small>",
+                                                            '',
+                                                            ['required-check' => 'required-check', 'required' => 'required'],
+                                                            [],
+                                                            '',
+                                                            'result_status'
+                                                        ); ?>
                                                     </div>
+                                                </div>
+
+                                                <div class="col-md-1">
+                                                    <p>&nbsp;</p>
+                                                    <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
+                                                        <i class="fa fa-plus"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         <?php } ?>
                                     </div>
-
-
                                 </form>
                             <?php } else if ($track["show_div_name"] == "confirmation_div") { ?>
                                 <form id="confirmation-form" class="form-disabled mb-5" onsubmit="return false;">
