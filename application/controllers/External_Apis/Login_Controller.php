@@ -601,7 +601,7 @@ class Login_Controller extends Api_Controller
 
     public function applicant_sync_excel()
     {
-
+       
         $this->load->helper('google');
 
         // Initialize response

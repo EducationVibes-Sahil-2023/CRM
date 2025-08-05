@@ -1431,7 +1431,7 @@ function check_country_rest($studyCountries)
     return $studyCountries;
 }
 
-function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $stage = "")
+function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $stage = "", $where = [])
 {
     $CI = &get_instance();
 
@@ -1448,12 +1448,17 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
             ->join(db_prefix() . 'applicant_stages', db_prefix() . 'applicant_stages.id = ' . db_prefix() . 'document_upload_type.stages', 'left')
             ->where(db_prefix() . "document_upload_type.country", ""); // Country is empty
 
+
         if (!empty($lead_type)) {
             $CI->db->where(db_prefix() . "document_upload_type.lead_type", $lead_type);
         }
 
         if (!empty($stage)) {
             $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
+        }
+
+        if (!empty($where)) {
+            $CI->db->where($where);
         }
 
         $CI->db->order_by("sequence", "ASC");
@@ -1473,6 +1478,9 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
 
         if (!empty($stage)) {
             $CI->db->where(db_prefix() . "document_upload_type.stages", $stage);
+        }
+        if (!empty($where)) {
+            $CI->db->where($where);
         }
 
         if (!empty($selected_country)) {

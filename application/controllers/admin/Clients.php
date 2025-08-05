@@ -5668,6 +5668,7 @@ class Clients extends AdminController
                 $university_offer_status = $letterData["university_offer_status"] ?? '0';
                 $remark = $letterData["remark"] ?? '';
                 $upload_status = $letterData["upload_status"] ?? '';
+                $condition_status = $letterData["condition_status"] ?? '';
                 $filePath = '';
 
                 try {
@@ -5706,6 +5707,7 @@ class Clients extends AdminController
                         'offer_date'              => $offer_date,
                         'university_offer_status' => $university_offer_status,
                         'conditional_notes'       => $remark,
+                        'condition_status'       => $condition_status,
                         'offer_letter'            => $filePath,
                         'created_at'              => date('Y-m-d H:i:s'),
                         'created_by'              => get_staff_user_id()
