@@ -5267,28 +5267,25 @@ class Clients extends AdminController
             if (!empty($shortlisting_id)) {
 
 
-if ($check_client->tracker_id <= 2) {
-                $this->update_application_processing($client_id);
+                if ($check_client->tracker_id <= 2) {
+                    $this->update_application_processing($client_id);
 
-                $this->db->where([
-                    "client_id" => $client_id,
-                    "id" => $shortlisting_id
-                ]);
-                $this->db->update(db_prefix() . 'client_university_shortlisting', [
-                    "applicant_stage" => ST3,
-                    "applicant_sub_status" => ST3_PENDING
-                ]);
-                 $data['resp_code'] = 'RCS';
-                $data['resp_desc'] = 'University Applied Successfully';
-}
-else
-{
-     $data['resp_code'] = 'RCS';
-                $data['resp_desc'] = 'University Applied Successfully';
-                 echo json_encode($data);
-                return;
-}
-               
+                    $this->db->where([
+                        "client_id" => $client_id,
+                        "id" => $shortlisting_id
+                    ]);
+                    $this->db->update(db_prefix() . 'client_university_shortlisting', [
+                        "applicant_stage" => ST3,
+                        "applicant_sub_status" => ST3_PENDING
+                    ]);
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = 'University Applied Successfully';
+                } else {
+                    $data['resp_code'] = 'RCS';
+                    $data['resp_desc'] = 'University Applied Successfully';
+                    echo json_encode($data);
+                    return;
+                }
             } else {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'No university selected';
@@ -5351,39 +5348,23 @@ else
                     ]);
                 }
             }
-
             $insertData = [];
-            $updateData = [];
+
             foreach ($pendencyArray as $pendency) {
                 if (!empty($pendency["remark"])) {
-                    if (!empty($pendency["id"])) {
-                        $updateData[] = array(
-                            "id" => $pendency["id"],
-                            "remark" => $pendency["remark"],
-                            "tracker_id" => $tracker_id,
-                            "status" => $pendency["status"],
-                            "updated_by" => get_staff_user_id(),
-                            "updated_at" => date('Y-m-d H:i:s'),
-                            "client_id" => $client_id,
-                            "shortlisting_id" => $shortlisting_id
-                        );
-                    } else {
-                        $insertData[] = array(
-                            "remark" => $pendency["remark"],
-                            "tracker_id" => $tracker_id,
-                            "status" => $pendency["status"],
-                            "created_by" => get_staff_user_id(),
-                            "created_at" => date('Y-m-d H:i:s'),
-                            "client_id" => $client_id,
-                            "shortlisting_id" => $shortlisting_id
-                        );
-                    }
+                    $insertData[] = [
+                        "remark" => $pendency["remark"],
+                        "tracker_id" => $tracker_id,
+                        "status" => $pendency["status"],
+                        "created_by" => get_staff_user_id(),
+                        "created_at" => date('Y-m-d H:i:s'),
+                        "client_id" => $client_id,
+                        "shortlisting_id" => $shortlisting_id
+                    ];
                 }
             }
 
-
-
-            // Execute DB update
+            // 1. Execute DB update for shortlisting
             $this->db->where([
                 "client_id" => $client_id,
                 "id"        => $shortlisting_id
@@ -5400,14 +5381,15 @@ else
                 return;
             }
 
-            // Batch insert new pendency records
+            // 2. Delete all old pendencies for this tracker + client + shortlisting
+            $this->db->where('client_id', $client_id)
+                ->where('shortlisting_id', $shortlisting_id)
+                ->where('tracker_id', $tracker_id)
+                ->delete(db_prefix() . 'client_university_pendency');
+
+            // 3. Insert new pendency records only
             if (!empty($insertData)) {
                 $this->db->insert_batch(db_prefix() . 'client_university_pendency', $insertData);
-            }
-
-            // Batch update existing pendency records
-            if (!empty($updateData)) {
-                $this->db->update_batch(db_prefix() . 'client_university_pendency', $updateData, 'id');
             }
 
             if ($save_status == 1) {
@@ -5524,37 +5506,22 @@ else
             ];
 
             $insertData = [];
-            $updateData = [];
+
             foreach ($pendencyArray as $pendency) {
                 if (!empty($pendency["remark"])) {
-                    if (!empty($pendency["id"])) {
-                        $updateData[] = array(
-                            "id" => $pendency["id"],
-                            "remark" => $pendency["remark"],
-                            "tracker_id" => $tracker_id,
-                            "status" => $pendency["status"],
-                            "updated_by" => get_staff_user_id(),
-                            "updated_at" => date('Y-m-d H:i:s'),
-                            "client_id" => $client_id,
-                            "shortlisting_id" => $shortlisting_id
-                        );
-                    } else {
-                        $insertData[] = array(
-                            "remark" => $pendency["remark"],
-                            "tracker_id" => $tracker_id,
-                            "status" => $pendency["status"],
-                            "created_by" => get_staff_user_id(),
-                            "created_at" => date('Y-m-d H:i:s'),
-                            "client_id" => $client_id,
-                            "shortlisting_id" => $shortlisting_id
-                        );
-                    }
+                    $insertData[] = [
+                        "remark" => $pendency["remark"],
+                        "tracker_id" => $tracker_id,
+                        "status" => $pendency["status"],
+                        "created_by" => get_staff_user_id(),
+                        "created_at" => date('Y-m-d H:i:s'),
+                        "client_id" => $client_id,
+                        "shortlisting_id" => $shortlisting_id
+                    ];
                 }
             }
 
-
-
-            // Execute DB update
+            // 1. Execute DB update for shortlisting (assuming $updateArray exists)
             $this->db->where([
                 "client_id" => $client_id,
                 "id"        => $shortlisting_id
@@ -5571,15 +5538,17 @@ else
                 return;
             }
 
-            // Batch insert new pendency records
+            // 2. Delete old pendency records for this client, shortlisting, and tracker
+            $this->db->where('client_id', $client_id)
+                ->where('shortlisting_id', $shortlisting_id)
+                ->where('tracker_id', $tracker_id)
+                ->delete(db_prefix() . 'client_university_pendency');
+
+            // 3. Insert new pendency records
             if (!empty($insertData)) {
                 $this->db->insert_batch(db_prefix() . 'client_university_pendency', $insertData);
             }
 
-            // Batch update existing pendency records
-            if (!empty($updateData)) {
-                $this->db->update_batch(db_prefix() . 'client_university_pendency', $updateData, 'id');
-            }
 
             $this->update_application_processing($client_id);
 
@@ -5809,20 +5778,20 @@ else
                 ]);
                 return;
             }
- $pre_deposite_status_check = $this->db->select('pre_deposite_status, university_name')
-    ->where('client_id', $client_id)
-    ->where('id !=', $shortlisting_id)
-    ->get(db_prefix() . 'client_university_shortlisting')
-    ->row();
+            $pre_deposite_status_check = $this->db->select('pre_deposite_status, university_name')
+                ->where('client_id', $client_id)
+                ->where('id !=', $shortlisting_id)
+                ->get(db_prefix() . 'client_university_shortlisting')
+                ->row();
 
 
-if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposite_status == 1) {
-    $data['resp_code'] = 'ERR';
-    $data['resp_desc'] = $pre_deposite_status_check->university_name . ' already has a pre-deposit. Only one university can have a pre-deposit at a time.';
-    $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
-    echo json_encode($data);
-    return;
-}
+            if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposite_status == 1) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = $pre_deposite_status_check->university_name . ' already has a pre-deposit. Only one university can have a pre-deposit at a time.';
+                $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+                echo json_encode($data);
+                return;
+            }
 
 
             // Default status if not save
@@ -5972,17 +5941,17 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
                 "applicant_sub_status" => FUNDS_IN_PROGRESS,
             ];
             // Default update if not saving as final stage
-            
-             $this->db->where([
+
+            $this->db->where([
                 "userid" => $client_id,
             ])->update(db_prefix() . 'clients', $stage_data);
-            
-             $stage_data["pre_deposite_status"]  = 1;
-            
+
+            $stage_data["pre_deposite_status"]  = 1;
+
             $this->db->where([
                 "client_id" => $client_id,
                 "id"        => $shortlisting_id,
-                
+
             ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
 
             $data['resp_code'] = 'RCS';
@@ -6020,15 +5989,15 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
                     "applicant_sub_status" => FUNDS_IN_PROGRESS
                 ];
 
-           $funds_status = isset($_POST["funds_status"]) ? $_POST["funds_status"] : '';
+                $funds_status = isset($_POST["funds_status"]) ? $_POST["funds_status"] : '';
 
-            if ($funds_status == '1') {
-                $stage_data["applicant_sub_status"] = FUNDS_IN_PROGRESS;
-            } elseif ($funds_status == '2') {
-                $stage_data["applicant_sub_status"] = FUNDS_COMPLETED;
-            } else {
-                $stage_data["applicant_sub_status"] = FUNDS_IN_SUFFICIENT;
-            }
+                if ($funds_status == '1') {
+                    $stage_data["applicant_sub_status"] = FUNDS_IN_PROGRESS;
+                } elseif ($funds_status == '2') {
+                    $stage_data["applicant_sub_status"] = FUNDS_COMPLETED;
+                } else {
+                    $stage_data["applicant_sub_status"] = FUNDS_IN_SUFFICIENT;
+                }
 
 
 
@@ -6109,7 +6078,7 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
 
 
             $stage_data = [
-                "applicant_stage"=> INTERVIEW
+                "applicant_stage" => INTERVIEW
             ];
 
             if ($save_status == 1) {
@@ -6163,6 +6132,42 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
 
             $data['resp_code'] = 'RCS';
             $data['resp_desc'] = 'Interview updated successfully.';
+        } else if ($tracker_id == 9) {
+            if (empty($client_id) || empty($shortlisting_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Invalid input data: client_id or shortlisting_id missing'
+                ]);
+                return;
+            }
+
+            $confirmationData = [
+                "confirmation_date"      => $_POST["confirmation_date"] ?? null,
+                "confirmation_receving_date"      => $_POST["confirmation_receving_date"] ?? null,
+                "confirmation_status"      => $_POST["confirmation_status"] ?? null,
+            ];
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ])->update(db_prefix() . 'client_university_shortlisting', $confirmationData);
+
+
+            // Handle applicant stage status
+            $stage_data = [
+                "applicant_stage"      => CONFORMATION,
+                "applicant_sub_status" => CONFORMATION_COMPLETED
+            ];
+            $this->db->where([
+                "client_id" => $client_id,
+                "id"        => $shortlisting_id
+            ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
+
+            $this->db->where([
+                "userid" => $client_id,
+            ])->update(db_prefix() . 'clients', $stage_data);
+
+            $data['resp_code'] = 'RCS';
+            $data['resp_desc'] = 'Confirmation details updated successfully.';
         } else {
             echo json_encode([
                 'resp_code' => 'ERR',
@@ -6186,7 +6191,7 @@ if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposi
 
             echo json_encode([
                 'resp_code' => 'RCS',
-                'resp_desc' => 'Pre-deposit submitted successfully'
+                'resp_desc' => 'University Shortlisting Stage Completed Successfully'
             ]);
             return;
         } else {

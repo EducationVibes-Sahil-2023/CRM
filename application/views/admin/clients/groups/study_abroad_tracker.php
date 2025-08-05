@@ -118,20 +118,19 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
         <?php
 
-if($selected_university_shortlisting["application_status"]!=1)
-{
-    ?>
-    <section>
-                    <fieldset id="refund_stage">
-                         <h2 class="fs-title text-center mb-4"><?=($selected_university_shortlisting["application_status"] == 2)?"Application Hold":"Application Closed"?></h2>
-                        <div class="row margin-top">
-                            </fieldset>
-                            </section>
-                        
-    <?php
-  
-}
-        if ($client_infomation->active == 4 || $client_infomation->active == 2 || $selected_university_shortlisting["application_status"]!=1) {
+        if ($selected_university_shortlisting["application_status"] != 1) {
+        ?>
+            <section>
+                <fieldset id="refund_stage">
+                    <h2 class="fs-title text-center mb-4"><?= ($selected_university_shortlisting["application_status"] == 2) ? "Application Hold" : "Application Closed" ?></h2>
+                    <div class="row margin-top">
+                </fieldset>
+            </section>
+
+        <?php
+
+        }
+        if ($client_infomation->active == 4 || $client_infomation->active == 2 || $selected_university_shortlisting["application_status"] != 1) {
         ?>
             <?php if ($client_infomation->active == 4) { ?>
                 <section>
@@ -417,10 +416,10 @@ if($selected_university_shortlisting["application_status"]!=1)
                                         </div>
                                     </div>
                                     <div id="pendency_<?= $track['id'] ?>" class="panel-body <?= isset($selected_university_shortlisting['st3_pendency']) && $selected_university_shortlisting['st3_pendency'] == 2 ? '' : 'hide' ?> mt-5">
-                                        <button class="btn btn-primary float-right" type="button" onclick="new_pendency_create(<?= $track['id'] ?>)"><i class='fa fa-plus'></i></button>
+
                                         <?php
                                         if (!empty($applicant_pendency[$activeShortlistingId][$track['id']])) {
-                                            foreach ($applicant_pendency[$activeShortlistingId][$track['id']] as $pendency_ut3) {
+                                            foreach ($applicant_pendency[$activeShortlistingId][$track['id']] as $key => $pendency_ut3) {
                                         ?>
                                                 <div class="row pendency-div">
                                                     <input type="hidden" name="pendency_id" class="pendency_id" value="<?= $pendency_ut3['id'] ?>">
@@ -447,6 +446,16 @@ if($selected_university_shortlisting["application_status"]!=1)
                                                                 "required-check" => "required-check",
                                                             ]
                                                         ) ?>
+                                                    </div>
+
+                                                    <div class="col-md-1">
+                                                        <p>&nbsp;</p>
+                                                        <?php if ($key == 0) { ?>
+                                                            <button type="button" class="btn btn-success add_pendency_btn" onclick="new_pendency_create(<?= $track['id'] ?>)">
+                                                                <i class="fa fa-plus"></i>
+                                                            </button>
+                                                        <?php } else { ?><button class="btn btn-danger" onclick="$(this).parents('.pendency-div').remove()"><i class='fa fa-trash '></i></button>
+                                                        <?php } ?>
                                                     </div>
                                                 </div>
                                             <?php
@@ -520,10 +529,10 @@ if($selected_university_shortlisting["application_status"]!=1)
                                     </div>
 
                                     <div id="pendency_<?= $track['id'] ?>" class="panel-body <?= isset($selected_university_shortlisting['stu_pendency']) && $selected_university_shortlisting['stu_pendency'] == 2 ? '' : 'hide' ?> mt-5">
-                                        <button class="btn btn-primary float-right" type="button" onclick="new_pendency_create(<?= $track['id'] ?>)"><i class='fa fa-plus'></i></button>
+
                                         <?php
                                         if (!empty($applicant_pendency[$activeShortlistingId][$track['id']])) {
-                                            foreach ($applicant_pendency[$activeShortlistingId][$track['id']] as $pendency_stu) {
+                                            foreach ($applicant_pendency[$activeShortlistingId][$track['id']] as $key => $pendency_stu) {
                                         ?>
                                                 <div class="row pendency-div">
                                                     <input type="hidden" name="pendency_id" class="pendency_id" value="<?= $pendency_stu['id'] ?>">
@@ -551,6 +560,16 @@ if($selected_university_shortlisting["application_status"]!=1)
                                                             ]
                                                         ) ?>
                                                     </div>
+                                                    <div class="col-md-1">
+                                                        <p>&nbsp;</p>
+                                                        <?php if ($key == 0) { ?>
+                                                            <button type="button" class="btn btn-success add_pendency_btn" onclick="new_pendency_create(<?= $track['id'] ?>)">
+                                                                <i class="fa fa-plus"></i>
+                                                            </button>
+                                                        <?php } else { ?>
+                                                            <button class="btn btn-danger" onclick="$(this).parents('.pendency-div').remove()"><i class='fa fa-trash '></i></button>
+                                                        <?php } ?>
+                                                    </div>
                                                 </div>
                                         <?php
                                             }
@@ -570,7 +589,7 @@ if($selected_university_shortlisting["application_status"]!=1)
                                                 <!-- Offer Date -->
                                                 <div class="col-md-3">
                                                     <?= render_input(
-                                                        "offer_date[]",
+                                                        "offer_date_{$key}",
                                                         "Offer Letter Receiving <small class='text-danger'>*</small>",
                                                         $o_letter['offer_date'] ?? '',
                                                         'date',
@@ -581,7 +600,7 @@ if($selected_university_shortlisting["application_status"]!=1)
                                                 <!-- Offer Status -->
                                                 <div class="col-md-3 form-group">
                                                     <label>Status <small class="text-danger">*</small></label>
-                                                    <select name="university_offer_status[]"
+                                                    <select name="university_offer_status_<?= $key ?>"
                                                         class="form-control selectpicker required-check"
                                                         required
                                                         onchange="changeOfferStatus(this)">
@@ -847,9 +866,9 @@ if($selected_university_shortlisting["application_status"]!=1)
                                                 ['required-check' => 'required-check', 'required' => 'required']
                                             ); ?>
                                         </div>
-                                        <div class="col-md-9">
+                                        <div class="col-md-9 form-group">
                                             <label for="funds_remark">Funds Remark <small class='text-danger'>*</small></label>
-                                            <textarea rows="4" name="funds_remark" class="form-control funds_remark" required><?= isset($selected_university_shortlisting['funds_remark']) ? $selected_university_shortlisting['funds_remark'] : '' ?></textarea>
+                                            <textarea rows="4" name="funds_remark" class="form-control funds_remark" required required-check><?= isset($selected_university_shortlisting['funds_remark']) ? $selected_university_shortlisting['funds_remark'] : '' ?></textarea>
                                         </div>
                                     </div>
                                 </form>
@@ -986,11 +1005,11 @@ if($selected_university_shortlisting["application_status"]!=1)
                                 <form id="confirmation-form" class="form-disabled mb-5" onsubmit="return false;">
                                     <div class="row col-md-12">
                                         <div class="col-md-3">
-                                            <?= render_input('confirmation_date', "Date of Application <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                            <?= render_input('confirmation_date', "Date of Application <small class='text-danger'>*</small>", $selected_university_shortlisting["confirmation_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
                                         </div>
 
                                         <div class="col-md-3">
-                                            <?= render_input('confirmation_receving_date', "Receiving Date <small class='text-danger'>*</small>", '', 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
+                                            <?= render_input('confirmation_receving_date', "Receiving Date <small class='text-danger'>*</small>", $selected_university_shortlisting["confirmation_receving_date"], 'date', ['required-check' => 'required-check', 'required' => 'required']); ?>
                                         </div>
 
                                         <div class="col-md-2">
@@ -998,8 +1017,8 @@ if($selected_university_shortlisting["application_status"]!=1)
                                                 'confirmation_status',
                                                 $conformation_letter_status,
                                                 ['id', 'name'],
-                                                "Result <small class='text-danger'>*</small>",
-                                                '',
+                                                "Status <small class='text-danger'>*</small>",
+                                                [$selected_university_shortlisting["confirmation_status"]],
                                                 ['required-check' => 'required-check', 'required' => 'required'],
                                                 [],
                                                 '',
@@ -1548,7 +1567,7 @@ if($selected_university_shortlisting["application_status"]!=1)
 
         if (id == 3) {
             if (same_step == 0) {
-                let check_validation = await check_required_fields("st3-form");
+                let check_validation = await check_required_fields("st3-form", 3);
                 if (!check_validation) {
                     hide_loader();
                     return false;
@@ -1559,7 +1578,7 @@ if($selected_university_shortlisting["application_status"]!=1)
         }
         if (id == 4) {
             if (same_step == 0) {
-                let check_validation = await check_required_fields("stu-form");
+                let check_validation = await check_required_fields("stu-form", 4);
                 if (!check_validation) {
                     hide_loader();
                     return false;
@@ -1612,6 +1631,17 @@ if($selected_university_shortlisting["application_status"]!=1)
             await check_interview_form(upload_data);
         }
 
+        if (id == 9) {
+            if (same_step == 0) {
+                let check_validation = await check_required_fields("confirmation-form");
+                if (!check_validation) {
+                    hide_loader();
+                    return false;
+                }
+            }
+
+            await check_confirmation_form(upload_data);
+        }
         try {
             upload_data.append("shortlisting_id", selectedUniversityShortListing);
             upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
@@ -1956,6 +1986,23 @@ if($selected_university_shortlisting["application_status"]!=1)
         });
     }
 
+    function check_confirmation_form(upload_data) {
+        return new Promise((resolve, reject) => {
+            try {
+                $("#confirmation-form input,select").each(function() {
+                    const $field = $(this);
+                    const name = $field.attr("name");
+                    if (name) {
+                        upload_data.append(name, $field.val());
+                    }
+                });
+                resolve(upload_data);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
+
 
 
 
@@ -1965,7 +2012,7 @@ if($selected_university_shortlisting["application_status"]!=1)
 
 
 
-    function check_required_fields(id = "application-form") {
+    function check_required_fields(id = "application-form", stage_id = 0) {
         return new Promise((resolve) => {
             let form_status = true;
             let additional_fields = {};
@@ -2013,6 +2060,43 @@ if($selected_university_shortlisting["application_status"]!=1)
                 }
             });
 
+            if (stage_id > 0) {
+                const $pendencyDivs = $("#pendency_" + stage_id + " .pendency-div");
+
+                $pendencyDivs.each(function() {
+                    const $pendencyDiv = $(this);
+                    const $select = $pendencyDiv.find("select");
+                    const $textarea = $pendencyDiv.find("textarea");
+
+                    const selectValue = $.trim($select.val() || '');
+                    const textareaValue = $.trim($textarea.val() || '');
+
+                    const selectName = $select.attr("name");
+                    const textareaName = $textarea.attr("name");
+
+                    if (selectValue == 1) {
+                        additional_fields[selectName] = "required";
+                        form_status = false;
+                        $select.addClass("error");
+                        if (selectName) {
+                            alert_float("danger", "Please clear the pendencies before proceeding.");
+
+                            return false;
+                            additional_fields[selectName] = "required";
+                        }
+                    } else {
+                        $select.removeClass("error");
+                    }
+
+                    if (textareaValue === "") {
+                        additional_fields[textareaName] = "required";
+                        form_status = false;
+                        $textarea.addClass("error");
+                    } else {
+                        $textarea.removeClass("error");
+                    }
+                });
+            }
             if (!form_status) {
                 appValidateForm($("#" + id), additional_fields);
                 $("#" + id).submit(); // If desired, remove this line to prevent auto-submit
@@ -2669,17 +2753,17 @@ if($selected_university_shortlisting["application_status"]!=1)
             </div>
         </div>
 <div class="interview-section-hide hide">
-        <div class="col-md-3">
-            <label>Date of Interview</label>
+        <div class="col-md-3 form-group">
+            <label>Date of Interview <small class="text-danger">*</small></label>
             <input type="date" name="interview_date_${uniqueId}" class="form-control interview_date" required required-check>
         </div>
 
-        <div class="col-md-3">
-            <label>Remark</label>
-            <textarea name="interview_remark_${uniqueId}" class="form-control interview_remark"></textarea>
+        <div class="col-md-3 form-group">
+            <label>Remark <small class="text-danger">*</small></label>
+            <textarea name="interview_remark_${uniqueId}" class="form-control interview_remark" required required-check></textarea>
         </div>
 
-        <div class="col-md-2">
+        <div class="col-md-2 form-group">
             <label>Result <small class="text-danger">*</small></label>
             <select name="result_status_${uniqueId}" class="form-control result_status selectpicker" required required-check>
                 ${resultStatusHTML}
