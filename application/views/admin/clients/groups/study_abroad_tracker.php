@@ -905,9 +905,16 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
                                                     <div class="col-md-1">
                                                         <p>&nbsp;</p>
-                                                        <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
-                                                            <i class="fa fa-plus"></i>
-                                                        </button>
+                                                        <?php if ($key == 0) { ?>
+                                                            <button type="button" class="btn btn-success add_interview_btn" onclick="addInterview()">
+                                                                <i class="fa fa-plus"></i>
+                                                            </button>
+                                                        <?php } else { ?>
+                                                            <button type="button" class="btn btn-danger" onclick="$(this).closest('.interview-section-inter').remove()">
+                                                                <i class='fa fa-trash'></i>
+                                                            </button>
+                                                        <?php } ?>
+
                                                     </div>
                                                 </div>
                                             <?php }

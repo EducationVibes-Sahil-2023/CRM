@@ -5267,6 +5267,7 @@ class Clients extends AdminController
             if (!empty($shortlisting_id)) {
 
 
+if ($check_client->tracker_id <= 2) {
                 $this->update_application_processing($client_id);
 
                 $this->db->where([
@@ -5277,9 +5278,17 @@ class Clients extends AdminController
                     "applicant_stage" => ST3,
                     "applicant_sub_status" => ST3_PENDING
                 ]);
-
-                $data['resp_code'] = 'RCS';
+                 $data['resp_code'] = 'RCS';
                 $data['resp_desc'] = 'University Applied Successfully';
+}
+else
+{
+     $data['resp_code'] = 'RCS';
+                $data['resp_desc'] = 'University Applied Successfully';
+                 echo json_encode($data);
+                return;
+}
+               
             } else {
                 $data['resp_code'] = 'ERR';
                 $data['resp_desc'] = 'No university selected';
@@ -5800,6 +5809,21 @@ class Clients extends AdminController
                 ]);
                 return;
             }
+ $pre_deposite_status_check = $this->db->select('pre_deposite_status, university_name')
+    ->where('client_id', $client_id)
+    ->where('id !=', $shortlisting_id)
+    ->get(db_prefix() . 'client_university_shortlisting')
+    ->row();
+
+
+if (!empty($pre_deposite_status_check) && $pre_deposite_status_check->pre_deposite_status == 1) {
+    $data['resp_code'] = 'ERR';
+    $data['resp_desc'] = $pre_deposite_status_check->university_name . ' already has a pre-deposit. Only one university can have a pre-deposit at a time.';
+    $this->update_applicant_tracker_stages_application($client_id, $shortlisting_id, ($tracker_id - 1));
+    echo json_encode($data);
+    return;
+}
+
 
             // Default status if not save
             $this->db->where([
@@ -5945,12 +5969,14 @@ class Clients extends AdminController
 
             $stage_data = [
                 "applicant_stage"      => FUNDS,
-                "applicant_sub_status" => FUNDS_IN_PROGRESS
+                "applicant_sub_status" => FUNDS_IN_PROGRESS,
+                "pre_deposite_status"  => 1,
             ];
             // Default update if not saving as final stage
             $this->db->where([
                 "client_id" => $client_id,
-                "id"        => $shortlisting_id
+                "id"        => $shortlisting_id,
+                
             ])->update(db_prefix() . 'client_university_shortlisting', $stage_data);
 
             $data['resp_code'] = 'RCS';
