@@ -625,7 +625,7 @@ class Login_Controller extends Api_Controller
             }
 
             // Attempt to sync
-            $auto_sync = syncExcel_new($id);
+            $auto_sync = syncExcel_neww($id);
 
             if ($auto_sync === true) {
                 $response = [
