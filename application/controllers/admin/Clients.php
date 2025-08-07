@@ -42,9 +42,7 @@ class Clients extends AdminController
 
         $data['customer_admins'] = $this->clients_model->get_customers_admin_unique_ids();
         // $data['application_stage'] = $this->clients_model->get_application_stage();
-        $data['application_stage'] = get_applicant_stage();
-        $data['application_sub_stage'] = $this->clients_model->get_application_sub_stage();
-        $data['application_sub_stage_mbbs'] = $this->clients_model->get_application_sub_stage_mbbs();
+    
 
         $whereContactsLoggedIn = '';
         if (!has_permission('customers', '', 'view')) {

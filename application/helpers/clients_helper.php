@@ -1550,7 +1550,7 @@ function get_applicant_stage()
         $applicant_stages = $CI->db
             ->select("*")
             ->where(array("status" => 1))
-            ->from(db_prefix() . 'applicant_stages')
+            ->from(db_prefix() . 'sa_applicant_stages')
             ->get()
             ->result_array();
 

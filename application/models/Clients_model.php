@@ -1984,33 +1984,33 @@ class Clients_model extends App_Model
 
     //     return $application_note_list = $this->db->get()->result_array();
     // }
-    
-    
+
+
     function application_note_list_study($client_id, $application_note_list_study_id = "")
-{
-    $this->db->select("
+    {
+        $this->db->select("
         n.*, 
         t.name AS application_stage_name, 
         CONCAT(s.firstname, ' ', s.lastname) AS staffname,
         IF(n.created_date > n.updated_date, n.created_date, n.updated_date) AS datetime
     ");
-    $this->db->from(db_prefix() . 'application_notes n');
-    $this->db->join(db_prefix() . 'applicant_tracker_study t', 'n.application_stage = t.id', 'inner');
-    $this->db->join(db_prefix() . 'staff s', 'n.created_by = s.staffid', 'inner');
-    $this->db->where('n.client_id', $client_id);
+        $this->db->from(db_prefix() . 'application_notes n');
+        $this->db->join(db_prefix() . 'applicant_tracker_study t', 'n.application_stage = t.id', 'inner');
+        $this->db->join(db_prefix() . 'staff s', 'n.created_by = s.staffid', 'inner');
+        $this->db->where('n.client_id', $client_id);
 
-    if (!empty($application_note_list_study_id)) {
-        $this->db->group_start(); // Start group for combined where clause
-        $this->db->where('n.shortlisting_id', $application_note_list_study_id);
-        $this->db->or_where('(n.client_id = ' . (int)$client_id . ' AND n.application_stage <= 2)');
-        $this->db->group_end(); // End group
+        if (!empty($application_note_list_study_id)) {
+            $this->db->group_start(); // Start group for combined where clause
+            $this->db->where('n.shortlisting_id', $application_note_list_study_id);
+            $this->db->or_where('(n.client_id = ' . (int)$client_id . ' AND n.application_stage <= 2)');
+            $this->db->group_end(); // End group
+        }
+
+        $this->db->where('n.status', '1');
+        $this->db->order_by('n.id', 'desc');
+
+        return $this->db->get()->result_array();
     }
-
-    $this->db->where('n.status', '1');
-    $this->db->order_by('n.id', 'desc');
-
-    return $this->db->get()->result_array();
-}
 
 
     function application_activity($client_id, $application_note_list_study_id = "")
@@ -2040,7 +2040,7 @@ class Clients_model extends App_Model
     function get_application_sub_stage()
     {
         $this->db->select("ts.*");
-        $this->db->from(db_prefix() . 'application_sub_category ts');
+        $this->db->from(db_prefix() . 'application_sub_category_study ts');
         $this->db->where("ts.status", 1);
         $this->db->order_by('ts.sequence', 'asc');
         return $get_application_sub_stage = $this->db->get()->result_array();

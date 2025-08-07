@@ -14,6 +14,9 @@ $office_location  = $this->staff_model->office_location();
 // $university_list = get_university_list("study abroad");
 // $country_list = get_country_list(9);
 
+
+$application_stage = get_applicant_stage();
+$application_sub_stage_mbbs = $this->clients_model->get_application_sub_stage();
 $filter_data = filter_country_university_array(1);
 $university_list = $filter_data['universities'];
 $country_list = $filter_data['countries'];
