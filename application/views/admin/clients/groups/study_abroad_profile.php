@@ -1043,7 +1043,7 @@ if ($lead_type_status == 1) {
                                     </div>
 
                                 </div>
-                                <div class="row btn-save-fun">
+                                <div class="row ">
                                     <div class="col-md-12 text-right  btn-save-fun">
                                         &nbsp; <button type="submit" onclick="save_admission_preferences()"
                                             class="btn btn-primary button-22">Save & Next</button>
