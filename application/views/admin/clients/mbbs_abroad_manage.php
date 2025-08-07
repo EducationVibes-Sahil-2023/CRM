@@ -18,6 +18,10 @@ $apostille_documents = get_orignal_document_list(0, 0, 1);
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
 $university_list_secondary = get_university_list("mbbs abroad");
+
+
+$application_stage = get_applicant_stage_mbbs();
+$application_sub_stage_mbbs = $this->clients_model->get_application_sub_stage_mbbs();
 // $country_list = get_country_list(7);
 $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
