@@ -2882,7 +2882,7 @@ function filter_country_university_array($leadType)
     $CI->db->select('s.country_name, s.university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name');
     $CI->db->from(db_prefix() . 'clients c');
     $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id', "LEFT");
-    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id', "LEFT");
+    $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id and s.status=1', "LEFT");
     $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid', "LEFT");
     $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id', "LEFT");
     $CI->db->where('l.type', $leadType);
@@ -2890,8 +2890,10 @@ function filter_country_university_array($leadType)
         $CI->db->or_where('c.client_type ', 2);
     }
 
+
     $query = $CI->db->get();
     $result = $query->result_array();
+
     $countries = [];
     $universities = [];
     $counselor = [];
