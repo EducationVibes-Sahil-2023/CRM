@@ -21,7 +21,9 @@ $staff_list              = $this->leads_model->get_staff_list();
 $get_entrance_exams_list              = $this->clients_model->get_entrance_exam_list();
 $get_entrance_exam              = $this->clients_model->get_entrance_exam($client_id);
 $get_entrance_exam_scrore              = $this->clients_model->get_entrance_exam_scrore($client_id);
-$get_entrance_exams_status = [array("id" => "1", "selected" => "0", "name" => "Not Given"), array("id" => "2", "selected" => "1", "name" => "Given")];
+$get_entrance_exams_status = get_status_table("entrance_status");
+
+// $get_entrance_exams_status = [array("id" => "1", "selected" => "0", "name" => "Not Given"), array("id" => "2", "selected" => "1", "name" => "Given")];
 $staff_list = array_column($staff_list, null, "staffid");
 if (!empty($board_dropdown)) {
     array_unshift($board_dropdown, array("id" => "", "name" => "Select Board"));
@@ -783,7 +785,7 @@ if ($lead_type_status == 1) {
 
                             <h4>Admission Preferences <span class="float-right h4">Budget Range : <?= !empty($client->budget_range) ? $client->budget_range . " LPA " : '' ?></span></h4>
                             <hr>
-                            <form id="admission-preferences-form" class="form-disabled" onsubmit=" return false;">
+                            <form id="admission-preferences-form" class="" onsubmit=" return false;">
                                 <div class="">
                                     <div class="col-lg-4" style="display:none">
                                         <div class="form-group">
@@ -3646,14 +3648,17 @@ if ($lead_type_status == 1) {
 
     function changeEntranceStatus(event) {
         const $parent = $(event).closest(".entrance-exams");
-        const $selectedOption = $(event).find("option:selected");
-        const selectedData = $selectedOption.data("selected");
+        const selectedData = $(event).find("option:selected").data("selected");
+        const $statusActive = $parent.find(".entrance-exams-status-active");
+        const $inputs = $statusActive.find(".entrance_marks, input[type='file']");
 
-        // Assuming data-selected="1" indicates active
-        if (selectedData === "1" || selectedData === 1) {
-            $parent.find(".entrance-exams-status-active").removeClass("hide");
+        $statusActive.find("select, input").val("").selectpicker('refresh');
+
+        if (selectedData == 1 || selectedData == 2) {
+            $statusActive.removeClass("hide");
+            $inputs.prop("required", selectedData == 1).attr("required-check", selectedData == 1 ? "required-check" : null);
         } else {
-            $parent.find(".entrance-exams-status-active").addClass("hide");
+            $statusActive.addClass("hide");
         }
     }
 </script>

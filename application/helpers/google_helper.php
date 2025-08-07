@@ -444,7 +444,6 @@ function syncExcel_new($id = "")
 
 
             $queryPart = [];
-            $extra_columns = [];
 
             // Process applicant documents
             // if (!empty($upload_document)) {
@@ -470,20 +469,20 @@ function syncExcel_new($id = "")
 
             // Process original documents for CASE WHEN logic
             if (!empty($orignal_documents)) {
-                foreach ($orignal_documents as $document) {
-                    $short_name = trim($document['short_name']);
-                    $safe_column_name = str_replace(" ", "_", $short_name);
+                foreach ($orignal_documents as $documents) {
+                    $short_name = trim($documents['short_name']); // Clean the short name
+                    $safe_column_name = str_replace(" ", "_", $short_name); // Sanitize column alias
                     $extra_columns[] = $safe_column_name;
 
-                    // Add dynamic CASE WHEN for SQL
+                    // Add a CASE WHEN expression for each document
                     $queryPart[] = "MAX(CASE WHEN od.short_name = '" . $CI->db->escape_str($short_name) . "' 
                           THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
                 }
             }
 
-            // Final SQL column segment
+            // Step 3: Append dynamic CASE columns to existing SELECT list
             if (!empty($queryPart)) {
-                $selectColumnName .= ', ' . implode(",\n", $queryPart);
+                $selectColumnName .= ',' . implode(',', $queryPart);
             }
         }
 
