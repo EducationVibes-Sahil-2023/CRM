@@ -431,59 +431,24 @@ function syncExcel_new($id = "")
             // Step 2: Fetch original documents
             $orignal_documents = get_orignal_document_list(); // Returns an array
 
-            $upload_document = get_documents(1, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
-            $applicant_documents = get_clients_documents(617);
-
-            // Decode applicant documents if available
-            if (!empty($applicant_documents[0]["data"])) {
-                $decoded_data = json_decode($applicant_documents[0]["data"], true);
-                if (!empty($decoded_data)) {
-                    $applicant_documents = array_column($decoded_data, null, "id");
-                }
-            }
-
-
             $queryPart = [];
-            $extra_columns = [];
 
-            // Process applicant documents
-            if (!empty($upload_document)) {
-                foreach ($upload_document as $document) {
-                    $doc_id = $document['id'];
-                    $short_name = trim($document['name']);
-                    $safe_column_name = str_replace(" ", "_", $short_name);
-                    $extra_columns[] = $safe_column_name;
 
-                    $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
-
-                    // Determine approval status
-                    if (isset($applicant_documents[$doc_id]["approval_status"])) {
-                        $status = ($applicant_documents[$doc_id]["approval_status"] == 1) ? "'Yes'" : "'No'";
-                    } else {
-                        $status = !empty($file_url) ? "'No'" : "''";  // Empty string in SQL
-                    }
-
-                    // Add to query part as: 'Yes' AS Document_Name
-                    $queryPart[] = "$status AS `$safe_column_name`";
-                }
-            }
-
-            // Process original documents for CASE WHEN logic
             if (!empty($orignal_documents)) {
-                foreach ($orignal_documents as $document) {
-                    $short_name = trim($document['short_name']);
-                    $safe_column_name = str_replace(" ", "_", $short_name);
+                foreach ($orignal_documents as $documents) {
+                    $short_name = trim($documents['short_name']); // Clean the short name
+                    $safe_column_name = str_replace(" ", "_", $short_name); // Sanitize column alias
                     $extra_columns[] = $safe_column_name;
 
-                    // Add dynamic CASE WHEN for SQL
+                    // Add a CASE WHEN expression for each document
                     $queryPart[] = "MAX(CASE WHEN od.short_name = '" . $CI->db->escape_str($short_name) . "' 
                           THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
                 }
             }
 
-            // Final SQL column segment
+            // Step 3: Append dynamic CASE columns to existing SELECT list
             if (!empty($queryPart)) {
-                $selectColumnName .= ', ' . implode(",\n", $queryPart);
+                $selectColumnName .= ',' . implode(',', $queryPart);
             }
         }
 
