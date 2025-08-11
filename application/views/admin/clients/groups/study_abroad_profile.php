@@ -2358,12 +2358,8 @@ if ($lead_type_status == 1) {
 
                                                     </td>
                                                     <td>
-                                                        <?php if (!empty($doc_files["lead_type"]) && $doc_files["disabled"] == 0) { ?>
-                                                            <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>"
-                                                                class="form-control"
-                                                                accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>"
-                                                                <?= $required_attr ?>>
-                                                        <?php } ?>
+                                                                                                               <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+
                                                     </td>
                                                     <td class="text-center">
                                                         <?php
