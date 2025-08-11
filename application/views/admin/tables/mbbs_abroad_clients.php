@@ -435,6 +435,12 @@ if ($this->ci->input->post('minor_status')) {
     OR (TIMESTAMPDIFF(YEAR, dob, CURDATE()) >= 18 AND 'No' = '{$minor}'))");
 }
 
+if ($this->ci->input->post('courier_date')) {
+    $courier_date = $this->ci->input->post('courier_date');
+    array_push($where, "AND DATE(apostille_summary.courier_date) = '{$courier_date}'");
+}
+
+
 if ($this->ci->input->post('passport_status')) {
     $passport_status = $this->ci->input->post('passport_status');
     if (is_array($passport_status)) {

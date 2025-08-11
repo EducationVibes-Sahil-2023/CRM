@@ -913,6 +913,22 @@ if ($lead_type_status == 2) {
                                                     <input class="form-control" <?= $text_danger_mbbs_required ?> type="float" placeholder="PCB Marks" name="pcb" id="pcb" value="<?= $academicdetails->pcb; ?>">
                                                 </div>
                                             </div>
+                                            <div class="col-lg-2 border2 border1">
+                                                <div class="c1">
+                                                    <p>Online Result</p>
+                                                </div>
+                                                <div class="c2">
+                                                    <input
+                                                        class="check-group"
+                                                        type="checkbox"
+                                                        name="online_result"
+                                                        id="online_result"
+                                                        value="1"
+                                                        placeholder="Online Result"
+                                                        <?= (!empty($academicdetails->online_result) && $academicdetails->online_result == 1) ? 'checked' : '' ?>>
+                                                </div>
+                                            </div>
+
                                             <?php
                                             foreach ($profile_section["12_stage"] as $s_stage) {
                                                 $doc_type = $s_stage["name"] ?? '';
@@ -1199,8 +1215,8 @@ if ($lead_type_status == 2) {
 
                                                     </td>
                                                     <td>
-                                                       
-                                                                                                                    <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+
+                                                        <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
 
                                                     </td>
                                                     <td class="text-center">

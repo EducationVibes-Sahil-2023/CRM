@@ -4175,7 +4175,6 @@ class Clients extends AdminController
                 unset($_POST["doc_url"]);
 
 
-                
                 foreach ($_POST as $key => $value) {
                     if (!empty($value) && strpos($key, 'custom_fields') !== false) {
                         // If the key contains 'custom_fields' and the value is not empty, add to custom data array
