@@ -4189,13 +4189,20 @@ class Clients extends AdminController
                     }
                 }
 
-                $check_client = $this->db->select('id')
+
+
+                $check_client = $this->db->select('id,passport_update_date')
                     ->where('client_id', $client_id)
                     ->get(db_prefix() . 'client_passport_details')->row();
+
+                if (empty($check_client->passport_update_date)) {
+                    $passpot_data["passport_update_date"] = date('Y-m-d H:i:s');
+                }
                 if (!empty($check_client->id)) {
                     $passpot_data["updated_date"] = date('Y-m-d H:i:s');
                     $passpot_data["updated_by"] = get_staff_user_id();
                     $this->db->where('client_id', $client_id);
+
                     $rows_affected = $this->db->update(db_prefix() . 'client_passport_details', $passpot_data);
                     $this->db->insert(db_prefix() . 'application_activity_log', array("description" => "Passport Information updated by - ", "date" => date('Y-m-d H:i:s'), "staffid" => get_staff_user_id(), "client_id" => $client_id));
                 } else {
@@ -7440,7 +7447,8 @@ class Clients extends AdminController
             $update_entry = [
                 'id'                => $row['id'],
                 'fees_deposite_date'           => $row['date_of_payment'] ?? "",
-                'payment_amount'           => $row['payment_amount'] ?? ""
+                'payment_amount'           => $row['payment_amount'] ?? "",
+                'fees_payment_currency_id' => $row['fees_payment_currency_id']
             ];
 
 
