@@ -1,7 +1,7 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php hooks()->do_action('before_leads_settings'); ?>
 <?php echo form_hidden('settings[sa_applicant_tracker]', 'true'); ?>
-<h3>MA Applicant Tracker</h3>
+<h3>SA Applicant Tracker</h3>
 <hr />
 <?php
 // Assuming $tbl_columns is an array of table column data

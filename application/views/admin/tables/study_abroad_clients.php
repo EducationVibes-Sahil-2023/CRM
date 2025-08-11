@@ -274,6 +274,21 @@ if ($this->ci->input->post('assigned')) {
     array_push($where, 'AND  ' . db_prefix() . 'leads.assigned IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ')');
 }
 
+
+if ($this->ci->input->post('agent')) {
+    array_push($where, 'AND  ' . db_prefix() . 'vendor_study_abroad.id IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('agent'))) . ')');
+}
+
+if ($this->ci->input->post('priority')) {
+    array_push($where, 'AND  ' . db_prefix() . 'client_university_shortlisting.is_primary IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('priority'))) . ')');
+}
+
+if ($this->ci->input->post('application_status')) {
+    array_push($where, 'AND  ' . db_prefix() . 'client_university_shortlisting.application_status IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('application_status'))) . ')');
+}
+
+
+
 if ($this->ci->input->post('source')) {
     array_push($where, 'AND ' . db_prefix() . 'leads.source IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('source'))) . ')');
 }

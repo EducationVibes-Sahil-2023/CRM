@@ -26,7 +26,15 @@ $sources = $filter_data['source'];
 $statuses = get_applicant_statuses();
 $passport_stages = get_passport_stages();
 $table_view = array_column(get_view_columns_sa(), null, "id");
-
+$study_abroad_vendors   = study_abroad_vendors();
+$priority_array = [];
+for ($i = 1; $i <= PRIORITY_ARRAY_STUDY_ABROAD; $i++) {
+   $priority_array[] = [
+      'id' => $i,
+      'name' => "P $i",
+   ];
+}
+$application_statuses = get_application_statuses();
 
 ?>
 <div id="wrapper">
@@ -464,6 +472,28 @@ $table_view = array_column(get_view_columns_sa(), null, "id");
                                  echo '</div>';
                                  ?>
                               </div>
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-application hide ">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('agent[]', $study_abroad_vendors, array('id', 'name'), '', '', array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => _l('Agent'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "agent");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-application hide ">
+                                 <?= render_select('priority[]', $priority_array, array('id', 'name'), "", [$shortlisting["is_primary"]], ['data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => "Priority", 'data-actions-box' => true], [], "", "priority-selection", "", "priority") ?>
+
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-application hide ">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('application_status[]', $application_statuses, array('id', 'name'), '', '', array('data-width' => '100%', 'multiple' => true, 'data-none-selected-text' => _l('Application Status'), 'data-actions-box' => true), array(), 'no-mbot', '', false, "application_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
 
 
                               <!-- <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
@@ -1062,6 +1092,9 @@ init_tail();
          'university_secondary': "[name='university_secondary[]']",
          'neet_status': "[name='neet_status[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
+         'agent': "[name='agent[]']",
+         'priority': "[name='priority[]']",
+         'application_status': "[name='application_status[]']",
       });
 
       applicant_table = initDataTable(
