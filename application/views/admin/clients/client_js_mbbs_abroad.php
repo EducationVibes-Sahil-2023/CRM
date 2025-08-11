@@ -241,7 +241,7 @@
                         $(this).find(".btn-save-fun").hide();
                     }
                 });
-
+$(".disabledd").attr("disabled", true);
 
                 $("#save_admission_preferences").attr("disabled", true);
 
@@ -251,6 +251,7 @@
 
             if (complete_application == 1) {
                 $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+                $(".disabledd").attr("disabled", true);
             }
         }
 
@@ -811,6 +812,7 @@
 
     $(".nav-tabs li").on("click", function() {
     
+  
         if (typeof final_sumbit !== "undefined" && final_sumbit != 1) {
             $(".btn-save-fun").show(); // Show the save button
             $(".tab-pane").find("input,select").attr("readonly", false);
@@ -829,6 +831,7 @@
         if (complete_application == 1) {
             $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }
+          $(".disabledd").attr("disabled", true);
     });
 
 
