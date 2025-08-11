@@ -737,7 +737,7 @@ function syncExcel_neww($id = "")
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
-                LEFT JOIN " . db_prefix() . "currencies cu dt ON cu.id = 2 AND c.scholarship_currency = 1
+                LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
                 LEFT JOIN (
                     SELECT 
                         userid,
