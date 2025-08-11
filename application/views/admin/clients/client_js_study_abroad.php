@@ -275,7 +275,9 @@
 
             if (complete_application == 1) {
                 $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
+                
             }
+              $(".disabledd").attr("disabled", true);
         }
 
         setTimeout(function() {
@@ -1184,6 +1186,7 @@
         if (complete_application == 1) {
             $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }
+          $(".disabledd").attr("disabled", true);
     });
 
 
