@@ -18,6 +18,9 @@ $visa_vendors = get_vendor_list(2);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
 
+$get_currencies = get_currencies();
+$get_currencies = array_column($get_currencies, null, 'id');
+
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
 
@@ -1057,9 +1060,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         <?php } else if ($track["show_div_name"] == "entrance_div") { ?>
                             <form id="entrance-form" class="form-disabled" onsubmit=" return false;">
                                 <div class="entrance_div">
-                                     <?php
-                                      $showStatus = 1;
-                                     if (!empty($entrance_exams)) { ?>
+                                    <?php
+                                    $showStatus = 1;
+                                    if (!empty($entrance_exams)) { ?>
                                         <?php foreach ($entrance_exams as $university => $exams) {
                                             if (empty($university) ? $exams[0]["m_university_name"] : $university == $admissionpreferences->primary_university) {
                                                 $showStatus = 0;
@@ -1310,8 +1313,33 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     </div>
 
                                                     <div class="col-md-3">
+                                                
                                                         <label>Payment Amount <?= $mand ?></label>
-                                                        <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
+                                                        <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                            <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
+                                                            <div class="input-group-addon currency-addon">
+
+                                                                <select name="fees_payment_currency_id_<?= $leg["id"] ?>" id="fees_payment_currency_id_<?= $leg["id"] ?>" class="currency-selector currency-selector-<?= $id ?>">
+                                                                    <?php foreach ($get_currencies as $c) {
+                                                                    ?>
+                                                                        <option
+                                                                            data-symbol="<?= $c['symbol'] ?>"
+                                                                            value="<?= $c['id'] ?>"
+                                                                            data-placeholder="0.00"
+                                                                            <?=
+                                                                            (!empty($leg['fees_payment_currency_id']) && $leg['fees_payment_currency_id'] == $c['id']) ||
+                                                                                (empty($leg['fees_payment_currency_id']) && !empty($leg['fees_payment_currency_id']) && $leg['fees_payment_currency_id'] == $c['id'])
+                                                                                ? 'selected'
+                                                                                : ''
+                                                                            ?>>
+                                                                            <?= $c['name'] ?>
+                                                                        </option>
+                                                                    <?php
+                                                                    }
+                                                                    ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="col-md-3">
                                                         <label>University Payment Receipt </label>
@@ -2693,8 +2721,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <p class="form-check-label">&nbsp;</p>
                             <label class="form-check-label">
                                 Ministry Order of Documents Received  ${mand}
-                                <input type="checkbox" class="form-check-input" ${check_min_doc} ${mand_re} name="ministry_doc_received_${(leg.id)}">
-                               
+                                <input type="checkbox" 
+       class="form-check-input" 
+       ${leg.ministry_document_recived == 1 ? 'checked' : ''} 
+       ${check_min_doc} 
+       ${mand_re} 
+       name="ministry_doc_received_${leg.id}">
                             </label>
                         </div>
                             <div class="col-md-3">
@@ -2756,6 +2788,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         }
     }
 
+    const leg = <?= json_encode($leg) ?>;
+    const currencies = <?= json_encode(array_values($get_currencies)) ?>;
+    const mandRe = <?= json_encode($mand_re) ?>;
+
     function createFeesDeposite(legalization, tracker_id) {
         let feesDepositeDiv = $(".fees_deposite_div");
         feesDepositeDiv.html(""); // Clear existing content
@@ -2801,9 +2837,36 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         </div>
                         <div class="col-md-3">
                              <label>Payment Amount ${mand}</label>
-                             <input type="number" value="${leg.payment_amount}" class="form-control" name="payment_amount_${leg.id}" ${mand_re}>
-                        </div>
-                        <div class="col-md-3">
+                                 <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+            <input 
+                type="number" 
+                value="${leg.payment_amount || ''}" 
+                class="form-control" 
+                name="payment_amount_${leg.id}" 
+                ${mandRe}
+            >
+ <div class="input-group-addon currency-addon">
+            <select 
+                name="fees_payment_currency_id_${leg.id}" 
+                id="fees_payment_currency_id_${leg.id}" 
+                class="currency-selector currency-selector-${leg.id}"
+            >`;
+
+                currencies.forEach(c => {
+                    const selected = (leg.fees_payment_currency_id && leg.fees_payment_currency_id == c.id) ? 'selected' : '';
+                    itemHtml += `
+            <option 
+                data-symbol="${c.symbol}" 
+                value="${c.id}" 
+                data-placeholder="0.00" 
+                ${selected}
+            >
+                ${c.name}
+            </option>`;
+                });
+
+                itemHtml += `</select></div></div></div>
+                <div class="col-md-3">
                             <label>University Payment Receipt </label>
                             <input type="file" class="form-control" accept=".pdf,image/*" name="university_payment_slip_${leg.id}" ${file_url_university_payment ? "" : ""}>
                             ${file_url_university_payment ? `
@@ -3398,6 +3461,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 let date_of_payment = $(this).find("input[name='date_of_payment_" + id + "']").val() || "";
                 let payment_slipInput = $(this).find("input[name='payment_slip_" + id + "']")[0];
                 let payment_amount = $(this).find("input[name='payment_amount_" + id + "']").val() || "";
+                let fees_payment_currency_id = $(this).find("select[name='fees_payment_currency_id_" + id + "']").val() || "";
                 let university_payment_slipInput = $(this).find("input[name='university_payment_slip_" + id + "']")[0];
 
                 // Validate if ID exists
@@ -3405,7 +3469,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     let entry = {
                         id: id.trim(),
                         date_of_payment: date_of_payment.trim(),
-                        payment_amount: payment_amount
+                        payment_amount: payment_amount,
+                        fees_payment_currency_id: fees_payment_currency_id,
                     };
 
                     // Append files to FormData if available
