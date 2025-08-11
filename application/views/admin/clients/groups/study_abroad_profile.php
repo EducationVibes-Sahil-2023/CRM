@@ -605,6 +605,23 @@ if ($lead_type_status == 1) {
                                         }
                                         ?>
                                     </div>
+                                    <div class="row">
+                                         <hr class="mtop5 mbot10" />
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <?php
+                                                echo render_select('tagging', $yesNO_Array, array('id', 'name'), "Tagging Status",  $client->tagging, [], [], "", "", "", "tagging");
+                                                ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <?php
+                                                echo render_select('loan_required', $yesNO_Array, array('id', 'name'), "Loan Required",  $client->loan_required, [], [], "", "", "", "loan_required");
+                                                ?>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="btn-save-fun">
                                         <div class="col-md-12">
                                             <button type="submit" onclick="save_basic_details()"
@@ -1043,7 +1060,7 @@ if ($lead_type_status == 1) {
                                     </div>
 
                                 </div>
-                                <div class="row btn-save-fun">
+                                <div class="row ">
                                     <div class="col-md-12 text-right  btn-save-fun">
                                         &nbsp; <button type="submit" onclick="save_admission_preferences()"
                                             class="btn btn-primary button-22">Save & Next</button>
