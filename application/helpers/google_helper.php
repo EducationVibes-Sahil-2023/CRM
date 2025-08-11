@@ -433,7 +433,7 @@ function syncExcel_new($id = "")
 
             // $upload_document = get_documents(1, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
             // $applicant_documents = get_clients_documents(617);
-           
+
             // // Decode applicant documents if available
             // if (!empty($applicant_documents[0]["data"])) {
             //     $decoded_data = json_decode($applicant_documents[0]["data"], true);
@@ -537,11 +537,11 @@ function syncExcel_new($id = "")
     ) AS apostille_summary ON apostille_summary.userid = c.userid
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
-                
-                 if (!empty($orignal_documents)) {
-        //               echo $sql;
-        // die;
-                 }
+
+        if (!empty($orignal_documents)) {
+            //               echo $sql;
+            // die;
+        }
         // echo $sql;
         // die;
         $arrayData = $CI->db->query($sql)->result_array();
@@ -654,7 +654,7 @@ function syncExcel_neww($id = "")
 
             $queryPart = [];
 
-           
+
 
             if (!empty($orignal_documents)) {
                 foreach ($orignal_documents as $document) {
@@ -666,14 +666,14 @@ function syncExcel_neww($id = "")
                           THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
                 }
             }
-            
-if (!empty($upload_document)) {
-    foreach ($upload_document as $docu) {
-        $doc_id = (int) $docu['id'];
-        $safe_column_name = str_replace(" ", "_", $docu["name"]);
-        $extra_columns[] = $safe_column_name;
 
-        $queryPart[] = "
+            if (!empty($upload_document)) {
+                foreach ($upload_document as $docu) {
+                    $doc_id = (int) $docu['id'];
+                    $safe_column_name = str_replace(" ", "_", $docu["name"]);
+                    $extra_columns[] = $safe_column_name;
+
+                    $queryPart[] = "
             CASE
                 WHEN JSON_SEARCH(
                     CAST(CAST(cd.data AS CHAR CHARACTER SET utf8) AS JSON),
@@ -686,14 +686,14 @@ if (!empty($upload_document)) {
                 ELSE 'NO'
             END AS `$safe_column_name`
         ";
-    }
-}
+                }
+            }
 
-$extra_columns[] = "Invitation_letter";
-$queryPart[] = "IF(u.invitation_letter IS NOT NULL AND u.invitation_letter != '', 'Yes', 'No') AS Invitation_letter";
+            $extra_columns[] = "Invitation_letter";
+            $queryPart[] = "IF(u.invitation_letter IS NOT NULL AND u.invitation_letter != '', 'Yes', 'No') AS Invitation_letter";
 
-$extra_columns[] = "Admission_letter";
-$queryPart[] = "IF(u.application_file IS NOT NULL AND u.application_file != '', 'Yes', 'No') AS Admission_letter";
+            $extra_columns[] = "Admission_letter";
+            $queryPart[] = "IF(u.application_file IS NOT NULL AND u.application_file != '', 'Yes', 'No') AS Admission_letter";
 
 
             if (!empty($queryPart)) {
@@ -737,6 +737,7 @@ $queryPart[] = "IF(u.application_file IS NOT NULL AND u.application_file != '', 
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
+                LEFT JOIN " . db_prefix() . "currencies cu dt ON cu.id = 2 AND c.scholarship_currency = 1
                 LEFT JOIN (
                     SELECT 
                         userid,
@@ -756,11 +757,11 @@ $queryPart[] = "IF(u.application_file IS NOT NULL AND u.application_file != '', 
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
 
-//  if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
-     
-//      echo $sql;
-//      die;
-//  }
+        //  if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
+
+        //      echo $sql;
+        //      die;
+        //  }
         $arrayData = $CI->db->query($sql)->result_array();
 
         $sheetColumnName = $CI->db->select("name")
