@@ -59,7 +59,7 @@ class Staff extends AdminController
         echo json_encode($response);
     }
     /* Add new staff member or edit existing */
-       public function member($id = '')
+    public function member($id = '')
     {
 
         if (!has_permission('staff', '', 'view')) {
@@ -70,6 +70,7 @@ class Staff extends AdminController
         $this->load->model('departments_model');
         if ($this->input->post()) {
             $data = $this->input->post();
+
             // Don't do XSS clean here.
             $data['email_signature'] = $this->input->post('email_signature', false);
             $data['email_signature'] = html_entity_decode($data['email_signature']);
@@ -90,8 +91,27 @@ class Staff extends AdminController
             $data['office_location'] = !empty($this->input->post('office_location')) ? $this->input->post('office_location') : '';
             $data['department'] = !empty($this->input->post('department')) ? $this->input->post('department') : '';
             $data['whatsapp_status'] = !empty($this->input->post('whatsapp_status')) ? $this->input->post('whatsapp_status') : '';
+            $data['emp_code'] = !empty($this->input->post('emp_code')) ? $this->input->post('emp_code') : '';
 
+            if (!empty($data['emp_code'])) {
+                $this->db->select('emp_code');
+                $this->db->from(db_prefix() . 'staff');
+                $this->db->where('emp_code', $data['emp_code']);
 
+                if (!empty($staff_id)) {
+                    $this->db->where('staffid !=', $id); // Exclude current record
+                }
+
+                $query = $this->db->get();
+                if ($query->num_rows() > 0) {
+                    $data['emp_code'] = "";
+                    // emp_code already exists (excluding this ID)
+                    // $data['emp_code_error'] = "Employee code already exists.";
+                    set_alert('danger', "Employee code already exists.");
+                    redirect(admin_url('staff/member/' . $id));
+                    die;
+                }
+            }
             if ($id == '') {
                 if (!has_permission('staff', '', 'create')) {
                     access_denied('staff');
@@ -129,6 +149,7 @@ class Staff extends AdminController
                 } elseif ($response == true) {
                     set_alert('success', _l('updated_successfully', _l('staff_member')));
                 }
+
                 redirect(admin_url('staff/member/' . $id));
             }
         }

@@ -513,6 +513,17 @@ $client_type = [
                                  ?>
                               </div>
 
+                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
+                                 <?php
+                                 $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('apostille_status[]', $apostille_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_status");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
+
 
 
                               <div class="col-md-2 margin-top leads-filter-column filter-hide-default filter-org-status hide">
@@ -584,6 +595,11 @@ $client_type = [
                               <div class="col-md-2  margin-top leads-filter-column hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="last_to_date" id="last_to_date" placeholder="To Last Update Date" autocomplete="off">
+                                 </div>
+                              </div>
+                              <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-ap-status hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="courier_date" id="courier_date" placeholder="Courier Date" autocomplete="off">
                                  </div>
                               </div>
 
@@ -1259,6 +1275,7 @@ init_tail();
          'university_secondary': "[name='university_secondary[]']",
          'neet_status': "[name='neet_status[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
+         'courier_date': "[name='courier_date']",
       });
 
       applicant_table = initDataTable(

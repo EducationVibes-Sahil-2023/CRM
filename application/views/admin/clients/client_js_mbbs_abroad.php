@@ -241,7 +241,7 @@
                         $(this).find(".btn-save-fun").hide();
                     }
                 });
-$(".disabledd").attr("disabled", true);
+                $(".disabledd").attr("disabled", true);
 
                 $("#save_admission_preferences").attr("disabled", true);
 
@@ -439,6 +439,7 @@ $(".disabledd").attr("disabled", true);
 
         // console.log(additional_fields);
 
+        console.log(additional_fields);
         if (!form_status) {
             appValidateForm($("#admission-details-form"), additional_fields);
             hide_loader();
@@ -522,7 +523,10 @@ $(".disabledd").attr("disabled", true);
 
             // Manage required-check attribute
             if (isDeclared) {
-                targetDiv.find("input, select, input[type='file']").attr("required-check", "required-check");
+                targetDiv
+                    .find("input:not([type='checkbox']), select, input[type='file']")
+                    .attr("required-check", "required-check");
+
             } else {
                 targetDiv.find("input, select, input[type='file']").removeAttr("required-check");
             }
@@ -811,8 +815,8 @@ $(".disabledd").attr("disabled", true);
     }
 
     $(".nav-tabs li").on("click", function() {
-    
-  
+
+
         if (typeof final_sumbit !== "undefined" && final_sumbit != 1) {
             $(".btn-save-fun").show(); // Show the save button
             $(".tab-pane").find("input,select").attr("readonly", false);
@@ -831,7 +835,7 @@ $(".disabledd").attr("disabled", true);
         if (complete_application == 1) {
             $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }
-          $(".disabledd").attr("disabled", true);
+        $(".disabledd").attr("disabled", true);
     });
 
 

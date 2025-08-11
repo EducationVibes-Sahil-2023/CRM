@@ -551,7 +551,6 @@ if ($lead_type_status == 1) {
                                                         </div>
                                                     </div>
                                                 <?php } ?>
-
                                             </div>
                                     </div>
                                     <div class="row">
@@ -604,6 +603,23 @@ if ($lead_type_status == 1) {
                                         <?php
                                         }
                                         ?>
+                                    </div>
+                                    <div class="row">
+                                        <hr class="mtop5 mbot10" />
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <?php
+                                                echo render_select('tagging', $yesNO_Array, array('id', 'name'), "Tagging Status",  $client->tagging, [], [], "", "", "", "tagging");
+                                                ?>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <?php
+                                                echo render_select('loan_required', $yesNO_Array, array('id', 'name'), "Loan Required",  $client->loan_required, [], [], "", "", "", "loan_required");
+                                                ?>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="btn-save-fun">
                                         <div class="col-md-12">
@@ -2358,7 +2374,7 @@ if ($lead_type_status == 1) {
 
                                                     </td>
                                                     <td>
-                                                                                                               <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                        <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
 
                                                     </td>
                                                     <td class="text-center">

@@ -42,7 +42,7 @@ class Clients extends AdminController
 
         $data['customer_admins'] = $this->clients_model->get_customers_admin_unique_ids();
         // $data['application_stage'] = $this->clients_model->get_application_stage();
-    
+
 
         $whereContactsLoggedIn = '';
         if (!has_permission('customers', '', 'view')) {
@@ -4011,6 +4011,8 @@ class Clients extends AdminController
             $agent_id_raw = trim($_POST["agent_id"] ?? '');
             $agent_id = trim($agent_id_raw);
             $state = trim($_POST["state"] ?? '');
+            $loan_required = trim($_POST["loan_required"] ?? '');
+            $tagging = trim($_POST["tagging"] ?? '');
             unset($_POST["clientid"]);
             unset($_POST["doc_type_id"]);
             unset($_POST["doc_type_name"]);
@@ -4022,6 +4024,8 @@ class Clients extends AdminController
             unset($_POST["agent_id"]);
             unset($_POST["state"]);
             unset($_POST["address"]);
+            unset($_POST["loan_required"]);
+            unset($_POST["tagging"]);
 
 
             if (empty($client_id) || !empty($agent_id)) {
@@ -4113,6 +4117,12 @@ class Clients extends AdminController
                 }
                 if (!empty($address)) {
                     $updateClientInfo['address'] = $address;
+                }
+                if (!empty($tagging)) {
+                    $updateClientInfo['tagging'] = !empty($tagging) ? $tagging : 0;
+                }
+                if (!empty($loan_required)) {
+                    $updateClientInfo['loan_required'] = !empty($loan_required) ? $loan_required : 0;
                 }
                 $this->db->where('userid', $client_id);
                 $rows_affected = $this->db->update(db_prefix() . 'clients', $updateClientInfo);

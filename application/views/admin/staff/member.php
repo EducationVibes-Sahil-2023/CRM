@@ -121,6 +121,9 @@
                         <?php echo render_input('lastname', 'staff_add_edit_lastname', $value); ?>
                         <?php $value = (isset($member) ? $member->email : ''); ?>
                         <?php echo render_input('email', 'staff_add_edit_email', $value, 'email', array('autocomplete' => 'off')); ?>
+                        <?php $value = (isset($member) ? $member->emp_code : ''); ?>
+                        <?php echo render_input('emp_code', 'Emp Code', $value, 'text', array('autocomplete' => 'off')); ?>
+
                         <div class="form-group">
                            <label for="hourly_rate"><?php echo _l('staff_hourly_rate'); ?></label>
                            <div class="input-group">
