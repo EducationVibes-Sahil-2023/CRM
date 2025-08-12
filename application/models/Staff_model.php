@@ -970,19 +970,24 @@ class Staff_model extends App_Model
         return $this->db->where(["post_sales" => 1, "active" => 1])->get(db_prefix() . 'staff')->result_array();
     }
 
-    public function office_location($id = "", $all = "")
+    public function office_location($id = "", $all = "", $where = [])
     {
         if (is_numeric($id)) {
             $this->db->where('id', $id);
         }
 
-        if (!empty($all) && $all == 1) {
-        } else {
+        // Only filter by status if not fetching all
+        if ($all != 1) {
             $this->db->where('status', 1);
+        }
+
+        if (!empty($where)) {
+            $this->db->where($where);
         }
 
         return $this->db->get(db_prefix() . 'office_location')->result_array();
     }
+
 
     public function staff_department($id = "")
     {

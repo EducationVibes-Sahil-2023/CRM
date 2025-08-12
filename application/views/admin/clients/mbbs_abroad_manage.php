@@ -515,15 +515,11 @@ $client_type = [
 
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
                                  <?php
-                                 $apostille_status = [array("id" => "Pending", "name" => "Pending"), array("id" => "Sent", "name" => "Sent"), array("id" => "Received", "name" => "Received")];
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('apostille_status[]', $apostille_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_status");
+                                 echo render_select('apostille_doc[]', $apostille_documents, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Doc", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_doc");
                                  echo '</div>';
                                  ?>
                               </div>
-
-
-
 
 
                               <div class="col-md-2 margin-top leads-filter-column filter-hide-default filter-org-status hide">
@@ -1250,6 +1246,7 @@ init_tail();
          'assigned': "[name='view_assigned[]']",
          'source': "[name='view_source[]']",
          'apostille_status': "[name='apostille_status[]']",
+         'apostille_doc': "[name='apostille_doc[]']",
          'lead_type': "[name='lead_type[]']",
          'last_from_date': "[name='last_from_date']",
          'last_to_date': "[name='last_to_date']",

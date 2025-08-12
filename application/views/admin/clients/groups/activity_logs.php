@@ -8,11 +8,12 @@
             <option value="2">Quotation Logs Activity</option>
             <option value="3">Documents Delete Activity</option>
             <option value="4">Applicant Activity</option>
+            <option value="5">Document Log Activity</option>
         </select>
     </div>
 
     <!-- Activity Feed Section -->
-    <div class="col-md-12 mt-3" >
+    <div class="col-md-12 mt-3">
         <div class="card">
             <div class="card-body ">
                 <h3 class="card-title">Activity</h3>

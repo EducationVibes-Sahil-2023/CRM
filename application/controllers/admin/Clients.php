@@ -1834,8 +1834,22 @@ class Clients extends AdminController
                 (!empty($this->input->post('office_location')))
             ) {
 
-                $get_data_from_document = get_orignal_document_data_list($ids);
+                $from_location = $this->input->post('from_location');
+                $office_location = $this->staff_model->office_location("", "", ["name" => $from_location]);
 
+                if (!empty($office_location) && isset($office_location[0]["id"])) {
+                    $location_id = $office_location[0]["id"];
+
+                    $get_data_from_document = get_orignal_document_data_list(
+                        $ids,
+                        "",
+                        ["r.location_id" => $location_id]
+                    );
+                } else {
+                    // Handle error or missing location
+                    log_message('error', "Office location not found for: " . $from_location);
+                    $get_data_from_document = [];
+                }
 
 
                 if (!empty($get_data_from_document["error"]) && $get_data_from_document["error"] === true) {
@@ -7282,19 +7296,88 @@ class Clients extends AdminController
 
         $batch_update_data = [];
 
+        // foreach ($legalization as $row) {
+        //     if (empty($row['id'])) {
+        //         continue; // Skip invalid entries
+        //     }
+
+        //     $update_entry = [
+        //         'id'                => $row['id'],
+        //         'ministry_document_recived'           => $row['ministry_doc_received'] ?? 0,
+        //         'leg_payment_date'           => $row['leg_payment_date'] ?? '',
+        //         'leg_applied_date'           => $row['leg_applied_date'] ?? '',
+        //         'contract_signed'  => $row['contract_signed'] ?? 0,
+        //         'leg_m_rec_dated' => !empty($row['ministry_doc_received']) ? date('Y-m-d') : '',
+        //     ];
+
+
+        //     $file_input_name = "ministry_doc_payment_" . $row['id'];
+
+        //     if (isset($files[$file_input_name]) && !empty($files[$file_input_name]['name'])) {
+        //         $document = $files[$file_input_name];
+
+        //         if ($document['error'] === UPLOAD_ERR_OK) {
+        //             $file_extension = pathinfo($document['name'], PATHINFO_EXTENSION);
+        //             $file_name = uniqid("ministry_payment_") . "." . $file_extension;
+
+        //             $uploaded_file = upload_applicant_documents($client_id, [
+        //                 "name"      => $file_name,
+        //                 "type"      => $document['type'],
+        //                 "tmp_name"  => $document['tmp_name'],
+        //                 "error"     => $document['error'],
+        //                 "size"      => $document['size']
+        //             ]);
+
+        //             if (!empty($uploaded_file["file_path"])) {
+        //                 $update_entry['ministry_payment'] = $uploaded_file["file_path"];
+        //                 $update_entry['ministry_payment_date'] = date('Y-m-d H:i:s');
+        //             }
+
+        //             // Log file upload
+        //             $this->db->insert(db_prefix() . 'application_activity_log', [
+        //                 "description" => "Ministry Payment Slip  uploaded by staff ID: " . get_staff_user_id(),
+        //                 "date"        => date('Y-m-d H:i:s'),
+        //                 "staffid"     => get_staff_user_id(),
+        //                 "client_id"   => $client_id
+        //             ]);
+        //         }
+        //     }
+
+        //     $batch_update_data[] = $update_entry;
+        // }
         foreach ($legalization as $row) {
             if (empty($row['id'])) {
                 continue; // Skip invalid entries
             }
 
-            $update_entry = [
-                'id'                => $row['id'],
-                'ministry_document_recived'           => $row['ministry_doc_received'] ?? 0,
-                'leg_payment_date'           => $row['leg_payment_date'] ?? '',
-                'leg_applied_date'           => $row['leg_applied_date'] ?? '',
-                'contract_signed'  => $row['contract_signed'] ?? 0
-            ];
+            // Fetch existing values from DB
+            $existing = $this->db
+                ->select('ministry_document_recived, leg_m_rec_dated')
+                ->where('id', $row['id'])
+                ->get(db_prefix() . 'legalization_table') // change table name accordingly
+                ->row_array();
 
+            $new_ministry_doc_received = $row['ministry_doc_received'] ?? 0;
+            $leg_m_rec_dated = $existing['leg_m_rec_dated'] ?? '';
+
+            // Logic: only set new date if changing from 0 → 1
+            if ($new_ministry_doc_received == 1 && (empty($existing['ministry_document_recived']) || $existing['ministry_document_recived'] == 0)) {
+                $leg_m_rec_dated = date('Y-m-d'); // set today's date
+            }
+            // If changing from 1 → 0, clear the date
+            elseif ($new_ministry_doc_received == 0 && $existing['ministry_document_recived'] == 1) {
+                $leg_m_rec_dated = '';
+            }
+            // else: keep the old date
+
+            $update_entry = [
+                'id'                        => $row['id'],
+                'ministry_document_recived' => $new_ministry_doc_received,
+                'leg_payment_date'          => $row['leg_payment_date'] ?? '',
+                'leg_applied_date'          => $row['leg_applied_date'] ?? '',
+                'contract_signed'           => $row['contract_signed'] ?? 0,
+                'leg_m_rec_dated'            => $leg_m_rec_dated
+            ];
 
             $file_input_name = "ministry_doc_payment_" . $row['id'];
 
@@ -7320,7 +7403,7 @@ class Clients extends AdminController
 
                     // Log file upload
                     $this->db->insert(db_prefix() . 'application_activity_log', [
-                        "description" => "Ministry Payment Slip  uploaded by staff ID: " . get_staff_user_id(),
+                        "description" => "Ministry Payment Slip uploaded by staff ID: " . get_staff_user_id(),
                         "date"        => date('Y-m-d H:i:s'),
                         "staffid"     => get_staff_user_id(),
                         "client_id"   => $client_id
@@ -8928,6 +9011,10 @@ class Clients extends AdminController
             case 4:
                 $table = db_prefix() . "application_activity_log";
                 break;
+            case 5:
+                $table = db_prefix() . "application_activity_log";
+                $like_query = "document uploaded by -";
+                break;
             default:
                 http_response_code(400);
                 echo "Invalid activity type.";
@@ -9020,85 +9107,88 @@ class Clients extends AdminController
     public function orignal_document_received_notification()
     {
         try {
-            $data = $this->input->post(); // Use CodeIgniter input class
-            $client_id = $data["client_id"] ?? null;
+            $client_id = $this->input->post("client_id");
+            $status    = (int) $this->input->post("status"); // 1 = return, 0 = received
 
+            // Validate client ID
             if (empty($client_id)) {
-                http_response_code(400);
-                echo json_encode([
-                    "resp_code" => "ERR",
-                    "resp_desc" => "Client ID is missing."
-                ]);
-                return;
+                return $this->json_error("Client ID is missing.", 400);
             }
 
+            // Fetch client details
             $client = $this->clients_model->getBasicDetails($client_id);
             if (!$client) {
-                http_response_code(404);
-                echo json_encode([
-                    "resp_code" => "ERR",
-                    "resp_desc" => "Client not found."
-                ]);
-                return;
+                return $this->json_error("Client not found.", 404);
             }
-            $status = $_POST["status"] ?? 0;
-            if (!empty($status) && $status == 1) {
-                $email_status = send_mail_template('Applicant_org_doc_return', $client->email, $client_id, get_staff_user_id());
+
+            // Decide email template & document filter
+            if ($status === 1) {
+                $template_name = 'Applicant_org_doc_return';
+                $doc_filter    = ["l.status" => 2];
             } else {
-                // Send email
-                $email_status = send_mail_template('Applicant_org_doc_received', $client->email, $client_id, get_staff_user_id());
+                $template_name = 'Applicant_org_doc_received';
+                $doc_filter    = [];
             }
 
+
+            // Send email
+            $email_status = send_mail_template($template_name, $client->email, $client_id, get_staff_user_id());
             if (!$email_status) {
-                log_message('error', "Failed to send email to client ID: {$client_id}");
-                echo json_encode([
-                    "resp_code" => "ERR",
-                    "resp_desc" => "Failed to send email."
-                ]);
-                return;
+                log_message('error', "Failed to send {$template_name} email to client ID: {$client_id}");
+                return $this->json_error("Failed to send email.");
             }
 
-            // Fetch documents
-            $documents_list = get_orignal_document_data_list([$client_id], !empty($status) ? $status : 0);
-            $documentsList = $documents_list[$client_id]['document_names'] ?? '';
+            $documents_list = get_orignal_document_data_list([$client_id], $status, $doc_filter);
+            $documents_str  = $documents_list[$client_id]['document_names'] ?? '';
 
-            if (!empty($documentsList)) {
-                if (ORIGNAL_DOCUMENT_RECEIVED) {
+            // Get document list
+
+
+            // Update WhatsApp/Email logs if documents exist
+            if (!empty($documents_str)) {
+                $template_id = ($status === 1) ? ORIGNAL_DOCUMENT_RETURN : ORIGNAL_DOCUMENT_RECEIVED;
+
+                if (!empty($template_id)) {
                     $this->db->where([
                         'type'        => 'email',
                         'clientid'    => $client_id,
-                        'template_id' => !empty($status) ? ORIGNAL_DOCUMENT_RECEIVED : ORIGNAL_DOCUMENT_RETURN,
-                    ]);
-                    $this->db->order_by('id', 'DESC');
-                    $this->db->limit(1);
+                        'template_id' => $template_id
+                    ])->order_by('id', 'DESC')->limit(1);
 
-                    $update = $this->db->update(db_prefix() . 'whatsapp_email_logs', [
-                        'documents' => $documentsList
-                    ]);
-
-                    if (!$update) {
+                    if (!$this->db->update(db_prefix() . 'whatsapp_email_logs', ['documents' => $documents_str])) {
                         log_message('error', "Database update failed for client ID: {$client_id}");
                     }
                 } else {
-                    log_message('error', "Email template 'Applicant_org_doc_received' not found.");
+                    log_message('error', "Template ID missing for {$template_name}");
                 }
             }
 
-            echo json_encode([
-                "resp_code" => "RCS",
-                "resp_desc" => "Original Document Email sent successfully."
-            ]);
-            return;
-        } catch (Exception $e) {
+            // Success response
+            return $this->json_success("Original Document Email sent successfully.");
+        } catch (Throwable $e) {
             log_message('error', 'Exception in orignal_document_received_notification: ' . $e->getMessage());
-
-            http_response_code(500);
-            echo json_encode([
-                "resp_code" => "ERR",
-                "resp_desc" => "Internal server error. Please try again later."
-            ]);
-            return;
+            return $this->json_error("Internal server error. Please try again later.", 500);
         }
+    }
+
+    /**
+     * Helper to send JSON success
+     */
+    private function json_success($msg)
+    {
+        http_response_code(200);
+        echo json_encode(["resp_code" => "RCS", "resp_desc" => $msg]);
+        return;
+    }
+
+    /**
+     * Helper to send JSON error
+     */
+    private function json_error($msg, $code = 400)
+    {
+        http_response_code($code);
+        echo json_encode(["resp_code" => "ERR", "resp_desc" => $msg]);
+        return;
     }
 
     public function get_universities_course_list()
