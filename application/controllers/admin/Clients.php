@@ -7307,7 +7307,7 @@ class Clients extends AdminController
         //         'leg_payment_date'           => $row['leg_payment_date'] ?? '',
         //         'leg_applied_date'           => $row['leg_applied_date'] ?? '',
         //         'contract_signed'  => $row['contract_signed'] ?? 0,
-        //         'leg_m_rec_dated' => !empty($row['ministry_doc_received']) ? date('Y-m-d') : '',
+        //         'leg_m_rec_date' => !empty($row['ministry_doc_received']) ? date('Y-m-d') : '',
         //     ];
 
 
@@ -7352,21 +7352,21 @@ class Clients extends AdminController
 
             // Fetch existing values from DB
             $existing = $this->db
-                ->select('ministry_document_recived, leg_m_rec_dated')
+                ->select('ministry_document_recived, leg_m_rec_date')
                 ->where('id', $row['id'])
                 ->get(db_prefix() . 'legalization_table') // change table name accordingly
                 ->row_array();
 
             $new_ministry_doc_received = $row['ministry_doc_received'] ?? 0;
-            $leg_m_rec_dated = $existing['leg_m_rec_dated'] ?? '';
+            $leg_m_rec_date = $existing['leg_m_rec_date'] ?? '';
 
             // Logic: only set new date if changing from 0 → 1
             if ($new_ministry_doc_received == 1 && (empty($existing['ministry_document_recived']) || $existing['ministry_document_recived'] == 0)) {
-                $leg_m_rec_dated = date('Y-m-d'); // set today's date
+                $leg_m_rec_date = date('Y-m-d'); // set today's date
             }
             // If changing from 1 → 0, clear the date
             elseif ($new_ministry_doc_received == 0 && $existing['ministry_document_recived'] == 1) {
-                $leg_m_rec_dated = '';
+                $leg_m_rec_date = '';
             }
             // else: keep the old date
 
@@ -7376,7 +7376,7 @@ class Clients extends AdminController
                 'leg_payment_date'          => $row['leg_payment_date'] ?? '',
                 'leg_applied_date'          => $row['leg_applied_date'] ?? '',
                 'contract_signed'           => $row['contract_signed'] ?? 0,
-                'leg_m_rec_dated'            => $leg_m_rec_dated
+                'leg_m_rec_date'            => $leg_m_rec_date
             ];
 
             $file_input_name = "ministry_doc_payment_" . $row['id'];
