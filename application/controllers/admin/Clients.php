@@ -7354,7 +7354,7 @@ class Clients extends AdminController
             $existing = $this->db
                 ->select('ministry_document_recived, leg_m_rec_date')
                 ->where('id', $row['id'])
-                ->get(db_prefix() . 'legalization_table') // change table name accordingly
+                ->get(db_prefix() . 'client_university_shortlisting') // change table name accordingly
                 ->row_array();
 
             $new_ministry_doc_received = $row['ministry_doc_received'] ?? 0;
