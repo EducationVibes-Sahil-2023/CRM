@@ -601,7 +601,7 @@ class Login_Controller extends Api_Controller
 
     public function applicant_sync_excel()
     {
-       
+
         $this->load->helper('google');
 
         // Initialize response
@@ -646,5 +646,30 @@ class Login_Controller extends Api_Controller
 
         // Output JSON response
         echo $this->json_output([$response]);
+    }
+
+
+    public function lead_sync_excel()
+    {
+        $this->load->helper('google');
+
+        // Initialize response
+        $response = [
+            'status' => 0,
+            'message' => 'An unknown error occurred.',
+        ];
+
+        $auto_sync = syncExcel_leads();
+
+        if ($auto_sync === true) {
+            $response = [
+                'status' => 1,
+                'message' => 'Google sheet synced successfully.',
+            ];
+        } else {
+            // Assume syncExcel() returns false or an error string/array
+            $errorMessage = is_array($auto_sync) ? $auto_sync[0] : 'Sync failed due to unknown reason.';
+            throw new Exception($errorMessage);
+        }
     }
 }

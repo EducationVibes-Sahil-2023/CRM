@@ -31,6 +31,7 @@ class Excel extends AdminController
             $data = $this->input->post();
 
             $sheetId = isset($data['sheetid']) ? intval($data['sheetid']) : 0;
+            $excel_type = isset($data['excel_type']) ? intval($data['excel_type']) : 0;
             $fromDate = isset($data['fromDate']) && $data['fromDate'] != '' && $data['fromDate'] != '0000-00-00' ? $data['fromDate'] : null;
             $toDate   = isset($data['toDate']) && $data['toDate'] != '' && $data['toDate'] != '0000-00-00' ? $data['toDate'] : null;
 
@@ -46,7 +47,8 @@ class Excel extends AdminController
                 'status' => 1,
                 'autoSync' => 1,
                 'created_by' => get_staff_user_id(),
-                'created_at' => date('Y-m-d H:i:s')
+                'created_at' => date('Y-m-d H:i:s'),
+                'excel_type' => $data['excel_type'] ?? '',
             ];
 
             $sorted_data = [];
