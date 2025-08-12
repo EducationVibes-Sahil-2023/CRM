@@ -589,6 +589,226 @@ function syncExcel_new($id = "")
 }
 
 
+// function syncExcel_neww($id = "")
+// {
+//     $CI = &get_instance();
+
+//     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+//     // Fetch sheet config(s)
+//     $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids,orignal_documents_status,excel_type")
+//         ->from(db_prefix() . "excel_data_update")
+//         // ->where("excel_type", 1)
+//         ->where("autoSync", 1);
+
+//     if (!empty($id)) {
+//         $CI->db->where("spreadsheetId", $id);
+//     }
+
+//     $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
+
+//     if (empty($sheetData)) {
+//         return [];
+//     }
+
+//     $dataArray = [];
+//     foreach ($sheetData as $sheet) {
+
+//         if ($sheet['excel_type'] == 2) {
+//             leads_excel_sync();
+//             die;
+//         }
+
+//         if ($sheet['excel_type'] != 1) {
+//             continue;
+//         }
+
+
+//         $currentId               = $sheet['id'] ?? null;
+//         $fromDate                = $sheet['fromDate'] ?? null;
+//         $toDate                  = $sheet['toDate'] ?? null;
+//         $acadmic_year            = $sheet['acadmic_year'] ?? null;
+//         $spreadsheetId           = $sheet['spreadsheetId'] ?? null;
+//         $sheet_name              = $sheet['sheet_name'] ?? null;
+//         $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
+//         $sql_conditions          = $sheet['sql_condition'] ?? null;
+
+//         $column_ids_raw = $sheet['column_ids'] ?? '';
+//         $column_ids = is_string($column_ids_raw) && !empty($column_ids_raw)
+//             ? explode(",", $column_ids_raw)
+//             : [];
+
+//         $order = implode(',', $column_ids);
+
+//         $selectColumnName = $CI->db
+//             ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
+//             ->from(db_prefix() . "excel_column_update")
+//             ->where_in("id", $column_ids)
+//             ->get()
+//             ->row()
+//             ->fetch_column_name ?? '';
+
+//         if (empty($selectColumnName)) {
+//             continue;
+//         }
+
+//         $extra_columns = [];
+//         if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
+
+//             $orignal_documents = get_orignal_document_list();
+//             $upload_document = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
+
+//             $queryPart = [];
+
+
+
+//             if (!empty($orignal_documents)) {
+//                 foreach ($orignal_documents as $document) {
+//                     $short_name = trim($document['short_name']);
+//                     $safe_column_name = str_replace(" ", "_", $short_name);
+//                     $extra_columns[] = $safe_column_name;
+
+//                     $queryPart[] = "MAX(CASE WHEN od.short_name = '" . $CI->db->escape_str($short_name) . "' 
+//                           THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
+//                 }
+//             }
+
+//             if (!empty($upload_document)) {
+//                 foreach ($upload_document as $docu) {
+//                     $doc_id = (int) $docu['id'];
+//                     $safe_column_name = str_replace(" ", "_", $docu["name"]);
+//                     $extra_columns[] = $safe_column_name;
+
+//                     $queryPart[] = "
+//             CASE
+//                 WHEN JSON_SEARCH(
+//                     CAST(CAST(cd.data AS CHAR CHARACTER SET utf8) AS JSON),
+//                     'one',
+//                     '$doc_id',
+//                     NULL,
+//                     '$.*.id'
+//                 ) IS NOT NULL
+//                 THEN 'YES'
+//                 ELSE 'NO'
+//             END AS `$safe_column_name`
+//         ";
+//                 }
+//             }
+
+//             $extra_columns[] = "Invitation_letter";
+//             $queryPart[] = "IF(u.invitation_letter IS NOT NULL AND u.invitation_letter != '', 'Yes', 'No') AS Invitation_letter";
+
+//             $extra_columns[] = "Admission_letter";
+//             $queryPart[] = "IF(u.application_file IS NOT NULL AND u.application_file != '', 'Yes', 'No') AS Admission_letter";
+
+
+//             if (!empty($queryPart)) {
+//                 $selectColumnName .= ', ' . implode(",\n", $queryPart);
+//             }
+//         }
+
+//         $condition_sql = "";
+
+//         if (!empty($fromDate) && !empty($toDate)) {
+//             $condition_sql .= " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
+//         }
+
+//         if (!empty($acadmic_year)) {
+//             $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+//         }
+
+//         if (!empty($sql_conditions)) {
+//             $condition_sql .= " {$sql_conditions}";
+//         }
+
+//         $sql = "SELECT {$selectColumnName}
+//                 FROM " . db_prefix() . "clients c
+//                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
+//                 LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+//                 LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+//                 LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+//                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+//                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+//                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
+//                 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+//                 LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1
+//                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
+//                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
+//                 LEFT JOIN " . db_prefix() . "orignal_documents_received dr ON dr.userid = c.userid
+//                 LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = dr.location_id
+//                 LEFT JOIN " . db_prefix() . "orignal_documents od ON od.id = dr.doc_id
+//                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+//                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+//                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
+//                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
+//                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
+//                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
+//                 LEFT JOIN (
+//                     SELECT 
+//                         userid,
+//                         SUM(apostille_cost) AS Total_cost,
+//                         MAX(courier_date) AS courier_date,
+//                         MAX(payment_date) AS payment_date,
+//                         GROUP_CONCAT(vendor_id) AS vendor_id,
+//                         CASE 
+//                             WHEN COUNT(*) = 0 THEN 'Pending'
+//                             WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+//                             WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+//                             ELSE 'Pending'
+//                         END AS apostille_status
+//                     FROM " . db_prefix() . "client_apostille_data
+//                     GROUP BY userid
+//                 ) AS apostille_summary ON apostille_summary.userid = c.userid
+//                 WHERE 1=1 {$condition_sql}
+//                 GROUP BY c.userid";
+
+//         //  if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
+
+//         //      echo $sql;
+//         //      die;
+//         //  }
+//         $arrayData = $CI->db->query($sql)->result_array();
+
+//         $sheetColumnName = $CI->db->select("name")
+//             ->from(db_prefix() . "excel_column_update")
+//             ->where_in("id", $column_ids)
+//             ->order_by("FIELD(id, " . implode(',', array_map('intval', $column_ids)) . ")", "", false)
+//             ->get()
+//             ->result_array();
+
+//         $columns = array_column($sheetColumnName, "name");
+//         if (!empty($extra_columns)) {
+//             $columns = array_merge($columns, $extra_columns);
+//         }
+
+//         $arrayDataValues = [];
+//         foreach ($arrayData as $row) {
+//             $valuesOnly = [];
+//             foreach ($row as $v) {
+//                 $valuesOnly[] = $v === null ? '' : $v;
+//             }
+//             $arrayDataValues[] = $valuesOnly;
+//         }
+
+//         $CI->db->where('id', $currentId);
+//         $CI->db->update(db_prefix() . "excel_data_update", [
+//             'lastSync' => date('Y-m-d H:i:s')
+//         ]);
+
+//         $dataArray[] = array(
+//             "columnName" => $columns,
+//             "workSheetName" => $sheet_name,
+//             "rowData" => $arrayDataValues
+//         );
+//     }
+
+//     header('Content-Type: application/json');
+//     echo json_encode($dataArray);
+//     die;
+// }
+
 function syncExcel_neww($id = "")
 {
     $CI = &get_instance();
@@ -596,7 +816,7 @@ function syncExcel_neww($id = "")
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition,column_ids,orignal_documents_status")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -611,24 +831,39 @@ function syncExcel_neww($id = "")
     }
 
     $dataArray = [];
+
     foreach ($sheetData as $sheet) {
+        // Excel type handling
+        if ((int) $sheet['excel_type'] === 2) {
+            leads_excel_sync();
+            return; // avoid die() unless debugging
+        }
+        if ((int) $sheet['excel_type'] !== 1) {
+            continue;
+        }
 
-        $currentId               = $sheet['id'] ?? null;
-        $fromDate                = $sheet['fromDate'] ?? null;
-        $toDate                  = $sheet['toDate'] ?? null;
-        $acadmic_year            = $sheet['acadmic_year'] ?? null;
-        $spreadsheetId           = $sheet['spreadsheetId'] ?? null;
-        $sheet_name              = $sheet['sheet_name'] ?? null;
+        $currentId                = $sheet['id'] ?? null;
+        $fromDate                 = $sheet['fromDate'] ?? null;
+        $toDate                   = $sheet['toDate'] ?? null;
+        $acadmic_year             = $sheet['acadmic_year'] ?? null;
+        $spreadsheetId            = $sheet['spreadsheetId'] ?? null;
+        $sheet_name               = $sheet['sheet_name'] ?? null;
         $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
-        $sql_conditions          = $sheet['sql_condition'] ?? null;
+        $sql_conditions           = $sheet['sql_condition'] ?? null;
 
+        // Parse column IDs
         $column_ids_raw = $sheet['column_ids'] ?? '';
-        $column_ids = is_string($column_ids_raw) && !empty($column_ids_raw)
-            ? explode(",", $column_ids_raw)
+        $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
+            ? array_filter(array_map('intval', explode(",", $column_ids_raw)))
             : [];
+
+        if (empty($column_ids)) {
+            continue; // skip if no columns configured
+        }
 
         $order = implode(',', $column_ids);
 
+        // Fetch column names in correct order
         $selectColumnName = $CI->db
             ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
             ->from(db_prefix() . "excel_column_update")
@@ -642,74 +877,69 @@ function syncExcel_neww($id = "")
         }
 
         $extra_columns = [];
-        if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
 
+        // Handle original documents extra columns
+        if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
             $orignal_documents = get_orignal_document_list();
-            $upload_document = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
+            $upload_document   = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
 
             $queryPart = [];
 
-
-
             if (!empty($orignal_documents)) {
                 foreach ($orignal_documents as $document) {
-                    $short_name = trim($document['short_name']);
-                    $safe_column_name = str_replace(" ", "_", $short_name);
-                    $extra_columns[] = $safe_column_name;
-
-                    $queryPart[] = "MAX(CASE WHEN od.short_name = '" . $CI->db->escape_str($short_name) . "' 
-                          THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
+                    $short_name        = trim($document['short_name']);
+                    $safe_column_name  = str_replace(" ", "_", $short_name);
+                    $extra_columns[]   = $safe_column_name;
+                    $queryPart[]       = "MAX(CASE WHEN od.short_name = " . $CI->db->escape($short_name) . " THEN 'YES' ELSE 'NO' END) AS `" . $safe_column_name . "`";
                 }
             }
 
             if (!empty($upload_document)) {
                 foreach ($upload_document as $docu) {
-                    $doc_id = (int) $docu['id'];
+                    $doc_id           = (int) $docu['id'];
                     $safe_column_name = str_replace(" ", "_", $docu["name"]);
-                    $extra_columns[] = $safe_column_name;
-
-                    $queryPart[] = "
-            CASE
-                WHEN JSON_SEARCH(
-                    CAST(CAST(cd.data AS CHAR CHARACTER SET utf8) AS JSON),
-                    'one',
-                    '$doc_id',
-                    NULL,
-                    '$.*.id'
-                ) IS NOT NULL
-                THEN 'YES'
-                ELSE 'NO'
-            END AS `$safe_column_name`
-        ";
+                    $extra_columns[]  = $safe_column_name;
+                    $queryPart[]      = "
+                        CASE
+                            WHEN JSON_SEARCH(
+                                CAST(CAST(cd.data AS CHAR CHARACTER SET utf8) AS JSON),
+                                'one',
+                                '$doc_id',
+                                NULL,
+                                '$.*.id'
+                            ) IS NOT NULL
+                            THEN 'YES'
+                            ELSE 'NO'
+                        END AS `$safe_column_name`";
                 }
             }
 
+            // Invitation letter
             $extra_columns[] = "Invitation_letter";
             $queryPart[] = "IF(u.invitation_letter IS NOT NULL AND u.invitation_letter != '', 'Yes', 'No') AS Invitation_letter";
 
+            // Admission letter
             $extra_columns[] = "Admission_letter";
             $queryPart[] = "IF(u.application_file IS NOT NULL AND u.application_file != '', 'Yes', 'No') AS Admission_letter";
-
 
             if (!empty($queryPart)) {
                 $selectColumnName .= ', ' . implode(",\n", $queryPart);
             }
         }
 
+        // Build conditions
         $condition_sql = "";
-
         if (!empty($fromDate) && !empty($toDate)) {
-            $condition_sql .= " AND (c.datecreated BETWEEN '{$fromDate}' AND '{$toDate}')";
+            $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
-
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = '{$acadmic_year}')";
+            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
-
         if (!empty($sql_conditions)) {
             $condition_sql .= " {$sql_conditions}";
         }
 
+        // Main SQL
         $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
@@ -753,17 +983,13 @@ function syncExcel_neww($id = "")
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
 
-        //  if (!empty($orignal_documents_status) && $orignal_documents_status == 1) {
-
-        //      echo $sql;
-        //      die;
-        //  }
         $arrayData = $CI->db->query($sql)->result_array();
 
+        // Get column names
         $sheetColumnName = $CI->db->select("name")
             ->from(db_prefix() . "excel_column_update")
             ->where_in("id", $column_ids)
-            ->order_by("FIELD(id, " . implode(',', array_map('intval', $column_ids)) . ")", "", false)
+            ->order_by("FIELD(id, " . implode(',', $column_ids) . ")", "", false)
             ->get()
             ->result_array();
 
@@ -772,6 +998,7 @@ function syncExcel_neww($id = "")
             $columns = array_merge($columns, $extra_columns);
         }
 
+        // Prepare data rows
         $arrayDataValues = [];
         foreach ($arrayData as $row) {
             $valuesOnly = [];
@@ -781,21 +1008,139 @@ function syncExcel_neww($id = "")
             $arrayDataValues[] = $valuesOnly;
         }
 
+        // Update last sync
         $CI->db->where('id', $currentId);
         $CI->db->update(db_prefix() . "excel_data_update", [
             'lastSync' => date('Y-m-d H:i:s')
         ]);
 
-        $dataArray[] = array(
-            "columnName" => $columns,
+        // Add to final array
+        $dataArray[] = [
+            "columnName"    => $columns,
             "workSheetName" => $sheet_name,
-            "rowData" => $arrayDataValues
-        );
+            "rowData"       => $arrayDataValues
+        ];
+    }
+
+    // Output JSON safely
+    header('Content-Type: application/json');
+    echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+
+function leads_excel_sync($id = "")
+{
+    $CI = &get_instance();
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    // Fetch sheet configs
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("excel_type", 2)
+        ->where("autoSync", 1);
+
+    if (!empty($id)) {
+        $CI->db->where("spreadsheetId", $id);
+    }
+
+    $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
+    if (empty($sheetData)) {
+        return [];
+    }
+
+    $dataArray = [];
+
+    foreach ($sheetData as $sheet) {
+        $currentId      = $sheet['id'];
+        $fromDate       = $sheet['fromDate'] ?? null;
+        $toDate         = $sheet['toDate'] ?? null;
+        $spreadsheetId  = $sheet['spreadsheetId'] ?? null;
+        $sheet_name     = $sheet['sheet_name'] ?? null;
+        $column_ids_raw = $sheet['column_ids'] ?? '';
+        $column_ids     = is_string($column_ids_raw) && !empty($column_ids_raw)
+            ? array_map('intval', explode(",", $column_ids_raw))
+            : [];
+
+        if (empty($column_ids)) {
+            continue; // No columns, skip this sheet
+        }
+
+        // Build column select order
+        $order = implode(',', $column_ids);
+        $selectColumnName = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, {$order})) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
+            ->fetch_column_name ?? '';
+
+        if (empty($selectColumnName)) {
+            continue; // No valid columns found
+        }
+
+        // SQL condition
+        $condition_sql = "";
+        if (!empty($fromDate) && !empty($toDate)) {
+            $condition_sql .= " AND DATE(l.dateadded) BETWEEN '{$fromDate}' AND '{$toDate}'";
+        }
+        if (!empty($sheet['sql_condition'])) {
+            $condition_sql .= " {$sheet['sql_condition']}";
+        }
+
+        // Main SQL
+        $sql = "
+            SELECT {$selectColumnName}
+            FROM tblleads l
+            LEFT JOIN tblleads_status ls ON l.status = ls.id
+            LEFT JOIN tblleads_type lt ON lt.id = l.type
+            LEFT JOIN tblleads_sources lso ON lso.id = l.source
+            LEFT JOIN tblstaff tsf ON tsf.staffid = l.assigned
+            LEFT JOIN tblreminders tr ON l.id = tr.rel_id AND tr.rel_type = 'lead'
+            LEFT JOIN tbllead_marketing lm ON lm.id = lso.marketing_type
+            LEFT JOIN tblcustomfields cf ON cf.fieldto = 'leads' AND cf.active = '1'
+            LEFT JOIN tblcustomfieldsvalues cfv ON cfv.fieldto = 'leads' AND cfv.fieldid = cf.id AND cfv.relid = l.id
+            WHERE 1=1 {$condition_sql}
+            GROUP BY l.id
+            ORDER BY l.id DESC
+        ";
+
+        $arrayData = $CI->db->query($sql)->result_array();
+
+        // Get column names in correct order
+        $sheetColumnName = $CI->db->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->where("excel_type", 2)
+            ->order_by("FIELD(id, {$order})", "", false)
+            ->get()
+            ->result_array();
+
+        $columns = array_column($sheetColumnName, "name");
+
+        // Prepare row values
+        $arrayDataValues = array_map(function ($row) {
+            return array_map(fn($v) => $v === null ? '' : $v, $row);
+        }, $arrayData);
+
+        // Update last sync time
+        $CI->db->where('id', $currentId)
+            ->update(db_prefix() . "excel_data_update", [
+                'lastSync' => date('Y-m-d H:i:s')
+            ]);
+
+        // Add to final output
+        $dataArray[] = [
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayDataValues
+        ];
     }
 
     header('Content-Type: application/json');
     echo json_encode($dataArray);
-    die;
+    exit;
 }
 
 
