@@ -365,7 +365,7 @@ if ($this->ci->input->post('apostille_doc')) {
     }, $apostille_doc);
 
     // Combine multiple FIND_IN_SET with OR
-    $where[] = '(' . implode(' OR ', $findInSetClauses) . ')';
+    $where[] = ' AND (' . implode(' AND ', $findInSetClauses) . ')';
 }
 
 
