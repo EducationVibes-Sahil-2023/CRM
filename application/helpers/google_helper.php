@@ -538,7 +538,7 @@ function syncExcel_new($id = "")
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
 
-      
+
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Fetch column headers (in order)
@@ -733,6 +733,7 @@ function syncExcel_neww($id = "")
                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
+                LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
                 LEFT JOIN (
                     SELECT 
                         userid,
