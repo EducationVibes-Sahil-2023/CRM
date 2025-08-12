@@ -538,12 +538,7 @@ function syncExcel_new($id = "")
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
 
-        if (!empty($orignal_documents)) {
-            //               echo $sql;
-            // die;
-        }
-        // echo $sql;
-        // die;
+      
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Fetch column headers (in order)

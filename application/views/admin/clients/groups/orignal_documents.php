@@ -39,10 +39,10 @@ if (!is_postSale() && !is_admin()) {
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>)"><i class="fa fa-envelope"></i> </button>
                 <?php }
 
-                echo "<br> <div class='mt-5 margin-top return-documents'  style='display:none'>";
+                echo "<br> <div class='mt-5 margin-top return-documents'>";
                 if ($client->client_type == 1) {
                     echo "Document Return Notification";
-                    getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RETURN, $client_id);
+                   echo  getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RETURN, $client_id);
                 ?>
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>,1)"><i class="fa fa-envelope"></i> </button>
                 <?php }
