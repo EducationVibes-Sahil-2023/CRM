@@ -1810,7 +1810,7 @@ function get_application_statuses($id = "")
     }
 }
 
-function get_orignal_document_data_list($client_ids_array = [], $return = 0)
+function get_orignal_document_data_list($client_ids_array = [], $return = 0, $where = [])
 {
     $client_ids = implode(",", $client_ids_array);
     $CI = &get_instance();
@@ -1822,6 +1822,10 @@ function get_orignal_document_data_list($client_ids_array = [], $return = 0)
         $CI->db->where("l.status", 2);
     } else {
         $CI->db->where("l.status", 1);
+    }
+
+    if (!empty($where)) {
+        $CI->db->where($where);
     }
 
     $CI->db->group_by("r.userid");

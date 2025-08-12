@@ -179,7 +179,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
  ) ',
     "LEFT JOIN (
         SELECT 
-            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,
+            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,GROUP_CONCAT(doc_id) as doc_id,
             CASE 
                 WHEN COUNT(*) = 0 THEN 'Pending'
                 WHEN SUM(received_status = 0) > 0 THEN 'Sent'
@@ -356,6 +356,18 @@ if ($this->ci->input->post('apostille_status')) {
 
     array_push($where, 'AND COALESCE(apostille_summary.apostille_status,"Pending") IN (' . implode(',', $apostille_status) . ')');
 }
+
+if ($this->ci->input->post('apostille_doc')) {
+    $apostille_doc = $this->ci->input->post('apostille_doc'); // array of IDs
+
+    $findInSetClauses = array_map(function ($status) {
+        return "FIND_IN_SET('" . $this->ci->db->escape_str($status) . "', apostille_summary.doc_id)";
+    }, $apostille_doc);
+
+    // Combine multiple FIND_IN_SET with OR
+    $where[] = '(' . implode(' OR ', $findInSetClauses) . ')';
+}
+
 
 
 if ($this->ci->input->post('application_stage')) {
