@@ -301,11 +301,12 @@ $academicYears = [
 
 
     function select_all_checkbox(obj, className) {
-        if ($(obj).prop("checked")) {
-            $("." + className).prop("checked", true);
-        } else {
-            $("." + className).prop("checked", false);
-        }
+   if ($(obj).prop("checked")) {
+    $("." + className + ":visible").prop("checked", true);
+} else {
+    $("." + className + ":visible").prop("checked", false);
+}
+
     }
 
     $(document).ready(function() {
