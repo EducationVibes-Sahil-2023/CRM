@@ -811,6 +811,7 @@ function syncExcel_new($id = "")
 
 function syncExcel_neww($id = "")
 {
+    
     $CI = &get_instance();
 
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
@@ -835,8 +836,9 @@ function syncExcel_neww($id = "")
     foreach ($sheetData as $sheet) {
         // Excel type handling
         if ((int) $sheet['excel_type'] === 2) {
-            leads_excel_sync();
-            return; // avoid die() unless debugging
+           
+            leads_excel_sync($id);
+           die;
         }
         if ((int) $sheet['excel_type'] !== 1) {
             continue;
@@ -999,14 +1001,16 @@ function syncExcel_neww($id = "")
         }
 
         // Prepare data rows
-        $arrayDataValues = [];
-        foreach ($arrayData as $row) {
-            $valuesOnly = [];
-            foreach ($row as $v) {
-                $valuesOnly[] = $v === null ? '' : $v;
-            }
-            $arrayDataValues[] = $valuesOnly;
-        }
+        // $arrayDataValues = [];
+        // foreach ($arrayData as $row) {
+        //     $valuesOnly = [];
+        //     foreach ($row as $v) {
+        //         $valuesOnly[] = $v === null ? '' : $v;
+        //     }
+        //     $arrayDataValues[] = $valuesOnly;
+        // }
+
+$arrayDataValues = array_map('array_values', $arrayData);
 
         // Update last sync
         $CI->db->where('id', $currentId);
@@ -1051,97 +1055,118 @@ function leads_excel_sync($id = "")
 
     $dataArray = [];
 
+    // Fetch lead types once
+    $leadTypes = $CI->db->select("name, id")
+        ->from("tblleads_type")
+        ->where("autoSync", 1)
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
+
     foreach ($sheetData as $sheet) {
-        $currentId      = $sheet['id'];
-        $fromDate       = $sheet['fromDate'] ?? null;
-        $toDate         = $sheet['toDate'] ?? null;
-        $spreadsheetId  = $sheet['spreadsheetId'] ?? null;
-        $sheet_name     = $sheet['sheet_name'] ?? null;
-        $column_ids_raw = $sheet['column_ids'] ?? '';
-        $column_ids     = is_string($column_ids_raw) && !empty($column_ids_raw)
-            ? array_map('intval', explode(",", $column_ids_raw))
-            : [];
+        foreach ($leadTypes as $lType) {
+            
+            $currentId      = $sheet['id'];
+            $fromDate       = $sheet['fromDate'] ?? null;
+            $toDate         = $sheet['toDate'] ?? null;
+            $spreadsheetId  = $sheet['spreadsheetId'] ?? null;
+            $sheet_name     = $lType['name'] ?? null;
+            $column_ids_raw = $sheet['column_ids'] ?? '';
+            $column_ids     = is_string($column_ids_raw) && !empty($column_ids_raw)
+                ? array_map('intval', explode(",", $column_ids_raw))
+                : [];
 
-        if (empty($column_ids)) {
-            continue; // No columns, skip this sheet
+            if (empty($column_ids)) {
+                continue; // Skip if no columns
+            }
+
+            // Build ordered column IDs for SQL FIELD()
+            $orderColumns = implode(',', $column_ids);
+
+            // Get actual column names in the specified order
+            $selectColumnName = $CI->db
+                ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, {$orderColumns})) AS fetch_column_name", false)
+                ->from(db_prefix() . "excel_column_update")
+                ->where_in("id", $column_ids)
+                ->get()
+                ->row()
+                ->fetch_column_name ?? '';
+
+            if (empty($selectColumnName)) {
+                continue;
+            }
+
+            // SQL condition
+            $condition_sql = "";
+            if (!empty($fromDate) && !empty($toDate)) {
+                $condition_sql .= " AND DATE(l.dateadded) BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate);
+            }
+            if (!empty($lType['id'])) {
+                $condition_sql .= " AND l.type = " . (int)$lType['id'];
+            }
+            // if (!empty($sheet['sql_condition'])) {
+            //     $condition_sql .= " " . $sheet['sql_condition']; // Optional — ensure it's safe before enabling
+            // }
+$limit  = isset($_GET['limit']) ? (int)$_GET['limit'] : 500; // default batch size
+$offset = isset($_GET['offset']) ? (int)$_GET['offset'] : 0;
+
+            // Main SQL query
+            $sql = "
+                SELECT {$selectColumnName}
+                FROM tblleads l
+                LEFT JOIN tblleads_status ls ON l.status = ls.id
+                LEFT JOIN tblleads_type lt ON lt.id = l.type
+                LEFT JOIN tblleads_sources lso ON lso.id = l.source
+                LEFT JOIN tblstaff tsf ON tsf.staffid = l.assigned
+                LEFT JOIN tblreminders tr ON l.id = tr.rel_id AND tr.rel_type = 'lead'
+                LEFT JOIN tbllead_marketing lm ON lm.id = lso.marketing_type
+                LEFT JOIN tblcustomfields cf ON cf.fieldto = 'leads' AND cf.active = '1'
+                LEFT JOIN tblcustomfieldsvalues cfv ON cfv.fieldto = 'leads' AND cfv.fieldid = cf.id AND cfv.relid = l.id
+                WHERE 1=1 {$condition_sql}
+                GROUP BY l.id
+                ORDER BY l.id DESC
+                LIMIT {$offset}, {$limit}
+            ";
+
+            $arrayData = $CI->db->query($sql)->result_array();
+
+
+            // Column names for final output
+            $sheetColumnName = $CI->db->select("name")
+                ->from(db_prefix() . "excel_column_update")
+                ->where_in("id", $column_ids)
+                ->where("excel_type", 2)
+                ->order_by("FIELD(id, {$orderColumns})", "", false)
+                ->get()
+                ->result_array();
+
+            $columns = array_column($sheetColumnName, "name");
+
+            // Format row values
+       
+$arrayData = array_map('array_values', $arrayData);
+
+
+            // Update last sync
+            $CI->db->where('id', $currentId)
+                ->update(db_prefix() . "excel_data_update", [
+                    'lastSync' => date('Y-m-d H:i:s')
+                ]);
+
+            // Append to output
+            $dataArray[] = [
+                "columnName"    => $columns,
+                "workSheetName" => $sheet_name,
+                "rowData"       => $arrayData
+            ];
         }
-
-        // Build column select order
-        $order = implode(',', $column_ids);
-        $selectColumnName = $CI->db
-            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, {$order})) AS fetch_column_name", false)
-            ->from(db_prefix() . "excel_column_update")
-            ->where_in("id", $column_ids)
-            ->get()
-            ->row()
-            ->fetch_column_name ?? '';
-
-        if (empty($selectColumnName)) {
-            continue; // No valid columns found
-        }
-
-        // SQL condition
-        $condition_sql = "";
-        if (!empty($fromDate) && !empty($toDate)) {
-            $condition_sql .= " AND DATE(l.dateadded) BETWEEN '{$fromDate}' AND '{$toDate}'";
-        }
-        if (!empty($sheet['sql_condition'])) {
-            $condition_sql .= " {$sheet['sql_condition']}";
-        }
-
-        // Main SQL
-        $sql = "
-            SELECT {$selectColumnName}
-            FROM tblleads l
-            LEFT JOIN tblleads_status ls ON l.status = ls.id
-            LEFT JOIN tblleads_type lt ON lt.id = l.type
-            LEFT JOIN tblleads_sources lso ON lso.id = l.source
-            LEFT JOIN tblstaff tsf ON tsf.staffid = l.assigned
-            LEFT JOIN tblreminders tr ON l.id = tr.rel_id AND tr.rel_type = 'lead'
-            LEFT JOIN tbllead_marketing lm ON lm.id = lso.marketing_type
-            LEFT JOIN tblcustomfields cf ON cf.fieldto = 'leads' AND cf.active = '1'
-            LEFT JOIN tblcustomfieldsvalues cfv ON cfv.fieldto = 'leads' AND cfv.fieldid = cf.id AND cfv.relid = l.id
-            WHERE 1=1 {$condition_sql}
-            GROUP BY l.id
-            ORDER BY l.id DESC
-        ";
-
-        $arrayData = $CI->db->query($sql)->result_array();
-
-        // Get column names in correct order
-        $sheetColumnName = $CI->db->select("name")
-            ->from(db_prefix() . "excel_column_update")
-            ->where_in("id", $column_ids)
-            ->where("excel_type", 2)
-            ->order_by("FIELD(id, {$order})", "", false)
-            ->get()
-            ->result_array();
-
-        $columns = array_column($sheetColumnName, "name");
-
-        // Prepare row values
-        $arrayDataValues = array_map(function ($row) {
-            return array_map(fn($v) => $v === null ? '' : $v, $row);
-        }, $arrayData);
-
-        // Update last sync time
-        $CI->db->where('id', $currentId)
-            ->update(db_prefix() . "excel_data_update", [
-                'lastSync' => date('Y-m-d H:i:s')
-            ]);
-
-        // Add to final output
-        $dataArray[] = [
-            "columnName"    => $columns,
-            "workSheetName" => $sheet_name,
-            "rowData"       => $arrayDataValues
-        ];
     }
 
     header('Content-Type: application/json');
     echo json_encode($dataArray);
     exit;
 }
+
 
 
 // Read data from sheet
