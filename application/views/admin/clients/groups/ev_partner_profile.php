@@ -24,9 +24,9 @@ foreach ($documents_type as $documents) {
 	}
 }
 
-array_push($documents_type, array("id" => "application", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "invitation", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "visa", "name" => "Visa", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "application", "disabled" => 1, "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "invitation", "disabled" => 1, "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "visa", "disabled" => 1, "name" => "Visa", "file_type" => ".pdf,image/*"));
 
 
 $staff_id = [];
@@ -56,8 +56,9 @@ if (!empty($client_id)) {
 	if (!empty($applicant_documents[0]["data"])) {
 		$applicant_documents = json_decode($applicant_documents[0]["data"], true);
 		array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
-		array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
-		array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
+		array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
+		array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
+
 		if (!empty($applicant_documents)) {
 			$applicant_documents = array_column($applicant_documents, null, "id");
 		}
