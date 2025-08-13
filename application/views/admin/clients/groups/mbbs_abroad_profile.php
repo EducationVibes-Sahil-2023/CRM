@@ -22,9 +22,9 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
-array_push($documents_type, array("id" => "application", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "invitation", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "visa", "name" => "Visa", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "application", "disabled" => 1, "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "invitation", "disabled" => 1, "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "visa", "disabled" => 1, "name" => "Visa", "file_type" => ".pdf,image/*"));
 
 $staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
