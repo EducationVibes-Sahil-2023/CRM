@@ -49,8 +49,8 @@ if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
 
     array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
-    array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
-    array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
+    array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
+    array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
 
     if (!empty($applicant_documents)) {
         $applicant_documents = array_column($applicant_documents, null, "id");
