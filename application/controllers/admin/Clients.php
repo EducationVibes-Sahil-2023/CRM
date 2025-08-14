@@ -1481,6 +1481,7 @@ class Clients extends AdminController
             } else if ($this->input->post('apostille_status') == "true") {
 
                 $documents_id = $this->input->post('apostille_document') ?? [];
+                $apostille_document_vendor = $this->input->post('apostille_document_vendor') ?? [];
                 $document_cost = $this->input->post('document_cost') ?? [];
 
                 // Required fields
@@ -1510,7 +1511,8 @@ class Clients extends AdminController
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
                 //     $check_status = 2; // update apostile data 
                 // }
-                $get_data_from_document = get_orignal_document_data_list_apostille($ids, $documents_id, $check_status, $vendor_id);
+
+                $get_data_from_document = get_orignal_document_data_list_apostille($ids, $documents_id, $check_status, $vendor_id, $apostille_document_vendor);
 
                 if (isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) {
                     $data = [
@@ -1520,6 +1522,7 @@ class Clients extends AdminController
                     echo json_encode($data);
                     exit;
                 }
+
                 if ($check_status == 1) {
                     $insert_apostille_data = [];
                     $activity_data = [];
@@ -1527,12 +1530,10 @@ class Clients extends AdminController
                         foreach ($documents_id as $doc_id) {
                             // Validate document cost
                             if (!isset($document_cost[$doc_id]) || !is_numeric($document_cost[$doc_id])) {
-                                // $data = [
-                                //     'resp_code' => 'ERR',
-                                //     'resp_desc' => "Invalid or missing cost for document ID: $doc_id",
-                                // ];
-                                // echo json_encode($data);
-                                // exit;
+                            }
+                            $by_vendor = 0;
+                            if (in_array($doc_id, $apostille_document_vendor)) {
+                                $by_vendor = 1;
                             }
 
                             $insert_apostille_data[] = [
@@ -1546,6 +1547,7 @@ class Clients extends AdminController
                                 "created_at" => date('Y-m-d H:i:s'),
                                 "created_by" => get_staff_user_id(),
                                 "received_status" => !empty($receiving_date) ? 1 : 0,
+                                "by_vendor" => $by_vendor
                             ];
                             $doc_name = !empty($apostille_documents[$doc_id]['name']) ? $apostille_documents[$doc_id]['name'] : 'Unknown Document';
                             $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
@@ -1564,6 +1566,7 @@ class Clients extends AdminController
                             ];
                         }
                     }
+
 
                     // Insert into DB
                     if (!empty($insert_apostille_data)) {

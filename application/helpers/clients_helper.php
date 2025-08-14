@@ -1887,10 +1887,17 @@ function get_view_columns_sa()
         ->result_array();
 }
 
-function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "")
+function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "", $apostille_document_vendor = [])
 {
-    $CI = &get_instance();
+    if (!empty($document_ids) && !empty($apostille_document_vendor)) {
+        $document_ids = array_diff($document_ids, $apostille_document_vendor);
+        if (empty($document_ids)) {
+            return true;
+        }
+    }
 
+
+    $CI = &get_instance();
     // Validate input
     if ($check_status == 0 || empty($client_ids_array)) {
         return [

@@ -52,6 +52,7 @@ $academicYears = [
                                         <label for="excel_type">Excel Type</label>
                                         <select name="excel_type" id="excel_type" class="form-control selectpicker" onchange="ChangeType(this.value)" required>
                                             <option value="1" <?php echo ($excelInfo->excel_type == "1") ? 'selected' : ''; ?>>MA Applicant</option>
+                                            <option value="3" <?php echo ($excelInfo->excel_type == "3") ? 'selected' : ''; ?>>SA Applicant</option>
                                             <option value="2" <?php echo ($excelInfo->excel_type == "2") ? 'selected' : ''; ?>>Leads</option>
                                         </select>
                                     </div>
@@ -74,7 +75,7 @@ $academicYears = [
                                             value="<?php echo ($excelInfo->toDate != "0000-00-00") ? $excelInfo->toDate : ''; ?>">
                                     </div>
 
-                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma">
+                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma applicant-sa">
                                         <label for="acadmic_year">Academic Year</label>
                                         <select class="form-control" name="acadmic_year" id="acadmic_year" required>
                                             <option value="">-- Select Academic Year --</option>
@@ -94,16 +95,17 @@ $academicYears = [
                                             value="<?php echo htmlspecialchars($excelInfo->sheet_name); ?>" required>
                                     </div>
 
-                                    <div class="col-md-3 mb-3 form-group hide-options applicant-ma">
+                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma">
                                         <label for="sql_condition">Select Type</label>
-                                        <select name="sql_condition" id="sql_condition" class="form-control" required>
+                                        <select name="sql_condition" id="sql_condition" class="form-control selectpicker" required>
+                                            <option value="" data-id="">Select</option>
                                             <option value=" AND l.type = 2 " data-id="1" <?php echo ($excelInfo->type == "1") ? 'selected' : ''; ?>>EV</option>
                                             <option value=" AND c.client_type = 2 " data-id="2" <?php echo ($excelInfo->type == "2") ? 'selected' : ''; ?>>EVP</option>
                                             <option value=" AND (l.type = 2 OR c.client_type = 2) " data-id="3" <?php echo ($excelInfo->type == "3") ? 'selected' : ''; ?>>Both</option>
                                         </select>
                                     </div>
 
-                                    <div class="col-md-3 mb-3 form-group hide-options applicant-ma">
+                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma">
                                         <label>&nbsp;</label>
                                         <div class="checkbox">
                                             <input type="checkbox" name="orignal_documents_status" id="orignal_documents_status"
@@ -112,11 +114,22 @@ $academicYears = [
                                         </div>
                                     </div>
 
+
+                                    <div class="col-md-3     mb-3 form-group hide-options applicant-ma">
+                                        <label>&nbsp;</label>
+                                        <div class="checkbox">
+                                            <input type="checkbox" name="apostile_documents_status" id="apostile_documents_status"
+                                                <?php echo (!empty($excelInfo->apostile_documents_status) && $excelInfo->apostile_documents_status == 1) ? 'checked' : ''; ?>>
+                                            <label for="apostile_documents_status">Apostile Documents Status</label>
+                                        </div>
+                                    </div>
                                     <div class="col-md-2 mb-3 form-group">
                                         <label>&nbsp;</label><br>
                                         <button type="submit" class="btn btn-primary margin-top" onclick="createSheet()">Create</button>
                                     </div>
+
                                 </div>
+
 
                                 <input type="hidden" name="sheetid" value="<?php echo !empty($excelInfo->id) ? $excelInfo->id : ''; ?>">
                                 <input type="hidden" name="<?php echo $this->security->get_csrf_token_name(); ?>"
@@ -186,8 +199,9 @@ $academicYears = [
 <script>
     function ChangeType(type) {
         // Clear all inputs and selects inside hide-options
-        $("div.hide-options input").val('');
+        $("div.hide-options input,input[type='checkbox']").val('').prop("checked", false);;
         $("div.hide-options select").val('').selectpicker('refresh');
+
 
         // Hide and reset Excel type rows
         $(".excel-type-tr").hide();
@@ -202,6 +216,9 @@ $academicYears = [
             $(".excel-type-1").show();
         } else if (type === "2" || type === 2) {
             $(".excel-type-2").show();
+        } else if (type === "3" || type === 3) {
+            $(".applicant-sa").show();
+            $(".excel-type-3").show();
         }
     }
 
@@ -301,11 +318,11 @@ $academicYears = [
 
 
     function select_all_checkbox(obj, className) {
-   if ($(obj).prop("checked")) {
-    $("." + className + ":visible").prop("checked", true);
-} else {
-    $("." + className + ":visible").prop("checked", false);
-}
+        if ($(obj).prop("checked")) {
+            $("." + className + ":visible").prop("checked", true);
+        } else {
+            $("." + className + ":visible").prop("checked", false);
+        }
 
     }
 
@@ -322,6 +339,9 @@ $academicYears = [
             $(".excel-type-1").show();
         } else if (excel_type === "2" || excel_type === 2) {
             $(".excel-type-2").show();
+        } else if (excel_type === "3" || excel_type === 3) {
+            $(".applicant-sa").show();
+            $(".excel-type-3").show();
         }
     });
 </script>

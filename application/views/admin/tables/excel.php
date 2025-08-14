@@ -3,6 +3,12 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 
 $aColumns = [
+    "CASE excel_type
+        WHEN 1 THEN 'MA Applicant'
+        WHEN 2 THEN 'Lead'
+        WHEN 3 THEN 'SA Applicant'
+        ELSE 'Unknown'
+     END as excel_type",
     'id',
     'spreadsheetId',
     'name',
@@ -13,6 +19,7 @@ $aColumns = [
     'sheet_name',
     'acadmic_year'
 ];
+
 $sIndexColumn = 'id';
 $sTable       = db_prefix() . 'excel_data_update';
 $result       = data_tables_init($aColumns, $sIndexColumn, $sTable, [], [], []);
@@ -29,6 +36,7 @@ foreach ($rResult as $aRow) {
         if ($aRow["status"] == 1) {
             $status = 'Active';
         }
+        $row[]              = $aRow["excel_type"];
         $row[]              = $aRow["sheet_name"];
         $row[]              = $aRow["spreadsheetId"];
         $row[]              = $status;
