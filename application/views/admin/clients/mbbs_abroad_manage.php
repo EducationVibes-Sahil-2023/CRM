@@ -684,6 +684,16 @@ $client_type = [
                         ], [], 'no-mbot', '', false, 'apostille_document'); ?>
                      </div>
                      <div class="col-md-4">
+                        <label>Documents By Vender</label>
+                        <?php echo render_select('apostille_document_vendor[]', $apostille_documents, ['id', 'name'], '', [], [
+                           'data-width' => '100%',
+                           'data-none-selected-text' => 'Documents',
+                           'multiple' => true,
+                           'data-actions-box' => true,
+
+                        ], [], 'no-mbot', '', false, 'apostille_document_vendor'); ?>
+                     </div>
+                     <div class="col-md-4">
                         <label>Courier Date</label>
                         <?php echo render_input('apostille_date', '', '', 'date'); ?>
                      </div>
@@ -1458,6 +1468,27 @@ init_tail();
                return false; // Exit loop early
             }
          });
+
+         let ApostileDocuments = $("#apostille_document").val() || [];
+         let ApostileDocumentVendor = $("#apostille_document_vendor").val() || [];
+
+         // Ensure both are arrays
+         ApostileDocuments = Array.isArray(ApostileDocuments) ? ApostileDocuments.map(String) : [String(ApostileDocuments)];
+         ApostileDocumentVendor = Array.isArray(ApostileDocumentVendor) ? ApostileDocumentVendor.map(String) : [String(ApostileDocumentVendor)];
+
+         // Find vendor docs not in selected docs
+         let notFound = ApostileDocumentVendor.filter(id => !ApostileDocuments.includes(id));
+
+         if (notFound.length > 0) {
+            let docName = apostille_documents_list[notFound[0]]['name'] || `ID ${notFound[0]}`;
+            alert_float("warning", `Please select the Apostille document: ${docName} before choosing a vendor documents.`);
+            is_valid = false;
+            return false; // Exit loop early
+         }
+
+
+
+
       }
 
       if (visa_status === true) {

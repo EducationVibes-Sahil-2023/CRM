@@ -53,6 +53,7 @@ if (!is_postSale() && !is_admin()) {
                                 <th scope="col">Cost</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Vendor</th>
+                                <th scope="col">Apply By Vendor</th>
                                 <th scope="col">Courier Date</th> <!-- Corrected "Courior" to "Courier" -->
                                 <th scope="col">Receiving Date</th>
                                 <th scope="col">Payment Date</th>
@@ -80,6 +81,7 @@ if (!is_postSale() && !is_admin()) {
                                         <td><?= !empty($doc["apostille_cost"]) ? $doc["apostille_cost"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_status"]) ? $doc["apostille_status"] : '' ?></td>
                                         <td><?= !empty($doc["vendor_name"]) ? $doc["vendor_name"] : '' ?></td>
+                                        <td><?= !empty($doc["by_vendor"]) ? 'Yes' : 'No' ?></td>
                                         <td><?= !empty($doc["courier_date"]) ? $doc["courier_date"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_received"]) & $doc["apostille_received"] != "0000-00-00"  ? $doc["apostille_received"] : '' ?></td>
                                         <td><?= !empty($doc["payment_date"]) && $doc["payment_date"] != "0000-00-00" ? $doc["payment_date"] : '' ?></td>

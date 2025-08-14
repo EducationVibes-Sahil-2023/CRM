@@ -3,6 +3,7 @@
 
 <?php
 $table_data = array(
+    "Excel Type",
     "Sheet name",
     "spreadsheetId",
     "status",

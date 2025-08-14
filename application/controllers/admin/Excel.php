@@ -28,97 +28,81 @@ class Excel extends AdminController
     {
         // Handle AJAX form submission
         if ($this->input->is_ajax_request()) {
-            $data = $this->input->post();
 
-            $sheetId = isset($data['sheetid']) ? intval($data['sheetid']) : 0;
-            $excel_type = isset($data['excel_type']) ? intval($data['excel_type']) : 0;
-            $fromDate = isset($data['fromDate']) && $data['fromDate'] != '' && $data['fromDate'] != '0000-00-00' ? $data['fromDate'] : null;
-            $toDate   = isset($data['toDate']) && $data['toDate'] != '' && $data['toDate'] != '0000-00-00' ? $data['toDate'] : null;
+            $post = $this->input->post(NULL, true); // XSS Filtering enabled
+
+            $sheetId     = (int) ($post['sheetid'] ?? 0);
+            $excel_type  = (int) ($post['excel_type'] ?? 0);
+
+            $fromDate    = (!empty($post['fromDate']) && $post['fromDate'] !== '0000-00-00') ? $post['fromDate'] : null;
+            $toDate      = (!empty($post['toDate']) && $post['toDate'] !== '0000-00-00') ? $post['toDate'] : null;
 
             $sheetData = [
-                'spreadsheetId' => $data['spreadsheetId'] ?? '',
-                'fromDate'      => $fromDate,
-                'toDate'        => $toDate,
-                'acadmic_year'  => $data['acadmic_year'] ?? '',
-                'sheet_name'    => $data['sheet_name'] ?? '',
-                'sql_condition' => $data['sql_condition'] ?? '',
-                'type' => $data['type'] ?? '',
-                "orignal_documents_status" => !empty($data['orignal_documents_status']) ? 1 : 0,
-                'status' => 1,
-                'autoSync' => 1,
-                'created_by' => get_staff_user_id(),
-                'created_at' => date('Y-m-d H:i:s'),
-                'excel_type' => $data['excel_type'] ?? '',
+                'spreadsheetId'             => $post['spreadsheetId'] ?? '',
+                'fromDate'                  => $fromDate,
+                'toDate'                    => $toDate,
+                'acadmic_year'              => $post['acadmic_year'] ?? '',
+                'sheet_name'                => $post['sheet_name'] ?? '',
+                'sql_condition'             => $post['sql_condition'] ?? '',
+                'type'                      => $post['type'] ?? '',
+                'orignal_documents_status'  => !empty($post['orignal_documents_status']) ? 1 : 0,
+                'apostile_documents_status' => !empty($post['apostile_documents_status']) ? 1 : 0,
+                'status'                    => 1,
+                'autoSync'                  => 1,
+                'created_by'                => get_staff_user_id(),
+                'created_at'                => date('Y-m-d H:i:s'),
+                'excel_type'                => $excel_type,
             ];
 
+            // Sort column IDs by sequence
             $sorted_data = [];
-
-            foreach ($_POST["column_ids"] as $key => $column_id) {
-                if (isset($_POST["sequence"][$key])) {
-                    $sequence = (int) $_POST["sequence"][$key];
-                    $sorted_data[] = [
-                        'column_id' => $column_id,
-                        'sequence'  => $sequence
-                    ];
+            if (!empty($post["column_ids"]) && !empty($post["sequence"])) {
+                foreach ($post["column_ids"] as $key => $column_id) {
+                    if (isset($post["sequence"][$key])) {
+                        $sorted_data[] = [
+                            'column_id' => $column_id,
+                            'sequence'  => (int) $post["sequence"][$key]
+                        ];
+                    }
                 }
+
+                usort($sorted_data, fn($a, $b) => $a['sequence'] <=> $b['sequence']);
             }
 
-            // Sort by sequence ascending
-            usort($sorted_data, function ($a, $b) {
-                return $a['sequence'] <=> $b['sequence'];
-            });
+            $sheetData["column_ids"] = implode(",", array_column($sorted_data, 'column_id'));
+            $sheetData["sequence"]   = json_encode($sorted_data);
 
-            // Separate sorted arrays
-            $sorted_column_ids = array_column($sorted_data, 'column_id');
-            $sorted_sequences = array_column($sorted_data, 'sequence');
-
-
-
-            // Implode for saving
-            $sheetData["column_ids"] = implode(",", $sorted_column_ids);
-            $sheetData["sequence"] = json_encode($sorted_data);
-
-
-
-
+            // Insert or Update
             if ($sheetId > 0) {
-                // Update existing sheet
-                $update = $this->excel_model->updateSheet($sheetId, $sheetData);
-                echo json_encode([
-                    'status' => $update ? 'RCS' : 'ERR',
-                    'message' => $update ? 'Sheet updated successfully.' : 'Failed to update sheet.'
-                ]);
-                die;
+                $success = $this->excel_model->updateSheet($sheetId, $sheetData);
+                $response = [
+                    'status'  => $success ? 'RCS' : 'ERR',
+                    'message' => $success ? 'Sheet updated successfully.' : 'Failed to update sheet.'
+                ];
             } else {
-                // Insert new sheet
                 $insertId = $this->excel_model->insertSheet($sheetData);
-                echo json_encode([
-                    'status' => $insertId ? 'RCS' : 'ERR',
+                $response = [
+                    'status'  => $insertId ? 'RCS' : 'ERR',
                     'message' => $insertId ? 'Sheet created successfully.' : 'Failed to create sheet.',
                     'sheetid' => $insertId
-                ]);
-                die;
+                ];
             }
 
-            return;
+            echo json_encode($response);
+            exit;
         }
 
         // Render page (non-AJAX)
         $data['title'] = "Excel Create";
         $data["tbl_excel_columns"] = $this->db
-            ->select('*')
-            ->from(db_prefix() . 'excel_column_update')
             ->where('excel_id', 1)
             ->order_by('sequence', 'ASC')
-            ->get()
+            ->get(db_prefix() . 'excel_column_update')
             ->result_array();
 
         $data["excelInfo"] = $this->db
-            ->select('*')
-            ->from(db_prefix() . 'excel_data_update')
             ->where('id', $id)
-            ->order_by('sequence', 'ASC')
-            ->get()
+            ->get(db_prefix() . 'excel_data_update')
             ->row();
 
         $this->load->view('admin/excel/create', $data);
