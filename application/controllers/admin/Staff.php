@@ -93,25 +93,25 @@ class Staff extends AdminController
             $data['whatsapp_status'] = !empty($this->input->post('whatsapp_status')) ? $this->input->post('whatsapp_status') : '';
             $data['emp_code'] = !empty($this->input->post('emp_code')) ? $this->input->post('emp_code') : '';
 
-            if (!empty($data['emp_code'])) {
-                $this->db->select('emp_code');
-                $this->db->from(db_prefix() . 'staff');
-                $this->db->where('emp_code', $data['emp_code']);
+            // if (!empty($data['emp_code'])) {
+            //     $this->db->select('emp_code');
+            //     $this->db->from(db_prefix() . 'staff');
+            //     $this->db->where('emp_code', $data['emp_code']);
 
-                if (!empty($staff_id)) {
-                    $this->db->where('staffid !=', $id); // Exclude current record
-                }
+            //     if (!empty($staff_id)) {
+            //         $this->db->where('staffid !=', $id); // Exclude current record
+            //     }
 
-                $query = $this->db->get();
-                if ($query->num_rows() > 0) {
-                    $data['emp_code'] = "";
-                    // emp_code already exists (excluding this ID)
-                    // $data['emp_code_error'] = "Employee code already exists.";
-                    set_alert('danger', "Employee code already exists.");
-                    redirect(admin_url('staff/member/' . $id));
-                    die;
-                }
-            }
+            //     $query = $this->db->get();
+            //     if ($query->num_rows() > 0) {
+            //         $data['emp_code'] = "";
+            //         // emp_code already exists (excluding this ID)
+            //         // $data['emp_code_error'] = "Employee code already exists.";
+            //         set_alert('danger', "Employee code already exists.");
+            //         redirect(admin_url('staff/member/' . $id));
+            //         die;
+            //     }
+            // }
             if ($id == '') {
                 if (!has_permission('staff', '', 'create')) {
                     access_denied('staff');

@@ -817,7 +817,7 @@ function syncExcel_neww($id = "")
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -851,6 +851,7 @@ function syncExcel_neww($id = "")
         $spreadsheetId            = $sheet['spreadsheetId'] ?? null;
         $sheet_name               = $sheet['sheet_name'] ?? null;
         $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
+         $apostile_documents_status = $sheet['apostile_documents_status'] ?? null;
         $sql_conditions           = $sheet['sql_condition'] ?? null;
 
         // Parse column IDs
@@ -929,6 +930,39 @@ function syncExcel_neww($id = "")
             }
         }
 
+ if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1 && 1==2) {
+      $apostille_documents = get_orignal_document_list(0, 0, 1);
+$queryPart = [];
+      if (!empty($apostille_documents)) {
+                foreach ($apostille_documents as $apostille) {
+                    $short_name        = trim($apostille['short_name']);
+                    $safe_column_name  = str_replace(" ", "_", $short_name);
+                    $extra_columns[]   = $safe_column_name;
+                    
+                  $queryPart[] = "
+COALESCE(
+  (
+    SELECT
+      CASE
+        WHEN received_status = 1 THEN 'Received'
+        ELSE 'Sent'
+      END
+    FROM " . db_prefix() . "client_apostille_data
+    WHERE userid = c.userid
+      AND doc_id = " . (int)$apostille['id'] . "
+    ORDER BY id DESC
+    LIMIT 1
+  ),
+  'Pending'
+) AS `" . $safe_column_name . "`";
+
+
+                }
+                   if (!empty($queryPart)) {
+                $selectColumnName .= ', ' . implode(",\n", $queryPart);
+            }
+            }
+ }
         // Build conditions
         $condition_sql = "";
         if (!empty($fromDate) && !empty($toDate)) {
@@ -985,6 +1019,9 @@ function syncExcel_neww($id = "")
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid";
 
+//  if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
+//      echo $sql; die;
+//  }
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names
