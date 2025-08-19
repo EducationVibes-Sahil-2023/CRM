@@ -919,7 +919,6 @@ function syncExcel_neww($id = "")
         
         ELSE 'NO'
     END AS `{$safe_column_name}`";
-
                 }
             }
 
@@ -938,11 +937,28 @@ function syncExcel_neww($id = "")
 
         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
             $apostille_documents = get_orignal_document_list(0, 0, 1);
+            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
+
+            // Ensure both are arrays before merging
+            if (!is_array($apostille_documents)) {
+                $apostille_documents = [];
+            }
+            if (!is_array($apostille_visa_apostile_documents)) {
+                $apostille_visa_apostile_documents = [];
+            }
+
+            $apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
             $queryPart = [];
             if (!empty($apostille_documents)) {
                 foreach ($apostille_documents as $apostille) {
                     $short_name        = trim($apostille['short_name']);
-                    $safe_column_name  = "Ap_".str_replace(" ", "_", $short_name);
+                    if ($apostille["apostile_status"] == 1) {
+                        $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
+                    } else if ($apostille["apostile_status"] == 2) {
+                        $safe_column_name  = "V_" . str_replace(" ", "_", $short_name);
+                    } else {
+                        $safe_column_name  =  str_replace(" ", "_", $short_name);
+                    }
                     $extra_columns[]   = $safe_column_name;
 
                     $queryPart[] = "
@@ -1027,7 +1043,7 @@ COALESCE(
         //      echo $sql; die;
         //  }
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-            
+
         // }
         $arrayData = $CI->db->query($sql)->result_array();
 
@@ -1078,18 +1094,18 @@ COALESCE(
 
 function sa_excel_sync($id = "")
 {
-    	error_reporting(0);
+    error_reporting(0);
 
-		ini_set('display_errors', 1);
-		
-  $CI = &get_instance();
+    ini_set('display_errors', 1);
+
+    $CI = &get_instance();
 
     // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
- $CI->db->query("SET SESSION sql_mode = ''");
+    $CI->db->query("SET SESSION sql_mode = ''");
 
     // Fetch sheet config(s)
-   $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status")
         ->from(db_prefix() . "excel_data_update")
         ->where("excel_type", 3)
         ->where("autoSync", 1);
@@ -1107,7 +1123,7 @@ function sa_excel_sync($id = "")
     $dataArray = [];
 
     foreach ($sheetData as $sheet) {
-   
+
 
         $currentId                = $sheet['id'] ?? null;
         $fromDate                 = $sheet['fromDate'] ?? null;
@@ -1156,10 +1172,10 @@ function sa_excel_sync($id = "")
         // if (!empty($sql_conditions)) {
         //     $condition_sql .= " {$sql_conditions}";
         // }
-        
-        $condition_sql .=" AND " . db_prefix() . "leads.type = 1 ";
-        
-       $sql = " SELECT {$selectColumnName}
+
+        $condition_sql .= " AND " . db_prefix() . "leads.type = 1 ";
+
+        $sql = " SELECT {$selectColumnName}
 FROM " . db_prefix() . "clients
 LEFT JOIN " . db_prefix() . "basic_details ON " . db_prefix() . "basic_details.userid = " . db_prefix() . "clients.userid
 LEFT JOIN " . db_prefix() . "applicant_status ON " . db_prefix() . "applicant_status.id = " . db_prefix() . "clients.active
@@ -1200,19 +1216,19 @@ GROUP BY " . db_prefix() . "clients.userid";
 
 
         //  if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
-            //  echo $sql; die;
+        //  echo $sql; die;
         //  }
-        
-      
-     $sql = preg_replace('/\s+/', ' ', trim($sql));
-$query = $CI->db->query($sql);
+
+
+        $sql = preg_replace('/\s+/', ' ', trim($sql));
+        $query = $CI->db->query($sql);
 
 
 
 
 
 
-$arrayData = $query->result_array();
+        $arrayData = $query->result_array();
 
 
 
@@ -1229,7 +1245,7 @@ $arrayData = $query->result_array();
             $columns = array_merge($columns, $extra_columns);
         }
 
- // Prepare data rows
+        // Prepare data rows
         // $arrayDataValues = [];
         // foreach ($arrayData as $row) {
         //     $valuesOnly = [];
@@ -1238,8 +1254,8 @@ $arrayData = $query->result_array();
         //     }
         //     $arrayDataValues[] = $valuesOnly;
         // }
-  
-  $arrayDataValues = array_map('array_values', $arrayData);
+
+        $arrayDataValues = array_map('array_values', $arrayData);
 
         // $arrayDataValues = array_map('array_values', $arrayData);
 

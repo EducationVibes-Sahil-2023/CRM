@@ -112,6 +112,10 @@ class Fly_batch extends AdminController
             $manually = $this->input->post("manually", true);
 
             check_invitation_letter($client_list);
+            check_neet_Aff($client_list);
+            check_name_Aff($client_list);
+            check_minor_Aff($client_list);
+
             // If manually is 1, process only ticket creation
             if ((int)$manually === 1) {
                 $postData_Ticket = [

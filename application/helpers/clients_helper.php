@@ -1753,7 +1753,7 @@ function activity_orignal_document($id)
     return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }
 
-function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id = "", $visa_rest = 0, $visa_georgia = 0)
+function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id = "", $visa_rest = 0, $visa_georgia = 0, $visa_apostile = 0)
 {
     $CI = &get_instance();
     $CI->db->select("*")
@@ -1772,6 +1772,9 @@ function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id =
     }
     if (!empty($apostile)) {
         $CI->db->where("apostile_status", 1);
+    }
+    if (!empty($visa_apostile)) {
+        $CI->db->where("visa_apostile", 1);
     }
     if (!empty($id)) {
         $CI->db->where("id", $id);
@@ -2166,7 +2169,7 @@ function fly_status($id = "")
     return  $CI->db->get()->result_array(); // Execute and return result
 }
 
-function get_apostille_document_data($client_id)
+function get_apostille_document_data($client_id, $visa_apostile = 0)
 {
     $CI = &get_instance();
     $CI->db->select("r.*, 
@@ -2186,6 +2189,9 @@ function get_apostille_document_data($client_id)
         ->join(db_prefix() . 'staff s', "s.staffid = r.created_by", "LEFT");
 
     $CI->db->where("o.apostile_status", 1);
+    if (!empty($visa_apostile)) {
+        $CI->db->or_where("o.visa_apostile", 1);
+    }
 
     return $CI->db->order_by("o.id", "asc")->get()->result_array();
 }
@@ -2541,6 +2547,308 @@ function check_invitation_letter($client_ids_array = [])
         ];
     }
 }
+
+function check_neet_Aff($client_ids_array)
+{
+    $CI = &get_instance();
+
+    if (empty($client_ids_array)) {
+        $data = [
+            "error" => true,
+            "message" => "No client IDs provided.",
+            'resp_code' => 'ERR',
+            'resp_desc' => "No client IDs provided."
+        ];
+
+        echo json_encode($data);
+        die;
+    }
+
+    try {
+        // Select client_id and neet_aff_status
+        $CI->db->select([
+            db_prefix() . 'clients.userid',
+            'IFNULL(' . db_prefix() . 'neet_status.neet_aff_status, 1) as neet_aff_status'
+        ]);
+
+        $CI->db->from(db_prefix() . 'clients');
+        $CI->db->join(
+            db_prefix() . 'academic_entrance_score',
+            db_prefix() . 'academic_entrance_score.client_id = ' . db_prefix() . 'clients.userid',
+            "LEFT"
+        );
+        $CI->db->join(
+            db_prefix() . 'neet_status',
+            db_prefix() . 'neet_status.id = ' . db_prefix() . 'academic_entrance_score.type',
+            "LEFT"
+        );
+
+        // Filter by provided client IDs
+        $CI->db->where_in(db_prefix() . 'clients.userid', $client_ids_array);
+
+        // Only where neet_aff_status = 0
+        $CI->db->where('IFNULL(' . db_prefix() . 'neet_status.neet_aff_status, 1) =', 1, FALSE);
+        $query = $CI->db->get();
+        $results = $query->result_array();
+        $doc_id = ORIGNAL_DOCUMENT_NEET_AFF_ID;
+
+        if (!empty($results)) {
+            // Extract all client IDs from results
+            $new_clientIds = array_column($results, "userid");
+
+            // Convert array to comma-separated string for SQL
+            $clientIdsStr = implode(",", $new_clientIds);
+
+            // SQL to check if doc_id exists in client_documents JSON
+            $sql = "
+        SELECT client_id,
+               CASE 
+                   WHEN JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL 
+                        AND JSON_CONTAINS(
+                              JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$[*].id'),
+                              JSON_QUOTE('{$doc_id}')
+                        )
+                   THEN 'YES'
+                   
+                   WHEN JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$.\"{$doc_id}\".id') IS NOT NULL
+                   THEN 'YES'
+                   
+                   ELSE 'NO'
+               END AS status
+        FROM " . db_prefix() . "client_documents
+        WHERE client_id IN ($clientIdsStr)
+    ";
+
+            $query = $CI->db->query($sql);
+            $docResults = $query->result_array();
+
+            // ✅ Filter out only client_ids where status = 'NO'
+            $missingClients = array_column(
+                array_filter($docResults, function ($row) {
+                    return $row['status'] === 'NO';
+                }),
+                'client_id'
+            );
+
+
+            foreach ($missingClients as $row) {
+                $client_name = get_client_name($row);
+                $errors[] = "User '{$client_name}' does not have any university shortlisting record.";
+
+                $data = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "User '{$client_name}' has mandatory to upload Neet Affidavite."
+                ];
+                echo json_encode($data);
+                die;
+            }
+        }
+
+
+
+        return [
+            "error" => false,
+            "data" => $results, // all matching client_ids + neet_aff_status = 0
+        ];
+    } catch (Exception $e) {
+        return [
+            "error" => true,
+            "message" => ["Server error: " . $e->getMessage()],
+        ];
+    }
+}
+
+
+function check_name_Aff($client_ids_array)
+{
+    $CI = &get_instance();
+
+    if (empty($client_ids_array)) {
+        $data = [
+            "error" => true,
+            "message" => "No client IDs provided.",
+            'resp_code' => 'ERR',
+            'resp_desc' => "No client IDs provided."
+        ];
+
+        echo json_encode($data);
+        die;
+    }
+
+    try {
+        // Select client_id and neet_aff_status
+        $CI->db->select([
+            db_prefix() . 'clients.userid',
+        ]);
+        $CI->db->from(db_prefix() . 'clients');
+        // Filter by provided client IDs
+        $CI->db->where_in(db_prefix() . 'clients.userid', $client_ids_array);
+
+        // Only where neet_aff_status = 0
+        $CI->db->where(db_prefix() . 'clients.name_aff_status', 1);
+        $query = $CI->db->get();
+        $results = $query->result_array();
+
+        $doc_id = ORIGNAL_DOCUMENT_NAME_AFF_ID;
+
+        if (!empty($results)) {
+            // Extract all client IDs from results
+            $new_clientIds = array_column($results, "userid");
+
+            // Convert array to comma-separated string for SQL
+            $clientIdsStr = implode(",", $new_clientIds);
+
+            // SQL to check if doc_id exists in client_documents JSON
+            $sql = "
+        SELECT client_id,
+               CASE 
+                   WHEN JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL 
+                        AND JSON_CONTAINS(
+                              JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$[*].id'),
+                              JSON_QUOTE('{$doc_id}')
+                        )
+                   THEN 'YES'
+                   
+                   WHEN JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$.\"{$doc_id}\".id') IS NOT NULL
+                   THEN 'YES'
+                   
+                   ELSE 'NO'
+               END AS status
+        FROM " . db_prefix() . "client_documents
+        WHERE client_id IN ($clientIdsStr)
+    ";
+
+            $query = $CI->db->query($sql);
+            $docResults = $query->result_array();
+
+            // ✅ Filter out only client_ids where status = 'NO'
+            $missingClients = array_column(
+                array_filter($docResults, function ($row) {
+                    return $row['status'] === 'NO';
+                }),
+                'client_id'
+            );
+
+
+            foreach ($missingClients as $row) {
+                $client_name = get_client_name($row);
+                $errors[] = "User '{$client_name}' does not have any university shortlisting record.";
+
+                $data = [
+                    'resp_code' => 'ERR',
+                    'resp_desc' => "User '{$client_name}' has mandatory to upload Name Affidavite."
+                ];
+                echo json_encode($data);
+                die;
+            }
+        }
+
+        return [
+            "error" => false,
+            "data" => $results, // all matching client_ids + neet_aff_status = 0
+        ];
+    } catch (Exception $e) {
+        return [
+            "error" => true,
+            "message" => ["Server error: " . $e->getMessage()],
+        ];
+    }
+}
+
+
+function check_minor_Aff($client_ids_array)
+{
+    $CI = &get_instance();
+
+    if (empty($client_ids_array)) {
+        $data = [
+            "error" => true,
+            "message" => "No client IDs provided.",
+            'resp_code' => 'ERR',
+            'resp_desc' => "No client IDs provided."
+        ];
+        echo json_encode($data);
+        die;
+    }
+
+    try {
+        // ✅ Select only minors (age < 18)
+        $CI->db->select([
+            db_prefix() . 'basic_details.userid',
+            'CASE WHEN TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 THEN 1 ELSE 0 END AS is_minor'
+        ]);
+        $CI->db->from(db_prefix() . 'basic_details');
+        $CI->db->where_in(db_prefix() . 'basic_details.userid', $client_ids_array);
+
+        $query = $CI->db->get();
+        $results = $query->result_array();
+
+        $doc_id = ORIGNAL_DOCUMENT_MINOR_ID; // Name Affidavit document
+
+        if (!empty($results)) {
+            // ✅ Extract only minors (is_minor = 1)
+            $minor_clientIds = array_column(
+                array_filter($results, function ($row) {
+                    return $row['is_minor'] == 1;
+                }),
+                'userid'
+            );
+
+            if (!empty($minor_clientIds)) {
+                $clientIdsStr = implode(",", $minor_clientIds);
+
+                // ✅ SQL to check if doc_id exists in client_documents JSON
+                $sql = "
+                    SELECT client_id,
+                           CASE 
+                               WHEN JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$[*].id') IS NOT NULL 
+                                    AND JSON_CONTAINS(
+                                          JSON_EXTRACT(CAST(data AS CHAR CHARACTER SET utf8), '$[*].id'),
+                                          JSON_QUOTE('{$doc_id}')
+                                    )
+                               THEN 'YES'
+                               ELSE 'NO'
+                           END AS status
+                    FROM " . db_prefix() . "client_documents
+                    WHERE client_id IN ($clientIdsStr)
+                ";
+
+                $query = $CI->db->query($sql);
+                $docResults = $query->result_array();
+
+                // ✅ Filter minors missing the affidavit
+                $missingClients = array_column(
+                    array_filter($docResults, function ($row) {
+                        return $row['status'] === 'NO';
+                    }),
+                    'client_id'
+                );
+
+                foreach ($missingClients as $client_id) {
+                    $client_name = get_client_name($client_id);
+                    $data = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "User '{$client_name}' must upload the Minor Affidavit (required for minors)."
+                    ];
+                    echo json_encode($data);
+                    die;
+                }
+            }
+        }
+
+        // ✅ If everything is fine
+        return [
+            "error" => false,
+            "data" => $results,
+        ];
+    } catch (Exception $e) {
+        return [
+            "error" => true,
+            "message" => ["Server error: " . $e->getMessage()],
+        ];
+    }
+}
+
 
 
 function get_orignal_document_data_list_visa($client_ids_array = [], $check_status = 0, $vendor_id = "")

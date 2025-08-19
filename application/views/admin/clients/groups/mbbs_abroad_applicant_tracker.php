@@ -878,6 +878,14 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                             <div class="document_approval_message_action">
                             </div>
+                            <div class="row">
+                                <label>
+                                    I want Name Affidavit for this Applicant
+                                    <input type="checkbox" value="1"
+                                        <?= !empty($client->name_aff_status) ? 'checked' : '' ?>
+                                        onchange="nameAffUpdate(this.checked, '<?= !empty($client_id) ? $client_id : '' ?>')">
+                                </label>
+                            </div>
                         <?php
                         } else if ($track["show_div_name"] == "university_div") {
                             $selected_university = json_decode($admissionpreferences->university, true);
@@ -1313,7 +1321,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                     </div>
 
                                                     <div class="col-md-3">
-                                                
+
                                                         <label>Payment Amount <?= $mand ?></label>
                                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                                                             <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
@@ -1864,6 +1872,41 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         parentDiv.find(".panel-body").toggle();
     });
 
+
+    async function nameAffUpdate(isChecked, clientId) {
+        let upload_data = new FormData();
+        show_loader();
+        // If clientId is empty, prevent AJAX call
+        if (!clientId) {
+            console.error("Client ID is missing");
+            return;
+        }
+
+        // Convert checkbox state to 1 or 0
+        let status = isChecked ? 1 : 0;
+        upload_data.append("name_affidavit_status", status);
+        upload_data.append("<?= $this->security->get_csrf_token_name(); ?>", csrfToken);
+        upload_data.append("client_id", <?= $client_id ?>);
+        let response = await $.ajax({
+            url: "<?= base_url("admin/clients/update_name_aff") ?>",
+            method: "POST",
+            data: upload_data,
+            contentType: false,
+            processData: false
+        });
+        response = JSON.parse(response);
+        hide_loader();
+        if (response.resp_code === "RCS") {
+            alert_float("success", response.resp_desc);
+
+        } else {
+            if (response.resp_code !== undefined) {
+                alert_float("danger", response.resp_desc);
+            } else {
+                alert_float("danger", response);
+            }
+        }
+    }
 
     $("#progressbar li").addClass("inactive");
     $("#progressbar li:eq(" + applicant_status + ")").removeClass("inactive").removeClass("previous").addClass("active");
