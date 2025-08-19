@@ -22,10 +22,10 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
-array_push($documents_type, array("id" => "application", "disabled" => 1, "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" => 1, "name" => "University Payment Slip", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "invitation", "disabled" => 1, "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "visa", "disabled" => 1, "name" => "Visa", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "application", "disabled" => 1, "stage" => "", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" => 1, "stage" => "", "name" => "University Payment Slip", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "invitation", "disabled" => 1, "stage" => "Visa", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "visa", "disabled" => 1, "stage" => "", "name" => "Visa", "file_type" => ".pdf,image/*"));
 
 $staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
@@ -52,7 +52,7 @@ if (!empty($applicant_documents[0]["data"])) {
     array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
     array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
     array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
-    	array_push($applicant_documents, array("id" => "University_Payment_Slip", "document_file" => !empty($university_shortlisting[0]['university_fees_payment_slip']) ? $university_shortlisting[0]['university_fees_payment_slip'] : ''));
+    array_push($applicant_documents, array("id" => "University_Payment_Slip", "document_file" => !empty($university_shortlisting[0]['university_fees_payment_slip']) ? $university_shortlisting[0]['university_fees_payment_slip'] : ''));
 
     if (!empty($applicant_documents)) {
         $applicant_documents = array_column($applicant_documents, null, "id");
@@ -1170,7 +1170,9 @@ if ($lead_type_status == 2) {
                                         <?php
 
                                         if (!empty($documents_type)) : ?>
-                                            <?php foreach ($documents_type as $key => $doc_files) :
+                                            <?php
+                                            $index = 1;
+                                            foreach ($documents_type as $key => $doc_files) :
 
                                                 $doc_type = $doc_files["name"] ?? '';
                                                 $doc_id = $doc_files["id"] ?? '';
@@ -1184,7 +1186,7 @@ if ($lead_type_status == 2) {
                                                 $required_attr = !empty($file_url) ? "" : $required_attr;
                                             ?>
                                                 <tr>
-                                                    <td><?= ($key + 1) ?></td>
+                                                    <td><?= ($index) ?></td>
                                                     <td>
                                                         <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
                                                         <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
@@ -1235,7 +1237,8 @@ if ($lead_type_status == 2) {
 
                                                     </td>
                                                 </tr>
-                                            <?php endforeach; ?>
+                                            <?php $index++;
+                                            endforeach; ?>
                                         <?php else : ?>
                                             <tr>
                                                 <td colspan="4" class="text-center">

@@ -459,9 +459,19 @@
 
             if (!name) return; // Skip if no name attribute
 
-            if (type === "radio" && !$(this).prop("checked")) return; // Only add checked radio buttons
+            if (type === "radio") {
+                if (!$(this).prop("checked")) return; // Only add checked radio buttons
+            }
 
-            let value = type === "file" ? $(this)[0].files[0] : $(this).val(); // Handle file input separately
+            let value;
+
+            if (type === "file") {
+                value = $(this)[0].files[0]; // Handle file input separately
+            } else if (type === "checkbox") {
+                value = $(this).prop("checked") ? 1 : 0; // ✅ checkbox as 1/0
+            } else {
+                value = $(this).val();
+            }
 
             if (value !== undefined && value !== null) {
                 formData.append(name, value);

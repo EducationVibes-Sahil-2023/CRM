@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
-$apostille_document  = get_apostille_document_data($client_id);
+$apostille_document  = get_apostille_document_data($client_id,1);
 $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location();
 $activity_apostille_document = activity_apostille_document($client_id);

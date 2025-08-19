@@ -15,6 +15,18 @@ $orignal_document_list_georgia = get_orignal_document_list(0, 1);
 $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
 $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
+$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
+
+// Ensure both are arrays before merging
+if (!is_array($apostille_documents)) {
+   $apostille_documents = [];
+}
+if (!is_array($apostille_visa_apostile_documents)) {
+   $apostille_visa_apostile_documents = [];
+}
+
+$apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
+
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
 $university_list_secondary = get_university_list("mbbs abroad");
