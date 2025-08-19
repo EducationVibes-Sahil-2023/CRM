@@ -7788,7 +7788,7 @@ if($save!=1){
             }
 $legalization_data = $this->clients_model->legalization_data($client_id);
 
-if (empty($legalization_data[0]["ministry_document_received"])) {
+if (empty($legalization_data[0]["ministry_document_recived"])) {
     $message = "Ministry Order Receiving is mandatory in Legalization Section";
 
     $data = [
