@@ -18,6 +18,7 @@
 						<?php
 						$table_data = array(
 							_l('staff_dt_name'),
+							'Emp Code',
 							_l('staff_dt_email'),
 							_l('phone'),
 							'Alternative No.',

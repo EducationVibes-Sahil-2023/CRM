@@ -9,6 +9,7 @@ $custom_fields = get_custom_fields('staff', [
 ]);
 $aColumns = [
     'firstname',
+    'emp_code',
     'email',
     'phonenumber',
     'alternate_number',

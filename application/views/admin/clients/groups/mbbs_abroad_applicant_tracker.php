@@ -1434,7 +1434,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         ?>
                             <form id="3-payment-form" class="form-disabled" onsubmit="return false;">
 
-                                <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" class="form-check-input" required name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
+                                <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" value="1" class="form-check-input" required required-check name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
                             </form>
                         <?php
 
