@@ -7684,7 +7684,24 @@ class Clients extends AdminController
         $invitation = !empty($this->input->post("invitation")) ? json_decode($this->input->post("invitation"), true) : [];
         $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
         $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
+if($save!=1){
+ $check_documents = $this->check_documents(8);
+                if (!empty($check_documents)) {
+                    // If required documents are missing
+                    $doc_names = implode(", ", $check_documents);
+                    $message = "{$doc_names} are mandatory to proceed to the next step.";
 
+                    $data = [
+                        'resp_code'               => 'ERR',
+                        'resp_desc'               => "Document requried " . $message,
+                    ];
+
+                    set_alert('danger', "Document requried " . $message);
+
+                    echo json_encode($data);
+                    die;
+                }
+}
         $files = $_FILES;
 
         if (empty($client_id) || empty($invitation)) {
@@ -7769,6 +7786,21 @@ class Clients extends AdminController
                 return $data;
                 die;
             }
+$legalization_data = $this->clients_model->legalization_data($client_id);
+
+if (empty($legalization_data[0]["ministry_document_received"])) {
+    $message = "Ministry Order Receiving is mandatory in Legalization Section";
+
+    $data = [
+        'resp_code' => 'ERR',
+        'resp_desc' => $message,
+    ];
+
+    set_alert('danger', "Document required: " . $message);
+
+    echo json_encode($data);
+    die;
+}
 
 
             $update_client_data = [

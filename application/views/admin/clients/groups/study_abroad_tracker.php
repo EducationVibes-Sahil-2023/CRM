@@ -118,7 +118,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
         <?php
 
-        if ($selected_university_shortlisting["application_status"] != 1) {
+        if (!empty($selected_university_shortlisting["application_status"]) && $selected_university_shortlisting["application_status"] != 1) {
         ?>
             <section>
                 <fieldset id="refund_stage">
@@ -130,7 +130,12 @@ if (empty($staffData["post_sales"]) && !is_admin()):
         <?php
 
         }
-        if ($client_infomation->active == 4 || $client_infomation->active == 2 || $selected_university_shortlisting["application_status"] != 1) {
+
+       if (
+    ($client_infomation->active == 4 || $client_infomation->active == 2) 
+    && !empty($selected_university_shortlisting["application_status"]) 
+    && $selected_university_shortlisting["application_status"] != 1
+) {
         ?>
             <?php if ($client_infomation->active == 4) { ?>
                 <section>
@@ -182,6 +187,7 @@ if (empty($staffData["post_sales"]) && !is_admin()):
 
         <?php
         } else {
+            
         ?>
 
             <section style="display:<?= (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) ? 'none' : 'block' ?>">
