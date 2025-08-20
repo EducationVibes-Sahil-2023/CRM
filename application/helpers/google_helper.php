@@ -937,7 +937,7 @@ function syncExcel_neww($id = "")
 
         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
             $apostille_documents = get_orignal_document_list(0, 0, 1);
-            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
+            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
 
             // Ensure both are arrays before merging
             if (!is_array($apostille_documents)) {
@@ -1044,8 +1044,8 @@ COALESCE(
         //      echo $sql; die;
         //  }
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-
-        // }
+//  echo $sql; die;
+//         }
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names

@@ -1756,11 +1756,22 @@ function activity_orignal_document($id)
     return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }
 
-function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id = "", $visa_rest = 0, $visa_georgia = 0, $visa_apostile = 0)
-{
+function get_orignal_document_list(
+    $rest = 0, 
+    $georgia = 0, 
+    $apostile = 0, 
+    $id = "", 
+    $visa_rest = 0, 
+    $visa_georgia = 0, 
+    $visa_apostile = 0,
+    $where = [],
+    $where_or = []
+) {
     $CI = &get_instance();
     $CI->db->select("*")
         ->from(db_prefix() . 'orignal_documents o');
+
+    // Dynamic filters
     if (!empty($rest)) {
         $CI->db->where("rest", 1);
     }
@@ -1782,6 +1793,27 @@ function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id =
     if (!empty($id)) {
         $CI->db->where("id", $id);
     }
+
+    // Always active records
+       if (!empty($where) || !empty($where_or)) {
+        $CI->db->where($where);
+    } else {
+        // Default filter only if user has NOT passed status
+        $CI->db->where("status", 1);
+    }
+
+    // AND conditions
+    if (!empty($where)) {
+        $CI->db->where($where);
+    }
+
+    // OR conditions (grouped properly)
+    if (!empty($where_or)) {
+        $CI->db->group_start();
+        $CI->db->or_where($where_or);
+        $CI->db->group_end();
+    }
+
     return $CI->db->order_by("id", "asc")->get()->result_array();
 }
 
