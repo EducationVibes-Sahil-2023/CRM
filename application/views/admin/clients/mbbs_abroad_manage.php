@@ -25,7 +25,7 @@ if (!is_array($apostille_visa_apostile_documents)) {
    $apostille_visa_apostile_documents = [];
 }
 
-$apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
+$apostille_documents_new = array_merge($apostille_documents, $apostille_visa_apostile_documents);
 
 $office_location  = $this->staff_model->office_location();
 $orignal_document_status  = orignal_document_status();
@@ -684,7 +684,7 @@ $client_type = [
                      </div>
                      <div class="col-md-4">
                         <label>Apostille Documents <small class='text-danger'>*</small></label>
-                        <?php echo render_select('apostille_document[]', $apostille_documents, ['id', 'name'], '', [], [
+                        <?php echo render_select('apostille_document[]', $apostille_documents_new, ['id', 'name'], '', [], [
                            'data-width' => '100%',
                            'data-none-selected-text' => 'Documents',
                            'multiple' => true,
@@ -697,7 +697,7 @@ $client_type = [
                      </div>
                      <div class="col-md-4">
                         <label>Documents By Vender</label>
-                        <?php echo render_select('apostille_document_vendor[]', $apostille_documents, ['id', 'name'], '', [], [
+                        <?php echo render_select('apostille_document_vendor[]', $apostille_documents_new, ['id', 'name'], '', [], [
                            'data-width' => '100%',
                            'data-none-selected-text' => 'Documents',
                            'multiple' => true,
@@ -781,10 +781,10 @@ $client_type = [
                      </div>
 
                      <div class="clearfix"></div>
-                     <div class="doc-cost-section">
+                     <!--<div class="doc-cost-section">-->
 
 
-                     </div>
+                     <!--</div>-->
                   </div>
                </div>
             </div>
@@ -904,7 +904,7 @@ init_tail();
    var orignal_document_visa_rest = <?= !empty($orignal_document_visa_rest) ? json_encode($orignal_document_visa_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_visa_georgia = <?= !empty($orignal_document_visa_georgia) ? json_encode($orignal_document_visa_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var apostille_documents = <?= !empty($apostille_documents) ? json_encode(array_values($apostille_documents), JSON_UNESCAPED_UNICODE) : '[]' ?>;
-   var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var apostille_documents_list = <?= !empty($apostille_documents_new) ? json_encode(array_column($apostille_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var tbllead_performance_column = [];
    var tbllead_performance_column_array = <?= !empty($table_view) ? json_encode($table_view, JSON_UNESCAPED_UNICODE) : '[]' ?>;
@@ -1369,6 +1369,7 @@ init_tail();
    });
 
    function Update_apostille(obj) {
+        $(".doc-cost-section").html('');
       // Check if the checkbox is checked
       if ($(obj).prop('checked')) {
          // Hide elements related to document status update

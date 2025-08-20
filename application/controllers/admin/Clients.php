@@ -6425,9 +6425,12 @@ class Clients extends AdminController
 
             $visa_information_check = visa_details($client_id, 1);
             $visa_information = visa_details($client_id, 0, 1);
+            
+            
             $this->db->where('userid', $client_id);
             $this->db->update(db_prefix() . 'clients', array("payment_3_received" => 1, "payment_3_received_date" => date('Y-m-d H:i:s')));
 
+            check_name_Aff([$client_id]);
             if (empty($visa_information_check)) {
                 $update_client_data = [
                     "applicant_status" => 0,

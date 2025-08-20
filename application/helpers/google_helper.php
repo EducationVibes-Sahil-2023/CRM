@@ -937,7 +937,7 @@ function syncExcel_neww($id = "")
 
         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
             $apostille_documents = get_orignal_document_list(0, 0, 1);
-            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
+            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
 
             // Ensure both are arrays before merging
             if (!is_array($apostille_documents)) {
@@ -949,12 +949,13 @@ function syncExcel_neww($id = "")
 
             $apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
             $queryPart = [];
+   
             if (!empty($apostille_documents)) {
                 foreach ($apostille_documents as $apostille) {
                     $short_name        = trim($apostille['short_name']);
                     if ($apostille["apostile_status"] == 1) {
                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
-                    } else if ($apostille["apostile_status"] == 2) {
+                    } else if ($apostille["visa_apostile"] == 1) {
                         $safe_column_name  = "V_" . str_replace(" ", "_", $short_name);
                     } else {
                         $safe_column_name  =  str_replace(" ", "_", $short_name);
@@ -1043,8 +1044,8 @@ COALESCE(
         //      echo $sql; die;
         //  }
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-
-        // }
+//  echo $sql; die;
+//         }
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names

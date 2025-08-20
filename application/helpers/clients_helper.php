@@ -1499,6 +1499,9 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
         $document = array_merge($document, $document_country);
 
 
+usort($document, function ($a, $b) {
+    return $a['sequence'] <=> $b['sequence'];
+});
         $unique = [];
         $seen_ids = [];
 
@@ -1753,11 +1756,22 @@ function activity_orignal_document($id)
     return $CI->db->get(db_prefix() . 'orignal_document_activity')->result_array();
 }
 
-function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id = "", $visa_rest = 0, $visa_georgia = 0, $visa_apostile = 0)
-{
+function get_orignal_document_list(
+    $rest = 0, 
+    $georgia = 0, 
+    $apostile = 0, 
+    $id = "", 
+    $visa_rest = 0, 
+    $visa_georgia = 0, 
+    $visa_apostile = 0,
+    $where = [],
+    $where_or = []
+) {
     $CI = &get_instance();
     $CI->db->select("*")
         ->from(db_prefix() . 'orignal_documents o');
+
+    // Dynamic filters
     if (!empty($rest)) {
         $CI->db->where("rest", 1);
     }
@@ -1779,6 +1793,27 @@ function get_orignal_document_list($rest = 0, $georgia = 0, $apostile = 0, $id =
     if (!empty($id)) {
         $CI->db->where("id", $id);
     }
+
+    // Always active records
+       if (!empty($where) || !empty($where_or)) {
+        $CI->db->where($where);
+    } else {
+        // Default filter only if user has NOT passed status
+        $CI->db->where("status", 1);
+    }
+
+    // AND conditions
+    if (!empty($where)) {
+        $CI->db->where($where);
+    }
+
+    // OR conditions (grouped properly)
+    if (!empty($where_or)) {
+        $CI->db->group_start();
+        $CI->db->or_where($where_or);
+        $CI->db->group_end();
+    }
+
     return $CI->db->order_by("id", "asc")->get()->result_array();
 }
 
@@ -2177,9 +2212,10 @@ function get_apostille_document_data($client_id, $visa_apostile = 0)
         v.name AS vendor_name, 
         CONCAT(s.firstname, ' ', s.lastname) AS created_by, 
         CASE 
-            WHEN r.received_status IS NOT NULL AND r.received_status != 0 THEN 'Received'
-            WHEN r.received_status IS NULL OR r.received_status = '' THEN 'Pending'
-            ELSE 'Sent'
+             WHEN r.id IS NULL THEN 'Pending'  
+    WHEN r.received_status = 1 THEN 'Received'  
+    WHEN r.received_status = 0 THEN 'Sent'     
+    ELSE 'Pending'          
         END AS apostille_status,
         IF(ord.id IS NULL, 'No', 'Yes') AS original_received")
         ->from(db_prefix() . 'orignal_documents o')
