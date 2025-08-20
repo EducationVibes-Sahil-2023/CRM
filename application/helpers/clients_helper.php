@@ -1499,6 +1499,9 @@ function get_documents($lead_type = "", $selected_country = [], $show_all = 0, $
         $document = array_merge($document, $document_country);
 
 
+usort($document, function ($a, $b) {
+    return $a['sequence'] <=> $b['sequence'];
+});
         $unique = [];
         $seen_ids = [];
 
@@ -2177,9 +2180,10 @@ function get_apostille_document_data($client_id, $visa_apostile = 0)
         v.name AS vendor_name, 
         CONCAT(s.firstname, ' ', s.lastname) AS created_by, 
         CASE 
-            WHEN r.received_status IS NOT NULL AND r.received_status != 0 THEN 'Received'
-            WHEN r.received_status IS NULL OR r.received_status = '' THEN 'Pending'
-            ELSE 'Sent'
+             WHEN r.id IS NULL THEN 'Pending'  
+    WHEN r.received_status = 1 THEN 'Received'  
+    WHEN r.received_status = 0 THEN 'Sent'     
+    ELSE 'Pending'          
         END AS apostille_status,
         IF(ord.id IS NULL, 'No', 'Yes') AS original_received")
         ->from(db_prefix() . 'orignal_documents o')
