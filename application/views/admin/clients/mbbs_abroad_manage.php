@@ -9,14 +9,15 @@ $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
 // Extract the 'id' column and limit to 5 results
 $selected_performance_column = [];
 $fees_data = get_clients_fees(2);
-$orignal_document_list = get_orignal_document_list(0,0,0,0,0,0,0,["status"=>1]);
+$orignal_document_list = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["status" => 1]);
 $orignal_document_list_rest = get_orignal_document_list(1);
 $orignal_document_list_georgia = get_orignal_document_list(0, 1);
 $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
 $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
-$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
-
+$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
+$get_currencies = get_currencies();
+$get_currencies = array_column($get_currencies, null, 'id');
 // Ensure both are arrays before merging
 if (!is_array($apostille_documents)) {
    $apostille_documents = [];
@@ -84,6 +85,10 @@ $client_type = [
 ?>
 <div id="wrapper">
    <style>
+      .modal.in .modal-dialog {
+         width: 50%;
+      }
+
       .margin-top {
          margin-top: 20px;
       }
@@ -452,6 +457,14 @@ $client_type = [
                                  <?php
                                  echo '<div id="leads-filter-source">';
                                  echo render_select('minor', $yes_no_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Minor", 'data-actions-box' => true), array(), 'no-mbot', '', false, "minor");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+                              <div class="col-md-2 margin-top  ">
+                                 <?php
+                                 echo '<div id="leads-filter-source">';
+                                 echo render_select('tf_status', $yes_no_status, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "TF Status", 'data-actions-box' => true), array(), 'no-mbot', '', false, "tf_status");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -1281,6 +1294,7 @@ init_tail();
          'doc_status': "[name='doc_status[]']",
          'passport_status': "[name='passport_status[]']",
          'minor_status': "[name='minor']",
+         'tf_status': "[name='tf_status']",
          'client_type': "[name='client_type[]']",
          'session_intake': "[name='session_intake']",
          'apostille_vendors_filter': "[name='apostille_vendors_filter[]']",
@@ -1369,7 +1383,7 @@ init_tail();
    });
 
    function Update_apostille(obj) {
-        $(".doc-cost-section").html('');
+      $(".doc-cost-section").html('');
       // Check if the checkbox is checked
       if ($(obj).prop('checked')) {
          // Hide elements related to document status update
@@ -1463,6 +1477,12 @@ init_tail();
       var is_valid = true;
       var apostille_data = {};
       var visa_data = {};
+      // Get value of the first select
+      var currency_id_apostile = $(".currency-selector-currency_type").first().val();
+
+      // Get text of the selected option
+      var currency_text_apostile = $(".currency-selector-currency_type option:selected").first().text();
+
 
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
@@ -1556,6 +1576,8 @@ init_tail();
          locations_name,
          apostille_status,
          visa_status,
+         currency_id_apostile,
+         currency_text_apostile
       };
 
       if (mass_delete == 1 && !confirm("Are you sure you want to delete the selected applicants?")) {
@@ -1736,6 +1758,28 @@ init_tail();
       });
    }
 
+   <?php
+   $currencyHtml = '<div class="input-group-addon currency-addon">
+    <select name="currency_type[]" id="currency_type" class="currency-selector currency-selector-currency_type" onchange="updateSymbol(this.value)">
+';
+
+   foreach ($get_currencies as $c) {
+      $selected = (!empty($fees['currency_id']) && $fees['currency_id'] == $c['id']) ||
+         (empty($fees['currency_id']) && !empty($c['default_currency']) && $c['default_currency'] == $c['id'])
+         ? 'selected' : '';
+
+      $currencyHtml .= '<option data-symbol="' . $c['symbol'] . '" value="' . $c['id'] . '" data-placeholder="0.00" ' . $selected . '>' . $c['name'] . '</option>';
+   }
+
+   $currencyHtml .= '</select></div>';
+   ?>
+
+   let currencyHtml = `<?= $currencyHtml ?>`;
+
+   function updateSymbol(value) {
+      $(".currency-selector-currency_type").val(value);
+   }
+
    function document_cost_div(obj) {
       let selected_documents = $(obj).val() || [];
 
@@ -1749,8 +1793,10 @@ init_tail();
          $(".doc-cost-section").append(`
             <div class='col-md-4' id='cost-doc-div-${doc_id}'>
                 <label>${doc.name} Cost</label>
-                <div class='form-group'>
+                                                                    <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+
                     <input class='form-control' type='number' placeholder='100' name='document_cost[${doc.id}]'>
+                    ${currencyHtml}
                 </div>
             </div>
         `);
