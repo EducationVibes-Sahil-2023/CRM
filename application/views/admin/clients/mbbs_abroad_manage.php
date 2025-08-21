@@ -9,13 +9,13 @@ $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
 // Extract the 'id' column and limit to 5 results
 $selected_performance_column = [];
 $fees_data = get_clients_fees(2);
-$orignal_document_list = get_orignal_document_list();
+$orignal_document_list = get_orignal_document_list(0,0,0,0,0,0,0,["status"=>1]);
 $orignal_document_list_rest = get_orignal_document_list(1);
 $orignal_document_list_georgia = get_orignal_document_list(0, 1);
 $orignal_document_visa_rest = get_orignal_document_list(0, 0, 0, "", 1);
 $orignal_document_visa_georgia = get_orignal_document_list(0, 0, 0, "", 0, 1);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
-$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1);
+$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
 
 // Ensure both are arrays before merging
 if (!is_array($apostille_documents)) {

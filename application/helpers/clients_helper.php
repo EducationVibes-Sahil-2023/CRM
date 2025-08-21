@@ -1734,7 +1734,8 @@ function get_orignal_document_data($client_id)
         ->from(db_prefix() . 'orignal_documents o')
         ->join(db_prefix() . 'orignal_documents_received r', "o.id = r.doc_id AND r.userid = {$client_id}", "LEFT")
         ->join(db_prefix() . 'staff s', "s.staffid = r.received_by ", "LEFT")
-        ->join(db_prefix() . 'office_location l', "l.id = r.location_id ", "LEFT");
+        ->join(db_prefix() . 'office_location l', "l.id = r.location_id ", "LEFT")
+        ->where('o.status', 1);
     return $CI->db->order_by("id", "asc")->get()->result_array();
 }
 
@@ -1799,7 +1800,7 @@ function get_orignal_document_list(
         $CI->db->where($where);
     } else {
         // Default filter only if user has NOT passed status
-        $CI->db->where("status", 1);
+        // $CI->db->where("status", 1);
     }
 
     // AND conditions
@@ -1927,15 +1928,99 @@ function get_view_columns_sa()
 
 function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "", $apostille_document_vendor = [])
 {
+        $CI = &get_instance();
     if (!empty($document_ids) && !empty($apostille_document_vendor)) {
         $document_ids = array_diff($document_ids, $apostille_document_vendor);
+
         if (empty($document_ids)) {
+            
+              if ($check_status == 1) {
+            $client_ids = array_map('intval', $client_ids_array);
+            
+            
+            $CI->db->select("o.id AS doc_id, o.name AS doc_name")
+        ->from(db_prefix() . 'orignal_documents o');
+        // ->where(['o.status' => 1, 'o.apostile_status' => 1]);
+    if (!empty($apostille_document_vendor)) {
+        $CI->db->where_in('o.id', $apostille_document_vendor);
+    }
+
+    $all_documents = $CI->db->get()->result_array();
+     $valid_doc_ids = array_column($all_documents, 'doc_id');
+    
+                $CI->db->select("r.userid, r.doc_id")
+            ->from(db_prefix() . 'client_apostille_data r')
+            ->where_in('r.userid', $client_ids);
+
+        if (!empty($valid_doc_ids)) {
+            $CI->db->where_in('r.doc_id', $valid_doc_ids);
+        }
+
+        $check_Apostille_data = $CI->db->get()->result_array();
+
+  
+        if (!empty($check_Apostille_data)) {
+            $user_id = $check_Apostille_data[0]["userid"];
+            $doc_id = $check_Apostille_data[0]["doc_id"];
+            $client_name = get_client_name($user_id);
+            $doc_details = get_orignal_document_list('', '', '', $doc_id)[0];
+            $doc_name = !empty($doc_details["name"]) ? $doc_details["name"] : "Unknown";
+
+            return [
+                "error" => true,
+                "message" => "User '{$client_name}' has already apostilled original document '{$doc_name}'."
+            ];
+        }
+              }
+              else if($check_status == 2)
+              {
+                    // Step 1: Fetch existing combinations from DB
+        $CI->db->select("r.id,r.userid, r.doc_id")
+            ->from(db_prefix() . 'client_apostille_data r')
+            ->where_in('r.userid', $client_ids);
+
+        if (!empty($document_ids)) {
+            $CI->db->where_in('r.doc_id', $document_ids);
+        }
+
+        if (!empty($vendor_id)) {
+            $CI->db->where_in('r.vendor_id', $vendor_id);
+        }
+
+        $existing_combinations = $CI->db->get()->result_array();
+
+        // Step 2: Build a set of existing keys for fast lookup
+        $existing_map = [];
+        foreach ($existing_combinations as $row) {
+            $existing_map[$row['userid'] . '_' . $row['doc_id']] = true;
+        }
+
+        // Step 3: Loop through input combinations to validate
+        foreach ($client_ids as $userid) {
+            foreach ($document_ids as $doc_id) {
+                $key = $userid . '_' . $doc_id;
+                if (!isset($existing_map[$key])) {
+                    $client_name = get_client_name($userid);
+                    $doc_name = get_orignal_document_list('', '', '', $doc_id)[0]["name"] ?? "Unknown Document";
+
+                    return [
+                        "error" => true,
+                        "message" => "No apostille sent record found for client '{$client_name}' and document '{$doc_name}'."
+                    ];
+
+                    die;
+                }
+            }
+        }
+
+        return $existing_combinations;
+              }
             return true;
         }
     }
 
 
-    $CI = &get_instance();
+
     // Validate input
     if ($check_status == 0 || empty($client_ids_array)) {
         return [
@@ -1948,9 +2033,8 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
     // Step 1: Fetch valid documents (active + apostille enabled)
     $CI->db->select("o.id AS doc_id, o.name AS doc_name")
-        ->from(db_prefix() . 'orignal_documents o')
-        ->where(['o.status' => 1, 'o.apostile_status' => 1]);
-
+        ->from(db_prefix() . 'orignal_documents o');
+        // ->where(['o.status' => 1, 'o.apostile_status' => 1]);
     if (!empty($document_ids)) {
         $CI->db->where_in('o.id', $document_ids);
     }
@@ -1965,8 +2049,6 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
     }
 
     $valid_doc_ids = array_column($all_documents, 'doc_id');
-
-
     $CI->db->select(db_prefix() . 'admission_preferences.userid, tblclient_university_shortlisting.invitation_letter');
     $CI->db->from(db_prefix() . 'admission_preferences');
     $CI->db->join(
@@ -2010,6 +2092,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
         $check_Apostille_data = $CI->db->get()->result_array();
 
+  
         if (!empty($check_Apostille_data)) {
             $user_id = $check_Apostille_data[0]["userid"];
             $doc_id = $check_Apostille_data[0]["doc_id"];
@@ -2400,6 +2483,7 @@ function validate_orignal_documents($client_ids, $country_names = [])
     $CI->db->select("o.id AS doc_id, o.name AS doc_name, IF(minor_status = 2, o.id, 0) AS check_minor")
         ->from(db_prefix() . 'orignal_documents o')
         ->where('o.status', 1);
+         $CI->db->where('o.visa_apostile', 1);
 
     if (in_array("Rest", $country_names)) {
         $CI->db->where('o.visa_rest', 1);

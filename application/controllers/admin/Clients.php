@@ -1514,6 +1514,7 @@ class Clients extends AdminController
 
                 $get_data_from_document = get_orignal_document_data_list_apostille($ids, $documents_id, $check_status, $vendor_id, $apostille_document_vendor);
 
+
                 if (isset($get_data_from_document["error"]) && $get_data_from_document["error"] == 1) {
                     $data = [
                         'resp_code' => 'ERR',
@@ -1605,7 +1606,7 @@ class Clients extends AdminController
                             $row["received_status"] = 1;
                         }
 
-                        if (!empty($document_cost[$rec_apostille['doc_id']])) {
+                        if ($document_cost[$rec_apostille['doc_id']]!='') {
                             $row["apostille_cost"] = $document_cost[$rec_apostille['doc_id']];
                         }
 
@@ -1621,7 +1622,7 @@ class Clients extends AdminController
 
 
                         $doc_name = !empty($apostille_documents[$rec_apostille['doc_id']]['name']) ? $apostille_documents[$rec_apostille['doc_id']]['name'] : 'Unknown Document';
-                        $cost = !empty($document_cost[$rec_apostille['doc_id']]) ? " with cost ₹{$document_cost[$rec_apostille['doc_id']]}" : '';
+                        $cost = $document_cost[$rec_apostille['doc_id']]!='' ? " with cost ₹{$document_cost[$rec_apostille['doc_id']]}" : '';
                         $vendor = !empty($apostille_vendors[$vendor_id]['name']) ? ", vendor: {$apostille_vendors[$vendor_id]['name']}" : '';
                         $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
                         $received = !empty($receiving_date) ? ", receiving date: {$receiving_date}" : '';
