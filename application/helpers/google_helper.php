@@ -817,7 +817,7 @@ function syncExcel_neww($id = "")
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
     // Fetch sheet config(s)
-    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status")
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status, excel_type,apostile_documents_status,group_by")
         ->from(db_prefix() . "excel_data_update")
         ->where("autoSync", 1);
 
@@ -856,7 +856,7 @@ function syncExcel_neww($id = "")
         $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
         $apostile_documents_status = $sheet['apostile_documents_status'] ?? null;
         $sql_conditions           = $sheet['sql_condition'] ?? null;
-
+$group_by_sql = $sheet['group_by'] ?? null;
         // Parse column IDs
         $column_ids_raw = $sheet['column_ids'] ?? '';
         $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
@@ -886,7 +886,7 @@ function syncExcel_neww($id = "")
 
         // Handle original documents extra columns
         if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-            $orignal_documents = get_orignal_document_list();
+            $orignal_documents = get_orignal_document_list(0,0,0,0,0,0,0,["status"=>1]);
             $upload_document   = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
 
             $queryPart = [];
@@ -995,7 +995,57 @@ COALESCE(
         if (!empty($sql_conditions)) {
             $condition_sql .= " {$sql_conditions}";
         }
+        
+        $group_by ="";
+        $apostile_query ="";
+if(!empty($group_by_sql))
+{
+$group_by = ",".$group_by_sql;
 
+  $apostile_query =" JOIN (
+                    SELECT 
+                    aps.id,
+                        aps.userid,
+                        apostille_cost AS Total_cost,
+                        courier_date AS courier_date,
+                        payment_date AS payment_date,
+                        apostille_received AS apostille_received,
+                        vendor_id AS vendor_id,
+                        doc_id AS doc_id,
+                        tod.short_name doc_name,
+                        if(by_vendor=1,'Yes','No') by_vendor,
+                        CASE 
+                            WHEN aps.id is NULL  THEN 'Pending'
+                            WHEN received_status = 0 THEN 'Sent'
+                            WHEN received_status = 1 THEN 'Received'
+                            ELSE 'Pending'
+                        END AS apostille_status
+                    FROM " . db_prefix() . "client_apostille_data aps
+                    join " . db_prefix() . "orignal_documents  tod ON aps.doc_id = tod.id
+                ) AS apostille_summary ON apostille_summary.userid = c.userid  ";
+}
+else
+{
+       $apostile_query =" LEFT JOIN (
+                    SELECT 
+                        userid,
+                        SUM(apostille_cost) AS Total_cost,
+                        MAX(courier_date) AS courier_date,
+                        MAX(payment_date) AS payment_date,
+                        MAX(apostille_received) AS apostille_received,
+                        GROUP_CONCAT(vendor_id) AS vendor_id,
+                        GROUP_CONCAT(doc_id) AS doc_id,
+                        if(by_vendor=1,'Yes','No') by_vendor,
+                        CASE 
+                            WHEN COUNT(*) = 0 THEN 'Pending'
+                            WHEN SUM(received_status = 0) > 0 THEN 'Sent'
+                            WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
+                            ELSE 'Pending'
+                        END AS apostille_status
+                    FROM " . db_prefix() . "client_apostille_data
+                    GROUP BY userid
+                ) AS apostille_summary ON apostille_summary.userid = c.userid ";
+}
         // Main SQL
         $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
@@ -1021,24 +1071,10 @@ COALESCE(
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
-                LEFT JOIN (
-                    SELECT 
-                        userid,
-                        SUM(apostille_cost) AS Total_cost,
-                        MAX(courier_date) AS courier_date,
-                        MAX(payment_date) AS payment_date,
-                        GROUP_CONCAT(vendor_id) AS vendor_id,
-                        CASE 
-                            WHEN COUNT(*) = 0 THEN 'Pending'
-                            WHEN SUM(received_status = 0) > 0 THEN 'Sent'
-                            WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
-                            ELSE 'Pending'
-                        END AS apostille_status
-                    FROM " . db_prefix() . "client_apostille_data
-                    GROUP BY userid
-                ) AS apostille_summary ON apostille_summary.userid = c.userid
+               {$apostile_query} 
                 WHERE 1=1 {$condition_sql}
-                GROUP BY c.userid";
+                GROUP BY c.userid {$group_by}   Order by c.userid";
+                
 
         //  if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
         //      echo $sql; die;
@@ -1046,6 +1082,10 @@ COALESCE(
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
 //  echo $sql; die;
 //         }
+// if($currentId == 11)
+// {
+//      echo $sql; die;
+// }
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names
