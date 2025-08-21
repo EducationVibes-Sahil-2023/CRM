@@ -528,7 +528,7 @@ $client_type = [
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('apostille_doc[]', $apostille_documents, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Doc", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_doc");
+                                 echo render_select('apostille_doc[]', $apostille_documents_new, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Apostille Doc", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "apostille_doc");
                                  echo '</div>';
                                  ?>
                               </div>
@@ -903,7 +903,7 @@ init_tail();
    var orignal_document_list_georgia = <?= !empty($orignal_document_list_georgia) ? json_encode($orignal_document_list_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_visa_rest = <?= !empty($orignal_document_visa_rest) ? json_encode($orignal_document_visa_rest, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var orignal_document_visa_georgia = <?= !empty($orignal_document_visa_georgia) ? json_encode($orignal_document_visa_georgia, JSON_UNESCAPED_UNICODE) : '[]' ?>;
-   var apostille_documents = <?= !empty($apostille_documents) ? json_encode(array_values($apostille_documents), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+   var apostille_documents = <?= !empty($apostille_documents_new) ? json_encode(array_values($apostille_documents_new), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var apostille_documents_list = <?= !empty($apostille_documents_new) ? json_encode(array_column($apostille_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var selected_performance_column = <?= !empty($selected_performance_column) ? json_encode($selected_performance_column, JSON_UNESCAPED_UNICODE) : '[]' ?>;
    var tbllead_performance_column = [];
