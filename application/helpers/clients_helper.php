@@ -1962,13 +1962,32 @@ function checkName_aff($client_ids, $document_ids)
 }
 function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "", $apostille_document_vendor = [])
 {
+<<<<<<< HEAD
     $CI = &get_instance();
     $client_ids = array_map('intval', $client_ids_array);
     checkName_aff($client_ids, $document_ids);
+=======
+        $CI = &get_instance();
+         $client_ids = array_map('intval', $client_ids_array);
+>>>>>>> b9a094613e4a786eb59f65bf10230a93d270b9dc
     if (!empty($document_ids) && !empty($apostille_document_vendor)) {
         $document_ids = array_diff($document_ids, $apostille_document_vendor);
 
         if (empty($document_ids)) {
+<<<<<<< HEAD
+=======
+            
+              if ($check_status == 1) {
+           
+            
+            
+            $CI->db->select("o.id AS doc_id, o.name AS doc_name")
+        ->from(db_prefix() . 'orignal_documents o');
+        // ->where(['o.status' => 1, 'o.apostile_status' => 1]);
+    if (!empty($apostille_document_vendor)) {
+        $CI->db->where_in('o.id', $apostille_document_vendor);
+    }
+>>>>>>> b9a094613e4a786eb59f65bf10230a93d270b9dc
 
             if ($check_status == 1) {
 
