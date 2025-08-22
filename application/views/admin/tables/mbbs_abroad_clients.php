@@ -55,6 +55,12 @@ $joinIn = ' And FIND_IN_SET(' . db_prefix() . 'clients.agent_id, ' . db_prefix()
 if ($post_sales->evp_partners == "all") {
     $joinIn = ' ';
 }
+$courier_date_join = "";
+if ($this->ci->input->post('courier_date')) {
+    $courier_date = $this->ci->input->post('courier_date');
+    $courier_date_join = " AND DATE(courier_date) = '{$courier_date}'";
+}
+
 
 if (!empty($tblma_applicant_tracker)) {
     foreach ($tblma_applicant_tracker as $key => $value) {
@@ -196,7 +202,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
                 WHEN SUM(received_status = 1) = COUNT(*) THEN 'Received'
                 ELSE 'Pending'
             END AS apostille_status
-        FROM " . db_prefix() . "client_apostille_data
+        FROM " . db_prefix() . "client_apostille_data where 1=1 ".$courier_date_join."
         GROUP BY userid
     ) AS apostille_summary ON apostille_summary.userid = " . db_prefix() . "clients.userid",
     'LEFT JOIN (
