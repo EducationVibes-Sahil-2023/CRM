@@ -81,6 +81,16 @@ if (!empty($tblma_applicant_tracker)) {
                 }
                 if ($value["column_name"] == "apostille_documents") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 1));
+                     $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
+                     
+                     if (!is_array($orignal_documents)) {
+   $orignal_documents = [];
+}
+if (!is_array($apostille_visa_apostile_documents)) {
+   $apostille_visa_apostile_documents = [];
+}
+
+$orignal_documents = array_merge($orignal_documents, $apostille_visa_apostile_documents);
                 }
                 if ($value["column_name"] == "orignal_document_visa_rest") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 0, '', 1));
