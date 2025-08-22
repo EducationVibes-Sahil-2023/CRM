@@ -1507,6 +1507,9 @@ class Clients extends AdminController
                 } else {
                     $check_status = 2; // update apostile data 
                 }
+                if (!empty($courier_date) && !empty($receiving_date)) {
+                    $check_status = 2;
+                }
 
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
                 //     $check_status = 2; // update apostile data 
