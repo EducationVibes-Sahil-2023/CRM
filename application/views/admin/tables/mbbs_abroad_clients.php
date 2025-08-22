@@ -708,7 +708,9 @@ foreach ($rResult as $aRow) {
 
         $company .= '<div class="row-options">';
         $company .= '<a href="' . $url . '">' . _l('view') . '</a>';
+         if (is_admin() || is_postSale()) {
         $company .= ' | <a href="javascript:void(0);" onclick="download_documents(' . $aRow['userid'] . ', \'' . addslashes($aRow['name']) . '\')">' . _l('Download') . '</a>';
+         }
 
         if ($aRow['registration_confirmed'] == 0 && is_admin()) {
             // $company .= ' | <a href="' . admin_url('clients/confirm_registration/' . $aRow['userid']) . '" class="text-success bold">' . _l('confirm_registration') . '</a>';

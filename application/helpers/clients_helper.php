@@ -1953,7 +1953,7 @@ function checkName_aff($client_ids, $document_ids)
 
             $data = [
                 'resp_code' => 'ERR',
-                'resp_desc' => "User '{$client_name}' has already apostilled original document '{$doc_name}'."
+                'resp_desc' => "User '{$client_name}' '{$doc_name}' not checked in document section."
             ];
             echo json_encode($data);
             exit;

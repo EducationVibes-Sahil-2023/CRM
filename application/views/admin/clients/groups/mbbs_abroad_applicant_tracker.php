@@ -2358,11 +2358,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
 
             if (id == 8) {
+                 if (skip == 1 || same_step == 1) {} else {
                 let check_validation = await check_required_fields("3-payment-form");
                 if (!check_validation) {
                     hide_loader();
                     return false;
                 }
+                 }
                 upload_data.append("3_payment", 1);
             }
 
