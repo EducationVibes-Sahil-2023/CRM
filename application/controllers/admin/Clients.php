@@ -7997,7 +7997,7 @@ class Clients extends AdminController
                         $update_client_data = [
                             "applicant_status" => 0,
                             "applicant_stage" => VISA,
-                            "applicant_sub_status" => VISA_APPLY
+                            "applicant_sub_status" => VISA_REJECTED
                         ];
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', $update_client_data);
@@ -8026,8 +8026,7 @@ class Clients extends AdminController
             if (!empty($row['visa_receiving_date'])) {
                 $visa_status = 3;
                 $received_status = 1;
-
-                $visa_sub_stage = VISA_APPLY;
+                $visa_sub_stage = VISA_RECEIVED;
             }
 
             if (!empty($row['visa_receiving_date']) && !empty($row['visa_payment_date'])) {
