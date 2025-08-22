@@ -1509,6 +1509,9 @@ class Clients extends AdminController
                 } else {
                     $check_status = 2; // update apostile data 
                 }
+                if (!empty($courier_date) && !empty($receiving_date)) {
+                    $check_status = 2;
+                }
 
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
                 //     $check_status = 2; // update apostile data 
@@ -6349,7 +6352,7 @@ class Clients extends AdminController
 
                 $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id, 1);
 
-                if (!empty($university_shortlisting_data) && !empty($university_shortlisting_data[0]["invitation_letter"])) {
+                if (!empty($university_shortlisting_data) && !empty($university_shortlisting_data[0]["invitation_letter"]) && !empty($university_shortlisting_data[0]["invitation_receiving_date"])) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => INVITATION,
@@ -7726,11 +7729,25 @@ class Clients extends AdminController
 
         $batch_update_data = [];
 
+        $update_client_data = [
+            "applicant_status" => 0,
+            "applicant_stage" => INVITATION,
+            "applicant_sub_status" => INVITATION_PENDING,
+        ];
+
         foreach ($invitation as $row) {
             if (empty($row['id'])) {
                 continue; // Skip invalid entries
             }
+            $file_input_name = "invitation_letter_" . $row['id'];
 
+            if (!empty($row['receiving_date']) && (!empty($files[$file_input_name]['name']) || $university_shortlisting_data[0]['invitation_letter'])) {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => INVITATION,
+                    "applicant_sub_status" => INVITATION_RECEIVED
+                ];
+            }
             $update_entry = [
                 'id'                => $row['id'],
                 'invitation_receiving_date'           => $row['receiving_date'] ?? "",
@@ -7739,7 +7756,6 @@ class Clients extends AdminController
             ];
 
 
-            $file_input_name = "invitation_letter_" . $row['id'];
 
             if (isset($files[$file_input_name]) && !empty($files[$file_input_name]['name'])) {
                 $document = $files[$file_input_name];
@@ -7786,11 +7802,7 @@ class Clients extends AdminController
                     'university_shortlisting' => $university_shortlisting_data
                 ];
 
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => INVITATION,
-                    "applicant_sub_status" => INVITATION_RECEIVED,
-                ];
+
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
