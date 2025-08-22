@@ -1929,13 +1929,14 @@ function get_view_columns_sa()
 function get_orignal_document_data_list_apostille($client_ids_array = [], $document_ids = [], $check_status = 0, $vendor_id = "", $apostille_document_vendor = [])
 {
         $CI = &get_instance();
+         $client_ids = array_map('intval', $client_ids_array);
     if (!empty($document_ids) && !empty($apostille_document_vendor)) {
         $document_ids = array_diff($document_ids, $apostille_document_vendor);
 
         if (empty($document_ids)) {
             
               if ($check_status == 1) {
-            $client_ids = array_map('intval', $client_ids_array);
+           
             
             
             $CI->db->select("o.id AS doc_id, o.name AS doc_name")
