@@ -38,7 +38,7 @@ $read_only = "readonly";
 
 $admin_status = 0;
 
-if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
+if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"]) || has_permission('customers', '', 'create')) {
 	$final_sumbit = 0;
 	$read_only = "";
 	$admin_status = 1;
@@ -692,7 +692,7 @@ if ($lead_type_status == 2) {
 												</div>
 											</div>
 
-											<?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) { ?>
+											<?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"]) || has_permission('customers', '', 'create')) { ?>
 												<div class="col-lg-4">
 													<div class="form-group">
 														<label for="primary_university">Primary University<small class="text-danger"></small></label>
