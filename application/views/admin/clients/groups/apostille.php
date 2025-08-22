@@ -1,6 +1,6 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php
-$apostille_document  = get_apostille_document_data($client_id,1);
+$apostille_document  = get_apostille_document_data($client_id, 1);
 $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location();
 $activity_apostille_document = activity_apostille_document($client_id);
@@ -51,6 +51,7 @@ if (!is_postSale() && !is_admin()) {
                                 <th scope="col">Document Name</th>
                                 <th scope="col">Orignal Status</th>
                                 <th scope="col">Cost</th>
+                                <th scope="col">Currency</th>
                                 <th scope="col">Status</th>
                                 <th scope="col">Vendor</th>
                                 <th scope="col">Apply By Vendor</th>
@@ -79,6 +80,7 @@ if (!is_postSale() && !is_admin()) {
                                         <td><?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
                                         <td><?= !empty($doc["original_received"]) ? $doc["original_received"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_cost"]) ? $doc["apostille_cost"] : '' ?></td>
+                                        <td><?= !empty($doc["currency_text"]) ? $doc["currency_text"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_status"]) ? $doc["apostille_status"] : '' ?></td>
                                         <td><?= !empty($doc["vendor_name"]) ? $doc["vendor_name"] : '' ?></td>
                                         <td><?= !empty($doc["by_vendor"]) ? 'Yes' : 'No' ?></td>

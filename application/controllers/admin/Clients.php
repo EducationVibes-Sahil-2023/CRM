@@ -1489,6 +1489,8 @@ class Clients extends AdminController
                 $courier_date = $this->input->post('apostille_date');
                 $receiving_date = $this->input->post('apostille_receiving_date');
                 $payment_date = $this->input->post('apostille_payment_date');
+                $currency_id_apostile = $this->input->post('currency_id_apostile');
+                $currency_text_apostile = $this->input->post('currency_text_apostile');
 
                 // Validate essential inputs
                 // if (empty($ids) || empty($documents_id) || empty($vendor_id) || empty($courier_date)) {
@@ -1551,7 +1553,9 @@ class Clients extends AdminController
                                 "created_at" => date('Y-m-d H:i:s'),
                                 "created_by" => get_staff_user_id(),
                                 "received_status" => !empty($receiving_date) ? 1 : 0,
-                                "by_vendor" => $by_vendor
+                                "by_vendor" => $by_vendor,
+                                "currency_type" => ($document_cost[$doc_id] != "") ? $currency_id_apostile : '',
+                                "currency_text" => ($document_cost[$doc_id] != "") ? $currency_text_apostile : '',
                             ];
                             $doc_name = !empty($apostille_documents[$doc_id]['name']) ? $apostille_documents[$doc_id]['name'] : 'Unknown Document';
                             $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
@@ -1609,8 +1613,10 @@ class Clients extends AdminController
                             $row["received_status"] = 1;
                         }
 
-                        if ($document_cost[$rec_apostille['doc_id']]!='') {
+                        if ($document_cost[$rec_apostille['doc_id']] != '') {
                             $row["apostille_cost"] = $document_cost[$rec_apostille['doc_id']];
+                            $row["currency_type"] = $currency_id_apostile;
+                            $row["currency_text"] = $currency_text_apostile;
                         }
 
                         if (!empty($payment_date)) {
@@ -1621,11 +1627,14 @@ class Clients extends AdminController
                             $row["courier_date"] = $courier_date;
                         }
 
+
+
+
                         $update_apostille_data[] = $row;
 
 
                         $doc_name = !empty($apostille_documents[$rec_apostille['doc_id']]['name']) ? $apostille_documents[$rec_apostille['doc_id']]['name'] : 'Unknown Document';
-                        $cost = $document_cost[$rec_apostille['doc_id']]!='' ? " with cost ₹{$document_cost[$rec_apostille['doc_id']]}" : '';
+                        $cost = $document_cost[$rec_apostille['doc_id']] != '' ? " with cost ₹{$document_cost[$rec_apostille['doc_id']]}" : '';
                         $vendor = !empty($apostille_vendors[$vendor_id]['name']) ? ", vendor: {$apostille_vendors[$vendor_id]['name']}" : '';
                         $courier = !empty($courier_date) ? ", courier date: {$courier_date}" : '';
                         $received = !empty($receiving_date) ? ", receiving date: {$receiving_date}" : '';
@@ -6343,7 +6352,7 @@ class Clients extends AdminController
 
                 $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id, 1);
 
-                if (!empty($university_shortlisting_data) && !empty($university_shortlisting_data[0]["invitation_letter"])) {
+                if (!empty($university_shortlisting_data) && !empty($university_shortlisting_data[0]["invitation_letter"]) && !empty($university_shortlisting_data[0]["invitation_receiving_date"])) {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => INVITATION,
@@ -6429,8 +6438,8 @@ class Clients extends AdminController
 
             $visa_information_check = visa_details($client_id, 1);
             $visa_information = visa_details($client_id, 0, 1);
-            
-            
+
+
             $this->db->where('userid', $client_id);
             $this->db->update(db_prefix() . 'clients', array("payment_3_received" => 1, "payment_3_received_date" => date('Y-m-d H:i:s')));
 
@@ -7720,11 +7729,25 @@ class Clients extends AdminController
 
         $batch_update_data = [];
 
+        $update_client_data = [
+            "applicant_status" => 0,
+            "applicant_stage" => INVITATION,
+            "applicant_sub_status" => INVITATION_PENDING,
+        ];
+
         foreach ($invitation as $row) {
             if (empty($row['id'])) {
                 continue; // Skip invalid entries
             }
+            $file_input_name = "invitation_letter_" . $row['id'];
 
+            if (!empty($row['receiving_date']) && (!empty($files[$file_input_name]['name']) || $university_shortlisting_data[0]['invitation_letter'])) {
+                $update_client_data = [
+                    "applicant_status" => 0,
+                    "applicant_stage" => INVITATION,
+                    "applicant_sub_status" => INVITATION_RECEIVED
+                ];
+            }
             $update_entry = [
                 'id'                => $row['id'],
                 'invitation_receiving_date'           => $row['receiving_date'] ?? "",
@@ -7733,7 +7756,6 @@ class Clients extends AdminController
             ];
 
 
-            $file_input_name = "invitation_letter_" . $row['id'];
 
             if (isset($files[$file_input_name]) && !empty($files[$file_input_name]['name'])) {
                 $document = $files[$file_input_name];
@@ -7780,11 +7802,7 @@ class Clients extends AdminController
                     'university_shortlisting' => $university_shortlisting_data
                 ];
 
-                $update_client_data = [
-                    "applicant_status" => 0,
-                    "applicant_stage" => INVITATION,
-                    "applicant_sub_status" => INVITATION_RECEIVED,
-                ];
+
 
                 $this->db->where("userid", $client_id);
                 $this->db->update(db_prefix() . 'clients', $update_client_data);

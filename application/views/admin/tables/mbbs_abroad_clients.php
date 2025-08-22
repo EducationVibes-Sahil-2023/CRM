@@ -77,7 +77,7 @@ if (!empty($tblma_applicant_tracker)) {
             if (in_array($value["column_name"], ['original_documents', 'original_documents_rest', 'original_documents_georgia', 'apostille_documents', 'orignal_document_visa_rest', 'orignal_document_visa_georgia'])) {
                 $orignal_documents = [];
                 if ($value["column_name"] == "original_documents") {
-                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0,0,0,0,0,0,0,["status"=>1]));
+                    $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["status" => 1]));
                 }
                 if ($value["column_name"] == "original_documents_rest") {
                     $orignal_documents = array_merge($orignal_documents, get_orignal_document_list(1));
@@ -461,6 +461,15 @@ if ($this->ci->input->post('minor_status')) {
     $minor = $this->ci->input->post('minor_status');
     array_push($where, "AND ((TIMESTAMPDIFF(YEAR, dob, CURDATE()) < 18 AND 'Yes' = '{$minor}')
     OR (TIMESTAMPDIFF(YEAR, dob, CURDATE()) >= 18 AND 'No' = '{$minor}'))");
+}
+if ($this->ci->input->post('tf_status')) {
+   $tf_status = $this->ci->input->post('tf_status');
+
+    if ($tf_status == "Yes") {
+        $where[] = " AND " . db_prefix() . "client_university_shortlisting.fees_deposite_slip != '' ";
+    } else {
+        $where[] = " AND " . db_prefix() . "client_university_shortlisting.fees_deposite_slip IS NULL or " . db_prefix() . "client_university_shortlisting.fees_deposite_slip='' ";
+    }
 }
 
 if ($this->ci->input->post('courier_date')) {
