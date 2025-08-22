@@ -1505,7 +1505,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             ]); ?>
                                                         </div>
                                                         <div class="col-md-4">
-                                                            <label>Cost <small class='text-danger'>*</small></label>
+                                                            <label>Visa Cost <small class='text-danger'>*</small></label>
                                                             <?php echo render_input('visa_cost_' . $visa_id, '',  !empty($visa["cost"]) ? $visa["cost"] : '', 'number', [
                                                                 'required-check' => 'required-check',
                                                                 'required' => 'required'
@@ -1533,7 +1533,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                             ]); ?>
                                                         </div>
                                                         <div class="col-md-4">
-                                                            <label>Visa Document <small class='text-danger'>*</small></label>
+                                                            <label>Stamp Visa <small class='text-danger'>*</small></label>
                                                             <?php
                                                             $re = !empty($file_url) ? 'false' : 'true';
                                                             echo render_input('visa_file_' . $visa_id, '', '', 'file', ["data-file" => $file_url, "required" => $re]); ?>
@@ -2358,13 +2358,13 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
 
             if (id == 8) {
-                 if (skip == 1 || same_step == 1) {} else {
-                let check_validation = await check_required_fields("3-payment-form");
-                if (!check_validation) {
-                    hide_loader();
-                    return false;
+                if (skip == 1 || same_step == 1) {} else {
+                    let check_validation = await check_required_fields("3-payment-form");
+                    if (!check_validation) {
+                        hide_loader();
+                        return false;
+                    }
                 }
-                 }
                 upload_data.append("3_payment", 1);
             }
 
@@ -2434,7 +2434,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     createInvitationLetter(response.invitation);
                 }
                 if (response.visa_details !== undefined) {
-                    set_visa_section(response.visa_details, id);
+                    $("#visa-details").html('');
+                    set_visa_section(response.visa_details, 0);
                 }
 
 
@@ -3621,9 +3622,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
             let delete_ = ``;
             if ((index > 0 && visa.id != "") || (index == 0 && <?= is_admin() ? 1 : 0 ?> == 1)) {
-                delete_ = `<div class="text-right">
+                if ($(".visa_div_application").length > 0) {
+                    delete_ = `<div class="text-right">
         <i class='fa fa-trash btn btn-danger' onclick="remove_visa_div(this,${visa.id ?? 0})"></i>
         </div>`;
+                }
             }
             return `
         <div class="col-md-12 visa_div_application  ${visa.status == 4 ? 'visa-rejected-div' : ''}"  >
@@ -3659,7 +3662,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 </div>
                 <div class="col-md-4">
                 <div class="form-group">
-                    <label>Cost</label>
+                    <label>Visa Cost</label>
                     <input type="number" id="visa_cost_${visa_id}" name="visa_cost_${visa_id}" value="${visa.cost ?? ''}" class="form-control"  ${requried}/>
                     </div>
                 </div>
@@ -3680,7 +3683,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 </div>
                 <div class="col-md-4">
                 <div class="form-group">
-                    <label>Visa Document</label>
+                    <label>Stamp Visa</label>
                     <input type="file" data-file="${visa.file ?? '' }" id="visa_file_${visa_id}" name="visa_file_${visa_id}" class="form-control" ${!media_view ? 'required' : ''} />
                     ${media_view}
                     </div>
