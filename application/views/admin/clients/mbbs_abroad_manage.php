@@ -1474,6 +1474,7 @@ init_tail();
       var locations_name = $("#office_location option:selected").text();
       var apostille_status = $("#apostille_status_check").prop('checked');
       var visa_status = $("#visa_status_check").prop('checked');
+      var apostille_payment_date = $("#apostille_payment_date").val();
       var is_valid = true;
       var apostille_data = {};
       var visa_data = {};
@@ -1483,10 +1484,20 @@ init_tail();
       // Get text of the selected option
       var currency_text_apostile = $(".currency-selector-currency_type option:selected").first().text();
 
+      if (apostille_payment_date !== "") {
+         $(".doc-cost-section input[type='number']")
+            .attr("required", true) // add required
+            .attr("required-check", true); // add custom attr
+      } else {
+         $(".doc-cost-section input[type='number']")
+            .removeAttr("required") // remove required
+            .removeAttr("required-check"); // remove custom attr
+      }
+
 
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
-            var name = $(this).attr('name');
+            var name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
@@ -1526,7 +1537,7 @@ init_tail();
 
       if (visa_status === true) {
          $('.visa_status_update').find('input, select').each(function() {
-            var name = $(this).attr('name');
+            var name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
@@ -1563,6 +1574,7 @@ init_tail();
          alert("Please select at least one customer.");
          return false;
       }
+
 
       var data = {
          ids,
@@ -1795,7 +1807,7 @@ init_tail();
                 <label>${doc.name} Cost</label>
                                                                     <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
 
-                    <input class='form-control' type='number' placeholder='100' name='document_cost[${doc.id}]'>
+                    <input class='form-control' type='number' data-name='${doc.name} Cost' placeholder='100' name='document_cost[${doc.id}]'>
                     ${currencyHtml}
                 </div>
             </div>
