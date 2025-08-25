@@ -7238,8 +7238,7 @@ class Clients extends AdminController
 
         if (!empty($entrance_exam_data)) {
             // Delete old exam status and manual data for this client
-            $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam_status');
-            $this->db->where('client_id', $client_id)->where("batch_id", 0)->delete(db_prefix() . 'clients_exam');
+
 
             $status_insert_data = [];
             $manual_insert_data = [];
@@ -7292,11 +7291,13 @@ class Clients extends AdminController
 
         // Insert all fresh status records
         if (!empty($status_insert_data)) {
+            $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam_status');
             $this->db->insert_batch(db_prefix() . 'clients_exam_status', $status_insert_data);
         }
 
         // Insert all manual records
         if (!empty($manual_insert_data)) {
+            $this->db->where('client_id', $client_id)->where("batch_id", 0)->delete(db_prefix() . 'clients_exam');
             $this->db->insert_batch(db_prefix() . 'clients_exam', $manual_insert_data);
         }
 
