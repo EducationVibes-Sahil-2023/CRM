@@ -7997,7 +7997,7 @@ class Clients extends AdminController
                         $update_client_data = [
                             "applicant_status" => 0,
                             "applicant_stage" => VISA,
-                            "applicant_sub_status" => VISA_REJECTED
+                            "applicant_sub_status" => VISA_APPLY
                         ];
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', $update_client_data);
@@ -8026,7 +8026,8 @@ class Clients extends AdminController
             if (!empty($row['visa_receiving_date'])) {
                 $visa_status = 3;
                 $received_status = 1;
-                $visa_sub_stage = VISA_RECEIVED;
+
+                $visa_sub_stage = VISA_APPLY;
             }
 
             if (!empty($row['visa_receiving_date']) && !empty($row['visa_payment_date'])) {
@@ -8682,12 +8683,25 @@ class Clients extends AdminController
             if (!empty($documents[0]['data'])) {
                 $documents = json_decode($documents[0]['data'], true);
 
-                foreach ($documents as $doc) {
-                    if ($doc['approval_status'] == 1) {
-                        $name = !empty($documents_type[$doc["id"]]) ? $documents_type[$doc["id"]] : '';
-                        $doc_urls[] = array("url" => base_url($doc['document_file']), "name" => sanitizeFileName($name));
-                    }
-                }
+           foreach ($documents as $doc) {
+    if ($doc['approval_status'] == 1) {
+        $name = !empty($documents_type[$doc["id"]]) ? $documents_type[$doc["id"]] : '';
+
+        // Sanitize filename
+        $name = sanitizeFileName($name);
+
+        // Replace "Dummy" (case-insensitive) with "Air_Ticket"
+        if (stripos($name, "Dummy") !== false) {
+            $name = "Air_Ticket";
+        }
+
+        $doc_urls[] = array(
+            "url" => base_url($doc['document_file']),
+            "name" => $name
+        );
+    }
+}
+
             }
             $doc_urls_additional = doc_urls_additional($userid);
 

@@ -956,7 +956,7 @@ $group_by_sql = $sheet['group_by'] ?? null;
                     if ($apostille["apostile_status"] == 1) {
                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
                     } else if ($apostille["visa_apostile"] == 1) {
-                        $safe_column_name  = "V_" . str_replace(" ", "_", $short_name);
+                        $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
                     } else {
                         $safe_column_name  =  str_replace(" ", "_", $short_name);
                     }
@@ -1085,7 +1085,7 @@ else
 //         }
 // if($currentId == 11)
 // {
-//      echo $sql; die;
+    //  echo $sql; die;
 // }
         $arrayData = $CI->db->query($sql)->result_array();
 
