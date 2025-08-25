@@ -1492,6 +1492,20 @@ class Clients extends AdminController
                 $currency_id_apostile = $this->input->post('currency_id_apostile');
                 $currency_text_apostile = $this->input->post('currency_text_apostile');
 
+                if (!empty($courier_date) && !empty($receiving_date)) {
+                    if (strtotime($receiving_date) < strtotime($courier_date)) {
+                        // receiving_date is earlier than courier_date → invalid
+                        $error_message = "Receiving date cannot be earlier than courier date.";
+
+                        $data = [
+                            'resp_code' => 'ERR',
+                            'resp_desc' => $error_message,
+                        ];
+                        echo json_encode($data);
+                        die;
+                    }
+                }
+
                 // Validate essential inputs
                 // if (empty($ids) || empty($documents_id) || empty($vendor_id) || empty($courier_date)) {
                 //     $data = [
@@ -1507,11 +1521,42 @@ class Clients extends AdminController
                 if (!empty($courier_date) && !empty($documents_id)) {
                     $check_status = 1; // insert new apostile data 
                 } else {
+                    if (!empty($receiving_date)) {
+                        $query = $this->db->select("r.id, r.userid, r.doc_id")
+                            ->from(db_prefix() . 'client_apostille_data r')
+                            ->where_in('r.userid', $ids)
+                            ->where('r.courier_date >', $receiving_date)
+                            ->get();
+
+                        if ($query->num_rows() > 0) {
+                            $ddata = $query->result_array();
+
+                            // Safely extract first row
+                            $userid   = $ddata[0]['userid'] ?? null;
+                            $doc_id   = $ddata[0]['doc_id'] ?? null;
+
+                            $client_name = $userid ? get_client_name($userid) : '';
+                            $doc_details = $doc_id ? (get_orignal_document_list('', '', '', $doc_id)[0] ?? []) : [];
+                            $doc_name = !empty($doc_details["name"]) ? $doc_details["name"] : "Unknown";
+                            $data = [
+                                'resp_code' => 'ERR',
+                                'resp_desc' => "{$client_name} {$doc_name} records already exist after the receiving date!",
+                                'client_name' => $client_name,
+                                'doc_details' => $doc_name,
+                            ];
+
+                            echo json_encode($data);
+                            exit; // use exit instead of die for cleaner code
+                        }
+                    }
+
+
+
                     $check_status = 2; // update apostile data 
                 }
-                if (!empty($courier_date) && !empty($receiving_date)) {
-                    $check_status = 2;
-                }
+                // if (!empty($courier_date) && !empty($receiving_date)) {
+                //     $check_status = 2;
+                // }
 
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
                 //     $check_status = 2; // update apostile data 
@@ -1548,7 +1593,7 @@ class Clients extends AdminController
                                 "doc_id" => $doc_id,
                                 "courier_date" => $courier_date,
                                 "apostille_received" => $receiving_date,
-                                "apostille_cost" => $document_cost[$doc_id],
+                                "apostille_cost" => !empty($document_cost[$doc_id]) ? $document_cost[$doc_id] : 0,
                                 "payment_date" => $payment_date,
                                 "created_at" => date('Y-m-d H:i:s'),
                                 "created_by" => get_staff_user_id(),
@@ -7699,6 +7744,24 @@ class Clients extends AdminController
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $invitation = !empty($this->input->post("invitation")) ? json_decode($this->input->post("invitation"), true) : [];
         $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+        if ($university_shortlisting_data[0]["ministry_document_recived"] == 0 && $university_shortlisting_data[0]["country_name"] == "Georgia") {
+
+            $update_client_data = [
+                "applicant_status" => 0,
+                "applicant_stage" => INVITATION,
+                "applicant_sub_status" => INVITATION_PENDING,
+            ];
+
+            $this->db->where("userid", $client_id);
+            $this->db->update(db_prefix() . 'clients', $update_client_data);
+            $data = [
+                'resp_code'               => 'ERR',
+                'resp_desc'               => "Ministry Order of Documents not Received in Legalization Section",
+            ];
+
+            echo json_encode($data);
+            die;
+        }
         $save = !empty($this->input->post("save")) ? $this->input->post("save") : 0;
         if ($save != 1) {
             $check_documents = $this->check_documents(8);
@@ -8683,25 +8746,24 @@ class Clients extends AdminController
             if (!empty($documents[0]['data'])) {
                 $documents = json_decode($documents[0]['data'], true);
 
-           foreach ($documents as $doc) {
-    if ($doc['approval_status'] == 1) {
-        $name = !empty($documents_type[$doc["id"]]) ? $documents_type[$doc["id"]] : '';
+                foreach ($documents as $doc) {
+                    if ($doc['approval_status'] == 1) {
+                        $name = !empty($documents_type[$doc["id"]]) ? $documents_type[$doc["id"]] : '';
 
-        // Sanitize filename
-        $name = sanitizeFileName($name);
+                        // Sanitize filename
+                        $name = sanitizeFileName($name);
 
-        // Replace "Dummy" (case-insensitive) with "Air_Ticket"
-        if (stripos($name, "Dummy") !== false) {
-            $name = "Air_Ticket";
-        }
+                        // Replace "Dummy" (case-insensitive) with "Air_Ticket"
+                        if (stripos($name, "Dummy") !== false) {
+                            $name = "Air_Ticket";
+                        }
 
-        $doc_urls[] = array(
-            "url" => base_url($doc['document_file']),
-            "name" => $name
-        );
-    }
-}
-
+                        $doc_urls[] = array(
+                            "url" => base_url($doc['document_file']),
+                            "name" => $name
+                        );
+                    }
+                }
             }
             $doc_urls_additional = doc_urls_additional($userid);
 
