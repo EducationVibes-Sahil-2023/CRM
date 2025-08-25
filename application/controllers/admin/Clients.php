@@ -7236,55 +7236,57 @@ class Clients extends AdminController
             ];
         }
 
-        // Delete old exam status and manual data for this client
-        $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam_status');
-        $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam');
+        if (!empty($entrance_exam_data)) {
+            // Delete old exam status and manual data for this client
+            $this->db->where('client_id', $client_id)->delete(db_prefix() . 'clients_exam_status');
+            $this->db->where('client_id', $client_id)->where("batch_id", 0)->delete(db_prefix() . 'clients_exam');
 
-        $status_insert_data = [];
-        $manual_insert_data = [];
+            $status_insert_data = [];
+            $manual_insert_data = [];
 
-        foreach ($entrance_exam_data as $exam) {
-            $exam_id  = (int)($exam['exam_id'] ?? 0);
-            $status   = trim($exam['status'] ?? '');
-            $exam_date = $exam['exam_date'] ?? null;
-            $batch_id = isset($exam['batch_id']) ? (int)$exam['batch_id'] : 0;
-            $is_manual = isset($exam['manually']) && (int)$exam['manually'] === 1;
+            foreach ($entrance_exam_data as $exam) {
+                $exam_id  = (int)($exam['exam_id'] ?? 0);
+                $status   = trim($exam['status'] ?? '');
+                $exam_date = $exam['exam_date'] ?? null;
+                $batch_id = isset($exam['batch_id']) ? (int)$exam['batch_id'] : 0;
+                $is_manual = isset($exam['manually']) && (int)$exam['manually'] === 1;
 
-            if ($is_manual) {
-                if (empty($exam_id) || empty($status)) {
-                    return [
-                        "resp_code" => "ERR",
-                        "resp_desc" => "Missing required fields for manual exam entry",
-                    ];
+                if ($is_manual) {
+                    if (empty($exam_id) || empty($status)) {
+                        return [
+                            "resp_code" => "ERR",
+                            "resp_desc" => "Missing required fields for manual exam entry",
+                        ];
+                    }
+                } else {
+                    if (empty($exam_id) || empty($status) || empty($batch_id)) {
+                        return [
+                            "resp_code" => "ERR",
+                            "resp_desc" => "Missing required fields for exam entry",
+                        ];
+                    }
                 }
-            } else {
-                if (empty($exam_id) || empty($status) || empty($batch_id)) {
-                    return [
-                        "resp_code" => "ERR",
-                        "resp_desc" => "Missing required fields for exam entry",
-                    ];
-                }
-            }
 
-            // Collect for status insert
-            $status_insert_data[] = [
-                'exam_id' => $exam_id,
-                'client_id' => $client_id,
-                'batch_id' => $batch_id,
-                'status' => $status,
-                "exam_date" => $exam_date,
-            ];
-
-            // If manual, collect for manual insert
-            if ($is_manual) {
-                $manual_insert_data[] = [
-                    "client_id" => $client_id,
+                // Collect for status insert
+                $status_insert_data[] = [
+                    'exam_id' => $exam_id,
+                    'client_id' => $client_id,
+                    'batch_id' => $batch_id,
+                    'status' => $status,
                     "exam_date" => $exam_date,
-                    "exam_id" => $exam_id,
-                    "batch_id" => $batch_id,
-                    "m_university_name" => $exam["m_university_name"] ?? '',
-                    "m_university_id" => $exam["m_university_id"] ?? ''
                 ];
+
+                // If manual, collect for manual insert
+                if ($is_manual) {
+                    $manual_insert_data[] = [
+                        "client_id" => $client_id,
+                        "exam_date" => $exam_date,
+                        "exam_id" => $exam_id,
+                        "batch_id" => $batch_id,
+                        "m_university_name" => $exam["m_university_name"] ?? '',
+                        "m_university_id" => $exam["m_university_id"] ?? ''
+                    ];
+                }
             }
         }
 

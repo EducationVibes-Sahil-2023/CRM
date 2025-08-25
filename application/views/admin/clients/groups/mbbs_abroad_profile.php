@@ -22,10 +22,10 @@ foreach ($documents_type as $documents) {
     $profile_section[$documents["profile_stages"]][] = $documents;
 }
 
-array_push($documents_type, array("id" => "application", "disabled" => 1, "stage" => "", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" => 1, "stage" => "", "name" => "University Payment Slip", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "invitation", "disabled" => 1, "stage" => "Visa", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
-array_push($documents_type, array("id" => "visa", "disabled" => 1, "stage" => "", "name" => "Visa", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "application", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Admission Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "University_Payment_Slip", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "University Payment Slip", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "invitation", "disabled" => 1, "disabledd" => 1, "stage" => "Visa", "name" => "Invitation Letter", "file_type" => ".pdf,image/*"));
+array_push($documents_type, array("id" => "visa", "disabled" => 1, "disabledd" => 1, "stage" => "", "name" => "Visa", "file_type" => ".pdf,image/*"));
 
 $staff_id = array_column($customer_admins, "staff_id");
 $final_sumbit = $client->submission_status;
@@ -1220,19 +1220,17 @@ if ($lead_type_status == 2) {
                                                     </td>
                                                     <td>
 
-<?php if(is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"]))
-{
-    ?>
-      <input type="file"  name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control " accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
-    <?php
-}
-else{
-    ?>
-      <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
-    <?php
-}
-?>
-                                                      
+                                                        <?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) {
+                                                        ?>
+                                                            <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= !empty($doc_files["disabledd"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                        <?php
+                                                        } else {
+                                                        ?>
+                                                            <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                        <?php
+                                                        }
+                                                        ?>
+
 
                                                     </td>
                                                     <td class="text-center">
