@@ -1019,7 +1019,8 @@ $group_by = ",".$group_by_sql;
                             WHEN received_status = 0 THEN 'Sent'
                             WHEN received_status = 1 THEN 'Received'
                             ELSE 'Pending'
-                        END AS apostille_status
+                        END AS apostille_status,
+                        aps.currency_text as currency_text
                     FROM " . db_prefix() . "client_apostille_data aps
                     join " . db_prefix() . "orignal_documents  tod ON aps.doc_id = tod.id
                 ) AS apostille_summary ON apostille_summary.userid = c.userid  ";
@@ -1056,8 +1057,9 @@ else
                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
-                LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
-                LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1
+                
+                LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
+                LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid and p.primary_university = u.university_name
                 LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
