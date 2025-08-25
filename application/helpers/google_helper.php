@@ -956,7 +956,7 @@ $group_by_sql = $sheet['group_by'] ?? null;
                     if ($apostille["apostile_status"] == 1) {
                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
                     } else if ($apostille["visa_apostile"] == 1) {
-                        $safe_column_name  = "V_" . str_replace(" ", "_", $short_name);
+                        $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
                     } else {
                         $safe_column_name  =  str_replace(" ", "_", $short_name);
                     }
@@ -1058,6 +1058,7 @@ else
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
                 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
                 LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1
+                LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id
                 LEFT JOIN " . db_prefix() . "orignal_document_status o ON o.id = c.orignal_document_status
@@ -1084,7 +1085,7 @@ else
 //         }
 // if($currentId == 11)
 // {
-//      echo $sql; die;
+    //  echo $sql; die;
 // }
         $arrayData = $CI->db->query($sql)->result_array();
 
