@@ -5,6 +5,7 @@ $tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
 $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
    return isset($row['selected']) && $row['selected'] == 1;
 });
+$post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
 
 // Extract the 'id' column and limit to 5 results
 $selected_performance_column = [];
@@ -519,15 +520,16 @@ $client_type = [
                                  echo '</div>';
                                  ?>
                               </div>
+                              <?php if (is_admin() || is_postSale() || $post_sales->evp_partners == "all") { ?>
+                                 <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
+                                    <?php
 
-                              <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-vendor hide">
-                                 <?php
-
-                                 echo '<div id="leads-filter-source">';
-                                 echo render_select('ev_partner_filter[]', $ev_partner, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "EVP Partners", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "ev_partner_filter");
-                                 echo '</div>';
-                                 ?>
-                              </div>
+                                    echo '<div id="leads-filter-source">';
+                                    echo render_select('ev_partner_filter[]', $ev_partner, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "EVP Partners", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "ev_partner_filter");
+                                    echo '</div>';
+                                    ?>
+                                 </div>
+                              <?php } ?>
 
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-ap-status hide">
                                  <?php

@@ -856,7 +856,7 @@ function syncExcel_neww($id = "")
         $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
         $apostile_documents_status = $sheet['apostile_documents_status'] ?? null;
         $sql_conditions           = $sheet['sql_condition'] ?? null;
-$group_by_sql = $sheet['group_by'] ?? null;
+        $group_by_sql = $sheet['group_by'] ?? null;
         // Parse column IDs
         $column_ids_raw = $sheet['column_ids'] ?? '';
         $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
@@ -886,7 +886,7 @@ $group_by_sql = $sheet['group_by'] ?? null;
 
         // Handle original documents extra columns
         if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-            $orignal_documents = get_orignal_document_list(0,0,0,0,0,0,0,["status"=>1]);
+            $orignal_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["status" => 1]);
             $upload_document   = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
 
             $queryPart = [];
@@ -937,7 +937,7 @@ $group_by_sql = $sheet['group_by'] ?? null;
 
         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
             $apostille_documents = get_orignal_document_list(0, 0, 1);
-            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1,["status"=>0]);
+            $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
 
             // Ensure both are arrays before merging
             if (!is_array($apostille_documents)) {
@@ -949,7 +949,7 @@ $group_by_sql = $sheet['group_by'] ?? null;
 
             $apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
             $queryPart = [];
-   
+
             if (!empty($apostille_documents)) {
                 foreach ($apostille_documents as $apostille) {
                     $short_name        = trim($apostille['short_name']);
@@ -995,14 +995,13 @@ COALESCE(
         if (!empty($sql_conditions)) {
             $condition_sql .= " {$sql_conditions}";
         }
-        
-        $group_by ="";
-        $apostile_query ="";
-if(!empty($group_by_sql))
-{
-$group_by = ",".$group_by_sql;
 
-  $apostile_query =" JOIN (
+        $group_by = "";
+        $apostile_query = "";
+        if (!empty($group_by_sql)) {
+            $group_by = "," . $group_by_sql;
+
+            $apostile_query = " JOIN (
                     SELECT 
                     aps.id,
                         aps.userid,
@@ -1024,10 +1023,8 @@ $group_by = ",".$group_by_sql;
                     FROM " . db_prefix() . "client_apostille_data aps
                     join " . db_prefix() . "orignal_documents  tod ON aps.doc_id = tod.id
                 ) AS apostille_summary ON apostille_summary.userid = c.userid  ";
-}
-else
-{
-       $apostile_query =" LEFT JOIN (
+        } else {
+            $apostile_query = " LEFT JOIN (
                     SELECT 
                         userid,
                         SUM(apostille_cost) AS Total_cost,
@@ -1046,7 +1043,7 @@ else
                     FROM " . db_prefix() . "client_apostille_data
                     GROUP BY userid
                 ) AS apostille_summary ON apostille_summary.userid = c.userid ";
-}
+        }
         // Main SQL
         $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
@@ -1057,7 +1054,6 @@ else
                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
-                
                 LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
                 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid and p.primary_university = u.university_name
                 LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
@@ -1070,6 +1066,8 @@ else
                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
+                LEFT JOIN " . db_prefix() . "visa_details vd ON vd.userid = c.userid
+                LEFT JOIN " . db_prefix() . "vendor_visa vv ON vv.id = vd.vendor_id
                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
@@ -1077,18 +1075,18 @@ else
                {$apostile_query} 
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid {$group_by}   Order by c.userid";
-                
+
 
         //  if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
         //      echo $sql; die;
         //  }
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-//  echo $sql; die;
-//         }
-// if($currentId == 11)
-// {
-    //  echo $sql; die;
-// }
+        //  echo $sql; die;
+        //         }
+        // if($currentId == 11)
+        // {
+        //  echo $sql; die;
+        // }
         $arrayData = $CI->db->query($sql)->result_array();
 
         // Get column names
