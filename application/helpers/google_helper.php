@@ -1066,8 +1066,24 @@ COALESCE(
                 LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
                 LEFT JOIN " . db_prefix() . "academic_details ad ON ad.userid = c.userid
-                LEFT JOIN " . db_prefix() . "visa_details vd ON vd.userid = c.userid
-                LEFT JOIN " . db_prefix() . "vendor_visa vv ON vv.id = vd.vendor_id
+LEFT JOIN (
+    SELECT vd1.*, vv.name AS vendor_name, pm.name AS payment_mode_name
+    FROM " . db_prefix() . "visa_details vd1
+    INNER JOIN (
+        SELECT userid, MAX(created_at) AS max_date
+        FROM " . db_prefix() . "visa_details
+        GROUP BY userid
+    ) vd2 
+        ON vd1.userid = vd2.userid 
+       AND vd1.created_at = vd2.max_date
+    LEFT JOIN " . db_prefix() . "vendor_list vv 
+        ON vv.id = vd1.vendor_id
+    LEFT JOIN " . db_prefix() . "payment_mode pm 
+        ON pm.id = vd1.payment_mode
+) vd ON vd.userid = c.userid
+
+
+
                 LEFT JOIN " . db_prefix() . "client_documents cd ON cd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency

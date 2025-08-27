@@ -477,6 +477,10 @@ if ($this->ci->input->post('courier_date')) {
     array_push($where, "AND DATE(apostille_summary.courier_date) = '{$courier_date}'");
 }
 
+if ($this->ci->input->post('visa_courier_date')) {
+    $visa_courier_date = $this->ci->input->post('visa_courier_date');
+    array_push($where, "AND DATE(" . db_prefix() . "visa_details.courier_date) = '{$visa_courier_date}'");
+}
 
 if ($this->ci->input->post('passport_status')) {
     $passport_status = $this->ci->input->post('passport_status');
