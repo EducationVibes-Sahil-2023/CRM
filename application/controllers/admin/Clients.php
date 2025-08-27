@@ -1729,7 +1729,14 @@ class Clients extends AdminController
                 $visa_payment_date = $this->input->post('visa_payment_date');
                 $visa_cost = $this->input->post('visa_cost');
                 $visa_payment_mode = $this->input->post('visa_payment_mode');
+                $visa_sub_status = VISA_PENDING;
+                if (!empty($courier_date)) {
+                    $visa_sub_status = VISA_SENT;
+                }
 
+                if (!empty($visa_payment_date)) {
+                    $visa_sub_status = VISA_APPLY;
+                }
 
                 $check_status = 1;
                 if (!empty($courier_date)) {
@@ -1796,6 +1803,17 @@ class Clients extends AdminController
                     // Insert into DB
                     if (!empty($insert_visa_data)) {
                         $inserted = $this->db->insert_batch(db_prefix() . "visa_details", $insert_visa_data);
+
+                        $update_client_data = [
+                            "applicant_status"     => 0,
+                            "applicant_stage"      => VISA,
+                            "applicant_sub_status" => $visa_sub_status,
+                        ];
+
+                        $this->db->where_in("userid", $ids);
+                        $this->db->update(db_prefix() . 'clients', $update_client_data);
+
+
                         if ($inserted) {
 
                             $this->db->insert_batch(db_prefix() . 'visa_document_activity', $activity_data);
@@ -1867,6 +1885,18 @@ class Clients extends AdminController
                     // Perform batch update
                     if (!empty($update_visa_data)) {
                         $updated = $this->db->update_batch(db_prefix() . "visa_details", $update_visa_data, "id");
+
+                        if (!empty($ids)) {
+                            $update_client_data = [
+                                "applicant_status"     => 0,
+                                "applicant_stage"      => VISA,
+                                "applicant_sub_status" => $visa_sub_status,
+                            ];
+
+                            $this->db->where_in("userid", $ids);
+                            $this->db->update(db_prefix() . 'clients', $update_client_data);
+                        }
+
                         $this->db->insert_batch(db_prefix() . 'visa_document_activity', $activity_data);
                         if ($updated) {
                             $data = [
@@ -6499,17 +6529,15 @@ class Clients extends AdminController
                 $this->db->update(db_prefix() . 'clients', $update_client_data);
             } else {
 
-  if($visa_information_check[0]["visa_rejected"] == 1)
-                {
+                if ($visa_information_check[0]["visa_rejected"] == 1) {
                     $update_client_data = [
-                         "applicant_status" => 0,
+                        "applicant_status" => 0,
                         "applicant_stage" => VISA,
                         "applicant_sub_status" => VISA_REJECTED
                     ];
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-                }
-               else if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+                } else if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
                     $update_client_data = [
                         "applicant_status" => 0,
                         "applicant_stage" => VISA,
@@ -6517,18 +6545,15 @@ class Clients extends AdminController
                     ];
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-                }else if($visa_information_check[0]["courier_date"] != "0000-00-00")
-                {
+                } else if ($visa_information_check[0]["courier_date"] != "0000-00-00") {
                     $update_client_data = [
-                         "applicant_status" => 0,
+                        "applicant_status" => 0,
                         "applicant_stage" => VISA,
                         "applicant_sub_status" => VISA_SENT
                     ];
                     $this->db->where("userid", $client_id);
                     $this->db->update(db_prefix() . 'clients', $update_client_data);
                 }
-               
-                
             }
 
             $this->update_applicant_tracker_stages($client_id, $tracker_id);
@@ -8007,132 +8032,132 @@ class Clients extends AdminController
         $visa = !empty($this->input->post("visa")) ? json_decode($this->input->post("visa"), true) : [];
         $files = $_FILES;
 
-$check_documents = $this->check_documents(10);
+        $check_documents = $this->check_documents(10);
         if (!empty($this->input->post("save"))) {
-          
 
-//             $check_documents = $this->check_documents(10);
-//             if (!empty($check_documents)) {
-//                 // If required documents are missing
-//                 $doc_names = implode(", ", $check_documents);
-//                 $message = "{$doc_names} are mandatory to proceed to the next step.";
 
-//                 $data = [
-//                     'resp_code'               => 'ERR',
-//                     'resp_desc'               =>  $message,
-//                 ];
-//             }
+            //             $check_documents = $this->check_documents(10);
+            //             if (!empty($check_documents)) {
+            //                 // If required documents are missing
+            //                 $doc_names = implode(", ", $check_documents);
+            //                 $message = "{$doc_names} are mandatory to proceed to the next step.";
 
-//                 $visa_information_check = visa_details($client_id, 1);
+            //                 $data = [
+            //                     'resp_code'               => 'ERR',
+            //                     'resp_desc'               =>  $message,
+            //                 ];
+            //             }
 
-//                 if (empty($visa_information_check)) {
-//                     $update_client_data = [
-//                         "applicant_status" => 0,
-//                         "applicant_stage" => VISA,
-//                         "applicant_sub_status" => VISA_PENDING,
-//                     ];
-//                     $this->db->where("userid", $client_id);
-//                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                 } else {
+            //                 $visa_information_check = visa_details($client_id, 1);
 
-//  if($visa_information_check[0]["visa_rejected"] == 1)
-// {
-//      $update_client_data = [
-//                             "applicant_status" => 0,
-//                             "applicant_stage" => VISA,
-//                             "applicant_sub_status" => VISA_REJECTED
-//                         ];
-//                         $this->db->where("userid", $client_id);
-//                         $this->db->update(db_prefix() . 'clients', $update_client_data);
-// }
-//                   else if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
-//                         $update_client_data = [
-//                             "applicant_status" => 0,
-//                             "applicant_stage" => VISA,
-//                             "applicant_sub_status" => VISA_APPLY
-//                         ];
-//                         $this->db->where("userid", $client_id);
-//                         $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                     }
-//                     else if($visa_information_check[0]["courier_date"] != "0000-00-00")
-//                 {
-//                     $update_client_data = [
-//                          "applicant_status" => 0,
-//                         "applicant_stage" => VISA,
-//                         "applicant_sub_status" => VISA_SENT
-//                     ];
-//                     $this->db->where("userid", $client_id);
-//                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                 }
-                
-//                 }
-//                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
-                // return $data;
-            
+            //                 if (empty($visa_information_check)) {
+            //                     $update_client_data = [
+            //                         "applicant_status" => 0,
+            //                         "applicant_stage" => VISA,
+            //                         "applicant_sub_status" => VISA_PENDING,
+            //                     ];
+            //                     $this->db->where("userid", $client_id);
+            //                     $this->db->update(db_prefix() . 'clients', $update_client_data);
+            //                 } else {
+
+            //  if($visa_information_check[0]["visa_rejected"] == 1)
+            // {
+            //      $update_client_data = [
+            //                             "applicant_status" => 0,
+            //                             "applicant_stage" => VISA,
+            //                             "applicant_sub_status" => VISA_REJECTED
+            //                         ];
+            //                         $this->db->where("userid", $client_id);
+            //                         $this->db->update(db_prefix() . 'clients', $update_client_data);
+            // }
+            //                   else if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+            //                         $update_client_data = [
+            //                             "applicant_status" => 0,
+            //                             "applicant_stage" => VISA,
+            //                             "applicant_sub_status" => VISA_APPLY
+            //                         ];
+            //                         $this->db->where("userid", $client_id);
+            //                         $this->db->update(db_prefix() . 'clients', $update_client_data);
+            //                     }
+            //                     else if($visa_information_check[0]["courier_date"] != "0000-00-00")
+            //                 {
+            //                     $update_client_data = [
+            //                          "applicant_status" => 0,
+            //                         "applicant_stage" => VISA,
+            //                         "applicant_sub_status" => VISA_SENT
+            //                     ];
+            //                     $this->db->where("userid", $client_id);
+            //                     $this->db->update(db_prefix() . 'clients', $update_client_data);
+            //                 }
+
+            //                 }
+            //                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+            // return $data;
+
         }
 
-//         if (empty($this->input->post("save"))) {
-//             $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
-//             $country_names = array_column($university_shortlisting, "country_name");
-//             $resultOrignal = validate_orignal_documents([$client_id], $country_names);
-//             if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
-//                 $data = [
-//                     'resp_code'               => 'ERR',
-//                     'resp_desc'               =>  $resultOrignal["message"][0],
-//                 ];
+        //         if (empty($this->input->post("save"))) {
+        //             $university_shortlisting = $this->clients_model->university_shortlisting($client_id, 1);
+        //             $country_names = array_column($university_shortlisting, "country_name");
+        //             $resultOrignal = validate_orignal_documents([$client_id], $country_names);
+        //             if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
+        //                 $data = [
+        //                     'resp_code'               => 'ERR',
+        //                     'resp_desc'               =>  $resultOrignal["message"][0],
+        //                 ];
 
-//                 $visa_information_check = visa_details($client_id, 1);
+        //                 $visa_information_check = visa_details($client_id, 1);
 
-// if(is_admin())
-// {
-//   print_r($visa_information_check);
-//   die;  
-// }
-//                 if (empty($visa_information_check)) {
-//                     $update_client_data = [
-//                         "applicant_status" => 0,
-//                         "applicant_stage" => VISA,
-//                         "applicant_sub_status" => VISA_PENDING,
-//                     ];
-//                     $this->db->where("userid", $client_id);
-//                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                 } else {
+        // if(is_admin())
+        // {
+        //   print_r($visa_information_check);
+        //   die;  
+        // }
+        //                 if (empty($visa_information_check)) {
+        //                     $update_client_data = [
+        //                         "applicant_status" => 0,
+        //                         "applicant_stage" => VISA,
+        //                         "applicant_sub_status" => VISA_PENDING,
+        //                     ];
+        //                     $this->db->where("userid", $client_id);
+        //                     $this->db->update(db_prefix() . 'clients', $update_client_data);
+        //                 } else {
 
-//       if ($visa_information_check[0]["visa_rejected"] == 1) {
-//                         $update_client_data = [
-//                             "applicant_status" => 0,
-//                             "applicant_stage" => VISA,
-//                             "applicant_sub_status" => VISA_REJECTED
-//                         ];
-//                         $this->db->where("userid", $client_id);
-//                         $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                     }
-//                     else if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
-//                         $update_client_data = [
-//                             "applicant_status" => 0,
-//                             "applicant_stage" => VISA,
-//                             "applicant_sub_status" => VISA_APPLY
-//                         ];
-//                         $this->db->where("userid", $client_id);
-//                         $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                     }
-//                     else if($visa_information_check[0]["courier_date"] != "0000-00-00")
-//                 {
-//                     $update_client_data = [
-//                          "applicant_status" => 0,
-//                         "applicant_stage" => VISA,
-//                         "applicant_sub_status" => VISA_SENT
-//                     ];
-//                     $this->db->where("userid", $client_id);
-//                     $this->db->update(db_prefix() . 'clients', $update_client_data);
-//                 }
+        //       if ($visa_information_check[0]["visa_rejected"] == 1) {
+        //                         $update_client_data = [
+        //                             "applicant_status" => 0,
+        //                             "applicant_stage" => VISA,
+        //                             "applicant_sub_status" => VISA_REJECTED
+        //                         ];
+        //                         $this->db->where("userid", $client_id);
+        //                         $this->db->update(db_prefix() . 'clients', $update_client_data);
+        //                     }
+        //                     else if ($visa_information_check[0]["payment_date"] != "0000-00-00") {
+        //                         $update_client_data = [
+        //                             "applicant_status" => 0,
+        //                             "applicant_stage" => VISA,
+        //                             "applicant_sub_status" => VISA_APPLY
+        //                         ];
+        //                         $this->db->where("userid", $client_id);
+        //                         $this->db->update(db_prefix() . 'clients', $update_client_data);
+        //                     }
+        //                     else if($visa_information_check[0]["courier_date"] != "0000-00-00")
+        //                 {
+        //                     $update_client_data = [
+        //                          "applicant_status" => 0,
+        //                         "applicant_stage" => VISA,
+        //                         "applicant_sub_status" => VISA_SENT
+        //                     ];
+        //                     $this->db->where("userid", $client_id);
+        //                     $this->db->update(db_prefix() . 'clients', $update_client_data);
+        //                 }
 
-              
-//                 }
-//                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
-//                 return $data;
-//             }
-//         }
+
+        //                 }
+        //                 $this->update_applicant_tracker_stages($client_id, ($tracker_id - 1));
+        //                 return $data;
+        //             }
+        //         }
 
         $batch_update_data = [];
         $batch_insert_data = [];
@@ -8145,7 +8170,7 @@ $check_documents = $this->check_documents(10);
 
             $visa_status = 1;
             $received_status = 0;
-             if (!empty($row['visa_date'])) {
+            if (!empty($row['visa_date'])) {
                 $visa_status = 2;
                 $visa_sub_stage = VISA_SENT;
             }
@@ -8168,9 +8193,9 @@ $check_documents = $this->check_documents(10);
                 $visa_status = 4;
                 $visa_sub_stage = VISA_REJECTED;
             }
-            
-            
-      
+
+
+
             $data_ = [
                 'id'                => $row['id'],
                 'userid'           => $client_id ?? "",
@@ -9091,44 +9116,44 @@ $check_documents = $this->check_documents(10);
                     ];
                     break;
 
-                    // case 4:
-                    //     if (empty($data["id"])) {
-                    //         return $this->json_response('ERR', 'Missing shortlisting ID');
-                    //     }
-                    //     $document_type = "University Fees Deposite";
+                // case 4:
+                //     if (empty($data["id"])) {
+                //         return $this->json_response('ERR', 'Missing shortlisting ID');
+                //     }
+                //     $document_type = "University Fees Deposite";
 
-                    //     $this->db->update($shortlisting_tbl, [
-                    //         "university_fees_payment_slip" => "",
-                    //         "updated_by" => $staff_id,
-                    //         "updated_date" => $timestamp
-                    //     ], ['id' => $data["id"]]);
-                    //     $update_client_data = [
-                    //         "applicant_status" => 0,
-                    //         "applicant_stage" => FEES_DEPOSITE,
-                    //         "applicant_sub_status" => FEES_DEPOSITE_PENDING,
-                    //     ];
-                    //     break;
+                //     $this->db->update($shortlisting_tbl, [
+                //         "university_fees_payment_slip" => "",
+                //         "updated_by" => $staff_id,
+                //         "updated_date" => $timestamp
+                //     ], ['id' => $data["id"]]);
+                //     $update_client_data = [
+                //         "applicant_status" => 0,
+                //         "applicant_stage" => FEES_DEPOSITE,
+                //         "applicant_sub_status" => FEES_DEPOSITE_PENDING,
+                //     ];
+                //     break;
 
-                    // case 5:
-                    //     if (empty($data["id"])) {
-                    //         return $this->json_response('ERR', 'Missing shortlisting ID');
-                    //     }
-                    //     $document_type = "invitation Letter";
+                // case 5:
+                //     if (empty($data["id"])) {
+                //         return $this->json_response('ERR', 'Missing shortlisting ID');
+                //     }
+                //     $document_type = "invitation Letter";
 
-                    //     $this->db->update($shortlisting_tbl, [
-                    //         "invitation_letter" => "",
-                    //         "invitation_receiving_date" => "",
-                    //         "updated_by" => $staff_id,
-                    //         "updated_date" => $timestamp
-                    //     ], ['id' => $data["id"]]);
-                    //     $update_client_data = [
-                    //         "applicant_status" => 0,
-                    //         "applicant_stage" => INVITATION,
-                    //         "applicant_sub_status" => INVITATION_PENDING,
-                    //     ];
-                    //     break;
+                //     $this->db->update($shortlisting_tbl, [
+                //         "invitation_letter" => "",
+                //         "invitation_receiving_date" => "",
+                //         "updated_by" => $staff_id,
+                //         "updated_date" => $timestamp
+                //     ], ['id' => $data["id"]]);
+                //     $update_client_data = [
+                //         "applicant_status" => 0,
+                //         "applicant_stage" => INVITATION,
+                //         "applicant_sub_status" => INVITATION_PENDING,
+                //     ];
+                //     break;
 
-                    case 6:
+                case 6:
                     if (empty($data["id"])) {
                         return $this->json_response('ERR', 'Missing visa ID');
                     }

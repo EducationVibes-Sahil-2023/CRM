@@ -41,6 +41,10 @@ if (in_array(get_staff_user_id(), $staff_id)) {
     $read_only = "";
 }
 
+$payment_action = "disabled";
+if (has_permission('customers', '', 'payment_action')) {
+    $payment_action = "";
+}
 ?>
 <style>
     /*basic reset*/
@@ -1231,7 +1235,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label>Leg Pay Date</label>
-                                                            <input type="date" class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <input type="date" onchange="proof_mandatory(this,'ministry_doc_payment_<?= htmlspecialchars($leg['id'], ENT_QUOTES, 'UTF-8') ?>')"
+                                                                <?= $payment_action ?> class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
                                                         </div>
                                                         <div class="col-md-3">
@@ -1240,7 +1245,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         </div>
                                                         <div class="col-md-3">
                                                             <label>MD Payment Proof </label>
-                                                            <input type="file" class="form-control" accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <input type="file" <?= !empty($leg["leg_payment_date"]) && empty($leg["ministry_payment"])  ? $mand_re : '' ?> <?= $payment_action ?> class="form-control" accept=".pdf,image/*" name="ministry_doc_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                             <?php
                                                             $file_url = !empty($leg["ministry_payment"]) ? $leg["ministry_payment"] : "";
                                                             if (!empty($file_url)) { ?>
@@ -1266,7 +1271,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label>Leg Pay Date</label>
-                                                            <input type="date" class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                            <input type="date" <?= $payment_action ?> class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
 
                                                         </div>
                                                     </div>
@@ -1303,12 +1308,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                 <div class="row mt-2">
                                                     <div class="col-md-3">
                                                         <label>Deposite Pay Date <?= $mand ?></label>
-                                                        <input type="date" <?= $mand_re ?> class="form-control" value="<?= !empty($leg["fees_deposite_date"]) ? $leg["fees_deposite_date"] : '' ?>" name="date_of_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="date" <?= $payment_action ?> <?= $mand_re ?> class="form-control" value="<?= !empty($leg["fees_deposite_date"]) ? $leg["fees_deposite_date"] : '' ?>" name="date_of_payment_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                     </div>
 
                                                     <div class="col-md-3">
                                                         <label>Payment Proof <?= $mand ?></label>
-                                                        <input type="file" <?= empty($file_url_payment) ? $mand_re : '' ?> class="form-control" accept=".pdf,image/*" name="payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                        <input type="file" <?= $payment_action ?> <?= empty($file_url_payment) ? $mand_re : '' ?> class="form-control" accept=".pdf,image/*" name="payment_slip_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
                                                         <?php if (!empty($file_url_payment)) { ?>
                                                             <div class="margin-top">
                                                                 <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url_payment) ?>');"></i>&nbsp;
@@ -1324,10 +1329,10 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                                         <label>Payment Amount <?= $mand ?></label>
                                                         <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                                            <input type="number" <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
+                                                            <input type="number" <?= $payment_action ?> <?= $mand_re ?> <?= empty($file_url_university_payment) ? '' : '' ?> class="form-control" name="payment_amount_<?= $leg["id"] ?>" value="<?= !empty($leg["payment_amount"]) ? $leg["payment_amount"] : '' ?>">
                                                             <div class="input-group-addon currency-addon">
 
-                                                                <select name="fees_payment_currency_id_<?= $leg["id"] ?>" id="fees_payment_currency_id_<?= $leg["id"] ?>" class="currency-selector currency-selector-<?= $id ?>">
+                                                                <select <?= $payment_action ?> name="fees_payment_currency_id_<?= $leg["id"] ?>" id="fees_payment_currency_id_<?= $leg["id"] ?>" class="currency-selector currency-selector-<?= $id ?>">
                                                                     <?php foreach ($get_currencies as $c) {
                                                                     ?>
                                                                         <option
@@ -1442,7 +1447,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                         ?>
                             <form id="3-payment-form" class="form-disabled" onsubmit="return false;">
 
-                                <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" value="1" class="form-check-input" required required-check name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
+                                <label for="3_payment"> <small class="text-danger">*</small> 3rd Payment Received </label> <input type="checkbox" <?= $payment_action ?> value="1" class="form-check-input" required required-check name="3_payment" id="3_payment" <?= !empty($client_infomation->payment_3_received) ? 'checked' : '' ?>>
                             </form>
                         <?php
 
@@ -2723,6 +2728,22 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
         $(".selectpicker").selectpicker("refresh");
     }
 
+    function proof_mandatory(obj, name) {
+        let fileInput = $(`input[name='${name}']`);
+        let dateInput = $(obj); // the date input
+
+        if (dateInput.length > 0 && dateInput.val() === "") {
+            // if date is empty -> file not required
+            fileInput.removeAttr("required");
+            fileInput.removeAttr("required-check");
+        } else {
+            // if date is filled -> file is required
+            fileInput.attr("required", true);
+            fileInput.attr("required-check", "required-check");
+        }
+    }
+
+
 
     function createLegalization(legalizationData, tracker_id) {
         let legalizationContainer = $(".legalization_div"); // Target container
@@ -2778,7 +2799,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <div class="col-md-3">
                             <label for="leg_payment_date_${leg.id}">Leg Pay Date</label>
                             <input 
+                            onchange="proof_mandatory(this,'ministry_doc_payment_${leg.id}')"
                             type="date" 
+                            <?= $payment_action ?>
                             class="form-control" 
                             id="leg_payment_date_${leg.id}" 
                             name="leg_payment_date_${leg.id}" 
@@ -2795,7 +2818,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             </div>
                          <div class="col-md-3">
                             <label>MD Payment Proof </label>
-                            <input type="file" class="form-control" accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
+                            <input type="file" ${leg.leg_payment_date ? mand : ''} <?= $payment_action ?> class="form-control" accept=".pdf,image/*" name="ministry_doc_payment_${(leg.id)}">
                             ${media_view}
                         </div>
                     </div>
@@ -2815,6 +2838,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <div class="col-md-4">
                             <label for="leg_payment_date_${leg.id}">Leg Pay Date</label>
                             <input 
+                            <?= $payment_action ?>
                             type="date" 
                             class="form-control" 
                             id="leg_payment_date_${leg.id}" 
@@ -2868,12 +2892,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     <div class="row mt-2">
                         <div class="col-md-3">
                             <label>Deposite Pay Date ${mand}</label>
-                            <input type="date" class="form-control" value="${leg.fees_deposite_date}" name="date_of_payment_${leg.id}" ${mand_re}>
+                            <input type="date" <?= $payment_action ?> class="form-control" value="${leg.fees_deposite_date}" name="date_of_payment_${leg.id}" ${mand_re}>
                         </div>
 
                         <div class="col-md-3">
                             <label>Payment Proof ${mand}</label>
-                            <input type="file" class="form-control" accept=".pdf,image/*" name="payment_slip_${leg.id}" ${file_url_payment ? "" : mand_re}>
+                            <input type="file" <?= $payment_action ?> class="form-control" accept=".pdf,image/*" name="payment_slip_${leg.id}" ${file_url_payment ? "" : mand_re}>
                             ${file_url_payment ? `
                                 <div class="margin-top">
                                     <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('${file_url_payment}');"></i>&nbsp;
@@ -2890,9 +2914,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 class="form-control" 
                 name="payment_amount_${leg.id}" 
                 ${mandRe}
+                <?= $payment_action ?>
             >
  <div class="input-group-addon currency-addon">
             <select 
+            <?= $payment_action ?> 
                 name="fees_payment_currency_id_${leg.id}" 
                 id="fees_payment_currency_id_${leg.id}" 
                 class="currency-selector currency-selector-${leg.id}"
