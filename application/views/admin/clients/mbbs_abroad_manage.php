@@ -5,7 +5,7 @@ $tbllead_performance_column = $this->leads_model->tblma_applicant_tracker();
 $filtered_columns = array_filter($tbllead_performance_column, function ($row) {
    return isset($row['selected']) && $row['selected'] == 1;
 });
-$post_sales = $this->ci->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
+$post_sales = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row();
 
 // Extract the 'id' column and limit to 5 results
 $selected_performance_column = [];
@@ -625,7 +625,11 @@ $client_type = [
                                     <input type="text" class="form-control datepicker" name="courier_date" id="courier_date" placeholder="Courier Date" autocomplete="off">
                                  </div>
                               </div>
-
+   <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-courior hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="visa_courier_date" id="visa_courier_date" placeholder="Visa Courier Date" autocomplete="off">
+                                 </div>
+                              </div>
                               <div class="col-md-2 margin-top ">
                                  <div class="form-group">
                                     <button type="button" class="btn btn-primary" id="apply_filter_">Apply Filter</button>
@@ -1311,6 +1315,8 @@ init_tail();
          'neet_status': "[name='neet_status[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
          'courier_date': "[name='courier_date']",
+         'visa_courier_date': "[name='visa_courier_date']",
+         
       });
 
       applicant_table = initDataTable(
@@ -1499,7 +1505,8 @@ init_tail();
 
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
-            var name = $(this).data("name") || $(this).attr("name");
+            var name =  $(this).attr("name");
+            var show_name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
@@ -1509,7 +1516,7 @@ init_tail();
             // console.log(required);
             if (required && !String(value).trim()) {
                $(this).focus();
-               alert_float("warning", "Please fill the required field: " + name);
+               alert_float("warning", "Please fill the required field: " + show_name);
                is_valid = false;
                return false; // Exit loop early
             }
@@ -1539,7 +1546,8 @@ init_tail();
 
       if (visa_status === true) {
          $('.visa_status_update').find('input, select').each(function() {
-            var name = $(this).data("name") || $(this).attr("name");
+            var name =  $(this).attr("name");
+             var show_name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
@@ -1549,7 +1557,7 @@ init_tail();
             // console.log(required);
             if (required && !String(value).trim()) {
                $(this).focus();
-               alert_float("warning", "Please fill the required field: " + name);
+               alert_float("warning", "Please fill the required field: " + show_name);
                is_valid = false;
                return false; // Exit loop early
             }

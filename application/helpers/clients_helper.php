@@ -2479,7 +2479,7 @@ function visa_details($client_id, $limit = 0, $show_all = 0)
 //     ];
 // }
 
-function validate_orignal_documents($client_ids, $country_names = [])
+function validate_orignal_documents($client_ids, $country_names = [],$visaApostile=0)
 {
     $CI = &get_instance();
 
@@ -2501,7 +2501,9 @@ function validate_orignal_documents($client_ids, $country_names = [])
     $CI->db->select("o.id AS doc_id, o.name AS doc_name, IF(minor_status = 2, o.id, 0) AS check_minor")
         ->from(db_prefix() . 'orignal_documents o')
         ->where('o.status', 1);
+        if($visaApostile == 1){
     $CI->db->where('o.visa_apostile', 1);
+        }
 
     if (in_array("Rest", $country_names)) {
         $CI->db->where('o.visa_rest', 1);
@@ -2510,6 +2512,7 @@ function validate_orignal_documents($client_ids, $country_names = [])
     }
 
     $all_documents = $CI->db->get()->result_array();
+
 
     // Step 4: Filter minor documents
     $filtered_documents = $all_documents;
@@ -3003,7 +3006,7 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
 
     $client_ids = array_map('intval', $client_ids_array); // Safe casting to integer
 
-    $resultOrignal = validate_orignal_documents($client_ids);
+    $resultOrignal = validate_orignal_documents($client_ids,[]);
     if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
         $data = [
             'error'               => true,

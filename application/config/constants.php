@@ -254,6 +254,7 @@ define('VISA_APPLY', '14');
 define('VISA_STAMP', '15');
 define('VISA_REJECTED', '16');
 define('SC_PENDING', '17');
+define('VISA_SENT', '26');
 
 
 // study abroad tracker
