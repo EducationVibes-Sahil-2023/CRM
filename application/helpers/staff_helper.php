@@ -46,7 +46,7 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "Payment Action" => "payment_action")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "payment_action" => "Payment Action")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
