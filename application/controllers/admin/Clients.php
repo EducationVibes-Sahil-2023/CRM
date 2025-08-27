@@ -1886,14 +1886,16 @@ class Clients extends AdminController
                     if (!empty($update_visa_data)) {
                         $updated = $this->db->update_batch(db_prefix() . "visa_details", $update_visa_data, "id");
 
-                        $update_client_data = [
-                            "applicant_status"     => 0,
-                            "applicant_stage"      => VISA,
-                            "applicant_sub_status" => $visa_sub_status,
-                        ];
+                        if (!empty($ids)) {
+                            $update_client_data = [
+                                "applicant_status"     => 0,
+                                "applicant_stage"      => VISA,
+                                "applicant_sub_status" => $visa_sub_status,
+                            ];
 
-                        $this->db->where_in("userid", $ids);
-                        $this->db->update(db_prefix() . 'clients', $update_client_data);
+                            $this->db->where_in("userid", $ids);
+                            $this->db->update(db_prefix() . 'clients', $update_client_data);
+                        }
 
                         $this->db->insert_batch(db_prefix() . 'visa_document_activity', $activity_data);
                         if ($updated) {
