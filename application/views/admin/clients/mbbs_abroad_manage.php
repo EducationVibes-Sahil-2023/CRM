@@ -622,7 +622,13 @@ $client_type = [
                               </div>
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-ap-status hide">
                                  <div class="form-group">
-                                    <input type="text" class="form-control datepicker" name="courier_date" id="courier_date" placeholder="Courier Date" autocomplete="off">
+                                    <input type="text" class="form-control datepicker" name="courier_date" id="courier_date" placeholder="APS Courier Date" autocomplete="off">
+                                 </div>
+                              </div>
+                              
+                              <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-ap-status hide">
+                                 <div class="form-group">
+                                    <input type="text" class="form-control datepicker" name="apostille_received" id="apostille_received" placeholder="APS Receving Date" autocomplete="off">
                                  </div>
                               </div>
    <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-courior hide">
@@ -1315,6 +1321,7 @@ init_tail();
          'neet_status': "[name='neet_status[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
          'courier_date': "[name='courier_date']",
+          'apostille_received': "[name='apostille_received']",
          'visa_courier_date': "[name='visa_courier_date']",
          
       });
