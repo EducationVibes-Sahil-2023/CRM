@@ -343,6 +343,13 @@ function app_init_customer_profile_tabs()
         'position' => 95,
         'leadType' => '2'
     ]);
+    $CI->app_tabs->add_customer_profile_tab('quotation', [
+        'name'     => "Quotation",
+        'icon'     => 'fa fa-map-marker',
+        'view'     => 'admin/clients/groups/quotation',
+        'position' => 95,
+        'leadType' => '2'
+    ]);
 
     $CI->app_tabs->add_customer_profile_tab('study_tracker', [
         'name'     => _l('customer_tracker'),
@@ -1321,16 +1328,105 @@ function get_condition_offer($client_id, $university_id)
         ->get()
         ->result_array();
 }
-
-function get_clients_fees($lead_type, $client_id = "")
+function university_applicant_fees($university_quotation = "", $applicant_quotaion = "", $university_array = [], $client_id = "")
 {
     $CI = &get_instance();
 
     // Select base columns from applicant_fees
     $CI->db->select("f.*")
         ->from(db_prefix() . 'applicant_fees f')
-        ->where('f.status', 1)
-        ->where('f.lead_type', $lead_type);
+        ->where('f.status', 1);
+
+
+    if (!empty($university_quotation)) {
+        $CI->db->where('f.university_quotation', 1);
+        $CI->db->order_by("f.university_quotation_sequence", "asc");
+    }
+
+    if (!empty($applicant_quotaion)) {
+        $CI->db->where('f.applicant_quotaion', 1);
+        $CI->db->order_by("f.applicant_quotaion_sequence", "asc");
+    }
+
+
+    // Conditionally join applicant_fees_details if client_id is provided
+    if (!empty($client_id)) {
+        $CI->db->select("d.amount, d.currency_id, d.fees_id, d.id as detail_id,d.amount as amount")
+            ->join(db_prefix() . 'applicant_quotation_fees_details d', "f.id = d.fees_id AND d.client_id = {$client_id}", "LEFT")->or_where($university_array);
+    }
+
+    if (!empty($university_array["university_name"]) && !empty($university_quotation)) {
+        $CI->db->select("d.amount, d.currency_id, d.fees_id, d.id as detail_id")
+            ->join(db_prefix() . 'applicant_quotation_fees_details d', "f.id = d.fees_id ", "LEFT");
+
+        if (!empty($university_array["university_name"])) {
+            $CI->db->where($university_array);
+        }
+    }
+
+
+
+
+
+
+    $client_fees = $CI->db->get()->result_array();
+
+    return $client_fees;
+}
+
+function university_applicant_fees_details($where = [])
+{
+    $CI = &get_instance();
+
+    $results = $CI->db->select("fd.*,f.backend")
+        ->from(db_prefix() . 'applicant_quotation_fees_details fd')
+        ->join(db_prefix() . 'applicant_fees f', 'f.id = fd.fees_id', 'left')
+        ->where($where)
+        // ->where('f.backend', 1)
+        ->order_by("fd.id", "asc")
+        ->get()
+        ->result_array();
+
+    $grouped = [];
+
+    foreach ($results as $row) {
+        // use correct column (acadmic_year instead of just year if that’s the DB field)
+        $year = $row['year'] ?? $row['year'] ?? 'unknown';
+
+        if (!isset($grouped[$year])) {
+            $grouped[$year] = [];
+        }
+
+        $grouped[$year][] = $row;
+    }
+
+    return $grouped;
+}
+
+
+
+function get_clients_fees($lead_type = "", $client_id = "", $university_quotation = "", $applicant_quotaion = "")
+{
+    $CI = &get_instance();
+
+    // Select base columns from applicant_fees
+    $CI->db->select("f.*")
+        ->from(db_prefix() . 'applicant_fees f')
+        ->where('f.status', 1);
+    if (!empty($lead_type)) {
+        $CI->db->where('f.lead_type', $lead_type);
+    }
+
+    if (!empty($university_quotation)) {
+        $CI->db->where('f.university_quotation', $university_quotation);
+        $CI->db->order_by("f.university_quotation_sequence", "asc");
+    }
+
+    if (!empty($applicant_quotaion)) {
+        $CI->db->where('f.applicant_quotaion', $applicant_quotaion);
+        $CI->db->order_by("f.applicant_quotaion_sequence", "asc");
+    }
+
 
     // Conditionally join applicant_fees_details if client_id is provided
     if (!empty($client_id)) {
@@ -1682,7 +1778,7 @@ function get_board_dropdown()
 function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
 {
     $CI = &get_instance();
-    $CI->db->select("TRIM(c.symbol) AS symbol, TRIM(d.amount) AS amount, CONCAT(TRIM(c.symbol), TRIM(d.amount)) AS total_amount,f.id")
+    $CI->db->select("TRIM(c.symbol) AS symbol, TRIM(d.amount) AS amount, CONCAT(TRIM(c.symbol), TRIM(d.amount)) AS total_amount,f.id,d.currency_id,f.fees")
         ->from(db_prefix() . 'applicant_fees f')
         ->join(db_prefix() . 'applicant_fees_details d', "f.id = d.fees_id")
         ->join(db_prefix() . 'currencies c', "c.id = d.currency_id")
@@ -2479,7 +2575,7 @@ function visa_details($client_id, $limit = 0, $show_all = 0)
 //     ];
 // }
 
-function validate_orignal_documents($client_ids, $country_names = [],$visaApostile=0)
+function validate_orignal_documents($client_ids, $country_names = [], $visaApostile = 0)
 {
     $CI = &get_instance();
 
@@ -2501,9 +2597,9 @@ function validate_orignal_documents($client_ids, $country_names = [],$visaAposti
     $CI->db->select("o.id AS doc_id, o.name AS doc_name, IF(minor_status = 2, o.id, 0) AS check_minor")
         ->from(db_prefix() . 'orignal_documents o')
         ->where('o.status', 1);
-        if($visaApostile == 1){
-    $CI->db->where('o.visa_apostile', 1);
-        }
+    if ($visaApostile == 1) {
+        $CI->db->where('o.visa_apostile', 1);
+    }
 
     if (in_array("Rest", $country_names)) {
         $CI->db->where('o.visa_rest', 1);
@@ -3006,7 +3102,7 @@ function get_orignal_document_data_list_visa($client_ids_array = [], $check_stat
 
     $client_ids = array_map('intval', $client_ids_array); // Safe casting to integer
 
-    $resultOrignal = validate_orignal_documents($client_ids,[]);
+    $resultOrignal = validate_orignal_documents($client_ids, []);
     if (!empty($resultOrignal["error"]) && $resultOrignal["error"] == 1) {
         $data = [
             'error'               => true,
@@ -3339,9 +3435,10 @@ function filter_country_university_array($leadType)
 {
     $CI = &get_instance();
 
-    $CI->db->select('s.country_name, s.university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name');
+    $CI->db->select('s.country_name, s.university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name,group_concat(c.userid) as client_ids,group_concat(ap.acadmic_year) as acadmic_year');
     $CI->db->from(db_prefix() . 'clients c');
     $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id', "LEFT");
+    $CI->db->join(db_prefix() . 'admission_preferences ap', 'ap.userid = c.userid', "LEFT");
     $CI->db->join(db_prefix() . 'client_university_shortlisting s', 'c.userid = s.client_id and s.status=1', "LEFT");
     $CI->db->join(db_prefix() . 'staff st', 'c.addedfrom = st.staffid', "LEFT");
     $CI->db->join(db_prefix() . 'leads_sources t', 'l.source = t.id', "LEFT");
@@ -3350,19 +3447,26 @@ function filter_country_university_array($leadType)
         $CI->db->or_where('c.client_type ', 2);
     }
 
+    $CI->db->where('s.university_name!= ', null);
+
+    $CI->db->group_by('s.country_name, s.university_name');
 
     $query = $CI->db->get();
     $result = $query->result_array();
+    $CI->db->last_query();
 
     $countries = [];
     $universities = [];
     $counselor = [];
     $sources = [];
+    $acadmic_year = [];
 
     $seenCountries = [];
     $seenUniversities = [];
     $seenCounselor = [];
     $seenSources = [];
+    $seenAcadmic_year = [];
+
 
     foreach ($result as $row) {
         if (!empty($row['country_name']) && !isset($seenCountries[$row['country_name']])) {
@@ -3379,6 +3483,7 @@ function filter_country_university_array($leadType)
                 "university_name" => $row['university_name']
             ];
             $seenUniversities[$row['university_name']] = true;
+            $seenAcadmic_year[$row['university_name']] = array_unique(array_map(fn($year) => ['id' => $year, 'name' => $year], explode(",", $row['acadmic_year'])), SORT_REGULAR);
         }
         if (!empty($row['staffid']) && !isset($seenCounselor[$row['staffid']])) {
             $counselor[] = [
@@ -3402,12 +3507,16 @@ function filter_country_university_array($leadType)
     usort($universities, fn($a, $b) => strcmp($a['university_name'], $b['university_name']));
     usort($counselor, fn($a, $b) => strcmp($a['staffid'], $b['staffid']));
     usort($sources, fn($a, $b) => strcmp($a['id'], $b['id']));
+    usort($acadmic_year, fn($a, $b) => strcmp($a['id'], $b['id']));
+
 
     return [
         'countries' => $countries,
         'universities' => $universities,
         'counselor' => $counselor,
         'source' => $sources,
+        'acadmic_year' => $seenAcadmic_year
+
     ];
 }
 

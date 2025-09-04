@@ -1,12 +1,20 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php init_head(); ?>
+<?php init_head();
+$university_applicant_fees = university_applicant_fees(1);
+?>
 <?php
 $table_data = array(
     "University Name",
-    "Session Intake",
-    "Year",
-    "Action",
+    "Acadmic Year",
+    "Year"
 );
+
+foreach ($university_applicant_fees as $fee) {
+    $table_data[] = $fee['quotation_name'];
+}
+
+$table_data[] = "Action";
+
 ?>
 <div id="wrapper">
     <div class="content">
@@ -15,7 +23,7 @@ $table_data = array(
                 <div class="panel_s">
                     <div class="panel-body _buttons">
                         <?php if (has_permission('quotation', '', 'create')) { ?>
-                            <a href="<?php echo admin_url('excel/create'); ?>" class="btn btn-info pull-left display-block"><?php echo "Create" ?></a>
+                            <a href="<?php echo admin_url('quotations/create_mbbs_abroad'); ?>" class="btn btn-info pull-left display-block"><?php echo "Create" ?></a>
                         <?php } ?>
                         <div class="clearfix"></div>
                         <hr class="hr-panel-heading" />

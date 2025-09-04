@@ -1875,10 +1875,10 @@ if ($lead_type_status == 2) {
         this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Convert to uppercase & remove invalid characters
     });
 
-    function updateSymbol(id) {
-        var selected = $(".currency-selector-" + id + " option:selected");
-        $(".currency-symbol-" + id).text(selected.data("symbol"));
-    }
+    // function updateSymbol(id) {
+    //     var selected = $(".currency-selector-" + id + " option:selected");
+    //     $(".currency-symbol-" + id).text(selected.data("symbol"));
+    // }
 
     function scholarshipCase(event) {
         if (event.checked) {

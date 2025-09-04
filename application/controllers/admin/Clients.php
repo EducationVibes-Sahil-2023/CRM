@@ -4,6 +4,12 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 class Clients extends AdminController
 {
+
+    function __construct()
+    {
+        parent::__construct();
+        $this->load->model('quotation_model');
+    }
     /* List all clients */
     public function index()
     {
@@ -820,7 +826,6 @@ class Clients extends AdminController
         $data['bodyclass'] = 'customer-profile dynamic-create-groups';
         $data['title']     = $title;
         $data['client_id']     = $id;
-
 
 
 
@@ -9528,6 +9533,93 @@ class Clients extends AdminController
             echo json_encode([
                 "resp_code" => "ERR",
                 "resp_desc" => "Invalid Client ID."
+            ]);
+        }
+    }
+    public function quotation()
+    {
+        try {
+            $university_name = $this->input->post('university_name');
+            $acadmic_year    = $this->input->post('acadmic_year');
+            $year            = $this->input->post('study_year');
+            $clientid        = $this->input->post('client_id');
+            $quotation_id    = $this->input->post('quotation_id');
+            $release_to_counsellor    = $this->input->post('release_to_counsellor');
+            $currency_exchange    = !empty($this->input->post('currency_exchange')) ? json_decode($this->input->post('currency_exchange')) : [];
+            $university_dues    = !empty($this->input->post('university_dues')) ? json_decode($this->input->post('university_dues')) : [];
+            $company_dues    = !empty($this->input->post('company_dues')) ? json_decode($this->input->post('company_dues')) : [];
+            $quotation_id    = $this->input->post('quotation_id');
+
+
+            // 🔹 Final insert/update data
+            $applicant_quotation_payment = [
+                'university_name' => $university_name,
+                'acadmic_year'    => $acadmic_year,
+                'year'            => $year,
+                'client_id'       => $clientid,
+                'exchange_value'  => json_encode($currency_exchange, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'university_due'  => json_encode($university_dues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'company_due'     => json_encode($company_dues, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'created_by'      => get_staff_user_id(),
+                'created_at'      => date('Y-m-d H:i:s'),
+                'release_to_counsellor' => !empty($release_to_counsellor) ? $release_to_counsellor : 0
+            ];
+
+
+            // 🔹 Check if already exists
+            $this->db->where([
+                'university_name' => $university_name,
+                'acadmic_year'    => $acadmic_year,
+                'year'            => $year,
+                'client_id'       => $clientid
+            ]);
+            $exists = $this->db->get(db_prefix() . 'applicant_quotation_payment')->row();
+
+            $status = false;
+            $action = "insert";
+
+
+            // die;
+            if ($quotation_id != "") {
+                $this->db->where('id', $quotation_id);
+                $status = $this->db->update(db_prefix() . 'applicant_quotation_payment', $applicant_quotation_payment);
+                $action = "update";
+                $insertId = $quotation_id;
+            } else {
+                $status = $this->db->insert(db_prefix() . 'applicant_quotation_payment', $applicant_quotation_payment);
+                $insertId = $this->db->insert_id();
+            }
+
+            // if (!$exists) {
+            // ✅ Insert
+
+            // } else {
+            //     // ✅ Update only if quotation_id matches
+            //     if ($quotation_id == $exists->id) {
+            //         $this->db->where('id', $quotation_id);
+            //         $status = $this->db->update(db_prefix() . 'applicant_quotation_payment', $applicant_quotation_payment);
+            //         $action = "update";
+            //         $insertId = $quotation_id;
+            //     }
+            // }
+
+            if ($status) {
+                echo json_encode([
+                    "resp_code" => "RCS",
+                    "resp_desc" => "Quotation {$action}d successfully.",
+                    "quotation_id" => $insertId ?? null
+                ]);
+            } else {
+                echo json_encode([
+                    "resp_code" => "ERR",
+                    "resp_desc" => "Failed to save quotation. Please try again."
+                ]);
+            }
+        } catch (Exception $e) {
+            // 🔹 Catch DB/Runtime errors
+            echo json_encode([
+                "resp_code" => "EXC",
+                "resp_desc" => "Exception occurred: " . $e->getMessage()
             ]);
         }
     }
