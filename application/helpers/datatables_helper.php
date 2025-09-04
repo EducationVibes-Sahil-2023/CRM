@@ -855,80 +855,171 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
             }
         }
 
+        // if (!empty($search_column)) {
+        //     for ($i = 0; $i < count($search_column); $i++) {
+        //         $columnName = $search_column[$i];
+
+        //         if (strpos($columnName, '.') !== false) {
+        //             if (str_contains($search_value, '!=')) {
+        //                 $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+        //             } else {
+        //                 $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+        //             }
+        //         }
+        //     }
+        // }
+
+
+        // if (count($sMatchCustomFields) > 0) {
+        //     $s = $CI->db->escape_str($search_value);
+        //     foreach ($sMatchCustomFields as $matchCustomField) {
+        //         if (str_contains($s, '!=')) {
+        //             $sWhere .= " NOT MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('" . str_replace("!=", "", $s) . "') USING utf8)) AND ";
+        //         } else {
+        //             $sWhere .= " MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('{$s}') USING utf8)) OR ";
+        //         }
+        //     }
+        // }
+
+
+        // if (count($additionalSelect) > 0) {
+        //     foreach ($additionalSelect as $searchAdditionalField) {
+        //         if (!empty($search_column)) {
+        //             // Convert to lowercase and check for ' as '
+        //             $lowerColumnName = strtolower($searchAdditionalField);
+        //             if (strpos($lowerColumnName, ' as ') !== false) {
+        //                 // Remove everything before and including ' as ', then trim
+        //                 $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
+        //             }
+
+        //             // Check if '.' exists, explode by '.' and get the last part
+        //             if (strpos($searchAdditionalField, '.') !== false) {
+        //                 $columnParts = explode('.', $searchAdditionalField);
+        //                 $searchAdditionalField = end($columnParts); // Get the last part after exploding
+        //             }
+
+        //             if (in_array(strtolower($searchAdditionalField), $search_column)) {
+        //             } else {
+        //                 $searchAdditionalField = "";
+        //             }
+        //         }
+
+        //         if (empty($searchAdditionalField)) {
+        //             continue;
+        //         }
+        //         if (strpos($searchAdditionalField, 'as') !== false) {
+        //             $searchAdditionalField = strbefore($searchAdditionalField, ' as');
+        //         }
+        //         if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
+        //         } else {
+
+        //             // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
+        //             // Use index
+        //             if (str_contains($search_value, '!=')) {
+        //                 $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+        //             } else {
+        //                 $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+        //             }
+        //         }
+        //     }
+        // }
+
+        // if (str_contains($search_value, '!=')) {
+        //     $sWhere = substr_replace($sWhere, '', -4);
+        // } else {
+        //     $sWhere = substr_replace($sWhere, '', -3);
+        // }
+        
+        
         if (!empty($search_column)) {
-            for ($i = 0; $i < count($search_column); $i++) {
-                $columnName = $search_column[$i];
+            $search_values = array_map('trim', explode(',', $search_value)); // split multiple values
+            $sWhereParts = [];
 
-                if (strpos($columnName, '.') !== false) {
-                    if (str_contains($search_value, '!=')) {
-                        $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
+            foreach ($search_column as $columnName) {
+                if (strpos($columnName, '.') === false) continue;
+
+                $columnParts = [];
+                foreach ($search_values as $value) {
+                    $not = false;
+                    if (strpos($value, '!=') === 0) {
+                        $value = substr($value, 2);
+                        $not = true;
+                    }
+
+                    if ($not) {
+                        $columnParts[] = 'CONVERT(IFNULL(' . $columnName . ',"") USING utf8) NOT REGEXP "' . $CI->db->escape_str($value) . '"';
                     } else {
-                        $sWhere .= ' convert( ifnull(' . $columnName . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
+                        $columnParts[] = 'CONVERT(IFNULL(' . $columnName . ',"") USING utf8) REGEXP "' . $CI->db->escape_str($value) . '"';
                     }
                 }
+
+                $sWhereParts[] = '(' . implode(' OR ', $columnParts) . ')';
             }
+
+            $sWhere .= '(' . implode(' OR ', $sWhereParts) . ') AND ';
         }
 
-
+        // Custom fields
         if (count($sMatchCustomFields) > 0) {
-            $s = $CI->db->escape_str($search_value);
+            $search_values = array_map('trim', explode(',', $search_value));
             foreach ($sMatchCustomFields as $matchCustomField) {
-                if (str_contains($s, '!=')) {
-                    $sWhere .= " NOT MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('" . str_replace("!=", "", $s) . "') USING utf8)) AND ";
-                } else {
-                    $sWhere .= " MATCH ({$matchCustomField}) AGAINST (CONVERT(BINARY('{$s}') USING utf8)) OR ";
+                $fieldParts = [];
+                foreach ($search_values as $value) {
+                    $not = false;
+                    if (strpos($value, '!=') === 0) {
+                        $value = substr($value, 2);
+                        $not = true;
+                    }
+                    if ($not) {
+                        $fieldParts[] = "NOT MATCH({$matchCustomField}) AGAINST(CONVERT(BINARY('" . $CI->db->escape_str($value) . "') USING utf8))";
+                    } else {
+                        $fieldParts[] = "MATCH({$matchCustomField}) AGAINST(CONVERT(BINARY('" . $CI->db->escape_str($value) . "') USING utf8))";
+                    }
                 }
+                $sWhere .= '(' . implode(' OR ', $fieldParts) . ') OR ';
             }
         }
 
-
+        // Additional select fields
         if (count($additionalSelect) > 0) {
+            $search_values = array_map('trim', explode(',', $search_value));
             foreach ($additionalSelect as $searchAdditionalField) {
-                if (!empty($search_column)) {
-                    // Convert to lowercase and check for ' as '
-                    $lowerColumnName = strtolower($searchAdditionalField);
-                    if (strpos($lowerColumnName, ' as ') !== false) {
-                        // Remove everything before and including ' as ', then trim
-                        $searchAdditionalField = trim(substr($searchAdditionalField, strpos($lowerColumnName, ' as ') + 4));
+                // Extract column name if 'as' exists
+                $lowerField = strtolower($searchAdditionalField);
+                if (strpos($lowerField, ' as ') !== false) {
+                    $searchAdditionalField = trim(substr($lowerField, strpos($lowerField, ' as ') + 4));
+                }
+
+                if (strpos($searchAdditionalField, '.') !== false) {
+                    $parts = explode('.', $searchAdditionalField);
+                    $searchAdditionalField = end($parts);
+                }
+
+                if (empty($searchAdditionalField)) continue;
+
+                $fieldParts = [];
+                foreach ($search_values as $value) {
+                    $not = false;
+                    if (strpos($value, '!=') === 0) {
+                        $value = substr($value, 2);
+                        $not = true;
                     }
 
-                    // Check if '.' exists, explode by '.' and get the last part
-                    if (strpos($searchAdditionalField, '.') !== false) {
-                        $columnParts = explode('.', $searchAdditionalField);
-                        $searchAdditionalField = end($columnParts); // Get the last part after exploding
-                    }
-
-                    if (in_array(strtolower($searchAdditionalField), $search_column)) {
+                    if ($not) {
+                        $fieldParts[] = 'CONVERT(IFNULL(' . $searchAdditionalField . ',"") USING utf8) NOT REGEXP "' . $CI->db->escape_str($value) . '"';
                     } else {
-                        $searchAdditionalField = "";
+                        $fieldParts[] = 'CONVERT(IFNULL(' . $searchAdditionalField . ',"") USING utf8) REGEXP "' . $CI->db->escape_str($value) . '"';
                     }
                 }
 
-                if (empty($searchAdditionalField)) {
-                    continue;
-                }
-                if (strpos($searchAdditionalField, 'as') !== false) {
-                    $searchAdditionalField = strbefore($searchAdditionalField, ' as');
-                }
-                if (stripos($columnName, 'AVG(') !== false || stripos($columnName, 'SUM(') !== false) {
-                } else {
-
-                    // $searchAdditionalField = explode(" ", $searchAdditionalField)[0];
-                    // Use index
-                    if (str_contains($search_value, '!=')) {
-                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " NOT REGEXP '" . $CI->db->escape_str(str_replace("!=", "", $search_value)) . "' AND ";
-                    } else {
-                        $sWhere .= 'convert(ifnull(' . $searchAdditionalField . ',"") USING utf8)' . " REGEXP '" . $CI->db->escape_str($search_value) . "' OR ";
-                    }
-                }
+                $sWhere .= '(' . implode(' OR ', $fieldParts) . ') OR ';
             }
         }
 
-        if (str_contains($search_value, '!=')) {
-            $sWhere = substr_replace($sWhere, '', -4);
-        } else {
-            $sWhere = substr_replace($sWhere, '', -3);
-        }
+        // Remove the trailing OR/AND
+        $sWhere = rtrim($sWhere, ' OR ');
+        $sWhere = rtrim($sWhere, ' AND ');
+
         $sWhere .= ')';
     } else {
         // Check for custom filtering

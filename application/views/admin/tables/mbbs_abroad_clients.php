@@ -58,7 +58,12 @@ if ($post_sales->evp_partners == "all") {
 $courier_date_join = "";
 if ($this->ci->input->post('courier_date')) {
     $courier_date = $this->ci->input->post('courier_date');
-    $courier_date_join = " AND DATE(courier_date) = '{$courier_date}'";
+    $courier_date_join .= " AND DATE(courier_date) = '{$courier_date}'";
+}
+
+if ($this->ci->input->post('apostille_received')) {
+    $apostille_received = $this->ci->input->post('apostille_received');
+    $courier_date_join .= " AND DATE(apostille_received) = '{$apostille_received}'";
 }
 
 
@@ -195,7 +200,7 @@ AND ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str
  ) ',
     "LEFT JOIN (
         SELECT 
-            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,GROUP_CONCAT(doc_id) as doc_id,
+            userid,sum(apostille_cost) as Total_cost,max(courier_date) as courier_date,max(payment_date) as payment_date,GROUP_CONCAT(vendor_id) as vendor_id,GROUP_CONCAT(doc_id) as doc_id,max(apostille_received) as apostille_received,
             CASE 
                 WHEN COUNT(*) = 0 THEN 'Pending'
                 WHEN SUM(received_status = 0) > 0 THEN 'Sent'
@@ -482,6 +487,11 @@ if ($this->ci->input->post('visa_courier_date')) {
     array_push($where, "AND DATE(" . db_prefix() . "visa_details.courier_date) = '{$visa_courier_date}'");
 }
 
+if ($this->ci->input->post('apostille_received')) {
+    $apostille_received = $this->ci->input->post('apostille_received');
+    array_push($where, "AND DATE(apostille_summary.apostille_received) = '{$apostille_received}'");
+}
+
 if ($this->ci->input->post('passport_status')) {
     $passport_status = $this->ci->input->post('passport_status');
     if (is_array($passport_status)) {
@@ -677,12 +687,32 @@ if (is_admin() || is_postSale()) {
 
 $search_column = [];
 // Define search and group-by clauses
+// if (!empty($_POST["search"]["value"])) {
+//     $search_column = [
+//         db_prefix() . "basic_details.email",
+//         db_prefix() . "basic_details.mobile",
+//         "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
+//     ];
+// }
+
+
 if (!empty($_POST["search"]["value"])) {
-    $search_column = [
-        db_prefix() . "basic_details.email",
-        db_prefix() . "basic_details.mobile",
-        "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
-    ];
+
+    if (strpos($search_value, ',') !== false) {
+       $searchValues = array_filter(array_map('trim', explode(",", $_POST["search"]["value"])));
+    $_POST["search"]["value"] = implode(",", $searchValues);
+        // Comma exists, split by comma
+        $search_column = [
+            "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
+        ];
+    } else {
+
+        $search_column = [
+            db_prefix() . "basic_details.email",
+            db_prefix() . "basic_details.mobile",
+            "CONCAT(" . db_prefix() . "basic_details.first_name, ' ', " . db_prefix() . "basic_details.last_name)"
+        ];
+    }
 }
 
 $result = data_tables_init(array_merge($aColumns, $additional_array), $sIndexColumn, $sTable, $join, $where, [], 'GROUP BY ' . db_prefix() . 'clients.userid', '', '', $search_column);

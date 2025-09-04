@@ -1269,11 +1269,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                                                             </label>
                                                         </div>
-                                                        <div class="col-md-4">
-                                                            <label>Leg Pay Date</label>
-                                                            <input type="date" <?= $payment_action ?> class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">
+                                                        <!--<div class="col-md-4">-->
+                                                        <!--    <label>Leg Pay Date</label>-->
+                                                        <!--    <input type="date" <?= $payment_action ?> class="form-control" value="<?= !empty($leg["leg_payment_date"]) ? $leg["leg_payment_date"] : '' ?>" name="leg_payment_date_<?= htmlspecialchars($leg["id"], ENT_QUOTES, 'UTF-8') ?>">-->
 
-                                                        </div>
+                                                        <!--</div>-->
                                                     </div>
                                                 <?php endif; ?>
                                             </div>
@@ -2835,16 +2835,16 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                 
                             </label>
                         </div>
-                            <div class="col-md-4">
-                            <label for="leg_payment_date_${leg.id}">Leg Pay Date</label>
-                            <input 
-                            <?= $payment_action ?>
-                            type="date" 
-                            class="form-control" 
-                            id="leg_payment_date_${leg.id}" 
-                            name="leg_payment_date_${leg.id}" 
-                            value="${leg.leg_payment_date ? leg.leg_payment_date : ''}">
-                            </div>
+                            // <div class="col-md-4">
+                            // <label for="leg_payment_date_${leg.id}">Leg Pay Date</label>
+                            // <input 
+                            // <?= $payment_action ?>
+                            // type="date" 
+                            // class="form-control" 
+                            // id="leg_payment_date_${leg.id}" 
+                            // name="leg_payment_date_${leg.id}" 
+                            // value="${leg.leg_payment_date ? leg.leg_payment_date : ''}">
+                            // </div>
                     </div>
                 `;
                 }
