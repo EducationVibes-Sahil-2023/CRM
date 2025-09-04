@@ -39,6 +39,24 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
+
+        if (has_permission('quotation', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('quotation', [
+                        'collapse' => true,
+                        'name'     => "Quotations",
+                        'position' => 5,
+                        'icon'     => 'fa fa-user-o',
+                ]);
+
+                $CI->app_menu->add_sidebar_children_item('quotation', [
+                        'slug'     => 'quotations/universities',
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "Universities",
+                        'href'     => admin_url('quotations/mbbs_abroad'),
+                        'position' => 1,
+                ]);
+        }
+
         $CI->app_menu->add_sidebar_children_item('customers', [
                 'slug'     => 'mbbs_abroad',
                 'icon'     => 'fa fa-user-o',
