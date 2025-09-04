@@ -1468,7 +1468,7 @@ if ($lead_type_status == 2) {
 
                                                 <div class="form-check checkbox">
                                                     <input
-                                                        class="form-check-input checkbox-group"
+                                                        class="form-check-input checkbox-group <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabledd' : '' ?>"
                                                         type="checkbox"
                                                         id="air_ticket_include"
                                                         name="air_ticket_include"

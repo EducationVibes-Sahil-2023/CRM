@@ -7798,6 +7798,7 @@ class Clients extends AdminController
         $tracker_id = !empty($this->input->post("tracker_id")) ? $this->input->post("tracker_id") : 1;
         $invitation = !empty($this->input->post("invitation")) ? json_decode($this->input->post("invitation"), true) : [];
         $university_shortlisting_data = $this->clients_model->university_shortlisting($client_id);
+     
         if ($university_shortlisting_data[0]["ministry_document_recived"] == 0 && $university_shortlisting_data[0]["country_name"] == "Georgia") {
 
             $update_client_data = [
@@ -7930,7 +7931,7 @@ class Clients extends AdminController
             }
             $legalization_data = $this->clients_model->legalization_data($client_id);
 
-            if (empty($legalization_data[0]["ministry_document_recived"])) {
+            if (empty($legalization_data[0]["ministry_document_recived"]) && $university_shortlisting_data[0]["country_name"] == "Georgia") {
                 $message = "Ministry Order Receiving is mandatory in Legalization Section";
 
                 $data = [

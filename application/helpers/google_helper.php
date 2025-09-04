@@ -1045,6 +1045,8 @@ COALESCE(
                 ) AS apostille_summary ON apostille_summary.userid = c.userid ";
         }
         // Main SQL
+        
+        // LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid and p.primary_university = u.university_name
         $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
                 LEFT JOIN " . db_prefix() . "basic_details b ON c.userid = b.userid
@@ -1055,7 +1057,14 @@ COALESCE(
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
                 LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
-                LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid and p.primary_university = u.university_name
+                
+                LEFT JOIN tbladmission_preferences p 
+                ON p.userid = c.userid
+              AND (
+        (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
+        OR (u.university_name IS NULL)
+   )
+
                 LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner
                 LEFT JOIN " . db_prefix() . "applicant_fees_details fd ON fd.client_id = c.userid
                 LEFT JOIN " . db_prefix() . "applicant_fees f ON f.id = fd.fees_id

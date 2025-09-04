@@ -1469,18 +1469,18 @@ if ($lead_type_status == 2) {
 												<div class="col-lg-4 col-md-4 col-6 fees-block-8">
 													<label>&nbsp;</label>
 
-													<div class="form-check checkbox">
-														<input
-															class="form-check-input checkbox-group"
-															type="checkbox"
-															id="air_ticket_include"
-															name="air_ticket_include"
-															<?= ($client->air_ticket_include == 1) ? 'checked' : '' ?>
-															<?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabled' : '' ?>>
-														<label class="form-check-label" for="air_ticket_include">
-															Air ticket inc. in Service Charge <span class="text-danger">*</span>
-														</label>
-													</div>
+												    <div class="form-check checkbox">
+                                                    <input
+                                                        class="form-check-input checkbox-group <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabledd' : '' ?>"
+                                                        type="checkbox"
+                                                        id="air_ticket_include"
+                                                        name="air_ticket_include"
+                                                        <?= ($client->air_ticket_include == 1) ? 'checked' : '' ?>
+                                                        <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabled' : '' ?>>
+                                                    <label class="form-check-label" for="air_ticket_include">
+                                                        Air ticket inc. in Service Charge <span class="text-danger">*</span>
+                                                    </label>
+                                                </div>
 												</div>
 											</div>
 										</div>
