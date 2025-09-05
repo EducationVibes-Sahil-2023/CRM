@@ -43,6 +43,7 @@ class Quotations extends AdminController
                 'acadmic_year'    => $this->input->post('acadmic_year'),
                 'year'            => $this->input->post('study_year')
             ]);
+            
             if (!empty($quotation_id)) {
                 $this->db->where('id !=', $quotation_id);
             }

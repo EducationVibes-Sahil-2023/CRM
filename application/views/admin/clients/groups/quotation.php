@@ -432,8 +432,10 @@ $quotation_paymente_mode = $this->db
 
                                                 </td>
                                                 <td>
-                                                    <select class="form-control" required id="university_pay_vendor" name="university_pay_vendor">
-                                                        <option value="">Select Vendor</option>
+                                                    <select class="form-control" style="display:<?= (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) ? 'none' : 'show' ?>" required id="university_pay_vendor" name="university_pay_vendor">
+                                                        <?php if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] != 5) { ?>
+                                                            <option value="">Select Vendor</option>
+                                                        <?php } ?>
                                                         <?php
                                                         if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 || $university_due_array["main"]['pay_info'][0]["payMode"] == 4) {
                                                             foreach ($modes_vendor as $vendor) {
@@ -449,10 +451,28 @@ $quotation_paymente_mode = $this->db
                                                             <option value="<?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?>" selected><?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?></option>
                                                         <?php
 
+                                                        } else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) {
+                                                        ?>
+                                                            <option value="<?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?>" selected><?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?></option>
+                                                        <?php
                                                         }
 
                                                         ?>
                                                     </select>
+
+                                                    <?php
+                                                    $payInfo_new = $university_due_array["main"]['pay_info'][0] ?? null;
+
+                                                    if (!empty($payInfo_new) && isset($payInfo_new["payMode"]) && $payInfo_new["payMode"] == 5): ?>
+                                                        <input
+                                                            type="text"
+                                                            name="manual_cash_vendor"
+                                                            required
+                                                            class="form-control manually-cash"
+                                                            placeholder="Enter Vendor Name"
+                                                            value="<?= !empty($payInfo_new["payVendor"]) ? htmlspecialchars($payInfo_new["payVendor"], ENT_QUOTES, 'UTF-8') : '' ?>">
+                                                    <?php endif; ?>
+
                                                 </td>
                                             </tr>
                                         </tfoot>
@@ -574,8 +594,10 @@ $quotation_paymente_mode = $this->db
 
                                                             </td>
                                                             <td>
-                                                                <select class="form-control" required id="university_pay_vendor" name="university_pay_vendor">
-                                                                    <option value="">Select Vendor</option>
+                                                                <select class="form-control" style="display:<?= (!empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 5) ? 'none' : 'show' ?>" required id="university_pay_vendor" name="university_pay_vendor">
+                                                                    <?php if (!empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 1) { ?>
+                                                                        <option value="">Select Vendor</option>
+                                                                    <?php } ?>
                                                                     <?php
                                                                     if (!empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 1 || $addition['pay_info'][0]["payMode"] == 4) {
                                                                         foreach ($modes_vendor as $vendor) {
@@ -591,10 +613,26 @@ $quotation_paymente_mode = $this->db
                                                                         <option value="<?= $addition['pay_info'][0]["payVendor"] ?>" selected><?= $addition['pay_info'][0]["payVendor"] ?></option>
                                                                     <?php
 
+                                                                    } else if (!empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 5) {
+                                                                    ?>
+                                                                        <option value="<?= $addition['pay_info'][0]["payVendor"] ?>" selected><?= $addition['pay_info'][0]["payVendor"] ?></option>
+                                                                    <?php
                                                                     }
 
                                                                     ?>
                                                                 </select>
+
+                                                                <?php
+
+                                                                if (!empty($addition['pay_info'][0]) && isset($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 5): ?>
+                                                                    <input
+                                                                        type="text"
+                                                                        name="manual_cash_vendor"
+                                                                        required
+                                                                        class="form-control manually-cash"
+                                                                        placeholder="Enter Vendor Name"
+                                                                        value="<?= !empty($addition['pay_info'][0]["payVendor"]) ? htmlspecialchars($addition['pay_info'][0]["payVendor"], ENT_QUOTES, 'UTF-8') : '' ?>">
+                                                                <?php endif; ?>
                                                             </td>
                                                         </tr>
                                                     </tfoot>
@@ -653,7 +691,7 @@ $quotation_paymente_mode = $this->db
                                             <?php if (!empty($fee['id'])): ?>
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($fee['id']) ?>">
                                             <?php endif; ?>
-                                            <select name="name[]" class="form-control name">
+                                            <select name="name[]" class="form-control name" <?= $index == 0 ? 'disabled' : '' ?>>
                                                 <?php foreach ($company_dues_fees_array as $fees_data): ?>
                                                     <?php if ($fees_data["status"] == (!empty($index) ? 1 : 0)): ?>
                                                         <option
@@ -730,8 +768,11 @@ $quotation_paymente_mode = $this->db
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-control" required name="university_pay_vendor" id="university_pay_vendor">
-                                                <option value="">Select Vendor</option>
+                                            <select class="form-control" style="display:<?= (!empty($payMode) && $payMode == 5) ? 'none' : 'show' ?>" required name="university_pay_vendor" id="university_pay_vendor">
+                                                <?php if ($payMode != 5) { ?>
+                                                    <option value="">Select Vendor</option>
+                                                <?php } ?>
+
                                                 <?php if (in_array($payMode, [1, 4])): ?>
                                                     <?php foreach ($modes_vendor as $vendor): ?>
                                                         <?php if ($vendor["mode"] == $payMode): ?>
@@ -740,10 +781,27 @@ $quotation_paymente_mode = $this->db
                                                             </option>
                                                         <?php endif; ?>
                                                     <?php endforeach; ?>
+
                                                 <?php elseif (in_array($payMode, [2, 3]) && !empty($payVendor)): ?>
+                                                    <option value="<?= $payVendor ?>" selected><?= $payVendor ?></option>
+
+                                                <?php elseif ($payMode == 5 && !empty($payVendor)): ?>
                                                     <option value="<?= $payVendor ?>" selected><?= $payVendor ?></option>
                                                 <?php endif; ?>
                                             </select>
+
+                                            <?php
+
+                                            if (!empty($payMode) && isset($payMode) && $payMode == 5): ?>
+                                                <input
+                                                    type="text"
+                                                    name="manual_cash_vendor"
+                                                    required
+                                                    class="form-control manually-cash"
+                                                    placeholder="Enter Vendor Name"
+                                                    value="<?= !empty($payVendor) ? htmlspecialchars($payVendor, ENT_QUOTES, 'UTF-8') : '' ?>">
+                                            <?php endif; ?>
+
                                         </td>
                                         <td>
                                             <select name="currency[]" class="form-control fee_currency" disabled>
@@ -872,20 +930,42 @@ $quotation_paymente_mode = $this->db
                                                             </select>
                                                         </td>
                                                         <td>
-                                                            <select class="form-control" required name="university_pay_vendor">
-                                                                <option value="">Select Vendor</option>
+                                                            <select class="form-control" style="display:<?= (!empty($l_array["payMode"]) && $l_array["payMode"] == 5) ? 'none' : 'show' ?>" required name="university_pay_vendor">
+                                                                <?php if ($l_array["payMode"] != 5) { ?>
+
+                                                                    <option value="">Select Vendor</option>
+                                                                <?php } ?>
+
                                                                 <?php if (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [1, 4])): ?>
                                                                     <?php foreach ($modes_vendor as $vendor): ?>
                                                                         <?php if ($vendor["mode"] == $l_array["payMode"]): ?>
-                                                                            <option value="<?= $vendor["id"] ?>" <?= ($vendor["id"] == ($l_array["payVendor"] ?? null)) ? "selected" : "" ?>>
+                                                                            <option value="<?= $vendor["id"] ?>" <?= (!empty($l_array["payVendor"]) && $vendor["id"] == $l_array["payVendor"]) ? "selected" : "" ?>>
                                                                                 <?= $vendor["name"] ?>
                                                                             </option>
                                                                         <?php endif; ?>
                                                                     <?php endforeach; ?>
-                                                                <?php elseif (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [2, 3])): ?>
+
+                                                                <?php elseif (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [2, 3]) && !empty($l_array["payVendor"])): ?>
+                                                                    <option value="<?= $l_array["payVendor"] ?>" selected><?= $l_array["payVendor"] ?></option>
+
+                                                                <?php elseif (!empty($l_array["payMode"]) && $l_array["payMode"] == 5 && !empty($l_array["payVendor"])): ?>
                                                                     <option value="<?= $l_array["payVendor"] ?>" selected><?= $l_array["payVendor"] ?></option>
                                                                 <?php endif; ?>
                                                             </select>
+
+
+                                                            <?php
+
+                                                            if (!empty($l_array["payMode"]) && isset($l_array["payMode"]) && $l_array["payMode"] == 5): ?>
+                                                                <input
+                                                                    type="text"
+                                                                    name="manual_cash_vendor"
+                                                                    required
+                                                                    class="form-control manually-cash"
+                                                                    placeholder="Enter Vendor Name"
+                                                                    value="<?= !empty($l_array["payVendor"]) ? htmlspecialchars($l_array["payVendor"], ENT_QUOTES, 'UTF-8') : '' ?>">
+                                                            <?php endif; ?>
+
                                                         </td>
                                                         <td>
                                                             <select name="currency[]" class="form-control fee_currency" disabled>
@@ -946,7 +1026,8 @@ $quotation_paymente_mode = $this->db
         // 🔹 Find the vendor select in the same row as the changed mode
         let vendor_select = $(obj).closest("tr").find("select[name='university_pay_vendor']");
         vendor_select.empty();
-
+        vendor_select.show();
+        $(obj).closest("tr").find("input.manually-cash").hide();
         // 🔹 Filter vendors by mode
         let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
@@ -975,8 +1056,21 @@ $quotation_paymente_mode = $this->db
             vendor_select.append(
                 '<option selected value="<?= $partnerText ?>"><?= htmlspecialchars($partnerText) ?></option>'
             );
+        } else if (modeId == 5) {
+            // 🔹 Hide the select
+            vendor_select.hide();
+
+            // 🔹 Remove existing manually-input if already added
+            $(obj).closest("tr").find("input.manually-cash").remove();
+
+            // 🔹 Add new input for manual cash entry
+            $('<input type="text" name="manual_cash_vendor" required class="form-control manually-cash" placeholder="Enter Vendor Name">')
+                .appendTo($(obj).closest("td").next("td"));
+
+
         }
     }
+
 
     function check_quotations(quotationId) {
         const url = new URL(window.location.href);
@@ -1353,11 +1447,13 @@ $quotation_paymente_mode = $this->db
 
         // Set university applicant fees
         const feesForYear = universityApplicantFeesArray[studyYear] || [];
+        console.log(feesForYear);
         feesForYear.forEach(fee => {
             const amountInput = document.querySelector(`.main-university-due .fees_${fee.fees_id}`);
             // if (!amountInput) return;
 
             if (fee.backend == 1) {
+                console.log(fee);
                 const currencySelect = document.querySelector(`.main-university-due .currency-selector-${fee.fees_id}`);
                 $(`.currency-selector-${fee.fees_id}`).val(fee.currency_id).trigger("change");
                 amountInput.value = formatCurrency(toFloat(fee.amount));
@@ -1742,6 +1838,17 @@ $quotation_paymente_mode = $this->db
             }
         });
 
+        $(document).on("keyup", ".manually-cash", function() {
+            let $row = $(this).closest("tr");
+            let vendor_select = $row.find("select[name='university_pay_vendor']");
+            vendor_select.empty();
+
+            let vendorName = $(this).val().trim();
+            if (vendorName !== "") {
+                vendor_select.append(`<option value="${vendorName}" selected>${vendorName}</option>`);
+            }
+        });
+
 
         // Setup event listeners
         const exchangeTableBody = document.getElementById("exchangeTableBody");
@@ -1783,12 +1890,18 @@ $quotation_paymente_mode = $this->db
         // Initial calculation
         // calculateInrValue();
 
-        <?php if (!empty($quotation_id)) {
-        ?>
+        <?php if (!empty($quotation_id)): ?>
             update_package_amount();
-        <?php
-
-        } ?>
-
+        <?php else: ?>
+            <?php
+            // Ensure $acadmic_year is valid before exploding
+            $acadmicYearParts = !empty($acadmic_year) ? explode("-", $acadmic_year) : [];
+            $acadmicYear = $acadmicYearParts[0] ?? '';
+            ?>
+            let acadmicYear = "<?= trim($acadmicYear) ?>";
+            if (acadmicYear == <?= Date("Y") ?>) {
+                $("#study_year").val(1).trigger("change");
+            }
+        <?php endif; ?>
     });
 </script>
