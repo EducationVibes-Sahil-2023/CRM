@@ -3449,11 +3449,13 @@ function filter_country_university_array($leadType)
 
     $CI->db->where('s.university_name!= ', null);
 
-    $CI->db->group_by('s.country_name, s.university_name');
+    $CI->db->group_by('s.country_name, s.university_name,c.addedfrom,t.id,ap.acadmic_year');
 
     $query = $CI->db->get();
     $result = $query->result_array();
-    $CI->db->last_query();
+    if(is_admin()){
+//   echo  $CI->db->last_query();
+    }
 
     $countries = [];
     $universities = [];

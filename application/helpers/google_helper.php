@@ -1482,6 +1482,95 @@ function leads_excel_sync($id = "")
     exit;
 }
 
+ function ma_quotations()
+{
+    $CI = &get_instance();
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    $columns = [
+        "Applicant Name",
+        "University Name",
+        "Acadmic Year",
+        "Year",
+        "Release to Counsollor",
+        "Dues",
+        "Fees",
+        "Currency",
+        "Amount",
+        "Payment Mode",
+        "Exchange Value",
+        "INR Values",
+        "Pay Mode",
+        "Pay Vendor",
+        "Quotation Label"
+    ];
+    $sheet_name = "Sheet 1";
+
+    try {
+        // ✅ Correct SQL (removed trailing comma before FROM)
+        $sql = "
+            SELECT 
+                CONCAT(bd.first_name, ' ', bd.last_name) AS applicant_name,
+                aq.university_name,
+                aq.acadmic_year,
+                CONCAT(aq.year, ' Year') AS year,
+                aq.release_to_counsellor,
+                aq.exchange_value,
+                aq.university_due,
+                aq.company_due,
+                CONCAT('Q', ROW_NUMBER() OVER (
+                    PARTITION BY aq.university_name, aq.client_id 
+                    ORDER BY aq.id ASC
+                )) AS quotation_label
+            FROM " . db_prefix() . "applicant_quotation_payment aq
+            JOIN " . db_prefix() . "basic_details bd 
+                ON aq.client_id = bd.userid
+        ";
+
+        $arrayData = $CI->db->query($sql)->result_array();
+
+        $dataArray = [[
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayData,
+            "company_dues_name" => array_column($CI->db->select("id,name")
+                ->from(db_prefix() . "company_dues_fees")
+                ->get()->result_array(),null,"id"),
+            "quotation_mode" => array_column($CI->db->select("*")
+                ->from(db_prefix() . "quotation_mode")
+                ->get()->result_array(),null,"id"),
+            "quotation_vendors" => array_column($CI->db->select("id,name")
+                ->from(db_prefix() . "quotation_vendor")
+                ->where("status", 1)
+                ->get()->result_array(),null,"id"),
+            "currency" => array_column($CI->db->select("id,name,symbol")
+                ->from(db_prefix() . "currencies")
+                ->order_by("isdefault", "DESC")
+                ->order_by("id", "ASC")
+                ->get()->result_array(),null,"id"),
+                "quotation_payment_mode" => array_column($CI->db->select("*")
+                ->from(db_prefix() . "quotation_paymente_mode")
+                ->get()->result_array(),null,"id"),
+                "company_dues_name" => array_column($CI->db->select("*")
+                ->from(db_prefix() . "company_dues_fees")
+                ->get()->result_array(),null,"id"),
+                
+        ]];
+
+        header('Content-Type: application/json');
+    echo json_encode($dataArray);
+    die;
+    } catch (Exception $e) {
+        header('Content-Type: application/json');
+        echo json_encode([
+            "status" => 0,
+            "message" => "Error: " . $e->getMessage(),
+            "data" => []
+        ]);
+    }
+
+    exit;
+}
 
 
 // Read data from sheet

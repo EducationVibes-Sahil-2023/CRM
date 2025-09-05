@@ -15,7 +15,7 @@ class Quotations extends AdminController
     {
 
         if ($this->input->is_ajax_request()) {
-            if (!has_permission('quotation', '', 'view')) {
+            if (!has_permission('quotation', '', 'view_own')) {
                 ajax_access_denied();
             }
             $this->app->get_table_data('university-quotation-mbbs-abroad');
@@ -62,7 +62,7 @@ class Quotations extends AdminController
 
             if ($quotation_id) {
                 echo json_encode([
-                    'resp_code'    => !empty($this->input->post('quotation_id')) ? 'RUS' : 'RCS',
+                    'resp_code'    => 'RCS',
                     'resp_desc'    => !empty($this->input->post('quotation_id'))
                         ? 'Quotation updated successfully.'
                         : 'Quotation created successfully.',
