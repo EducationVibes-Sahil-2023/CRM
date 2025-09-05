@@ -13,7 +13,14 @@ $aColumns = [
 
 // Dynamic applicant fees columns
 foreach ($university_applicant_fees as $fee) {
-    $aColumns[] = "CONCAT(IFNULL(SUM(CASE WHEN aqfd.fees_id = " . $fee['id'] . " THEN aqfd.amount ELSE 0 END), 0),' ',c.name) AS `" . $fee['quotation_name'] . "`";
+  $aColumns[] = "
+    CONCAT(
+        FORMAT(IFNULL(SUM(CASE WHEN aqfd.fees_id = " . $fee['id'] . " THEN aqfd.amount ELSE 0 END), 0), 2),
+        ' ',
+        COALESCE(MAX(CASE WHEN aqfd.fees_id = " . $fee['id'] . " THEN c.name END), '')
+    ) AS `" . $fee['quotation_name'] . "`
+";
+
 }
 
 $aColumns[] = db_prefix() . "university_quotation.id as id";

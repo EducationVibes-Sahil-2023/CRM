@@ -40,7 +40,7 @@ function app_init_admin_sidebar_menu_items()
         }
 
 
-        if (has_permission('quotation', '', 'view')) {
+        if (has_permission('quotation', '', 'view') || has_permission('quotation', '', 'view_own')) {
                 $CI->app_menu->add_sidebar_menu_item('quotation', [
                         'collapse' => true,
                         'name'     => "Quotations",

@@ -672,4 +672,38 @@ class Login_Controller extends Api_Controller
             throw new Exception($errorMessage);
         }
     }
+    
+public function quotations()
+{
+    $this->load->helper('google');
+
+    try {
+        $auto_sync = ma_quotations();
+
+        if (!empty($auto_sync)) {
+            // Pass data to sync function
+            $syncResult = syncExcel($auto_sync); // <-- assuming you have this helper to push data
+
+            if ($syncResult === true) {
+                $response = [
+                    'status'  => 1,
+                    'message' => 'Google sheet synced successfully.',
+                ];
+            } else {
+                $errorMessage = is_array($syncResult) ? reset($syncResult) : 'Sync failed due to unknown reason.';
+                throw new Exception($errorMessage);
+            }
+        } else {
+            throw new Exception('No data available to sync.');
+        }
+    } catch (Exception $e) {
+        $response = [
+            'status'  => 0,
+            'message' => $e->getMessage(),
+        ];
+    }
+
+    echo json_encode($response);
+}
+
 }
