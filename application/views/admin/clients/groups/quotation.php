@@ -1034,6 +1034,8 @@ $quotation_paymente_mode = $this->db
         vendor_select.empty();
         vendor_select.show();
         $(obj).closest("tr").find("input.manually-cash").hide();
+            $(obj).closest("tr").find("input.manually-cash").remove();
+
         // 🔹 Filter vendors by mode
         let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
@@ -1822,7 +1824,9 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
                     url.searchParams.delete("quotation_id");
                     window.location.replace(url.toString()); // redirect to new URL
                 }
-                // location.reload();
+                else{
+                location.reload();
+                }
             } else {
                 alert_float("danger", data.resp_desc)
 

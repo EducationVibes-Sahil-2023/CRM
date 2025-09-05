@@ -199,7 +199,8 @@ $get_currencies = array_column($get_currencies, null, 'id');
                 }
                 alert_float('success', response.resp_desc);
 
-                window.location.reload(); // or redirect
+                window.location.href = "<?= admin_url('quotations/mbbs_abroad') ?>";
+
 
             },
             error: function(xhr) {
