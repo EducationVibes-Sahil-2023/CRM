@@ -1,6 +1,10 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 
 <?php
+ if (!has_permission('customers', '', 'quotation_create')) {
+     echo "<h3>No Quotations</h3>";
+     die;
+ }
 $primary_university = $admissionpreferences->primary_university ?? "";
 $acadmic_year       = $admissionpreferences->acadmic_year ?? "";
 
@@ -148,30 +152,32 @@ $quotation_paymente_mode = $this->db
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="form-group">
-                            <?php
-                            // $year_options = array_map(fn($year) => ['id' => $year, 'name' => $year . ' Year'], range(1, 8));
+    <div class="form-group">
+        <?php
+        // Prepare year options (1 to 8, or from $years_array)
+        $year_options = array_map(fn($year) => [
+            'id'   => $year,
+            'name' => $year . ' Year'
+        ], $years_array);
 
-                            $year_options = array_map(fn($year) => [
-                                'id' => $year,
-                                'name' => $year . ' Year'
-                            ], $years_array);
-                            echo render_select(
-                                'study_year',
-                                $year_options,
-                                ['id', 'name'],
-                                'Year <small class="text-danger">*</small>',
-                                [$applicant_quotation_data->year ?? ''],
-                                [
-                                    'data-width' => '100%',
-                                    'data-none-selected-text' => "Year",
-                                    'required' => true,
-                                    "onchange" => "fetchApplicantFees(this.value)"
-                                ]
-                            );
-                            ?>
-                        </div>
-                    </div>
+        echo render_select(
+            'study_year',
+            $year_options,
+            ['id', 'name'],
+            html_entity_decode('Year <small class="text-danger">*</small>'),
+            $applicant_quotation_data->year ?? '',
+            [
+                'data-width'              => '100%',
+                'data-none-selected-text' => 'Select Year',
+                'required'                => true,
+                'onchange'                => 'fetchApplicantFees(this.value)',
+            ]
+        );
+        ?>
+    </div>
+</div>
+
+                  
                 </div>
 
                 <!-- Currency Exchange -->
@@ -1353,13 +1359,17 @@ $quotation_paymente_mode = $this->db
 
         // Set university applicant fees
         const feesForYear = universityApplicantFeesArray[studyYear] || [];
+        
         feesForYear.forEach(fee => {
             const amountInput = document.querySelector(`.main-university-due .fees_${fee.fees_id}`);
             // if (!amountInput) return;
 
             if (fee.backend == 1) {
+                console.log(fee);
                 const currencySelect = document.querySelector(`.main-university-due .currency-selector-${fee.fees_id}`);
-                $(`.currency-selector-${fee.fees_id}`).val(fee.currency_id).trigger("change");
+$(`.main-university-due .currency-selector-${fee.fees_id}`)
+  .val(String(fee.currency_id))  // make sure value matches string in <option>
+  .trigger("change");            // fire change event
                 amountInput.value = formatCurrency(toFloat(fee.amount));
             }
             if (fee.fees_id == 11) {
@@ -1377,10 +1387,11 @@ $quotation_paymente_mode = $this->db
         getClientsFees.forEach(fee => {
             // if (!amountInput) return;
             // console.log(fee);
+            if(fee.fees =1){
             const currencySelect = document.querySelector(`.main-university-due .currency-selector-${fee.id}`);
             $(`.main-university-due .currency-selector-${fee.id}`).val(fee.currency_id).trigger("change");
             $(`.main-university-due .fees_${fee.id}`).val(fee.amount);
-
+}
             if (<?= TOTAL_AMOUNT_ID ?> == fee.id) {
                 $("#universityDue input.total_service_charge").val(fee.amount);
             }
