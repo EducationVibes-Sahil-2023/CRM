@@ -289,7 +289,7 @@ if (!is_postSale() && !is_admin()) {
 
     let currencyHtml = `<?= $currencyHtml ?>`;
 
-    var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+    var apostille_documents_list = <?= !empty($$apostille_documents_new) ? json_encode(array_column($$apostille_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
 
     if (complete_application == 1) {
@@ -394,6 +394,9 @@ if (!is_postSale() && !is_admin()) {
         var apostille_status = true;
         var apostille_data = {};
         var is_valid = true;
+        var currency_id_apostile = $(".currency-selector-currency_type").first().val();
+        // Get text of the selected option
+        var currency_text_apostile = $(".currency-selector-currency_type option:selected").first().text();
 
         $('.apostille_status_update').find('input, select').each(function() {
             var name = $(this).attr("name");
@@ -446,7 +449,9 @@ if (!is_postSale() && !is_admin()) {
         var data = {
             ids,
             apostille_status,
-            ...apostille_data
+            ...apostille_data,
+            currency_id_apostile,
+            currency_text_apostile
         };
 
         $(event.target).prop('disabled', true);
