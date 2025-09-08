@@ -1045,7 +1045,7 @@ COALESCE(
                 ) AS apostille_summary ON apostille_summary.userid = c.userid ";
         }
         // Main SQL
-        
+
         // LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid and p.primary_university = u.university_name
         $sql = "SELECT {$selectColumnName}
                 FROM " . db_prefix() . "clients c
@@ -1482,7 +1482,7 @@ function leads_excel_sync($id = "")
     exit;
 }
 
- function ma_quotations()
+function ma_quotations()
 {
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
@@ -1492,6 +1492,11 @@ function leads_excel_sync($id = "")
         "University Name",
         "Acadmic Year",
         "Year",
+        "Status",
+        "App stage",
+        "App Sub Stage",
+        "Owner",
+        "Counsellor Name",
         "Release to Counsollor",
         "Dues",
         "Fees",
@@ -1521,9 +1526,20 @@ function leads_excel_sync($id = "")
                 CONCAT('Q', ROW_NUMBER() OVER (
                     PARTITION BY aq.university_name, aq.client_id 
                     ORDER BY aq.id ASC
-                )) AS quotation_label
+                )) AS quotation_label,
+                 s.name student_status,
+                 ts.name sub_stage,
+                 CONCAT(tt.id,' ',tt.name) application_stage,
+                 if(c.client_type=1,'EV','EVP') as client_type,
+                 CONCAT(st.firstname,' ',st.lastname) as counsellor_name
+                 
             FROM " . db_prefix() . "applicant_quotation_payment aq
             JOIN " . db_prefix() . "basic_details bd 
+            JOIN " . db_prefix() . "clients c 
+             LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+            LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+            LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+            LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
                 ON aq.client_id = bd.userid
         ";
 
@@ -1535,31 +1551,31 @@ function leads_excel_sync($id = "")
             "rowData"       => $arrayData,
             "company_dues_name" => array_column($CI->db->select("id,name")
                 ->from(db_prefix() . "company_dues_fees")
-                ->get()->result_array(),null,"id"),
+                ->get()->result_array(), null, "id"),
             "quotation_mode" => array_column($CI->db->select("*")
                 ->from(db_prefix() . "quotation_mode")
-                ->get()->result_array(),null,"id"),
+                ->get()->result_array(), null, "id"),
             "quotation_vendors" => array_column($CI->db->select("id,name")
                 ->from(db_prefix() . "quotation_vendor")
                 ->where("status", 1)
-                ->get()->result_array(),null,"id"),
+                ->get()->result_array(), null, "id"),
             "currency" => array_column($CI->db->select("id,name,symbol")
                 ->from(db_prefix() . "currencies")
                 ->order_by("isdefault", "DESC")
                 ->order_by("id", "ASC")
-                ->get()->result_array(),null,"id"),
-                "quotation_payment_mode" => array_column($CI->db->select("*")
+                ->get()->result_array(), null, "id"),
+            "quotation_payment_mode" => array_column($CI->db->select("*")
                 ->from(db_prefix() . "quotation_paymente_mode")
-                ->get()->result_array(),null,"id"),
-                "company_dues_name" => array_column($CI->db->select("*")
+                ->get()->result_array(), null, "id"),
+            "company_dues_name" => array_column($CI->db->select("*")
                 ->from(db_prefix() . "company_dues_fees")
-                ->get()->result_array(),null,"id"),
-                
+                ->get()->result_array(), null, "id"),
+
         ]];
 
         header('Content-Type: application/json');
-    echo json_encode($dataArray);
-    die;
+        echo json_encode($dataArray);
+        die;
     } catch (Exception $e) {
         header('Content-Type: application/json');
         echo json_encode([
