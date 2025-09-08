@@ -2091,7 +2091,8 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
                 $check_Apostille_data = $CI->db->get()->result_array();
 
 
-                if (!empty($check_Apostille_data)) {
+                if (!empty($check_Apostille_data) && $_POST["manual_status"] != 1) {
+
                     $user_id = $check_Apostille_data[0]["userid"];
                     $doc_id = $check_Apostille_data[0]["doc_id"];
                     $client_name = get_client_name($user_id);
@@ -2108,6 +2109,10 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
                 $CI->db->select("r.id,r.userid, r.doc_id")
                     ->from(db_prefix() . 'client_apostille_data r')
                     ->where_in('r.userid', $client_ids);
+
+                if (!empty($_POST["apostile_id"])) {
+                    $CI->db->where('r.id', $_POST["apostile_id"]);
+                }
 
                 if (!empty($document_ids)) {
                     $CI->db->where_in('r.doc_id', $document_ids);
@@ -2207,7 +2212,7 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
         $check_Apostille_data = $CI->db->get()->result_array();
 
 
-        if (!empty($check_Apostille_data)) {
+        if (!empty($check_Apostille_data) && $_POST["manual_status"] != 1) {
             $user_id = $check_Apostille_data[0]["userid"];
             $doc_id = $check_Apostille_data[0]["doc_id"];
             $client_name = get_client_name($user_id);
@@ -2227,6 +2232,10 @@ function get_orignal_document_data_list_apostille($client_ids_array = [], $docum
 
         if (!empty($document_ids)) {
             $CI->db->where_in('r.doc_id', $document_ids);
+        }
+
+        if (!empty($_POST["apostile_id"])) {
+            $CI->db->where('r.id', $_POST["apostile_id"]);
         }
 
         if (!empty($vendor_id)) {
@@ -3453,8 +3462,8 @@ function filter_country_university_array($leadType)
 
     $query = $CI->db->get();
     $result = $query->result_array();
-    if(is_admin()){
-//   echo  $CI->db->last_query();
+    if (is_admin()) {
+        //   echo  $CI->db->last_query();
     }
 
     $countries = [];

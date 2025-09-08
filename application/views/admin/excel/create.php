@@ -54,6 +54,7 @@ $academicYears = [
                                             <option value="1" <?php echo ($excelInfo->excel_type == "1") ? 'selected' : ''; ?>>MA Applicant</option>
                                             <option value="3" <?php echo ($excelInfo->excel_type == "3") ? 'selected' : ''; ?>>SA Applicant</option>
                                             <option value="2" <?php echo ($excelInfo->excel_type == "2") ? 'selected' : ''; ?>>Leads</option>
+                                            <option value="4" <?php echo ($excelInfo->excel_type == "4") ? 'selected' : ''; ?>>Visa</option>
                                         </select>
                                     </div>
 
