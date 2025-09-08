@@ -121,10 +121,20 @@ $quotation_paymente_mode = $this->db
                         ?>
                     </div>
                     <?php if (has_permission('customers', '', 'quotation_create')) { ?>
-                        <div class="form-group col-md-4 text-right  ">
+                        <div class="form-group col-md-3 text-right  ">
                             <label for="release_to_counsellor"><br>Release to Counsellor</label>
                             <input type="checkbox" value="1" id="release_to_counsellor" <?= !empty($applicant_quotation_data->release_to_counsellor) ? 'checked' : '' ?> name="release_to_counsellor">
                         </div>
+                        <?php if(!empty($quotation_id) && !empty($applicant_quotation_data)){ ?>
+                        <div class="form-group col-md-3 text-right  ">
+                            <button class="btn btn-primary" 
+        onclick="window.open('<?=$applicant_quotation_data->pdf?>', '_blank')">
+    <i class="fa fa-eye"></i>
+</button>
+
+                            <button class="btn btn-primary" onclick="GeneratePDF('<?=$client_id?>','<?=$quotation_id?>')">Generate PDF</button>
+                            </div>
+                            <?php } ?>
                     <?php } ?>
 
                 </div>
@@ -266,7 +276,7 @@ $quotation_paymente_mode = $this->db
                                 </div>
                                 <hr>
                                 <div class="main-university-due">
-                                    <table class="table table-bordered" id="feesTable">
+                                    <table class="table table-bordered university-feesTable" id="feesTable">
                                         <thead>
                                             <tr>
                                                 <th class="text-center">Fees Info</th>
@@ -423,7 +433,7 @@ $quotation_paymente_mode = $this->db
                                         <tfoot id="main-university-due-pay">
 
                                             <tr>
-                                                <td colspan="2">Pay To <small class="text-danger">*</small>
+                                                <td colspan="">Pay To <small class="text-danger">*</small>
 
                                                 </td>
                                                 <td>
@@ -480,6 +490,9 @@ $quotation_paymente_mode = $this->db
                                                     <?php endif; ?>
 
                                                 </td>
+                                                <td>
+                                                    <input type="input" readonly name="totalINRValue" class="form-control" value="<?=!empty($university_due_array["main"]['pay_info'][0]["totalINRValue"])?$university_due_array["main"]['pay_info'][0]["totalINRValue"]:0?>">
+                                                </td>
                                             </tr>
                                         </tfoot>
                                     </table>
@@ -499,7 +512,7 @@ $quotation_paymente_mode = $this->db
                                                     onclick="$(this).parents('.aditional-university-due-table').remove();">
                                                     <i class="fa fa-minus"></i> Remove Due
                                                 </button>
-                                                <table class="table table-bordered" id="feesTable">
+                                                <table class="table table-bordered university-feesTable" id="feesTable">
 
 
 
@@ -586,7 +599,7 @@ $quotation_paymente_mode = $this->db
                                                     </tbody>
                                                     <tfoot>
                                                         <tr>
-                                                            <td colspan="2">Pay To <small class="text-danger">*</small>
+                                                            <td colspan="1">Pay To <small class="text-danger">*</small>
                                                             </td>
                                                             <td>
                                                                 <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
@@ -640,6 +653,9 @@ $quotation_paymente_mode = $this->db
                                                                         value="<?= !empty($addition['pay_info'][0]["payVendor"]) ? htmlspecialchars($addition['pay_info'][0]["payVendor"], ENT_QUOTES, 'UTF-8') : '' ?>">
                                                                 <?php endif; ?>
                                                             </td>
+                                                             <td>
+                                                   <input type="input" readonly name="totalINRValue" class="form-control" value="<?=!empty($university_due_array["main"]['pay_info'][0]["totalINRValue"])?$university_due_array["main"]['pay_info'][0]["totalINRValue"]:0?>">
+                                                </td>
                                                         </tr>
                                                     </tfoot>
                                                 </table>
@@ -681,6 +697,7 @@ $quotation_paymente_mode = $this->db
                             </thead>
                             <tbody>
                                 <?php
+                                
                                 $mainInfo = !empty($company_due_array['main']["info"])
                                     ? array_values(array_filter($company_due_array['main']["info"]))
                                     : [];
@@ -691,13 +708,17 @@ $quotation_paymente_mode = $this->db
                                 foreach ($feesSource as $index => $fee):
                                     $labelName = strtolower(str_replace(" ", "_", $fee['label_name'] ?? $fee['name']));
                                     $isReadOnly = !empty($fee['readonly']) || $index === 0;
+                                     if($labelName == "" && $index ==0)
+                                    {
+                                        $labelName ="total_service_charge";
+                                    }
                                 ?>
                                     <tr class="<?= $index == 0 ? '' : 'calculate' ?>">
                                         <td>
                                             <?php if (!empty($fee['id'])): ?>
                                                 <input type="hidden" name="id" value="<?= htmlspecialchars($fee['id']) ?>">
                                             <?php endif; ?>
-                                            <select name="name[]" class="form-control name" <?= $index == 0 ? 'disabled' : '' ?>>
+                                            <select name="name[]" onchange="calculateInrValue();Change_companyDue(this);" class="form-control name" <?= $index == 0 ? 'disabled' : '' ?>>
                                                 <?php foreach ($company_dues_fees_array as $fees_data): ?>
                                                     <?php if ($fees_data["status"] == (!empty($index) ? 1 : 0)): ?>
                                                         <option
@@ -744,7 +765,7 @@ $quotation_paymente_mode = $this->db
                                                 <button type="button" onclick="university_due_add_column(this)" class="btn btn-primary">
                                                     <i class="fa fa-plus"></i>
                                                 </button>
-                                            <?php elseif ($index > 1): ?>
+                                            <?php elseif ($index >= 1): ?>
                                                 <button type="button" onclick="$(this).closest('tr').remove()" class="btn btn-danger">
                                                     <i class="fa fa-minus"></i>
                                                 </button>
@@ -873,7 +894,7 @@ $quotation_paymente_mode = $this->db
                                                     ?>
                                                     <tr class="calculate">
                                                         <td>
-                                                            <select name="name[]" class="form-control name">
+                                                            <select name="name[]" onchange="calculateInrValue();Change_companyDue(this);" class="form-control name">
                                                                 <?php foreach ($company_dues_fees_array as $fees_data): ?>
                                                                     <?php if (!empty($fees_data["status"])): ?>
                                                                         <option value="<?= htmlspecialchars($fees_data['id']) ?>"
@@ -910,11 +931,11 @@ $quotation_paymente_mode = $this->db
                                                                 class="form-control fee_value_inr <?= $labelName . '_inr' ?>"
                                                                 placeholder="0.00">
                                                             <?php if ($index === 0): ?>
-                                                                <button type="button" class="btn btn-primary btn-add-row">
+                                                                <button type="button"  onclick="university_due_add_column(this)" class="btn btn-primary btn-add-row">
                                                                     <i class="fa fa-plus"></i>
                                                                 </button>
                                                             <?php else: ?>
-                                                                <button type="button" class="btn btn-danger btn-remove-row">
+                                                                <button type="button" onclick="$(this).closest('tr').remove()" class="btn btn-danger btn-remove-row">
                                                                     <i class="fa fa-minus"></i>
                                                                 </button>
                                                             <?php endif; ?>
@@ -1180,7 +1201,7 @@ $quotation_paymente_mode = $this->db
                 <tbody>
                     <tr>
                         <td>
-                            <select name="name[]" class="form-control name">
+                            <select name="name[]" onchange="calculateInrValue();Change_companyDue(this);" class="form-control name">
                                 <?php foreach ($company_dues_fees_array as $fees_data): ?>
                                     <?php if (!empty($fees_data["status"]) && $fees_data["status"] == 1): ?>
                                         <option data-add="<?= $fees_data["add_flag"] ?>" value="<?= htmlspecialchars($fees_data['id']) ?>">
@@ -1257,7 +1278,7 @@ $quotation_paymente_mode = $this->db
         let html_tr = `
         <tr class="calculate">
             <td>
-                <select name="name[]" class="form-control name">
+                <select name="name[]" onchange="calculateInrValue();Change_companyDue(this);"  class="form-control name">
                     <?php foreach ($company_dues_fees_array as $fees_data): ?>
                         <?php if (!empty($fees_data["status"]) && $fees_data["status"] == 1): ?>
                             <option data-add="<?= $fees_data["add_flag"] ?>" value="<?= htmlspecialchars($fees_data['id']) ?>">
@@ -1297,41 +1318,68 @@ $quotation_paymente_mode = $this->db
 
 
     // --- Calculate INR values for all fee rows ---
-    function calculateInrValue() {
-        exchangeRates = {};
-        document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
-            const currencySelect = row.querySelector("select[name='exchange_currency[]']");
-            const amountInput = row.querySelector("input[name='exchange_value[]']");
+function calculateInrValue() {
+    let exchangeRates = {};
 
-            if (currencySelect && amountInput) {
-                const currencyId = currencySelect.value;
-                const rate = parseFloat(amountInput.value) || 0;
-                exchangeRates[currencyId] = rate;
-            }
-        });
-        // Update all fees with INR values
-        document.querySelectorAll("#feesTable .fee-row").forEach(feeRow => {
-            const feeId = feeRow.dataset.id;
-            const amountInput = feeRow.querySelector(`.fees_${feeId}`);
-            const currencySelect = feeRow.querySelector(`.currency-selector-${feeId}`);
-            const inrInput = feeRow.querySelector(`input[name$='_inr_value']`);
-            const exchangeInput = feeRow.querySelector(`input[name$='_exchangeValue']`);
+    // Build exchange rate map
+    document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
+        const currencySelect = row.querySelector("select[name='exchange_currency[]']");
+        const amountInput = row.querySelector("input[name='exchange_value[]']");
 
-            if (!amountInput || !currencySelect || !inrInput) return;
-
-            const amount = toFloat(amountInput.value);
+        if (currencySelect && amountInput) {
             const currencyId = currencySelect.value;
-            const exchangeRate = exchangeRates[currencyId] || 0;
+            const rate = parseFloat(amountInput.value) || 0;
+            exchangeRates[currencyId] = rate;
+        }
+    });
 
-            if (exchangeInput) exchangeInput.value = exchangeRate;
-            const safeRate = (exchangeRate && exchangeRate !== 0) ? exchangeRate : 1;
+    // 🔹 Update all fee rows inside each university table
+    document.querySelectorAll(".university-feesTable .fee-row").forEach(feeRow => {
+        const feeId = feeRow.dataset.id;
+        const amountInput = feeRow.querySelector(`.fees_${feeId}`);
+        const currencySelect = feeRow.querySelector(`.currency-selector-${feeId}`);
+        const inrInput = feeRow.querySelector(`input[name$='_inr_value']`);
+        const exchangeInput = feeRow.querySelector(`input[name$='_exchangeValue']`);
 
-            inrInput.value = formatCurrency(amount * safeRate);
+        if (!amountInput || !currencySelect || !inrInput) return;
+
+        const amount = toFloat(amountInput.value);
+        const currencyId = currencySelect.value;
+        const exchangeRate = exchangeRates[currencyId] || 0;
+
+        if (exchangeInput) exchangeInput.value = exchangeRate;
+
+        const safeRate = (exchangeRate && exchangeRate !== 0) ? exchangeRate : 1;
+        let inrAmount = amount * safeRate;
+
+        // Save raw numeric value in a data attribute (for totals)
+        inrInput.dataset.raw = inrAmount;
+
+        // Show formatted string for user
+        inrInput.value = formatCurrency(inrAmount);
+    });
+
+    // 🔹 Compute totals per university table
+    $(".university-feesTable").each(function () {
+        let totalValue = 0;
+
+        $(this).find("input[name$='_inr_value']").each(function () {
+            let raw = $(this).val();// safe numeric value
+            let val = parseFloat(raw) || 0;
+            totalValue += val;
         });
 
+        // Debug
+        // console.log("Table total:", totalValue);
 
-        updateUniversityDue();
-    }
+        // Set formatted total in the table’s totalINRValue input
+        $(this).find("input[name='totalINRValue']").val(formatCurrency(totalValue));
+    });
+
+    updateUniversityDue();
+}
+
+
 
     // --- Update University Due / Pending (table by table) ---
     function updateUniversityDue() {
@@ -1340,67 +1388,88 @@ $quotation_paymente_mode = $this->db
             document.querySelector("input.total_service_charge_inr")?.value || 0
         );
         let final_total_service_charge = total_service_charge;
-        // console.log(final_total_service_charge);
-        // Loop through each table
-        document.querySelectorAll("#universityDue, .aditional_university_dues table").forEach(table => {
-            let totalValue = 0;
-            let totalInr = 0;
+        
+        
+           let exchangeRates = {};
+            document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
+                const currencySelect = row.querySelector("select[name='exchange_currency[]']");
+                const amountInput = row.querySelector("input[name='exchange_value[]']");
 
-            // Loop rows inside this table
-            table.querySelectorAll("tbody tr").forEach(row => {
-                const selectEl = row.querySelector("select[name='name[]']");
-                const selectedOption = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
-                const addStatus = selectedOption ? parseInt(selectedOption.getAttribute("data-add")) : null;
-
-                const valueInput = row.querySelector("input[name='fee_value[]']");
-                const currencySelect = row.querySelector("select[name='fee_currency[]']");
-                const inrInput = row.querySelector("input[name='fee_value_inr[]']");
-
-                if (!valueInput || !currencySelect || !inrInput) return;
-
-                const value = toFloat(valueInput.value);
-                const currencyId = currencySelect.value;
-                const exchangeRate = exchangeRates[currencyId] || 1;
-                const inrValue = value * exchangeRate;
-
-                // Add raw value
-                totalValue += value;
-
-                // Only include if row belongs to an additional table
-                if (row.closest(".aditional_university_dues")) {
-                    totalInr += inrValue;
-                }
-
-                // Update INR field
-                inrInput.value = formatCurrency(inrValue);
-
-                // Adjust service charge based on data-add
-
-                if (!isNaN(addStatus)) {
-                    if (addStatus === 1) {
-                        if (!row.closest(".aditional_university_dues")) {
-                            final_total_service_charge += inrValue;
-                        }
-                    } else if (addStatus === 0) {
-                        final_total_service_charge -= inrValue;
-                    }
-
+                if (currencySelect && amountInput) {
+                    const currencyId = currencySelect.value;
+                    const rate = parseFloat(amountInput.value) || 0;
+                    exchangeRates[currencyId] = rate;
                 }
             });
-
-            // Update this table’s total pending input
-            const pendingInput = table.querySelector("input[name='total_pending_amount']");
-            if (pendingInput) {
-                pendingInput.value = formatCurrency(totalInr);
-            }
-        });
-
         // console.log(final_total_service_charge);
-        // Update global pending (main table)
-        const mainPending = document.querySelector("#universityDue input[name='total_pending_amount']");
-        if (mainPending) {
-            mainPending.value = formatCurrency(final_total_service_charge);
+        // Loop through each table
+        
+var check_firstServiceCharge = 0;
+
+document.querySelectorAll("#universityDue, .aditional_university_dues table").forEach((table, index) => {
+    let totalValue = 0;
+    let totalInr = 0;
+
+    // Loop rows inside this table
+    table.querySelectorAll("tbody tr").forEach(row => {
+        const selectEl = row.querySelector("select[name='name[]']");
+        const selectedOption = selectEl ? selectEl.options[selectEl.selectedIndex] : null;
+        const addStatus = selectedOption ? parseInt(selectedOption.getAttribute("data-add")) : null;
+
+        const valueInput = row.querySelector("input[name='fee_value[]']");
+        const currencySelect = row.querySelector("select[name='fee_currency[]']");
+        const inrInput = row.querySelector("input[name='fee_value_inr[]']");
+
+        if (!valueInput || !currencySelect || !inrInput) return;
+
+        const value = toFloat(valueInput.value);
+        const currencyId = currencySelect.value;
+        const exchangeRate = exchangeRates[currencyId] || 1;
+        const inrValue = value * exchangeRate;
+
+        // Add raw value
+        totalValue += value;
+        totalInr += inrValue; // ✅ always add to this table total
+
+        // Update INR field
+        inrInput.value = formatCurrency(inrValue);
+
+        // Adjust service charge based on data-add
+        if (!isNaN(addStatus)) {
+            if (addStatus === 1) {
+                if (!row.closest(".aditional_university_dues")) {
+                    final_total_service_charge += inrValue;
+                }
+            } else if (addStatus === 0) {
+                final_total_service_charge -= inrValue;
+                if (index === 0) {
+                    check_firstServiceCharge = 1;
+                }
+            }
         }
+    });
+
+    // For the first (main) table, deduct base service charge if not adjusted
+    if (index === 0 && check_firstServiceCharge === 0) {
+        totalInr = (totalInr - total_service_charge) < 0 ? 0 : totalInr - total_service_charge;
+    }
+
+    // Update this table’s total pending input
+    const pendingInput = table.querySelector("input[name='total_pending_amount']");
+    if (pendingInput) {
+        pendingInput.value = formatCurrency(totalInr);
+    }
+});
+
+// Update global pending (main table) if first service charge was adjusted
+if (check_firstServiceCharge === 1) {
+    const mainPending = document.querySelector("#universityDue input[name='total_pending_amount']");
+    if (mainPending) {
+        mainPending.value = formatCurrency(final_total_service_charge);
+    }
+}
+setNumberDecimal();
+
     }
 
 
@@ -1429,6 +1498,15 @@ $quotation_paymente_mode = $this->db
             feesForYear.forEach(fee => {
 
                 if (fee.fees_id == <?= PACKAGE_FEES_ID ?>) {
+            //   console.log(fee.amount);
+                if(fee.amount == 0)
+                {
+                    $(`.currency-selector-${fee.fees_id}`)
+  .closest("tr") // safer than .parent("tr")
+  .find("select, input")
+  .prop("disabled", true);
+
+                }
                     Orignal_package_amount = fee.amount;
                     Orignal_package_currency_id = fee.currency_id;
                     let exchangeRate = exchangeRates[fee.currency_id];
@@ -1461,16 +1539,25 @@ $quotation_paymente_mode = $this->db
             // if (!amountInput) return;
 
             if (fee.backend == 1) {
-                console.log(fee);
+                console.log("backend",fee);
                 const currencySelect = document.querySelector(`.main-university-due .currency-selector-${fee.fees_id}`);
 $(`.main-university-due .currency-selector-${fee.fees_id}`)
   .val(String(fee.currency_id))  // make sure value matches string in <option>
   .trigger("change");            // fire change event
                 amountInput.value = formatCurrency(toFloat(fee.amount));
             }
-            if (fee.fees_id == 11) {
+            if (fee.fees_id == <?= PACKAGE_FEES_ID ?>) {
                 Orignal_package_amount = fee.amount;
                 Orignal_package_currency_id = fee.currency_id;
+                console.log(fee.amount);
+                if(fee.amount == 0)
+                {
+                 $(`.currency-selector-${fee.fees_id}`)
+  .closest("tr") // safer than .parent("tr")
+  .find("select, input")
+  .prop("disabled", true);
+
+                }
                 // let exchangeRate = exchangeRates[fee.currency_id];
                 // let safeRate = (exchangeRate !== undefined && exchangeRate !== null) ? exchangeRate : 1;
 
@@ -1480,24 +1567,29 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
         });
 
 
-        getClientsFees.forEach(fee => {
-            // if (!amountInput) return;
-            // console.log(fee);
-            if(fee.fees =1){
-            const currencySelect = document.querySelector(`.main-university-due .currency-selector-${fee.id}`);
-            $(`.main-university-due .currency-selector-${fee.id}`).val(fee.currency_id).trigger("change");
-            $(`.main-university-due .fees_${fee.id}`).val(fee.amount);
-}
-            if (<?= TOTAL_AMOUNT_ID ?> == fee.id) {
-                $("#universityDue input.total_service_charge").val(fee.amount);
-            }
+      getClientsFees.forEach(fee => {
+    // Check if fee.fees == 1 AND fee.id is either 3 or 7
+    if (fee.fees == 1 && [3, 7].includes(parseInt(fee.id))) {
+        // Set currency selector
+        $(`.main-university-due .currency-selector-${fee.id}`)
+            .val(fee.currency_id)
+            .trigger("change");
 
-        });
+        // Set fee amount
+        $(`.main-university-due .fees_${fee.id}`).val(fee.amount);
+    }
+
+    // Handle TOTAL_AMOUNT_ID
+    if (parseInt(fee.id) === <?= TOTAL_AMOUNT_ID ?>) {
+        $("#universityDue input.total_service_charge").val(fee.amount);
+    }
+});
+
 
         // Set client fees
 
-        update_package_amount();
-        calculateInrValue();
+        // update_package_amount();
+        // calculateInrValue();
     }
 
     // --- Add/Remove Exchange Rows ---
@@ -1535,13 +1627,13 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
             const $selector = $(obj); // wrap in jQuery
 
             if ($selector.length === 0) {
-                console.warn("updateSymbol_: selector not found", obj, feeId);
+                // console.warn("updateSymbol_: selector not found", obj, feeId);
                 return;
             }
 
             const $selectedOption = $selector.find("option:selected");
             if ($selectedOption.length === 0) {
-                console.warn("updateSymbol_: no selected option", obj, feeId);
+                // console.warn("updateSymbol_: no selected option", obj, feeId);
                 return;
             }
 
@@ -1669,7 +1761,8 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
                 let rowData = {
                     payMode: $(this).find("select[name='university_pay_mode']").val() || null,
                     payVendor: $(this).find("select[name='university_pay_vendor']").val() || null,
-                    payAmount: $(this).find("input[name='university_pay_amount']").val() || null
+                    payAmount: $(this).find("input[name='university_pay_amount']").val() || null,
+                     totalINRValue: $(this).find("input[name='totalINRValue']").val() || null
                 };
                 university_dues.main.pay_info.push(rowData);
             });
@@ -1704,7 +1797,8 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
                     let rowData = {
                         payMode: $(this).find("select[name='university_pay_mode']").val() || null,
                         payVendor: $(this).find("select[name='university_pay_vendor']").val() || null,
-                        payAmount: $(this).find("input[name='university_pay_amount']").val() || null
+                        payAmount: $(this).find("input[name='university_pay_amount']").val() || null,
+                         totalINRValue: $(this).find("input[name='totalINRValue']").val() || null
                     };
                     tableGroup.pay_info.push(rowData);
                 });
@@ -1797,7 +1891,7 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
             formData.append("release_to_counsellor", $("#release_to_counsellor").is("checked") ? 1 : 0);
 
 
-            <?php if (!empty($quotation_id)) { ?>
+            <?php if (!empty($quotation_id) && !empty($applicant_quotation_data)) { ?>
                 formData.append("quotation_id", <?= !empty($quotation_id) ? $quotation_id : 0 ?>);
             <?php } ?>
             formData.append(csrfData.token_name, csrfData.hash);
@@ -1814,7 +1908,7 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
                 body: formData
             });
             const data = await response.json();
-            console.log(data);
+            // console.log(data);
             if (data.resp_code || data.resp_code === "RCS") {
                 alert_float("success", data.resp_desc)
                 let url = new URL(window.location.href);
@@ -1916,5 +2010,86 @@ $(`.main-university-due .currency-selector-${fee.fees_id}`)
                 $("#study_year").val(1).trigger("change");
             }
         <?php endif; ?>
+        
+   
+
+
     });
+    
+      function Change_companyDue(obj) {
+    let value = $(obj).val();              // selected fee id
+    let $row  = $(obj).closest("tr");      // current row
+
+    console.log("Selected fee ID:", value);
+
+    // Reset fields
+    $row.find("input[name='fee_value[]']").val(0);
+    $row.find("select[name='fee_currency[]']").val(3).trigger("change");
+
+    // Find fee in getClientsFees
+    let fee = getClientsFees.find(f => String(f.id) === String(value));
+
+    if (fee && fee.id == 3) {
+        // Set fee value safely
+        $row.find("input[name='fee_value[]']").val(fee.amount ?? 0);
+
+        // ✅ Set currency correctly
+        if (fee.currency_id) {
+            $row.find("select[name='fee_currency[]']")
+                .val(fee.currency_id)
+                .trigger("change"); // trigger recalculation (e.g. INR value update)
+        }
+    }
+
+    updateUniversityDue();
+    console.log("Row updated:", fee);
+}
+
+
+
+    function GeneratePDF(client_id, quotation_id) {
+    $.ajax({
+        url: "<?= admin_url('clients/quotationGenerate') ?>", // your controller method
+        type: "POST",
+        data: {
+            client_id: client_id,
+            quotation_id: quotation_id
+        },
+        beforeSend: function() {
+            // Optional: show loader
+            console.log("Generating PDF...");
+        },
+        success: function(response) {
+            response = JSON.parse(response);
+
+            // If backend returns PDF file URL
+            if (response.pdf_url) {
+                window.open(response.pdf_url, "_blank"); // Open in new tab
+            } else {
+                alert("PDF generated successfully.");
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error(error);
+            alert("Something went wrong. Please try again.");
+        }
+    });
+}
+
+function setNumberDecimal() {
+    $(document).on("focus", "input[name='fee_value[]'], .currency-amount", function () {
+        // Force input type="number" with step for 4 decimals
+        $(this).attr({
+            type: "number",
+            step: "0.0001",  // up to 4 decimals
+            min: "0"         // optional: prevent negative values
+        });
+    });
+}
+
+
+
+
+
+
 </script>
