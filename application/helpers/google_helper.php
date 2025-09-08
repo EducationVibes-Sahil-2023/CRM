@@ -1484,6 +1484,9 @@ function leads_excel_sync($id = "")
 
 function ma_quotations()
 {
+    ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 
@@ -1534,13 +1537,14 @@ function ma_quotations()
                  CONCAT(st.firstname,' ',st.lastname) as counsellor_name
                  
             FROM " . db_prefix() . "applicant_quotation_payment aq
-            JOIN " . db_prefix() . "basic_details bd 
-            JOIN " . db_prefix() . "clients c 
-             LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+           LEFT JOIN " . db_prefix() . "basic_details bd  ON aq.client_id = bd.userid
+           LEFT JOIN " . db_prefix() . "clients c on c.userid = aq.client_id
+            LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+            LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
             LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
             LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
             LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
-                ON aq.client_id = bd.userid
+               
         ";
 
         $arrayData = $CI->db->query($sql)->result_array();
