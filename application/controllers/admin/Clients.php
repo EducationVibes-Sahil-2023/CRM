@@ -9624,4 +9624,156 @@ class Clients extends AdminController
             ]);
         }
     }
+    
+   public function quotationGenerate()
+{
+    $client_id    = $this->input->post("client_id") ?? '';
+    $quotation_id = $this->input->post("quotation_id") ?? '';
+
+    try {
+        // -----------------------------
+        // Fetch applicant data
+        // -----------------------------
+        $sql = "
+            SELECT 
+                CONCAT(b.first_name, ' ', b.last_name) AS applicant_name,
+                ap.acadmic_year,
+                ap.primary_university,
+                ap.primary_country
+            FROM " . db_prefix() . "clients AS c
+            JOIN " . db_prefix() . "basic_details AS b 
+                ON c.userid = b.userid
+            JOIN " . db_prefix() . "admission_preferences AS ap 
+                ON ap.userid = c.userid
+            WHERE c.userid = ?
+        ";
+
+        $query = $this->db->query($sql, [$client_id]);
+        $data["applicantData"] = $query->row();
+
+        // -----------------------------
+        // Fetch bank accounts (re-index by id)
+        // -----------------------------
+        $sql_account = "SELECT * FROM " . db_prefix() . "quotation_vendor WHERE account_name != ''";
+        $query_account = $this->db->query($sql_account);
+        $data["bankAccounts"] = array_column($query_account->result_array(), null, "id");
+
+        // -----------------------------
+        // Fetch applicant quotation data
+        // -----------------------------
+        $data["applicant_quotation_data"] = $this->quotation_model->applicant_quotation_data($client_id, $quotation_id);
+
+        // -----------------------------
+        // Fetch fees details
+        // -----------------------------
+        $data["feesDetails"] = array_column(
+            $this->db
+                ->select('id, name, pdf_content, quotation_name')
+                ->from(db_prefix() . 'applicant_fees')
+                ->where("pdf_content !=", "")
+                ->order_by("pdf_sequence", "asc")
+                ->get()
+                ->result_array(),
+            null,
+            "id"
+        );
+
+        // -----------------------------
+        // Init TCPDF
+        // -----------------------------
+        stream_context_set_default([
+            'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+        ]);
+
+        $pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetCellHeightRatio(1.3);
+        $pdf->SetMargins(20, 10, 20, true);
+        $pdf->AddPage();
+
+        // Load custom fonts if needed
+        $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';
+        $path_book_antiqua = APPPATH . 'libraries/tcpdf/fonts/book-antiqua-bold.ttf';
+        $path_Cambria_Math = APPPATH . 'libraries/tcpdf/fonts/Cambria Math.ttf';
+        $path_Cambria      = APPPATH . 'libraries/tcpdf/fonts/Cambria/Cambria Bold 700.ttf';
+
+        $data["gillsansmt"]   = TCPDF_FONTS::addTTFfont($path_gill_sans_mt, 'TrueTypeUnicode', '', 15);
+        $data["book_antiqua"] = TCPDF_FONTS::addTTFfont($path_book_antiqua, 'TrueTypeUnicode', '', 15);
+        $data["Cambria_Math"] = TCPDF_FONTS::addTTFfont($path_Cambria_Math, 'TrueTypeUnicode', '', 15);
+        $data["Cambria"]      = TCPDF_FONTS::addTTFfont($path_Cambria, 'TrueTypeUnicode', '', 15);
+
+        $pdf->setCellPadding(0);
+        $pdf->setCellMargins(0, 0, 0, 2);
+        $pdf->setImageScale(1.6);
+
+        // -----------------------------
+        // Load HTML template into PDF
+        // -----------------------------
+        $html = $this->load->view('admin/pdf/quotation', $data, true);
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        // -----------------------------
+        // Save PDF to folder
+        // -----------------------------
+        $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/MA-Quotation/";
+
+        if (!is_dir($upload_dir)) {
+            if (!mkdir($upload_dir, 0777, true) && !is_dir($upload_dir)) {
+                echo json_encode(["status" => "error", "message" => "Failed to create upload directory."]);
+                return;
+            }
+        }
+
+        // $file_name = 'Quotation_' . time() . '.pdf';
+        
+        $file_name = $data["applicantData"]->applicant_name . " " .
+             $data["applicantData"]->primary_country . " " .
+             $data["applicantData"]->primary_university . " " .
+            $data["applicantData"]->acadmic_year . " " .
+            time() . '.pdf';
+
+$file_name = strtolower(str_replace(" ", "_", $file_name));
+
+
+        $file_path = $upload_dir . $file_name;
+
+        // Remove if exists
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+
+        // Save file
+        $pdf->Output($file_path, 'F');
+
+        if (!file_exists($file_path)) {
+            echo json_encode(["status" => "error", "message" => "Failed to generate PDF file."]);
+            return;
+        }
+
+        // -----------------------------
+        // Update quotation record (not clients!)
+        
+        // -----------------------------
+        $update_data = ["pdf" =>  base_url().APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/MA-Quotation/".$file_name];
+        $this->db->where(["client_id" => $client_id, "id" => $quotation_id]);
+        $this->db->update(db_prefix() . 'applicant_quotation_payment', $update_data);
+
+
+        // -----------------------------
+        // Return response
+        // -----------------------------
+        echo json_encode([
+            "status"   => "success",
+            "pdf_url"  => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $client_id . "/MA-Quotation/" . $file_name)
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            "status"  => "error",
+            "message" => $e->getMessage()
+        ]);
+    }
+}
+
 }

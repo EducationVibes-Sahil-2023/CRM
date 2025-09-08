@@ -15,7 +15,7 @@ $aColumns = [
 foreach ($university_applicant_fees as $fee) {
   $aColumns[] = "
     CONCAT(
-        FORMAT(IFNULL(SUM(CASE WHEN aqfd.fees_id = " . $fee['id'] . " THEN aqfd.amount ELSE 0 END), 0), 2),
+        FORMAT(IFNULL(MAX(CASE WHEN aqfd.fees_id = " . $fee['id'] . " THEN aqfd.amount ELSE 0 END), 0), 2),
         ' ',
         COALESCE(MAX(CASE WHEN aqfd.fees_id = " . $fee['id'] . " THEN c.name END), '')
     ) AS `" . $fee['quotation_name'] . "`
@@ -41,7 +41,7 @@ $join[] = 'LEFT JOIN ' . db_prefix() . 'applicant_quotation_fees_details aqfd
 $join[] = 'LEFT JOIN ' . db_prefix() . 'currencies c 
             ON c.id = aqfd.currency_id';
 
-$groupBy = "GROUP BY " . db_prefix() . "university_quotation.university_name, " . db_prefix() . "university_quotation.acadmic_year, " . db_prefix() . "university_quotation.year";
+$groupBy = "GROUP BY " . db_prefix() . "university_quotation.university_name, " . db_prefix() . "university_quotation.acadmic_year, " . db_prefix() . "university_quotation.year," . db_prefix() . "university_quotation.id";
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, [], [], $groupBy);
 $output  = $result['output'];
 $rResult = $result['rResult'];
