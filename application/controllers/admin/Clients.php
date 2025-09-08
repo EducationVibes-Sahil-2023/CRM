@@ -1485,6 +1485,7 @@ class Clients extends AdminController
                 die;
             } else if ($this->input->post('apostille_status') == "true") {
 
+
                 $documents_id = $this->input->post('apostille_document') ?? [];
                 $apostille_document_vendor = $this->input->post('apostille_document_vendor') ?? [];
                 $document_cost = $this->input->post('document_cost') ?? [];
@@ -1526,42 +1527,71 @@ class Clients extends AdminController
                 if (!empty($courier_date) && !empty($documents_id)) {
                     $check_status = 1; // insert new apostile data 
                 } else {
-                    if (!empty($receiving_date)) {
-                        $query = $this->db->select("r.id, r.userid, r.doc_id")
-                            ->from(db_prefix() . 'client_apostille_data r')
-                            ->where_in('r.userid', $ids)
-                            ->where('r.courier_date >', $receiving_date)
-                            ->get();
-
-                        if ($query->num_rows() > 0) {
-                            $ddata = $query->result_array();
-
-                            // Safely extract first row
-                            $userid   = $ddata[0]['userid'] ?? null;
-                            $doc_id   = $ddata[0]['doc_id'] ?? null;
-
-                            $client_name = $userid ? get_client_name($userid) : '';
-                            $doc_details = $doc_id ? (get_orignal_document_list('', '', '', $doc_id)[0] ?? []) : [];
-                            $doc_name = !empty($doc_details["name"]) ? $doc_details["name"] : "Unknown";
-                            $data = [
-                                'resp_code' => 'ERR',
-                                'resp_desc' => "{$client_name} {$doc_name} records already exist after the receiving date!",
-                                'client_name' => $client_name,
-                                'doc_details' => $doc_name,
-                            ];
-
-                            echo json_encode($data);
-                            exit; // use exit instead of die for cleaner code
-                        }
-                    }
-
-
-
                     $check_status = 2; // update apostile data 
                 }
-                // if (!empty($courier_date) && !empty($receiving_date)) {
-                //     $check_status = 2;
+
+                if (!empty($receiving_date)) {
+                    $query = $this->db->select("r.id, r.userid, r.doc_id")
+                        ->from(db_prefix() . 'client_apostille_data r')
+                        ->where_in('r.userid', $ids)
+                        ->where('r.courier_date >', $receiving_date)
+                        ->get();
+
+                    if ($query->num_rows() > 0) {
+                        $ddata = $query->result_array();
+
+                        // Safely extract first row
+                        $userid   = $ddata[0]['userid'] ?? null;
+                        $doc_id   = $ddata[0]['doc_id'] ?? null;
+
+                        $client_name = $userid ? get_client_name($userid) : '';
+                        $doc_details = $doc_id ? (get_orignal_document_list('', '', '', $doc_id)[0] ?? []) : [];
+                        $doc_name = !empty($doc_details["name"]) ? $doc_details["name"] : "Unknown";
+                        $data = [
+                            'resp_code' => 'ERR',
+                            'resp_desc' => "{$client_name} {$doc_name} records already exist after the receiving date!",
+                            'client_name' => $client_name,
+                            'doc_details' => $doc_name,
+                        ];
+
+                        echo json_encode($data);
+                        exit; // use exit instead of die for cleaner code
+                    }
+                }
+
+                // if (!empty($receiving_date)) {
+                //     $query = $this->db->select("r.id, r.userid, r.doc_id")
+                //         ->from(db_prefix() . 'client_apostille_data r')
+                //         ->where_in('r.userid', $ids)
+                //         ->where('r.courier_date >', $receiving_date)
+                //         ->get();
+
+                //     if ($query->num_rows() > 0) {
+                //         $ddata = $query->result_array();
+
+                //         // Safely extract first row
+                //         $userid   = $ddata[0]['userid'] ?? null;
+                //         $doc_id   = $ddata[0]['doc_id'] ?? null;
+
+                //         $client_name = $userid ? get_client_name($userid) : '';
+                //         $doc_details = $doc_id ? (get_orignal_document_list('', '', '', $doc_id)[0] ?? []) : [];
+                //         $doc_name = !empty($doc_details["name"]) ? $doc_details["name"] : "Unknown";
+                //         $data = [
+                //             'resp_code' => 'ERR',
+                //             'resp_desc' => "{$client_name} {$doc_name} records already exist after the receiving date!",
+                //             'client_name' => $client_name,
+                //             'doc_details' => $doc_name,
+                //         ];
+
+                //         echo json_encode($data);
+                //         exit; // use exit instead of die for cleaner code
+                //     }
                 // }
+
+                if (!empty($_POST["apostile_id"])) {
+                    $check_status = 2;
+                }
+
 
                 // else if (empty($courier_date) && empty($documents_id) && (!empty($receiving_date) || !empty($payment_date))) {
                 //     $check_status = 2; // update apostile data 
@@ -1606,6 +1636,7 @@ class Clients extends AdminController
                                 "by_vendor" => $by_vendor,
                                 "currency_type" => ($document_cost[$doc_id] != "") ? $currency_id_apostile : '',
                                 "currency_text" => ($document_cost[$doc_id] != "") ? $currency_text_apostile : '',
+                                "bulk" => empty($_POST["manual_status"]) ? 1 : 0,
                             ];
                             $doc_name = !empty($apostille_documents[$doc_id]['name']) ? $apostille_documents[$doc_id]['name'] : 'Unknown Document';
                             $cost = !empty($document_cost[$doc_id]) ? " with cost ₹{$document_cost[$doc_id]}" : '';
@@ -1677,6 +1708,9 @@ class Clients extends AdminController
                             $row["courier_date"] = $courier_date;
                         }
 
+                        if (!empty($_POST["manual_status"])) {
+                            $row["bulk"] = 0;
+                        }
 
 
 
@@ -9782,6 +9816,6 @@ class Clients extends AdminController
         $view = "applicant_quotation_released";
 
         // Load the corresponding table data
-        $this->app->get_table_data($view,["client_id"=>$client_id]);
+        $this->app->get_table_data($view, ["client_id" => $client_id]);
     }
 }

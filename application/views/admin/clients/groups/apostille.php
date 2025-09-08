@@ -5,7 +5,18 @@ $orignal_document_status  = orignal_document_status();
 $office_location  = $this->staff_model->office_location();
 $activity_apostille_document = activity_apostille_document($client_id);
 $apostille_documents = get_orignal_document_list(0, 0, 1);
+$apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
 $apostille_vendors = get_vendor_list(1);
+$get_currencies = get_currencies();
+$get_currencies = array_column($get_currencies, null, 'id');
+if (!is_array($apostille_documents)) {
+    $apostille_documents = [];
+}
+if (!is_array($apostille_visa_apostile_documents)) {
+    $apostille_visa_apostile_documents = [];
+}
+
+$apostille_documents_new = array_merge($apostille_documents, $apostille_visa_apostile_documents);
 array_unshift($apostille_vendors, array());
 
 // $client = $this->clients_model->get($id);
@@ -68,16 +79,28 @@ if (!is_postSale() && !is_admin()) {
                             <?php if (!empty($apostille_document)) : ?>
                                 <?php
                                 $index = 1;
-                                foreach ($apostille_document as $key => $doc) :
+                                foreach ($apostille_document as $key => $doc) :;
                                 ?>
                                     <tr>
-                                        <!-- <td>
-                                            <div class="checkbox">
-                                                <input type="hidden" name="received_id" value="<?= !empty($doc['received_id']) ? $doc['received_id'] : '' ?>">
-                                                <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
-                                            </div>
-                                        </td> -->
-                                        <td><?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
+
+                                        <td>
+                                            <?= $doc["name"] ?>
+
+                                            <?php if (!empty($doc["info"])): ?>
+                                                <i class="fa fa-info-circle" title="<?= htmlspecialchars($doc["info"]) ?>"></i>
+                                            <?php endif; ?>
+
+                                            <?php if (empty($doc["bulk"]) && !empty($doc["id"])): ?>
+                                                <br>
+                                                <a href="#"
+                                                    data-toggle="modal"
+                                                    data-target="#customers_apostille"
+                                                    onclick='updateApostileData(<?= $doc["id"] ?>, "<?= base64_encode(json_encode($doc)) ?>")'>
+                                                    Edit
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
+
                                         <td><?= !empty($doc["original_received"]) ? $doc["original_received"] : '' ?></td>
                                         <td><?= !empty($doc["apostille_cost"]) ? $doc["apostille_cost"] : '' ?></td>
                                         <td><?= !empty($doc["currency_text"]) ? $doc["currency_text"] : '' ?></td>
@@ -110,8 +133,8 @@ if (!is_postSale() && !is_admin()) {
 
                     <div class="pull-right">
                         <!-- <button type="button" class="btn btn-primary" onclick="check_update()">Update</button> -->
-                        <?php if (!empty($client->sc_100) && $client->sc_100 != 1) { ?>
-                            <a href="#" data-toggle="modal" data-target="#customers_apostille" class="bulk-actions-btn table-btn btn btn-primary ">processed</a>
+                        <?php if (is_postsale() || is_admin()) { ?>
+                            <a href="#" data-toggle="modal" data-target="#customers_apostille" onclick="updateApostileData()" class="bulk-actions-btn table-btn btn btn-primary ">processed</a>
                         <?php } ?>
                     </div>
                     <!-- <div class="col-md-3 pull-right">
@@ -177,8 +200,11 @@ if (!is_postSale() && !is_admin()) {
                         <div class="apostille_status_update">
                             <div class="row">
                                 <div class="col-md-4">
+                                    <input type="hidden" name="apostile_id" id="apostile_id" value="">
                                     <label>Apostille Vendor <small class='text-danger'>*</small></label>
-                                    <?php echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
+                                    <?php
+                                    array_unshift($apostille_vendors, array());
+                                    echo render_select('apostille_vendor', $apostille_vendors, ['id', 'name'], '', [], [
                                         'data-width' => '100%',
                                         'data-none-selected-text' => 'Vendor',
                                         'data-actions-box' => true,
@@ -188,7 +214,7 @@ if (!is_postSale() && !is_admin()) {
                                 </div>
                                 <div class="col-md-4">
                                     <label>Apostille Documents <small class='text-danger'>*</small></label>
-                                    <?php echo render_select('apostille_document[]', $apostille_documents, ['id', 'name'], '', [], [
+                                    <?php echo render_select('apostille_document[]', $apostille_documents_new, ['id', 'name'], '', [], [
                                         'data-width' => '100%',
                                         'data-none-selected-text' => 'Documents',
                                         'multiple' => true,
@@ -198,6 +224,16 @@ if (!is_postSale() && !is_admin()) {
                                         'onchange' => 'document_cost_div(this)'
 
                                     ], [], 'no-mbot', '', false, 'apostille_document'); ?>
+                                </div>
+                                <div class="col-md-4">
+                                    <label>Documents By Vender</label>
+                                    <?php echo render_select('apostille_document_vendor[]', $apostille_documents_new, ['id', 'name'], '', [], [
+                                        'data-width' => '100%',
+                                        'data-none-selected-text' => 'Documents',
+                                        'multiple' => true,
+                                        'data-actions-box' => true,
+
+                                    ], [], 'no-mbot', '', false, 'apostille_document_vendor'); ?>
                                 </div>
                                 <div class="col-md-4">
                                     <label>Courier Date</label>
@@ -232,13 +268,103 @@ if (!is_postSale() && !is_admin()) {
         </div>
     </div>
 </div>
+
 <?php init_tail(); ?>
 <script>
+    <?php
+    $currencyHtml = '<div class="input-group-addon currency-addon">
+    <select name="currency_type[]" id="currency_type" class="currency-selector currency-selector-currency_type" onchange="updateSymbol(this.value)">
+';
+
+    foreach ($get_currencies as $c) {
+        $selected = (!empty($fees['currency_id']) && $fees['currency_id'] == $c['id']) ||
+            (empty($fees['currency_id']) && !empty($c['default_currency']) && $c['default_currency'] == $c['id'])
+            ? 'selected' : '';
+
+        $currencyHtml .= '<option data-symbol="' . $c['symbol'] . '" value="' . $c['id'] . '" data-placeholder="0.00" ' . $selected . '>' . $c['name'] . '</option>';
+    }
+
+    $currencyHtml .= '</select></div>';
+    ?>
+
+    let currencyHtml = `<?= $currencyHtml ?>`;
+
     var apostille_documents_list = <?= !empty($apostille_documents) ? json_encode(array_column($apostille_documents, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
 
     if (complete_application == 1) {
 
+    }
+
+    function updateApostileData(id = "", encodedDoc = "") {
+        // Reset the form
+        $("#apostille-document-form")[0].reset();
+        $(".doc-cost-section").html('');
+
+        // Reset and refresh all selectpickers inside the form
+        $('#apostille-document-form .selectpicker').val('').prop("disabled", false).selectpicker('refresh');
+
+        setTimeout(() => {
+            $("#apostile_id").val(id);
+            const apostileData = JSON.parse(atob(encodedDoc));
+
+            let {
+                doc_id,
+                vendor_id,
+                by_vendor,
+                courier_date,
+                apostille_received,
+                payment_date,
+                apostille_cost,
+                currency_type
+            } = apostileData;
+
+            // Vendor dropdown
+            if ($("#apostille_vendor").length) {
+                $("#apostille_vendor")
+                    .val(vendor_id)
+                    .selectpicker("refresh");
+            }
+
+            // Document dropdown
+            if ($("#apostille_document").length) {
+                $("#apostille_document")
+                    .val(doc_id)
+                    .prop("disabled", true) // disable select
+                    .selectpicker("refresh").trigger("change");
+            }
+
+            // Vendor-specific document dropdown
+            if (by_vendor == 1 && $("#apostille_document_vendor").length) {
+                $("#apostille_document_vendor")
+                    .val(doc_id)
+                    .prop("disabled", true)
+                    .selectpicker("refresh");
+            }
+
+            // Dates
+            $("#apostille_date").val(courier_date || "");
+            $("#apostille_receiving_date").val(apostille_received || "");
+            $("#apostille_payment_date").val(payment_date || "");
+
+            setTimeout(() => {
+                // Cost input
+                let costInput = $(`input[name='document_cost[${doc_id}]']`);
+                if (costInput.length) {
+                    costInput.val(apostille_cost || "");
+                }
+
+                // Currency type input (assuming it's a separate input/select aligned with cost)
+                let currencyInput = $(`select[name='currency_type[${doc_id}]'], input[name='currency_type[${doc_id}]']`);
+                if (currencyInput.length) {
+                    currencyInput.val(currency_type || "").selectpicker?.("refresh");
+                }
+            }, 200);
+
+
+
+
+        }, 100);
     }
 
     function document_cost_div(obj) {
@@ -254,8 +380,10 @@ if (!is_postSale() && !is_admin()) {
             $(".doc-cost-section").append(`
             <div class='col-md-4' id='cost-doc-div-${doc_id}'>
                 <label>${doc.name} Cost</label>
-                <div class='form-group'>
-                    <input class='form-control' type='number' placeholder='100' name='document_cost[${doc.id}]'>
+                                                                    <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+
+                    <input class='form-control' type='number' data-name='${doc.name} Cost' placeholder='100' name='document_cost[${doc.id}]'>
+                    ${currencyHtml}
                 </div>
             </div>
         `);
@@ -268,21 +396,44 @@ if (!is_postSale() && !is_admin()) {
         var is_valid = true;
 
         $('.apostille_status_update').find('input, select').each(function() {
-            var name = $(this).attr('name');
-            var required = $(this).attr('required') || $(this).attr('requried');
+            var name = $(this).attr("name");
+            var show_name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
-
+            var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
                 apostille_data[name] = value;
             }
-
+            // console.log(value);
+            // console.log(required);
             if (required && !String(value).trim()) {
                 $(this).focus();
-                alert_float("warning", "Please fill the required field: " + name);
+                alert_float("warning", "Please fill the required field: " + show_name);
                 is_valid = false;
                 return false; // Exit loop early
             }
         });
+        apostille_data["manual_status"] = 1;
+        apostille_data["apostile_id"] = $("#apostile_id").val();
+
+
+        let ApostileDocuments = $("#apostille_document").val() || [];
+        let ApostileDocumentVendor = $("#apostille_document_vendor").val() || [];
+
+        // Ensure both are arrays
+        ApostileDocuments = Array.isArray(ApostileDocuments) ? ApostileDocuments.map(String) : [String(ApostileDocuments)];
+        ApostileDocumentVendor = Array.isArray(ApostileDocumentVendor) ? ApostileDocumentVendor.map(String) : [String(ApostileDocumentVendor)];
+
+        // Find vendor docs not in selected docs
+        let notFound = ApostileDocumentVendor.filter(id => !ApostileDocuments.includes(id));
+
+        if (notFound.length > 0) {
+            let docName = apostille_documents_list[notFound[0]]['name'] || `ID ${notFound[0]}`;
+            alert_float("warning", `Please select the Apostille document: ${docName} before choosing a vendor documents.`);
+            is_valid = false;
+            return false; // Exit loop early
+        }
+
+
 
 
         if (!is_valid) return false;
@@ -290,6 +441,7 @@ if (!is_postSale() && !is_admin()) {
         if (!confirm(app.lang.confirm_action_prompt)) return false;
 
         var ids = [<?= $client_id ?>];
+
 
         var data = {
             ids,
