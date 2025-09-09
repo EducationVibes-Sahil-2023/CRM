@@ -289,7 +289,7 @@ if (!is_postSale() && !is_admin()) {
 
     let currencyHtml = `<?= $currencyHtml ?>`;
 
-    var apostille_documents_list = <?= !empty($$apostille_documents_new) ? json_encode(array_column($$apostille_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
+    var apostille_documents_list = <?= !empty($apostille_documents_new) ? json_encode(array_column($apostille_documents_new, null, 'id'), JSON_UNESCAPED_UNICODE) : '[]' ?>;
     var complete_application = " <?= !empty($client->sc_100) && $client->sc_100 == 1 ? 1 : 0 ?>";
 
     if (complete_application == 1) {
