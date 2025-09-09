@@ -843,7 +843,8 @@ function syncExcel_neww($id = "")
             sa_excel_sync($id);
             die;
         }
-        if ((int) $sheet['excel_type'] !== 4) {
+        if ((int) $sheet['excel_type'] === 4) {
+     
             visa_excel_sync($id);
             die;
         }
@@ -1166,6 +1167,7 @@ LEFT JOIN (
 
 function visa_excel_sync($id = "")
 {
+
     $CI = &get_instance();
 
     // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
@@ -1232,56 +1234,45 @@ function visa_excel_sync($id = "")
         // Build conditions
         $condition_sql = "";
         if (!empty($fromDate) && !empty($toDate)) {
-            $condition_sql .= " AND (" . db_prefix() . "clients.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
+            $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (" . db_prefix() . "admission_preferences.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
-
-        $condition_sql .= " AND " . db_prefix() . "leads.type = 1 ";
-
-        $sql = " SELECT {$selectColumnName}
-FROM " . db_prefix() . "visa_details
-LEFT JOIN " . db_prefix() . "clients ON " . db_prefix() . "clients.userid = " . db_prefix() . "visa_details.userid
-LEFT JOIN " . db_prefix() . "basic_details ON " . db_prefix() . "basic_details.userid = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "applicant_status ON " . db_prefix() . "applicant_status.id = " . db_prefix() . "clients.active
-LEFT JOIN " . db_prefix() . "leads ON (" . db_prefix() . "leads.id = " . db_prefix() . "clients.leadid AND " . db_prefix() . "leads.type = 1)
-LEFT JOIN " . db_prefix() . "staff ON " . db_prefix() . "leads.assigned = " . db_prefix() . "staff.staffid
-LEFT JOIN " . db_prefix() . "leads_status ON " . db_prefix() . "leads_status.id = " . db_prefix() . "leads.status
-LEFT JOIN " . db_prefix() . "leads_type ON " . db_prefix() . "leads_type.id = " . db_prefix() . "leads.type
-LEFT JOIN " . db_prefix() . "leads_sources ON " . db_prefix() . "leads_sources.id = " . db_prefix() . "leads.source
-LEFT JOIN " . db_prefix() . "applicant_tracker ON " . db_prefix() . "applicant_tracker.id = (" . db_prefix() . "clients.applicant_status + 1)
-LEFT JOIN " . db_prefix() . "admission_preferences ON " . db_prefix() . "admission_preferences.userid = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "client_university_shortlisting ON (" . db_prefix() . "client_university_shortlisting.client_id = " . db_prefix() . "clients.userid AND " . db_prefix() . "client_university_shortlisting.status = 1)
-LEFT JOIN " . db_prefix() . "application_status ON " . db_prefix() . "application_status.id = " . db_prefix() . "client_university_shortlisting.application_status
-LEFT JOIN " . db_prefix() . "applicant_fees_details ON " . db_prefix() . "applicant_fees_details.client_id = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "applicant_fees ON " . db_prefix() . "applicant_fees.id = " . db_prefix() . "applicant_fees_details.fees_id
-LEFT JOIN " . db_prefix() . "currencies ON " . db_prefix() . "currencies.id = " . db_prefix() . "applicant_fees_details.currency_id
-LEFT JOIN " . db_prefix() . "sa_applicant_stages stage_category ON stage_category.id = " . db_prefix() . "clients.applicant_stage
-LEFT JOIN " . db_prefix() . "application_sub_category_study stage_sub_category ON stage_sub_category.id = " . db_prefix() . "clients.applicant_sub_status
-LEFT JOIN " . db_prefix() . "client_passport_details ON " . db_prefix() . "client_passport_details.client_id = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "passport_stages ON " . db_prefix() . "passport_stages.id = " . db_prefix() . "client_passport_details.passport_status
-LEFT JOIN " . db_prefix() . "academic_details ON " . db_prefix() . "academic_details.userid = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "visa_details ON " . db_prefix() . "visa_details.userid = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "sa_applicant_stages u_stage_category ON u_stage_category.id = " . db_prefix() . "client_university_shortlisting.applicant_stage
-LEFT JOIN " . db_prefix() . "application_sub_category_study u_stage_sub_category ON u_stage_sub_category.id = " . db_prefix() . "client_university_shortlisting.applicant_sub_status
-LEFT JOIN " . db_prefix() . "visa_status ON " . db_prefix() . "visa_status.id = " . db_prefix() . "visa_details.status
-LEFT JOIN " . db_prefix() . "vendor_study_abroad ON " . db_prefix() . "vendor_study_abroad.id = " . db_prefix() . "client_university_shortlisting.vendor_id
-LEFT JOIN " . db_prefix() . "admission_program ON " . db_prefix() . "admission_program.id = " . db_prefix() . "admission_preferences.degree
-LEFT JOIN (SELECT client_id, shortlisting_id, SUM(payment_amount) AS total_payment_amount, MAX(id) AS latest_deposite_id, MAX(date_of_deposite) AS latest_deposite_date, MAX(currency_type) AS currency_type FROM " . db_prefix() . "applicntion_pre_deposite GROUP BY client_id, shortlisting_id) AS deposit_summary ON deposit_summary.client_id = " . db_prefix() . "clients.userid
-LEFT JOIN " . db_prefix() . "offer_condition ON " . db_prefix() . "offer_condition.client_id = " . db_prefix() . "clients.userid AND " . db_prefix() . "offer_condition.university_id = " . db_prefix() . "client_university_shortlisting.university_id
-LEFT JOIN " . db_prefix() . "university_offer_letter ON " . db_prefix() . "university_offer_letter.client_id = " . db_prefix() . "clients.userid
-LEFT JOIN (SELECT td1.*, td2.total_cost FROM " . db_prefix() . "ticket_data td1 INNER JOIN (SELECT MAX(id) AS max_id, SUM(ticket_cost) total_cost FROM " . db_prefix() . "ticket_data GROUP BY client_id) td2 ON td1.id = td2.max_id) td ON td.client_id = " . db_prefix() . "clients.userid
+$condition_sql ="";
+        $condition_sql .= " AND ((l.type = 1 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
+        
+$sql = "SELECT {$selectColumnName}
+FROM " . db_prefix() . "ticket_data td
+LEFT JOIN " . db_prefix() . "clients c ON c.userid = td.client_id
+ LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
+  LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
+LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
+LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 1)
+LEFT JOIN " . db_prefix() . "staff st ON c.addedfrom = st.staffid
+LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
+LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+LEFT JOIN " . db_prefix() . "client_university_shortlisting us ON (us.client_id = c.userid AND us.status = 1)
+LEFT JOIN " . db_prefix() . "application_status appst ON appst.id = us.application_status
+LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid
+LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status
+LEFT JOIN " . db_prefix() . "visa_details vd ON vd.userid = c.userid
+LEFT JOIN " . db_prefix() . "visa_status vs ON vs.id = vd.status
 LEFT JOIN " . db_prefix() . "ticket_status ts ON ts.id = td.ticket_status
 LEFT JOIN " . db_prefix() . "departure_location dl ON dl.id = td.departure_location
 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
-LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = " . db_prefix() . "client_university_shortlisting.partner
-LEFT JOIN (SELECT client_id, shortlisting_id, tracker_id, IFNULL(COUNT(DISTINCT id), 0) AS totalPendency FROM tblclient_university_pendency WHERE status = 1 GROUP BY client_id, shortlisting_id, tracker_id) AS total_pendency ON total_pendency.client_id = tblclients.userid AND total_pendency.shortlisting_id = tblclient_university_shortlisting.id AND tblclient_university_shortlisting.tracker_id + 1 = total_pendency.tracker_id
+LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
+LEFT JOIN " . db_prefix() . "departure_location tdl ON tdl.id = td.departure_location
+
 WHERE 1=1 {$condition_sql}
-GROUP BY " . db_prefix() . "clients.userid";
+GROUP BY c.userid";
+
+
 
 
         $sql = preg_replace('/\s+/', ' ', trim($sql));
+       
         $query = $CI->db->query($sql);
 
         $arrayData = $query->result_array();
@@ -1310,7 +1301,11 @@ GROUP BY " . db_prefix() . "clients.userid";
             "workSheetName" => $sheet_name,
             "rowData"       => $arrayDataValues
         ];
+         header('Content-Type: application/json');
+    echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
     }
+     
 }
 
 function sa_excel_sync($id = "")

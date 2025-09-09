@@ -76,7 +76,7 @@ $academicYears = [
                                             value="<?php echo ($excelInfo->toDate != "0000-00-00") ? $excelInfo->toDate : ''; ?>">
                                     </div>
 
-                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma applicant-sa">
+                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma applicant-sa visa-data">
                                         <label for="acadmic_year">Academic Year</label>
                                         <select class="form-control" name="acadmic_year" id="acadmic_year" required>
                                             <option value="">-- Select Academic Year --</option>
@@ -96,7 +96,7 @@ $academicYears = [
                                             value="<?php echo htmlspecialchars($excelInfo->sheet_name); ?>" required>
                                     </div>
 
-                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma">
+                                    <div class="col-md-2 mb-3 form-group hide-options applicant-ma visa-data">
                                         <label for="sql_condition">Select Type</label>
                                         <select name="sql_condition" id="sql_condition" class="form-control selectpicker" required>
                                             <option value="" data-id="">Select</option>
@@ -221,6 +221,10 @@ $academicYears = [
             $(".applicant-sa").show();
             $(".excel-type-3").show();
         }
+        else if (type === "4" || type === 4) {
+            $(".visa-data").show();
+            $(".excel-type-4").show();
+        }
     }
 
 
@@ -343,6 +347,10 @@ $academicYears = [
         } else if (excel_type === "3" || excel_type === 3) {
             $(".applicant-sa").show();
             $(".excel-type-3").show();
+        }
+        else if (type === "4" || type === 4) {
+            $(".visa-data").show();
+            $(".excel-type-4").show();
         }
     });
 </script>
