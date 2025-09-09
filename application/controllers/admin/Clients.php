@@ -1445,7 +1445,6 @@ class Clients extends AdminController
     public function bulk_action()
     {
 
-        die;
         $apostille_documents = array_column(get_orignal_document_list(0, 0, 1), null, "id");
         $apostille_vendors = array_column(get_vendor_list(), null, "id");
         hooks()->do_action('before_do_bulk_action_for_customers');
