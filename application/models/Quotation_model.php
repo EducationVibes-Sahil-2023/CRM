@@ -158,4 +158,27 @@ class Quotation_model extends App_Model
             return [];
         }
     }
+
+    public function applicant_payment_data($client_id, $payment_id = "")
+    {
+        try {
+            $this->db->select("*")
+                ->from(db_prefix() . "payment_quotations")
+                ->where("client_id", $client_id);
+
+            if (!empty($payment_id)) {
+                $this->db->where("id", $payment_id);
+            }
+
+            // Optional: only active records (if you store a status column)
+            // $this->db->where("status", 1);
+
+            $query = $this->db->get();
+
+            return !empty($payment_id) ? $query->row() : $query->result_array();
+        } catch (Exception $e) {
+            log_message('error', 'Error fetching applicant payment data: ' . $e->getMessage());
+            return [];
+        }
+    }
 }
