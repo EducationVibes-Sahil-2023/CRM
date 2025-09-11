@@ -845,8 +845,10 @@ function syncExcel_neww($id = "")
         }
         if ((int) $sheet['excel_type'] === 4) {
      
-            visa_excel_sync($id);
-            die;
+            $dataArray[] = fly_excel_sync($id);
+            
+             continue;
+            // die;
         }
         if ((int) $sheet['excel_type'] !== 1) {
             continue;
@@ -1103,6 +1105,11 @@ LEFT JOIN (
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
+                LEFT JOIN " . db_prefix() . "ticket_data td  ON c.userid = td.client_id
+                LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
+                LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
+                LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
+                
                {$apostile_query} 
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid {$group_by}   Order by c.userid";
@@ -1153,9 +1160,11 @@ LEFT JOIN (
 
         // Add to final array
         $dataArray[] = [
+            "currentId"=>$currentId,
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
-            "rowData"       => $arrayDataValues
+            "rowData"       => $arrayDataValues,
+            
         ];
     }
 
@@ -1165,7 +1174,7 @@ LEFT JOIN (
     exit;
 }
 
-function visa_excel_sync($id = "")
+function fly_excel_sync($id = "")
 {
 
     $CI = &get_instance();
@@ -1296,14 +1305,14 @@ GROUP BY c.userid";
             'lastSync' => date('Y-m-d H:i:s')
         ]);
         // Add to final array
-        $dataArray[] = [
+      return  $dataArray[] = [
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
             "rowData"       => $arrayDataValues
         ];
-         header('Content-Type: application/json');
-    echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    exit;
+    //      header('Content-Type: application/json');
+    // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    // exit;
     }
      
 }
@@ -1656,7 +1665,8 @@ function ma_quotations()
         "INR Values",
         "Pay Mode",
         "Pay Vendor",
-        "Quotation Label"
+        "Quotation Label",
+         "USD Rate"
     ];
     $sheet_name = "Sheet 1";
 

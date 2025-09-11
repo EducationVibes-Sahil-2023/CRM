@@ -83,6 +83,7 @@ class Fly_model extends App_Model
 
     public function check_batch($where)
     {
+         return [];
         try {
             $result = $this->db->select("id")
                 ->from(db_prefix() . "ticket_batch")

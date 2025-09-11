@@ -116,7 +116,16 @@ if (!empty($batch_data["client_ids"])) {
                         </div>
 
                         <div class="form-group col-md-3">
-                            <?php echo render_input('batch_name', 'Fly Ticket Batch ', $batch_name, "text", array()); ?>
+                            <?php 
+                            $batch_names = [];
+for ($i = 1; $i <= 10; $i++) {
+    $batch_names[] = [
+        'id'   => 'Batch ' . $i,
+        'name' => 'Batch ' . $i
+    ];
+}
+                            ?>
+                            <?php echo render_select('batch_name', $batch_names, array('id', 'name'), "Batch Name", [$batch_name]); ?>
                         </div>
 
 
