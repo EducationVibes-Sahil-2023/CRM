@@ -404,7 +404,7 @@ $CI->app_menu->add_sidebar_menu_item('batch_create', [
 
         
 
-        if (has_permission('academic', '', 'view')) {
+        // if (has_permission('academic', '', 'view')) {
                 $CI->app_menu->add_sidebar_menu_item('academic', [
                         'collapse' => true,
                         'icon'     => 'fa fa-user-o',
@@ -454,7 +454,7 @@ $CI->app_menu->add_sidebar_menu_item('batch_create', [
                         'position' => 15,
                 ]);
         }
-        }
+        // }
 
         // Setup menu
         if (has_permission('staff', '', 'view')) {

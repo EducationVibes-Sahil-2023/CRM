@@ -111,10 +111,10 @@ class Fly_batch extends AdminController
             $departure_location = $this->input->post("departure_location", true);
             $manually = $this->input->post("manually", true);
 
-            check_invitation_letter($client_list);
-            check_neet_Aff($client_list);
-            check_name_Aff($client_list);
-            check_minor_Aff($client_list);
+            // check_invitation_letter($client_list);
+            // check_neet_Aff($client_list);
+            // check_name_Aff($client_list);
+            // check_minor_Aff($client_list);
 
             // If manually is 1, process only ticket creation
             if ((int)$manually === 1) {
@@ -160,16 +160,17 @@ class Fly_batch extends AdminController
             if (!empty($batch_id)) {
                 $where["id !="] = $batch_id;
             }
+            
 
-            $check_exist = $this->fly_model->check_batch($where);
+            // $check_exist = $this->fly_model->check_batch($where);
 
-            if ($check_exist) {
-                echo json_encode([
-                    'resp_code' => 'ERR',
-                    'resp_desc' => "Fly Batch already exists",
-                ]);
-                return;
-            }
+            // if ($check_exist) {
+            //     echo json_encode([
+            //         'resp_code' => 'ERR',
+            //         'resp_desc' => "Fly Batch already exists",
+            //     ]);
+            //     return;
+            // }
 
             // Prepare batch data
             $postData = [
@@ -180,6 +181,9 @@ class Fly_batch extends AdminController
                 'university_ids'  => $university_ids,
                 'university_name' => $university_name,
             ];
+            
+            
+          
 
             if (empty($postData['id'])) {
                 $postData['status']     = 1;
@@ -190,6 +194,7 @@ class Fly_batch extends AdminController
                 $postData['updated_at'] = date('Y-m-d H:i:s');
             }
 
+// $insert_result =[];
             // Insert/update batch
             $insert_result = $this->fly_model->insert_update($postData);
 
