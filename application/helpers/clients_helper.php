@@ -323,7 +323,7 @@ function app_init_customer_profile_tabs()
     ]);
     $CI->app_tabs->add_customer_profile_tab('orignal_document', [
         'name'     => _l('Orignal Documents'),
-        'icon'     => 'fa fa-map-marker',
+        'icon'     => 'fa fa-file-archive-o',
         'view'     => 'admin/clients/groups/orignal_documents',
         'position' => 95,
         'leadType' => '2'
@@ -331,7 +331,7 @@ function app_init_customer_profile_tabs()
 
     $CI->app_tabs->add_customer_profile_tab('apostille', [
         'name'     => _l('Apostille Documents'),
-        'icon'     => 'fa fa-map-marker',
+        'icon'     => 'fa fa-book',
         'view'     => 'admin/clients/groups/apostille',
         'position' => 95,
         'leadType' => '2'
@@ -345,15 +345,22 @@ function app_init_customer_profile_tabs()
     ]);
     $CI->app_tabs->add_customer_profile_tab('quotation', [
         'name'     => "Quotation",
-        'icon'     => 'fa fa-map-marker',
+        'icon'     => 'fa fa-quora',
         'view'     => 'admin/clients/groups/quotation',
         'position' => 95,
         'leadType' => '2'
     ]);
 
+     $CI->app_tabs->add_customer_profile_tab('payment', [
+        'name'     => "Payments",
+        'icon'     => 'fa fa-rupee',
+        'view'     => 'admin/clients/groups/payment',
+        'position' => 95,
+        'leadType' => '2'
+    ]);
     $CI->app_tabs->add_customer_profile_tab('study_tracker', [
         'name'     => _l('customer_tracker'),
-        'icon'     => 'fa fa-map-marker',
+        'icon'     => 'fa fa-user-secret',
         'view'     => 'admin/clients/groups/study_abroad_tracker',
         'position' => 95,
         'leadType' => '1'
@@ -361,7 +368,7 @@ function app_init_customer_profile_tabs()
 
     $CI->app_tabs->add_customer_profile_tab('fly_ticket', [
         'name'     => "Fly Ticket",
-        'icon'     => 'fa fa-map-marker',
+        'icon'     => 'fa fa-ticket',
         'view'     => 'admin/clients/groups/fly_ticket',
         'position' => 95,
 

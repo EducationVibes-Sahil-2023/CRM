@@ -55,6 +55,10 @@ function get_available_staff_permissions($data = [])
             'name'         => "Quotations",
             'capabilities' => $allPermissionsArray,
         ],
+        'payment_quotation' => [
+            'name'         => "Quotations Payments",
+            'capabilities' => array_merge($allPermissionsArray, array("payment_approval" => "Payment Approval")),
+        ],
         'email_templates' => [
             'name'         => _l('email_templates'),
             'capabilities' => [

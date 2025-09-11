@@ -1982,7 +1982,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             // Handle the error response from the server
             // console.error(error);
             hide_loader();
-            reject(error);
+            alert_float("danger", error);
         }
     }
 

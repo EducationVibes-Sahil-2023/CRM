@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-$university_applicant_fees = university_applicant_fees(1);
+// $university_applicant_fees = university_applicant_fees(1);
 
 // Select columns
 $aColumns = [
