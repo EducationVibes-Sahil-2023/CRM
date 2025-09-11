@@ -2055,7 +2055,25 @@ if (has_permission('customers', '', 'quotation_create')) {
                 }
             <?php endif; ?>
 
+$("input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount").each(function(){
+      let $this = $(this);
 
+    // Remove commas from current value
+    let val = $this.val();
+    console.log(val);
+    if (val) {
+        $this.val(val.replace(/,/g, ""));
+         console.log(val.replace(/,/g, ""));
+    }
+
+    // Force numeric input with decimals
+    $this.attr({
+        type: "number",
+        step: "0.0001", // allow up to 4 decimals
+        min: "0"
+    }); 
+})
+ 
 
 
         });
@@ -2121,7 +2139,7 @@ if (has_permission('customers', '', 'quotation_create')) {
         }
 
         function setNumberDecimal() {
-            $(document).on("focus", "input[name='fee_value[]'], .currency-amount", function() {
+            $(document).on("focus", "input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount", function() {
                 // Force input type="number" with step for 4 decimals
                 $(this).attr({
                     type: "number",

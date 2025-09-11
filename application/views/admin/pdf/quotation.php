@@ -68,7 +68,7 @@ foreach ($company_due_array as $key => $c_due_array) {
         $feeData = $feesInfo[$fd['id']] ?? null;
         
 //   print_r($feeData);
-    if ($feeData && !empty($feeData->fee_value_inr) && $feeData->fee_value_inr > 0) {
+    if ($feeData && isset($feeData->fee_value_inr)) {
         
         if($key>0 && $fd['id']==2)
         {
