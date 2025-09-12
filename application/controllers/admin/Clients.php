@@ -9833,7 +9833,7 @@ class Clients extends AdminController
 
     public function payment_quotation()
     {
-        // try {
+        try {
         $payment_id         = $this->input->post("payment_id") ?? '';
         $client_id          = $this->input->post("client_id") ?? '';
         $university_name    = $this->input->post("university_name") ?? '';
@@ -9877,10 +9877,10 @@ class Clients extends AdminController
 
             if (!empty($payment_id)) {
                 $row["id"] = $payment_id;
-                $row["updated_date"] = date('Y-m-d H:i:s');
+                $row["updated_by"] = date('Y-m-d H:i:s');
                 $row["updated_date"] = get_staff_user_id();
             } else {
-                $row["created_at"] = date('Y-m-d H:i:s');
+                $row["created_date"] = date('Y-m-d H:i:s');
                 $row["created_by"] = get_staff_user_id();
             }
 
@@ -10018,13 +10018,13 @@ class Clients extends AdminController
         } else {
             throw new Exception("No changes were made or failed to save payment quotation data.");
         }
-        // } catch (Exception $e) {
-        //     log_message('error', 'Payment quotation insert failed: ' . $e->getMessage());
-        //     echo json_encode([
-        //         'resp_code' => 'ERR',
-        //         'resp_desc' => $e->getMessage()
-        //     ]);
-        // }
+        } catch (Exception $e) {
+            log_message('error', 'Payment quotation insert failed: ' . $e->getMessage());
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
     }
 
 
