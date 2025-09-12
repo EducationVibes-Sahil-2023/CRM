@@ -9833,198 +9833,202 @@ class Clients extends AdminController
 
     public function payment_quotation()
     {
-        // try {
-        $payment_id         = $this->input->post("payment_id") ?? '';
-        $client_id          = $this->input->post("client_id") ?? '';
-        $university_name    = $this->input->post("university_name") ?? '';
-        $acadmic_year       = $this->input->post("acadmic_year") ?? '';
-        $study_year         = $this->input->post("study_year") ?? '';
-        $currency_exchange  = $this->input->post("currency_exchange") ?? '';
-        $payment_quotations = $this->input->post("payment_quotations")
-            ? json_decode($this->input->post("payment_quotations"), true)
-            : [];
+        try {
+            $payment_id         = $this->input->post("payment_id") ?? '';
+            $client_id          = $this->input->post("client_id") ?? '';
+            $university_name    = $this->input->post("university_name") ?? '';
+            $acadmic_year       = $this->input->post("acadmic_year") ?? '';
+            $study_year         = $this->input->post("study_year") ?? '';
+            $currency_exchange  = $this->input->post("currency_exchange") ?? '';
+            $payment_quotations = $this->input->post("payment_quotations")
+                ? json_decode($this->input->post("payment_quotations"), true)
+                : [];
 
-        if (empty($payment_quotations)) {
-            throw new Exception("No payment quotations provided.");
-        }
+            if (empty($payment_quotations)) {
+                throw new Exception("No payment quotations provided.");
+            }
 
-        // 🔒 Permission checks
-        if (!empty($payment_id) && !has_permission('payment_quotation', '', 'edit')) {
-            throw new Exception("Access denied: Quotation Payment Edit");
-        }
-        if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
-            throw new Exception("Access denied: Quotation Payment Create");
-        }
+            // 🔒 Permission checks
+            if (!empty($payment_id) && !has_permission('payment_quotation', '', 'edit')) {
+                throw new Exception("Access denied: Quotation Payment Edit");
+            }
+            if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
+                throw new Exception("Access denied: Quotation Payment Create");
+            }
 
-        // 🔹 Load fees for duplicate error messages
-        $university_applicant_fees = university_applicant_fees("", 1, [
-            "university_name" => $university_name,
-            "acadmic_year"    => $acadmic_year
-        ]);
-        $university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
-
-        $paymentData  = [];
-        $seenEntries  = [];
-
-        foreach ($payment_quotations as $key => $payment) {
-            $row = [
-                "client_id"       => $client_id,
+            // 🔹 Load fees for duplicate error messages
+            $university_applicant_fees = university_applicant_fees("", 1, [
                 "university_name" => $university_name,
-                "academic_year"   => $acadmic_year,
-                "year"            => $study_year,
-                "exchange_value"  => $currency_exchange,
-            ];
+                "acadmic_year"    => $acadmic_year
+            ]);
+            $university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
 
-            if (!empty($payment_id)) {
-                $row["id"] = $payment_id;
-                $row["updated_date"] = date('Y-m-d H:i:s');
-                $row["updated_date"] = get_staff_user_id();
-            } else {
-                $row["created_at"] = date('Y-m-d H:i:s');
-                $row["created_by"] = get_staff_user_id();
+            $paymentData  = [];
+            $seenEntries  = [];
+
+
+            // echo "<pre>";
+            // print_r($payment_quotations);
+            // die;
+            foreach ($payment_quotations as $key => $payment) {
+                $row = [
+                    "client_id"       => $client_id,
+                    "university_name" => $university_name,
+                    "academic_year"   => $acadmic_year,
+                    "year"            => $study_year,
+                    "exchange_value"  => $currency_exchange,
+                ];
+
+                if (!empty($payment_id)) {
+                    $row["id"] = $payment_id;
+                    $row["updated_by"] = date('Y-m-d H:i:s');
+                    $row["updated_date"] = get_staff_user_id();
+                } else {
+                    $row["created_date"] = date('Y-m-d H:i:s');
+                    $row["created_by"] = get_staff_user_id();
+                }
+
+                // Merge payment fields
+                $row = array_merge($row, $payment);
+
+                // Convert type array → string
+                if (!empty($payment["type"]) && is_array($payment["type"])) {
+                    $row["type"] = implode(",", $payment["type"]);
+                }
+
+                // Vendor handling
+                if (!empty($payment["vendor_id"])) {
+                    $row["vendor_name"] = is_numeric($payment["vendor_id"])
+                        ? ''
+                        : $payment["vendor_id"];
+                }
+
+                // Encode split_data
+                if (!empty($payment["split_data"])) {
+                    $row["fess_infomation"] = json_encode($payment["split_data"], JSON_UNESCAPED_UNICODE);
+                }
+
+
+                $vendorId   = is_numeric($payment["vendor_id"]) ? $payment["vendor_id"] : 0;
+                $vendorName = !is_numeric($payment["vendor_id"]) ? $payment["vendor_id"] : '';
+
+                $entryKey = implode("|", [
+                    $client_id,
+                    $university_name,
+                    $acadmic_year,
+                    $study_year,
+                    $payment['mode'],
+                    $payment['amount'],
+                    $payment['pay_date'],
+                    "vendor_id:" . $vendorId,
+                    "vendor_name:" . $vendorName
+                ]);
+
+                // 🚫 Prevent duplicate in same request
+                if (isset($seenEntries[$entryKey])) {
+                    throw new Exception(
+                        "Duplicate detected in current submission for {$university_applicant_fees_[$feeId]['name']} Fees, Amount {$feeAmount}."
+                    );
+                }
+                $seenEntries[$entryKey] = true;
+
+                // 🚫 Prevent duplicate in DB
+                $this->db->where('client_id', $client_id);
+                $this->db->where('university_name', $university_name);
+                $this->db->where('academic_year', $acadmic_year);
+                $this->db->where('year', $study_year);
+                $this->db->where('mode', $payment['mode']);
+                $this->db->where('amount', $payment['amount']);
+                $this->db->where('pay_date', $payment['pay_date']);
+
+                if (is_numeric($payment["vendor_id"])) {
+                    $this->db->where('vendor_id', $payment["vendor_id"]);
+                } else {
+                    $this->db->where('vendor_name', $payment["vendor_id"]);
+                }
+
+                if (!empty($payment_id)) {
+                    $this->db->where('id !=', $payment_id);
+                }
+
+                // $jsonCheck = json_encode([
+                //     "fee_id"      => $feeId,
+                //     "fee_amount"  => $feeAmount,
+                //     "fee_currency" => $feeCurrency
+                // ], JSON_UNESCAPED_UNICODE);
+
+                // $this->db->where("JSON_CONTAINS(fess_infomation, " . $this->db->escape($jsonCheck) . ")", NULL, FALSE);
+                $duplicate = $this->db->get(db_prefix() . 'payment_quotations')->row();
+
+                if ($duplicate) {
+                    throw new Exception(
+                        "Duplicate entry already exists for {$university_applicant_fees_[$feeId]['name']} Fees, Amount {$feeAmount}."
+                    );
+                }
+
+                // ✅ Duplicate checks
+                // if (!empty($payment["split_data"])) {
+                //     foreach ($payment["split_data"] as $splitData) {
+                //         $feeId       = (int)$splitData["fee_id"];
+                //         $feeAmount   = $splitData["fee_amount"];
+                //         $feeCurrency = $splitData["fee_currency"];
+
+
+                //     }
+                // }
+
+                // Clean unwanted fields
+                unset($row["proof"], $row["split_data"]);
+
+                // 📎 File upload
+                if (!empty($_FILES["proof_" . $key])) {
+                    $documents = $_FILES["proof_" . $key];
+                    if (!empty($documents['name'])) {
+                        $file_name_ = ($client_id ? get_client_name($client_id) : 'proof') . "_" . time();
+                        $upload_data = [
+                            "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+                            "type"     => $documents['type'],
+                            "tmp_name" => $documents['tmp_name'],
+                            "error"    => $documents['error'],
+                            "size"     => $documents['size'],
+                        ];
+                        if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                            $file_name = upload_applicant_documents($client_id, $upload_data);
+                            $row['pdf'] = $file_name["file_path"];
+                        }
+                    }
+                }
+
+                $paymentData[] = $row;
             }
 
-            // Merge payment fields
-            $row = array_merge($row, $payment);
 
-            // Convert type array → string
-            if (!empty($payment["type"]) && is_array($payment["type"])) {
-                $row["type"] = implode(",", $payment["type"]);
-            }
 
-            // Vendor handling
-            if (!empty($payment["vendor_id"])) {
-                $row["vendor_name"] = is_numeric($payment["vendor_id"])
-                    ? ''
-                    : $payment["vendor_id"];
-            }
 
-            // Encode split_data
-            if (!empty($payment["split_data"])) {
-                $row["fess_infomation"] = json_encode($payment["split_data"], JSON_UNESCAPED_UNICODE);
-            }
-
-            // ✅ Duplicate checks
-            if (!empty($payment["split_data"])) {
-                foreach ($payment["split_data"] as $splitData) {
-                    $feeId       = (int)$splitData["fee_id"];
-                    $feeAmount   = $splitData["fee_amount"];
-                    $feeCurrency = $splitData["fee_currency"];
-
-                    $vendorId   = is_numeric($payment["vendor_id"]) ? $payment["vendor_id"] : 0;
-                    $vendorName = !is_numeric($payment["vendor_id"]) ? $payment["vendor_id"] : '';
-
-                    $entryKey = implode("|", [
-                        $client_id,
-                        $university_name,
-                        $acadmic_year,
-                        $study_year,
-                        $payment['mode'],
-                        $payment['amount'],
-                        $payment['pay_date'],
-                        "vendor_id:" . $vendorId,
-                        "vendor_name:" . $vendorName,
-                        $feeId,
-                        $feeAmount,
-                        $feeCurrency
-                    ]);
-
-                    // 🚫 Prevent duplicate in same request
-                    if (isset($seenEntries[$entryKey])) {
-                        throw new Exception(
-                            "Duplicate detected in current submission for {$university_applicant_fees_[$feeId]['name']} Fees, Amount {$feeAmount}."
-                        );
-                    }
-                    $seenEntries[$entryKey] = true;
-
-                    // 🚫 Prevent duplicate in DB
-                    $this->db->where('client_id', $client_id);
-                    $this->db->where('university_name', $university_name);
-                    $this->db->where('academic_year', $acadmic_year);
-                    $this->db->where('year', $study_year);
-                    $this->db->where('mode', $payment['mode']);
-                    $this->db->where('amount', $payment['amount']);
-                    $this->db->where('pay_date', $payment['pay_date']);
-
-                    if (is_numeric($payment["vendor_id"])) {
-                        $this->db->where('vendor_id', $payment["vendor_id"]);
-                    } else {
-                        $this->db->where('vendor_name', $payment["vendor_id"]);
-                    }
-
-                    if (!empty($payment_id)) {
-                        $this->db->where('id !=', $payment_id);
-                    }
-
-                    $jsonCheck = json_encode([
-                        "fee_id"      => $feeId,
-                        "fee_amount"  => $feeAmount,
-                        "fee_currency" => $feeCurrency
-                    ], JSON_UNESCAPED_UNICODE);
-
-                    $this->db->where("JSON_CONTAINS(fess_infomation, " . $this->db->escape($jsonCheck) . ")", NULL, FALSE);
-                    $duplicate = $this->db->get(db_prefix() . 'payment_quotations')->row();
-
-                    if ($duplicate) {
-                        throw new Exception(
-                            "Duplicate entry already exists for {$university_applicant_fees_[$feeId]['name']} Fees, Amount {$feeAmount}."
-                        );
-                    }
+            // 🔹 Insert or Update
+            if (!empty($paymentData)) {
+                if (!empty($payment_id)) {
+                    $this->db->update_batch(db_prefix() . 'payment_quotations', $paymentData, 'id');
+                } else {
+                    $this->db->insert_batch(db_prefix() . 'payment_quotations', $paymentData);
                 }
             }
 
-            // Clean unwanted fields
-            unset($row["proof"], $row["split_data"]);
-
-            // 📎 File upload
-            if (!empty($_FILES["proof_" . $key])) {
-                $documents = $_FILES["proof_" . $key];
-                if (!empty($documents['name'])) {
-                    $file_name_ = ($client_id ? get_client_name($client_id) : 'proof') . "_" . time();
-                    $upload_data = [
-                        "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
-                        "type"     => $documents['type'],
-                        "tmp_name" => $documents['tmp_name'],
-                        "error"    => $documents['error'],
-                        "size"     => $documents['size'],
-                    ];
-                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
-                        $file_name = upload_applicant_documents($client_id, $upload_data);
-                        $row['pdf'] = $file_name["file_path"];
-                    }
-                }
-            }
-
-            $paymentData[] = $row;
-        }
-
-
-
-
-        // 🔹 Insert or Update
-        if (!empty($paymentData)) {
-            if (!empty($payment_id)) {
-                $this->db->update_batch(db_prefix() . 'payment_quotations', $paymentData, 'id');
-            } else {
-                $this->db->insert_batch(db_prefix() . 'payment_quotations', $paymentData);
-            }
-        }
-
-        if ($this->db->affected_rows() > 0) {
+            // if ($this->db->affected_rows()) {
             echo json_encode([
                 'resp_code' => 'RCS',
                 'resp_desc' => 'Payment quotation data saved successfully.'
             ]);
-        } else {
-            throw new Exception("No changes were made or failed to save payment quotation data.");
+            // } else {
+            //     throw new Exception("No changes were made or failed to save payment quotation data.");
+            // }
+        } catch (Exception $e) {
+            log_message('error', 'Payment quotation insert failed: ' . $e->getMessage());
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
         }
-        // } catch (Exception $e) {
-        //     log_message('error', 'Payment quotation insert failed: ' . $e->getMessage());
-        //     echo json_encode([
-        //         'resp_code' => 'ERR',
-        //         'resp_desc' => $e->getMessage()
-        //     ]);
-        // }
     }
 
 
