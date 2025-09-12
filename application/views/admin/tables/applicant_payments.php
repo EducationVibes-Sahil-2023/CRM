@@ -1,42 +1,54 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-$university_applicant_fees = university_applicant_fees("", 1, [
-    "university_name" => $university_name,
-    "acadmic_year"    => $acadmic_year
-]);
-$university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
+$university_applicant_fees   = university_applicant_fees_payments();
+$university_applicant_fees_  = array_column($university_applicant_fees, null, 'id');
 
-$get_currencies = get_currencies();
-$currency_lookup = array_column($get_currencies, NULL, 'id');
-// $university_applicant_fees = university_applicant_fees(1);
+$get_currencies   = get_currencies();
+$currency_lookup  = array_column($get_currencies, null, 'id');
+
+$sTable       = db_prefix() . 'payment_quotations';
+
 
 // Select columns
 $aColumns = [
-    "university_name as university_name",
-    "academic_year as academic_year",
-    "year as year",
-    "if(status=1,'Aproved',if(status=2,'rejected','Pending')) as status",
-    "if(status=1,'success',if(status=2,'danger','warning')) as status_color",
-    "inr_value as inr_value",
-    "fess_infomation as fess_infomation",
-    "pdf as pdf",
-    "status as status_id",
-    "id as id",
+    $sTable . ".pay_date as pay_date",
+    $sTable . ".payment_type as type",
+    $sTable . ".mode as mode",
+    db_prefix() . "quotation_mode.name as mode_name",
+    $sTable . ".vendor_name as vendor_name",
+    db_prefix() . "quotation_vendor.name as v_name",
+    $sTable . ".inr_value as inr_value",
+    $sTable . ".payment_type as payment_type",
+    $sTable . ".university_name as university_name",
+    $sTable . ".academic_year as academic_year",
+    $sTable . ".year as year",
+    "IF(" . $sTable . ".status=1,'Approved',IF(" . $sTable . ".status=2,'Rejected','Pending')) as status",
+    "IF(" . $sTable . ".status=1,'success',IF(" . $sTable . ".status=2,'danger','warning')) as status_color",
+    $sTable . ".fess_infomation as fess_infomation",
+    $sTable . ".pdf as pdf",
+    $sTable . ".status as status_id",
+    $sTable . ".id as id",
 ];
 
-// print_r($payment_id);
-// die;
-
 $sIndexColumn = 'id';
-$sTable       = db_prefix() . 'payment_quotations';
-$where = [];
-$where[] = "AND client_id = " . $client_id;
-if ($_POST['payment_id']) {
-    $where[] = "AND id = " . $_POST['payment_id'];
+
+$join = [
+    ' LEFT JOIN ' . db_prefix() . 'quotation_mode ON ' . db_prefix() . 'quotation_mode.id = ' . $sTable . '.mode',
+    ' LEFT JOIN ' . db_prefix() . 'quotation_vendor ON ' . db_prefix() . 'quotation_vendor.id = ' . $sTable . '.vendor_id',
+
+];
+
+$where   = [];
+$where[] = "AND " . $sTable . ".client_id = " . (int) $client_id;
+
+if (!empty($_POST['payment_id'])) {
+    $where[] = "AND " . $sTable . ".id = " . (int) $_POST['payment_id'];
 }
+
 $groupBy = "";
-$result  = data_tables_init($aColumns, $sIndexColumn, $sTable, [], $where, [], $groupBy);
+
+$result  = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [], $groupBy);
 $output  = $result['output'];
 $rResult = $result['rResult'];
 
@@ -73,12 +85,15 @@ if (!empty($_POST['payment_id'])) {
         );
 
         $row[] = '
-            <button class="btn btn-primary" onclick="showSplit(this, ' . $feesInfo . ', ' . (int)$aRow['id'] . ')">
+            <button class="btn btn-xs btn-primary" onclick="showSplit(this, ' . $feesInfo . ', ' . (int)$aRow['id'] . ')">
                 <i class="fa fa-eye"></i>
             </button>
-            &nbsp;' . $aRow['university_name'];
+            &nbsp;' . $aRow['pay_date'];
 
-        $row[] = $aRow['academic_year'];
+        $row[] = $university_applicant_fees_[$aRow['type']]['name'] ?? '';
+        $row[] = $aRow['mode_name'];
+        $row[] = !empty($aRow['v_name']) ? $aRow['v_name'] : $aRow['vendor_name'];
+        $row[] = $aRow['inr_value'];
         $row[] = $aRow['year'];
 
         // Status + approval buttons
@@ -89,15 +104,15 @@ if (!empty($_POST['payment_id'])) {
             && (is_admin() || has_permission('payment_quotation', '', 'payment_approval'))
         ) {
             $status .= '
-                <button class="btn-xs btn btn-success" onclick="document_approved(this, 1,' . (int)$aRow['id'] . ')">
+                <button class="btn-xs btn btn-xs btn-success" onclick="document_approved(this, 1,' . (int)$aRow['id'] . ')">
                     <i class="fa fa-check"></i>
                 </button>
                 &nbsp;
-                <button class="btn-xs btn btn-danger" onclick="document_approved(this, 2,' . (int)$aRow['id'] . ')">
+                <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 2,' . (int)$aRow['id'] . ')">
                     <i class="fa fa-times"></i>
                 </button>
                 &nbsp;
-                <button class="btn-xs btn btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
+                <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
                     <i class="fa fa-trash"></i>
                 </button>';
         }
@@ -105,24 +120,24 @@ if (!empty($_POST['payment_id'])) {
         $status .= " &nbsp; <span class='text-" . $aRow['status_color'] . "'>" . $aRow['status'] . "</span>";
         $row[] = $status;
 
-        $row[] = $aRow['inr_value'];
-
         // Action buttons
+
+        if (!empty($aRow['pdf'])) {
+            $row[] = '
+                &nbsp; 
+                <button class="btn btn-xs btn-primary" onclick="window.open(\'' . base_url($aRow['pdf']) . '\', \'_blank\')">
+                    <i class="fa fa-eye"></i>
+                </button>';
+        } else {
+            $row[] = '';
+        }
         $action = '';
         if (is_admin() || has_permission('payment_quotation', '', 'edit')) {
             $action .= '
-                <a class="btn btn-sm btn-primary" href="?group=payment&payment_id=' . (int)$aRow['id'] . '">
+                <a class="btn btn-xs btn-sm btn-primary" href="?group=payment&payment_id=' . (int)$aRow['id'] . '">
                     <i class="fa fa-pencil"></i>
                 </a>';
         }
-        if (!empty($aRow['pdf'])) {
-            $action .= '
-                &nbsp; 
-                <button class="btn btn-primary" onclick="window.open(\'' . base_url($aRow['pdf']) . '\', \'_blank\')">
-                    <i class="fa fa-eye"></i>
-                </button>';
-        }
-
         $row[] = $action;
 
         // Push row

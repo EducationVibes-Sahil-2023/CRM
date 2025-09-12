@@ -351,7 +351,7 @@ function app_init_customer_profile_tabs()
         'leadType' => '2'
     ]);
 
-     $CI->app_tabs->add_customer_profile_tab('payment', [
+    $CI->app_tabs->add_customer_profile_tab('payment', [
         'name'     => "Payments",
         'icon'     => 'fa fa-rupee',
         'view'     => 'admin/clients/groups/payment',
@@ -1335,12 +1335,32 @@ function get_condition_offer($client_id, $university_id)
         ->get()
         ->result_array();
 }
-function university_applicant_fees($university_quotation = "", $applicant_quotaion = "", $university_array = [], $client_id = "")
+
+
+function university_applicant_fees_payments($condition = [])
 {
     $CI = &get_instance();
 
     // Select base columns from applicant_fees
     $CI->db->select("f.*")
+        ->from(db_prefix() . 'applicant_fees f');
+
+    if (!empty($condition)) {
+        $CI->db->where($condition);
+    }
+    $CI->db->order_by("f.id", "asc");
+
+    $client_fees = $CI->db->get()->result_array();
+
+    return $client_fees;
+}
+
+function university_applicant_fees($university_quotation = "", $applicant_quotaion = "", $university_array = [], $client_id = "")
+{
+    $CI = &get_instance();
+
+    // Select base columns from applicant_fees
+    $CI->db->select("f.*,if(f.quotation_name!='',f.quotation_name,f.name) as name")
         ->from(db_prefix() . 'applicant_fees f')
         ->where('f.status', 1);
 

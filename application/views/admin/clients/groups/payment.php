@@ -7,12 +7,15 @@
     <div class="panel-body">
         <?php
         $payment_table = array(
-            "University Name",
-            "Acadmic Year",
+            "Pay Date",
+            "Type",
+            "Mode",
+            "Vendor",
+            "INR Amount",
             "Year",
             "Status",
-            "INR Amount",
-            "PDF",
+            "proof",
+            "Action",
         );
         ?>
         <div class="row">
@@ -78,7 +81,7 @@
             return;
         }
 
-        const secondaryTableColumns = ["Fees Type", "Fees Amount", "Currency", "INR Value"];
+        const secondaryTableColumns = ["Type", "Amount", "Currency", "INR Value"];
         const nestedTableId = `nested-applicant-table-${payment_id}`;
 
         // Create child row HTML
@@ -135,10 +138,16 @@ if (has_permission('payment_quotation', '', 'create')) {
     // Get all required data in optimized queries
     $company_dues_fees_array = $ci->db->get(db_prefix() . "company_dues_fees")->result_array();
 
-    $university_applicant_fees = university_applicant_fees("", 1, [
-        "university_name" => $primary_university,
-        "acadmic_year"    => $acadmic_year
+    $university_applicant_fees = university_applicant_fees_payments([
+        "payment_quotation_split" => 1
     ]);
+
+
+    $university_applicant_fees_type = university_applicant_fees_payments([
+        "payment_quotation_type" => 1
+    ]);
+
+
     $university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
     $university_applicant_fees_array = university_applicant_fees_details([
         "fd.university_name" => $primary_university,
@@ -213,13 +222,17 @@ if (has_permission('payment_quotation', '', 'create')) {
         [id^="nested-applicant-table-"] div.row {
             display: none !important;
         }
+
+        .dataTables_wrapper div.row {
+            display: none !important;
+        }
     </style>
 
     <div class="row">
         <div class="col-md-12">
             <div class="panel_s">
                 <div class="panel-body">
-                    <h4>payment Payments</h4>
+                    <h4>Quotation Payments</h4>
                     <hr class="hr-panel-heading" />
 
                     <?= form_open(admin_url('clients/payment_quotation'), ['id' => 'applicant-payment-form', 'enctype' => 'multipart/form-data']); ?>
@@ -339,7 +352,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                             <div id="applicant_fees">
                                 <div class="row align-items-center mb-2">
                                     <div class="col-md-6">
-                                        <h4 class="mb-0">Applicant payments Payments</h4>
+                                        <h4 class="mb-0">Applicant Quotation Payments</h4>
                                     </div>
                                     <?php if (empty($payment_id)) { ?>
                                         <div class="col-md-6 text-right">
@@ -352,12 +365,12 @@ if (has_permission('payment_quotation', '', 'create')) {
                                 <hr>
                                 <div class="payment_payment">
                                     <div class="row">
-                                        <div class="col-md-3 form-group">
+                                        <div class="col-md-2 form-group">
                                             <label>Payment Date <span class="text-danger">*</span></label>
                                             <input type="date" name="pay_date" data-name="pay_date" class="form-control pay_date" value="<?= htmlspecialchars($applicant_payment_data->pay_date ?? $pay_date) ?>" required>
                                         </div>
 
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <div class=" form-group">
                                                 <label>Mode <span class="text-danger">*</span></label>
                                                 <select class="form-control selectpicker electpicker-new mode"
@@ -377,16 +390,27 @@ if (has_permission('payment_quotation', '', 'create')) {
                                             </div>
                                         </div>
 
-                                        <div class="col-md-3 form-group">
+
+
+                                        <?php if (!empty($applicant_payment_data->mode) &&  $applicant_payment_data->mode == 5) { ?>
+                                            <script>
+                                                $(document).ready(function() {
+                                                    console.log("hide vendor");
+                                                    $(".vendor_id").hide();
+                                                })
+                                            </script>
+                                        <?php
+                                        }
+
+                                        ?>
+
+                                        <div class="col-md-2 form-group">
                                             <label>Vendor <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new vendor_id"
                                                 style="display:<?= (!empty($applicant_payment_data->mode) &&
                                                                     $applicant_payment_data->mode == 5) ? 'none' : 'block' ?>"
                                                 id="vendor_id" name="vendor_id" data-name="vendor_id"
                                                 required data-live-search="true" title="Select Vendor">
-                                                <?php if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode != 5) { ?>
-
-                                                <?php } ?>
                                                 <?php
                                                 if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 || $applicant_payment_data->mode == 4) {
                                                 ?>
@@ -405,43 +429,67 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     <option value="<?= $applicant_payment_data->vendor_name ?>" selected><?= $applicant_payment_data->vendor_name ?></option>
                                                 <?php
 
-                                                } else if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 5) {
-                                                ?>
-                                                    <option value="<?= $applicant_payment_data->vendor_id ?>" selected><?= $applicant_payment_data->vendor_id ?></option>
-                                                <?php
                                                 }
 
                                                 ?>
                                             </select>
+                                            <?php
+                                            if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 5) {
+                                            ?>
+                                                <input type="text" data-name="vendor_name" name="vendor_name" required class="form-control manually-cash" placeholder="Enter Vendor Name" value="<?= $applicant_payment_data->vendor_name ?>">
+                                            <?php
+                                            }
+                                            ?>
                                         </div>
 
                                         <div class="col-md-3 form-group">
-                                            <label>Fees Type <span class="text-danger">*</span></label>
+                                            <label>Payment Type <span class="text-danger">*</span></label>
+                                            <select class="form-control selectpicker electpicker-new payment_type"
+                                                data-live-search="true"
+                                                data-actions-box="false"
+                                                title="Select Payment Type"
+                                                name="payment_type"
+                                                data-name='payment_type'
+                                                required
+                                                onchange="split_data(this, this.value)">
+                                                <?php foreach ($university_applicant_fees_type as $fees): ?>
+                                                    <option value="<?= $fees['id'] ?>"
+                                                        <?= ($applicant_payment_data->payment_type == $fees['id']) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($fees['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+
+                                        </div>
+
+                                        <div class="col-md-3 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID ? 'show' : 'none' ?>">
+                                            <label>Payment Fees Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new type"
                                                 multiple
                                                 data-live-search="true"
                                                 data-actions-box="true"
                                                 data-selected-text-format="count > 3"
-
-                                                id="type" name="type" data-name="type"
-                                                required onchange="split_data(this)">
+                                                name="type" ,
+                                                data-name="type"
+                                                required
+                                                onchange="split_data(this)">
                                                 <?php foreach ($university_applicant_fees as $fees): ?>
                                                     <option value="<?= $fees['id'] ?>"
                                                         <?= (is_array($selectedType) && in_array($fees['id'], $selectedType)) ? 'selected' : '' ?>>
                                                         <?= htmlspecialchars($fees['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
-
                                             </select>
                                         </div>
-                                    </div>
 
-                                    <div class="row mt-3">
+                                    </div>
+                                    <div class="row">
+
                                         <div class="col-md-3 form-group">
                                             <label>Amount <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <div class="input-group-addon currency-symbol-amount_<?= time() ?>">
-                                                    <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
+                                                    <?= $currency_lookup[!empty($applicant_payment_data->ex_currency) ? $applicant_payment_data->ex_currency : 3]["symbol"] ?? '' ?>
                                                 </div>
                                                 <input type="text" name="amount" data-name="amount" class="form-control amount currency-amount"
                                                     placeholder="0.00" required oninput="calculateInrValue()" value="<?= $applicant_payment_data->amount ? $applicant_payment_data->amount : '' ?>">
@@ -450,7 +498,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                         class="currency-selector currency-selector-amount ex_currency"
                                                         onchange="calculateInrValue(); updateSymbol_(this,'amount_<?= time() ?>')">
                                                         <?php foreach ($get_currencies as $c): ?>
-                                                            <option value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
+                                                            <option value="<?= $c['id'] ?>" <?= $applicant_payment_data->ex_currency == $c['id'] ? 'selected' : '' ?> data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
                                                                 <?= htmlspecialchars($c['name']) ?>
                                                             </option>
                                                         <?php endforeach; ?>
@@ -493,7 +541,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>Location</label>
-                                            <select name="location_id" data-name="location_id"
+                                            <select name="location_id" data-name="location_id" <?= !empty($applicant_payment_data->location_id) ? '' : 'disabled' ?>
                                                 data-live-search="true" data-actions-box="true" title="Select Location"
                                                 class="selectpicker electpicker-new form-control location_id">
                                                 <?php foreach ($office_location as $l): ?>
@@ -511,7 +559,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                     <div id="applicant_fees_split" class="payment-split-data" style="display:<?= !empty($splitData) ? 'show' : 'none' ?>">
                                         <div class="row align-items-center mb-2">
                                             <div class="col-md-6">
-                                                <h4 class="mb-0">Applicant payments Payments Split Data</h4>
+                                                <h4 class="mb-0">Applicant Quotation Payments Split Data</h4>
                                             </div>
                                         </div>
                                         <hr>
@@ -538,18 +586,21 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                             <td>
                                                                 <div class="input-group">
                                                                     <div class="input-group-addon currency-symbol-<?= $split['fee_id'] ?>">
-                                                                        <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
+
+                                                                        <?= $currency_lookup[!empty($split['fee_currency']) ? $split['fee_currency'] : 3]["symbol"] ?>
                                                                     </div>
                                                                     <input type="number" step="0.01"
                                                                         name="fee_amount[<?= $split['fee_id'] ?>]"
                                                                         requried
-                                                                        class="form-control fee-amount currency-amount"
+                                                                        class="form-control fee-amount currency-amount  <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated' : '' ?>"
                                                                         placeholder="0.00"
                                                                         value="<?= $split['fee_amount'] ?? 0 ?>"
+                                                                        <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'readonly' : '' ?>
                                                                         oninput="calculateInrValue()">
                                                                     <div class="input-group-addon">
                                                                         <select name="amount_currency_type[<?= $split['fee_id'] ?>]"
-                                                                            class="currency-selector currency-selector-amount"
+                                                                            class="currency-selector currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : '' ?>"
+                                                                            <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'disabled' : '' ?>
                                                                             onchange="calculateInrValue(); updateSymbol_(this,<?= $split['fee_id'] ?>)">
                                                                             <?php foreach ($get_currencies as $c): ?>
                                                                                 <option value="<?= $c['id'] ?>" <?= $c['id'] == $split['fee_currency'] ? 'selected' : '' ?> data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
@@ -647,12 +698,12 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                         <div class="payment_payment">
                                     <div class="row">
-                                        <div class="col-md-3 form-group">
+                                        <div class="col-md-2 form-group">
                                             <label>Payment Date <span class="text-danger">*</span></label>
                                             <input type="date" name="pay_date_<?= time() ?>" data-name="pay_date" class="form-control pay_date" value="" required>
                                         </div>
 
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <div class=" form-group">
                                                 <label>Mode <span class="text-danger">*</span></label>
                                                 <select data-name="mode" class="form-control selectpicker electpicker-new mode"
@@ -669,7 +720,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                             </div>
                                         </div>
 
-                                        <div class="col-md-3 form-group">
+                                        <div class="col-md-2 form-group">
                                             <label>Vendor <span class="text-danger">*</span></label>
                                             <select data-name="vendor_id" class="form-control selectpicker electpicker-new vendor_id"
                                                 style="display:none"
@@ -679,27 +730,44 @@ if (has_permission('payment_quotation', '', 'create')) {
                                             </select>
                                         </div>
 
-                                        <div class="col-md-3 form-group">
-                                            <label>Fees Type <span class="text-danger">*</span></label>
+                                         <div class="col-md-3 form-group">
+                                            <label>Payment Type <span class="text-danger">*</span></label>
+                                            <select class="form-control selectpicker electpicker-new payment_type"
+                                                data-live-search="true"
+                                                data-actions-box="false"
+                                                title="Select Payment Type"
+                                                name="payment_type_<?= time() ?>"
+                                                data-name='payment_type'
+                                                required
+                                                onchange="split_data(this, this.value)">
+                                                <?php foreach ($university_applicant_fees_type as $fees): ?>
+                                                    <option value="<?= $fees['id'] ?>" >
+                                                        <?= htmlspecialchars($fees['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-3 form-group split-type-dropdown" style="display:none">
+                                            <label>Payment Fees Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new type"
                                                 multiple
                                                 data-live-search="true"
                                                 data-actions-box="true"
                                                 data-selected-text-format="count > 3"
-data-name="type"
-                                                id="type" name="type_<?= time() ?>"type"
-                                                required onchange="split_data(this)">
+                                                name="type_<?= time() ?>" ,
+                                                data-name="type"
+                                                required
+                                                onchange="split_data(this)">
                                                 <?php foreach ($university_applicant_fees as $fees): ?>
                                                     <option value="<?= $fees['id'] ?>">
                                                         <?= htmlspecialchars($fees['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
-
                                             </select>
                                         </div>
-                                    </div>
-
-                                    <div class="row mt-3">
+                                        </div>
+                                    <div class="row">
                                         <div class="col-md-3 form-group">
                                             <label>Amount <span class="text-danger">*</span></label>
                                             <div class="input-group">
@@ -747,7 +815,7 @@ data-name="type"
 
                                         <div class="col-md-3 form-group">
                                             <label>Location</label>
-                                            <select name="location_id_<?= time() ?>" data-name="location_id" title="Select Location"
+                                            <select name="location_id_<?= time() ?>" data-name="location_id" disabled title="Select Location"
                                                 data-live-search="true" data-actions-box="true"
                                                 class="selectpicker electpicker-new form-control location_id">
                                                 <?php foreach ($office_location as $l): ?>
@@ -813,22 +881,32 @@ data-name="type"
             // $(".payment_payment").append(html);
         }
 
-
-
-
-
-
-
-
-
-
         function vendor_update(obj, modeId) {
             let $formGroup = $(obj).closest(".form-group");
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
 
+
+            if (modeId == 5) {
+                vendor_select.removeAttr('required');
+                $(obj).closest('.payment_payment')
+                    .find("[name='location_id']")
+                    .prop("disabled", false)
+                    .prop("required", true)
+                    .selectpicker('refresh'); // only if it's a <select>
+            } else {
+                vendor_select.attr('required');
+                $(obj).closest('.payment_payment')
+                    .find("[name='location_id']")
+                    .val('')
+                    .prop("disabled", true)
+                    .prop("required", false)
+                    .selectpicker('refresh'); // only if it's a <select>
+            }
+
             // Clear vendor select
             vendor_select.empty().show();
 
+            $(".vendor_id").show();
             // Remove any old manual input
             $formGroup.closest(".row").find("input.manually-cash").remove();
 
@@ -874,95 +952,12 @@ data-name="type"
                 // Destroy selectpicker before hiding
                 vendor_select.selectpicker('destroy');
                 vendor_select.hide();
-
                 // Add manual input
-                $('<input type="text" name="manual_cash_vendor[]" required class="form-control manually-cash" placeholder="Enter Vendor Name">')
-                    .insertAfter(vendor_select);
+                $('<input type="text" data-name="vendor_name" name="vendor_name" required class="form-control manually-cash" placeholder="Enter Vendor Name">')
+                    .insertBefore(vendor_select);
             }
         }
 
-        function split_data(obj) {
-            let selectedFeesIds = $(obj).val() || [];
-            let $paymentpayment = $(obj).closest('.payment_payment');
-            let $tbody = $paymentpayment.find("table.payment_payment_split_table tbody");
-
-            // 🔹 Remove rows that are NOT in selected fees anymore
-            $tbody.find("tr").each(function() {
-                let feeId = $(this).data("fee-id") || 0;
-                if (!selectedFeesIds.includes(feeId.toString())) {
-                    $(this).remove();
-                }
-            });
-
-            if (selectedFeesIds.length > 0) {
-                $paymentpayment.find(".payment-split-data").show();
-            } else {
-                $paymentpayment.find(".payment-split-data").hide();
-            }
-
-            let totalINR = 0;
-            selectedFeesIds.forEach(feeId => {
-                let unique = "<?= time() ?>" + feeId;
-                // ✅ check if row already exists
-                if ($tbody.find(`tr[data-fee-id='${feeId}']`).length > 0) {
-                    let inrValue = parseFloat($tbody.find(`tr[data-fee-id='${feeId}'] .fee-inr`).val()) || 0;
-                    totalINR += inrValue;
-                    return;
-                }
-
-                let feeData = university_applicant_fees.find(f => f.id == feeId);
-                if (feeData) {
-                    let inrValue = parseFloat(feeData.inr_value || 0);
-                    totalINR += inrValue;
-
-                    let row = `
-                    <tr data-fee-id="${feeData.id}">
-                        <td>
-                            <select class="form-control selectpicker" disabled>
-                                <option selected value="${feeData.id}">${feeData.name}</option>
-                            </select>
-                            <input type="hidden" name="selected_fees[]" value="${feeData.id}">
-                        </td>
-                        <td>
-                            <div class="input-group">
-                                <div class="input-group-addon currency-symbol-${unique}">
-                                    <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
-                                </div>
-                                <input type="number" step="0.01" 
-                                       name="fee_amount[${feeData.id}]" 
-                                       requried
-                                       class="form-control fee-amount currency-amount"
-                                       placeholder="0.00" 
-                                       value="${feeData.amount || 0}"
-                                       oninput="calculateInrValue()">
-                                <div class="input-group-addon">
-                                    <select name="amount_currency_type[${feeData.id}]"
-                                            class="currency-selector currency-selector-amount"
-                                            onchange="calculateInrValue(); updateSymbol_(this,${unique})">
-                                        ${getCurrencyOptions(3)}
-                                    </select>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <select disabled name="fee_currency[${feeData.id}]" class="form-control">
-                                ${getCurrencyOptions(3)}
-                            </select>
-                        </td>
-                        <td>
-                            <input type="text" name="fee_inr_value[${feeData.id}]" 
-                                   class="form-control fee-inr" value="${inrValue.toFixed(2)}" readonly>
-                        </td>
-                    </tr>
-                `;
-                    $tbody.append(row);
-                    $tbody.find(".selectpicker").selectpicker("refresh");
-                }
-            });
-
-            // update total INR
-            recalcTotalINR($paymentpayment);
-        }
 
         // helper to build currency select options
         function getCurrencyOptions(selectedId = 3) {
@@ -972,6 +967,131 @@ data-name="type"
             });
             return html;
         }
+
+        function split_data(obj, feesID = 0) {
+            let selectedFeesIds = $(obj).val() || [];
+            let singleSelectedValue = "";
+            // ✅ Ensure it's always an array
+            if (!Array.isArray(selectedFeesIds)) {
+                singleSelectedValue = selectedFeesIds;
+                selectedFeesIds = [selectedFeesIds];
+            }
+
+
+            console.log("Selected Fees:", selectedFeesIds);
+
+            let $paymentpayment = $(obj).closest('.payment_payment');
+
+            if ($paymentpayment.find("input[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>) {
+                $paymentpayment.find("table.payment_payment_split_table tbody").html('');
+            }
+            let $tbody = $paymentpayment.find("table.payment_payment_split_table tbody");
+
+
+
+
+            // 🔹 Remove rows that are NOT in selected fees anymore
+            $tbody.find("tr").each(function() {
+                let feeId = $(this).data("fee-id") || 0;
+                if (!selectedFeesIds.includes(feeId.toString())) {
+                    $(this).remove();
+                }
+            });
+
+            // 🔹 Toggle split section
+
+
+            $paymentpayment.find(".payment-split-data").toggle(selectedFeesIds.length > 0);
+
+            // 🔹 Build / update rows
+            selectedFeesIds.forEach(feeId => {
+                let unique = Date.now() + "_" + feeId; // ✅ use JS timestamp instead of PHP time()
+
+                // ✅ check if row already exists
+                if ($tbody.find(`tr[data-fee-id='${feeId}']`).length > 0) {
+                    return; // already added
+                }
+
+                let readonly = 0;
+                if (feesID > 0 && singleSelectedValue != '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
+                    readonly = 1;
+                }
+
+                let feeData = university_applicant_fees.find(f => f.id == feeId);
+                if (feeData) {
+                    let inrValue = parseFloat(feeData.inr_value || 0);
+
+                    let row = `
+                <tr data-fee-id="${feeData.id}">
+                    <td>
+                        <select class="form-control selectpicker" disabled>
+                            <option selected value="${feeData.id}">${feeData.name}</option>
+                        </select>
+                        <input type="hidden" name="selected_fees[]" value="${feeData.id}">
+                    </td>
+                    <td>
+                        <div class="input-group">
+                            <div class="input-group-addon currency-symbol-${unique}">
+                                <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
+                            </div>
+                            <input type="number" step="0.01"
+                                   name="fee_amount[${feeData.id}]"
+                                   required
+                                   class="form-control fee-amount currency-amount   ${readonly == 1 ? 'auto-populated' : ''}"
+                                   placeholder="0.00"
+                                  ${readonly == 1 ? 'readonly' : ''}
+                                   value="${feeData.amount || 0}"
+                                   oninput="calculateInrValue()">
+                            <div class="input-group-addon">
+                                <select name="amount_currency_type[${feeData.id}]"
+                                        ${readonly == 1 ? 'disabledd' : ''} class="currency-selector currency-selector-amount  ${readonly == 1 ? 'auto-populated-select' : ''}"
+                                        onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
+                                    ${getCurrencyOptions(3)}
+                                </select>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <select disabled name="fee_currency[${feeData.id}]" class="form-control">
+                            ${getCurrencyOptions(3)}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="text" name="fee_inr_value[${feeData.id}]"
+                               class="form-control fee-inr" value="${inrValue.toFixed(2)}" readonly>
+                    </td>
+                </tr>
+            `;
+                    $tbody.append(row);
+                    $tbody.find(".selectpicker").selectpicker("refresh");
+                }
+            });
+
+
+            // 🔹 Handle split type dropdown
+            if (feesID == <?= PACKAGE_FEES_ID ?>) {
+                $(obj).closest('.panel_s').find(".split-type-dropdown")
+                    .find("select.electpicker")
+                    .val('')
+                    .selectpicker('refresh');
+                $(obj).closest('.panel_s').find(".split-type-dropdown").show();
+                $tbody.html('');
+            } else if (feesID > 0 && singleSelectedValue != '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
+                $(obj).closest('.panel_s').find(".split-type-dropdown").hide();
+                $(obj).closest('.panel_s').find(".split-type-dropdown")
+                    .find("select.electpicker")
+                    .val('')
+                    .selectpicker('refresh');
+
+            }
+
+
+            // calculateInrValue();
+            // 🔹 update total INR
+            recalcTotalINR($paymentpayment);
+        }
+
+
 
         // 🔹 Recalc INR when user edits amounts/currency
         $(document).on("input change", ".fee-amount, select[name^='fee_currency'], select[name^='amount_currency_type']", function() {
@@ -1079,12 +1199,23 @@ data-name="type"
 
                 // Calculate INR value
                 let inrValue = amount * rate;
+
                 // Set INR value input
                 $entry.find("input.inr_value").val(inrValue.toFixed(2));
 
+
+                $entry.find("input.auto-populated").val(amount);
+                $entry.find("select.auto-populated-select").attr("disabled", true).val(currency_id);
+                updateSymbol_($entry.find("select.auto-populated-select"), currency_id);
+
+
+
                 // Recalculate totals if needed
                 recalcTotalINR($entry);
+
             });
+
+
         }
 
 
@@ -1237,10 +1368,12 @@ data-name="type"
                     // Collect split data
                     let splitData = [];
                     $payment.find("table.payment_payment_split_table tbody tr").each(function() {
+                        let feeId = $(this).data("fee-id");
+
                         let rowData = {
-                            fee_id: $(this).data("fee-id"),
+                            fee_id: feeId,
                             fee_amount: $(this).find(".fee-amount").val(),
-                            fee_currency: $(this).find("select[name^='fee_currency']").val(),
+                            fee_currency: $(this).find(`select.currency-selector-amount`).val(),
                             fee_inr_value: $(this).find(".fee-inr").val()
                         };
                         splitData.push(rowData);
@@ -1319,16 +1452,16 @@ data-name="type"
                 }
             });
 
-            $(document).on("keyup", ".manually-cash", function() {
-                let $row = $(this).closest("tr");
-                let vendor_select = $row.find("select.vendor_id");
-                vendor_select.empty();
+            // $(document).on("keyup", ".manually-cash", function() {
+            //     let $row = $(this).closest("tr");
+            //     let vendor_select = $row.find("select.vendor_id");
+            //     vendor_select.empty();
 
-                let vendorName = $(this).val().trim();
-                if (vendorName !== "") {
-                    vendor_select.append(`<option value="${vendorName}" selected>${vendorName}</option>`);
-                }
-            });
+            //     let vendorName = $(this).val().trim();
+            //     if (vendorName !== "") {
+            //         vendor_select.append(`<option value="${vendorName}" selected>${vendorName}</option>`);
+            //     }
+            // });
 
             // Setup event listeners
             if ($exchangeTableBody) {
