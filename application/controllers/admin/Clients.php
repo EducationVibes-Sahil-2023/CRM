@@ -4035,22 +4035,137 @@ class Clients extends AdminController
     //     }
     // }
 
+    // public function media_upload($data, $media)
+    // {
+    //     if (empty($media["files"]["name"])) {
+    //         return ['success' => false, 'message' => 'No files selected for upload.'];
+    //     }
+
+    //     $doc_ids       = $data["doc_type_id"] ?? [];
+    //     $doc_names     = $data["doc_type_name"] ?? [];
+    //     $document_url  = $data["doc_url"] ?? [];
+    //     $client_id     = $data["clientid"];
+    //     $update_array  = [];
+    //     $error_logs    = [];
+
+    //     $documents_type = get_documents("", [], 1);
+    //     $documents_type = array_column($documents_type, null, 'id');
+
+    //     $this->db->select("data");
+    //     $this->db->where('client_id', $client_id);
+    //     $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
+
+    //     if (!empty($already_data->data)) {
+    //         $already_data = json_decode($already_data->data, true);
+    //         $already_data = array_column($already_data, null, "id");
+    //     }
+
+    //     for ($i = 0; $i < count($doc_ids); $i++) {
+    //         $documents = $media["files_" . $doc_ids[$i]] ?? [];
+
+    //         $file_name_ = str_replace(" ", "-", $doc_names[$i]);
+    //         if (!empty($documents['name'])) {
+    //             $upload_data = [
+    //                 "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+    //                 "type"     => $documents['type'],
+    //                 "tmp_name" => $documents['tmp_name'],
+    //                 "error"    => $documents['error'],
+    //                 "size"     => $documents['size']
+    //             ];
+
+    //             if ($upload_data["error"] === UPLOAD_ERR_OK) {
+    //                 $file_name = upload_applicant_documents($client_id, $upload_data);
+
+    //                 $update_array[] = [
+    //                     "id"            => $doc_ids[$i],
+    //                     "document_file" => $file_name["file_path"],
+    //                     "updated_by"    => get_staff_user_id(),
+    //                     "updated_date"  => date('Y-m-d H:i:s')
+    //                 ];
+
+    //                 $doc_name = $documents_type[$doc_ids[$i]]["name"];
+    //                 $this->db->insert(db_prefix() . 'application_activity_log', [
+    //                     "description" => "{$doc_name} document uploaded by - ",
+    //                     "date"        => date('Y-m-d H:i:s'),
+    //                     "staffid"     => get_staff_user_id(),
+    //                     "client_id"   => $client_id
+    //                 ]);
+    //             } else {
+    //                 $error_logs[] = "Failed to upload '{$doc_names[$i]}' — Error Code: " . $upload_data["error"];
+    //             }
+    //         } elseif (!empty($document_url[$i])) {
+    //             if (!empty($already_data[$doc_ids[$i]])) {
+    //                 $update_array[] = $already_data[$doc_ids[$i]];
+    //             }
+    //         }
+    //     }
+
+    //     // Save or update document data
+    //     $this->db->select("*");
+    //     $this->db->where('client_id', $client_id);
+    //     $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+
+    //     if (!empty($check_->id)) {
+    //         $existing_data = json_decode($check_->data, true) ?? [];
+    //         $existing_data = array_column($existing_data, null, "id");
+    //         $filtered_data = array_diff_key($existing_data, array_flip($doc_ids));
+    //         $merged_array  = array_merge($update_array, array_values($filtered_data));
+
+    //         $update_data = [
+    //             "data"                     => json_encode($merged_array, true),
+    //             "updated_date"            => date('Y-m-d H:i:s'),
+    //             "document_status"         => 0,
+    //             "document_update_datetime" => date('Y-m-d H:i:s'),
+    //             "updated_by"              => get_staff_user_id()
+    //         ];
+    //         $this->db->where("id", $check_->id);
+    //         $this->db->update(db_prefix() . 'client_documents', $update_data);
+    //     } elseif (!empty($update_array)) {
+    //         $insert_data = [
+    //             "client_id"   => $client_id,
+    //             "data"        => json_encode($update_array, true),
+    //             "status"      => 1,
+    //             "created_date" => date('Y-m-d H:i:s'),
+    //             "created_by"  => get_staff_user_id()
+    //         ];
+    //         $this->db->insert(db_prefix() . 'client_documents', $insert_data);
+    //     }
+
+    //     if (!empty($error_logs)) {
+    //         return ['success' => false, 'message' => implode("<br>", $error_logs)];
+    //     }
+
+    //     return ['success' => true, 'message' => 'Documents uploaded successfully.'];
+    // }
+    
     public function media_upload($data, $media)
-    {
-        if (empty($media["files"]["name"])) {
-            return ['success' => false, 'message' => 'No files selected for upload.'];
+{
+    try {
+        // ✅ Validate required inputs
+        if (empty($data["clientid"])) {
+            throw new Exception("Client ID is required.");
         }
 
-        $doc_ids       = $data["doc_type_id"] ?? [];
-        $doc_names     = $data["doc_type_name"] ?? [];
+        if (empty($data["doc_type_id"]) || !is_array($data["doc_type_id"])) {
+            throw new Exception("Document type IDs are missing or invalid.");
+        }
+
+        if (empty($data["doc_type_name"]) || !is_array($data["doc_type_name"])) {
+            throw new Exception("Document type names are missing or invalid.");
+        }
+
+        $doc_ids       = $data["doc_type_id"];
+        $doc_names     = $data["doc_type_name"];
         $document_url  = $data["doc_url"] ?? [];
-        $client_id     = $data["clientid"];
+        $client_id     = (int) $data["clientid"];
         $update_array  = [];
         $error_logs    = [];
 
+        // ✅ Load document types
         $documents_type = get_documents("", [], 1);
         $documents_type = array_column($documents_type, null, 'id');
 
+        // ✅ Fetch already existing client docs
         $this->db->select("data");
         $this->db->where('client_id', $client_id);
         $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
@@ -4058,12 +4173,19 @@ class Clients extends AdminController
         if (!empty($already_data->data)) {
             $already_data = json_decode($already_data->data, true);
             $already_data = array_column($already_data, null, "id");
+        } else {
+            $already_data = [];
         }
 
-        for ($i = 0; $i < count($doc_ids); $i++) {
-            $documents = $media["files_" . $doc_ids[$i]] ?? [];
+        // ✅ Process each document
+        foreach ($doc_ids as $i => $docId) {
+            $docId   = (int) $docId;
+            $docName = $doc_names[$i] ?? "Document";
 
-            $file_name_ = str_replace(" ", "-", $doc_names[$i]);
+            $documents = $media["files_" . $docId] ?? [];
+
+            $file_name_ = str_replace(" ", "-", $docName);
+
             if (!empty($documents['name'])) {
                 $upload_data = [
                     "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
@@ -4074,33 +4196,36 @@ class Clients extends AdminController
                 ];
 
                 if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                    // Upload file
                     $file_name = upload_applicant_documents($client_id, $upload_data);
 
                     $update_array[] = [
-                        "id"            => $doc_ids[$i],
+                        "id"            => $docId,
                         "document_file" => $file_name["file_path"],
                         "updated_by"    => get_staff_user_id(),
                         "updated_date"  => date('Y-m-d H:i:s')
                     ];
 
-                    $doc_name = $documents_type[$doc_ids[$i]]["name"];
+                    // Log activity
+                    $doc_type_name = $documents_type[$docId]["name"] ?? "Unknown";
                     $this->db->insert(db_prefix() . 'application_activity_log', [
-                        "description" => "{$doc_name} document uploaded by - ",
+                        "description" => "{$doc_type_name} document uploaded by - ",
                         "date"        => date('Y-m-d H:i:s'),
                         "staffid"     => get_staff_user_id(),
                         "client_id"   => $client_id
                     ]);
                 } else {
-                    $error_logs[] = "Failed to upload '{$doc_names[$i]}' — Error Code: " . $upload_data["error"];
+                    $error_logs[] = "Failed to upload '{$docName}' — Error Code: " . $upload_data["error"];
                 }
             } elseif (!empty($document_url[$i])) {
-                if (!empty($already_data[$doc_ids[$i]])) {
-                    $update_array[] = $already_data[$doc_ids[$i]];
+                // Keep old data if URL exists
+                if (!empty($already_data[$docId])) {
+                    $update_array[] = $already_data[$docId];
                 }
             }
         }
 
-        // Save or update document data
+        // ✅ Save or update document data
         $this->db->select("*");
         $this->db->where('client_id', $client_id);
         $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
@@ -4108,35 +4233,47 @@ class Clients extends AdminController
         if (!empty($check_->id)) {
             $existing_data = json_decode($check_->data, true) ?? [];
             $existing_data = array_column($existing_data, null, "id");
+
+            // Keep only docs that are not in the current request
             $filtered_data = array_diff_key($existing_data, array_flip($doc_ids));
+
             $merged_array  = array_merge($update_array, array_values($filtered_data));
 
             $update_data = [
-                "data"                     => json_encode($merged_array, true),
-                "updated_date"            => date('Y-m-d H:i:s'),
-                "document_status"         => 0,
+                "data"                     => json_encode($merged_array, JSON_UNESCAPED_UNICODE),
+                "updated_date"             => date('Y-m-d H:i:s'),
+                "document_status"          => 0,
                 "document_update_datetime" => date('Y-m-d H:i:s'),
-                "updated_by"              => get_staff_user_id()
+                "updated_by"               => get_staff_user_id()
             ];
+
             $this->db->where("id", $check_->id);
             $this->db->update(db_prefix() . 'client_documents', $update_data);
         } elseif (!empty($update_array)) {
             $insert_data = [
-                "client_id"   => $client_id,
-                "data"        => json_encode($update_array, true),
-                "status"      => 1,
+                "client_id"    => $client_id,
+                "data"         => json_encode($update_array, JSON_UNESCAPED_UNICODE),
+                "status"       => 1,
                 "created_date" => date('Y-m-d H:i:s'),
-                "created_by"  => get_staff_user_id()
+                "created_by"   => get_staff_user_id()
             ];
             $this->db->insert(db_prefix() . 'client_documents', $insert_data);
         }
 
+        // ✅ Return response
         if (!empty($error_logs)) {
             return ['success' => false, 'message' => implode("<br>", $error_logs)];
         }
 
         return ['success' => true, 'message' => 'Documents uploaded successfully.'];
+
+    } catch (Exception $e) {
+        // Catch unexpected errors
+        log_message('error', 'Media Upload Error: ' . $e->getMessage());
+        return ['success' => false, 'message' => $e->getMessage()];
     }
+}
+
 
 
     public function student_update()
@@ -9834,15 +9971,15 @@ class Clients extends AdminController
     public function payment_quotation()
     {
         try {
-            $payment_id         = $this->input->post("payment_id") ?? '';
-            $client_id          = $this->input->post("client_id") ?? '';
-            $university_name    = $this->input->post("university_name") ?? '';
-            $acadmic_year       = $this->input->post("acadmic_year") ?? '';
-            $study_year         = $this->input->post("study_year") ?? '';
-            $currency_exchange  = $this->input->post("currency_exchange") ?? '';
-            $payment_quotations = $this->input->post("payment_quotations")
-                ? json_decode($this->input->post("payment_quotations"), true)
-                : [];
+        $payment_id         = $this->input->post("payment_id") ?? '';
+        $client_id          = $this->input->post("client_id") ?? '';
+        $university_name    = $this->input->post("university_name") ?? '';
+        $acadmic_year       = $this->input->post("acadmic_year") ?? '';
+        $study_year         = $this->input->post("study_year") ?? '';
+        $currency_exchange  = $this->input->post("currency_exchange") ?? '';
+        $payment_quotations = $this->input->post("payment_quotations")
+            ? json_decode($this->input->post("payment_quotations"), true)
+            : [];
 
             if (empty($payment_quotations)) {
                 throw new Exception("No payment quotations provided.");

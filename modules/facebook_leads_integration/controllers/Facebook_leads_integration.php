@@ -489,6 +489,9 @@ class Facebook_leads_integration extends ClientsController
 
     {
 
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
         $app_version = FACEBOOK_VERSION;
         $key = FORM_KEY;
         $access_token = FACEBOOK_ACCESS_TOKEN;
@@ -558,14 +561,14 @@ if (!empty($ad_id)) {
 // 3. Fetch Ad Set Details
 $ad_set_name = "";
 if (!empty($ad_set_id)) {
-    $ad_set_response = json_decode(file_get_contents("https://graph.facebook.com/$app_version/$ad_set_id?fields=name&access_token=$access_token"), true);
+    $ad_set_response = json_decode(file_get_contents("https://graph.facebook.com/v23.0/$ad_set_id?fields=name&access_token=$access_token"), true);
     $ad_set_name = !empty($ad_set_response["name"]) ? trim($ad_set_response["name"]) : "";
 }
 
 // 4. Fetch Campaign Details
 $campaign_name = "";
 if (!empty($campaign_id)) {
-    $campaign_response = json_decode(file_get_contents("https://graph.facebook.com/v21.0/$campaign_id?fields=name&access_token=$access_token"), true);
+    $campaign_response = json_decode(file_get_contents("https://graph.facebook.com/v23.0/$campaign_id?fields=name&access_token=$access_token"), true);
     $campaign_name = !empty($campaign_response["name"]) ? trim($campaign_response["name"]) : "";
 }
                 $this->db->insert(db_prefix() . 'facebook_leads_logs', array("lead_details" => json_encode($lead_data, true), "lead_data" => json_encode($lead_data_response, true), "ledgen_id" => $leadgen_id, "form_name" => $form_name, "form_id" => $form_id, "datetime" => date("Y-m-d H:i:s")));
