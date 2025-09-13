@@ -7,6 +7,8 @@ $aColumns = [
         WHEN 1 THEN 'MA Applicant'
         WHEN 2 THEN 'Lead'
         WHEN 3 THEN 'SA Applicant'
+        WHEN 4 THEN 'Flight'
+        WHEN 5 THEN 'Visa'
         ELSE 'Unknown'
      END as excel_type",
     'id',

@@ -1,12 +1,4 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-
-<?php
-
-
-
-
-
-?>
 <div class="panel_s">
 
 
@@ -1703,7 +1695,7 @@ if (has_permission('customers', '', 'quotation_create')) {
         // --- Form submission handler ---
         async function handleFormSubmission(form, event) {
             event.preventDefault();
-
+show_loader();
             try {
                 const formData = new FormData();
 
@@ -1736,6 +1728,7 @@ if (has_permission('customers', '', 'quotation_create')) {
 
                 // Show error if duplicates exist
                 if (hasDuplicate) {
+                    hide_loader();
                     alert_float("danger", "Duplicate Currency Exchange Rates detected. Please select unique currencies.");
                     return false; // stop further processing
                 }
@@ -1752,6 +1745,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                         "danger",
                         `Package amount should be greater than or equal to the original package amount (${Orignal_package_amount})`
                     );
+                    hide_loader();
                     return false; // stop further processing
                 }
 
@@ -1760,6 +1754,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                         "danger",
                         `Company due value cannot be negative.`
                     );
+                    hide_loader();
                     return false; // stop further processing  
                 }
 
@@ -1941,11 +1936,6 @@ if (has_permission('customers', '', 'quotation_create')) {
                 <?php } ?>
                 formData.append(csrfData.token_name, csrfData.hash);
 
-                console.log("✅ Final JSON", {
-                    currency_exchange,
-                    university_dues,
-                    company_dues
-                });
 
 
                 const response = await fetch(form.action, {
@@ -1953,6 +1943,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                     body: formData
                 });
                 const data = await response.json();
+                hide_loader();
                 // console.log(data);
                 if (data.resp_code || data.resp_code === "RCS") {
                     alert_float("success", data.resp_desc)
@@ -1970,6 +1961,7 @@ if (has_permission('customers', '', 'quotation_create')) {
 
                 }
             } catch (error) {
+                hide_loader();
                 console.error("Error:", error);
                 alert("Something went wrong! Please try again.");
             }
