@@ -154,8 +154,7 @@ if (has_permission('payment_quotation', '', 'create')) {
         "fd.acadmic_year"    => $acadmic_year
     ]);
 
-    $years_array = !empty($university_applicant_fees_array) ? array_keys($university_applicant_fees_array) : [];
-
+    $years_array =  range(1, 6);
     // Get client data with optimized queries
     $get_clients_fees = [];
     $university_shortlisting = [];
@@ -182,6 +181,8 @@ if (has_permission('payment_quotation', '', 'create')) {
     $currency_lookup = array_column($get_currencies, NULL, 'id');
     $modes = $ci->quotation_model->payment_mod();
     $modes_vendor = $ci->quotation_model->payment_mode_vendors();
+
+    // die;
 
     // Initialize variables with default values
     $applicant_payment_data = [];
@@ -940,7 +941,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
             } else if (modeId == 3) {
                 vendor_select.append(
-                    '<option value="<?= htmlspecialchars(!empty($partnerName['id']) ? $partnerName['id'] : "") ?>" selected>' +
+                    '<option value="<?= htmlspecialchars(!empty($partnerName['name']) ? $partnerName['name'] : "") ?>" selected>' +
                     '<?= htmlspecialchars(!empty($partnerName['name']) ? $partnerName['name'] : "No vendors available") ?>' +
                     '</option>'
                 );
@@ -1294,8 +1295,10 @@ if (has_permission('payment_quotation', '', 'create')) {
             event.preventDefault();
 
             try {
-                await validation_set("applicant-payment-form");
 
+
+                await validation_set("applicant-payment-form");
+                show_loader();
                 const formData = new FormData();
 
                 // 🔹 Currency Exchange (array)
@@ -1322,6 +1325,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                 });
 
                 if (hasDuplicate) {
+                    hide_loader();
                     alert_float("danger", "Duplicate Currency Exchange Rates detected. Please select unique currencies.");
                     return false;
                 }
@@ -1333,7 +1337,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                     let $payment = $(this);
                     let paymentData = {};
 
-                    // Collect all form data for this payment
+                    // 🔹 Collect all form data
                     $payment.find("input, select, textarea").each(function() {
                         let name = $(this).attr("data-name");
                         if (!name) return;
@@ -1341,46 +1345,61 @@ if (has_permission('payment_quotation', '', 'create')) {
                         let value;
 
                         if ($(this).is(":checkbox")) {
-                            // ✅ For checkboxes → 1 if checked, 0 if not
+                            // ✅ For checkboxes
                             value = $(this).is(":checked") ? 1 : 0;
                         } else if ($(this).is(":radio")) {
-                            // ✅ For radio → only take the checked one
+                            // ✅ Only use checked radio
                             if (!$(this).is(":checked")) return;
                             value = $(this).val();
+                        } else if ($(this).is("select[multiple]")) {
+                            // ✅ Handle multiple select
+                            value = $(this).val() || [];
                         } else {
                             value = $(this).val();
                         }
 
                         if (value !== undefined) {
                             if (name.endsWith("[]")) {
+                                // Normalize array fields
                                 name = name.replace("[]", "");
                                 if (!paymentData[name]) {
                                     paymentData[name] = [];
                                 }
-                                paymentData[name].push(value);
+                                if (Array.isArray(value)) {
+                                    paymentData[name] = paymentData[name].concat(value);
+                                } else {
+                                    paymentData[name].push(value);
+                                }
                             } else {
                                 paymentData[name] = value;
                             }
                         }
                     });
 
-
-                    // Collect split data
+                    // 🔹 Collect split data rows
                     let splitData = [];
                     $payment.find("table.payment_payment_split_table tbody tr").each(function() {
-                        let feeId = $(this).data("fee-id");
-
                         let rowData = {
-                            fee_id: feeId,
-                            fee_amount: $(this).find(".fee-amount").val(),
-                            fee_currency: $(this).find(`select.currency-selector-amount`).val(),
-                            fee_inr_value: $(this).find(".fee-inr").val()
+                            fee_id: $(this).data("fee-id") || null,
+                            fee_amount: $(this).find(".fee-amount").val() || 0,
+                            fee_currency: $(this).find("select.currency-selector-amount").val() || '',
+                            fee_inr_value: $(this).find(".fee-inr").val() || 0
                         };
                         splitData.push(rowData);
                     });
 
                     paymentData.split_data = splitData;
+
+                    // ✅ Push payment object into main array
                     paymentpayments.push(paymentData);
+
+                    // 🔹 Collect files
+                    let fileInput = $(this).find("input[type='file']")[0];
+                    if (fileInput && fileInput.files.length > 0) {
+                        $.each(fileInput.files, function(fIndex, file) {
+                            formData.append("proof_" + index, file);
+                        });
+                    }
                 });
 
                 // 🔹 Add all form data to FormData
@@ -1389,14 +1408,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                 });
 
                 // 🔹 Add files
-                $("input[type='file']").each(function() {
-                    let files = $(this)[0].files;
-                    if (files && files.length > 0) {
-                        for (let i = 0; i < files.length; i++) {
-                            formData.append("proof_" + i, files[i]);
-                        }
-                    }
-                });
+
 
                 // 🔹 Add structured data
                 formData.append("currency_exchange", JSON.stringify(currency_exchange));
@@ -1418,6 +1430,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                 });
 
                 const data = await response.json();
+                hide_loader();
 
                 if (data.resp_code === "RCS") {
                     alert_float("success", data.resp_desc);
@@ -1433,6 +1446,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                     alert_float("danger", data.resp_desc);
                 }
             } catch (error) {
+                hide_loader();
                 console.error("Error:", error);
                 alert_float("danger", "Something went wrong! Please try again.");
             }
@@ -1559,7 +1573,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                 // ✅ Handle delete confirm
                 if (status == 0) {
-                    if (!confirm("Are you sure you want to delete " + (documents_type_dropdown[doc_id]?.name ?? "this") + " document?")) {
+                    if (!confirm("Are you sure you want to delete Payments ?")) {
                         hide_loader();
                         return false;
                     }

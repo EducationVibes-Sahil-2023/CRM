@@ -4137,142 +4137,141 @@ class Clients extends AdminController
 
     //     return ['success' => true, 'message' => 'Documents uploaded successfully.'];
     // }
-    
+
     public function media_upload($data, $media)
-{
-    try {
-        // ✅ Validate required inputs
-        if (empty($data["clientid"])) {
-            throw new Exception("Client ID is required.");
-        }
+    {
+        try {
+            // ✅ Validate required inputs
+            if (empty($data["clientid"])) {
+                throw new Exception("Client ID is required.");
+            }
 
-        if (empty($data["doc_type_id"]) || !is_array($data["doc_type_id"])) {
-            throw new Exception("Document type IDs are missing or invalid.");
-        }
+            if (empty($data["doc_type_id"]) || !is_array($data["doc_type_id"])) {
+                throw new Exception("Document type IDs are missing or invalid.");
+            }
 
-        if (empty($data["doc_type_name"]) || !is_array($data["doc_type_name"])) {
-            throw new Exception("Document type names are missing or invalid.");
-        }
+            if (empty($data["doc_type_name"]) || !is_array($data["doc_type_name"])) {
+                throw new Exception("Document type names are missing or invalid.");
+            }
 
-        $doc_ids       = $data["doc_type_id"];
-        $doc_names     = $data["doc_type_name"];
-        $document_url  = $data["doc_url"] ?? [];
-        $client_id     = (int) $data["clientid"];
-        $update_array  = [];
-        $error_logs    = [];
+            $doc_ids       = $data["doc_type_id"];
+            $doc_names     = $data["doc_type_name"];
+            $document_url  = $data["doc_url"] ?? [];
+            $client_id     = (int) $data["clientid"];
+            $update_array  = [];
+            $error_logs    = [];
 
-        // ✅ Load document types
-        $documents_type = get_documents("", [], 1);
-        $documents_type = array_column($documents_type, null, 'id');
+            // ✅ Load document types
+            $documents_type = get_documents("", [], 1);
+            $documents_type = array_column($documents_type, null, 'id');
 
-        // ✅ Fetch already existing client docs
-        $this->db->select("data");
-        $this->db->where('client_id', $client_id);
-        $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
+            // ✅ Fetch already existing client docs
+            $this->db->select("data");
+            $this->db->where('client_id', $client_id);
+            $already_data = $this->db->get(db_prefix() . 'client_documents')->row();
 
-        if (!empty($already_data->data)) {
-            $already_data = json_decode($already_data->data, true);
-            $already_data = array_column($already_data, null, "id");
-        } else {
-            $already_data = [];
-        }
+            if (!empty($already_data->data)) {
+                $already_data = json_decode($already_data->data, true);
+                $already_data = array_column($already_data, null, "id");
+            } else {
+                $already_data = [];
+            }
 
-        // ✅ Process each document
-        foreach ($doc_ids as $i => $docId) {
-            $docId   = (int) $docId;
-            $docName = $doc_names[$i] ?? "Document";
+            // ✅ Process each document
+            foreach ($doc_ids as $i => $docId) {
+                $docId   = (int) $docId;
+                $docName = $doc_names[$i] ?? "Document";
 
-            $documents = $media["files_" . $docId] ?? [];
+                $documents = $media["files_" . $docId] ?? [];
 
-            $file_name_ = str_replace(" ", "-", $docName);
+                $file_name_ = str_replace(" ", "-", $docName);
 
-            if (!empty($documents['name'])) {
-                $upload_data = [
-                    "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
-                    "type"     => $documents['type'],
-                    "tmp_name" => $documents['tmp_name'],
-                    "error"    => $documents['error'],
-                    "size"     => $documents['size']
-                ];
-
-                if ($upload_data["error"] === UPLOAD_ERR_OK) {
-                    // Upload file
-                    $file_name = upload_applicant_documents($client_id, $upload_data);
-
-                    $update_array[] = [
-                        "id"            => $docId,
-                        "document_file" => $file_name["file_path"],
-                        "updated_by"    => get_staff_user_id(),
-                        "updated_date"  => date('Y-m-d H:i:s')
+                if (!empty($documents['name'])) {
+                    $upload_data = [
+                        "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+                        "type"     => $documents['type'],
+                        "tmp_name" => $documents['tmp_name'],
+                        "error"    => $documents['error'],
+                        "size"     => $documents['size']
                     ];
 
-                    // Log activity
-                    $doc_type_name = $documents_type[$docId]["name"] ?? "Unknown";
-                    $this->db->insert(db_prefix() . 'application_activity_log', [
-                        "description" => "{$doc_type_name} document uploaded by - ",
-                        "date"        => date('Y-m-d H:i:s'),
-                        "staffid"     => get_staff_user_id(),
-                        "client_id"   => $client_id
-                    ]);
-                } else {
-                    $error_logs[] = "Failed to upload '{$docName}' — Error Code: " . $upload_data["error"];
-                }
-            } elseif (!empty($document_url[$i])) {
-                // Keep old data if URL exists
-                if (!empty($already_data[$docId])) {
-                    $update_array[] = $already_data[$docId];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        // Upload file
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+
+                        $update_array[] = [
+                            "id"            => $docId,
+                            "document_file" => $file_name["file_path"],
+                            "updated_by"    => get_staff_user_id(),
+                            "updated_date"  => date('Y-m-d H:i:s')
+                        ];
+
+                        // Log activity
+                        $doc_type_name = $documents_type[$docId]["name"] ?? "Unknown";
+                        $this->db->insert(db_prefix() . 'application_activity_log', [
+                            "description" => "{$doc_type_name} document uploaded by - ",
+                            "date"        => date('Y-m-d H:i:s'),
+                            "staffid"     => get_staff_user_id(),
+                            "client_id"   => $client_id
+                        ]);
+                    } else {
+                        $error_logs[] = "Failed to upload '{$docName}' — Error Code: " . $upload_data["error"];
+                    }
+                } elseif (!empty($document_url[$i])) {
+                    // Keep old data if URL exists
+                    if (!empty($already_data[$docId])) {
+                        $update_array[] = $already_data[$docId];
+                    }
                 }
             }
+
+            // ✅ Save or update document data
+            $this->db->select("*");
+            $this->db->where('client_id', $client_id);
+            $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
+
+            if (!empty($check_->id)) {
+                $existing_data = json_decode($check_->data, true) ?? [];
+                $existing_data = array_column($existing_data, null, "id");
+
+                // Keep only docs that are not in the current request
+                $filtered_data = array_diff_key($existing_data, array_flip($doc_ids));
+
+                $merged_array  = array_merge($update_array, array_values($filtered_data));
+
+                $update_data = [
+                    "data"                     => json_encode($merged_array, JSON_UNESCAPED_UNICODE),
+                    "updated_date"             => date('Y-m-d H:i:s'),
+                    "document_status"          => 0,
+                    "document_update_datetime" => date('Y-m-d H:i:s'),
+                    "updated_by"               => get_staff_user_id()
+                ];
+
+                $this->db->where("id", $check_->id);
+                $this->db->update(db_prefix() . 'client_documents', $update_data);
+            } elseif (!empty($update_array)) {
+                $insert_data = [
+                    "client_id"    => $client_id,
+                    "data"         => json_encode($update_array, JSON_UNESCAPED_UNICODE),
+                    "status"       => 1,
+                    "created_date" => date('Y-m-d H:i:s'),
+                    "created_by"   => get_staff_user_id()
+                ];
+                $this->db->insert(db_prefix() . 'client_documents', $insert_data);
+            }
+
+            // ✅ Return response
+            if (!empty($error_logs)) {
+                return ['success' => false, 'message' => implode("<br>", $error_logs)];
+            }
+
+            return ['success' => true, 'message' => 'Documents uploaded successfully.'];
+        } catch (Exception $e) {
+            // Catch unexpected errors
+            log_message('error', 'Media Upload Error: ' . $e->getMessage());
+            return ['success' => false, 'message' => $e->getMessage()];
         }
-
-        // ✅ Save or update document data
-        $this->db->select("*");
-        $this->db->where('client_id', $client_id);
-        $check_ = $this->db->get(db_prefix() . 'client_documents')->row();
-
-        if (!empty($check_->id)) {
-            $existing_data = json_decode($check_->data, true) ?? [];
-            $existing_data = array_column($existing_data, null, "id");
-
-            // Keep only docs that are not in the current request
-            $filtered_data = array_diff_key($existing_data, array_flip($doc_ids));
-
-            $merged_array  = array_merge($update_array, array_values($filtered_data));
-
-            $update_data = [
-                "data"                     => json_encode($merged_array, JSON_UNESCAPED_UNICODE),
-                "updated_date"             => date('Y-m-d H:i:s'),
-                "document_status"          => 0,
-                "document_update_datetime" => date('Y-m-d H:i:s'),
-                "updated_by"               => get_staff_user_id()
-            ];
-
-            $this->db->where("id", $check_->id);
-            $this->db->update(db_prefix() . 'client_documents', $update_data);
-        } elseif (!empty($update_array)) {
-            $insert_data = [
-                "client_id"    => $client_id,
-                "data"         => json_encode($update_array, JSON_UNESCAPED_UNICODE),
-                "status"       => 1,
-                "created_date" => date('Y-m-d H:i:s'),
-                "created_by"   => get_staff_user_id()
-            ];
-            $this->db->insert(db_prefix() . 'client_documents', $insert_data);
-        }
-
-        // ✅ Return response
-        if (!empty($error_logs)) {
-            return ['success' => false, 'message' => implode("<br>", $error_logs)];
-        }
-
-        return ['success' => true, 'message' => 'Documents uploaded successfully.'];
-
-    } catch (Exception $e) {
-        // Catch unexpected errors
-        log_message('error', 'Media Upload Error: ' . $e->getMessage());
-        return ['success' => false, 'message' => $e->getMessage()];
     }
-}
 
 
 
@@ -9971,15 +9970,15 @@ class Clients extends AdminController
     public function payment_quotation()
     {
         try {
-        $payment_id         = $this->input->post("payment_id") ?? '';
-        $client_id          = $this->input->post("client_id") ?? '';
-        $university_name    = $this->input->post("university_name") ?? '';
-        $acadmic_year       = $this->input->post("acadmic_year") ?? '';
-        $study_year         = $this->input->post("study_year") ?? '';
-        $currency_exchange  = $this->input->post("currency_exchange") ?? '';
-        $payment_quotations = $this->input->post("payment_quotations")
-            ? json_decode($this->input->post("payment_quotations"), true)
-            : [];
+            $payment_id         = $this->input->post("payment_id") ?? '';
+            $client_id          = $this->input->post("client_id") ?? '';
+            $university_name    = $this->input->post("university_name") ?? '';
+            $acadmic_year       = $this->input->post("acadmic_year") ?? '';
+            $study_year         = $this->input->post("study_year") ?? '';
+            $currency_exchange  = $this->input->post("currency_exchange") ?? '';
+            $payment_quotations = $this->input->post("payment_quotations")
+                ? json_decode($this->input->post("payment_quotations"), true)
+                : [];
 
             if (empty($payment_quotations)) {
                 throw new Exception("No payment quotations provided.");
@@ -9993,20 +9992,10 @@ class Clients extends AdminController
                 throw new Exception("Access denied: Quotation Payment Create");
             }
 
-            // 🔹 Load fees for duplicate error messages
-            $university_applicant_fees = university_applicant_fees("", 1, [
-                "university_name" => $university_name,
-                "acadmic_year"    => $acadmic_year
-            ]);
-            $university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
+            $seenEntries = [];
+            $insertRows  = [];
+            $updateRows  = [];
 
-            $paymentData  = [];
-            $seenEntries  = [];
-
-
-            // echo "<pre>";
-            // print_r($payment_quotations);
-            // die;
             foreach ($payment_quotations as $key => $payment) {
                 $row = [
                     "client_id"       => $client_id,
@@ -10014,153 +10003,126 @@ class Clients extends AdminController
                     "academic_year"   => $acadmic_year,
                     "year"            => $study_year,
                     "exchange_value"  => $currency_exchange,
+                    "mode"            => $payment['mode'] ?? '',
+                    "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
+                    "pay_date"        => $payment['pay_date'] ?? null,
+                    "payment_type"        => $payment['payment_type'] ?? "",
                 ];
 
+                // Metadata
                 if (!empty($payment_id)) {
-                    $row["id"] = $payment_id;
-                    $row["updated_by"] = date('Y-m-d H:i:s');
-                    $row["updated_date"] = get_staff_user_id();
+                    $row["id"]         = $payment_id;
+                    $row["updated_by"] = get_staff_user_id();
+                    $row["updated_date"] = date('Y-m-d H:i:s');
                 } else {
+                    $row["created_by"]   = get_staff_user_id();
                     $row["created_date"] = date('Y-m-d H:i:s');
-                    $row["created_by"] = get_staff_user_id();
                 }
 
-                // Merge payment fields
-                $row = array_merge($row, $payment);
-
-                // Convert type array → string
-                if (!empty($payment["type"]) && is_array($payment["type"])) {
-                    $row["type"] = implode(",", $payment["type"]);
-                }
+                // Handle type (array → string)
+                $row["type"] = !empty($payment["type"]) && is_array($payment["type"])
+                    ? implode(",", $payment["type"])
+                    : "";
 
                 // Vendor handling
-                if (!empty($payment["vendor_id"])) {
-                    $row["vendor_name"] = is_numeric($payment["vendor_id"])
-                        ? ''
-                        : $payment["vendor_id"];
+                if (is_numeric($payment["vendor_id"])) {
+                    $row["vendor_id"]   = $payment["vendor_id"];
+                    $row["vendor_name"] = '';
+                } else {
+                    $row["vendor_id"]   = 0;
+                    $row["vendor_name"] = $payment["vendor_id"];
                 }
 
-                // Encode split_data
+
+                // Split data (JSON encode)
                 if (!empty($payment["split_data"])) {
                     $row["fess_infomation"] = json_encode($payment["split_data"], JSON_UNESCAPED_UNICODE);
                 }
 
-
-                $vendorId   = is_numeric($payment["vendor_id"]) ? $payment["vendor_id"] : 0;
-                $vendorName = !is_numeric($payment["vendor_id"]) ? $payment["vendor_id"] : '';
-
+                // 🚫 Prevent duplicate in same request
                 $entryKey = implode("|", [
                     $client_id,
                     $university_name,
                     $acadmic_year,
                     $study_year,
-                    $payment['mode'],
-                    $payment['amount'],
-                    $payment['pay_date'],
-                    "vendor_id:" . $vendorId,
-                    "vendor_name:" . $vendorName
+                    $row['mode'],
+                    $row['amount'],
+                    $row['pay_date'],
+                    "vendor_id:" . ($row['vendor_id'] ?? 0),
+                    "vendor_name:" . ($row['vendor_name'] ?? '')
                 ]);
-
-                // 🚫 Prevent duplicate in same request
                 if (isset($seenEntries[$entryKey])) {
-                    throw new Exception(
-                        "Duplicate detected in current submission for {$university_applicant_fees_[$feeId]['name']} Fees, Amount {$feeAmount}."
-                    );
+                    throw new Exception("Duplicate detected in current submission (Mode {$row['mode']}, Amount {$row['amount']}).");
                 }
                 $seenEntries[$entryKey] = true;
 
                 // 🚫 Prevent duplicate in DB
-                $this->db->where('client_id', $client_id);
-                $this->db->where('university_name', $university_name);
-                $this->db->where('academic_year', $acadmic_year);
-                $this->db->where('year', $study_year);
-                $this->db->where('mode', $payment['mode']);
-                $this->db->where('amount', $payment['amount']);
-                $this->db->where('pay_date', $payment['pay_date']);
-
-                if (is_numeric($payment["vendor_id"])) {
-                    $this->db->where('vendor_id', $payment["vendor_id"]);
+                $this->db->where([
+                    'client_id'      => $client_id,
+                    'university_name' => $university_name,
+                    'academic_year'  => $acadmic_year,
+                    'year'           => $study_year,
+                    'mode'           => $row['mode'],
+                    'amount'         => $row['amount'],
+                    'pay_date'       => $row['pay_date'],
+                ]);
+                if (!empty($row["vendor_id"])) {
+                    $this->db->where('vendor_id', $row["vendor_id"]);
                 } else {
-                    $this->db->where('vendor_name', $payment["vendor_id"]);
+                    $this->db->where('vendor_name', $row["vendor_name"]);
                 }
-
-                if (!empty($payment_id)) {
-                    $this->db->where('id !=', $payment_id);
+                if (!empty($row["id"])) {
+                    $this->db->where('id !=', $row["id"]);
                 }
-
-                // $jsonCheck = json_encode([
-                //     "fee_id"      => $feeId,
-                //     "fee_amount"  => $feeAmount,
-                //     "fee_currency" => $feeCurrency
-                // ], JSON_UNESCAPED_UNICODE);
-
-                // $this->db->where("JSON_CONTAINS(fess_infomation, " . $this->db->escape($jsonCheck) . ")", NULL, FALSE);
                 $duplicate = $this->db->get(db_prefix() . 'payment_quotations')->row();
-
                 if ($duplicate) {
-                    throw new Exception(
-                        "Duplicate entry already exists for {$university_applicant_fees_[$feeId]['name']} Fees, Amount {$feeAmount}."
-                    );
+                    throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");
                 }
-
-                // ✅ Duplicate checks
-                // if (!empty($payment["split_data"])) {
-                //     foreach ($payment["split_data"] as $splitData) {
-                //         $feeId       = (int)$splitData["fee_id"];
-                //         $feeAmount   = $splitData["fee_amount"];
-                //         $feeCurrency = $splitData["fee_currency"];
-
-
-                //     }
-                // }
-
-                // Clean unwanted fields
-                unset($row["proof"], $row["split_data"]);
 
                 // 📎 File upload
-                if (!empty($_FILES["proof_" . $key])) {
+                if (!empty($_FILES["proof_" . $key]['name'])) {
                     $documents = $_FILES["proof_" . $key];
-                    if (!empty($documents['name'])) {
-                        $file_name_ = ($client_id ? get_client_name($client_id) : 'proof') . "_" . time();
-                        $upload_data = [
-                            "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
-                            "type"     => $documents['type'],
-                            "tmp_name" => $documents['tmp_name'],
-                            "error"    => $documents['error'],
-                            "size"     => $documents['size'],
-                        ];
-                        if ($upload_data["error"] === UPLOAD_ERR_OK) {
-                            $file_name = upload_applicant_documents($client_id, $upload_data);
-                            $row['pdf'] = $file_name["file_path"];
-                        }
+                    $file_name_ = ($client_id ? get_client_name($client_id) : 'proof') . "_" . time();
+                    $upload_data = [
+                        "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+                        "type"     => $documents['type'],
+                        "tmp_name" => $documents['tmp_name'],
+                        "error"    => $documents['error'],
+                        "size"     => $documents['size'],
+                    ];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        $row['pdf'] = $file_name["file_path"];
+                        $row['status'] = 3;
                     }
                 }
 
-                $paymentData[] = $row;
-            }
-
-
-
-
-            // 🔹 Insert or Update
-            if (!empty($paymentData)) {
-                if (!empty($payment_id)) {
-                    $this->db->update_batch(db_prefix() . 'payment_quotations', $paymentData, 'id');
+                // Decide insert/update bucket
+                if (!empty($row["id"])) {
+                    $updateRows[] = $row;
                 } else {
-                    $this->db->insert_batch(db_prefix() . 'payment_quotations', $paymentData);
+                    $insertRows[] = $row;
                 }
             }
 
-            // if ($this->db->affected_rows()) {
-            echo json_encode([
-                'resp_code' => 'RCS',
-                'resp_desc' => 'Payment quotation data saved successfully.'
-            ]);
-            // } else {
-            //     throw new Exception("No changes were made or failed to save payment quotation data.");
-            // }
+
+            // 🔹 Insert or Update
+            if (!empty($updateRows)) {
+                $this->db->update_batch(db_prefix() . 'payment_quotations', $updateRows, 'id');
+            }
+            if (!empty($insertRows)) {
+                $this->db->insert_batch(db_prefix() . 'payment_quotations', $insertRows);
+            }
+
+            if ($this->db->affected_rows()) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Payment quotation data saved successfully.'
+                ]);
+            } else {
+                throw new Exception("No changes were made or failed to save payment quotation data.");
+            }
         } catch (Exception $e) {
-            log_message('error', 'Payment quotation insert failed: ' . $e->getMessage());
             echo json_encode([
                 'resp_code' => 'ERR',
                 'resp_desc' => $e->getMessage()
@@ -10199,7 +10161,7 @@ class Clients extends AdminController
                     $data['resp_desc'] = 'This quotation has already been ' . ($current_status == 1 ? 'approved' : 'rejected') . '.';
                 } elseif ($status === 0) {
                     // Delete record
-                    $this->db->where('id', $quotation_payment_id)->update(db_prefix() . 'payment_quotations', ['status' => $status]);
+                    $this->db->where('id', $quotation_payment_id)->update(db_prefix() . 'payment_quotations', ['pdf' => '', 'status' => $status]);
                     if ($this->db->affected_rows() > 0) {
                         $data['resp_code'] = 'RCS';
                         $data['resp_desc'] = 'Quotation payment deleted successfully.';
