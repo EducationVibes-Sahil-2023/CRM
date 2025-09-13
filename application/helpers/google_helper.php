@@ -1815,7 +1815,7 @@ function ma_quotations()
         "Pay Mode",
         "Pay Vendor",
         "Quotation Label",
-         "USD Rate"
+        "USD Rate"
     ];
     $sheet_name = "Sheet 1";
 
