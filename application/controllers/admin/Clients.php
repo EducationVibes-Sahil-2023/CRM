@@ -10031,6 +10031,8 @@ class Clients extends AdminController
                 // Convert type array → string
                 if (!empty($payment["type"]) && is_array($payment["type"])) {
                     $row["type"] = implode(",", $payment["type"]);
+                }else{
+                     $row["type"] = '';
                 }
 
                 // Vendor handling
@@ -10150,15 +10152,16 @@ class Clients extends AdminController
                     $this->db->insert_batch(db_prefix() . 'payment_quotations', $paymentData);
                 }
             }
+           
 
-            // if ($this->db->affected_rows()) {
+            if ($this->db->affected_rows()) {
             echo json_encode([
                 'resp_code' => 'RCS',
                 'resp_desc' => 'Payment quotation data saved successfully.'
             ]);
-            // } else {
-            //     throw new Exception("No changes were made or failed to save payment quotation data.");
-            // }
+            } else {
+                throw new Exception("No changes were made or failed to save payment quotation data.");
+            }
         } catch (Exception $e) {
             log_message('error', 'Payment quotation insert failed: ' . $e->getMessage());
             echo json_encode([

@@ -54,7 +54,8 @@ $academicYears = [
                                             <option value="1" <?php echo ($excelInfo->excel_type == "1") ? 'selected' : ''; ?>>MA Applicant</option>
                                             <option value="3" <?php echo ($excelInfo->excel_type == "3") ? 'selected' : ''; ?>>SA Applicant</option>
                                             <option value="2" <?php echo ($excelInfo->excel_type == "2") ? 'selected' : ''; ?>>Leads</option>
-                                            <option value="4" <?php echo ($excelInfo->excel_type == "4") ? 'selected' : ''; ?>>Visa</option>
+                                            <option value="4" <?php echo ($excelInfo->excel_type == "4") ? 'selected' : ''; ?>>Flight</option>
+                                            <option value="5" <?php echo ($excelInfo->excel_type == "5") ? 'selected' : ''; ?>>Visa</option>
                                         </select>
                                     </div>
 
@@ -225,6 +226,10 @@ $academicYears = [
             $(".visa-data").show();
             $(".excel-type-4").show();
         }
+         else if (type === "5" || type === 5) {
+            $(".visa-data").show();
+            $(".excel-type-5").show();
+        }
     }
 
 
@@ -348,9 +353,13 @@ $academicYears = [
             $(".applicant-sa").show();
             $(".excel-type-3").show();
         }
-        else if (type === "4" || type === 4) {
+        else if (excel_type === "4" || excel_type === 4) {
             $(".visa-data").show();
             $(".excel-type-4").show();
+        }
+         else if (excel_type === "5" || excel_type === 5) {
+            $(".visa-data").show();
+            $(".excel-type-5").show();
         }
     });
 </script>
