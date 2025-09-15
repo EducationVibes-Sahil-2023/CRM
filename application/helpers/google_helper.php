@@ -858,6 +858,15 @@ function syncExcel_neww($id = "")
              continue;
             // die;
         }
+          if ((int) $sheet['excel_type'] === 6) {
+     
+            $dataArray[] = payment_quotations($id);
+            
+             continue;
+            // die;
+        }
+        
+        
         if ((int) $sheet['excel_type'] !== 1) {
             continue;
         }
@@ -1257,7 +1266,7 @@ function fly_excel_sync($id = "")
             $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
 $condition_sql ="";
-        $condition_sql .= " AND ((l.type = 1 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
+        $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
         
 $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "ticket_data td
@@ -1266,7 +1275,7 @@ LEFT JOIN " . db_prefix() . "clients c ON c.userid = td.client_id
   LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
 LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
-LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 1)
+LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 2)
 LEFT JOIN " . db_prefix() . "staff st ON c.addedfrom = st.staffid
 LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
@@ -1281,6 +1290,7 @@ LEFT JOIN " . db_prefix() . "departure_location dl ON dl.id = td.departure_locat
 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
 LEFT JOIN " . db_prefix() . "departure_location tdl ON tdl.id = td.departure_location
+LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = td.payment_mode
 
 WHERE 1=1 {$condition_sql}
 GROUP BY c.userid";
@@ -1402,7 +1412,7 @@ function visa_excel_sync($id = "")
             $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
 $condition_sql ="";
-        $condition_sql .= " AND ((l.type = 1 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
+        $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
         
 $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "visa_details vd
@@ -1411,7 +1421,7 @@ LEFT JOIN " . db_prefix() . "clients c ON c.userid = vd.userid
   LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
 LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
-LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 1)
+LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type =2)
 LEFT JOIN " . db_prefix() . "staff st ON c.addedfrom = st.staffid
 LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
@@ -1788,12 +1798,10 @@ function leads_excel_sync($id = "")
 
 function ma_quotations()
 {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
-
+$acadmic_year ="2025 - 2026";
     $columns = [
         "Applicant Name",
         "University Name",
@@ -1815,10 +1823,15 @@ function ma_quotations()
         "Pay Mode",
         "Pay Vendor",
         "Quotation Label",
-        "USD Rate"
+        "USD Rate",
+        "Fly Batch",
+        "Fly Date",
+        "Departure",
+        "Country"
     ];
     $sheet_name = "Sheet 1";
-
+$condition_sql ="";
+$condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  ";
     try {
         // ✅ Correct SQL (removed trailing comma before FROM)
         $sql = "
@@ -1839,18 +1852,35 @@ function ma_quotations()
                  ts.name sub_stage,
                  CONCAT(tt.id,' ',tt.name) application_stage,
                  if(c.client_type=1,'EV','EVP') as client_type,
-                 CONCAT(st.firstname,' ',st.lastname) as counsellor_name
+                 CONCAT(st.firstname,' ',st.lastname) as counsellor_name,
+                 tb.name as batch_name,
+                DATE_FORMAT(
+                IF(td.fly_date IS NOT NULL AND td.fly_date != '0000-00-00',
+                td.fly_date,
+                NULL
+                ), '%d-%m-%Y'
+                ) AS fly_date,
+                fl.name as departure,
+                p.primary_country
+               
+
                  
             FROM " . db_prefix() . "applicant_quotation_payment aq
-           LEFT JOIN " . db_prefix() . "basic_details bd  ON aq.client_id = bd.userid
-           LEFT JOIN " . db_prefix() . "clients c on c.userid = aq.client_id
+            LEFT JOIN " . db_prefix() . "basic_details bd  ON aq.client_id = bd.userid
+            LEFT JOIN " . db_prefix() . "clients c on c.userid = aq.client_id
             LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
             LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
             LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
             LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
             LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
+            LEFT JOIN " . db_prefix() . "ticket_data td ON td.client_id = aq.client_id
+            LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
+            LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
+            LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+           where 1=1 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql}
                
         ";
+
 
         $arrayData = $CI->db->query($sql)->result_array();
 
@@ -1895,6 +1925,158 @@ function ma_quotations()
     }
 
     exit;
+}
+
+
+function payment_quotations($id='')
+{
+    ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
+
+    $CI = &get_instance();
+
+    // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    $CI->db->query("SET SESSION sql_mode = ''");
+
+    // Fetch sheet config(s)
+    $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, acadmic_year, sheet_name, sql_condition, column_ids, orignal_documents_status")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("excel_type", 6)
+        ->where("autoSync", 1);
+
+    if (!empty($id)) {
+        $CI->db->where("spreadsheetId", $id);
+    }
+
+    $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
+    
+    
+    $get_currencies = get_currencies();
+$get_currencies = array_column($get_currencies, null, 'id');
+
+$university_applicant_fees_payments = university_applicant_fees_payments();
+$university_applicant_fees_payments = array_column($university_applicant_fees_payments, null, 'id');
+    if (empty($sheetData)) {
+        return [];
+    }
+
+    $dataArray = [];
+
+    foreach ($sheetData as $sheet) {
+
+
+        $currentId                = $sheet['id'] ?? null;
+        $fromDate                 = $sheet['fromDate'] ?? null;
+        $toDate                   = $sheet['toDate'] ?? null;
+        $acadmic_year             = $sheet['acadmic_year'] ?? null;
+        $spreadsheetId            = $sheet['spreadsheetId'] ?? null;
+        $sheet_name               = $sheet['sheet_name'] ?? null;
+        $orignal_documents_status = $sheet['orignal_documents_status'] ?? null;
+        $apostile_documents_status = $sheet['apostile_documents_status'] ?? null;
+        $sql_conditions           = $sheet['sql_condition'] ?? null;
+
+        // Parse column IDs
+        $column_ids_raw = $sheet['column_ids'] ?? '';
+        $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
+            ? array_filter(array_map('intval', explode(",", $column_ids_raw)))
+            : [];
+
+        if (empty($column_ids)) {
+            continue; // skip if no columns configured
+        }
+        $order = implode(',', $column_ids);
+
+        // Fetch column names in correct order
+        $selectColumnName = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $order)) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
+            ->fetch_column_name ?? '';
+
+        if (empty($selectColumnName)) {
+            continue;
+        }
+
+        $extra_columns = [];
+
+        // Build conditions
+        $condition_sql = "";
+        if (!empty($fromDate) && !empty($toDate)) {
+            $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
+        }
+        if (!empty($acadmic_year)) {
+            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+        }
+$condition_sql ="";
+        $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
+    
+  $sql = "
+        SELECT 
+        {$selectColumnName},exchange_value,fess_infomation
+        FROM `".db_prefix()."payment_quotations` pq 
+        LEFT JOIN ".db_prefix()."clients c ON pq.client_id = c.userid 
+        LEFT JOIN ".db_prefix()."quotation_mode m ON m.id = pq.mode 
+        LEFT JOIN ".db_prefix()."basic_details b ON b.userid = pq.client_id 
+        JOIN ".db_prefix()."applicant_fees f ON f.id = pq.payment_type  
+        LEFT JOIN ".db_prefix()."applicant_stages tt ON tt.id = c.applicant_stage
+        LEFT JOIN ".db_prefix()."application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status 
+        LEFT JOIN ".db_prefix()."staff st ON c.addedfrom = st.staffid 
+        LEFT JOIN ".db_prefix()."admission_preferences p ON p.userid = pq.client_id 
+        LEFT JOIN ".db_prefix()."office_location lo ON lo.id = pq.location_id  
+        LEFT JOIN ".db_prefix()."client_passport_details pd ON pd.client_id = c.userid 
+        LEFT JOIN ".db_prefix()."passport_stages ps ON ps.id = pd.passport_status 
+        LEFT JOIN ".db_prefix()."client_university_shortlisting u ON u.client_id = pq.client_id 
+        LEFT JOIN ".db_prefix()."university_partner u_p ON u_p.id = u.partner 
+        LEFT JOIN ".db_prefix()."quotation_vendor vl ON vl.id = pq.vendor_id 
+        LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+        LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = pq.ex_currency
+        WHERE 1=1 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql}
+        GROUP BY pq.id ORDER BY pq.client_id
+        ";
+    
+     
+    
+       $sql = preg_replace('/\s+/', ' ', trim($sql));
+
+        $query = $CI->db->query($sql);
+
+        $arrayData = $query->result_array();
+        // Get column names
+        $sheetColumnName = $CI->db->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->order_by("FIELD(id, " . implode(',', $column_ids) . ")", "", false)
+            ->get()
+            ->result_array();
+
+        $columns = array_column($sheetColumnName, "name");
+        if (!empty($extra_columns)) {
+            $columns = array_merge($columns, $extra_columns);
+        }
+
+        $arrayDataValues = array_map('array_values', $arrayData);
+        // Update last sync
+        $CI->db->where('id', $currentId);
+        $CI->db->update(db_prefix() . "excel_data_update", [
+            'lastSync' => date('Y-m-d H:i:s')
+        ]);
+        // Add to final array
+      return  $dataArray[] = [
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayDataValues,
+            "get_currencies"=>$get_currencies,
+            "university_applicant_fees_payments"=>$university_applicant_fees_payments
+        ];
+    //      header('Content-Type: application/json');
+    // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    // exit;
+    }
+
 }
 
 

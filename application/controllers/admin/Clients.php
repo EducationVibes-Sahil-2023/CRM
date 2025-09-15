@@ -9976,6 +9976,10 @@ class Clients extends AdminController
             $acadmic_year       = $this->input->post("acadmic_year") ?? '';
             $study_year         = $this->input->post("study_year") ?? '';
             $currency_exchange  = $this->input->post("currency_exchange") ?? '';
+            $ex_currency  = $this->input->post("ex_currency") ?? '';
+            $tt_copy  = $this->input->post("tt_copy") ?? 0;
+            $inr_value  = $this->input->post("inr_value") ?? 0;
+             $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
             $payment_quotations = $this->input->post("payment_quotations")
                 ? json_decode($this->input->post("payment_quotations"), true)
                 : [];
@@ -10002,11 +10006,16 @@ class Clients extends AdminController
                     "university_name" => $university_name,
                     "academic_year"   => $acadmic_year,
                     "year"            => $study_year,
+                     "ex_currency"            => $ex_currency,
                     "exchange_value"  => $currency_exchange,
                     "mode"            => $payment['mode'] ?? '',
                     "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
                     "pay_date"        => $payment['pay_date'] ?? null,
                     "payment_type"        => $payment['payment_type'] ?? "",
+                    "inr_value"        => $inr_value ?? 0,
+                    "total_inr_amount"        => $total_inr_amount ?? 0,
+                    "tt_copy" => $tt_copy ??0
+                    
                 ];
 
                 // Metadata
