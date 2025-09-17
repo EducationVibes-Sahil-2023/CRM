@@ -131,8 +131,8 @@ $vendor_type = vendor_types();
                             type = [rawType.trim()]; // single value as array
                         }
                     }
-                    if (type.length === 0 && rawType.trim() !== "") {
-                        type = [rawType.trim()];
+                    if (type.length === 0) {
+                        type = [rawType];
                     }
 
                     $('input[name="vendor_name"]').val(name);
