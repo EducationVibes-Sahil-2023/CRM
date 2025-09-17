@@ -26,54 +26,52 @@ function app_init_admin_sidebar_menu_items()
         //         ]);
         // }
 
-     if (
-    has_permission('customers', '', 'view')
-    || (
-        have_assigned_customers()
-        || (!have_assigned_customers() && has_permission('customers', '', 'create'))
-    )
-) {
-    $CI->app_menu->add_sidebar_menu_item('customers', [
-        'collapse' => true,
-        'name'     => _l('als_clients'),
-        'position' => 5,
-        'icon'     => 'fa fa-user-o',
-    ]);
+        if (
+                has_permission('customers', '', 'view')
+                || (
+                        have_assigned_customers()
+                        || (!have_assigned_customers() && has_permission('customers', '', 'create'))
+                )
+        ) {
+                $CI->app_menu->add_sidebar_menu_item('customers', [
+                        'collapse' => true,
+                        'name'     => _l('als_clients'),
+                        'position' => 5,
+                        'icon'     => 'fa fa-user-o',
+                ]);
 
-    
- // Pending Customers (MBBS Abroad)
-    $CI->app_menu->add_sidebar_children_item('customers', [
-        'slug'     => 'mbbs_abroad/customers',
-        'icon'     => 'fa fa-user-times',
-        'name'     => "Pend. Customers",
-        'href'     => admin_url('clients/customers/mbbs_abroad'),
-        'position' => 2,
-    ]);
-    
-    // MBBS Abroad Applicant
-    $CI->app_menu->add_sidebar_children_item('customers', [
-        'slug'     => 'mbbs_abroad',
-        'icon'     => 'fa fa-users',
-        'name'     => "MA Applicant",
-        'href'     => admin_url('clients/mbbs_abroad'),
-        'position' => 3,
-    ]);
 
-   
+                // Pending Customers (MBBS Abroad)
+                $CI->app_menu->add_sidebar_children_item('customers', [
+                        'slug'     => 'mbbs_abroad/customers',
+                        'icon'     => 'fa fa-user-times',
+                        'name'     => "Pend. Customers",
+                        'href'     => admin_url('clients/customers/mbbs_abroad'),
+                        'position' => 2,
+                ]);
 
-    // Study Abroad Applicant
-    $CI->app_menu->add_sidebar_children_item('customers', [
-        'slug'     => 'study_abroad',
-        'icon'     => 'fa fa-users',
-        'name'     => "SA Applicant",
-        'href'     => admin_url('clients/study_abroad'),
-        'position' => 4,
-    ]);
+                // MBBS Abroad Applicant
+                $CI->app_menu->add_sidebar_children_item('customers', [
+                        'slug'     => 'mbbs_abroad',
+                        'icon'     => 'fa fa-users',
+                        'name'     => "MA Applicant",
+                        'href'     => admin_url('clients/mbbs_abroad'),
+                        'position' => 3,
+                ]);
 
-   
-}
 
- if (has_permission('quotation', '', 'view') || has_permission('quotation', '', 'view_own')) {
+
+                // Study Abroad Applicant
+                $CI->app_menu->add_sidebar_children_item('customers', [
+                        'slug'     => 'study_abroad',
+                        'icon'     => 'fa fa-users',
+                        'name'     => "SA Applicant",
+                        'href'     => admin_url('clients/study_abroad'),
+                        'position' => 4,
+                ]);
+        }
+
+        if (has_permission('quotation', '', 'view') || has_permission('quotation', '', 'view_own')) {
                 $CI->app_menu->add_sidebar_menu_item('quotation', [
                         'collapse' => true,
                         'name'     => "Quotations",
@@ -91,43 +89,43 @@ function app_init_admin_sidebar_menu_items()
         }
 
 
- if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view') || has_permission('exam_batch', '', 'view_own') || has_permission('exam_batch', '', 'view')) {
-$CI->app_menu->add_sidebar_menu_item('batch_create', [
-        'collapse' => true,
-        'name'     => "Batch Create",
-        'position' => 7,
-        'icon'     => 'fa fa-database',
-    ]);
- }
+        if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view') || has_permission('exam_batch', '', 'view_own') || has_permission('exam_batch', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('batch_create', [
+                        'collapse' => true,
+                        'name'     => "Batch Create",
+                        'position' => 7,
+                        'icon'     => 'fa fa-database',
+                ]);
+        }
 
- // Fly Batch
-    if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
-        $CI->app_menu->add_sidebar_children_item('batch_create', [
-            'href'     => admin_url('fly_batch'),
-            'slug'     => 'fly_batch',
-            'name'     => "Fly Batch",
-            'icon'     => 'fa fa-ticket',
-            'position' => 200,
-        ]);
-    }
-    // Exam Batch
-    if (has_permission('exam_batch', '', 'view_own') || has_permission('exam_batch', '', 'view')) {
-        $CI->app_menu->add_sidebar_children_item('batch_create', [
-            'href'     => admin_url('exam_batch'),
-            'slug'     => 'exam_batch',
-            'name'     => "Exam Batch",
-            'icon'     => 'fa fa-book',
-            'position' => 199,
-        ]);
-    }
-    
-    
-    
+        // Fly Batch
+        if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
+                $CI->app_menu->add_sidebar_children_item('batch_create', [
+                        'href'     => admin_url('fly_batch'),
+                        'slug'     => 'fly_batch',
+                        'name'     => "Fly Batch",
+                        'icon'     => 'fa fa-ticket',
+                        'position' => 200,
+                ]);
+        }
+        // Exam Batch
+        if (has_permission('exam_batch', '', 'view_own') || has_permission('exam_batch', '', 'view')) {
+                $CI->app_menu->add_sidebar_children_item('batch_create', [
+                        'href'     => admin_url('exam_batch'),
+                        'slug'     => 'exam_batch',
+                        'name'     => "Exam Batch",
+                        'icon'     => 'fa fa-book',
+                        'position' => 199,
+                ]);
+        }
 
 
-       
 
-   
+
+
+
+
+
 
         // 'href'     => admin_url('clients'),
 
@@ -213,7 +211,7 @@ $CI->app_menu->add_sidebar_menu_item('batch_create', [
         //         ]);
         // }
 
-       
+
 
         // if (has_permission('expenses', '', 'view') || has_permission('expenses', '', 'view_own')) {
         //         $CI->app_menu->add_sidebar_menu_item('expenses', [
@@ -402,52 +400,52 @@ $CI->app_menu->add_sidebar_menu_item('batch_create', [
         }
 
 
-        
+
 
         // if (has_permission('academic', '', 'view')) {
-                $CI->app_menu->add_sidebar_menu_item('academic', [
-                        'collapse' => true,
-                        'icon'     => 'fa fa-user-o',
-                        'name'     => "Back-end Data",
-                        'position' => 25,
-                ]);
+        $CI->app_menu->add_sidebar_menu_item('academic', [
+                'collapse' => true,
+                'icon'     => 'fa fa-user-o',
+                'name'     => "Back-end Data",
+                'position' => 25,
+        ]);
+        $CI->app_menu->add_sidebar_children_item('academic', [
+                'slug'     => 'universities',
+                'icon'     => 'fa fa-university',
+                'name'     => "Universities",
+                'href'     => admin_url('academic/university'),
+                'position' => 5,
+        ]);
+        $CI->app_menu->add_sidebar_children_item('academic', [
+                'slug'     => 'courses',
+                'icon'     => 'fa fa-graduation-cap',
+                'name'     => "Courses",
+                'href'     => admin_url('academic/courses'),
+                'position' => 5,
+        ]);
+
+
+        if (has_permission('partners', '', 'view')) {
+
                 $CI->app_menu->add_sidebar_children_item('academic', [
-                        'slug'     => 'universities',
+                        'slug'     => 'university',
                         'icon'     => 'fa fa-university',
-                        'name'     => "Universities",
-                        'href'     => admin_url('academic/university'),
+                        'name'     => "University Partner",
+                        'href'     => admin_url('partner/university'),
                         'position' => 5,
                 ]);
                 $CI->app_menu->add_sidebar_children_item('academic', [
-                        'slug'     => 'courses',
-                        'icon'     => 'fa fa-graduation-cap',
-                        'name'     => "Courses",
-                        'href'     => admin_url('academic/courses'),
+                        'slug'     => 'ev_partner',
+                        'icon'     => 'fa fa-handshake-o',
+                        'name'     => "EV Partner",
+                        'href'     => admin_url('partner/ev_partner'),
                         'position' => 5,
                 ]);
+        }
 
-
-                if (has_permission('partners', '', 'view')) {
-
-                        $CI->app_menu->add_sidebar_children_item('academic', [
-                                'slug'     => 'university',
-                                'icon'     => 'fa fa-university',
-                                'name'     => "University Partner",
-                                'href'     => admin_url('partner/university'),
-                                'position' => 5,
-                        ]);
-                        $CI->app_menu->add_sidebar_children_item('academic', [
-                                'slug'     => 'ev_partner',
-                                'icon'     => 'fa fa-handshake-o',
-                                'name'     => "EV Partner",
-                                'href'     => admin_url('partner/ev_partner'),
-                                'position' => 5,
-                        ]);
-                }
-                
-                 if (has_permission('school_board', '', 'view') || has_permission('school_board', '', 'view_own')) {
+        if (has_permission('school_board', '', 'view') || has_permission('school_board', '', 'view_own')) {
                 $CI->app_menu->add_sidebar_children_item('academic', [
-                       'slug'     => 'school_board',
+                        'slug'     => 'school_board',
                         'name'     => "School Board",
                         'href'     => admin_url('school_board'),
                         'icon'     => 'fa fa-home',
@@ -633,24 +631,46 @@ $CI->app_menu->add_sidebar_menu_item('batch_create', [
                         'name'     => _l('vendors'),
                         'position' => 25,
                 ]);
+
                 $CI->app_menu->add_setup_children_item('vendor', [
-                        'slug'     => 'visa',
-                        'name'     => _l('visa_vendors'),
-                        'href'     => admin_url('vendor/visa'),
+                        'slug'     => 'ma_vendors',
+                        'name'     => _l('MA Vendors'),
+                        'href'     => admin_url('vendor/ma_vendor'),
                         'position' => 5,
                 ]);
-                $CI->app_menu->add_setup_children_item('vendor', [
-                        'slug'     => 'accommodation',
-                        'name'     => _l('accommodation_vendors'),
-                        'href'     => admin_url('vendor/accommodation'),
-                        'position' => 10,
-                ]);
-                $CI->app_menu->add_setup_children_item('vendor', [
-                        'slug'     => 'applicant',
-                        'name'     => _l('applicant_vendors'),
-                        'href'     => admin_url('vendor/applicant'),
-                        'position' => 15,
-                ]);
+
+
+                //   $CI->app_menu->add_setup_children_item('vendor', [
+                //         'slug'     => 'apostile',
+                //         'name'     => _l('apostile_vendors'),
+                //         'href'     => admin_url('vendor/apostile'),
+                //         'position' => 5,
+                // ]);
+                //   $CI->app_menu->add_setup_children_item('vendor', [
+                //         'slug'     => 'apostile',
+                //         'name'     => _l('apostile_vendors'),
+                //         'href'     => admin_url('vendor/apostile'),
+                //         'position' => 5,
+                // ]);
+
+                // $CI->app_menu->add_setup_children_item('vendor', [
+                //         'slug'     => 'visa',
+                //         'name'     => _l('visa_vendors'),
+                //         'href'     => admin_url('vendor/visa'),
+                //         'position' => 5,
+                // ]);
+                // $CI->app_menu->add_setup_children_item('vendor', [
+                //         'slug'     => 'accommodation',
+                //         'name'     => _l('accommodation_vendors'),
+                //         'href'     => admin_url('vendor/accommodation'),
+                //         'position' => 10,
+                // ]);
+                // $CI->app_menu->add_setup_children_item('vendor', [
+                //         'slug'     => 'applicant',
+                //         'name'     => _l('applicant_vendors'),
+                //         'href'     => admin_url('vendor/applicant'),
+                //         'position' => 15,
+                // ]);
 
 
                 $modules_name = _l('modules');

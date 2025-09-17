@@ -109,7 +109,7 @@ class Vendor extends AdminController
                         $data["name"] = $data["vendor"];
                         unset($data["vendor"]);
                     }
-                    
+
                     $id = $this->vendor_model->add($table, $data);
                     if ($id) {
                         $success = true;
@@ -153,6 +153,122 @@ class Vendor extends AdminController
                 }
             }
             die;
+        }
+    }
+
+    public function ma_vendor()
+    {
+        if (!is_admin()) {
+            access_denied('vendor');
+        }
+
+        if ($this->input->is_ajax_request()) {
+            $this->app->get_table_data('ma_vendors');
+        }
+        $data['title']                = _l('MA Vendors');
+        $data['type']                = _l('applicant');
+
+        $this->load->view('admin/vendor/ma_vendor_manage', $data);
+    }
+
+
+    public function ma_vendor_name()
+    {
+
+        if ($this->input->post()) {
+            $data    = $this->input->post();
+            $table   = db_prefix() . "vendor_list";
+            $success = false;
+            $message = '';
+
+            // Normalize vendor_type (always string)
+            $vendorType = '';
+            if (!empty($data['vendor_type'])) {
+                if (is_array($data['vendor_type'])) {
+                    $vendorType = implode(",", $data['vendor_type']);
+                } else {
+                    $vendorType = $data['vendor_type']; // already string
+                }
+            }
+
+      
+            // ADD CASE
+            if (empty($data['vendor_id'])) {
+                // Check if vendor already exists
+                $check_vendor = $this->db->select("id")
+                    ->where("name", $data["vendor_name"])
+                    ->get($table)
+                    ->row_array();
+
+                if (!empty($check_vendor)) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => "Vendor name already exists"
+                    ]);
+                    exit;
+                }
+
+                // Insert new vendor_name
+                $insertData = [
+                    'name'        => $data['vendor_name'],
+                    'status'      => isset($data['status']) ? $data['status'] : 1,
+                    'vendor_type' => $vendorType,
+                ];
+
+                $this->db->insert($table, $insertData);
+                $id = $this->db->insert_id();
+
+                if ($id) {
+                    $success = true;
+                    $message = _l('added_successfully', _l('vendor'));
+                }
+
+                echo json_encode([
+                    'success' => $success,
+                    'message' => $message
+                ]);
+                exit;
+            }
+
+            // UPDATE CASE
+            else {
+                $id = $data['vendor_id'];
+
+                // Check duplicate name (excluding current record)
+                $check_vendor = $this->db->select("id")
+                    ->where("name", $data["vendor_name"])
+                    ->where("id!=", $id)
+                    ->get($table)
+                    ->row_array();
+
+                if (!empty($check_vendor)) {
+                    echo json_encode([
+                        'success' => false,
+                        'message' => "Vendor name already exists"
+                    ]);
+                    exit;
+                }
+
+                // Update vendor
+                $updateData = [
+                    'name'        => $data['vendor_name'],
+                    'status'      => isset($data['status']) ? $data['status'] : 1,
+                    'vendor_type' => $vendorType,
+                ];
+
+                $this->db->where('id', $id);
+                $success = $this->db->update($table, $updateData);
+
+                if ($success) {
+                    $message = _l('updated_successfully', _l('vendor'));
+                }
+
+                echo json_encode([
+                    'success' => $success,
+                    'message' => $message
+                ]);
+                exit;
+            }
         }
     }
 }
