@@ -9775,6 +9775,21 @@ class Clients extends AdminController
             // }
 
             if ($status) {
+
+                $activity_data[] = [
+                    "date"        => date('Y-m-d H:i:s'),
+                    "staffid"     => get_staff_user_id(),
+                    "client_id"   => $clientid,
+                    "description" => json_encode([
+                        'ExchangeData' => $currency_exchange,
+                        'UniversityData' => $university_dues,
+                        'CompanyData' => $company_dues
+                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    "quotation_id" => $insertId
+                ];
+
+                $this->db->insert_batch(db_prefix() . 'quotation_payment_activity_log', $activity_data);
+
                 echo json_encode([
                     "resp_code" => "RCS",
                     "resp_desc" => "Quotation {$action}d successfully.",
@@ -9979,7 +9994,7 @@ class Clients extends AdminController
             $ex_currency  = $this->input->post("ex_currency") ?? '';
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
             $inr_value  = $this->input->post("inr_value") ?? 0;
-             $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
+            $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
             $payment_quotations = $this->input->post("payment_quotations")
                 ? json_decode($this->input->post("payment_quotations"), true)
                 : [];
@@ -9999,14 +10014,14 @@ class Clients extends AdminController
             $seenEntries = [];
             $insertRows  = [];
             $updateRows  = [];
-
+            $activity_data = [];
             foreach ($payment_quotations as $key => $payment) {
                 $row = [
                     "client_id"       => $client_id,
                     "university_name" => $university_name,
                     "academic_year"   => $acadmic_year,
                     "year"            => $study_year,
-                     "ex_currency"            => $ex_currency,
+                    "ex_currency"            => $ex_currency,
                     "exchange_value"  => $currency_exchange,
                     "mode"            => $payment['mode'] ?? '',
                     "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
@@ -10014,8 +10029,8 @@ class Clients extends AdminController
                     "payment_type"        => $payment['payment_type'] ?? "",
                     "inr_value"        => $inr_value ?? 0,
                     "total_inr_amount"        => $total_inr_amount ?? 0,
-                    "tt_copy" => $tt_copy ??0
-                    
+                    "tt_copy" => $tt_copy ?? 0
+
                 ];
 
                 // Metadata
@@ -10103,6 +10118,13 @@ class Clients extends AdminController
                         $file_name = upload_applicant_documents($client_id, $upload_data);
                         $row['pdf'] = $file_name["file_path"];
                         $row['status'] = 3;
+                        $this->db->insert(db_prefix() . 'quotation_payment_activity_log', [
+                            "date"        => date('Y-m-d H:i:s'),
+                            "staffid"     => get_staff_user_id(),
+                            "client_id"   => $client_id,
+                            "description" => $payment_id ? "Payment Proof update successfully " : "Payment Proof add successfully ",
+                            "payment_id" => $payment_id ?? 1
+                        ]);
                     }
                 }
 
@@ -10112,8 +10134,30 @@ class Clients extends AdminController
                 } else {
                     $insertRows[] = $row;
                 }
+
+                $activity_data[] = [
+                    "date"        => date('Y-m-d H:i:s'),
+                    "staffid"     => get_staff_user_id(),
+                    "client_id"   => $client_id,
+                    "description" => json_encode([
+                        'ExchangeData' => $currency_exchange,
+                        'PaymentData' => [
+                            $client_id,
+                            $university_name,
+                            $acadmic_year,
+                            $study_year,
+                            $row['mode'],
+                            $row['amount'],
+                            $row['pay_date'],
+                            "vendor_id:" . ($row['vendor_id'] ?? 0),
+                            "vendor_name:" . ($row['vendor_name'] ?? '')
+                        ],
+                        'SplitData' => $payment["split_data"]
+                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    "payment_id" => $payment_id ?? 1
+                ];
             }
-           
+
 
 
             // 🔹 Insert or Update
@@ -10123,6 +10167,11 @@ class Clients extends AdminController
             if (!empty($insertRows)) {
                 $this->db->insert_batch(db_prefix() . 'payment_quotations', $insertRows);
             }
+
+            if (!empty($activity_data)) {
+                $this->db->insert_batch(db_prefix() . 'quotation_payment_activity_log', $activity_data);
+            }
+
 
             if ($this->db->affected_rows()) {
                 echo json_encode([
@@ -10154,7 +10203,7 @@ class Clients extends AdminController
             $quotation_payment_id = $this->input->post("quotation_payment_id");
             $client_id            = $this->input->post("client_id");
             $status               = (int) $this->input->post("status");
-
+            $activity_data = [];
             $this->db->select("id,status");
             $this->db->where('client_id', $client_id);
             $this->db->where('id', $quotation_payment_id);
@@ -10179,6 +10228,16 @@ class Clients extends AdminController
                         $data['resp_code'] = 'ERR';
                         $data['resp_desc'] = 'Failed to delete quotation payment.';
                     }
+
+                    $activity_data[] = [
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id,
+                        "description" => 'Quotation payment Delete successfully.',
+                        "payment_id" => $quotation_payment_id ?? 1
+                    ];
+
+                    $this->db->insert_batch(db_prefix() . 'quotation_payment_activity_log', $activity_data);
                 } elseif (in_array($status, [1, 2])) {
                     // Update to approve/reject
                     $this->db->where('id', $quotation_payment_id)
@@ -10191,6 +10250,16 @@ class Clients extends AdminController
                         $data['resp_code'] = 'ERR';
                         $data['resp_desc'] = 'Failed to update quotation payment.';
                     }
+
+                    $activity_data[] = [
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "client_id"   => $client_id,
+                        "description" => 'Quotation payment ' . ($status == 1 ? 'Approved' : 'Rejected') . ' successfully.',
+                        "payment_id" => $quotation_payment_id ?? 1
+                    ];
+
+                    $this->db->insert_batch(db_prefix() . 'quotation_payment_activity_log', $activity_data);
                 } else {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'Invalid status action.';
