@@ -3662,3 +3662,25 @@ function get_preDeposite($client_id)
     $query = $CI->db->get();
     return $result = $query->result_array();
 }
+
+function vendor_types($type = "")
+{
+    $CI = &get_instance();
+
+    try {
+        // Build query
+        $CI->db->select('*')
+            ->from(db_prefix() . 'vendor_types');
+
+        // Order and limit
+        $CI->db->order_by('name', 'ASC');
+
+        // Execute query
+        $vendor_types = $CI->db->get()->result_array();
+
+        return $vendor_types;
+    } catch (Exception $e) {
+        log_message('error', 'Error fetching vendor_types list: ' . $e->getMessage());
+        return [];
+    }
+}
