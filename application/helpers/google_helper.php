@@ -1930,9 +1930,6 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
 
 function payment_quotations($id='')
 {
-    ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-error_reporting(E_ALL);
 
     $CI = &get_instance();
 

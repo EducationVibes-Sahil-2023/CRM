@@ -8568,6 +8568,9 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
         }
 
 
+  if(!empty($lead->type) && $lead->type == 1){
+                            welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $leadid, 8);
+                            }
 
         $CI->db->where('id', $leadid);
         $CI->db->update(db_prefix() . 'leads', ['welcome_message_status' => 1]);
@@ -8704,7 +8707,176 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
     }
 }
 
+function welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $leadid,$whatsapp_template_id)
+{
+    $CI = &get_instance();
 
+    if (!class_exists('leads_model')) {
+        $CI->load->model('leads_model');
+    }
+
+    try {
+        // Get lead
+        $lead = $CI->leads_model->get($leadid);
+        if (!$lead) {
+            throw new Exception("Lead not found.");
+        }
+
+
+
+        // Skip if welcome message already sent
+        if ($lead->welcome_message_status == 1) {
+            return true;
+        }
+
+
+        // Get staff
+        $staff_data = $CI->db->select("CONCAT(firstname,' ',lastname) as name, phonenumber, whatsapp_status")
+            ->where('staffid', $staff_id)
+            ->get(db_prefix() . 'staff')
+            ->row();
+
+        if (!$staff_data) {
+            throw new Exception("Staff details not found.");
+        }
+
+        if ((int)$staff_data->whatsapp_status == 0) {
+            return true;
+        }
+
+
+
+        $CI->db->where('id', $leadid);
+        $CI->db->update(db_prefix() . 'leads', ['welcome_message_status' => 1]);
+
+        // Build WhatsApp data
+        $productToken      = WHATSAAP_PRODUCT_KEY;
+        $fromNumber        = WHATSAAP_FROM_NUMBER;
+        $templateNamespace = WHATSAAP_NAMESPACE;
+        $toNumber          = "0091" . getLast10Digits($contact_number);
+
+        $whatsapp = $CI->db->query("SELECT * FROM " . db_prefix() . "whatsapptemplates WHERE status=1 AND id = ?", [$whatsapp_template_id])->row();
+        if (!$whatsapp) {
+            throw new Exception("WhatsApp template not found: ID $whatsapp_template_id");
+        }
+
+        $templateName = $whatsapp->template_name;
+        $languageCode = $whatsapp->languageCode ?? "en";
+        $documentName = $whatsapp->documentName ?? "";
+
+        // Replace variables
+        $variables = str_replace(
+            [],
+            [],
+            $whatsapp->variables_name ?? ""
+        );
+
+        $parameters = [];
+        if (!empty($variables)) {
+            $variables_array = array_map('trim', explode(",", $variables));
+            foreach ($variables_array as $data) {
+                if (empty($data)) {
+                    throw new Exception("Missing WhatsApp parameter.");
+                }
+                $parameters[] = ["type" => "text", "text" => str_replace("#@", ",", $data)];
+            }
+        }
+
+        // Build API payload
+        $payload = [
+            "messages" => [
+                "authentication" => ["producttoken" => $productToken],
+                "msg" => [[
+                    "from" => $fromNumber,
+                    "to"   => [["number" => $toNumber]],
+                    "body" => [
+                        "type"    => "auto",
+                        "content" => $templateName
+                    ],
+                    "allowedChannels" => ["WhatsApp"],
+                    "richContent" => [
+                        "conversation" => [[
+                            "template" => [
+                                "whatsapp" => [
+                                    "namespace"    => $templateNamespace,
+                                    "element_name" => $templateName,
+                                    "language"     => [
+                                        "policy" => "deterministic",
+                                        "code"   => $languageCode
+                                    ],
+                                    "components" => []
+                                ]
+                            ]
+                        ]]
+                    ]
+                ]]
+            ]
+        ];
+
+        // Attach document if exists
+        if (!empty($whatsapp->documentURL)) {
+            $payload["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+                "type" => "header",
+                "parameters" => [[
+                    "type"  => "document",
+                    "media" => [
+                        "mediaName" => $documentName,
+                        "mediaUri"  => base_url() . $whatsapp->documentURL,
+                        "mimeType"  => $whatsapp->mimeType ?? 'application/pdf'
+                    ]
+                ]]
+            ];
+        }
+
+        // Add body text parameters
+        if (!empty($parameters)) {
+            $payload["messages"]["msg"][0]["richContent"]["conversation"][0]["template"]["whatsapp"]["components"][] = [
+                "type" => "body",
+                "parameters" => $parameters
+            ];
+        }
+
+        // Send the API request
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL            => 'https://gw.messaging.cm.com/v1.0/message',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json']
+        ]);
+
+        $response = curl_exec($curl);
+        $curlError = curl_error($curl);
+        curl_close($curl);
+
+        if ($curlError) {
+            throw new Exception("cURL Error: $curlError");
+        }
+
+        $responseArray = json_decode($response, true);
+        if (!$responseArray || isset($responseArray['error'])) {
+            throw new Exception("API Error: " . json_encode($responseArray));
+        }
+
+        // Insert log (fallback client ID to 0 if not available)
+        $insert_data = [
+            "type"       => "whatsapp",
+            "template_id" => $whatsapp_template_id,
+            "clientid"   => !empty($lead->clientid) ? $lead->clientid : 0,
+            "datetime"   => date("Y-m-d H:i:s"),
+            "contact"   => $toNumber
+        ];
+        $CI->db->insert(db_prefix() . 'whatsapp_email_logs', $insert_data);
+        $CI->leads_model->log_lead_activity($leadid, "WhatsApp message successfully triggered to {$toNumber}.", true);
+
+        return json_encode(["success" => "Message sent successfully.", "response" => $responseArray]);
+    } catch (Exception $e) {
+        log_message('error', 'WhatsApp Message Error: ' . $e->getMessage());
+        return json_encode(["error" => $e->getMessage()]);
+    }
+}
 
 
 
