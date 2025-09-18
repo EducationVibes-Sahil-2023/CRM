@@ -377,7 +377,7 @@ if ($lead->type == 1) {
                                     <input type="hidden" value="<?= $fees['id'] ?>" name="<?= $field_name ?>_id">
 
                                     <div class="input-group-addon currency-symbol-<?= $id ?>"><?= !empty($get_currencies[$fees["default_currency"]]["symbol"]) ? $get_currencies[$fees["default_currency"]]["symbol"] : '$' ?></div>
-                                    <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
+                                    <input type="text" onkeypress="return acceptText(this,'number')"  name="<?= $field_name ?>" <?= $required ?> class="form-control currency-refefees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" size="8">
                                     <div class="input-group-addon currency-addon">
 
                                        <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
