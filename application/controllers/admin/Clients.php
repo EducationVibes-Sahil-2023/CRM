@@ -121,9 +121,9 @@ class Clients extends AdminController
 
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
-                if(has_permission('customers', '', 'applicant_view_document'))
-                {}else{
-                ajax_access_denied();
+                if (has_permission('customers', '', 'applicant_view_document')) {
+                } else {
+                    ajax_access_denied();
                 }
             }
         }
@@ -141,9 +141,9 @@ class Clients extends AdminController
 
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
-                 if(has_permission('customers', '', 'applicant_view_document'))
-                {}else{
-                ajax_access_denied();
+                if (has_permission('customers', '', 'applicant_view_document')) {
+                } else {
+                    ajax_access_denied();
                 }
             }
         }
@@ -190,12 +190,10 @@ class Clients extends AdminController
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
                 } else {
-                    if(has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile' )
-                    {
-                         $data['documentAccessOnly'] = 1;
-                    }
-                    else{
-                    access_denied('customers');
+                    if (has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile') {
+                        $data['documentAccessOnly'] = 1;
+                    } else {
+                        access_denied('customers');
                     }
                 }
             }
@@ -529,17 +527,13 @@ class Clients extends AdminController
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
-                }  else {
-                    if(has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile' )
-                    {
-                         $data['documentAccessOnly'] = 1;
-                    }
-                    else{
-                    access_denied('customers');
+                } else {
+                    if (has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile') {
+                        $data['documentAccessOnly'] = 1;
+                    } else {
+                        access_denied('customers');
                     }
                 }
-                
-                
             }
         }
 
@@ -10015,7 +10009,6 @@ class Clients extends AdminController
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
             $inr_value  = $this->input->post("inr_value") ?? 0;
             $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
-
             $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
             $payment_quotations = $this->input->post("payment_quotations")
                 ? json_decode($this->input->post("payment_quotations"), true)
@@ -10046,6 +10039,7 @@ class Clients extends AdminController
                     "ex_currency"            => $ex_currency,
                     "exchange_value"  => $currency_exchange,
                     "mode"            => $payment['mode'] ?? '',
+                    "transaction_type"            => $payment['transaction_type'] ?? '',
                     "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
                     "pay_date"        => $payment['pay_date'] ?? null,
                     "payment_type"        => $payment['payment_type'] ?? "",
@@ -10151,6 +10145,28 @@ class Clients extends AdminController
                     }
                 }
 
+                if (!empty($_FILES["tt_proof_" . $key]['name'])) {
+                    $documents = $_FILES["tt_proof_" . $key];
+                    $file_name_ = ($client_id ? get_client_name($client_id) : 'tt_proof') . "_" . time();
+                    $upload_data = [
+                        "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+                        "type"     => $documents['type'],
+                        "tmp_name" => $documents['tmp_name'],
+                        "error"    => $documents['error'],
+                        "size"     => $documents['size'],
+                    ];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($client_id, $upload_data);
+                        $row['tt_pdf'] = $file_name["file_path"];
+                        $this->db->insert(db_prefix() . 'quotation_payment_activity_log', [
+                            "date"        => date('Y-m-d H:i:s'),
+                            "staffid"     => get_staff_user_id(),
+                            "client_id"   => $client_id,
+                            "description" => $payment_id ? "Payment TT Proof update successfully " : "Payment TT Proof add successfully ",
+                            "payment_id" => $payment_id ?? 1
+                        ]);
+                    }
+                }
                 // Decide insert/update bucket
                 if (!empty($row["id"])) {
                     $updateRows[] = $row;

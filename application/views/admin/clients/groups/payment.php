@@ -135,6 +135,7 @@ if (has_permission('payment_quotation', '', 'create')) {
     // Cache database queries
     $ci = &get_instance();
 
+    $transaction_type  = transaction_type();
     // Get all required data in optimized queries
     $company_dues_fees_array = $ci->db->get(db_prefix() . "company_dues_fees")->result_array();
 
@@ -444,7 +445,26 @@ if (has_permission('payment_quotation', '', 'create')) {
                                             ?>
                                         </div>
 
-                                        <div class="col-md-3 form-group">
+                                        <div class="col-md-2 form-group trans-div" style="display:<?= !empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 ? '' : 'none' ?>;">
+                                            <label>Transaction Type <span class="text-danger">*</span></label>
+                                            <select class="form-control selectpicker electpicker-new transaction_type"
+                                                data-live-search="true"
+                                                data-actions-box="false"
+                                                title="Select Transaction Type"
+                                                name="transaction_type"
+                                                data-name='transaction_type'
+                                                required>
+                                                <?php foreach ($transaction_type as $t_type): ?>
+                                                    <option value="<?= $t_type['id'] ?>"
+                                                        <?= ($applicant_payment_data->transaction_type == $t_type['id']) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($t_type['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+
+                                        </div>
+
+                                        <div class="col-md-2 form-group">
                                             <label>Payment Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new payment_type"
                                                 data-live-search="true"
@@ -464,7 +484,10 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         </div>
 
-                                        <div class="col-md-3 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID ? 'show' : 'none' ?>">
+
+
+
+                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID ? 'show' : 'none' ?>">
                                             <label>Payment Fees Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new type"
                                                 multiple
@@ -536,9 +559,24 @@ if (has_permission('payment_quotation', '', 'create')) {
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-md-3 form-group">
+                                        <div class="col-md-3 form-group hide">
                                             <label>TT copy</label><br>
                                             <input type="checkbox" class="from-control tt_copy" <?= !empty($applicant_payment_data->tt_copy) ? 'checked' : '' ?> value="1" name="tt_copy" data-name="tt_copy">
+                                        </div>
+
+                                        <div class="col-md-3 form-group">
+                                            <label>TT Proof </label>
+                                            <input type="file" name="tt_proof" data-name="tt_proof" class="form-control tt_proof">
+                                            <?php
+                                            $file_url = !empty($applicant_payment_data->tt_pdf) ? $applicant_payment_data->tt_pdf : "";
+                                            if (!empty($file_url)) { ?>
+                                                <br>
+                                                <div class="margin-top">
+                                                    <i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>&nbsp;
+                                                    <i class="fa fa-download btn btn-xs btn-primary" onclick="download_media_files('<?= base_url($file_url) ?>', '_blank');"></i>
+
+                                                </div>
+                                            <?php } ?>
                                         </div>
 
                                         <div class="col-md-3 form-group">
@@ -936,7 +974,10 @@ if (has_permission('payment_quotation', '', 'create')) {
         function vendor_update(obj, modeId) {
             let $formGroup = $(obj).closest(".form-group");
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
-
+            $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
+            if (modeId != 1) {
+                $(obj).parents('.payment_payment').find('.trans-div').hide();
+            }
 
             if (modeId == 5) {
                 vendor_select.removeAttr('required');
@@ -966,6 +1007,10 @@ if (has_permission('payment_quotation', '', 'create')) {
             let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
             if (modeId == 1 || modeId == 4) {
+                if (modeId == 1) {
+                    $(obj).parents('.payment_payment').find('.trans-div').show();
+
+                }
                 if (vendors.length > 0) {
                     vendors.forEach(v => {
                         vendor_select.append(`<option value="${v.id}">${v.name}</option>`);
@@ -1484,8 +1529,8 @@ if (has_permission('payment_quotation', '', 'create')) {
                             fee_currency: $(this).find("select.currency-selector-amount").val() || '',
                             fee_inr_value: $(this).find(".fee-inr").val() || 0
                         };
-                       totalAmountCheck_ += parseFloat($(this).find(".fee-amount").val()) || 0;
-                       totalINRCheck_ += parseFloat($(this).find(".fee-inr").val()) || 0;
+                        totalAmountCheck_ += parseFloat($(this).find(".fee-amount").val()) || 0;
+                        totalINRCheck_ += parseFloat($(this).find(".fee-inr").val()) || 0;
 
                         splitData.push(rowData);
                     });
@@ -1496,10 +1541,18 @@ if (has_permission('payment_quotation', '', 'create')) {
                     paymentpayments.push(paymentData);
 
                     // 🔹 Collect files
-                    let fileInput = $(this).find("input[type='file']")[0];
+                    let fileInput = $(this).find("input[name='proof']")[0];
                     if (fileInput && fileInput.files.length > 0) {
                         $.each(fileInput.files, function(fIndex, file) {
                             formData.append("proof_" + index, file);
+                        });
+                    }
+
+
+                    let fileInput_tt_proof = $(this).find("input[name='tt_proof']")[0];
+                    if (fileInput_tt_proof && fileInput_tt_proof.files.length > 0) {
+                        $.each(fileInput_tt_proof.files, function(fIndex, file) {
+                            formData.append("tt_proof_" + index, file);
                         });
                     }
                     console.log(totalAmountCheck);
