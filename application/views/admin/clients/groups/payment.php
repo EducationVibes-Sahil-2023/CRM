@@ -284,7 +284,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                     <div class="panel_s shadow">
                         <div class="panel-body">
                             <h4 class="text-bold">Currency Exchange Rates</h4>
-                            <label>Disabled currency <input type="checkbox" value='1' name="currency_disabled" <?= !empty($applicant_payment_data->currency_disabled) ? 'checked' : '' ?> onclick="currencyDisabled(this)"></label>
+                            <label>Disable Conversion <input type="checkbox" value='1' name="currency_disabled" <?= !empty($applicant_payment_data->currency_disabled) ? 'checked' : '' ?> onclick="currencyDisabled(this)"></label>
                             <hr>
                             <table class="table table-bordered" id="exchangeTable">
                                 <thead>
