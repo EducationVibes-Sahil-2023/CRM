@@ -14,7 +14,7 @@ class Clients extends AdminController
     public function index()
     {
         $lastSegment = $this->uri->segment($this->uri->total_segments());
-        if (!has_permission('customers', '', 'view')) {
+        if (!has_permission('customers', '', 'view') && !has_permission('customers', '', 'applicant_view_document')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
                 access_denied('customers');
             }
@@ -121,7 +121,10 @@ class Clients extends AdminController
 
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
+                if(has_permission('customers', '', 'applicant_view_document'))
+                {}else{
                 ajax_access_denied();
+                }
             }
         }
         $view = "clients";
@@ -138,7 +141,10 @@ class Clients extends AdminController
 
         if (!has_permission('customers', '', 'view')) {
             if (!have_assigned_customers() && !has_permission('customers', '', 'create')) {
+                 if(has_permission('customers', '', 'applicant_view_document'))
+                {}else{
                 ajax_access_denied();
+                }
             }
         }
         $view = "clients";
@@ -184,7 +190,13 @@ class Clients extends AdminController
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
                 } else {
+                    if(has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile' )
+                    {
+                         $data['documentAccessOnly'] = 1;
+                    }
+                    else{
                     access_denied('customers');
+                    }
                 }
             }
         }
@@ -517,9 +529,17 @@ class Clients extends AdminController
         if (!has_permission('customers', '', 'view')) {
             if ($id != '' && !is_customer_admin($id)) {
                 if ($client->addedfrom == get_staff_user_id()) {
-                } else {
+                }  else {
+                    if(has_permission('customers', '', 'applicant_view_document') &&  !$this->input->get('group') ? 'profile' : $this->input->get('group') == 'profile' )
+                    {
+                         $data['documentAccessOnly'] = 1;
+                    }
+                    else{
                     access_denied('customers');
+                    }
                 }
+                
+                
             }
         }
 
