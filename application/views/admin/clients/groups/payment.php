@@ -1484,8 +1484,9 @@ if (has_permission('payment_quotation', '', 'create')) {
                             fee_currency: $(this).find("select.currency-selector-amount").val() || '',
                             fee_inr_value: $(this).find(".fee-inr").val() || 0
                         };
-                        totalAmountCheck_ += $(this).find(".fee-amount").val() || 0;
-                        totalINRCheck_ += $(this).find(".fee-inr").val() || 0;
+                       totalAmountCheck_ += parseFloat($(this).find(".fee-amount").val()) || 0;
+                       totalINRCheck_ += parseFloat($(this).find(".fee-inr").val()) || 0;
+
                         splitData.push(rowData);
                     });
 
@@ -1501,14 +1502,16 @@ if (has_permission('payment_quotation', '', 'create')) {
                             formData.append("proof_" + index, file);
                         });
                     }
-                    if (totalAmountCheck !== totalAmountCheck_) {
+                    console.log(totalAmountCheck);
+                    console.log(totalAmountCheck_);
+                    if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_)) {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match Amount.");
                         return false;
                     }
 
-                    if (totalINRCheck !== totalINRCheck_) {
+                    if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_)) {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match INR Value. ");

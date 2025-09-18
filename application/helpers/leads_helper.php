@@ -8568,9 +8568,9 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
         }
 
 
-  if(!empty($lead->type) && $lead->type == 1){
-                            welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $leadid,8);
-                            }
+//   if(!empty($lead->type) && $lead->type == 1){
+//                             welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $leadid,8);
+//                             }
 
         $CI->db->where('id', $leadid);
         $CI->db->update(db_prefix() . 'leads', ['welcome_message_status' => 1]);
@@ -8746,8 +8746,8 @@ function welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $lead
 
 
 
-        $CI->db->where('id', $leadid);
-        $CI->db->update(db_prefix() . 'leads', ['welcome_message_status' => 1]);
+        // $CI->db->where('id', $leadid);
+        // $CI->db->update(db_prefix() . 'leads', ['welcome_message_status' => 1]);
 
         // Build WhatsApp data
         $productToken      = WHATSAAP_PRODUCT_KEY;
