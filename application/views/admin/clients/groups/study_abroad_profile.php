@@ -2776,6 +2776,28 @@ if ($lead_type_status == 1) {
             $("form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }, 1500);
     }
+    
+    
+    
+    document.addEventListener("DOMContentLoaded", function() {
+    var documentAccessOnly = "<?=!empty($documentAccessOnly)?$documentAccessOnly:0?>";
+    console.log(documentAccessOnly);
+
+    if (documentAccessOnly == "1") {
+        $('.nav-tabs-horizontal li').each(function() {
+            var $li = $(this);
+            var $a = $li.find('a[href="#documents"]');
+            if ($a.length === 0) {
+                $li.hide();
+            } else {
+                $li.show();
+                $a.trigger("click"); // More robust to use $a not $li
+            }
+        });
+        
+        $(".btn-save-funn").hide();
+    }
+});
 
 
     function multiple_document_download(className, zipFileName = '<?= sanitizeFileName($basicdetails->first_name . ' ' . $basicdetails->last_name) ?>.zip') {
