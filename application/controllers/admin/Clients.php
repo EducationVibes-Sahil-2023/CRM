@@ -10238,7 +10238,7 @@ class Clients extends AdminController
             } else {
                 $current_status = (int) $check_->status;
 
-                if (in_array($current_status, [1, 2]) && 1 == 2) {
+                if (in_array($current_status, [1, 2])) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'This quotation has already been ' . ($current_status == 1 ? 'approved' : 'rejected') . '.';
                 } elseif ($status == 0) {
