@@ -935,6 +935,8 @@ class Forms extends ClientsController
                         $success = true;
 
                         if (ENABLE_WHATSAPP_MESSAGE) {
+                            
+                            welcome_whatsapp_channel_study_abroad($post_data["phonenumber"], $form->responsible, $lead_id, 8);
                             welcome_whatsapp_message_send($post_data["phonenumber"], $form->responsible, $lead_id, WELCOME_WHATSAPP_MESSAGE);
                         }
 
