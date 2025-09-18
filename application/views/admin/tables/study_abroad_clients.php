@@ -9,6 +9,12 @@ if (!empty($user_lead_type->lead_type)) {
 } else {
     $user_lead_type = 0;
 }
+
+if(has_permission('customers', '', 'applicant_view_document') )
+{
+    $user_lead_type = 1;
+}
+
 $get_sa_ = get_applicant_stage_mbbs();
 $get_sa_ = array_column($get_sa_, null, 'id');
 
@@ -230,6 +236,11 @@ if ($role == 3) {
 // If user does NOT have 'view' permission and is not in post-sales
 $current_staff_id = get_staff_user_id();
 
+if(has_permission('customers', '', 'applicant_view_document'))
+{
+
+}
+else{
 if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) && $post_sales->post_sales != 1) {
     $where[] = 'AND (
         ' . db_prefix() . 'clients.userid IN (
@@ -239,6 +250,7 @@ if (!has_permission('customers', '', 'view') && isset($post_sales->post_sales) &
         ) 
         OR ' . db_prefix() . 'leads.assigned = ' . $current_staff_id . '
     ) ';
+}
 }
 
 if (!is_admin()) {
@@ -255,7 +267,7 @@ if (!is_admin()) {
                 OR ' . db_prefix() . 'leads.assigned IN (' . implode(',', $escaped_sids) . ')) ';
         } else {
 
-            if (has_permission('customers', '', 'applicant_view')) {
+            if (has_permission('customers', '', 'applicant_view') || has_permission('customers', '', 'applicant_view_document')) {
             } else {
                 $where[] = 'AND (
                 ' . db_prefix() . 'clients.userid IN (

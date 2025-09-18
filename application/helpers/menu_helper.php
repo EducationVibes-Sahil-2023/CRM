@@ -31,7 +31,7 @@ function app_init_admin_sidebar_menu_items()
                 || (
                         have_assigned_customers()
                         || (!have_assigned_customers() && has_permission('customers', '', 'create'))
-                )
+                ) || has_permission('customers', '', 'applicant_view_document') 
         ) {
                 $CI->app_menu->add_sidebar_menu_item('customers', [
                         'collapse' => true,
@@ -402,6 +402,7 @@ function app_init_admin_sidebar_menu_items()
 
 
 
+ if (has_permission('partners', '', 'view')) {
         // if (has_permission('academic', '', 'view')) {
         $CI->app_menu->add_sidebar_menu_item('academic', [
                 'collapse' => true,
@@ -424,6 +425,7 @@ function app_init_admin_sidebar_menu_items()
                 'position' => 5,
         ]);
 
+}
 
         if (has_permission('partners', '', 'view')) {
 

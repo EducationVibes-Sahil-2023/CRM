@@ -8569,7 +8569,7 @@ function welcome_whatsapp_message_send($contact_number, $staff_id, $leadid, $wha
 
 
   if(!empty($lead->type) && $lead->type == 1){
-                            welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $leadid, 8);
+                            welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $leadid,8);
                             }
 
         $CI->db->where('id', $leadid);
@@ -8740,9 +8740,9 @@ function welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $lead
             throw new Exception("Staff details not found.");
         }
 
-        if ((int)$staff_data->whatsapp_status == 0) {
-            return true;
-        }
+        // if ((int)$staff_data->whatsapp_status == 0) {
+        //     return true;
+        // }
 
 
 

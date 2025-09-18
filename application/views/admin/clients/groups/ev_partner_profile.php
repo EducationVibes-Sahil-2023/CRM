@@ -1603,6 +1603,27 @@ if ($lead_type_status == 2) {
 ?>
 
 <script>
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    var documentAccessOnly = "<?=!empty($documentAccessOnly)?$documentAccessOnly:0?>";
+    console.log(documentAccessOnly);
+
+    if (documentAccessOnly == "1") {
+        $('.nav-tabs-horizontal li').each(function() {
+            var $li = $(this);
+            var $a = $li.find('a[href="#documents"]');
+            if ($a.length === 0) {
+                $li.hide();
+            } else {
+                $li.show();
+                $a.trigger("click"); // More robust to use $a not $li
+            }
+        });
+        $(".btn-save-funn").hide();
+    }
+});
+
 	var primary_country = "<?= !empty($admissionpreferences->primary_country) ? $admissionpreferences->primary_country : 0 ?>";
 	var primary_university = "<?= !empty($admissionpreferences->primary_university) ? $admissionpreferences->primary_university : 0 ?>";
 
