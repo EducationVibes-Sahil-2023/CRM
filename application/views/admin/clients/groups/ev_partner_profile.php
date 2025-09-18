@@ -1311,7 +1311,7 @@ if ($lead_type_status == 2) {
 										<div class="col-lg-2">
 											<div class="form-group">
 												<label for="exampleInputMiddleName">Payment received from <small class="text-danger"></small></label>
-												<input class="form-control" type="text" name="payment_recevied_from" value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
+												<input class="form-control" type="text" onkeypress="return acceptText(this,'number')" name="payment_recevied_from" value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
 											</div>
 										</div>
 
@@ -1433,7 +1433,7 @@ if ($lead_type_status == 2) {
 
 
 															</div>
-															<input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
+															<input type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
 															<div class="input-group-addon currency-addon">
 
 																<select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
@@ -1469,18 +1469,18 @@ if ($lead_type_status == 2) {
 												<div class="col-lg-4 col-md-4 col-6 fees-block-8">
 													<label>&nbsp;</label>
 
-												    <div class="form-check checkbox">
-                                                    <input
-                                                        class="form-check-input checkbox-group <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabledd' : '' ?>"
-                                                        type="checkbox"
-                                                        id="air_ticket_include"
-                                                        name="air_ticket_include"
-                                                        <?= ($client->air_ticket_include == 1) ? 'checked' : '' ?>
-                                                        <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabled' : '' ?>>
-                                                    <label class="form-check-label" for="air_ticket_include">
-                                                        Air ticket inc. in Service Charge <span class="text-danger">*</span>
-                                                    </label>
-                                                </div>
+													<div class="form-check checkbox">
+														<input
+															class="form-check-input checkbox-group <?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabledd' : '' ?>"
+															type="checkbox"
+															id="air_ticket_include"
+															name="air_ticket_include"
+															<?= ($client->air_ticket_include == 1) ? 'checked' : '' ?>
+															<?= (strtolower($admissionpreferences->primary_country) != "georgia") ? 'disabled' : '' ?>>
+														<label class="form-check-label" for="air_ticket_include">
+															Air ticket inc. in Service Charge <span class="text-danger">*</span>
+														</label>
+													</div>
 												</div>
 											</div>
 										</div>

@@ -1309,7 +1309,7 @@ if ($lead_type_status == 2) {
                                     <div class="col-lg-2">
                                         <div class="form-group">
                                             <label for="exampleInputMiddleName">Payment received from <small class="text-danger">*</small></label>
-                                            <input class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" <?= !empty($final_sumbit) ? 'disabled' : '' ?> type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>">
+                                            <input class="form-control <?= !empty($final_sumbit) ? 'disabled-form-welcome' : '' ?>" <?= !empty($final_sumbit) ? 'disabled' : '' ?> type="text" name="payment_recevied_from" <?= $text_danger_mbbs_required ?> value="<?= !empty($client->payment_recevied_from) ? $client->payment_recevied_from : '' ?>" onkeypress="return acceptText(this,'text')">
                                         </div>
                                     </div>
 
@@ -1431,7 +1431,7 @@ if ($lead_type_status == 2) {
 
 
                                                         </div>
-                                                        <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
+                                                        <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
                                                             <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">

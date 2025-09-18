@@ -41,6 +41,7 @@ $join = [
 
 $where   = [];
 $where[] = "AND " . $sTable . ".client_id = " . (int) $client_id;
+$where[] = "AND " . $sTable . ".status > 0 ";
 
 if (!empty($_POST['payment_id'])) {
     $where[] = "AND " . $sTable . ".id = " . (int) $_POST['payment_id'];
@@ -112,9 +113,7 @@ if (!empty($_POST['payment_id'])) {
                     <i class="fa fa-times"></i>
                 </button>
                 &nbsp;
-                <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
-                    <i class="fa fa-trash"></i>
-                </button>';
+               ';
         }
 
         $status .= " &nbsp; <span class='text-" . $aRow['status_color'] . "'>" . $aRow['status'] . "</span>";
@@ -137,6 +136,13 @@ if (!empty($_POST['payment_id'])) {
                 <a class="btn btn-xs btn-sm btn-primary" href="?group=payment&payment_id=' . (int)$aRow['id'] . '">
                     <i class="fa fa-pencil"></i>
                 </a>';
+        }
+
+        if (is_admin() || has_permission('payment_quotation', '', 'delete')) {
+            $action .= '
+     <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
+                    <i class="fa fa-trash"></i>
+                </button>';
         }
         $row[] = $action;
 

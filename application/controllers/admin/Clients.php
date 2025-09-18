@@ -9994,6 +9994,8 @@ class Clients extends AdminController
             $ex_currency  = $this->input->post("ex_currency") ?? '';
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
             $inr_value  = $this->input->post("inr_value") ?? 0;
+            $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
+
             $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
             $payment_quotations = $this->input->post("payment_quotations")
                 ? json_decode($this->input->post("payment_quotations"), true)
@@ -10029,7 +10031,8 @@ class Clients extends AdminController
                     "payment_type"        => $payment['payment_type'] ?? "",
                     "inr_value"        => $inr_value ?? 0,
                     "total_inr_amount"        => $total_inr_amount ?? 0,
-                    "tt_copy" => $tt_copy ?? 0
+                    "tt_copy" => $tt_copy ?? 0,
+                    "currency_disabled" => $currency_disabled ?? 0
 
                 ];
 
@@ -10215,10 +10218,10 @@ class Clients extends AdminController
             } else {
                 $current_status = (int) $check_->status;
 
-                if (in_array($current_status, [1, 2])) {
+                if (in_array($current_status, [1, 2]) && 1 == 2) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'This quotation has already been ' . ($current_status == 1 ? 'approved' : 'rejected') . '.';
-                } elseif ($status === 0) {
+                } elseif ($status == 0) {
                     // Delete record
                     $this->db->where('id', $quotation_payment_id)->update(db_prefix() . 'payment_quotations', ['pdf' => '', 'status' => $status]);
                     if ($this->db->affected_rows() > 0) {

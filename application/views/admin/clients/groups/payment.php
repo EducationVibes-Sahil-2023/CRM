@@ -284,6 +284,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                     <div class="panel_s shadow">
                         <div class="panel-body">
                             <h4 class="text-bold">Currency Exchange Rates</h4>
+                            <label>Disabled currency <input type="checkbox" value='1' name="currency_disabled" <?= !empty($applicant_payment_data->currency_disabled) ? 'checked' : '' ?> onclick="currencyDisabled(this)"></label>
                             <hr>
                             <table class="table table-bordered" id="exchangeTable">
                                 <thead>
@@ -492,10 +493,10 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 <div class="input-group-addon currency-symbol-amount_<?= time() ?>">
                                                     <?= $currency_lookup[!empty($applicant_payment_data->ex_currency) ? $applicant_payment_data->ex_currency : 3]["symbol"] ?? '' ?>
                                                 </div>
-                                                <input type="text" name="amount" data-name="amount" class="form-control amount currency-amount"
+                                                <input type="number" name="amount" data-name="amount" class="form-control amount currency-amount"
                                                     placeholder="0.00" required oninput="calculateInrValue()" value="<?= $applicant_payment_data->amount ? $applicant_payment_data->amount : '' ?>">
                                                 <div class="input-group-addon">
-                                                    <select name="ex_currency" data-name="ex_currency"
+                                                    <select name="ex_currency" data-id="amount_<?= time() ?>" data-name="ex_currency"
                                                         class="currency-selector currency-selector-amount ex_currency"
                                                         onchange="calculateInrValue(); updateSymbol_(this,'amount_<?= time() ?>')">
                                                         <?php foreach ($get_currencies as $c): ?>
@@ -529,7 +530,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 <div class="input-group-addon currency-symbol">
                                                     <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                                                 </div>
-                                                <input type="text" name="inr_value" required value="<?= $applicant_payment_data->inr_value ?? $applicant_payment_data->inr_value ?>" data-name="inr_value" id="inr_value" class="form-control inr_value" readonly>
+                                                <input type="number" name="inr_value" required value="<?= $applicant_payment_data->inr_value ?? $applicant_payment_data->inr_value ?>" data-name="inr_value" id="inr_value" oninput="calculateInrValue()" class="form-control inr_value" <?= $applicant_payment_data->currency_disabled == 1 ? '' : 'readonly' ?>>
                                             </div>
                                         </div>
                                     </div>
@@ -575,7 +576,10 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <?php foreach ($splitData as $split) {
+                                                    <?php
+                                                    $totalINRAmount = 0;
+                                                    foreach ($splitData as $split) {
+                                                        $totalINRAmount += $split['fee_inr_value'] ?? 0;
                                                     ?>
                                                         <tr data-fee-id="<?= $split['fee_id'] ?>">
                                                             <td>
@@ -600,8 +604,8 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                                         oninput="calculateInrValue()">
                                                                     <div class="input-group-addon">
                                                                         <select name="amount_currency_type[<?= $split['fee_id'] ?>]"
-                                                                            class="currency-selector currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : '' ?>"
-                                                                            <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'disabled' : '' ?>
+                                                                            class="currency-selector currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : 'auto-populated-select' ?>"
+                                                                            readonly
                                                                             onchange="calculateInrValue(); updateSymbol_(this,<?= $split['fee_id'] ?>)">
                                                                             <?php foreach ($get_currencies as $c): ?>
                                                                                 <option value="<?= $c['id'] ?>" <?= $c['id'] == $split['fee_currency'] ? 'selected' : '' ?> data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
@@ -622,8 +626,8 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                                 </select>
                                                             </td>
                                                             <td>
-                                                                <input type="text" name="fee_inr_value[<?= $split['fee_id'] ?>]"
-                                                                    class="form-control fee-inr" value="<?= $split['fee_inr_value'] ?? 0 ?>" readonly>
+                                                                <input type="number" required name="fee_inr_value[<?= $split['fee_id'] ?>]"
+                                                                    oninput="calculateInrValue()" class="form-control fee-inr" value="<?= $split['fee_inr_value'] ?? 0 ?>" <?= $applicant_payment_data->currency_disabled == 1 ? '' : 'readonly' ?>>
                                                             </td>
                                                         </tr>
                                                     <?php } ?>
@@ -636,7 +640,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                                 <div class="input-group-addon currency-symbol">
                                                                     <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                                                                 </div>
-                                                                <input type="text" name="total_inr_amount" data-name="total_inr_amount" id="total_inr_amount" class="total_inr_amount form-control" readonly>
+                                                                <input type="text" name="total_inr_amount" data-name="total_inr_amount" value="<?= $totalINRAmount ?? 0 ?>" id="total_inr_amount" class="total_inr_amount form-control" readonly>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -687,6 +691,53 @@ if (has_permission('payment_quotation', '', 'create')) {
 
         // global counter for unique IDs
         window._cloneCounter = window._cloneCounter || 0;
+
+        var currencyDisabledStatus = <?= !empty($applicant_payment_data->currency_disabled) ? $applicant_payment_data->currency_disabled : 0 ?>;
+
+        function currencyDisabled(obj) {
+            $(".payment_payment").each(function() {
+                var $paymentpayment = $(this);
+                var paymentType = $paymentpayment.find("select[name='payment_type']").val();
+
+                if ($(obj).is(":checked")) {
+                    currencyDisabledStatus = 1;
+                    if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+                        $paymentpayment.find(".inr_value")
+                            .val('')
+                            .removeAttr('readonly');
+                    } else {
+                        $paymentpayment.find(".inr_value, .fee-inr")
+                            .val('')
+                            .removeAttr('readonly');
+                    }
+                } else {
+                    currencyDisabledStatus = 0;
+                    if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+                        $paymentpayment.find(".inr_value")
+                            .val('')
+                            .attr('readonly', 'readonly');
+                    } else {
+                        $paymentpayment.find(".inr_value, .fee-inr")
+                            .val('')
+                            .attr('readonly', 'readonly');
+                    }
+                }
+            });
+            calculateInrValue();
+        }
+
+
+        function setPaymentDate() {
+            var today = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('input.pay_date[type="date"]').forEach(function(el) {
+                el.setAttribute('max', today);
+            });
+
+        }
+        // Set max date to today for all .pay_date inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            setPaymentDate();
+        });
 
         function newClone() {
             let html = `<div class="panel_s">
@@ -775,7 +826,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 <div class="input-group-addon currency-symbol-amount_<?= time() ?>">
                                                     <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                                                 </div>
-                                                <input type="text" data-name="amount" name="amount_<?= time() ?>"amount" class="form-control amount currency-amount"
+                                                <input type="number" data-name="amount" name="amount_<?= time() ?>"amount" class="form-control amount currency-amount"
                                                     placeholder="0.00" required oninput="calculateInrValue()" value="">
                                                 <div class="input-group-addon">
                                                     <select data-name="ex_currency" name="ex_currency_<?= time() ?>"ex_currency"
@@ -803,7 +854,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 <div class="input-group-addon currency-symbol">
                                                     <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                                                 </div>
-                                                <input type="text" required data-name='inr_value' name="inr_value_<?= time() ?>" value=""inr_value" id="inr_value" class="form-control inr_value" readonly>
+                                                <input type="number" required data-name='inr_value' name="inr_value_<?= time() ?>" value=""inr_value" id="inr_value" class="form-control inr_value" oninput="calculateInrValue()" readonly>
                                             </div>
                                         </div>
                                     </div>
@@ -859,7 +910,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                                 <div class="input-group-addon currency-symbol">
                                                                     <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                                                                 </div>
-                                                                <input type="text" name="total_inr_amount_<?= time() ?>" data-name="total_inr_amount" id="total_inr_amount" class="total_inr_amount form-control" readonly>
+                                                                <input type="text" required name="total_inr_amount_<?= time() ?>" data-name="total_inr_amount" id="total_inr_amount" class="total_inr_amount form-control" readonly>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -878,7 +929,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
             // Refresh UI
             $newSelects.selectpicker("refresh");
-
+            setPaymentDate();
             // $(".payment_payment").append(html);
         }
 
@@ -972,26 +1023,25 @@ if (has_permission('payment_quotation', '', 'create')) {
         function split_data(obj, feesID = 0) {
             let selectedFeesIds = $(obj).val() || [];
             let singleSelectedValue = "";
-            // ✅ Ensure it's always an array
+
+            // Ensure always an array
             if (!Array.isArray(selectedFeesIds)) {
                 singleSelectedValue = selectedFeesIds;
                 selectedFeesIds = [selectedFeesIds];
+            } else if (selectedFeesIds.length === 1) {
+                singleSelectedValue = selectedFeesIds[0];
             }
 
-
-            console.log("Selected Fees:", selectedFeesIds);
-
             let $paymentpayment = $(obj).closest('.payment_payment');
+            let paymentType = $paymentpayment.find("select[name='payment_type']").val();
 
-            if ($paymentpayment.find("input[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>) {
+            // If payment_type is NOT PACKAGE_FEES_ID, clear the split table
+            if (paymentType != <?= PACKAGE_FEES_ID ?>) {
                 $paymentpayment.find("table.payment_payment_split_table tbody").html('');
             }
             let $tbody = $paymentpayment.find("table.payment_payment_split_table tbody");
 
-
-
-
-            // 🔹 Remove rows that are NOT in selected fees anymore
+            // Remove rows NOT selected anymore
             $tbody.find("tr").each(function() {
                 let feeId = $(this).data("fee-id") || 0;
                 if (!selectedFeesIds.includes(feeId.toString())) {
@@ -999,103 +1049,99 @@ if (has_permission('payment_quotation', '', 'create')) {
                 }
             });
 
-            // 🔹 Toggle split section
-
-
+            // Toggle split-data visibility
             $paymentpayment.find(".payment-split-data").toggle(selectedFeesIds.length > 0);
 
-            // 🔹 Build / update rows
-            selectedFeesIds.forEach(feeId => {
-                let unique = Date.now() + "_" + feeId; // ✅ use JS timestamp instead of PHP time()
-
-                // ✅ check if row already exists
+            // Build/update fee split rows
+            selectedFeesIds.forEach(function(feeId) {
+                feeId = feeId.toString();
+                let unique = Date.now() + "_" + feeId;
+                // Skip if already exists
                 if ($tbody.find(`tr[data-fee-id='${feeId}']`).length > 0) {
-                    return; // already added
+                    return;
                 }
 
                 let readonly = 0;
-                if (feesID > 0 && singleSelectedValue != '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
+                if (feesID > 0 && singleSelectedValue !== '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
                     readonly = 1;
                 }
+                // Example: if (currencyDisabledStatus == 1) readonly = 0;
 
                 let feeData = university_applicant_fees.find(f => f.id == feeId);
                 if (feeData) {
-                    let inrValue = parseFloat(feeData.inr_value || 0);
+                    let inrValue = 0;
+                    if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+                        inrValue = parseFloat(feeData.inr_value || 0);
+                    }
 
                     let row = `
-                <tr data-fee-id="${feeData.id}">
-                    <td>
-                        <select class="form-control selectpicker" disabled>
-                            <option selected value="${feeData.id}">${feeData.name}</option>
-                        </select>
-                        <input type="hidden" name="selected_fees[]" value="${feeData.id}">
-                    </td>
-                    <td>
-                        <div class="input-group">
-                            <div class="input-group-addon currency-symbol-${unique}">
-                                <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
-                            </div>
-                            <input type="number" step="0.01"
-                                   name="fee_amount[${feeData.id}]"
-                                   required
-                                   class="form-control fee-amount currency-amount   ${readonly == 1 ? 'auto-populated' : ''}"
-                                   placeholder="0.00"
-                                  ${readonly == 1 ? 'readonly' : ''}
-                                   value="${feeData.amount || 0}"
-                                   oninput="calculateInrValue()">
-                            <div class="input-group-addon">
-                                <select name="amount_currency_type[${feeData.id}]"
-                                        ${readonly == 1 ? 'disabledd' : ''} class="currency-selector currency-selector-amount  ${readonly == 1 ? 'auto-populated-select' : ''}"
-                                        onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
-                                    ${getCurrencyOptions(3)}
-                                </select>
-                            </div>
+            <tr data-fee-id="${feeData.id}">
+                <td>
+                    <select class="form-control selectpicker" disabled>
+                        <option selected value="${feeData.id}">${feeData.name}</option>
+                    </select>
+                    <input type="hidden" name="selected_fees[]" value="${feeData.id}">
+                </td>
+                <td>
+                    <div class="input-group">
+                        <div class="input-group-addon currency-symbol-${unique}">
+                            <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                         </div>
-                    </td>
-                    <td>
-                        <select disabled name="fee_currency[${feeData.id}]" class="form-control">
-                            ${getCurrencyOptions(3)}
-                        </select>
-                    </td>
-                    <td>
-                        <input type="text" name="fee_inr_value[${feeData.id}]"
-                               class="form-control fee-inr" value="${inrValue.toFixed(2)}" readonly>
-                    </td>
-                </tr>
+                        <input type="number" step="0.01"
+                               name="fee_amount[${feeData.id}]"
+                               required
+                               class="form-control fee-amount currency-amount ${readonly == 1 ? 'auto-populated' : ''}"
+                               placeholder="0.00"
+                               ${readonly == 1 ? 'readonly' : ''}
+                               value="${feeData.amount || 0}"
+                               oninput="calculateInrValue()">
+                        <div class="input-group-addon">
+                            <select name="amount_currency_type[${feeData.id}]"
+                                    ${readonly == 1 ? 'readonly' : ''}
+                                    data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
+                                    onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
+                                ${getCurrencyOptions(3)}
+                            </select>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <select disabled name="fee_currency[${feeData.id}]" class="form-control">
+                        ${getCurrencyOptions(3)}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" required name="fee_inr_value[${feeData.id}]"
+                           oninput="calculateInrValue()" class="form-control fee-inr" value="${inrValue.toFixed(2)}" ${currencyDisabledStatus == 1 ? '' : 'readonly'}>
+                </td>
+            </tr>
             `;
                     $tbody.append(row);
                     $tbody.find(".selectpicker").selectpicker("refresh");
                 }
             });
 
-
-            // 🔹 Handle split type dropdown
+            // Handle split-type dropdown
+            let $panel = $(obj).closest('.panel_s');
+            let $splitTypeDropdown = $panel.find(".split-type-dropdown");
+            let $splitTypeSelect = $splitTypeDropdown.find("select.electpicker");
             if (feesID == <?= PACKAGE_FEES_ID ?>) {
-                $(obj).closest('.panel_s').find(".split-type-dropdown")
-                    .find("select.electpicker")
-                    .val('')
-                    .selectpicker('refresh');
-                $(obj).closest('.panel_s').find(".split-type-dropdown").show();
+                $splitTypeSelect.val('').selectpicker('refresh');
+                $splitTypeDropdown.show();
                 $tbody.html('');
-            } else if (feesID > 0 && singleSelectedValue != '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
-                $(obj).closest('.panel_s').find(".split-type-dropdown").hide();
-                $(obj).closest('.panel_s').find(".split-type-dropdown")
-                    .find("select.electpicker")
-                    .val('')
-                    .selectpicker('refresh');
-
+            } else if (feesID > 0 && singleSelectedValue !== '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
+                $splitTypeDropdown.hide();
+                $splitTypeSelect.val('').selectpicker('refresh');
             }
 
-
-            // calculateInrValue();
-            // 🔹 update total INR
-            recalcTotalINR($paymentpayment);
+            calculateInrValue();
         }
 
 
 
+
         // 🔹 Recalc INR when user edits amounts/currency
-        $(document).on("input change", ".fee-amount, select[name^='fee_currency'], select[name^='amount_currency_type']", function() {
+        $(document).on("input change", ".fee-amount,.fee-inr, select[name^='fee_currency'], select[name^='amount_currency_type'],.inr_value", function() {
             let $paymentpayment = $(this).closest('.payment_payment');
             recalcTotalINR($paymentpayment);
         });
@@ -1115,16 +1161,14 @@ if (has_permission('payment_quotation', '', 'create')) {
             });
         }
 
-
         function recalcTotalINR($paymentpayment) {
             let $tbody = $paymentpayment.find("table.payment_payment_split_table tbody tr");
 
-            // 🔹 Build exchange rate map from exchange table
-            exchangeRates = {};
+            // Build exchange rate map from exchange table
+            let exchangeRates = {};
             document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
                 const currencySelect = row.querySelector("select[name='exchange_currency[]']");
                 const amountInput = row.querySelector("input[name='exchange_value[]']");
-
                 if (currencySelect && amountInput) {
                     const currencyId = currencySelect.value;
                     const rate = parseFloat(amountInput.value) || 1;
@@ -1134,24 +1178,33 @@ if (has_permission('payment_quotation', '', 'create')) {
 
             let totalINR = 0;
 
-            // 🔹 Recalc INR for each fee row
+            // Recalculate INR for each fee row
             $tbody.each(function() {
                 let $row = $(this);
                 let feeId = $row.data("fee-id") || 0;
 
-                let amount = parseFloat($row.find("input[name='fee_amount[" + feeId + "]']").val()) || 0;
-                let currency = $row.find("select[name='amount_currency_type[" + feeId + "]']").val();
-
+                let amount = parseFloat($row.find(`input[name='fee_amount[${feeId}]']`).val()) || 0;
+                let currency = $row.find(`select[name='amount_currency_type[${feeId}]']`).val();
                 let rate = exchangeRates[currency] || 1;
-                let inrValue = amount * rate;
+                let inrValue = 0;
 
-                $row.find(".fee-inr").val(inrValue.toFixed(2));
+                if (typeof currencyDisabledStatus !== "undefined" && currencyDisabledStatus == 1) {
+                    // If disabled, trust user-entered INR value
+                    inrValue = parseFloat($row.find(".fee-inr").val()) || 0;
+                } else {
+                    // Otherwise, calculate
+                    inrValue = amount * rate;
+                    $row.find(".fee-inr").val(inrValue.toFixed(2));
+                }
+
                 totalINR += inrValue;
             });
 
-            // 🔹 Update total INR
+            // Update total INR
             $paymentpayment.find("input.total_inr_amount").val(totalINR.toFixed(2));
         }
+
+
 
         // --- Fetch applicant fees ---
         function fetchApplicantFees(studyYear) {
@@ -1184,39 +1237,82 @@ if (has_permission('payment_quotation', '', 'create')) {
         }
 
         function calculateInrValue() {
-            // Make sure exchange rates are updated
             calculateExchangeRate();
 
-            // Loop through each payment payment
             $('.payment_payment').each(function() {
                 const $entry = $(this);
 
-                // Get the amount and currency
+                // Get main input values
                 let amount = parseFloat($entry.find("input.amount").val()) || 0;
                 let currency_id = $entry.find("select.ex_currency").val();
 
-                // Validate exchange rate exists
-                let rate = exchangeRates[currency_id] || 1;
+                // Get exchange rate for selected currency
+                let rate = typeof exchangeRates !== "undefined" ? (exchangeRates[currency_id] || 1) : 1;
 
                 // Calculate INR value
                 let inrValue = amount * rate;
 
-                // Set INR value input
-                $entry.find("input.inr_value").val(inrValue.toFixed(2));
+                // Set main INR value (only if not in manual/disabled mode)
+                if (currencyDisabledStatus !== 1) {
+                    $entry.find("input.inr_value").val(inrValue.toFixed(2));
+                }
 
-
+                // Auto-populated amount fields (e.g. split fee rows)
                 $entry.find("input.auto-populated").val(amount);
-                $entry.find("select.auto-populated-select").attr("disabled", true).val(currency_id);
-                updateSymbol_($entry.find("select.auto-populated-select"), currency_id);
 
+                // If special package fee and disabled mode, propagate INR
+                if (
+                    currencyDisabledStatus == 1 &&
+                    $entry.find("select[name='payment_type']").val() != 'undefined' && $entry.find("select[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>
+                ) {
 
+                    console.log($entry.find("select[name='payment_type']").val());
+                    console.log(<?= PACKAGE_FEES_ID ?>);
+                    console.log("Same INR Value");
+                    $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
+                }
 
-                // Recalculate totals if needed
+                // Refresh read-only and force currency select state where needed
+                $entry.find("select.auto-populated-select").each(function() {
+                    let idd = $(this).data("id");
+                    $(this)
+                        .attr("readonly", true)
+                        .val(currency_id);
+                    updateSymbol_($(this), idd);
+                });
+
+                // Recalculate totals for this payment entry
                 recalcTotalINR($entry);
-
             });
+        }
 
 
+
+        // Helper: robustly extract numeric id (with optional _suffix) from the addon element
+        function getCurrencyNumericFromAddon($addon) {
+            if (!$addon || !$addon.length) return null;
+
+            // read class attribute and normalize whitespace / remove control chars
+            let classAttr = $addon.attr('class') || '';
+            classAttr = classAttr.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+            // debug: uncomment to see exact string (shows hidden chars)
+            // console.log("raw classAttr (json):", JSON.stringify(classAttr));
+
+            // tokenise by space and test each token
+            const tokens = classAttr.split(' ');
+            const re = /currency-symbol(?:-amount)?_(\d+(?:_\d+)?)/;
+            const matches = [];
+
+            for (let t of tokens) {
+                const m = t.match(re);
+                if (m) matches.push(m[1]); // capture group 1: digits or digits_suffix
+            }
+
+            if (matches.length === 0) return null;
+            // prefer a match that contains underscore (the one with suffix)
+            const withSuffix = matches.find(x => x.indexOf('_') !== -1);
+            return withSuffix || matches[0];
         }
 
 
@@ -1332,11 +1428,14 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                 // 🔹 Collect all payment payment data
                 let paymentpayments = [];
-
+                let error = false;
                 $(".payment_payment").each(function(index) {
                     let $payment = $(this);
                     let paymentData = {};
-
+                    let totalAmountCheck = $(this).find("input[name='amount']").val() || 0;
+                    let totalAmountCheck_ = 0;
+                    let totalINRCheck = $(this).find("input[name='inr_value']").val() || 0;
+                    let totalINRCheck_ = 0;
                     // 🔹 Collect all form data
                     $payment.find("input, select, textarea").each(function() {
                         let name = $(this).attr("data-name");
@@ -1385,6 +1484,8 @@ if (has_permission('payment_quotation', '', 'create')) {
                             fee_currency: $(this).find("select.currency-selector-amount").val() || '',
                             fee_inr_value: $(this).find(".fee-inr").val() || 0
                         };
+                        totalAmountCheck_ += $(this).find(".fee-amount").val() || 0;
+                        totalINRCheck_ += $(this).find(".fee-inr").val() || 0;
                         splitData.push(rowData);
                     });
 
@@ -1400,8 +1501,25 @@ if (has_permission('payment_quotation', '', 'create')) {
                             formData.append("proof_" + index, file);
                         });
                     }
+                    if (totalAmountCheck !== totalAmountCheck_) {
+                        error = true;
+                        hide_loader();
+                        alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match Amount.");
+                        return false;
+                    }
+
+                    if (totalINRCheck !== totalINRCheck_) {
+                        error = true;
+                        hide_loader();
+                        alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match INR Value. ");
+                        return false;
+                    }
+
                 });
 
+                if (error == true) {
+                    return false;
+                }
                 // 🔹 Add all form data to FormData
                 $("#applicant-payment-form").serializeArray().forEach(function(field) {
                     formData.append(field.name, field.value);
@@ -1466,6 +1584,11 @@ if (has_permission('payment_quotation', '', 'create')) {
                 }
             });
 
+            $(document).on("mousedown", "select.readonly", function(e) {
+                e.preventDefault(); // stop dropdown from opening
+                this.blur(); // remove focus
+            });
+
             // $(document).on("keyup", ".manually-cash", function() {
             //     let $row = $(this).closest("tr");
             //     let vendor_select = $row.find("select.vendor_id");
@@ -1521,7 +1644,10 @@ if (has_permission('payment_quotation', '', 'create')) {
             appValidateForm($("#applicant-payment-form"));
         });
 
+
         function GeneratePDF(client_id, payment_id) {
+
+            show_loader();
             $.ajax({
                 url: "<?= admin_url('clients/paymentGenerate') ?>",
                 type: "POST",
@@ -1534,6 +1660,8 @@ if (has_permission('payment_quotation', '', 'create')) {
                     console.log("Generating PDF...");
                 },
                 success: function(response) {
+                    hide_loader();
+
                     response = JSON.parse(response);
 
                     // If backend returns PDF file URL
@@ -1551,7 +1679,7 @@ if (has_permission('payment_quotation', '', 'create')) {
         }
 
         function setNumberDecimal() {
-            $(document).on("focus", "input[name='fee_value[]'], .currency-amount", function() {
+            $(document).on("focus", "input[name='fee_value[]'], .currency-amount,.inr_value", function() {
                 // Force input type="number" with step for 4 decimals
                 $(this).attr({
                     type: "number",
