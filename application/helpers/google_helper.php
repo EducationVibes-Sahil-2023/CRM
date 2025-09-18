@@ -2016,6 +2016,7 @@ $condition_sql ="";
         {$selectColumnName},exchange_value,fess_infomation
         FROM `".db_prefix()."payment_quotations` pq 
         LEFT JOIN ".db_prefix()."clients c ON pq.client_id = c.userid 
+        LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
         LEFT JOIN ".db_prefix()."quotation_mode m ON m.id = pq.mode 
         LEFT JOIN ".db_prefix()."basic_details b ON b.userid = pq.client_id 
         JOIN ".db_prefix()."applicant_fees f ON f.id = pq.payment_type  
