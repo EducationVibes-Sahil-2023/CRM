@@ -2033,7 +2033,7 @@ $condition_sql ="";
         LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
         LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = pq.ex_currency
         LEFT JOIN " . db_prefix() . "transaction_type ptt ON ptt.id = pq.transaction_type
-        WHERE 1=1 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql}
+        WHERE 1=1 and pq.status > 0 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql}
         GROUP BY pq.id ORDER BY pq.client_id
         ";
     
