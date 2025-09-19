@@ -10105,7 +10105,7 @@ class Clients extends AdminController
                     'year'           => $study_year,
                     'mode'           => $row['mode'],
                     'amount'         => $row['amount'],
-                    'pay_date'       => $row['pay_date'],
+                    'pay_date'       => $row['pay_date']
                 ]);
                 if (!empty($row["vendor_id"])) {
                     $this->db->where('vendor_id', $row["vendor_id"]);
@@ -10115,6 +10115,8 @@ class Clients extends AdminController
                 if (!empty($row["id"])) {
                     $this->db->where('id !=', $row["id"]);
                 }
+                
+                $this->db->where('status > ', 0);
                 $duplicate = $this->db->get(db_prefix() . 'payment_quotations')->row();
                 if ($duplicate) {
                     throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");

@@ -2085,7 +2085,7 @@ $("input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount").e
 
             if (fee && fee.id == 3) {
                 // Set fee value safely
-                $row.find("input[name='fee_value[]']").val(fee.amount ?? 0);
+                $row.find("input[name='fee_value[]']").val(parseInt((fee.amount).replace(/,/g, ""), 10) ?? 0);
 
                 // ✅ Set currency correctly
                 if (fee.currency_id) {
