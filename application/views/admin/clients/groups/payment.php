@@ -1,5 +1,22 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+   <style>
+        [id^="nested-applicant-table-"] div.row {
+            display: none !important;
+        }
 
+        .dataTables_wrapper div.row {
+            display: none !important;
+        }
+    </style>
+    <?php  if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
+        
+        echo ' <div class="row">
+            <div class="col-md-12">
+            <h4 class="fs-title text-center">No Payments View Access</h4>
+            </div>
+            </div>';
+        die;
+    }?>
 <div class="panel_s">
 
     <input type="hidden" value='1' name="fess_info">
@@ -220,15 +237,7 @@ if (has_permission('payment_quotation', '', 'create')) {
     $payment_payment_mode = $ci->db->get(db_prefix() . 'quotation_paymente_mode')->result_array();
 ?>
 
-    <style>
-        [id^="nested-applicant-table-"] div.row {
-            display: none !important;
-        }
-
-        .dataTables_wrapper div.row {
-            display: none !important;
-        }
-    </style>
+ 
 
     <div class="row">
         <div class="col-md-12">

@@ -8728,6 +8728,10 @@ function welcome_whatsapp_channel_study_abroad($contact_number, $staff_id, $lead
         if ($lead->welcome_message_status == 1) {
             return true;
         }
+        
+           if ($lead->type != 1) {
+            return true;
+        }
 
 
         // Get staff
