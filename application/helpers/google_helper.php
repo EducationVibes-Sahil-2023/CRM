@@ -959,9 +959,23 @@ function syncExcel_neww($id = "")
                 $selectColumnName .= ', ' . implode(",\n", $queryPart);
             }
         }
-
-        if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
-            $apostille_documents = get_orignal_document_list(0, 0, 1);
+$apostileSub ="";
+if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
+    
+        $apostileSub .="LEFT JOIN (
+        SELECT 
+        ca.userid,
+        GROUP_CONCAT(DISTINCT od.short_name) AS all_docs,
+        GROUP_CONCAT(DISTINCT CASE WHEN ca.received_status = 1 THEN od.short_name END) AS received_docs,
+        GROUP_CONCAT(DISTINCT CASE WHEN ca.by_vendor = 1 THEN od.short_name END) AS by_vendor_docs
+        FROM tblclient_apostille_data ca
+        JOIN tblorignal_documents od ON od.id = ca.doc_id
+        GROUP BY ca.userid
+        ) doc_list ON doc_list.userid = c.userid";
+        
+        
+        
+          $apostille_documents = get_orignal_document_list(0, 0, 1);
             $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
 
             // Ensure both are arrays before merging
@@ -976,7 +990,11 @@ function syncExcel_neww($id = "")
             $queryPart = [];
 
             if (!empty($apostille_documents)) {
+                
+        $apostileSub .=" LEFT JOIN (
+    SELECT userid";
                 foreach ($apostille_documents as $apostille) {
+           
                     $short_name        = trim($apostille['short_name']);
                     if ($apostille["apostile_status"] == 1) {
                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
@@ -985,30 +1003,78 @@ function syncExcel_neww($id = "")
                     } else {
                         $safe_column_name  =  str_replace(" ", "_", $short_name);
                     }
+                    
+                    $safe_column_name = str_replace(".","",$safe_column_name);
                     $extra_columns[]   = $safe_column_name;
+                   $queryPart[] = "IFNULL(doc_status.".$safe_column_name.",'Pending') as {$safe_column_name} ";
+                    
+                 $apostileSub .= " ,COALESCE(MAX(CASE WHEN doc_id = " . $apostille['id'] . " THEN (CASE WHEN received_status = 1 THEN 'Received' ELSE 'Sent' END) END), 'Pending') AS {$safe_column_name} ";
 
-                    $queryPart[] = "
-COALESCE(
-  (
-    SELECT
-      CASE
-        WHEN received_status = 1 THEN 'Received'
-        ELSE 'Sent'
-      END
-    FROM " . db_prefix() . "client_apostille_data
-    WHERE userid = c.userid
-      AND doc_id = " . (int)$apostille['id'] . "
-    ORDER BY id DESC
-    LIMIT 1
-  ),
-  'Pending'
-) AS `" . $safe_column_name . "`";
+                    
+                    }
+                    if (!empty($queryPart)) {
+                     $selectColumnName .= ', ' . implode(",\n", $queryPart);
                 }
-                if (!empty($queryPart)) {
-                    $selectColumnName .= ', ' . implode(",\n", $queryPart);
-                }
+               
+                       $apostileSub .=" FROM tblclient_apostille_data
+    GROUP BY userid
+) doc_status ON doc_status.userid = c.userid ";
             }
-        }
+}
+// else{
+//         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
+//             $apostille_documents = get_orignal_document_list(0, 0, 1);
+//             $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
+
+//             // Ensure both are arrays before merging
+//             if (!is_array($apostille_documents)) {
+//                 $apostille_documents = [];
+//             }
+//             if (!is_array($apostille_visa_apostile_documents)) {
+//                 $apostille_visa_apostile_documents = [];
+//             }
+
+//             $apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
+//             $queryPart = [];
+
+//             if (!empty($apostille_documents)) {
+//                 foreach ($apostille_documents as $apostille) {
+//                     $short_name        = trim($apostille['short_name']);
+//                     if ($apostille["apostile_status"] == 1) {
+//                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
+//                     } else if ($apostille["visa_apostile"] == 1) {
+//                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
+//                     } else {
+//                         $safe_column_name  =  str_replace(" ", "_", $short_name);
+//                     }
+//                     $extra_columns[]   = $safe_column_name;
+
+//                     $queryPart[] = "
+// COALESCE(
+//   (
+//     SELECT
+//       CASE
+//         WHEN received_status = 1 THEN 'Received'
+//         ELSE 'Sent'
+//       END
+//     FROM " . db_prefix() . "client_apostille_data
+//     WHERE userid = c.userid
+//       AND doc_id = " . (int)$apostille['id'] . "
+//     ORDER BY id DESC
+//     LIMIT 1
+//   ),
+//   'Pending'
+// ) AS `" . $safe_column_name . "`";
+//                 }
+//                 if (!empty($queryPart)) {
+//                     $selectColumnName .= ', ' . implode(",\n", $queryPart);
+//                 }
+//             }
+//         }
+// }
+        
+        
+        
         // Build conditions
         $condition_sql = "";
         if (!empty($fromDate) && !empty($toDate)) {
@@ -1127,7 +1193,7 @@ LEFT JOIN (
                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
                 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
                 
-               {$apostile_query} 
+               {$apostile_query}  {$apostileSub}
                 WHERE 1=1 {$condition_sql}
                 GROUP BY c.userid {$group_by}   Order by c.userid";
 
@@ -1836,7 +1902,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
         // ✅ Correct SQL (removed trailing comma before FROM)
         $sql = "
             SELECT 
-                CONCAT(bd.first_name, ' ', bd.last_name) AS applicant_name,
+                CONCAT(bd.first_name,' ', bd.last_name) AS applicant_name,
                 aq.university_name,
                 aq.acadmic_year,
                 CONCAT(aq.year, ' Year') AS year,
@@ -1883,6 +1949,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
 
 
         $arrayData = $CI->db->query($sql)->result_array();
+
 
         $dataArray = [[
             "columnName"    => $columns,

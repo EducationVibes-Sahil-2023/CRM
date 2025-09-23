@@ -9987,8 +9987,10 @@ class Clients extends AdminController
     public function payment_table($client_id)
     {
 
-        if (!has_permission('payment_quotation', '', 'view') || !has_permission('payment_quotation', '', 'view_own')) {
-            throw new Exception("Access denied: Quotation Payment View");
+        if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
+            // throw new Exception("Access denied: Quotation Payment View");
+              return ajax_access_denied();
+            die;
         }
         $view = "applicant_payments";
 
@@ -10015,15 +10017,24 @@ class Clients extends AdminController
                 : [];
 
             if (empty($payment_quotations)) {
-                throw new Exception("No payment quotations provided.");
+                
+                   echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'No payment quotations provided.'
+            ]);
+                // access_denied('No payment quotations provided.');
+            die;
             }
 
             // 🔒 Permission checks
             if (!empty($payment_id) && !has_permission('payment_quotation', '', 'edit')) {
-                throw new Exception("Access denied: Quotation Payment Edit");
+    
+                 access_denied('Quotation Payment Edit');
+            die;
             }
             if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
-                throw new Exception("Access denied: Quotation Payment Create");
+                  access_denied('Quotation Payment Create');
+            die;
             }
 
             $seenEntries = [];

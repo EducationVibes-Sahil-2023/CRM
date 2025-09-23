@@ -1606,7 +1606,7 @@ if (has_permission('customers', '', 'quotation_create')) {
 
             getClientsFees.forEach(fee => {
                 // Check if fee.fees == 1 AND fee.id is either 3 or 7
-                if (fee.fees == 1 && [3, 7].includes(parseInt(fee.id))) {
+                if (fee.fees == 1 ) {
                     // Set currency selector
                     $(`.main-university-due .currency-selector-${fee.id}`)
                         .val(fee.currency_id)
