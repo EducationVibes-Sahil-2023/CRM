@@ -9987,10 +9987,8 @@ class Clients extends AdminController
     public function payment_table($client_id)
     {
 
-        if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
-            // throw new Exception("Access denied: Quotation Payment View");
-              return ajax_access_denied();
-            die;
+        if (!has_permission('payment_quotation', '', 'view') || !has_permission('payment_quotation', '', 'view_own')) {
+            throw new Exception("Access denied: Quotation Payment View");
         }
         $view = "applicant_payments";
 
@@ -10011,30 +10009,22 @@ class Clients extends AdminController
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
             $inr_value  = $this->input->post("inr_value") ?? 0;
             $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
+            $quotation_id  = $this->input->post("quotation_id") ?? 0;
             $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
             $payment_quotations = $this->input->post("payment_quotations")
                 ? json_decode($this->input->post("payment_quotations"), true)
                 : [];
 
             if (empty($payment_quotations)) {
-                
-                   echo json_encode([
-                'resp_code' => 'ERR',
-                'resp_desc' => 'No payment quotations provided.'
-            ]);
-                // access_denied('No payment quotations provided.');
-            die;
+                throw new Exception("No payment quotations provided.");
             }
 
             // 🔒 Permission checks
             if (!empty($payment_id) && !has_permission('payment_quotation', '', 'edit')) {
-    
-                 access_denied('Quotation Payment Edit');
-            die;
+                throw new Exception("Access denied: Quotation Payment Edit");
             }
             if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
-                  access_denied('Quotation Payment Create');
-            die;
+                throw new Exception("Access denied: Quotation Payment Create");
             }
 
             $seenEntries = [];
@@ -10057,7 +10047,8 @@ class Clients extends AdminController
                     "inr_value"        => $inr_value ?? 0,
                     "total_inr_amount"        => $total_inr_amount ?? 0,
                     "tt_copy" => $tt_copy ?? 0,
-                    "currency_disabled" => $currency_disabled ?? 0
+                    "currency_disabled" => $currency_disabled ?? 0,
+                    "quotation_id" => $quotation_id ?? 0
 
                 ];
 
@@ -10126,7 +10117,7 @@ class Clients extends AdminController
                 if (!empty($row["id"])) {
                     $this->db->where('id !=', $row["id"]);
                 }
-                
+
                 $this->db->where('status > ', 0);
                 $duplicate = $this->db->get(db_prefix() . 'payment_quotations')->row();
                 if ($duplicate) {

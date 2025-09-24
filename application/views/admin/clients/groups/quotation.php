@@ -121,7 +121,7 @@ if (has_permission('customers', '', 'quotation_create')) {
     }
 
     $selected_mod = 0;
-
+    $transaction_type  = transaction_type();
     $quotation_paymente_mode = $this->db
         ->select('*')
         ->from(db_prefix() . 'quotation_paymente_mode')
@@ -473,7 +473,26 @@ if (has_permission('customers', '', 'quotation_create')) {
                                             <tfoot id="main-university-due-pay">
 
                                                 <tr>
-                                                    <td colspan="">Pay To <small class="text-danger">*</small>
+                                                    <td colspan="" class="d-flex">
+                                                        <div>Pay To <small class="text-danger">*</small></div>
+                                                        <div class="col-md-8 form-group trans-div" style="display:<?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 ? '' : 'none' ?>;">
+
+                                                            <select class="form-control selectpicker electpicker-new transaction_type"
+                                                                data-live-search="true"
+                                                                data-actions-box="false"
+                                                                title="Select Transaction Type"
+                                                                name="transaction_type"
+                                                                data-name='transaction_type'
+                                                                required>
+                                                                <?php foreach ($transaction_type as $t_type): ?>
+                                                                    <option value="<?= $t_type['id'] ?>"
+                                                                        <?= ($university_due_array["main"]['pay_info'][0]["transaction_type"] == $t_type['id']) ? 'selected' : '' ?>>
+                                                                        <?= htmlspecialchars($t_type['name']) ?>
+                                                                    </option>
+                                                                <?php endforeach; ?>
+                                                            </select>
+
+                                                        </div>
 
                                                     </td>
                                                     <td>
@@ -639,7 +658,25 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                         </tbody>
                                                         <tfoot>
                                                             <tr>
-                                                                <td colspan="1">Pay To <small class="text-danger">*</small>
+                                                                <td colspan="1" class="d-flex">Pay To <small class="text-danger">*</small>
+                                                                    <div class="col-md-8 form-group trans-div" style="display:<?= !empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 1 ? '' : 'none' ?>;">
+
+                                                                        <select class="form-control selectpicker electpicker-new transaction_type"
+                                                                            data-live-search="true"
+                                                                            data-actions-box="false"
+                                                                            title="Select Transaction Type"
+                                                                            name="transaction_type"
+                                                                            data-name='transaction_type'
+                                                                            required>
+                                                                            <?php foreach ($transaction_type as $t_type): ?>
+                                                                                <option value="<?= $t_type['id'] ?>"
+                                                                                    <?= ($addition['pay_info'][0]["transaction_type"] == $t_type['id']) ? 'selected' : '' ?>>
+                                                                                    <?= htmlspecialchars($t_type['name']) ?>
+                                                                                </option>
+                                                                            <?php endforeach; ?>
+                                                                        </select>
+
+                                                                    </div>
                                                                 </td>
                                                                 <td>
                                                                     <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
@@ -909,7 +946,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                     <h4 class="mb-0">Company Dues</h4>
                                                 </div>
                                                 <div class="col-md-6 text-right">
-                                                    <button type="button" class="btn btn-danger btn-remove-table">
+                                                    <button type="button" class="btn btn-danger btn-remove-table" onclick="$(this).closest('.aditional_university_dues').remove();">
                                                         <i class="fa fa-minus"></i>
                                                     </button>
                                                 </div>
@@ -1096,10 +1133,19 @@ if (has_permission('customers', '', 'quotation_create')) {
             $(obj).closest("tr").find("input.manually-cash").hide();
             $(obj).closest("tr").find("input.manually-cash").remove();
 
+            $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div select').val('').selectpicker('refresh');
+            if (modeId != 1) {
+                $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').hide();
+            }
+
             // 🔹 Filter vendors by mode
             let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
             if (modeId == 1 || modeId == 4) {
+                if (modeId == 1) {
+                    $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').show();
+
+                }
                 if (vendors.length > 0) {
                     vendor_select.append('<option value="">-- Select Vendor --</option>');
                     vendors.forEach(v => {
@@ -1191,7 +1237,11 @@ if (has_permission('customers', '', 'quotation_create')) {
             // Append button + cloned table to wrapper
             wrapper.appendChild(removeBtn);
             wrapper.appendChild(clone);
-
+// Hide the first div with class "trans-div" inside wrapper
+const transDiv = wrapper.querySelector("div.trans-div");
+if (transDiv) {
+    transDiv.style.display = "none";
+}
             // Append wrapper to container
             document.querySelector(".aditional-university-due").appendChild(wrapper);
 
@@ -1606,7 +1656,7 @@ if (has_permission('customers', '', 'quotation_create')) {
 
             getClientsFees.forEach(fee => {
                 // Check if fee.fees == 1 AND fee.id is either 3 or 7
-                if (fee.fees == 1 ) {
+                if (fee.fees == 1) {
                     // Set currency selector
                     $(`.main-university-due .currency-selector-${fee.id}`)
                         .val(fee.currency_id)
@@ -1695,7 +1745,7 @@ if (has_permission('customers', '', 'quotation_create')) {
         // --- Form submission handler ---
         async function handleFormSubmission(form, event) {
             event.preventDefault();
-show_loader();
+            show_loader();
             try {
                 const formData = new FormData();
 
@@ -1799,6 +1849,7 @@ show_loader();
                 // ✅ Collect main pay info
                 $(".main-university-due tfoot tr").each(function() {
                     let rowData = {
+                        transaction_type: $(this).find("select[name='transaction_type']").val() || null,
                         payMode: $(this).find("select[name='university_pay_mode']").val() || null,
                         payVendor: $(this).find("select[name='university_pay_vendor']").val() || null,
                         payAmount: $(this).find("input[name='university_pay_amount']").val() || null,
@@ -1835,6 +1886,7 @@ show_loader();
                     // Pay info
                     $(this).find("tfoot tr").each(function() {
                         let rowData = {
+                            transaction_type: $(this).find("select[name='transaction_type']").val() || null,
                             payMode: $(this).find("select[name='university_pay_mode']").val() || null,
                             payVendor: $(this).find("select[name='university_pay_vendor']").val() || null,
                             payAmount: $(this).find("input[name='university_pay_amount']").val() || null,
@@ -2047,25 +2099,25 @@ show_loader();
                 }
             <?php endif; ?>
 
-$("input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount").each(function(){
-      let $this = $(this);
+            $("input[name='fee_value[]'],input[name='fee_value_inr[]'], .currency-amount").each(function() {
+                let $this = $(this);
 
-    // Remove commas from current value
-    let val = $this.val();
-    console.log(val);
-    if (val) {
-        $this.val(val.replace(/,/g, ""));
-         console.log(val.replace(/,/g, ""));
-    }
+                // Remove commas from current value
+                let val = $this.val();
+                console.log(val);
+                if (val) {
+                    $this.val(val.replace(/,/g, ""));
+                    console.log(val.replace(/,/g, ""));
+                }
 
-    // Force numeric input with decimals
-    $this.attr({
-        type: "number",
-        step: "0.0001", // allow up to 4 decimals
-        min: "0"
-    }); 
-})
- 
+                // Force numeric input with decimals
+                $this.attr({
+                    type: "number",
+                    step: "0.0001", // allow up to 4 decimals
+                    min: "0"
+                });
+            })
+
 
 
         });

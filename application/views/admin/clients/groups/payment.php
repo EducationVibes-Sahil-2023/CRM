@@ -1,22 +1,22 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-   <style>
-        [id^="nested-applicant-table-"] div.row {
-            display: none !important;
-        }
+<style>
+    [id^="nested-applicant-table-"] div.row {
+        display: none !important;
+    }
 
-        .dataTables_wrapper div.row {
-            display: none !important;
-        }
-    </style>
-    <?php  if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
-        
-        echo ' <div class="row">
+    .dataTables_wrapper div.row {
+        display: none !important;
+    }
+</style>
+<?php if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
+
+    echo ' <div class="row">
             <div class="col-md-12">
             <h4 class="fs-title text-center">No Payments View Access</h4>
             </div>
             </div>';
-        die;
-    }?>
+    die;
+} ?>
 <div class="panel_s">
 
     <input type="hidden" value='1' name="fess_info">
@@ -149,6 +149,22 @@ if (has_permission('payment_quotation', '', 'create')) {
 
     $office_location  = $this->staff_model->office_location("", 1);
 
+
+    $sql = "
+    SELECT 
+        aq.*,
+        CONCAT('Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)) AS quotation_label,
+        CONCAT(aq.university_name, '-', aq.acadmic_year, '-', aq.year,' Year', ' - ',
+               'Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)
+        ) AS unique_id
+    FROM " . db_prefix() . "applicant_quotation_payment aq
+    WHERE aq.client_id = ?
+    ORDER BY aq.id DESC
+";
+
+    $applicant_quotations = $this->db->query($sql, [$client_id])->result_array();
+    array_unshift($applicant_quotations, array("id" => "", "name" => ""));
+
     // Cache database queries
     $ci = &get_instance();
 
@@ -237,7 +253,7 @@ if (has_permission('payment_quotation', '', 'create')) {
     $payment_payment_mode = $ci->db->get(db_prefix() . 'quotation_paymente_mode')->result_array();
 ?>
 
- 
+
 
     <div class="row">
         <div class="col-md-12">
@@ -376,6 +392,29 @@ if (has_permission('payment_quotation', '', 'create')) {
                                 </div>
                                 <hr>
                                 <div class="payment_payment">
+                                    <div class="row">
+                                        <div class="form-group col-md-6">
+                                            <?php
+                                            echo render_select(
+                                                'quotation_id',
+                                                $applicant_quotations,
+                                                ['id', 'unique_id'], // first = value, second = label
+                                                'Applicant Quotations',
+                                                [$applicant_payment_data->quotation_id ?? ''],
+                                                [
+                                                    'data-width' => '100%',
+                                                    'data-none-selected-text' => 'Applicant Quotations',
+                                                    'onchange' => 'check_quotations(this.value)'
+                                                ],
+                                                [],
+                                                'no-mbot',
+                                                '',
+                                                false,
+                                                'quotation_id'
+                                            );
+                                            ?>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-2 form-group">
                                             <label>Payment Date <span class="text-danger">*</span></label>
@@ -796,6 +835,29 @@ if (has_permission('payment_quotation', '', 'create')) {
 </div>
 
                         <div class="payment_payment">
+                         <div class="row">
+                                        <div class="form-group col-md-6">
+                                            <?php
+                                            echo render_select(
+                                                'quotation_id_' . time(),
+                                                $applicant_quotations,
+                                                ['id', 'unique_id'], // first = value, second = label
+                                                'Applicant Quotations',
+                                                [''],
+                                                [
+                                                    'data-width' => '100%',
+                                                    'data-none-selected-text' => 'Applicant Quotations',
+                                                    'onchange' => 'check_quotations(this.value)'
+                                                ],
+                                                [],
+                                                'no-mbot',
+                                                '',
+                                                false,
+                                                'quotation_id' . time()
+                                            );
+                                            ?>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-2 form-group">
                                             <label>Payment Date <span class="text-danger">*</span></label>
