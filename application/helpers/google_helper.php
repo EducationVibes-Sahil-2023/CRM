@@ -1188,7 +1188,26 @@ LEFT JOIN (
                 LEFT JOIN " . db_prefix() . "document_upload_type dt ON dt.lead_type = 2 AND dt.orignal_status = 1
                 LEFT JOIN " . db_prefix() . "currencies cu ON cu.id = c.scholarship_currency
                 LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = u.fees_payment_currency_id
-                LEFT JOIN " . db_prefix() . "ticket_data td  ON c.userid = td.client_id
+          
+          LEFT JOIN (
+    SELECT td_latest.*,
+           td_sum.total_ticket_cost
+    FROM " . db_prefix() . "ticket_data td_latest
+    INNER JOIN (
+        SELECT client_id, SUM(ticket_cost) AS total_ticket_cost
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+    ) td_sum ON td_latest.client_id = td_sum.client_id
+    INNER JOIN (
+        SELECT client_id, MAX(id) AS latest_id
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+    ) td_max ON td_latest.client_id = td_max.client_id 
+            AND td_latest.id = td_max.latest_id
+) td ON td.client_id = c.userid
+
+
+
                 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
                 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
@@ -1335,8 +1354,23 @@ $condition_sql ="";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
         
 $sql = "SELECT {$selectColumnName}
-FROM " . db_prefix() . "ticket_data td
-LEFT JOIN " . db_prefix() . "clients c ON c.userid = td.client_id
+FROM " . db_prefix() . "clients c
+INNER JOIN (
+    SELECT td_latest.*,
+           td_sum.total_ticket_cost
+    FROM " . db_prefix() . "ticket_data td_latest
+    INNER JOIN (
+        SELECT client_id, SUM(ticket_cost) AS total_ticket_cost
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+    ) td_sum ON td_latest.client_id = td_sum.client_id
+    INNER JOIN (
+        SELECT client_id, MAX(id) AS latest_id
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+    ) td_max ON td_latest.client_id = td_max.client_id 
+            AND td_latest.id = td_max.latest_id
+) td ON td.client_id = c.userid
  LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
   LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
 LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
@@ -1359,7 +1393,7 @@ LEFT JOIN " . db_prefix() . "departure_location tdl ON tdl.id = td.departure_loc
 LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = td.payment_mode
 
 WHERE 1=1 {$condition_sql}
-GROUP BY c.userid";
+GROUP BY c.userid ";
 
 
 
@@ -1943,7 +1977,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
             LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
             LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
             LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
-           where 1=1 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql}
+           where 1=1 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql} group by aq.id
                
         ";
 
@@ -2090,11 +2124,20 @@ $condition_sql ="";
         LEFT JOIN ".db_prefix()."applicant_stages tt ON tt.id = c.applicant_stage
         LEFT JOIN ".db_prefix()."application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status 
         LEFT JOIN ".db_prefix()."staff st ON c.addedfrom = st.staffid 
-        LEFT JOIN ".db_prefix()."admission_preferences p ON p.userid = pq.client_id 
         LEFT JOIN ".db_prefix()."office_location lo ON lo.id = pq.location_id  
         LEFT JOIN ".db_prefix()."client_passport_details pd ON pd.client_id = c.userid 
         LEFT JOIN ".db_prefix()."passport_stages ps ON ps.id = pd.passport_status 
         LEFT JOIN ".db_prefix()."client_university_shortlisting u ON u.client_id = pq.client_id 
+        AND u.status = 1 
+                
+                LEFT JOIN tbladmission_preferences p 
+                ON p.userid = pq.client_id 
+              AND (
+        (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
+        OR (u.university_name IS NULL)
+   )
+
+       
         LEFT JOIN ".db_prefix()."university_partner u_p ON u_p.id = u.partner 
         LEFT JOIN ".db_prefix()."quotation_vendor vl ON vl.id = pq.vendor_id 
         LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
