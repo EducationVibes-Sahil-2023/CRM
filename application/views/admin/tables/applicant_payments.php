@@ -20,7 +20,7 @@ $aColumns = [
     db_prefix() . "quotation_vendor.name as v_name",
     $sTable . ".inr_value as inr_value",
     $sTable . ".payment_type as payment_type",
-    $sTable . ".university_name as university_name",
+    "p.primary_university as university_name",
     $sTable . ".academic_year as academic_year",
     $sTable . ".year as year",
     "IF(" . $sTable . ".status=1,'Approved',IF(" . $sTable . ".status=2,'Rejected','Pending')) as status",
@@ -36,6 +36,7 @@ $sIndexColumn = 'id';
 $join = [
     ' LEFT JOIN ' . db_prefix() . 'quotation_mode ON ' . db_prefix() . 'quotation_mode.id = ' . $sTable . '.mode',
     ' LEFT JOIN ' . db_prefix() . 'quotation_vendor ON ' . db_prefix() . 'quotation_vendor.id = ' . $sTable . '.vendor_id',
+    " LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = " . db_prefix() . "payment_quotations.client_id ",
 
 ];
 

@@ -191,7 +191,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                             <div class="form-group">
                                 <label for="university_name">University Name <small class="text-danger">*</small></label>
                                 <input type="text" class="form-control" name="university_name" id="university_name" readonly
-                                    value="<?= htmlspecialchars(!empty($applicant_quotation_data->university_name) ? $applicant_quotation_data->university_name : $primary_university); ?>">
+                                    value="<?= htmlspecialchars($primary_university); ?>">
                             </div>
                         </div>
                         <div class="col-lg-3">
@@ -512,7 +512,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                 <option value="">Select Vendor</option>
                                                             <?php } ?>
                                                             <?php
-                                                            if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 || $university_due_array["main"]['pay_info'][0]["payMode"] == 4) {
+                                                            if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 || $university_due_array["main"]['pay_info'][0]["payMode"] == 4 || $university_due_array["main"]['pay_info'][0]["payMode"] == 6 ) {
                                                                 foreach ($modes_vendor as $vendor) {
                                                                     if ($vendor["mode"] == $university_due_array["main"]['pay_info'][0]["payMode"]) {
                                                             ?>
@@ -695,7 +695,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                             <option value="">Select Vendor</option>
                                                                         <?php } ?>
                                                                         <?php
-                                                                        if (!empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 1 || $addition['pay_info'][0]["payMode"] == 4) {
+                                                                        if (!empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 1 || $addition['pay_info'][0]["payMode"] == 4 || $addition['pay_info'][0]["payMode"] == 6) {
                                                                             foreach ($modes_vendor as $vendor) {
                                                                                 if ($vendor["mode"] == $addition['pay_info'][0]["payMode"]) {
                                                                         ?>
@@ -876,7 +876,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                         <option value="">Select Vendor</option>
                                                     <?php } ?>
 
-                                                    <?php if (in_array($payMode, [1, 4])): ?>
+                                                    <?php if (in_array($payMode, [1, 4,6])): ?>
                                                         <?php foreach ($modes_vendor as $vendor): ?>
                                                             <?php if ($vendor["mode"] == $payMode): ?>
                                                                 <option value="<?= $vendor["id"] ?>" <?= ($vendor["id"] == $payVendor) ? "selected" : "" ?>>
@@ -1039,7 +1039,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                         <option value="">Select Vendor</option>
                                                                     <?php } ?>
 
-                                                                    <?php if (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [1, 4])): ?>
+                                                                    <?php if (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [1, 4,6])): ?>
                                                                         <?php foreach ($modes_vendor as $vendor): ?>
                                                                             <?php if ($vendor["mode"] == $l_array["payMode"]): ?>
                                                                                 <option value="<?= $vendor["id"] ?>" <?= (!empty($l_array["payVendor"]) && $vendor["id"] == $l_array["payVendor"]) ? "selected" : "" ?>>
@@ -1141,7 +1141,7 @@ if (has_permission('customers', '', 'quotation_create')) {
             // 🔹 Filter vendors by mode
             let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
-            if (modeId == 1 || modeId == 4) {
+            if (modeId == 1 || modeId == 4 || modeId == 6) {
                 if (modeId == 1) {
                     $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').show();
 

@@ -271,7 +271,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                             <div class="form-group">
                                 <label for="university_name">University Name <small class="text-danger">*</small></label>
                                 <input type="text" class="form-control" name="university_name" id="university_name" readonly
-                                    value="<?= htmlspecialchars($applicant_payment_data->university_name ?? $primary_university) ?>">
+                                    value="<?= htmlspecialchars($primary_university) ?>">
                             </div>
                         </div>
                         <div class="col-lg-3">
@@ -464,7 +464,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 id="vendor_id" name="vendor_id" data-name="vendor_id"
                                                 required data-live-search="true" title="Select Vendor">
                                                 <?php
-                                                if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 || $applicant_payment_data->mode == 4) {
+                                                if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 || $applicant_payment_data->mode == 4  || $applicant_payment_data->mode == 6 ) {
                                                 ?>
                                                     <option value="">Select Vendor</option>
                                                     <?php
@@ -1079,7 +1079,7 @@ if (has_permission('payment_quotation', '', 'create')) {
             // 🔹 Filter vendors by mode
             let vendors = payment_mode_vendors.filter(v => v.mode == modeId);
 
-            if (modeId == 1 || modeId == 4) {
+            if (modeId == 1 || modeId == 4 || modeId == 6) {
                 if (modeId == 1) {
                     $(obj).parents('.payment_payment').find('.trans-div').show();
 
