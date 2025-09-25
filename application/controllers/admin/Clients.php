@@ -9986,7 +9986,7 @@ class Clients extends AdminController
 
     public function payment_table($client_id)
     {
-       
+
 
         if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
             throw new Exception("Access denied: Quotation Payment View");
@@ -10315,5 +10315,41 @@ class Clients extends AdminController
         }
 
         echo json_encode($data);
+    }
+
+
+    public function payment_information()
+    {
+        try {
+            // Load model
+            $this->load->model('Payments_model');
+
+            // Get input safely
+            $clientId = $this->input->post('client_id', true);
+
+            if (empty($clientId)) {
+                throw new Exception("Client ID is required.");
+            }
+
+            $data = [];
+            $data["client_id"] = $clientId;
+            // Fetch data
+            $pageData = $this->load->view(
+                "admin/clients/groups/payment_information",
+                $data,
+                true
+            );
+
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Payment information retrieved successfully.',
+                'data'      => $pageData
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
     }
 }
