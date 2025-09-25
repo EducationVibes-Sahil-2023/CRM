@@ -1899,6 +1899,7 @@ function leads_excel_sync($id = "")
 function ma_quotations()
 {
 
+
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 $acadmic_year ="2025 - 2026";
@@ -1938,7 +1939,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
         $sql = "
             SELECT 
                 CONCAT(bd.first_name,' ', bd.last_name) AS applicant_name,
-                aq.university_name,
+                p.primary_university as university_name,
                 aq.acadmic_year,
                 CONCAT(aq.year, ' Year') AS year,
                 aq.release_to_counsellor,
