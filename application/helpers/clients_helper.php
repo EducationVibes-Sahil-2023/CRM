@@ -1807,7 +1807,7 @@ function get_clients_fees_details($lead_type, $client_id, $fees_id = "")
     $CI = &get_instance();
     $CI->db->select("
     TRIM(c.symbol) AS symbol,
-    FORMAT(d.amount, 2) AS amount, 
+    d.amount AS amount, 
     CONCAT(TRIM(c.symbol), FORMAT(d.amount, 2)) AS total_amount,
     f.id,
     d.currency_id,

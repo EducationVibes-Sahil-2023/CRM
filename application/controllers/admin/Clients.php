@@ -9986,8 +9986,9 @@ class Clients extends AdminController
 
     public function payment_table($client_id)
     {
+       
 
-        if (!has_permission('payment_quotation', '', 'view') || !has_permission('payment_quotation', '', 'view_own')) {
+        if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
             throw new Exception("Access denied: Quotation Payment View");
         }
         $view = "applicant_payments";

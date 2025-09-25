@@ -1927,9 +1927,10 @@ $acadmic_year ="2025 - 2026";
         "Fly Batch",
         "Fly Date",
         "Departure",
-        "Country"
+        "Country",
+        "Transaction Type"
     ];
-    $sheet_name = "Sheet 1";
+    $sheet_name = "Quotation";
 $condition_sql ="";
 $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  ";
     try {
@@ -2009,6 +2010,9 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
                 ->get()->result_array(), null, "id"),
             "company_dues_name" => array_column($CI->db->select("*")
                 ->from(db_prefix() . "company_dues_fees")
+                ->get()->result_array(), null, "id"),
+                "transaction_type" => array_column($CI->db->select("*")
+                ->from(db_prefix() . "transaction_type")
                 ->get()->result_array(), null, "id"),
 
         ]];
@@ -2107,16 +2111,17 @@ $university_applicant_fees_payments = array_column($university_applicant_fees_pa
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
 $condition_sql ="";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
     
   $sql = "
         SELECT 
-        {$selectColumnName},exchange_value,fess_infomation
+        {$selectColumnName},pq.exchange_value,fess_infomation
         FROM `".db_prefix()."payment_quotations` pq 
         LEFT JOIN ".db_prefix()."clients c ON pq.client_id = c.userid 
+        LEFT JOIN ".db_prefix()."applicant_quotation_payment aqp ON aqp.id = pq.quotation_id 
         LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
         LEFT JOIN ".db_prefix()."quotation_mode m ON m.id = pq.mode 
         LEFT JOIN ".db_prefix()."basic_details b ON b.userid = pq.client_id 
@@ -2143,7 +2148,7 @@ $condition_sql ="";
         LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
         LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = pq.ex_currency
         LEFT JOIN " . db_prefix() . "transaction_type ptt ON ptt.id = pq.transaction_type
-        WHERE 1=1 and pq.status > 0 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql}
+        WHERE 1=1 and pq.status > 0  {$condition_sql}
         GROUP BY pq.id ORDER BY pq.client_id
         ";
     
