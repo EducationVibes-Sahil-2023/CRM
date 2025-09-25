@@ -159,7 +159,7 @@ class Quotation_model extends App_Model
         }
     }
 
-    public function applicant_payment_data($client_id, $payment_id = "")
+    public function applicant_payment_data($client_id, $payment_id = "", $status = "")
     {
         try {
             $this->db->select("*")
@@ -168,6 +168,10 @@ class Quotation_model extends App_Model
 
             if (!empty($payment_id)) {
                 $this->db->where("id", $payment_id);
+            }
+
+            if (!empty($status)) {
+                $this->db->where("status", 1);
             }
 
             // Optional: only active records (if you store a status column)

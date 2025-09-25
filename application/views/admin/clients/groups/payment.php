@@ -17,6 +17,21 @@
             </div>';
     die;
 } ?>
+
+<?php if (!empty($_GET["admin"]) && $_GET["admin"] == 1) { ?>
+    <div class="panel_s">
+        <div class="panel-body">
+            <h4 class="fs-title">Payments Dues <a data-toggle="tooltip" data-title="Payment Summary" data-placement="bottom" class="btn btn-default btn-with-tooltip" onclick="getPayementInformation(<?= $client_id ?>)"><i class="fa fa-bar-chart"></i></a></h4>
+            <hr>
+
+            <div class="PaymentInformationShow" style="display:none;">
+
+            </div>
+        </div>
+    </div>
+<?php } ?>
+
+
 <div class="panel_s">
 
     <input type="hidden" value='1' name="fess_info">
@@ -35,6 +50,8 @@
             "Action",
         );
         ?>
+
+
         <div class="row">
             <div class="col-md-12">
                 <div class="form-container">
@@ -55,6 +72,46 @@
 <?php init_tail(); ?>
 
 <script>
+    function getPayementInformation(client_id) {
+        console.log("Client ID:", client_id);
+
+        let $container = $(".PaymentInformationShow");
+
+        if ($container.is(":visible")) {
+            // Already visible → just hide
+            $container.slideUp();
+        } else {
+            // Hidden → fetch API, inject content, then show
+            $.ajax({
+                url: admin_url + "clients/payment_information", // CI controller method
+                type: "POST",
+                data: {
+                    client_id: client_id
+                },
+                dataType: "json",
+                success: function(response) {
+                    if (response.resp_code === "RCS") {
+                        $container.html(response.data).slideDown();
+                    } else {
+                        $container.html(
+                            '<div class="alert alert-warning">' + response.resp_desc + '</div>'
+                        ).slideDown();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", error);
+                    $container.html(
+                        '<div class="alert alert-danger">Error loading payment info.</div>'
+                    ).slideDown();
+                }
+            });
+        }
+    }
+
+
+
+
+
     document.addEventListener("DOMContentLoaded", function() {
         var tAPI = "";
         $(function() {
@@ -209,6 +266,7 @@ if (has_permission('payment_quotation', '', 'create')) {
     }
 
 
+    // print_r($FessAmounts);
 
     // Cache currencies and payment modes
     $get_currencies = get_currencies();
@@ -251,7 +309,15 @@ if (has_permission('payment_quotation', '', 'create')) {
     }
 
     $payment_payment_mode = $ci->db->get(db_prefix() . 'quotation_paymente_mode')->result_array();
+
+
+
 ?>
+
+
+
+
+
 
 
 
@@ -405,7 +471,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     'data-width' => '100%',
                                                     'data-none-selected-text' => 'Applicant Quotations',
                                                     'onchange' => 'check_quotations(this.value)',
-                                                    'class'=>'electpicker-new quotation_id'
+                                                    'class' => 'electpicker-new quotation_id'
                                                 ],
                                                 [],
                                                 'no-mbot',
@@ -849,7 +915,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     'data-width' => '100%',
                                                     'data-none-selected-text' => 'Applicant Quotations',
                                                     'onchange' => 'check_quotations(this.value)',
-                                                    
+
                                                 ],
                                                 [],
                                                 'no-mbot',
@@ -1510,9 +1576,9 @@ if (has_permission('payment_quotation', '', 'create')) {
 
             try {
 
-                
 
-                
+
+
                 show_loader();
                 const formData = new FormData();
 
@@ -1546,24 +1612,24 @@ if (has_permission('payment_quotation', '', 'create')) {
                 }
 
                 // 🔹 Collect all payment payment data
-              
-                 let paymentpayments = [];
+
+                let paymentpayments = [];
                 let error = false;
 
-                   $(".payment_payment").each(function(index) {
-     
+                $(".payment_payment").each(function(index) {
+
                     let q_id = $(this).find("select.quotation_id").val() || '';
                     let mode_id = $(this).find("select.mode").val() || '';
                     let payment_type_id = $(this).find("select.payment_type").val() || '';
-                    
+
                     let $quotationSelect = $(this).find("select.quotation_id");
-                    
-                    if (mode_id === "1" && payment_type_id === "<?=PACKAGE_FEES_ID?>") {
-                    $quotationSelect.prop("required", true);
+
+                    if (mode_id === "1" && payment_type_id === "<?= PACKAGE_FEES_ID ?>") {
+                        $quotationSelect.prop("required", true);
                     } else {
-                    $quotationSelect.prop("required", false);
+                        $quotationSelect.prop("required", false);
                     }
-                    
+
                     // refresh the Bootstrap select UI
                     $quotationSelect.selectpicker("refresh");
 
@@ -1665,7 +1731,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                 });
 
-await validation_set("applicant-payment-form");
+                await validation_set("applicant-payment-form");
                 if (error == true) {
                     return false;
                 }
