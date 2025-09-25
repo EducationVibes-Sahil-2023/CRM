@@ -404,11 +404,12 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 [
                                                     'data-width' => '100%',
                                                     'data-none-selected-text' => 'Applicant Quotations',
-                                                    'onchange' => 'check_quotations(this.value)'
+                                                    'onchange' => 'check_quotations(this.value)',
+                                                    'class'=>'electpicker-new quotation_id'
                                                 ],
                                                 [],
                                                 'no-mbot',
-                                                '',
+                                                'electpicker-new quotation_id',
                                                 false,
                                                 'quotation_id'
                                             );
@@ -847,11 +848,12 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 [
                                                     'data-width' => '100%',
                                                     'data-none-selected-text' => 'Applicant Quotations',
-                                                    'onchange' => 'check_quotations(this.value)'
+                                                    'onchange' => 'check_quotations(this.value)',
+                                                    
                                                 ],
                                                 [],
                                                 'no-mbot',
-                                                '',
+                                                'electpicker-new quotation_id',
                                                 false,
                                                 'quotation_id' . time()
                                             );
@@ -1508,8 +1510,9 @@ if (has_permission('payment_quotation', '', 'create')) {
 
             try {
 
+                
 
-                await validation_set("applicant-payment-form");
+                
                 show_loader();
                 const formData = new FormData();
 
@@ -1543,9 +1546,27 @@ if (has_permission('payment_quotation', '', 'create')) {
                 }
 
                 // 🔹 Collect all payment payment data
-                let paymentpayments = [];
+              
+                 let paymentpayments = [];
                 let error = false;
-                $(".payment_payment").each(function(index) {
+
+                   $(".payment_payment").each(function(index) {
+     
+                    let q_id = $(this).find("select.quotation_id").val() || '';
+                    let mode_id = $(this).find("select.mode").val() || '';
+                    let payment_type_id = $(this).find("select.payment_type").val() || '';
+                    
+                    let $quotationSelect = $(this).find("select.quotation_id");
+                    
+                    if (mode_id === "1" && payment_type_id === "<?=PACKAGE_FEES_ID?>") {
+                    $quotationSelect.prop("required", true);
+                    } else {
+                    $quotationSelect.prop("required", false);
+                    }
+                    
+                    // refresh the Bootstrap select UI
+                    $quotationSelect.selectpicker("refresh");
+
                     let $payment = $(this);
                     let paymentData = {};
                     let totalAmountCheck = $(this).find("input[name='amount']").val() || 0;
@@ -1644,6 +1665,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                 });
 
+await validation_set("applicant-payment-form");
                 if (error == true) {
                     return false;
                 }
