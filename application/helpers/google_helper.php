@@ -1081,7 +1081,26 @@ if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            
+            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+        
+
+            // extract start & end years
+
+
+
+// safer split (handles spaces correctly)
+list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+// build semester codes
+$first_semester  = $start . "-09";
+$second_semester = $end . "-02";
+
+
+$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
+                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+
+
         }
         if (!empty($sql_conditions)) {
             $condition_sql .= " {$sql_conditions}";
@@ -1147,10 +1166,11 @@ if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1
                 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
                 LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
                 LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
-                LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
+               
                 
                 LEFT JOIN tbladmission_preferences p 
                 ON p.userid = c.userid
+                 LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = c.userid AND u.status = 1 
               AND (
         (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
         OR (u.university_name IS NULL)
@@ -1348,7 +1368,20 @@ function fly_excel_sync($id = "")
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            
+            
+// safer split (handles spaces correctly)
+list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+// build semester codes
+$first_semester  = $start . "-09";
+$second_semester = $end . "-02";
+
+
+$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
+                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+
         }
 $condition_sql ="";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
@@ -1376,7 +1409,7 @@ INNER JOIN (
 LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
 LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 2)
-LEFT JOIN " . db_prefix() . "staff st ON c.addedfrom = st.staffid
+LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
 LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
 LEFT JOIN " . db_prefix() . "client_university_shortlisting us ON (us.client_id = c.userid AND us.status = 1)
@@ -1509,7 +1542,20 @@ function visa_excel_sync($id = "")
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            
+            
+// safer split (handles spaces correctly)
+list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+// build semester codes
+$first_semester  = $start . "-09";
+$second_semester = $end . "-02";
+
+
+$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
+                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+
         }
 $condition_sql ="";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
@@ -1522,7 +1568,7 @@ LEFT JOIN " . db_prefix() . "clients c ON c.userid = vd.userid
 LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
 LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type =2)
-LEFT JOIN " . db_prefix() . "staff st ON c.addedfrom = st.staffid
+LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
 LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
 LEFT JOIN " . db_prefix() . "client_university_shortlisting us ON (us.client_id = c.userid AND us.status = 1)
@@ -1648,7 +1694,20 @@ function sa_excel_sync($id = "")
             $condition_sql .= " AND (" . db_prefix() . "clients.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            $condition_sql .= " AND (" . db_prefix() . "admission_preferences.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            // $condition_sql .= " AND (" . db_prefix() . "admission_preferences.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+            
+            
+// safer split (handles spaces correctly)
+list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+// build semester codes
+$first_semester  = $start . "-09";
+$second_semester = $end . "-02";
+
+
+$condition_sql .= " AND (" . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($first_semester) . 
+                  " OR " . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($second_semester) . ")";
+
         }
         // if (!empty($sql_conditions)) {
         //     $condition_sql .= " {$sql_conditions}";
@@ -1898,11 +1957,34 @@ function leads_excel_sync($id = "")
 
 function ma_quotations()
 {
-
+$condition_sql ="";
 
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 $acadmic_year ="2025 - 2026";
+
+ if (!empty($acadmic_year)) {
+            
+            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
+        
+
+            // extract start & end years
+
+
+
+// safer split (handles spaces correctly)
+list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+// build semester codes
+$first_semester  = $start . "-09";
+$second_semester = $end . "-02";
+
+
+$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
+                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+
+
+        }
     $columns = [
         "Applicant Name",
         "University Name",
@@ -1932,7 +2014,7 @@ $acadmic_year ="2025 - 2026";
         "Transaction Type"
     ];
     $sheet_name = "Quotation";
-$condition_sql ="";
+
 $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  ";
     try {
         // ✅ Correct SQL (removed trailing comma before FROM)
@@ -1979,7 +2061,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
             LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
             LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
             LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
-           where 1=1 AND (p.acadmic_year = '{$acadmic_year}') {$condition_sql} group by aq.id
+           where 1=1 {$condition_sql} group by aq.id
                
         ";
 
@@ -2034,6 +2116,128 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
 }
 
 
+function paymentDues()
+{
+    
+    $CI = &get_instance();
+    // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+// fetch fees with lead_type as well
+$feesList = $CI->db->select("id, name")
+    ->from(db_prefix() . "applicant_fees")->where_in("id",[1,3,5,6,7])
+    ->order_by("sequence", "ASC")
+    ->get()
+    ->result_array();
+
+$columns = [
+    "Owner",
+    "Country",
+    "Primary University",
+    "App Process Stage",
+    "Student Name",
+    "Counsellor Name"
+];
+
+$normal = $pay = $dues = [];
+
+foreach ($feesList as $fee) {
+    $normal[] = $fee['name'];
+    $pay[]    = "Pay " . $fee['name'];
+    $dues[]   = "Dues " . $fee['name'];
+}
+
+$columns = array_merge($columns, $normal, $pay, $dues);
+
+
+
+
+
+    $sheet_name = "Payment Dues";
+    
+  $sql = "
+SELECT 
+    IF(c.client_type = 2, 'EVP', 'EV') AS owner,
+    ap.primary_country,
+    ap.primary_university,
+    CONCAT(c.applicant_stage, ' ', tt.name) AS app_process_stage,
+    CONCAT(bd.first_name, ' ', bd.last_name) AS student_name,
+
+
+    CONCAT('[', GROUP_CONCAT(
+        DISTINCT JSON_OBJECT(
+            'fees_id', fd.fees_id,
+            'amount', fd.amount,
+            'currency_id', fd.currency_id
+        )
+    ), ']') AS fees_details_json,
+
+
+    CONCAT('[', GROUP_CONCAT(
+        DISTINCT JSON_OBJECT(
+            'pay_id', pq.id,
+            'fees_id', pq.payment_type,
+            'amount', pq.amount,
+            'currency_id', pq.ex_currency
+        )
+    ), ']') AS payment_details_json,
+
+
+    CONCAT('[', GROUP_CONCAT(
+        DISTINCT JSON_OBJECT(
+            'fees_id', fd.fees_id,
+            'amount', fd.amount - IFNULL(pq.amount, 0),
+            'currency_id', fd.currency_id
+        )
+    ), ']') AS due_details_json,
+
+
+    IF(c.client_type = 2, evp.name, CONCAT(st.firstname, ' ', st.lastname)) AS counsellor_name
+
+FROM " . db_prefix() . "applicant_fees_details fd
+ JOIN " . db_prefix() . "clients c 
+    ON fd.client_id = c.userid
+LEFT JOIN " . db_prefix() . "basic_details bd 
+    ON bd.userid = fd.client_id  
+LEFT JOIN " . db_prefix() . "admission_preferences ap 
+    ON ap.userid = fd.client_id
+LEFT JOIN " . db_prefix() . "applicant_stages tt 
+    ON tt.id = c.applicant_stage
+LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts 
+    ON ts.id = c.applicant_sub_status  
+LEFT JOIN " . db_prefix() . "leads l 
+    ON c.leadid = l.id
+LEFT JOIN " . db_prefix() . "payment_quotations pq 
+    ON pq.client_id = fd.client_id
+LEFT JOIN " . db_prefix() . "staff st 
+    ON st.staffid = l.assigned
+LEFT JOIN " . db_prefix() . "ev_partner evp 
+    ON evp.id = c.agent_id
+
+WHERE  (l.type = 2  OR l.type IS NULL OR c.client_type = 2) 
+GROUP BY fd.client_id
+";
+// echo $sql;
+
+ $arrayData = $CI->db->query($sql)->result_array();
+ 
+ 
+ $dataArray = [[
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayData,
+            "currency" => array_column($CI->db->select("id,name,symbol")
+                ->from(db_prefix() . "currencies")
+                ->order_by("isdefault", "DESC")
+                ->order_by("id", "ASC")
+                ->get()->result_array(), null, "id"),
+                 "fess_type" =>$feesList
+        ]];
+        
+         header('Content-Type: application/json');
+        echo json_encode($dataArray);
+        die;
+
+
+}
 function payment_quotations($id='')
 {
 
@@ -2122,6 +2326,8 @@ $condition_sql ="";
         {$selectColumnName},pq.exchange_value,fess_infomation
         FROM `".db_prefix()."payment_quotations` pq 
         LEFT JOIN ".db_prefix()."clients c ON pq.client_id = c.userid 
+        LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+         LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
         LEFT JOIN ".db_prefix()."applicant_quotation_payment aqp ON aqp.id = pq.quotation_id 
         LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
         LEFT JOIN ".db_prefix()."quotation_mode m ON m.id = pq.mode 
@@ -2129,24 +2335,25 @@ $condition_sql ="";
         JOIN ".db_prefix()."applicant_fees f ON f.id = pq.payment_type  
         LEFT JOIN ".db_prefix()."applicant_stages tt ON tt.id = c.applicant_stage
         LEFT JOIN ".db_prefix()."application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status 
-        LEFT JOIN ".db_prefix()."staff st ON c.addedfrom = st.staffid 
+        LEFT JOIN ".db_prefix()."staff st ON l.assigned = st.staffid 
         LEFT JOIN ".db_prefix()."office_location lo ON lo.id = pq.location_id  
         LEFT JOIN ".db_prefix()."client_passport_details pd ON pd.client_id = c.userid 
         LEFT JOIN ".db_prefix()."passport_stages ps ON ps.id = pd.passport_status 
-        LEFT JOIN ".db_prefix()."client_university_shortlisting u ON u.client_id = pq.client_id 
-        AND u.status = 1 
-                
-                LEFT JOIN tbladmission_preferences p 
+        
+                LEFT JOIN  ".db_prefix()."admission_preferences p 
                 ON p.userid = pq.client_id 
-              AND (
+             
+   LEFT JOIN ".db_prefix()."client_university_shortlisting u ON u.client_id = pq.client_id 
+        AND u.status = 1 
+         AND (
         (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
         OR (u.university_name IS NULL)
    )
+   
 
        
         LEFT JOIN ".db_prefix()."university_partner u_p ON u_p.id = u.partner 
         LEFT JOIN ".db_prefix()."quotation_vendor vl ON vl.id = pq.vendor_id 
-        LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
         LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = pq.ex_currency
         LEFT JOIN " . db_prefix() . "transaction_type ptt ON ptt.id = pq.transaction_type
         WHERE 1=1 and pq.status > 0  {$condition_sql}

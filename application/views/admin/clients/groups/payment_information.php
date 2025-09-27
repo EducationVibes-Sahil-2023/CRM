@@ -7,7 +7,7 @@ $get_clients_fees = get_clients_fees_details(2, $client_id);
 
 $FessAmounts  =  array_column($get_clients_fees, null, 'id');
 $FeesInformation = array_column(university_applicant_fees_payments(["lead_type" => 2]), null, "id");
-$applicantpaymentdata = $ci->quotation_model->applicant_payment_data($client_id, "", 1);
+$applicantpaymentdata = $ci->quotation_model->applicant_payment_data($client_id, "", "");
 $get_currencies = get_currencies();
 $currency_lookup = array_column($get_currencies, NULL, 'id');
 

@@ -202,7 +202,7 @@ $route['external/excel_sync'] = 'External_Apis/Login_Controller/excel_sync';
 $route['external/applicant_sync_excel'] = 'External_Apis/Login_Controller/applicant_sync_excel';
 $route['external/applicant_sync_excel_new'] = 'External_Apis/Login_Controller/applicant_sync_excel_new';
 $route['external/quotations'] = 'External_Apis/Login_Controller/quotations';
-
+$route['external/payment_dues'] = 'External_Apis/Login_Controller/payment_dues';
 
 
 /**
