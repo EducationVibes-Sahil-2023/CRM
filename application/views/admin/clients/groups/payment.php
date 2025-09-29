@@ -683,7 +683,16 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>TT Proof </label>
-                                            <input type="file" name="tt_proof" <?= !empty($applicant_payment_data->tt_proof) ? '' : 'disabled' ?> data-name="tt_proof" class="form-control tt_proof">
+                                            
+                                            <input type="file" name="tt_proof" <?= (
+    !empty($applicant_payment_data->mode) &&
+    (
+        $applicant_payment_data->mode == 2 ||
+        ($applicant_payment_data->mode == 4 && $applicant_payment_data->vendor_id == 5) ||
+        ($applicant_payment_data->mode == 1 && $applicant_payment_data->transaction_type == 1)
+    )
+) ? '' : 'disabled' ?>
+  data-name="tt_proof" class="form-control tt_proof">
                                             <?php
                                             $file_url = !empty($applicant_payment_data->tt_pdf) ? $applicant_payment_data->tt_pdf : "";
                                             if (!empty($file_url)) { ?>
