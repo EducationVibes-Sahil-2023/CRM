@@ -706,4 +706,14 @@ public function quotations()
     echo json_encode($response);
 }
 
+public function payment_dues()
+{
+    
+       $this->load->helper('google');
+    ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+    paymentDues();
+}
+
 }

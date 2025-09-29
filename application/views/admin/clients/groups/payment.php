@@ -18,7 +18,7 @@
     die;
 } ?>
 
-<?php if (!empty($_GET["admin"]) && $_GET["admin"] == 1) { ?>
+<?php if (is_admin()) { ?>
     <div class="panel_s">
         <div class="panel-body">
             <h4 class="fs-title">Payments Dues <a data-toggle="tooltip" data-title="Payment Summary" data-placement="bottom" class="btn btn-default btn-with-tooltip" onclick="getPayementInformation(<?= $client_id ?>)"><i class="fa fa-bar-chart"></i></a></h4>
@@ -495,7 +495,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     name="mode" data-name="mode"
                                                     required data-live-search="true" data-size="5"
                                                     title="Select Mode"
-                                                    onchange="vendor_update(this,this.value);">
+                                                    onchange="vendor_update(this,this.value); check_tt_copy(this)">
                                                     <?php foreach ($modes as $m): ?>
                                                         <option value="<?= $m['id'] ?>"
                                                             <?= (!empty($applicant_payment_data->mode) &&
@@ -524,7 +524,8 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         <div class="col-md-2 form-group">
                                             <label>Vendor <span class="text-danger">*</span></label>
-                                            <select class="form-control selectpicker electpicker-new vendor_id"
+                                            <select class="form-control selectpicker electpicker-new vendor_id" 
+                                                    onchange="check_tt_copy(this)"
                                                 style="display:<?= (!empty($applicant_payment_data->mode) &&
                                                                     $applicant_payment_data->mode == 5) ? 'none' : 'block' ?>"
                                                 id="vendor_id" name="vendor_id" data-name="vendor_id"
@@ -563,6 +564,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                         <div class="col-md-2 form-group trans-div" style="display:<?= !empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 ? '' : 'none' ?>;">
                                             <label>Transaction Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new transaction_type"
+                                            onchange="check_tt_copy(this)"
                                                 data-live-search="true"
                                                 data-actions-box="false"
                                                 title="Select Transaction Type"
@@ -681,7 +683,16 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>TT Proof </label>
-                                            <input type="file" name="tt_proof" data-name="tt_proof" class="form-control tt_proof">
+                                            
+                                            <input type="file" name="tt_proof" <?= (
+    !empty($applicant_payment_data->mode) &&
+    (
+        $applicant_payment_data->mode == 2 ||
+        ($applicant_payment_data->mode == 4 && $applicant_payment_data->vendor_id == 5) ||
+        ($applicant_payment_data->mode == 1 && $applicant_payment_data->transaction_type == 1)
+    )
+) ? '' : 'disabled' ?>
+  data-name="tt_proof" class="form-control tt_proof">
                                             <?php
                                             $file_url = !empty($applicant_payment_data->tt_pdf) ? $applicant_payment_data->tt_pdf : "";
                                             if (!empty($file_url)) { ?>
@@ -880,6 +891,24 @@ if (has_permission('payment_quotation', '', 'create')) {
         }
 
 
+function check_tt_copy(obj)
+{
+     let paymentSection = $(obj).parents('.payment_payment');
+     let modeId = paymentSection.find("select.mode").val();
+     let vendor_select = paymentSection.find("select.vendor_id").val();
+      let transaction_type = paymentSection.find("select.transaction_type ").val();
+            
+              if(modeId == 2 || (modeId == 4 && vendor_select== 5) || (modeId == 1 && transaction_type== 1))
+            {
+                paymentSection.find("input.tt_proof ").attr("disabled",false).attr("required",true);
+            }
+            else
+            {
+                 paymentSection.find("input.tt_proof ").val('').attr("disabled",true).attr("required",false);
+            }
+}
+
+
         function setPaymentDate() {
             var today = new Date().toISOString().split('T')[0];
             document.querySelectorAll('input.pay_date[type="date"]').forEach(function(el) {
@@ -939,7 +968,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     name="mode_<?= time() ?>"mode"
                                                     required data-live-search="true" data-size="5"
                                                     title="Select Mode"
-                                                    onchange="vendor_update(this,this.value);">
+                                                    onchange="vendor_update(this,this.value); check_tt_copy(this);">
                                                     <?php foreach ($modes as $m): ?>
                                                         <option value="<?= $m['id'] ?>">
                                                             <?= htmlspecialchars($m['name']) ?>
@@ -951,7 +980,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         <div class="col-md-2 form-group">
                                             <label>Vendor <span class="text-danger">*</span></label>
-                                            <select data-name="vendor_id" class="form-control selectpicker electpicker-new vendor_id"
+                                            <select data-name="vendor_id" onchange="check_tt_copy(this)" class="form-control selectpicker electpicker-new vendor_id"
                                                 style="display:none"
                                                 id="vendor_id" name="vendor_id_<?= time() ?>"vendor_id"
                                                 required data-live-search="true" title="Select Vendor">
@@ -959,6 +988,24 @@ if (has_permission('payment_quotation', '', 'create')) {
                                             </select>
                                         </div>
 
+ <div class="col-md-2 form-group trans-div" style="display:none">
+                                            <label>Transaction Type <span class="text-danger">*</span></label>
+                                            <select class="form-control selectpicker electpicker-new transaction_type"
+                                            onchange="check_tt_copy(this)"
+                                                data-live-search="true"
+                                                data-actions-box="false"
+                                                title="Select Transaction Type"
+                                                name="transaction_type"
+                                                data-name='transaction_type'
+                                                required>
+                                                <?php foreach ($transaction_type as $t_type): ?>
+                                                    <option value="<?= $t_type['id'] ?>">
+                                                        <?= htmlspecialchars($t_type['name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+
+                                        </div>
                                          <div class="col-md-3 form-group">
                                             <label>Payment Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new payment_type"

@@ -592,6 +592,12 @@ class Forms extends ClientsController
                             $duplicateLead = $this->db->get(db_prefix() . 'leads')->row();
 
 
+
+                            // if ($duplicateLead->status == 1) {
+                            // echo json_encode(['success' => true, 'message' => "Leads Status is Custumer so data is not update"]);
+                            // die;
+                            // }
+                                
                             if (!empty($form->lead_source)) {
 
                                 $source_data_get = $this->leads_model->get_source($duplicateLead->source);

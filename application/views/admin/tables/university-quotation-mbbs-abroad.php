@@ -6,7 +6,7 @@ $university_applicant_fees = university_applicant_fees(1);
 
 // Select columns
 $aColumns = [
-   "p.primary_university as university_name",
+   db_prefix() ."university_quotation.university_name as university_name",
     db_prefix() . "university_quotation.acadmic_year as acadmic_year",
     db_prefix() . "university_quotation.year as year",
 ];
@@ -41,7 +41,7 @@ $join[] = 'LEFT JOIN ' . db_prefix() . 'applicant_quotation_fees_details aqfd
 $join[] = 'LEFT JOIN ' . db_prefix() . 'currencies c 
             ON c.id = aqfd.currency_id';
 
- $join[] = " LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = " . db_prefix() . "university_quotation.client_id ";
+//  $join[] = " LEFT JOIN " . db_prefix() . "admission_preferences p ON p.primary_university = " . db_prefix() . "university_quotation.university_name ";
  
 $groupBy = "GROUP BY " . db_prefix() . "university_quotation.university_name, " . db_prefix() . "university_quotation.acadmic_year, " . db_prefix() . "university_quotation.year," . db_prefix() . "university_quotation.id";
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, [], [], $groupBy);

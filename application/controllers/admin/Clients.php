@@ -10007,6 +10007,7 @@ class Clients extends AdminController
             $study_year         = $this->input->post("study_year") ?? '';
             $currency_exchange  = $this->input->post("currency_exchange") ?? '';
             $ex_currency  = $this->input->post("ex_currency") ?? '';
+             $location_id  = $this->input->post("location_id") ?? '';
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
             $inr_value  = $this->input->post("inr_value") ?? 0;
             $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
@@ -10033,25 +10034,55 @@ class Clients extends AdminController
             $updateRows  = [];
             $activity_data = [];
             foreach ($payment_quotations as $key => $payment) {
-                $row = [
-                    "client_id"       => $client_id,
-                    "university_name" => $university_name,
-                    "academic_year"   => $acadmic_year,
-                    "year"            => $study_year,
-                    "ex_currency"            => $ex_currency,
-                    "exchange_value"  => $currency_exchange,
-                    "mode"            => $payment['mode'] ?? '',
-                    "transaction_type"            => $payment['transaction_type'] ?? '',
-                    "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
-                    "pay_date"        => $payment['pay_date'] ?? null,
-                    "payment_type"        => $payment['payment_type'] ?? "",
-                    "inr_value"        => $inr_value ?? 0,
-                    "total_inr_amount"        => $total_inr_amount ?? 0,
-                    "tt_copy" => $tt_copy ?? 0,
-                    "currency_disabled" => $currency_disabled ?? 0,
-                    "quotation_id" => $quotation_id ?? 0
+                // $row = [
+                //     "client_id"       => $client_id,
+                //     "university_name" => $university_name,
+                //     "academic_year"   => $acadmic_year,
+                //     "year"            => $study_year,
+                //     "ex_currency"            => $ex_currency,
+                //     "exchange_value"  => $currency_exchange,
+                //     "mode"            => $payment['mode'] ?? '',
+                //     "transaction_type"            => $payment['transaction_type'] ?? '',
+                //     "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
+                //     "pay_date"        => $payment['pay_date'] ?? null,
+                //     "payment_type"        => $payment['payment_type'] ?? "",
+                //     "inr_value"        => $inr_value ?? 0,
+                //     "total_inr_amount"        => $total_inr_amount ?? 0,
+                //     "tt_copy" => $tt_copy ?? 0,
+                //     "currency_disabled" => $currency_disabled ?? 0,
+                //     "quotation_id" => $quotation_id ?? 0,
+                //     "location_id" => $location_id ?? 0
 
-                ];
+                // ];
+                
+                $row = [
+    "client_id"        => $client_id,
+    "university_name"  => $university_name,
+    "academic_year"    => $acadmic_year,
+    "year"             => $study_year,
+    "ex_currency"      => $ex_currency,
+    "exchange_value"   => $currency_exchange,
+
+    // if mode key exists, take its value, otherwise 0
+    "mode"             => isset($payment['mode']) ? $payment['mode'] : 0,
+    "transaction_type"             => isset($payment['transaction_type']) ? $payment['transaction_type'] : 0,
+
+    // clean numeric string (e.g., "1,000" → 1000)
+    "amount"           => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
+
+    "pay_date"         => isset($payment['pay_date']) ? $payment['pay_date'] : null,
+    "payment_type"     => isset($payment['payment_type']) ? $payment['payment_type'] : 0,
+
+    // safe fallbacks
+    "inr_value"        => isset($inr_value) ? $inr_value : 0,
+    "total_inr_amount" => isset($total_inr_amount) ? $total_inr_amount : 0,
+    "tt_copy"          => isset($tt_copy) ? $tt_copy : 0,
+    "currency_disabled"=> isset($currency_disabled) ? $currency_disabled : 0,
+    "quotation_id"     => isset($quotation_id) ? $quotation_id : 0,
+    "location_id"      => isset($location_id) ? $location_id : 0
+];
+
+     
 
                 // Metadata
                 if (!empty($payment_id)) {
@@ -10074,7 +10105,7 @@ class Clients extends AdminController
                     $row["vendor_name"] = '';
                 } else {
                     $row["vendor_id"]   = 0;
-                    $row["vendor_name"] = $payment["vendor_id"];
+                    $row["vendor_name"] = !empty($payment["vendor_id"])?$payment["vendor_id"]:$payment["vendor_name"];
                 }
 
 
@@ -10239,10 +10270,10 @@ class Clients extends AdminController
     public function quotation_payment_approved()
     {
         $data = [];
-        if ((!has_permission('payment_quotation', '', 'payment_approval'))) {
-            access_denied('Quatation Payment Approval');
-            die;
-        }
+        // if ((!has_permission('payment_quotation', '', 'payment_approval'))) {
+        //     access_denied('Quatation Payment Approval');
+        //     die;
+        // }
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $quotation_payment_id = $this->input->post("quotation_payment_id");
             $client_id            = $this->input->post("client_id");
@@ -10259,7 +10290,7 @@ class Clients extends AdminController
             } else {
                 $current_status = (int) $check_->status;
 
-                if (in_array($current_status, [1, 2])) {
+                if (in_array($current_status, [1, 2]) &&  $status!=0) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'This quotation has already been ' . ($current_status == 1 ? 'approved' : 'rejected') . '.';
                 } elseif ($status == 0) {
