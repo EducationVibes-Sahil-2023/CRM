@@ -1547,6 +1547,7 @@ class Clients extends AdminController
                     $query = $this->db->select("r.id, r.userid, r.doc_id")
                         ->from(db_prefix() . 'client_apostille_data r')
                         ->where_in('r.userid', $ids)
+                        ->where_in('r.doc_id', $documents_id)
                         ->where('r.courier_date >', $receiving_date)
                         ->get();
 
@@ -10152,9 +10153,9 @@ class Clients extends AdminController
 
                 $this->db->where('status > ', 0);
                 $duplicate = $this->db->get(db_prefix() . 'payment_quotations')->row();
-                if ($duplicate) {
-                    throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");
-                }
+                // if ($duplicate) {
+                //     throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");
+                // }
 
                 // 📎 File upload
                 if (!empty($_FILES["proof_" . $key]['name'])) {
