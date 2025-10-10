@@ -43,6 +43,9 @@ $hostelDues = json_decode($hostelData->hostel_due, true)["main"]["fees_info"];
 $amountValue = $hostelDues[0]["amount"];
 $amountCurrency = $hostelDues[0]["currency_id"];
 
+$modes = $ci->quotation_model->payment_mod();
+
+
 ?>
 <h3 class="invoice-title">INVOICE</h3>
 <div class="small">
@@ -62,12 +65,27 @@ $amountCurrency = $hostelDues[0]["currency_id"];
 <table>
     <tr>
         <td style="width:50%;" class="small">
-            <p>Name: <?= htmlspecialchars($hostelData->hostel_name ?? '') ?></p>
-            <p>Address: 1 Sabatono 7, Tbilisi, 0114 Georgia</p>
-            <p>ID: <?= htmlspecialchars($hostelData->hostel_id ?? '') ?></p>
-            <p>Phone: <?= htmlspecialchars($hostelData->contact_number ?? '') ?></p>
-            <p>Email: <?= htmlspecialchars($hostelData->email ?? '') ?></p>
+            <?php if (!empty($hostelData->hostel_name)): ?>
+                <p>Name: <?= htmlspecialchars($hostelData->hostel_name) ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($hostelData->hostel_address)): ?>
+                <p>Address: <?= htmlspecialchars($hostelData->hostel_address) ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($hostelData->hostel_id)): ?>
+                <p>ID: <?= htmlspecialchars($hostelData->hostel_id) ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($hostelData->contact_number)): ?>
+                <p>Phone: <?= htmlspecialchars($hostelData->contact_number) ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($hostelData->email)): ?>
+                <p>Email: <?= htmlspecialchars($hostelData->email) ?></p>
+            <?php endif; ?>
         </td>
+
 
         <td style="width:50%;" class="medium">
             <p><strong>Recipient: <?= $hostelData->name ?? '' ?></strong></p>
@@ -104,7 +122,7 @@ $amountCurrency = $hostelDues[0]["currency_id"];
             <p>One Time Payment</p>
         </td>
         <td style="text-align:right">
-            <p> <?= $amountValue ?? '' ?> <?= $get_currencies[$amountCurrency]["symbol"] ?></p>
+            <p> <?= ((int)$amountValue * (int)$hostelData->month_difference) ?? '' ?> <?= $get_currencies[$amountCurrency]["symbol"] ?></p>
         </td>
     </tr>
     <tr class="medium bold">
@@ -128,38 +146,40 @@ $amountCurrency = $hostelDues[0]["currency_id"];
             <p>Name of Beneficiary </p>
         </td>
         <td>
-            <p>JSC TBC Bank</p>
-            <p>TBCBGE22</p>
-            <p>GE40TB7631236120100005</p>
-            <p>TBILISI CLASSIC HOTELS LLC</p>
+            <p><?= $hostelData->beneficiary_bank ?></p>
+            <p><?= $hostelData->bank_code ?></p>
+            <p><?= $hostelData->beneficiary_iban ?></p>
+            <p><?= $hostelData->beneficiary_name ?></p>
         </td>
     </tr>
 </table>
 <p></p>
+<?php if (!empty($hostelData->beneficiary_iban_usd)) { ?>
+    <hr>
+    <p></p>
+    <table class="small">
+        <tr>
+            <p class="bold"> FOR U.S. DOLLAR INTERNATIONAL TRANSFER</p>
+        </tr>
+        <tr class="small">
+            <td>
+                <p> Beneficiary’s Bank</p>
+                <p> Bank Code </p>
+                <p> Beneficiary’s IBAN </p>
+                <p> Name of Beneficiary</p>
+            </td>
+            <td>
+                <p><?= $hostelData->beneficiary_bank ?></p>
+                <p><?= $hostelData->bank_code ?></p>
+                <p><?= $hostelData->beneficiary_iban_usd ?></p>
+                <p><?= $hostelData->beneficiary_name ?></p>
+            </td>
+        </tr>
+    </table>
+    <p></p>
+<?php } ?>
 <hr>
-<p></p>
-<table class="small">
-    <tr>
-        <p class="bold"> FOR U.S. DOLLAR INTERNATIONAL TRANSFER</p>
-    </tr>
-    <tr class="small">
-        <td>
-            <p> Beneficiary’s Bank</p>
-            <p> Bank Code </p>
-            <p> Beneficiary’s IBAN </p>
-            <p> Name of Beneficiary</p>
-        </td>
-        <td>
-            <p>JSC TBC Bank</p>
-            <p>TBCBGE22</p>
-            <p>GE40TB7631236120100005</p>
-            <p>TBILISI CLASSIC HOTELS LLC</p>
-        </td>
-    </tr>
-</table>
-<p></p>
-<hr>
-<table>
+<!-- <table>
     <tr class="small">
         <td>
             <p class=""> Intermediary Bank</p>
@@ -183,9 +203,9 @@ $amountCurrency = $hostelDues[0]["currency_id"];
             <p> Kote Marjanishvili St, 7 Tbilis</p>
         </td>
     </tr>
-</table>
-<p></p>
-<hr>
+</table> -->
+<!-- <p></p>
+<hr> -->
 <p></p>
 <table>
     <tr>
