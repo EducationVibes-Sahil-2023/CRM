@@ -1,7 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <div class="panel_s">
-
-
     <div class="panel-body">
         <?php
         $quotation_table = array(
@@ -512,7 +510,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                 <option value="">Select Vendor</option>
                                                             <?php } ?>
                                                             <?php
-                                                            if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 || $university_due_array["main"]['pay_info'][0]["payMode"] == 4 || $university_due_array["main"]['pay_info'][0]["payMode"] == 6 ) {
+                                                            if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 || $university_due_array["main"]['pay_info'][0]["payMode"] == 4 || $university_due_array["main"]['pay_info'][0]["payMode"] == 6) {
                                                                 foreach ($modes_vendor as $vendor) {
                                                                     if ($vendor["mode"] == $university_due_array["main"]['pay_info'][0]["payMode"]) {
                                                             ?>
@@ -876,7 +874,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                         <option value="">Select Vendor</option>
                                                     <?php } ?>
 
-                                                    <?php if (in_array($payMode, [1, 4,6])): ?>
+                                                    <?php if (in_array($payMode, [1, 4, 6])): ?>
                                                         <?php foreach ($modes_vendor as $vendor): ?>
                                                             <?php if ($vendor["mode"] == $payMode): ?>
                                                                 <option value="<?= $vendor["id"] ?>" <?= ($vendor["id"] == $payVendor) ? "selected" : "" ?>>
@@ -1039,7 +1037,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                         <option value="">Select Vendor</option>
                                                                     <?php } ?>
 
-                                                                    <?php if (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [1, 4,6])): ?>
+                                                                    <?php if (!empty($l_array["payMode"]) && in_array($l_array["payMode"], [1, 4, 6])): ?>
                                                                         <?php foreach ($modes_vendor as $vendor): ?>
                                                                             <?php if ($vendor["mode"] == $l_array["payMode"]): ?>
                                                                                 <option value="<?= $vendor["id"] ?>" <?= (!empty($l_array["payVendor"]) && $vendor["id"] == $l_array["payVendor"]) ? "selected" : "" ?>>
@@ -1237,11 +1235,11 @@ if (has_permission('customers', '', 'quotation_create')) {
             // Append button + cloned table to wrapper
             wrapper.appendChild(removeBtn);
             wrapper.appendChild(clone);
-// Hide the first div with class "trans-div" inside wrapper
-const transDiv = wrapper.querySelector("div.trans-div");
-if (transDiv) {
-    transDiv.style.display = "none";
-}
+            // Hide the first div with class "trans-div" inside wrapper
+            const transDiv = wrapper.querySelector("div.trans-div");
+            if (transDiv) {
+                transDiv.style.display = "none";
+            }
             // Append wrapper to container
             document.querySelector(".aditional-university-due").appendChild(wrapper);
 

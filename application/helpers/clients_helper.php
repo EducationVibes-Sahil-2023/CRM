@@ -3706,3 +3706,19 @@ function transaction_type()
         return [];
     }
 }
+
+function getDataInformation($table_name, $select = ["*"], $where = [])
+{
+
+    $CI = &get_instance();
+    if (!empty($select)) {
+        $CI->db->select($select);
+    }
+    $CI->db->from(db_prefix() . $table_name);
+    if (!empty($where)) {
+        $CI->db->where($where);
+    }
+    $CI->db->order_by("id", "asc");
+    $query = $CI->db->get();
+    return $result = $query->result_array();
+}

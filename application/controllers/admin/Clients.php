@@ -10008,7 +10008,7 @@ class Clients extends AdminController
             $study_year         = $this->input->post("study_year") ?? '';
             $currency_exchange  = $this->input->post("currency_exchange") ?? '';
             $ex_currency  = $this->input->post("ex_currency") ?? '';
-             $location_id  = $this->input->post("location_id") ?? '';
+            $location_id  = $this->input->post("location_id") ?? '';
             $tt_copy  = $this->input->post("tt_copy") ?? 0;
             $inr_value  = $this->input->post("inr_value") ?? 0;
             $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
@@ -10055,35 +10055,35 @@ class Clients extends AdminController
                 //     "location_id" => $location_id ?? 0
 
                 // ];
-                
+
                 $row = [
-    "client_id"        => $client_id,
-    "university_name"  => $university_name,
-    "academic_year"    => $acadmic_year,
-    "year"             => $study_year,
-    "ex_currency"      => $ex_currency,
-    "exchange_value"   => $currency_exchange,
+                    "client_id"        => $client_id,
+                    "university_name"  => $university_name,
+                    "academic_year"    => $acadmic_year,
+                    "year"             => $study_year,
+                    "ex_currency"      => $ex_currency,
+                    "exchange_value"   => $currency_exchange,
 
-    // if mode key exists, take its value, otherwise 0
-    "mode"             => isset($payment['mode']) ? $payment['mode'] : 0,
-    "transaction_type"             => isset($payment['transaction_type']) ? $payment['transaction_type'] : 0,
+                    // if mode key exists, take its value, otherwise 0
+                    "mode"             => isset($payment['mode']) ? $payment['mode'] : 0,
+                    "transaction_type"             => isset($payment['transaction_type']) ? $payment['transaction_type'] : 0,
 
-    // clean numeric string (e.g., "1,000" → 1000)
-    "amount"           => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
+                    // clean numeric string (e.g., "1,000" → 1000)
+                    "amount"           => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
 
-    "pay_date"         => isset($payment['pay_date']) ? $payment['pay_date'] : null,
-    "payment_type"     => isset($payment['payment_type']) ? $payment['payment_type'] : 0,
+                    "pay_date"         => isset($payment['pay_date']) ? $payment['pay_date'] : null,
+                    "payment_type"     => isset($payment['payment_type']) ? $payment['payment_type'] : 0,
 
-    // safe fallbacks
-    "inr_value"        => isset($inr_value) ? $inr_value : 0,
-    "total_inr_amount" => isset($total_inr_amount) ? $total_inr_amount : 0,
-    "tt_copy"          => isset($tt_copy) ? $tt_copy : 0,
-    "currency_disabled"=> isset($currency_disabled) ? $currency_disabled : 0,
-    "quotation_id"     => isset($quotation_id) ? $quotation_id : 0,
-    "location_id"      => isset($location_id) ? $location_id : 0
-];
+                    // safe fallbacks
+                    "inr_value"        => isset($inr_value) ? $inr_value : 0,
+                    "total_inr_amount" => isset($total_inr_amount) ? $total_inr_amount : 0,
+                    "tt_copy"          => isset($tt_copy) ? $tt_copy : 0,
+                    "currency_disabled" => isset($currency_disabled) ? $currency_disabled : 0,
+                    "quotation_id"     => isset($quotation_id) ? $quotation_id : 0,
+                    "location_id"      => isset($location_id) ? $location_id : 0
+                ];
 
-     
+
 
                 // Metadata
                 if (!empty($payment_id)) {
@@ -10106,7 +10106,7 @@ class Clients extends AdminController
                     $row["vendor_name"] = '';
                 } else {
                     $row["vendor_id"]   = 0;
-                    $row["vendor_name"] = !empty($payment["vendor_id"])?$payment["vendor_id"]:$payment["vendor_name"];
+                    $row["vendor_name"] = !empty($payment["vendor_id"]) ? $payment["vendor_id"] : $payment["vendor_name"];
                 }
 
 
@@ -10291,7 +10291,7 @@ class Clients extends AdminController
             } else {
                 $current_status = (int) $check_->status;
 
-                if (in_array($current_status, [1, 2]) &&  $status!=0) {
+                if (in_array($current_status, [1, 2]) &&  $status != 0) {
                     $data['resp_code'] = 'ERR';
                     $data['resp_desc'] = 'This quotation has already been ' . ($current_status == 1 ? 'approved' : 'rejected') . '.';
                 } elseif ($status == 0) {
@@ -10383,5 +10383,209 @@ class Clients extends AdminController
                 'resp_desc' => $e->getMessage()
             ]);
         }
+    }
+
+    public function visa_details()
+    {
+        // ✅ Permission check
+        if (!has_permission('external_visa', '', 'view_own')) {
+            return access_denied('external_visa'); // Stop execution immediately
+        }
+
+        // ✅ Prepare any required data (if needed in view)
+        $data = [];
+
+        // ✅ Set correct view page
+        $view_page = 'admin/clients/visa_details'; // Example path for view file
+
+        // ✅ Load view safely
+        $this->load->view($view_page, $data);
+    }
+
+    public function visa_details_table()
+    {
+        // ✅ Permission check
+        if (!has_permission('external_visa', '', 'view_own')) {
+            return access_denied('external_visa'); // Use return to stop further execution
+        }
+
+        // ✅ Correct table view (filename from views/admin/tables/)
+        $view = 'visa_clients'; // corresponds to application/views/admin/tables/visa_clients.php
+
+        // ✅ Call DataTable loader
+        return $this->app->get_table_data($view);
+    }
+
+    public function external_visa($id = "")
+    {
+        // ✅ Permission check
+        if (!has_permission('external_visa', '', 'create')) {
+            return access_denied('external_visa'); // Stop execution immediately
+        }
+
+        if (!empty($id) && !has_permission('external_visa', '', 'edit')) {
+            return access_denied('external_visa'); // Stop execution immediately
+        }
+
+        // ✅ Prepare any required data (if needed in view)
+        $data = [];
+        $data["id"] = $id;
+        $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) where co.id=7")->result_array();
+        $data["visaData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_visa_data')->row();
+        // ✅ Set correct view page
+        $view_page = 'admin/clients/external_visa'; // Example path for view file
+
+        // ✅ Load view safely
+        $this->load->view($view_page, $data);
+    }
+
+    public function save_visa_details()
+    {
+        try {
+            if (!has_permission('external_visa', '', 'create')) {
+                return access_denied('external_visa'); // Stop execution immediately
+            }
+
+            if (!empty($data['id']) && !has_permission('external_visa', '', 'edit')) {
+                return access_denied('external_visa'); // Stop execution immediately
+            }
+            $data = $this->input->post();
+
+            // Validate required fields
+            if (empty($data['name']) || empty($data['visa_vendor']) || empty($data['visa_type'])) {
+                throw new Exception('Please fill all required fields');
+            }
+
+            // Prepare data array
+            $save_data = [
+                'name' => $data['name'],
+                'visa_vendor' => $data['visa_vendor'],
+                'visa_type' => $data['visa_type'],
+                'visa_status' => $data['visa_status'] ?? null,
+                'visa_app_date' => $data['visa_app_date'] ?? null,
+                'visa_rec_date' => $data['visa_rec_date'] ?? null,
+                'payment_mode' => $data['payment_mode'] ?? null,
+                'payment_date' => $data['payment_date'] ?? null,
+                'visa_cost' => $data['visa_cost'] ?? null,
+                'insurance_cost' => $data['insurance_cost'] ?? null,
+                'country' => $data['country'] ?? null,
+                'deposite_mode' => $data['deposite_mode'] ?? null,
+                'deposite_amount' => $data['deposite_amount'] ?? null,
+                'deposite_date' => $data['deposite_date'] ?? null,
+                'remark' => $data['remark'] ?? null,
+                'country_name' => $data['country_name'] ?? null,
+                'passport' => $data['passport'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'dob' => $data['dob'] ?? null,
+                'issue_date' => $data['issue_date'] ?? null,
+                'exp_date' => $data['exp_date'] ?? null,
+                'status' => 1
+            ];
+
+
+            $data = $this->input->post();
+
+            // Define upload directory
+            $upload_path = FCPATH . 'uploads/visa_documents_external/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0777, true);
+            }
+
+            // Handle optional file uploads
+            $file_fields = ['adhar', 'visa_file', 'minor', 'passport_file'];
+            foreach ($file_fields as $field) {
+                if (!empty($_FILES[$field]['name'])) {
+                    $file = $_FILES[$field];
+                    $new_filename = time() . '_' . preg_replace('/\s+/', '_', $file['name']);
+                    $target_path = $upload_path . $new_filename;
+
+                    if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                        // Save relative file path
+                        $save_data[$field] = 'uploads/visa_documents_external/' . $new_filename;
+                    } else {
+                        // throw new Exception("Failed to upload file: {$file['name']}");
+                    }
+                }
+            }
+
+            if (!empty($data['id'])) {
+                $save_data['updated_date'] = date('Y-m-d H:i:s');
+                $save_data['updated_by'] = get_staff_user_id();
+                // Update existing record
+                $this->db->where('id', $data['id']);
+                $this->db->update(db_prefix() . 'external_visa_data', $save_data);
+                $record_id = $data['id'];
+            } else {
+                $save_data['created_date'] = date('Y-m-d H:i:s');
+                $save_data['created_by'] = get_staff_user_id();
+                // Insert new record
+                $this->db->insert(db_prefix() . 'external_visa_data', $save_data);
+                $record_id = $this->db->insert_id();
+            }
+
+            // Return structured response
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Visa details saved successfully.',
+                'data'      => [
+                    'id' => $record_id,
+                    'name' => $data['name'],
+                    'visa_vendor' => $data['visa_vendor'],
+                    'visa_type' => $data['visa_type']
+                ]
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function delete_visa($id = null)
+    {
+        if (!has_permission('external_visa', '', 'delete')) {
+            return access_denied('external_visa'); // Stop execution immediately
+        }
+
+        if ($id) {
+            $this->db->where('id', $id);
+            $updated = $this->db->update(db_prefix() . 'external_visa_data', ['status' => 0]);
+
+            if ($updated) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Visa record deleted successfully (status set to 0)'
+                ]);
+            } else {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Failed to update visa status'
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Invalid ID'
+            ]);
+        }
+    }
+
+
+    public function ticket_details()
+    {
+        // ✅ Permission check
+        if (!has_permission('external_ticket', '', 'view_own')) {
+            return access_denied('external_ticket'); // Stop execution immediately
+        }
+
+        // ✅ Prepare any required data (if needed in view)
+        $data = [];
+
+        // ✅ Set correct view page
+        $view_page = 'admin/clients/ticket_details'; // Example path for view file
+
+        // ✅ Load view safely
+        $this->load->view($view_page, $data);
     }
 }
