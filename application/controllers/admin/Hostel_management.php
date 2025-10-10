@@ -820,4 +820,39 @@ class hostel_management extends AdminController
             ]);
         }
     }
+    
+      public function payment_information()
+    {
+        try {
+            // Load model
+            $this->load->model('Payments_model');
+
+            // Get input safely
+            $hostel_info_id = $this->input->post('hostel_info_id', true);
+
+            if (empty($hostel_info_id)) {
+                throw new Exception("hostel_info_id ID is required.");
+            }
+
+            $data = [];
+            $data["hostel_info_id"] = $hostel_info_id;
+            // Fetch data
+            $pageData = $this->load->view(
+                "admin/hostel_management/payment_information",
+                $data,
+                true
+            );
+
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Payment information retrieved successfully.',
+                'data'      => $pageData
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
 }

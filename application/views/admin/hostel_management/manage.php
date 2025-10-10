@@ -108,13 +108,13 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
                         ?>
                     </div>
 
-                    <div class="col-md-3">
-                        <?= render_input('floor_No', 'Floor No', '', 'number', ["placeholder" => "Enter Floor No"]); ?>
-                    </div>
+                    <!--<div class="col-md-3">-->
+                    <!--    <?= render_input('floor_No', 'Floor No', '', 'number', ["placeholder" => "Enter Floor No"]); ?>-->
+                    <!--</div>-->
 
-                    <div class="col-md-3">
-                        <?= render_input('room_No', 'Room No', '', 'number', ["placeholder" => "Enter Room No"]); ?>
-                    </div>
+                    <!--<div class="col-md-3">-->
+                    <!--    <?= render_input('room_No', 'Room No', '', 'number', ["placeholder" => "Enter Room No"]); ?>-->
+                    <!--</div>-->
 
 
                     <div class="col-md-3">
@@ -141,7 +141,7 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
                         ?>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-3 hide">
                         <?= render_select(
                             'room_capacity',
                             [],
@@ -153,7 +153,7 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
                         ?>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-3 hide">
                         <label>Room Rent <span class="text-danger">*</span></label><br>
                         <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
                             <input type="text" name="rent" <?= $required ?> class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="" size="8" onkeypress="return acceptText(this,'number')">
@@ -177,12 +177,12 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
                     </div>
 
                     <div class="col-md-3">
-                        <?= render_input('startdate', 'Start Date', '', 'date'); ?>
-                    </div>
+                    <!--    <?= render_input('startdate', 'Start Date', '', 'date'); ?>-->
+                    <!--</div>-->
 
-                    <div class="col-md-3">
-                        <?= render_input('enddate', 'End Date', '', 'date'); ?>
-                    </div>
+                    <!--<div class="col-md-3">-->
+                    <!--    <?= render_input('enddate', 'End Date', '', 'date'); ?>-->
+                    <!--</div>-->
 
                 </div>
             </div>
@@ -245,15 +245,15 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
         appValidateForm($('#hostel_management_form'), {
             student_name: 'required',
             university_id: 'required',
-            floor_No: 'required',
-            room_No: 'required',
+            // floor_No: 'required',
+            // room_No: 'required',
             company: 'required',
             hostel: 'required',
-            room_capacity: 'required',
-            rent: 'required',
-            rent_currency_type: 'required',
-            startdate: 'required',
-            enddate: 'required'
+            room_capacity: 'required'
+            // rent: 'required',
+            // rent_currency_type: 'required',
+            // startdate: 'required',
+            // enddate: 'required'
         });
 
 
@@ -320,11 +320,24 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
 
         var form = $(this);
 
-        // Check if form is valid
-        if (!form.valid()) {
-            // If validation fails, stop submission
-            return false;
+     $(form)
+    .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
+    .each(function() {
+        let value = $(this).val(); // safely get value
+        if (!value || String(value).trim() === "") {
+            $(this).addClass("is-invalid");
+
+            // Try to get readable label
+            let label = $(this).closest(".form-group").find("label").text().trim();
+            let fieldName = label || $(this).attr("name");
+
+            // Collect field name or handle it as you wish
+            console.warn("Missing required:", fieldName);
+        } else {
+            $(this).removeClass("is-invalid");
         }
+    });
+
 
         var url = '<?= admin_url("hostel_management/save_hostel_details"); ?>';
         var formData = new FormData(this);
