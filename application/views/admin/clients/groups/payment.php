@@ -18,7 +18,7 @@
     die;
 } ?>
 
-<?php if (is_admin()) { ?>
+
     <div class="panel_s">
         <div class="panel-body">
             <h4 class="fs-title">Payments Dues <a data-toggle="tooltip" data-title="Payment Summary" data-placement="bottom" class="btn btn-default btn-with-tooltip" onclick="getPayementInformation(<?= $client_id ?>)"><i class="fa fa-bar-chart"></i></a></h4>
@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-<?php } ?>
+
 
 
 <div class="panel_s">
@@ -651,7 +651,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>Proof <span class="text-danger">*</span></label>
-                                            <input type="file" name="proof" data-name="proof" class="form-control proof" <?= !empty($applicant_payment_data->pdf) ? '' : 'required' ?>>
+                                            <input type="file" name="proof" data-name="proof" class="form-control proof" <?= !empty($applicant_payment_data->pdf) || (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 5) ? '' : 'required' ?>>
                                             <?php
                                             $file_url = !empty($applicant_payment_data->pdf) ? $applicant_payment_data->pdf : "";
                                             if (!empty($file_url)) { ?>
@@ -767,8 +767,9 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                                         <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'readonly' : '' ?>
                                                                         oninput="calculateInrValue()">
                                                                     <div class="input-group-addon">
+                                                                        
                                                                         <select name="amount_currency_type[<?= $split['fee_id'] ?>]"
-                                                                            class="currency-selector currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : 'auto-populated-select' ?>"
+                                                                            class="currency-selector currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : '' ?>"
                                                                             readonly
                                                                             onchange="calculateInrValue(); updateSymbol_(this,<?= $split['fee_id'] ?>)">
                                                                             <?php foreach ($get_currencies as $c): ?>
@@ -1161,11 +1162,14 @@ function check_tt_copy(obj)
             let $formGroup = $(obj).closest(".form-group");
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
             $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
+            
+            $(obj).parents('.payment_payment').find("input[name='proof']").attr("required",true);
             if (modeId != 1) {
                 $(obj).parents('.payment_payment').find('.trans-div').hide();
             }
 
             if (modeId == 5) {
+                $(obj).parents('.payment_payment').find("input[name='proof']").removeAttr("required");
                 vendor_select.removeAttr('required');
                 $(obj).closest('.payment_payment')
                     .find("[name='location_id']")
@@ -1329,7 +1333,7 @@ function check_tt_copy(obj)
                         <div class="input-group-addon">
                             <select name="amount_currency_type[${feeData.id}]"
                                     ${readonly == 1 ? 'readonly' : ''}
-                                    data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
+                                    data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : ''}"
                                     onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
                                 ${getCurrencyOptions(3)}
                             </select>
@@ -1762,14 +1766,14 @@ function check_tt_copy(obj)
                     }
                     console.log(totalAmountCheck);
                     console.log(totalAmountCheck_);
-                    if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_)) {
+                    if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_) && payment_type_id != "<?= PACKAGE_FEES_ID ?>") {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match Amount.");
                         return false;
                     }
 
-                    if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_)) {
+                    if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_) && payment_type_id != "<?= PACKAGE_FEES_ID ?>") {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match INR Value. ");

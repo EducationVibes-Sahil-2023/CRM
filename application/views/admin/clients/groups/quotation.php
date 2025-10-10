@@ -1788,14 +1788,14 @@ if (has_permission('customers', '', 'quotation_create')) {
                     package_amount += val;
                 });
 
-                if (Orignal_package_amount > package_amount) {
-                    alert_float(
-                        "danger",
-                        `Package amount should be greater than or equal to the original package amount (${Orignal_package_amount})`
-                    );
-                    hide_loader();
-                    return false; // stop further processing
-                }
+                // if (Orignal_package_amount > package_amount) {
+                //     alert_float(
+                //         "danger",
+                //         `Package amount should be greater than or equal to the original package amount (${Orignal_package_amount})`
+                //     );
+                //     hide_loader();
+                //     return false; // stop further processing
+                // }
 
                 if ($("#universityDue input[name='total_pending_amount']").val() < 0) {
                     alert_float(

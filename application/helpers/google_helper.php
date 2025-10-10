@@ -2120,7 +2120,7 @@ function paymentDues()
 {
     
     $CI = &get_instance();
-    // $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
 // fetch fees with lead_type as well
 $feesList = $CI->db->select("id, name")
     ->from(db_prefix() . "applicant_fees")->where_in("id",[1,3,5,6,7])
@@ -2176,7 +2176,8 @@ SELECT
             'pay_id', pq.id,
             'fees_id', pq.payment_type,
             'amount', pq.amount,
-            'currency_id', pq.ex_currency
+            'currency_id', pq.ex_currency,
+            'fess_infomation',pq.fess_infomation
         )
     ), ']') AS payment_details_json,
 
