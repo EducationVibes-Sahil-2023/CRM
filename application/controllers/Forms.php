@@ -37,6 +37,10 @@ class Forms extends ClientsController
         if (!$data['form_fields']) {
             $data['form_fields'] = [];
         }
+        
+          //  if($key == "c04d2a1fda6448b12c7fe55c5f2184f2"){
+        //       $this->db->insert(db_prefix() . 'facebook_webhook_data', ['data' => json_encode($post_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),"form_id"=>"whatsapp"]);
+        //         }
         if ($this->input->post('key')) {
             if ($this->input->post('key') == $key) {
                 $post_data = $this->input->post();

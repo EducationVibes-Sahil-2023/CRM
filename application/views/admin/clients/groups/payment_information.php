@@ -16,9 +16,24 @@ $remaningDues = [];
 $deduction_amount = [];
 
 
+// if (!empty($applicantpaymentdata)) {
+//     foreach ($applicantpaymentdata as $applicantPayment) {
+//         $deduction_amount[$applicantPayment["payment_type"]][$applicantPayment["ex_currency"]] += $applicantPayment['amount'] ?? 0;
+//     }
+// }
+
 if (!empty($applicantpaymentdata)) {
     foreach ($applicantpaymentdata as $applicantPayment) {
-        $deduction_amount[$applicantPayment["payment_type"]][$applicantPayment["ex_currency"]] += $applicantPayment['amount'] ?? 0;
+        $FeesInformation_array = json_decode($applicantPayment['fess_infomation'],true);
+  
+        foreach ($FeesInformation_array as $applicantPayment_) {
+            if($applicantPayment_["fee_id"] ==1){
+        $deduction_amount[$applicantPayment_["fee_id"]][3] += $applicantPayment_['fee_inr_value'] ?? 0;
+            }else
+            {
+                $deduction_amount[$applicantPayment_["fee_id"]][$applicantPayment_["fee_currency"]] += $applicantPayment_['fee_amount'] ?? 0; 
+            }
+        }
     }
 }
 ?>
@@ -49,6 +64,12 @@ if (!empty($applicantpaymentdata)) {
     <?php if (!empty($FeesInformation)): ?>
         <?php foreach ($FeesInformation as $FeesInfo): ?>
             <?php
+// print_r($FeesInfo);
+if(in_array($FeesInfo["id"],[2,4,8]))
+{
+    continue;
+    
+}
 
 
             $feeId   = $FeesInfo['id'] ?? null;
