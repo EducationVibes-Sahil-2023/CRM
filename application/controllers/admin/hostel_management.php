@@ -1,0 +1,823 @@
+<?php
+
+defined('BASEPATH') or exit('No direct script access allowed');
+
+class hostel_management extends AdminController
+{
+    // Define the property
+
+    function __construct()
+    {
+        parent::__construct();
+        $this->load->model('Hostel_model'); // Load the model
+        $this->load->model('quotation_model');
+    }
+
+    function index()
+    {
+
+        $data["universities"] = $this->Hostel_model->get_university_rentInfo();
+        $this->load->view('admin/hostel_management/manage', $data);
+    }
+
+    function table()
+    {
+
+        // ✅ Permission check
+        if (!has_permission('hostel_management', '', 'view_own')) {
+            return access_denied('hostel_management'); // Use return to stop further execution
+        }
+
+        // ✅ Correct table view (filename from views/admin/tables/)
+        $view = 'hostel'; // corresponds to application/views/admin/tables/visa_clients.php
+
+        // ✅ Call DataTable loader
+        return $this->app->get_table_data($view);
+    }
+
+    function create($id)
+    {
+
+        // ✅ Permission check
+        if (!has_permission('hostel_management', '', 'create')) {
+            return access_denied('hostel_management'); // Stop execution immediately
+        }
+
+        if (!empty($id) && !has_permission('hostel_management', '', 'edit')) {
+            return access_denied('hostel_management'); // Stop execution immediately
+        }
+
+        // ✅ Prepare any required data (if needed in view)
+        $data = [];
+        $data["id"] = $id;
+        if (!empty($id)) {
+            $data["visaData"] = $this->db->where('id', $id)->get(db_prefix() . 'hostel')->row();
+        }
+        // ✅ Set correct view page
+        $view_page = 'admin/hostel_management/create'; // Example path for view file
+
+        // ✅ Load view safely
+        $this->load->view($view_page, $data);
+    }
+
+
+
+    function groups($id)
+    {
+        // ✅ Permission check
+        if (!has_permission('hostel_management', '', 'edit')) {
+            return access_denied('hostel_management'); // Stop execution immediately
+        }
+
+        if (!$id) {
+            redirect(admin_url('hostel_management'));
+        }
+
+        $data = [];
+
+        if (!empty($_GET['tab'])) {
+            $data['active_tab'] = $_GET['tab'];
+        } else {
+            $data['active_tab'] = 'profile';
+        }
+        $data["view_page"] = 'profile'; // Example path for view file
+        $data["getId"] = $id;
+        $data['hostelData'] = $this->db->select('*')->where('id', $id)->get(db_prefix() . 'hostel_infomation')->row();
+
+        $data["universities"] = array_column($this->Hostel_model->get_university_rentInfo(), null, 'university_id');
+
+        if ($_GET['tab'] == 'profile') {
+
+            if (!has_permission('hostel_management', '', 'view_own')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+            if (empty($data['hostelData'])) {
+                redirect(admin_url('hostel_management'));
+            }
+            $data["view_page"] = 'profile';
+        } else if ($_GET['tab'] == 'quotation') {
+
+            if (!has_permission('hostel_management', '', 'quotation')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+
+            $data["view_page"] = 'quotation';
+            $data["quotation_id"] = $_GET["quotation_id"] ?? '';
+        } else if ($_GET['tab'] == 'payment') {
+
+            if (!has_permission('hostel_management', '', 'payment')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+
+            $data["view_page"] = 'payment';
+            $data["quotation_id"] = $_GET["quotation_id"] ?? '';
+        }
+
+        $this->load->view('admin/hostel_management/group', $data);
+    }
+
+    public function quotation()
+    {
+        try {
+            $quotationSave = [
+                "hostel_info_id" => $_POST["hostel_info_id"] ?? null,
+                "university_name" => $_POST["university_name"] ?? null,
+                "start_date" => $_POST["start_date"] ?? null,
+                "end_date" => $_POST["end_date"] ?? null,
+                "room_capacity" => $_POST["room_capacity"] ?? null,
+                "floor_No" => $_POST["floor_No"] ?? null,
+                "room_No" => $_POST["room_No"] ?? null,
+                "company" => $_POST["company"] ?? null,
+                "rent" => $_POST["rent"] ?? null,
+                "currency" => $_POST["rent_currency_type"] ?? null,
+                "hostel" => $_POST["hostel"] ?? null,
+                "exchange_value" => ($_POST["currency_exchange"]) ?? null,
+                'hostel_due'  => ($_POST["university_dues"]) ?? null,
+                'company_due'     => ($_POST["company_due"]) ?? null,
+                'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? null,
+
+            ];
+
+
+
+            $quotation_id = $_POST["quotation_id"] ?? null;
+
+            // 🔹 Optional: Check if record already exists
+            $this->db->where([
+                'university_name' => $_POST["university_name"],
+                'start_date' => $_POST["start_date"],
+                'end_date' => $_POST["end_date"]
+            ]);
+            $exists = $this->db->get(db_prefix() . 'hostel_quotation')->row();
+
+            if (!empty($quotation_id)) {
+                // 🔸 Update existing record
+                $this->db->where('id', $quotation_id);
+                $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
+            } else {
+                // 🔸 Insert new record
+                $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
+            }
+
+            // ✅ Success Response
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel rental details saved successfully.',
+            ]);
+        } catch (Exception $e) {
+            // ❌ Error Response
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function quotation_table($hostelInfo_Id)
+    {
+        $view = "hostel_quotation_released";
+
+        // Load the corresponding table data
+        $this->app->get_table_data($view, ["hostel_info_id" => $hostelInfo_Id]);
+    }
+
+
+    function rental()
+    {
+        $data = [];
+        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
+
+        $this->load->view('admin/hostel_management/rental', $data);
+    }
+
+    function rental_table()
+    {
+        // ✅ Permission check
+        if (!has_permission('hostel_management', '', 'backend_view_own')) {
+            return access_denied('hostel_management'); // Use return to stop further execution
+        }
+
+        // ✅ Correct table view (filename from views/admin/tables/)
+        $view = 'hostel_rental'; // corresponds to application/views/admin/tables/visa_clients.php
+
+        // ✅ Call DataTable loader
+        return $this->app->get_table_data($view);
+    }
+
+    function save_rental_details()
+    {
+        try {
+            if (!has_permission('hostel_management', '', 'backend_create')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+
+            if (!empty($data['id']) && !has_permission('hostel_management', '', 'backend_edit')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+            $data = $this->input->post();
+
+
+
+            // Prepare data array
+            $save_data = [
+                'university_id' => $data['university_id'],
+                'university_name' => $data['university_name'],
+                'room_capacity' => $data['room_capacity'],
+                'rent' => $data['rent'] ?? null,
+                'currency' => $data['currency'] ?? null
+            ];
+
+            $check_duplicate = [];
+            $check_duplicate['university_id'] = $data['university_id'];
+            $check_duplicate['room_capacity'] = $data['room_capacity'];
+
+            // check duplicate entry
+            $this->db->where($check_duplicate)->where('status', 1)->where('id!=', $data['rental_id'] ?? 0);
+            $this->db->from(db_prefix() . 'hostel_rental');
+            $count = $this->db->count_all_results();
+
+            if ($count > 0) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Duplicate entry found for the same university and room capacity.'
+                ]);
+                die;
+            }
+
+
+            if (!empty($data['rental_id'])) {
+                $save_data['updated_date'] = date('Y-m-d H:i:s');
+                $save_data['updated_by'] = get_staff_user_id();
+                // Update existing record
+                $this->db->where('id', $data['rental_id']);
+                $this->db->update(db_prefix() . 'hostel_rental', $save_data);
+                $record_id = $data['id'];
+            } else {
+                $save_data['created_date'] = date('Y-m-d H:i:s');
+                $save_data['created_by'] = get_staff_user_id();
+                // Insert new record
+                $this->db->insert(db_prefix() . 'hostel_rental', $save_data);
+                $record_id = $this->db->insert_id();
+            }
+
+            // Return structured response
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel rental details saved successfully.',
+
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+    function delete_rental($id)
+    {
+        // ✅ Permission check
+        if (!has_permission('hostel_management', '', 'backend_delete')) {
+            return access_denied('hostel_management'); // Stop execution immediately
+        }
+
+        if (!$id) {
+            redirect(admin_url('hostel_management'));
+        }
+
+        $this->db->where('id', $id);
+        $this->db->update(db_prefix() . 'hostel_rental', ["status" => "0"]);
+
+        if ($this->db->affected_rows() > 0) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel rental record deleted successfully.'
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Error deleting hostel rental record or record not found.'
+            ]);
+        }
+    }
+
+    function save_hostel_details()
+    {
+        try {
+            if (!has_permission('hostel_management', '', 'create')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+
+            if (!empty($data['id']) && !has_permission('hostel_management', '', 'edit')) {
+                return access_denied('hostel_management'); // Stop execution immediately
+            }
+            $data = $this->input->post();
+            // Prepare data array
+            $save_data = [
+                'name' => $data['student_name' ?? ''],
+                'university_id' => $data['university_id' ?? ''],
+                'passport' => $data['passport' ?? ''],
+                'university_name' => $data['university_name' ?? ''],
+                'floor_no' => $data['floor_No' ?? ''],
+                'room_no' => $data['room_No' ?? ''],
+                'company' => $data['company' ?? ''],
+                'hostel' => $data['hostel' ?? ''],
+                'room_capacity' => $data['room_capacity' ?? ''],
+                'rent_amount' => $data['rent' ?? ''],
+                'currency' => $data['rent_currency_type' ?? ''],
+                'start_date' => $data['startdate' ?? ''],
+                'end_date' => $data['enddate' ?? ''],
+            ];
+
+            if (!empty($data['id'])) {
+                $save_data['updated_date'] = date('Y-m-d H:i:s');
+                $save_data['updated_by'] = get_staff_user_id();
+                // Update existing record
+                $this->db->where('id', $data['id']);
+                $this->db->update(db_prefix() . 'hostel_infomation', $save_data);
+                $record_id = $data['id'];
+            } else {
+                $save_data['created_date'] = date('Y-m-d H:i:s');
+                $save_data['created_by'] = get_staff_user_id();
+                // Insert new record
+                $this->db->insert(db_prefix() . 'hostel_infomation', $save_data);
+                $record_id = $this->db->insert_id();
+            }
+            // Return structured response
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel details saved successfully.',
+                'record_id' => $record_id
+            ]); // Include record ID in response
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+    function delete($id)
+    {
+        // ✅ Permission check
+        if (!has_permission('hostel_management', '', 'delete')) {
+            return access_denied('hostel_management'); // Stop execution immediately
+        }
+
+        if (!$id) {
+            redirect(admin_url('hostel_management'));
+        }
+
+        $this->db->where('id', $id);
+        $this->db->update(db_prefix() . 'hostel_infomation', ["status" => "0"]);
+
+        if ($this->db->affected_rows() > 0) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel record deleted successfully.'
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Error deleting hostel record or record not found.'
+            ]);
+        }
+    }
+
+
+    function quotationGenerate()
+    {
+
+        die;
+        if (!has_permission('hostel_management', '', 'generate_invoice')) {
+            return access_denied('hostel_management'); // Stop execution if no permission
+        }
+
+        $hostelInfo_Id = $_POST["hostel_info_id"] ?? 3;
+        $quotation_id = $_POST["quotation_id"] ?? 8;
+
+        if (!$quotation_id) {
+            redirect(admin_url('hostel_management'));
+        }
+
+
+        $this->db->select([
+            'hq.id',
+            'hq.university_name',
+            'hq.room_no',
+            'hq.floor_no',
+            'hq.company',
+            'hq.hostel',
+            'hq.room_capacity',
+            'hq.start_date',
+            'hq.end_date',
+            'hq.exchange_value',
+            'hq.hostel_due',
+            'hi.name',
+            'hi.passport',
+            'TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date) AS month_difference'
+        ])
+            ->from(db_prefix() . 'hostel_quotation AS hq')
+            ->join(db_prefix() . 'hostel_infomation AS hi', 'hi.id = hq.hostel_info_id', 'left')
+            ->where('hq.hostel_info_id', $hostelInfo_Id)
+            ->where('hq.id', $quotation_id);
+
+
+
+
+        $data['hostelData'] = $this->db->get()->row();
+
+
+
+        // Disable SSL verification (for images/fonts)
+        stream_context_set_default(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+
+        // Initialize TCPDF
+        $pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+        // Disable default header/footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
+        // ✅ Force small margins to fit more on one page
+        $pdf->SetMargins(10, 10, 10, true);
+        $pdf->SetAutoPageBreak(false, 0); // ✅ Disable automatic page breaks completely
+
+        // Add single page
+        $pdf->AddPage();
+
+        // Optional: Custom fonts
+        $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';
+        $path_book_antiqua = APPPATH . 'libraries/tcpdf/fonts/book-antiqua-bold.ttf';
+        $path_Cambria_Math = APPPATH . 'libraries/tcpdf/fonts/Cambria Math.ttf';
+        $path_Cambria = APPPATH . 'libraries/tcpdf/fonts/Cambria/Cambria Bold 700.ttf';
+
+        $data["gillsansmt"]   = TCPDF_FONTS::addTTFfont($path_gill_sans_mt, 'TrueTypeUnicode', '', 15);
+        $data["book_antiqua"] = TCPDF_FONTS::addTTFfont($path_book_antiqua, 'TrueTypeUnicode', '', 15);
+        $data["Cambria_Math"] = TCPDF_FONTS::addTTFfont($path_Cambria_Math, 'TrueTypeUnicode', '', 15);
+        $data["Cambria"]      = TCPDF_FONTS::addTTFfont($path_Cambria, 'TrueTypeUnicode', '', 15);
+
+        $pdf->setImageScale(1.7);
+
+
+        // Load the HTML view
+        $html = $this->load->view('admin/pdf/hostel_invoice', $data, true);
+
+        // ✅ Make sure the HTML fits in one page
+        // Shrink content slightly if it’s long (use CSS or scale below)
+        // $pdf->writeHTMLCell(
+        //     0,        // width
+        //     0,        // height
+        //     '',       // x
+        //     '',       // y
+        //     $html,    // html
+        //     0,        // border
+        //     1,        // line break
+        //     0,        // fill
+        //     true,     // reset height
+        //     // 'C',      // align
+        //     true      // autopadding
+        // );
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        // ✅ Output PDF to browser (single page)
+        // $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
+
+
+        $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/";
+
+        if (!is_dir($upload_dir)) {
+            if (!mkdir($upload_dir, 0777, true) && !is_dir($upload_dir)) {
+                echo json_encode(["status" => "error", "message" => "Failed to create upload directory."]);
+                return;
+            }
+        }
+
+        // $file_name = 'Quotation_' . time() . '.pdf';
+
+        $file_name = $data["hostelData"]->name . " " .
+            $data["hostelData"]->university_name . " " .
+            $data["hostelData"]->start_date . " " .
+            $data["hostelData"]->end_date . " " .
+            $data["hostelData"]->room_capacity . " " .
+            time() . '.pdf';
+
+        $file_name = strtolower(str_replace(" ", "_", $file_name));
+
+
+        $file_path = $upload_dir . $file_name;
+
+        // Remove if exists
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+
+        // Save file
+        $pdf->Output($file_path, 'F');
+
+        if (!file_exists($file_path)) {
+            echo json_encode(["status" => "error", "message" => "Failed to generate PDF file."]);
+            return;
+        }
+
+        // -----------------------------
+        // Update quotation record (not clients!)
+
+        // -----------------------------
+        $update_data = ["pdf" =>  base_url() . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/" . $file_name];
+        $this->db->where(["hostel_info_id" => $hostelInfo_Id, "id" => $quotation_id]);
+        $this->db->update(db_prefix() . 'hostel_quotation', $update_data);
+
+
+        // -----------------------------
+        // Return response
+        // -----------------------------
+        echo json_encode([
+            "status"   => "success",
+            "pdf_url"  => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/" . $file_name)
+        ]);
+    }
+
+    public function payment_table($hostel_info_id)
+    {
+        if (!has_permission('hostal_management', '', 'view') && !has_permission('hostal_management', '', 'view_own')) {
+            throw new Exception("Access denied: Quotation Payment View");
+        }
+        $view = "hostel_payments";
+
+        // Load the corresponding table data
+        $this->app->get_table_data($view, ["hostel_info_id" => $hostel_info_id]);
+    }
+    public function payment_quotation()
+    {
+        try {
+            $payment_id         = $this->input->post("payment_id") ?? '';
+            $hostel_info_id          = $this->input->post("hostel_info_id") ?? '';
+            $university_name    = $this->input->post("university_name") ?? '';
+            $start_date       = $this->input->post("start_date") ?? '';
+            $end_date       = $this->input->post("end_date") ?? '';
+            $room_capacity         = $this->input->post("room_capacity") ?? '';
+            $currency_exchange  = $this->input->post("currency_exchange") ?? '';
+            $ex_currency  = $this->input->post("ex_currency") ?? '';
+            $location_id  = $this->input->post("location_id") ?? '';
+            $tt_copy  = $this->input->post("tt_copy") ?? 0;
+            $inr_value  = $this->input->post("inr_value") ?? 0;
+            $currency_disabled  = $this->input->post("currency_disabled") ?? 0;
+            $quotation_id  = $this->input->post("quotation_id") ?? 0;
+            $total_inr_amount  = $this->input->post("total_inr_amount") ?? 0;
+            $payment_quotations = $this->input->post("payment_quotations")
+                ? json_decode($this->input->post("payment_quotations"), true)
+                : [];
+
+            if (empty($payment_quotations)) {
+                throw new Exception("No payment quotations provided.");
+            }
+
+            // 🔒 Permission checks
+            if (!empty($payment_id) && !has_permission('payment_quotation', '', 'edit')) {
+                throw new Exception("Access denied: Quotation Payment Edit");
+            }
+            if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
+                throw new Exception("Access denied: Quotation Payment Create");
+            }
+
+            $seenEntries = [];
+            $insertRows  = [];
+            $updateRows  = [];
+            $activity_data = [];
+            foreach ($payment_quotations as $key => $payment) {
+                // $row = [
+                //     "hostel_info_id"       => $hostel_info_id,
+                //     "university_name" => $university_name,
+                //     "academic_year"   => $acadmic_year,
+                //     "year"            => $study_year,
+                //     "ex_currency"            => $ex_currency,
+                //     "exchange_value"  => $currency_exchange,
+                //     "mode"            => $payment['mode'] ?? '',
+                //     "transaction_type"            => $payment['transaction_type'] ?? '',
+                //     "amount"          => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
+                //     "pay_date"        => $payment['pay_date'] ?? null,
+                //     "payment_type"        => $payment['payment_type'] ?? "",
+                //     "inr_value"        => $inr_value ?? 0,
+                //     "total_inr_amount"        => $total_inr_amount ?? 0,
+                //     "tt_copy" => $tt_copy ?? 0,
+                //     "currency_disabled" => $currency_disabled ?? 0,
+                //     "quotation_id" => $quotation_id ?? 0,
+                //     "location_id" => $location_id ?? 0
+
+                // ];
+
+                $row = [
+                    "hostel_info_id"        => $hostel_info_id,
+                    "university_name"  => $university_name,
+                    "start_date"    => $start_date,
+                    "end_date"    => $end_date,
+                    "room_capacity"             => $room_capacity,
+                    "ex_currency"      => $ex_currency,
+                    "exchange_value"   => $currency_exchange,
+
+                    // if mode key exists, take its value, otherwise 0
+                    "mode"             => isset($payment['mode']) ? $payment['mode'] : 0,
+                    "transaction_type"             => isset($payment['transaction_type']) ? $payment['transaction_type'] : 0,
+
+                    // clean numeric string (e.g., "1,000" → 1000)
+                    "amount"           => isset($payment['amount']) ? str_replace(',', '', $payment['amount']) : 0,
+
+                    "pay_date"         => isset($payment['pay_date']) ? $payment['pay_date'] : null,
+                    "payment_type"     => isset($payment['payment_type']) ? $payment['payment_type'] : 0,
+
+                    // safe fallbacks
+                    "inr_value"        => isset($inr_value) ? $inr_value : 0,
+                    "total_inr_amount" => isset($total_inr_amount) ? $total_inr_amount : 0,
+                    "tt_copy"          => isset($tt_copy) ? $tt_copy : 0,
+                    "currency_disabled" => isset($currency_disabled) ? $currency_disabled : 0,
+                    "quotation_id"     => isset($quotation_id) ? $quotation_id : 0,
+                    "location_id"      => isset($location_id) ? $location_id : 0
+                ];
+
+
+
+                // Metadata
+                if (!empty($payment_id)) {
+                    $row["id"]         = $payment_id;
+                    $row["updated_by"] = get_staff_user_id();
+                    $row["updated_date"] = date('Y-m-d H:i:s');
+                } else {
+                    $row["created_by"]   = get_staff_user_id();
+                    $row["created_date"] = date('Y-m-d H:i:s');
+                }
+
+                // Handle type (array → string)
+                $row["type"] = !empty($payment["type"]) && is_array($payment["type"])
+                    ? implode(",", $payment["type"])
+                    : "";
+
+                // Vendor handling
+                if (is_numeric($payment["vendor_id"])) {
+                    $row["vendor_id"]   = $payment["vendor_id"];
+                    $row["vendor_name"] = '';
+                } else {
+                    $row["vendor_id"]   = 0;
+                    $row["vendor_name"] = !empty($payment["vendor_id"]) ? $payment["vendor_id"] : $payment["vendor_name"];
+                }
+
+
+                // Split data (JSON encode)
+                if (!empty($payment["split_data"])) {
+                    $row["fess_infomation"] = json_encode($payment["split_data"], JSON_UNESCAPED_UNICODE);
+                }
+
+                // 🚫 Prevent duplicate in same request
+                $entryKey = implode("|", [
+                    $hostel_info_id,
+                    $university_name,
+                    $start_date,
+                    $end_date,
+                    $room_capacity,
+                    $row['mode'],
+                    $row['amount'],
+                    $row['pay_date'],
+                    "vendor_id:" . ($row['vendor_id'] ?? 0),
+                    "vendor_name:" . ($row['vendor_name'] ?? '')
+                ]);
+                if (isset($seenEntries[$entryKey])) {
+                    throw new Exception("Duplicate detected in current submission (Mode {$row['mode']}, Amount {$row['amount']}).");
+                }
+                $seenEntries[$entryKey] = true;
+
+                // 🚫 Prevent duplicate in DB
+                $this->db->where([
+                    'hostel_info_id'      => $hostel_info_id,
+                    'university_name' => $university_name,
+                    'start_date'  => $start_date,
+                    'end_date'  => $end_date,
+                    'room_capacity'           => $room_capacity,
+                    'mode'           => $row['mode'],
+                    'amount'         => $row['amount'],
+                    'pay_date'       => $row['pay_date']
+                ]);
+                if (!empty($row["vendor_id"])) {
+                    $this->db->where('vendor_id', $row["vendor_id"]);
+                } else {
+                    $this->db->where('vendor_name', $row["vendor_name"]);
+                }
+                if (!empty($row["id"])) {
+                    $this->db->where('id !=', $row["id"]);
+                }
+
+                $this->db->where('status > ', 0);
+                $duplicate = $this->db->get(db_prefix() . 'hostel_payments')->row();
+                // if ($duplicate) {
+                //     throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");
+                // }
+
+                // 📎 File upload
+                if (!empty($_FILES["proof_" . $key]['name'])) {
+                    $documents = $_FILES["proof_" . $key];
+                    $file_name_ = ($hostel_info_id ? get_client_name($hostel_info_id) : 'proof') . "_" . time();
+                    $upload_data = [
+                        "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+                        "type"     => $documents['type'],
+                        "tmp_name" => $documents['tmp_name'],
+                        "error"    => $documents['error'],
+                        "size"     => $documents['size'],
+                    ];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($hostel_info_id, $upload_data);
+                        $row['pdf'] = $file_name["file_path"];
+                        $row['status'] = 3;
+                        $this->db->insert(db_prefix() . 'hostel_payment_activity_log', [
+                            "date"        => date('Y-m-d H:i:s'),
+                            "staffid"     => get_staff_user_id(),
+                            "hostel_info_id"   => $hostel_info_id,
+                            "description" => $payment_id ? "Payment Proof update successfully " : "Payment Proof add successfully ",
+                            "payment_id" => $payment_id ?? 1
+                        ]);
+                    }
+                }
+
+                if (!empty($_FILES["tt_proof_" . $key]['name'])) {
+                    $documents = $_FILES["tt_proof_" . $key];
+                    $file_name_ = ($hostel_info_id ? get_client_name($hostel_info_id) : 'tt_proof') . "_" . time();
+                    $upload_data = [
+                        "name"     => $file_name_ . "." . pathinfo($documents['name'], PATHINFO_EXTENSION),
+                        "type"     => $documents['type'],
+                        "tmp_name" => $documents['tmp_name'],
+                        "error"    => $documents['error'],
+                        "size"     => $documents['size'],
+                    ];
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        $file_name = upload_applicant_documents($hostel_info_id, $upload_data);
+                        $row['tt_pdf'] = $file_name["file_path"];
+                        $this->db->insert(db_prefix() . 'hostel_payment_activity_log', [
+                            "date"        => date('Y-m-d H:i:s'),
+                            "staffid"     => get_staff_user_id(),
+                            "hostel_info_id"   => $hostel_info_id,
+                            "description" => $payment_id ? "Payment TT Proof update successfully " : "Payment TT Proof add successfully ",
+                            "payment_id" => $payment_id ?? 1
+                        ]);
+                    }
+                }
+                // Decide insert/update bucket
+                if (!empty($row["id"])) {
+                    $updateRows[] = $row;
+                } else {
+                    $insertRows[] = $row;
+                }
+
+                $activity_data[] = [
+                    "date"        => date('Y-m-d H:i:s'),
+                    "staffid"     => get_staff_user_id(),
+                    "hostel_info_id"   => $hostel_info_id,
+                    "description" => json_encode([
+                        'ExchangeData' => $currency_exchange,
+                        'PaymentData' => [
+                            $hostel_info_id,
+                            $university_name,
+                            $start_date,
+                            $end_date,
+                            $room_capacity,
+                            $row['mode'],
+                            $row['amount'],
+                            $row['pay_date'],
+                            "vendor_id:" . ($row['vendor_id'] ?? 0),
+                            "vendor_name:" . ($row['vendor_name'] ?? '')
+                        ],
+                        'SplitData' => $payment["split_data"]
+                    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                    "payment_id" => $payment_id ?? 1
+                ];
+            }
+
+
+
+            // 🔹 Insert or Update
+            if (!empty($updateRows)) {
+                $this->db->update_batch(db_prefix() . 'hostel_payments', $updateRows, 'id');
+            }
+            if (!empty($insertRows)) {
+                $this->db->insert_batch(db_prefix() . 'hostel_payments', $insertRows);
+            }
+
+            if (!empty($activity_data)) {
+                $this->db->insert_batch(db_prefix() . 'hostel_payment_activity_log', $activity_data);
+            }
+
+
+            if ($this->db->affected_rows()) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Payment quotation data saved successfully.'
+                ]);
+            } else {
+                throw new Exception("No changes were made or failed to save payment quotation data.");
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+}

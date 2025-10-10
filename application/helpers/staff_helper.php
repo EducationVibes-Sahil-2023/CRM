@@ -46,10 +46,19 @@ function get_available_staff_permissions($data = [])
         ],
         'customers' => [
             'name'         => _l('clients'),
-            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "payment_action" => "Payment Action", "quotation_create" => "Quotation Create,","applicant_view_document" => "Global Applicant Documents View Only")),
+            'capabilities' => array_merge($withNotApplicableViewOwn, array("applicant_view" => "Global Applicant View Only", "delete_documents" => "Delete Documents", 'activity_logs' => "Activity Logs", "return_document" => "Orignal Document Return", "payment_action" => "Payment Action", "quotation_create" => "Quotation Create,", "applicant_view_document" => "Global Applicant Documents View Only")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
+        ],
+
+        'external_visa' => [
+            'name'         => "External Visa",
+            'capabilities' => $allPermissionsArray,
+        ],
+        'external_ticket' => [
+            'name'         => "External Ticket",
+            'capabilities' => $allPermissionsArray,
         ],
         'quotation' => [
             'name'         => "Quotations",

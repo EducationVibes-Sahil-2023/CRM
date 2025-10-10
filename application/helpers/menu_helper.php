@@ -31,7 +31,7 @@ function app_init_admin_sidebar_menu_items()
                 || (
                         have_assigned_customers()
                         || (!have_assigned_customers() && has_permission('customers', '', 'create'))
-                ) || has_permission('customers', '', 'applicant_view_document') 
+                ) || has_permission('customers', '', 'applicant_view_document')
         ) {
                 $CI->app_menu->add_sidebar_menu_item('customers', [
                         'collapse' => true,
@@ -68,6 +68,37 @@ function app_init_admin_sidebar_menu_items()
                         'name'     => "SA Applicant",
                         'href'     => admin_url('clients/study_abroad'),
                         'position' => 4,
+                ]);
+                if (has_permission('external_visa', '', 'view') || has_permission('external_visa', '', 'view_own')) {
+                        $CI->app_menu->add_sidebar_children_item('customers', [
+                                'slug'     => 'visa_details',
+                                'icon'     => 'fa fa-cc-visa',
+                                'name'     => "Visa Data",
+                                'href'     => admin_url('clients/visa_details'),
+                                'position' => 5,
+                        ]);
+                }
+                if (has_permission('external_ticket', '', 'view') || has_permission('external_ticket', '', 'view_own')) {
+
+                        $CI->app_menu->add_sidebar_children_item('customers', [
+                                'slug'     => 'ticket_details',
+                                'icon'     => 'fa fa-ticket',
+                                'name'     => "Ticket Data",
+                                'href'     => admin_url('clients/ticket_details'),
+                                'position' => 5,
+                        ]);
+                }
+        }
+
+
+        if (has_permission('external_ticket', '', 'view') || has_permission('external_ticket', '', 'view_own')) {
+
+                $CI->app_menu->add_sidebar_menu_item('hostel_management', [
+                        'slug'     => 'hostel_management',
+                        'icon'     => 'fa fa-bed',
+                        'name'     => "HMS",
+                        'href'     => admin_url('hostel_management'),
+                        'position' => 5,
                 ]);
         }
 
@@ -402,30 +433,29 @@ function app_init_admin_sidebar_menu_items()
 
 
 
- if (has_permission('partners', '', 'view')) {
-        // if (has_permission('academic', '', 'view')) {
-        $CI->app_menu->add_sidebar_menu_item('academic', [
-                'collapse' => true,
-                'icon'     => 'fa fa-user-o',
-                'name'     => "Back-end Data",
-                'position' => 25,
-        ]);
-        $CI->app_menu->add_sidebar_children_item('academic', [
-                'slug'     => 'universities',
-                'icon'     => 'fa fa-university',
-                'name'     => "Universities",
-                'href'     => admin_url('academic/university'),
-                'position' => 5,
-        ]);
-        $CI->app_menu->add_sidebar_children_item('academic', [
-                'slug'     => 'courses',
-                'icon'     => 'fa fa-graduation-cap',
-                'name'     => "Courses",
-                'href'     => admin_url('academic/courses'),
-                'position' => 5,
-        ]);
-
-}
+        if (has_permission('partners', '', 'view')) {
+                // if (has_permission('academic', '', 'view')) {
+                $CI->app_menu->add_sidebar_menu_item('academic', [
+                        'collapse' => true,
+                        'icon'     => 'fa fa-user-o',
+                        'name'     => "Back-end Data",
+                        'position' => 25,
+                ]);
+                $CI->app_menu->add_sidebar_children_item('academic', [
+                        'slug'     => 'universities',
+                        'icon'     => 'fa fa-university',
+                        'name'     => "Universities",
+                        'href'     => admin_url('academic/university'),
+                        'position' => 5,
+                ]);
+                $CI->app_menu->add_sidebar_children_item('academic', [
+                        'slug'     => 'courses',
+                        'icon'     => 'fa fa-graduation-cap',
+                        'name'     => "Courses",
+                        'href'     => admin_url('academic/courses'),
+                        'position' => 5,
+                ]);
+        }
 
         if (has_permission('partners', '', 'view')) {
 
@@ -464,6 +494,25 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 5,
                 ]);
         }
+
+
+        if (has_permission('hostel', '', 'backend_view')) {
+                $CI->app_menu->add_setup_menu_item('hms_backend', [
+                        'name'     => "HMS Backend",
+                        'collapse' => true,
+                        'position' => 5,
+                ]);
+
+                $CI->app_menu->add_setup_children_item('hms_backend', [
+                        'slug'     => 'hrms-rental',
+                        'name'     => "Rental",
+                        'href'     => admin_url('hostel_management/rental'),
+                        'position' => 5,
+                ]);
+        }
+
+
+
 
         if (is_admin()) {
                 $CI->app_menu->add_setup_menu_item('customers', [
