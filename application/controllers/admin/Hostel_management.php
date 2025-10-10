@@ -152,9 +152,13 @@ class hostel_management extends AdminController
 
             if (!empty($quotation_id)) {
                 // 🔸 Update existing record
+                $quotationSave['created_date'] = date('Y-m-d H:i:s');
+                $quotationSave['created_by'] = get_staff_user_id();
                 $this->db->where('id', $quotation_id);
                 $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
             } else {
+                $quotationSave['updated_date'] = date('Y-m-d H:i:s');
+                $quotationSave['updated_by'] = get_staff_user_id();
                 // 🔸 Insert new record
                 $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
             }
@@ -388,8 +392,6 @@ class hostel_management extends AdminController
 
     function quotationGenerate()
     {
-
-        die;
         if (!has_permission('hostel_management', '', 'generate_invoice')) {
             return access_denied('hostel_management'); // Stop execution if no permission
         }
@@ -403,6 +405,7 @@ class hostel_management extends AdminController
 
 
         $this->db->select([
+
             'hq.id',
             'hq.university_name',
             'hq.room_no',
@@ -414,12 +417,25 @@ class hostel_management extends AdminController
             'hq.end_date',
             'hq.exchange_value',
             'hq.hostel_due',
+            'hq.created_date',
             'hi.name',
             'hi.passport',
-            'TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date) AS month_difference'
+            'hq.company',
+            'hq.hostel',
+            'TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date) AS month_difference',
+            'h.hostel_name',
+            'h.beneficiary_bank',
+            'h.beneficiary_iban',
+            'h.contact_number',
+            'h.email',
+            'h.address',
+            'h.pin_code',
+            'h.state',
+
         ])
             ->from(db_prefix() . 'hostel_quotation AS hq')
             ->join(db_prefix() . 'hostel_infomation AS hi', 'hi.id = hq.hostel_info_id', 'left')
+            ->join(db_prefix() . 'hostel AS h', 'h.id = hq.hostel', 'left')
             ->where('hq.hostel_info_id', $hostelInfo_Id)
             ->where('hq.id', $quotation_id);
 
@@ -482,9 +498,9 @@ class hostel_management extends AdminController
         $pdf->writeHTML($html, true, false, true, false, '');
 
         // ✅ Output PDF to browser (single page)
-        // $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
+        $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
 
-
+        die;
         $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/";
 
         if (!is_dir($upload_dir)) {
@@ -820,8 +836,8 @@ class hostel_management extends AdminController
             ]);
         }
     }
-    
-      public function payment_information()
+
+    public function payment_information()
     {
         try {
             // Load model

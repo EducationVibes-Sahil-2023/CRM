@@ -93,13 +93,13 @@ function app_init_admin_sidebar_menu_items()
 
         if (has_permission('external_ticket', '', 'view') || has_permission('external_ticket', '', 'view_own')) {
 
-                // $CI->app_menu->add_sidebar_menu_item('hostel_management', [
-                //         'slug'     => 'hostel_management',
-                //         'icon'     => 'fa fa-hotel',
-                //         'name'     => "Hostel MS",
-                //         'href'     => admin_url('hostel_management'),
-                //         'position' => 5,
-                // ]);
+                $CI->app_menu->add_sidebar_menu_item('hostel_management', [
+                        'slug'     => 'hostel_management',
+                        'icon'     => 'fa fa-hotel',
+                        'name'     => "Hostel MS",
+                        'href'     => admin_url('hostel_management'),
+                        'position' => 5,
+                ]);
         }
 
         if (has_permission('quotation', '', 'view') || has_permission('quotation', '', 'view_own')) {
@@ -497,18 +497,18 @@ function app_init_admin_sidebar_menu_items()
 
 
         if (has_permission('hostel', '', 'backend_view')) {
-                // $CI->app_menu->add_setup_menu_item('hms_backend', [
-                //         'name'     => "HMS Backend",
-                //         'collapse' => true,
-                //         'position' => 5,
-                // ]);
+                $CI->app_menu->add_setup_menu_item('hms_backend', [
+                        'name'     => "HMS Backend",
+                        'collapse' => true,
+                        'position' => 5,
+                ]);
 
-                // $CI->app_menu->add_setup_children_item('hms_backend', [
-                //         'slug'     => 'hrms-rental',
-                //         'name'     => "Rental",
-                //         'href'     => admin_url('hostel_management/rental'),
-                //         'position' => 5,
-                // ]);
+                $CI->app_menu->add_setup_children_item('hms_backend', [
+                        'slug'     => 'hrms-rental',
+                        'name'     => "Rental",
+                        'href'     => admin_url('hostel_management/rental'),
+                        'position' => 5,
+                ]);
         }
 
 

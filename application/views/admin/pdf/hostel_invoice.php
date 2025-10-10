@@ -50,18 +50,25 @@ $amountCurrency = $hostelDues[0]["currency_id"];
     <p>Invoice Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date)) : '' ?>
     </p>
     <p>Payment Terms: CASH IN RECEPTION / BANK</p>
-    <p>Payment Date: 23.05.2025</p>
+    <p>Payment Date: <?= !empty($hostelData->created_date)
+                            ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
+                            : ''
+                        ?>
+    </p>
     <hr>
 </div>
+
+
 <table>
     <tr>
         <td style="width:50%;" class="small">
-            <p>Name: TCH, TBILISI CLASSIC HOTELS LLC</p>
-            <p>Address: 1 Sabatono 7,Tbilisi, 0114 Georgia</p>
-            <p>ID: 406189011</p>
-            <p>Phone: +995 592 03 35 73</p>
-            <p>Email: tbilisiclassichotel7@gmail.com</p>
+            <p>Name: <?= htmlspecialchars($hostelData->hostel_name ?? '') ?></p>
+            <p>Address: 1 Sabatono 7, Tbilisi, 0114 Georgia</p>
+            <p>ID: <?= htmlspecialchars($hostelData->hostel_id ?? '') ?></p>
+            <p>Phone: <?= htmlspecialchars($hostelData->contact_number ?? '') ?></p>
+            <p>Email: <?= htmlspecialchars($hostelData->email ?? '') ?></p>
         </td>
+
         <td style="width:50%;" class="medium">
             <p><strong>Recipient: <?= $hostelData->name ?? '' ?></strong></p>
             <br>
@@ -184,7 +191,10 @@ $amountCurrency = $hostelDues[0]["currency_id"];
     <tr>
         <td>
             <p class="large bold">The amount must be paid in GEL, according to the exchange rate of the National Bank on the day of payment (inside Georgia)</p>
-            <p class="large"><strong>Note:</strong> Kindly make the payment by <span class='highlight'>23.05.2025</span>. In the description of the bank receipt must mention Food & Accommodation for the
+            <p class="large"><strong>Note:</strong> Kindly make the payment by <span class='highlight'><?= !empty($hostelData->created_date)
+                                                                                                            ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
+                                                                                                            : ''
+                                                                                                        ?></span>. In the description of the bank receipt must mention Food & Accommodation for the
                 student name, invoice number and passport number clearly</p>
         </td>
     </tr>
