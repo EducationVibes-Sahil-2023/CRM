@@ -127,12 +127,12 @@ if (!empty($_GET['quotation_id'])) {
                         );
                         ?>
                     </div>
-                    <?php if (has_permission('customers', '', 'quotation_create')) { ?>
+                    <?php if (has_permission('hostel_management', '', 'quotation')) { ?>
                         <div class="form-group col-md-3 text-right  ">
                             <label for="release_to_counsellor"><br>Release to Counsellor</label>
                             <input type="checkbox" value="1" id="release_to_counsellor" <?= !empty($hostel_quotation_data->release_to_counsellor) ? 'checked' : '' ?> name="release_to_counsellor">
                         </div>
-                        <?php if (!empty($quotation_id) && !empty($hostel_quotation_data)) { ?>
+                        <?php if (!empty($quotation_id) && !empty($hostel_quotation_data) && has_permission("hostel_management","","hostel_invoice_generate")) { ?>
                             <div class="form-group col-md-3 text-right  ">
                                 <button class="btn btn-primary"
                                     onclick="window.open('<?= $hostel_quotation_data->pdf ?>', '_blank')">
@@ -171,7 +171,7 @@ if (!empty($_GET['quotation_id'])) {
                         <div class="col-md-3 hide ">
                             <label>Room Rent <span class="text-danger">*</span></label><br>
                             <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                                <input type="text" name="rent" <?= $required ?> class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="<?= $hostelData->rent_amount ?? '' ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                <input type="text" name="rent" <?= $required ?> class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="<?= $hostel_quotation_data->rent ?? '' ?>" size="8" onkeypress="return acceptText(this,'number')">
                                 <div class="input-group-addon currency-addon">
                                     <select name="rent_currency_type" id="rent" class="currency-selector currency-selector-rent" onchange="updateSymbol('rent')">
                                         <?php foreach ($get_currencies as $c) {
@@ -179,7 +179,7 @@ if (!empty($_GET['quotation_id'])) {
                                             <option
                                                 data-symbol="<?= $c['symbol'] ?>"
                                                 value="<?= $c['id'] ?>"
-                                                data-placeholder="0.00" <?= $hostelData->currency ?? '' == $c['id'] ? 'selected' : '' ?>>
+                                                data-placeholder="0.00" <?= $hostel_quotation_data->currency == $c['id'] ? 'selected' : '' ?>>
                                                 <?= $c['name'] ?>
                                             </option>
                                         <?php
@@ -944,7 +944,7 @@ if (!empty($_GET['quotation_id'])) {
                     </div>
                 </div>
 
-                <?php if (has_permission('hostel_quotation', '', 'quotation_create')) { ?>
+                <?php if (has_permission('hostel_management', '', 'quotation')) { ?>
                     <div class="row text-right">
                         <button type="submit" class="btn btn-info mtop25"><?= !empty($quotation_id) ? 'Update' : 'Create' ?></button>
                     </div>
@@ -1008,7 +1008,13 @@ if (!empty($_GET['quotation_id'])) {
             console.log("roomData", roomData);
             $("input[name='rent']").val(roomData.rent);
             $("select[name='rent_currency_type']").val(roomData.currency);
+            $(".fees_5").val(roomData.rent);
+            $(".currency-selector-5").val(roomData.currency);
+            updateSymbol_($(".currency-selector-5"),5);
         } else {
+            $(".fees_5").val(0);
+            updateSymbol_($(".currency-selector-5"),5);
+            $(".currency-selector-5").val('');
             $("input[name='rent']").val('');
             $("select[name='rent_currency_type']").val('');
         }
@@ -1320,11 +1326,41 @@ if (!empty($_GET['quotation_id'])) {
     // --- Form submission handler ---
     async function handleFormSubmission(form, event) {
         event.preventDefault();
-        if (!$(form).valid()) {
-            // Form has validation errors
-            alert_float("danger", "Please fill all required fields before submitting.");
-            return false; // stop here!
-        }
+        let missingFields = [];
+
+            $(form)
+                .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
+                .each(function() {
+                    let value = $(this).val(); // safely get value
+                    if (!value || String(value).trim() === "") {
+                        $(this).addClass("is-invalid");
+
+                        // Try to get readable label
+                        let label = $(this).closest(".form-group").find("label").text().trim();
+                        let fieldName = label || $(this).attr("name");
+
+                        // Collect field name or handle it as you wish
+                        console.warn("Missing required:", fieldName);
+                    } else {
+                        $(this).removeClass("is-invalid");
+                    }
+                });
+
+
+            if (missingFields.length > 0) {
+                $('html, body').animate({
+                    scrollTop: $(".is-invalid").first().offset().top - 100
+                }, 400);
+
+                alert_float(
+                    "danger",
+                    "Please fill the following required fields:<br><b>" +
+                    missingFields.join(", ") +
+                    "</b>"
+                );
+                return false;
+            }
+
         show_loader();
         try {
             const formData = new FormData();

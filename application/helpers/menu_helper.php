@@ -91,7 +91,7 @@ function app_init_admin_sidebar_menu_items()
         }
 
 
-        if (has_permission('external_ticket', '', 'view') || has_permission('external_ticket', '', 'view_own')) {
+        if (has_permission('hostel_management', '', 'view') || has_permission('hostel_management', '', 'view_own')) {
 
                 $CI->app_menu->add_sidebar_menu_item('hostel_management', [
                         'slug'     => 'hostel_management',
@@ -496,7 +496,7 @@ function app_init_admin_sidebar_menu_items()
         }
 
 
-        if (has_permission('hostel', '', 'backend_view')) {
+        if (has_permission('hostel_management', '', 'backend')) {
                 $CI->app_menu->add_setup_menu_item('hms_backend', [
                         'name'     => "HMS Backend",
                         'collapse' => true,

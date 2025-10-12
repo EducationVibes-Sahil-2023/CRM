@@ -59,7 +59,8 @@ class Hostel_model extends App_Model
 {
     // 🧩 Fetch quotations
     $allQuotations = $this->db
-        ->select("*")
+        ->select("*,TIMESTAMPDIFF(MONTH,start_date,end_date)
+       + (DAY(end_date) >= DAY(start_date)) AS month_difference")
         ->from(db_prefix() . "hostel_quotation")
         ->where("hostel_info_id", $hostel_info_id)
         ->get()
@@ -113,7 +114,7 @@ class Hostel_model extends App_Model
         if (!empty($decoded["main"]["fees_info"]) && is_array($decoded["main"]["fees_info"])) {
             foreach ($decoded["main"]["fees_info"] as $fee) {
                 $feeId    = $fee["id"] ?? null;
-                $inrValue = isset($fee["inr_value"]) ? (float)$fee["inr_value"] : 0;
+                $inrValue = isset($fee["inr_value"]) ? (float)$fee["inr_value"]*$quotation["month_difference"] : 0;
 
                 if (!$feeId) continue;
 

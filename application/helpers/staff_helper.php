@@ -51,7 +51,13 @@ function get_available_staff_permissions($data = [])
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
         ],
-
+'hostel_management' => [
+            'name'         => "Hostel Management",
+            'capabilities' => array_merge($allPermissionsArray, array("quotation" => "Hostel Quotation", "payment" => "Hostel Payment","hostel_invoice_generate"=>"Generate Invoice","backend"=>"HMS Backend")),
+            'help'         => [
+                'view_own' => _l('permission_customers_based_on_admins'),
+            ],
+        ],
         'external_visa' => [
             'name'         => "External Visa",
             'capabilities' => $allPermissionsArray,

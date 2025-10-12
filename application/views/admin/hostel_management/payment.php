@@ -8,7 +8,7 @@
         display: none !important;
     }
 </style>
-<?php if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
+<?php if (!has_permission('hostel_management', '', 'payment') && !has_permission('hostel_management', '', 'payment')) {
 
     echo ' <div class="row">
             <div class="col-md-12">
@@ -18,7 +18,7 @@
     die;
 } ?>
 
-<?php if (is_admin()) { ?>
+
     <div class="panel_s">
         <div class="panel-body">
             <h4 class="fs-title">Payments Dues <a data-toggle="tooltip" data-title="Payment Summary" data-placement="bottom" class="btn btn-default btn-with-tooltip" onclick="getPayementInformation(<?= $getId ?>)"><i class="fa fa-bar-chart"></i></a></h4>
@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-<?php } ?>
+
 
 
 
@@ -201,7 +201,7 @@
 </script>
 
 <?php
-if (has_permission('payment_quotation', '', 'create')) {
+if (has_permission('hostel_management', '', 'payment')) {
     // Initialize data with null coalescing for safety
     $office_location  = $this->staff_model->office_location("", 1);
 
@@ -808,7 +808,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                     <div class="payment_payment_aditional">
                     </div>
 
-                    <?php if (has_permission('payment_quotation', '', 'create')): ?>
+                    <?php if (has_permission('hostel_management', '', 'payment')): ?>
                         <div class="row text-right">
                             <button type="submit" class="btn btn-info mtop25"><?= !empty($payment_id) ? 'Update' : 'Create' ?></button>
                         </div>
