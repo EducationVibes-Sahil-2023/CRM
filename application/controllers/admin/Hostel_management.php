@@ -8,6 +8,10 @@ class hostel_management extends AdminController
 
     function __construct()
     {
+        
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
         parent::__construct();
         $this->load->model('Hostel_model'); // Load the model
         $this->load->model('quotation_model');
@@ -118,7 +122,7 @@ class hostel_management extends AdminController
 
     public function quotation()
     {
-        try {
+     
             $quotationSave = [
                 "hostel_info_id" => $_POST["hostel_info_id"] ?? null,
                 "university_name" => $_POST["university_name"] ?? null,
@@ -138,7 +142,8 @@ class hostel_management extends AdminController
 
             ];
 
-
+ 
+        try {
 
             $quotation_id = $_POST["quotation_id"] ?? null;
 
@@ -152,16 +157,19 @@ class hostel_management extends AdminController
 
             if (!empty($quotation_id)) {
                 // 🔸 Update existing record
-                $quotationSave['created_date'] = date('Y-m-d H:i:s');
-                $quotationSave['created_by'] = get_staff_user_id();
+                  $quotationSave['updated_date'] = date('Y-m-d H:i:s');
+                $quotationSave['updated_by'] = get_staff_user_id();
+               
                 $this->db->where('id', $quotation_id);
                 $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
             } else {
-                $quotationSave['updated_date'] = date('Y-m-d H:i:s');
-                $quotationSave['updated_by'] = get_staff_user_id();
+               $quotationSave['created_date'] = date('Y-m-d H:i:s');
+                $quotationSave['created_by'] = get_staff_user_id();
                 // 🔸 Insert new record
                 $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
             }
+
+  
 
             // ✅ Success Response
             echo json_encode([
@@ -197,7 +205,7 @@ class hostel_management extends AdminController
     function rental_table()
     {
         // ✅ Permission check
-        if (!has_permission('hostel_management', '', 'backend_view_own')) {
+        if (!has_permission('hostel_management', '', 'backend')) {
             return access_denied('hostel_management'); // Use return to stop further execution
         }
 
@@ -211,7 +219,7 @@ class hostel_management extends AdminController
     function save_rental_details()
     {
         try {
-            if (!has_permission('hostel_management', '', 'backend_create')) {
+            if (!has_permission('hostel_management', '', 'backend')) {
                 return access_denied('hostel_management'); // Stop execution immediately
             }
 
@@ -392,12 +400,12 @@ class hostel_management extends AdminController
 
     function quotationGenerate()
     {
-        if (!has_permission('hostel_management', '', 'generate_invoice')) {
+        if (!has_permission('hostel_management', '', 'hostel_invoice_generate')) {
             return access_denied('hostel_management'); // Stop execution if no permission
         }
 
-        $hostelInfo_Id = $_POST["hostel_info_id"] ?? 3;
-        $quotation_id = $_POST["quotation_id"] ?? 8;
+        $hostelInfo_Id = $_POST["hostel_info_id"] ?? 1;
+        $quotation_id = $_POST["quotation_id"] ?? 1;
 
         if (!$quotation_id) {
             redirect(admin_url('hostel_management'));
@@ -422,7 +430,8 @@ class hostel_management extends AdminController
             'hi.passport',
             'hq.company',
             'hq.hostel',
-            'TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date) AS month_difference',
+            'TIMESTAMPDIFF(MONTH, hq.start_date,hq.end_date)
+       + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference',
             'h.hostel_name',
             'h.beneficiary_bank',
             'h.beneficiary_name',
@@ -433,6 +442,10 @@ class hostel_management extends AdminController
             'h.address',
             'h.pin_code',
             'h.state',
+            'h.bank_code',
+            'h.hostel_address',
+            'h.note',
+            'h.bank_header'
 
         ])
             ->from(db_prefix() . 'hostel_quotation AS hq')
@@ -500,9 +513,9 @@ class hostel_management extends AdminController
         $pdf->writeHTML($html, true, false, true, false, '');
 
         // ✅ Output PDF to browser (single page)
-        $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
+        // $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
 
-        die;
+        // die;
         $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/";
 
         if (!is_dir($upload_dir)) {
@@ -559,7 +572,7 @@ class hostel_management extends AdminController
 
     public function payment_table($hostel_info_id)
     {
-        if (!has_permission('hostal_management', '', 'view') && !has_permission('hostal_management', '', 'view_own')) {
+        if (!has_permission('hostel_management', '', 'payment')) {
             throw new Exception("Access denied: Quotation Payment View");
         }
         $view = "hostel_payments";
@@ -593,10 +606,10 @@ class hostel_management extends AdminController
             }
 
             // 🔒 Permission checks
-            if (!empty($payment_id) && !has_permission('payment_quotation', '', 'edit')) {
+            if (!empty($payment_id) && !has_permission('hostel_management', '', 'payment')) {
                 throw new Exception("Access denied: Quotation Payment Edit");
             }
-            if (empty($payment_id) && !has_permission('payment_quotation', '', 'create')) {
+            if (empty($payment_id) && !has_permission('hostel_management', '', 'payment')) {
                 throw new Exception("Access denied: Quotation Payment Create");
             }
 

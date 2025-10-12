@@ -2,7 +2,7 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
-$has_permission_delete = has_permission('client_visa_delete', '', 'delete');
+$has_permission_delete = has_permission('hostel_management', '', 'backend');
 
 // Columns for DataTables
 $aColumns = [
@@ -87,7 +87,7 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['currency_name'];
     $row[] = $aRow['rent'];
     $action = '';
-    if (has_permission('hostel', '', 'edit')) {
+    if (has_permission('hostel_management', '', 'backend')) {
         // Convert PHP array to JSON, then encode in base64
         $encodedData = base64_encode(json_encode($aRow));
 
@@ -97,7 +97,7 @@ foreach ($rResult as $aRow) {
                 <i class="fa fa-pencil-square-o"></i>
                 </a>';
     }
-    if (has_permission('hostel', '', 'delete')) {
+    if (has_permission('hostel_management', '', 'backend')) {
         $action .= ' <a href="javascript:void(0);"  onclick="Delete(' . $aRow['id'] . ')" c class="btn btn-danger btn-icon _delete"><i class="fa fa-remove"></i></a>';
     }
     $row[] = $action;

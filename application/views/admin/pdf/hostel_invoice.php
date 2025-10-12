@@ -35,16 +35,30 @@
 </style>
 
 <?php
+    $ci = &get_instance();
 
 $get_currencies = array_column(get_currencies(), null, "id");
-
-$hostelDues = json_decode($hostelData->hostel_due, true)["main"]["fees_info"];
+$hostel_due=json_decode($hostelData->hostel_due, true)["main"];
+$hostelDues = $hostel_due["fees_info"];
+$paymentMode = $hostel_due["pay_info"][0]["payMode"];
 
 $amountValue = $hostelDues[0]["amount"];
 $amountCurrency = $hostelDues[0]["currency_id"];
 
 $modes = $ci->quotation_model->payment_mod();
+$modes = array_column($modes,"name","id");
+function numberToWord($num) {
+    $map = [
+        1 => 'Single',
+        2 => 'Double',
+        3 => 'Triple',
+        4 => 'Four',
+        5 => 'Five',
+        6 => 'Six',
+    ];
 
+    return $map[$num] ?? 'unknown';
+}
 
 ?>
 <h3 class="invoice-title">INVOICE</h3>
@@ -52,7 +66,7 @@ $modes = $ci->quotation_model->payment_mod();
     <p>Invoice Number: INVOICE-HM-00<?= $hostelData->id ?? '' ?></p>
     <p>Invoice Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date)) : '' ?>
     </p>
-    <p>Payment Terms: CASH IN RECEPTION / BANK</p>
+    <p>Payment Terms:<span id="paymentMode"><?=$modes[$paymentMode]??''?></span> </p>
     <p>Payment Date: <?= !empty($hostelData->created_date)
                             ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
                             : ''
@@ -116,7 +130,7 @@ $modes = $ci->quotation_model->payment_mod();
     <hr>
     <tr class="medium bold">
         <td>
-            <p>Food &amp; Accommodation for Double Sharing Room</p>
+            <p>Food &amp; Accommodation for <?=numberToWord($hostelData->room_capacity)?> Sharing Room</p>
             <p><?= $amountValue ?? '' ?><?= $get_currencies[$amountCurrency]["symbol"] ?> per month </p>
             <p><?= $hostelData->month_difference ?? '' ?> Months Contract (<?= !empty($hostelData->start_date) ? date('d-m-Y', strtotime($hostelData->start_date)) : '' ?> ~ <?= !empty($hostelData->end_date) ? date('d-m-Y', strtotime($hostelData->end_date)) : '' ?>)</p>
             <p>One Time Payment</p>
@@ -134,7 +148,7 @@ $modes = $ci->quotation_model->payment_mod();
     </tr>
     <tr class="small">
         <td colspan="2">
-            <p class="bold">FOR GEORGIAN LARI LOCAL TRANSFER</p>
+            <p class="bold"><?=$hostelData->bank_header?></p>
         </td>
     </tr>
     <tr class="small">
@@ -203,14 +217,14 @@ $modes = $ci->quotation_model->payment_mod();
             <p> Kote Marjanishvili St, 7 Tbilis</p>
         </td>
     </tr>
-</table> -->
+</table>
 <!-- <p></p>
 <hr> -->
 <p></p>
 <table>
     <tr>
         <td>
-            <p class="large bold">The amount must be paid in GEL, according to the exchange rate of the National Bank on the day of payment (inside Georgia)</p>
+            <p class="large bold"><?=$hostelData->note?></p>
             <p class="large"><strong>Note:</strong> Kindly make the payment by <span class='highlight'><?= !empty($hostelData->created_date)
                                                                                                             ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
                                                                                                             : ''

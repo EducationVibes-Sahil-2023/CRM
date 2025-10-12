@@ -22,7 +22,7 @@ $table_data = array(
                                 <h4 class="no-margin"><?php echo _l('Hostel Rental'); ?></h4>
                             </div>
                             <div class="col-md-6 text-right">
-                                <?php if (has_permission('hostel_management', '', 'backend_create')) {
+                                <?php if (has_permission('hostel_management', '', 'backend')) {
                                 ?>
                                     <button type="button" data-toggle="modal" data-target="#hostel_rental" class="btn btn-primary">
                                         <i class="fa fa-plus"></i> <?php echo _l('create'); ?>
