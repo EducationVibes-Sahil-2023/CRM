@@ -35,10 +35,10 @@
 </style>
 
 <?php
-    $ci = &get_instance();
+$ci = &get_instance();
 
 $get_currencies = array_column(get_currencies(), null, "id");
-$hostel_due=json_decode($hostelData->hostel_due, true)["main"];
+$hostel_due = json_decode($hostelData->hostel_due, true)["main"];
 $hostelDues = $hostel_due["fees_info"];
 $paymentMode = $hostel_due["pay_info"][0]["payMode"];
 
@@ -46,8 +46,11 @@ $amountValue = $hostelDues[0]["amount"];
 $amountCurrency = $hostelDues[0]["currency_id"];
 
 $modes = $ci->quotation_model->payment_mod();
-$modes = array_column($modes,"name","id");
-function numberToWord($num) {
+$modes = array_column($modes, "name", "id");
+$logoPath = FCPATH . $hostelData->hostel_logo;
+
+function numberToWord($num)
+{
     $map = [
         1 => 'Single',
         2 => 'Double',
@@ -62,19 +65,24 @@ function numberToWord($num) {
 
 ?>
 <h3 class="invoice-title">INVOICE</h3>
-<div class="small">
-    <p>Invoice Number: INVOICE-HM-00<?= $hostelData->id ?? '' ?></p>
-    <p>Invoice Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date)) : '' ?>
-    </p>
-    <p>Payment Terms:<span id="paymentMode"><?=$modes[$paymentMode]??''?></span> </p>
-    <p>Payment Date: <?= !empty($hostelData->created_date)
-                            ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
-                            : ''
-                        ?>
-    </p>
-    <hr>
-</div>
+<table>
+    <tr>
+        <td style="width:70%;" class="small">
+            <p>Invoice Number: INVOICE-HM-00<?= htmlspecialchars($hostelData->id ?? '') ?></p>
+            <p>Invoice Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date)) : '' ?></p>
+            <p>Payment Terms: <?= htmlspecialchars($modes[$paymentMode] ?? '') ?></p>
+            <p>Payment Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day')) : '' ?></p>
+        </td>
+        <td style="width:30%; text-align:right;">
+            <?php if (file_exists($logoPath)): ?>
+                <img src="<?= $logoPath ?>" width="200">
+            <?php endif; ?>
+        </td>
+    </tr>
 
+</table>
+<br>
+<hr>
 
 <table>
     <tr>
@@ -130,7 +138,7 @@ function numberToWord($num) {
     <hr>
     <tr class="medium bold">
         <td>
-            <p>Food &amp; Accommodation for <?=numberToWord($hostelData->room_capacity)?> Sharing Room</p>
+            <p>Food &amp; Accommodation for <?= numberToWord($hostelData->room_capacity) ?> Sharing Room</p>
             <p><?= $amountValue ?? '' ?><?= $get_currencies[$amountCurrency]["symbol"] ?> per month </p>
             <p><?= $hostelData->month_difference ?? '' ?> Months Contract (<?= !empty($hostelData->start_date) ? date('d-m-Y', strtotime($hostelData->start_date)) : '' ?> ~ <?= !empty($hostelData->end_date) ? date('d-m-Y', strtotime($hostelData->end_date)) : '' ?>)</p>
             <p>One Time Payment</p>
@@ -148,7 +156,7 @@ function numberToWord($num) {
     </tr>
     <tr class="small">
         <td colspan="2">
-            <p class="bold"><?=$hostelData->bank_header?></p>
+            <p class="bold"><?= $hostelData->bank_header ?></p>
         </td>
     </tr>
     <tr class="small">
@@ -193,38 +201,31 @@ function numberToWord($num) {
     <p></p>
 <?php } ?>
 <hr>
-<!-- <table>
+<table>
     <tr class="small">
         <td>
-            <p class=""> Intermediary Bank</p>
+            <p>Intermediary bank</p>
+            <p>Beneficiary Bank</p>
             <p></p>
-            <p></p>
-            <p></p>
-            <p></p>
-            <p></p>
-            <p></p>
-            <p></p>
-            <p></p>
-            <p> Bank Address</p>
+            <p>Beneficiary</p>
+            <p>Account</p>
         </td>
         <td>
-            <p class="bold">CITIBANK N.A.</p>
-            <p>New York, USA</p>
-            <p></p>
-            <p> SWIFT: CITIUS33</p>
-            <p> ABA: 021000089</p>
-            <p></p>
-            <p> Kote Marjanishvili St, 7 Tbilis</p>
+            <p>Citibank N.A. , New York, USA: SWIFT : CITIUS33</p>
+            <p>Bank of Georgia, SWIFT : BAGAGE22; 29a Gagarin Street,</p>
+            <p>Tbilisi 0160, Georgia </p>
+            <p>Education Vibes LLP</p>
+            <p>GE95BG0000000606359971</p>
         </td>
     </tr>
 </table>
-<!-- <p></p>
-<hr> -->
+<p></p>
+<hr>
 <p></p>
 <table>
     <tr>
         <td>
-            <p class="large bold"><?=$hostelData->note?></p>
+            <p class="large bold"><?= $hostelData->note ?></p>
             <p class="large"><strong>Note:</strong> Kindly make the payment by <span class='highlight'><?= !empty($hostelData->created_date)
                                                                                                             ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
                                                                                                             : ''

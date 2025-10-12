@@ -445,7 +445,9 @@ class hostel_management extends AdminController
             'h.bank_code',
             'h.hostel_address',
             'h.note',
-            'h.bank_header'
+            'h.bank_header',
+            'h.hostel_logo',
+            'h.hostel_stamp',
 
         ])
             ->from(db_prefix() . 'hostel_quotation AS hq')
