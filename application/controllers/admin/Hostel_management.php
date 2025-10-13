@@ -468,17 +468,38 @@ class hostel_management extends AdminController
 
         // Initialize TCPDF
         $pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf->SetAuthor('Education Vibes');
+        $pdf->SetTitle('Hostel Invoice');
+        $pdf->SetSubject('Hostel Invoice');
+        
 
         // Disable default header/footer
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-
+// This won't work anymore if you decide to add a watermark
+        $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE.' 006', PDF_HEADER_STRING);
         // ✅ Force small margins to fit more on one page
         $pdf->SetMargins(10, 10, 10, true);
         $pdf->SetAutoPageBreak(false, 0); // ✅ Disable automatic page breaks completely
 
         // Add single page
         $pdf->AddPage();
+
+        $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
+
+// Check if image exists
+if (file_exists($stampPath)) {
+
+    // X and Y coordinates in mm
+    $x = 150; // distance from left
+    $y = 250;  // distance from top
+
+    // Width of image in mm (height auto-scaled)
+    $width = 40;
+
+    // Place the stamp at absolute position
+    $pdf->Image($stampPath, $x, $y, $width, 0, '', '', '', false, 300);
+}
 
         // Optional: Custom fonts
         $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';
