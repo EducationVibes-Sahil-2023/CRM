@@ -87,7 +87,7 @@ foreach ($rResult as $aRow) {
     $row = [];
     $nameRow = $aRow['name'] . "<br>";
     if (has_permission('hostel_management', '', 'edit')) {
-        $nameRow .= '<a href="' . admin_url('hostel_management/groups/' . $aRow['id'] . '?groups=profile') . '" >' . _l('edit') . '</a>';
+        $nameRow .= '<a href="' . admin_url('hostel_management/hostel/' . $aRow['id'] . '?tab=profile') . '" >' . _l('edit') . '</a>';
     }
 
     if ($has_permission_delete) {

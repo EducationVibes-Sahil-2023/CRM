@@ -20,7 +20,7 @@ $aColumns = [
 $sIndexColumn = 'id';
 $sTable       = db_prefix() . 'applicant_quotation_payment';
 $where = [];
-$where[] = "AND release_to_counsellor = 1";
+$where[] = "AND release_to_counsellor = 1 AND status = 1";
 $where[] = "AND client_id = " . $client_id;
 $groupBy = "";
 $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, [], $where, [], $groupBy);

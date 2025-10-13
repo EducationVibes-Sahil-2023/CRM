@@ -148,7 +148,7 @@ class Quotation_model extends App_Model
             }
 
             // Optional: only active records (if you store a status column)
-            // $this->db->where("status", 1);
+            $this->db->where("status", 1);
 
             $query = $this->db->get();
 

@@ -10349,6 +10349,59 @@ class Clients extends AdminController
         echo json_encode($data);
     }
 
+    public function quotationDelete()
+    {
+        try {
+            // Permission check
+            if (!has_permission('customers', '', 'quotation_delete')) {
+                return access_denied('customers');
+            }
+
+            // Get POST data safely
+            $client_id = $this->input->post('client_id');
+            $quotation_id = $this->input->post('quotation_id');
+
+            // Validate required fields
+            if (empty($client_id) || empty($quotation_id)) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Client ID and Quotation ID are required.'
+                ]);
+                return;
+            }
+
+            // Check if quotation exists for the client
+            $exists = $this->db
+                ->where(['id' => $quotation_id, 'client_id' => $client_id])
+                ->get(db_prefix() . 'applicant_quotation_payment')
+                ->row();
+
+            if (!$exists) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Quotation not found for this client.'
+                ]);
+                return;
+            }
+
+            // Soft delete: set status to 0
+            $this->db
+                ->where(['id' => $quotation_id, 'client_id' => $client_id])
+                ->update(db_prefix() . 'applicant_quotation_payment', ['status' => 0]);
+
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Quotation deleted successfully.'
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+
 
     public function payment_information()
     {

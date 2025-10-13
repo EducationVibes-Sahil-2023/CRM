@@ -3478,7 +3478,7 @@ function filter_country_university_array($leadType)
 {
     $CI = &get_instance();
 
-    $CI->db->select('s.country_name, s.university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name,group_concat(c.userid) as client_ids,group_concat(ap.acadmic_year) as acadmic_year');
+    $CI->db->select('s.country_name,ifNULL(s.university_name,ap.primary_university) as university_name, s.country_id, s.university_id,st.staffid,st.firstname,st.lastname,t.id source_id,t.name source_name,group_concat(c.userid) as client_ids,group_concat(ap.acadmic_year) as acadmic_year');
     $CI->db->from(db_prefix() . 'clients c');
     $CI->db->join(db_prefix() . 'leads l', 'c.leadid = l.id', "LEFT");
     $CI->db->join(db_prefix() . 'admission_preferences ap', 'ap.userid = c.userid', "LEFT");
@@ -3490,14 +3490,14 @@ function filter_country_university_array($leadType)
         $CI->db->or_where('c.client_type ', 2);
     }
 
-    $CI->db->where('s.university_name!= ', null);
+    $CI->db->where('ifNULL(s.university_name,ap.primary_university) != ', null);
 
     $CI->db->group_by('s.country_name, s.university_name,c.addedfrom,t.id,ap.acadmic_year');
 
     $query = $CI->db->get();
     $result = $query->result_array();
     if (is_admin()) {
-        //   echo  $CI->db->last_query();
+          echo  $CI->db->last_query();
     }
 
     $countries = [];
