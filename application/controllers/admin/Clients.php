@@ -10389,6 +10389,16 @@ class Clients extends AdminController
                 ->where(['id' => $quotation_id, 'client_id' => $client_id])
                 ->update(db_prefix() . 'applicant_quotation_payment', ['status' => 0]);
 
+            $activity_data[] = [
+                "date"        => date('Y-m-d H:i:s'),
+                "staffid"     => get_staff_user_id(),
+                "client_id"   => $client_id,
+                "description" => 'Quotation deleted successfully',
+                "quotation_id" => $quotation_id ?? 0
+            ];
+
+            $this->db->insert_batch(db_prefix() . 'quotation_payment_activity_log', $activity_data);
+
             echo json_encode([
                 'resp_code' => 'RCS',
                 'resp_desc' => 'Quotation deleted successfully.'
