@@ -226,7 +226,7 @@ function numberToWord($num)
     <tr>
         <td>
             <p class="large bold"><?= $hostelData->note ?></p>
-            <p class="large"><strong>Note:</strong> Kindly make the payment by <span class='highlight'><?= !empty($hostelData->created_date)
+            <p class="large"><strong>Note:</strong> Kindly make the payment by <span style="background-color: yellow; font-weight: bold; padding: 2px 4px;"><?= !empty($hostelData->created_date)
                                                                                                             ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
                                                                                                             : ''
                                                                                                         ?></span>. In the description of the bank receipt must mention Food & Accommodation for the

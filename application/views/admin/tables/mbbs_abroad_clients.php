@@ -792,6 +792,17 @@ foreach ($rResult as $aRow) {
             if ((is_admin() || is_postSale()) && $statuses[$aRow["status_id"]]['refund'] != 1) {
                 $outputStatus .= '<ul class="dropdown-menu dropdown-menu-right" aria-labelledby="tableLeadsStatus-' . $aRow['id'] . '">';
 
+if(is_admin())
+{
+        foreach ($statuses as $leadChangeStatus) {
+                    if ($aRow['status_id'] != $leadChangeStatus['id']) {
+                       
+   $outputStatus .= '<li><a onclick="applicant_mark_as(' . $leadChangeStatus['id'] . ',' . $aRow['userid'] . ',' . $leadChangeStatus['canceled'] . ',' . $leadChangeStatus['refund'] . '); return false;">' . $leadChangeStatus['name'] . '</a></li>';
+                    }
+                }
+}
+else
+{
                 $canceled_status = !empty($statuses[$aRow["status_id"]]['canceled']);
                 $refunded_status = !empty($statuses[$aRow["status_id"]]['refund']);
 
@@ -809,6 +820,7 @@ foreach ($rResult as $aRow) {
                         }
                     }
                 }
+}
 
                 $outputStatus .= '</ul>';
             }
