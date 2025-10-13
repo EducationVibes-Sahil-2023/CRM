@@ -3496,9 +3496,9 @@ function filter_country_university_array($leadType)
 
     $query = $CI->db->get();
     $result = $query->result_array();
-    if (is_admin()) {
-          echo  $CI->db->last_query();
-    }
+    // if (is_admin()) {
+    //       echo  $CI->db->last_query();
+    // }
 
     $countries = [];
     $universities = [];
