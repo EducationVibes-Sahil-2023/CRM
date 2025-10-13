@@ -4,15 +4,15 @@
 $tabs = [
     'profile' => [
         'name' => 'Profile',
-        'icon' => 'fa fa-user',
+        'icon' => 'fa fa-user-circle menu-icon',
     ],
     'quotation' => [
         'name' => 'Quotation',
-        'icon' => 'fa fa-user',
+        'icon' => 'fa fa-quora menu-icon',
     ],
     'payment' => [
         'name' => 'Payments',
-        'icon' => 'fa fa-user',
+        'icon' => 'fa fa-rupee menu-icon',
     ],
 
 ];
@@ -21,6 +21,11 @@ $tabs = [
     <style>
         .margin-top {
             margin-top: 20px;
+        }
+
+        .nav-stacked>li {
+            margin-right: 5px;
+            height: 100%;
         }
     </style>
     <div class="content">
@@ -32,7 +37,7 @@ $tabs = [
                             <?php
                             foreach ($tabs as $key => $tab) { ?>
                                 <li class="<?php echo ($key == $active_tab) ? 'active ' : ''; ?>customer_tab_<?php echo $key; ?>">
-                                    <a data-group="<?php echo $key; ?>" href="<?php echo admin_url('hostel_management/groups/' . $getId . '?tab=' . $key); ?>">
+                                    <a data-group="<?php echo $key; ?>" href="<?php echo admin_url('hostel_management/hostel/' . $getId . '?tab=' . $key); ?>">
                                         <?php if (!empty($tab['icon'])) { ?>
                                             <i class="<?php echo $tab['icon']; ?> menu-icon" aria-hidden="true"></i>
                                         <?php } ?>
@@ -50,4 +55,3 @@ $tabs = [
             </div>
         </div>
     </div>
-   

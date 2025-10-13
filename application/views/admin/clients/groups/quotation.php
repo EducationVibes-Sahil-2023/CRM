@@ -92,7 +92,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                'Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)
         ) AS unique_id
     FROM " . db_prefix() . "applicant_quotation_payment aq
-    WHERE aq.client_id = ?
+    WHERE aq.client_id = ? and status = 1
     ORDER BY aq.id DESC
 ";
 
@@ -113,6 +113,12 @@ if (has_permission('customers', '', 'quotation_create')) {
     $quotation_id = !empty($_GET['quotation_id']) ? $_GET['quotation_id'] : '';
     if (!empty($_GET['quotation_id'])) {
         $applicant_quotation_data =  $this->quotation_model->applicant_quotation_data($client_id, $_GET['quotation_id']);
+
+
+        if (empty($applicant_quotation_data)) {
+            redirect(admin_url("clients"));
+            die;
+        }
         $exchange_value_array = json_decode($applicant_quotation_data->exchange_value, true);
         $university_due_array = json_decode($applicant_quotation_data->university_due, true);
         $company_due_array = json_decode($applicant_quotation_data->company_due, true);
@@ -171,6 +177,9 @@ if (has_permission('customers', '', 'quotation_create')) {
                                     </button>
 
                                     <button class="btn btn-primary" onclick="GeneratePDF('<?= $client_id ?>','<?= $quotation_id ?>')">Generate PDF</button>
+                                    <?php if (has_permission('customers', '', 'quotation_delete')) { ?>
+                                        <button class="btn btn-danger" onclick="DeleteQuotation('<?= $client_id ?>','<?= $quotation_id ?>')"><i class="fa fa-trash"></i></button>
+                                    <?php } ?>
                                 </div>
                             <?php } ?>
                         <?php } ?>
@@ -481,7 +490,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                 title="Select Transaction Type"
                                                                 name="transaction_type"
                                                                 data-name='transaction_type'
-                                                                required>
+                                                                <?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 1 ? 'required' : '' ?>>
                                                                 <?php foreach ($transaction_type as $t_type): ?>
                                                                     <option value="<?= $t_type['id'] ?>"
                                                                         <?= ($university_due_array["main"]['pay_info'][0]["transaction_type"] == $t_type['id']) ? 'selected' : '' ?>>
@@ -665,7 +674,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                                             title="Select Transaction Type"
                                                                             name="transaction_type"
                                                                             data-name='transaction_type'
-                                                                            required>
+                                                                            <?= !empty($addition['pay_info'][0]["payMode"]) && $addition['pay_info'][0]["payMode"] == 1 ? 'required' : '' ?>>
                                                                             <?php foreach ($transaction_type as $t_type): ?>
                                                                                 <option value="<?= $t_type['id'] ?>"
                                                                                     <?= ($addition['pay_info'][0]["transaction_type"] == $t_type['id']) ? 'selected' : '' ?>>
@@ -1131,9 +1140,16 @@ if (has_permission('customers', '', 'quotation_create')) {
             $(obj).closest("tr").find("input.manually-cash").hide();
             $(obj).closest("tr").find("input.manually-cash").remove();
 
+            
             $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div select').val('').selectpicker('refresh');
             if (modeId != 1) {
                 $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').hide();
+                $(obj).parents('.main-university-due,.aditional-university-due-table').find('select.transaction_type').removeAttr("required");
+            }
+            else
+            {
+            $(obj).parents('.main-university-due,.aditional-university-due-table').find('select.transaction_type').attr("required",true);
+                
             }
 
             // 🔹 Filter vendors by mode
@@ -1181,8 +1197,50 @@ if (has_permission('customers', '', 'quotation_create')) {
 
 
             }
+            calculateInrValue();
         }
 
+
+        function DeleteQuotation(client_id, quotation_id) {
+            $.ajax({
+                url: "<?= admin_url('clients/quotationDelete') ?>", // your controller method
+                type: "POST",
+                data: {
+                    client_id: client_id,
+                    quotation_id: quotation_id
+                },
+                beforeSend: function() {
+                    show_loader();
+                    // Optional: show loader
+                    // console.log("Generating PDF...");
+                },
+                success: function(response) {
+                    hide_loader();
+                    let data = JSON.parse(response);
+                    // console.log(data);
+                    if (data.resp_code || data.resp_code === "RCS") {
+                        alert_float("success", data.resp_desc);
+                        // Get current URL
+                        // Get current URL
+                        const url = new URL(window.location.href);
+
+                        // Remove the "quotation_id" parameter
+                        url.searchParams.delete("quotation_id");
+
+                        // Reload the page with updated URL
+                        window.location.href = url.toString();
+
+                    } else {
+                        alert_float("danger", "Quotation not delete sucessfully");
+
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    alert_float("danger", "Something went wrong. Please try again.");
+                }
+            });
+        }
 
         function check_quotations(quotationId) {
             const url = new URL(window.location.href);
@@ -1625,7 +1683,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                 // if (!amountInput) return;
 
                 if (fee.backend == 1) {
-                    console.log("backend", fee);
+                    // console.log("backend", fee);
                     const currencySelect = document.querySelector(`.main-university-due .currency-selector-${fee.fees_id}`);
                     $(`.main-university-due .currency-selector-${fee.fees_id}`)
                         .val(String(fee.currency_id)) // make sure value matches string in <option>
@@ -1635,7 +1693,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                 if (fee.fees_id == <?= PACKAGE_FEES_ID ?>) {
                     Orignal_package_amount = fee.amount;
                     Orignal_package_currency_id = fee.currency_id;
-                    console.log(fee.amount);
+                    // console.log(fee.amount);
                     if (fee.amount == 0) {
                         $(`.currency-selector-${fee.fees_id}`)
                             .closest("tr") // safer than .parent("tr")
@@ -1742,6 +1800,7 @@ if (has_permission('customers', '', 'quotation_create')) {
 
         // --- Form submission handler ---
         async function handleFormSubmission(form, event) {
+            // console.log("start");
             event.preventDefault();
             show_loader();
             try {
@@ -2102,10 +2161,10 @@ if (has_permission('customers', '', 'quotation_create')) {
 
                 // Remove commas from current value
                 let val = $this.val();
-                console.log(val);
+                // console.log(val);
                 if (val) {
                     $this.val(val.replace(/,/g, ""));
-                    console.log(val.replace(/,/g, ""));
+                    // console.log(val.replace(/,/g, ""));
                 }
 
                 // Force numeric input with decimals
@@ -2124,7 +2183,7 @@ if (has_permission('customers', '', 'quotation_create')) {
             let value = $(obj).val(); // selected fee id
             let $row = $(obj).closest("tr"); // current row
 
-            console.log("Selected fee ID:", value);
+            // console.log("Selected fee ID:", value);
 
             // Reset fields
             $row.find("input[name='fee_value[]']").val(0);
@@ -2146,7 +2205,7 @@ if (has_permission('customers', '', 'quotation_create')) {
             }
 
             updateUniversityDue();
-            console.log("Row updated:", fee);
+            // console.log("Row updated:", fee);
         }
 
 
@@ -2161,7 +2220,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                 },
                 beforeSend: function() {
                     // Optional: show loader
-                    console.log("Generating PDF...");
+                    // console.log("Generating PDF...");
                 },
                 success: function(response) {
                     response = JSON.parse(response);

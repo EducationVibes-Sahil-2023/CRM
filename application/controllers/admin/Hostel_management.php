@@ -8,10 +8,10 @@ class hostel_management extends AdminController
 
     function __construct()
     {
-        
-//         ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+
+        //         ini_set('display_errors', 1);
+        // ini_set('display_startup_errors', 1);
+        // error_reporting(E_ALL);
         parent::__construct();
         $this->load->model('Hostel_model'); // Load the model
         $this->load->model('quotation_model');
@@ -66,7 +66,7 @@ class hostel_management extends AdminController
 
 
 
-    function groups($id)
+    function hostel($id)
     {
         // ✅ Permission check
         if (!has_permission('hostel_management', '', 'edit')) {
@@ -122,27 +122,27 @@ class hostel_management extends AdminController
 
     public function quotation()
     {
-     
-            $quotationSave = [
-                "hostel_info_id" => $_POST["hostel_info_id"] ?? null,
-                "university_name" => $_POST["university_name"] ?? null,
-                "start_date" => $_POST["start_date"] ?? null,
-                "end_date" => $_POST["end_date"] ?? null,
-                "room_capacity" => $_POST["room_capacity"] ?? null,
-                "floor_No" => $_POST["floor_No"] ?? null,
-                "room_No" => $_POST["room_No"] ?? null,
-                "company" => $_POST["company"] ?? null,
-                "rent" => $_POST["rent"] ?? null,
-                "currency" => $_POST["rent_currency_type"] ?? null,
-                "hostel" => $_POST["hostel"] ?? null,
-                "exchange_value" => ($_POST["currency_exchange"]) ?? null,
-                'hostel_due'  => ($_POST["university_dues"]) ?? null,
-                'company_due'     => ($_POST["company_due"]) ?? null,
-                'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? null,
 
-            ];
+        $quotationSave = [
+            "hostel_info_id" => $_POST["hostel_info_id"] ?? null,
+            "university_name" => $_POST["university_name"] ?? null,
+            "start_date" => $_POST["start_date"] ?? null,
+            "end_date" => $_POST["end_date"] ?? null,
+            "room_capacity" => $_POST["room_capacity"] ?? null,
+            "floor_No" => $_POST["floor_No"] ?? null,
+            "room_No" => $_POST["room_No"] ?? null,
+            "company" => $_POST["company"] ?? null,
+            "rent" => $_POST["rent"] ?? null,
+            "currency" => $_POST["rent_currency_type"] ?? null,
+            "hostel" => $_POST["hostel"] ?? null,
+            "exchange_value" => ($_POST["currency_exchange"]) ?? null,
+            'hostel_due'  => ($_POST["university_dues"]) ?? null,
+            'company_due'     => ($_POST["company_due"]) ?? null,
+            'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? null,
 
- 
+        ];
+
+
         try {
 
             $quotation_id = $_POST["quotation_id"] ?? null;
@@ -157,19 +157,19 @@ class hostel_management extends AdminController
 
             if (!empty($quotation_id)) {
                 // 🔸 Update existing record
-                  $quotationSave['updated_date'] = date('Y-m-d H:i:s');
+                $quotationSave['updated_date'] = date('Y-m-d H:i:s');
                 $quotationSave['updated_by'] = get_staff_user_id();
-               
+
                 $this->db->where('id', $quotation_id);
                 $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
             } else {
-               $quotationSave['created_date'] = date('Y-m-d H:i:s');
+                $quotationSave['created_date'] = date('Y-m-d H:i:s');
                 $quotationSave['created_by'] = get_staff_user_id();
                 // 🔸 Insert new record
                 $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
             }
 
-  
+
 
             // ✅ Success Response
             echo json_encode([
@@ -317,50 +317,69 @@ class hostel_management extends AdminController
     {
         try {
             if (!has_permission('hostel_management', '', 'create')) {
-                return access_denied('hostel_management'); // Stop execution immediately
+                return access_denied('hostel_management'); // Stop execution
             }
 
-            if (!empty($data['id']) && !has_permission('hostel_management', '', 'edit')) {
-                return access_denied('hostel_management'); // Stop execution immediately
-            }
             $data = $this->input->post();
-            // Prepare data array
+
+            // If updating, check edit permission
+            if (!empty($data['id']) && !has_permission('hostel_management', '', 'edit')) {
+                return access_denied('hostel_management');
+            }
+
+            // --- Check for duplicate passport ---
+            $this->db->where('passport', $data['passport'] ?? '');
+            if (!empty($data['id'])) {
+                // Exclude current record when updating
+                $this->db->where('id !=', $data['id']);
+            }
+            $existing = $this->db->get(db_prefix() . 'hostel_infomation')->row();
+            if ($existing) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Passport number already exists.'
+                ]);
+                return; // Stop execution
+            }
+
+            // --- Prepare data array ---
             $save_data = [
-                'name' => $data['student_name' ?? ''],
-                'university_id' => $data['university_id' ?? ''],
-                'passport' => $data['passport' ?? ''],
-                'university_name' => $data['university_name' ?? ''],
-                'floor_no' => $data['floor_No' ?? ''],
-                'room_no' => $data['room_No' ?? ''],
-                'company' => $data['company' ?? ''],
-                'hostel' => $data['hostel' ?? ''],
-                'room_capacity' => $data['room_capacity' ?? ''],
-                'rent_amount' => $data['rent' ?? ''],
-                'currency' => $data['rent_currency_type' ?? ''],
-                'start_date' => $data['startdate' ?? ''],
-                'end_date' => $data['enddate' ?? ''],
+                'name' => $data['student_name'] ?? '',
+                'university_id' => $data['university_id'] ?? '',
+                'passport' => $data['passport'] ?? '',
+                'university_name' => $data['university_name'] ?? '',
+                'floor_no' => $data['floor_No'] ?? '',
+                'room_no' => $data['room_No'] ?? '',
+                'company' => $data['company'] ?? '',
+                'hostel' => $data['hostel'] ?? '',
+                'room_capacity' => $data['room_capacity'] ?? '',
+                'rent_amount' => $data['rent'] ?? '',
+                'currency' => $data['rent_currency_type'] ?? '',
+                'start_date' => $data['startdate'] ?? '',
+                'end_date' => $data['enddate'] ?? '',
             ];
 
             if (!empty($data['id'])) {
+                // Update existing record
                 $save_data['updated_date'] = date('Y-m-d H:i:s');
                 $save_data['updated_by'] = get_staff_user_id();
-                // Update existing record
                 $this->db->where('id', $data['id']);
                 $this->db->update(db_prefix() . 'hostel_infomation', $save_data);
                 $record_id = $data['id'];
             } else {
+                // Insert new record
                 $save_data['created_date'] = date('Y-m-d H:i:s');
                 $save_data['created_by'] = get_staff_user_id();
-                // Insert new record
                 $this->db->insert(db_prefix() . 'hostel_infomation', $save_data);
                 $record_id = $this->db->insert_id();
             }
-            // Return structured response
+
+            // Return success response
             echo json_encode([
                 'resp_code' => 'RCS',
                 'resp_desc' => 'Hostel details saved successfully.',
                 'record_id' => $record_id
-            ]); // Include record ID in response
+            ]);
         } catch (Exception $e) {
             echo json_encode([
                 'resp_code' => 'ERR',
@@ -368,6 +387,7 @@ class hostel_management extends AdminController
             ]);
         }
     }
+
 
 
     function delete($id)
@@ -471,13 +491,13 @@ class hostel_management extends AdminController
         $pdf->SetAuthor('Education Vibes');
         $pdf->SetTitle('Hostel Invoice');
         $pdf->SetSubject('Hostel Invoice');
-        
+
 
         // Disable default header/footer
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-// This won't work anymore if you decide to add a watermark
-        $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE.' 006', PDF_HEADER_STRING);
+        // This won't work anymore if you decide to add a watermark
+        $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE . ' 006', PDF_HEADER_STRING);
         // ✅ Force small margins to fit more on one page
         $pdf->SetMargins(10, 10, 10, true);
         $pdf->SetAutoPageBreak(false, 0); // ✅ Disable automatic page breaks completely
@@ -487,19 +507,19 @@ class hostel_management extends AdminController
 
         $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
 
-// Check if image exists
-if (file_exists($stampPath)) {
+        // Check if image exists
+        if (file_exists($stampPath)) {
 
-    // X and Y coordinates in mm
-    $x = 150; // distance from left
-    $y = 250;  // distance from top
+            // X and Y coordinates in mm
+            $x = 150; // distance from left
+            $y = 250;  // distance from top
 
-    // Width of image in mm (height auto-scaled)
-    $width = 40;
+            // Width of image in mm (height auto-scaled)
+            $width = 40;
 
-    // Place the stamp at absolute position
-    $pdf->Image($stampPath, $x, $y, $width, 0, '', '', '', false, 300);
-}
+            // Place the stamp at absolute position
+            $pdf->Image($stampPath, $x, $y, $width, 0, '', '', '', false, 300);
+        }
 
         // Optional: Custom fonts
         $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';

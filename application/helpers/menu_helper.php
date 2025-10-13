@@ -69,25 +69,25 @@ function app_init_admin_sidebar_menu_items()
                         'href'     => admin_url('clients/study_abroad'),
                         'position' => 4,
                 ]);
-                // if (has_permission('external_visa', '', 'view') || has_permission('external_visa', '', 'view_own')) {
-                //         $CI->app_menu->add_sidebar_children_item('customers', [
-                //                 'slug'     => 'visa_details',
-                //                 'icon'     => 'fa fa-cc-visa',
-                //                 'name'     => "Visa Data",
-                //                 'href'     => admin_url('clients/visa_details'),
-                //                 'position' => 5,
-                //         ]);
-                // }
-                // if (has_permission('external_ticket', '', 'view') || has_permission('external_ticket', '', 'view_own')) {
+                if (has_permission('external_visa', '', 'view') || has_permission('external_visa', '', 'view_own')) {
+                        $CI->app_menu->add_sidebar_children_item('customers', [
+                                'slug'     => 'visa_details',
+                                'icon'     => 'fa fa-cc-visa',
+                                'name'     => "Visa Data",
+                                'href'     => admin_url('clients/visa_details'),
+                                'position' => 5,
+                        ]);
+                }
+                if (has_permission('external_ticket', '', 'view') || has_permission('external_ticket', '', 'view_own')) {
 
-                //         $CI->app_menu->add_sidebar_children_item('customers', [
-                //                 'slug'     => 'ticket_details',
-                //                 'icon'     => 'fa fa-ticket',
-                //                 'name'     => "Ticket Data",
-                //                 'href'     => admin_url('clients/ticket_details'),
-                //                 'position' => 5,
-                //         ]);
-                // }
+                        $CI->app_menu->add_sidebar_children_item('customers', [
+                                'slug'     => 'ticket_details',
+                                'icon'     => 'fa fa-ticket',
+                                'name'     => "Ticket Data",
+                                'href'     => admin_url('clients/ticket_details'),
+                                'position' => 5,
+                        ]);
+                }
         }
 
 

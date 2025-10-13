@@ -844,29 +844,29 @@ function syncExcel_neww($id = "")
             die;
         }
         if ((int) $sheet['excel_type'] === 4) {
-     
+
             $dataArray[] = fly_excel_sync($id);
-            
-             continue;
+
+            continue;
             // die;
         }
-        
+
         if ((int) $sheet['excel_type'] === 5) {
-     
+
             $dataArray[] = visa_excel_sync($id);
-            
-             continue;
+
+            continue;
             // die;
         }
-          if ((int) $sheet['excel_type'] === 6) {
-     
+        if ((int) $sheet['excel_type'] === 6) {
+
             $dataArray[] = payment_quotations($id);
-            
-             continue;
+
+            continue;
             // die;
         }
-        
-        
+
+
         if ((int) $sheet['excel_type'] !== 1) {
             continue;
         }
@@ -959,10 +959,10 @@ function syncExcel_neww($id = "")
                 $selectColumnName .= ', ' . implode(",\n", $queryPart);
             }
         }
-$apostileSub ="";
-if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
-    
-        $apostileSub .="LEFT JOIN (
+        $apostileSub = "";
+        if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
+
+            $apostileSub .= "LEFT JOIN (
         SELECT 
         ca.userid,
         GROUP_CONCAT(DISTINCT od.short_name) AS all_docs,
@@ -972,10 +972,10 @@ if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1
         JOIN tblorignal_documents od ON od.id = ca.doc_id
         GROUP BY ca.userid
         ) doc_list ON doc_list.userid = c.userid";
-        
-        
-        
-          $apostille_documents = get_orignal_document_list(0, 0, 1);
+
+
+
+            $apostille_documents = get_orignal_document_list(0, 0, 1);
             $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
 
             // Ensure both are arrays before merging
@@ -990,11 +990,11 @@ if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1
             $queryPart = [];
 
             if (!empty($apostille_documents)) {
-                
-        $apostileSub .=" LEFT JOIN (
+
+                $apostileSub .= " LEFT JOIN (
     SELECT userid";
                 foreach ($apostille_documents as $apostille) {
-           
+
                     $short_name        = trim($apostille['short_name']);
                     if ($apostille["apostile_status"] == 1) {
                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
@@ -1003,104 +1003,100 @@ if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1
                     } else {
                         $safe_column_name  =  str_replace(" ", "_", $short_name);
                     }
-                    
-                    $safe_column_name = str_replace(".","",$safe_column_name);
-                    $extra_columns[]   = $safe_column_name;
-                   $queryPart[] = "IFNULL(doc_status.".$safe_column_name.",'Pending') as {$safe_column_name} ";
-                    
-                 $apostileSub .= " ,COALESCE(MAX(CASE WHEN doc_id = " . $apostille['id'] . " THEN (CASE WHEN received_status = 1 THEN 'Received' ELSE 'Sent' END) END), 'Pending') AS {$safe_column_name} ";
 
-                    
-                    }
-                    if (!empty($queryPart)) {
-                     $selectColumnName .= ', ' . implode(",\n", $queryPart);
+                    $safe_column_name = str_replace(".", "", $safe_column_name);
+                    $extra_columns[]   = $safe_column_name;
+                    $queryPart[] = "IFNULL(doc_status." . $safe_column_name . ",'Pending') as {$safe_column_name} ";
+
+                    $apostileSub .= " ,COALESCE(MAX(CASE WHEN doc_id = " . $apostille['id'] . " THEN (CASE WHEN received_status = 1 THEN 'Received' ELSE 'Sent' END) END), 'Pending') AS {$safe_column_name} ";
                 }
-               
-                       $apostileSub .=" FROM tblclient_apostille_data
+                if (!empty($queryPart)) {
+                    $selectColumnName .= ', ' . implode(",\n", $queryPart);
+                }
+
+                $apostileSub .= " FROM tblclient_apostille_data
     GROUP BY userid
 ) doc_status ON doc_status.userid = c.userid ";
             }
-}
-// else{
-//         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
-//             $apostille_documents = get_orignal_document_list(0, 0, 1);
-//             $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
+        }
+        // else{
+        //         if (!empty($apostile_documents_status) && (int) $apostile_documents_status === 1) {
+        //             $apostille_documents = get_orignal_document_list(0, 0, 1);
+        //             $apostille_visa_apostile_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 1, ["status" => 0]);
 
-//             // Ensure both are arrays before merging
-//             if (!is_array($apostille_documents)) {
-//                 $apostille_documents = [];
-//             }
-//             if (!is_array($apostille_visa_apostile_documents)) {
-//                 $apostille_visa_apostile_documents = [];
-//             }
+        //             // Ensure both are arrays before merging
+        //             if (!is_array($apostille_documents)) {
+        //                 $apostille_documents = [];
+        //             }
+        //             if (!is_array($apostille_visa_apostile_documents)) {
+        //                 $apostille_visa_apostile_documents = [];
+        //             }
 
-//             $apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
-//             $queryPart = [];
+        //             $apostille_documents = array_merge($apostille_documents, $apostille_visa_apostile_documents);
+        //             $queryPart = [];
 
-//             if (!empty($apostille_documents)) {
-//                 foreach ($apostille_documents as $apostille) {
-//                     $short_name        = trim($apostille['short_name']);
-//                     if ($apostille["apostile_status"] == 1) {
-//                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
-//                     } else if ($apostille["visa_apostile"] == 1) {
-//                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
-//                     } else {
-//                         $safe_column_name  =  str_replace(" ", "_", $short_name);
-//                     }
-//                     $extra_columns[]   = $safe_column_name;
+        //             if (!empty($apostille_documents)) {
+        //                 foreach ($apostille_documents as $apostille) {
+        //                     $short_name        = trim($apostille['short_name']);
+        //                     if ($apostille["apostile_status"] == 1) {
+        //                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
+        //                     } else if ($apostille["visa_apostile"] == 1) {
+        //                         $safe_column_name  = "Ap_" . str_replace(" ", "_", $short_name);
+        //                     } else {
+        //                         $safe_column_name  =  str_replace(" ", "_", $short_name);
+        //                     }
+        //                     $extra_columns[]   = $safe_column_name;
 
-//                     $queryPart[] = "
-// COALESCE(
-//   (
-//     SELECT
-//       CASE
-//         WHEN received_status = 1 THEN 'Received'
-//         ELSE 'Sent'
-//       END
-//     FROM " . db_prefix() . "client_apostille_data
-//     WHERE userid = c.userid
-//       AND doc_id = " . (int)$apostille['id'] . "
-//     ORDER BY id DESC
-//     LIMIT 1
-//   ),
-//   'Pending'
-// ) AS `" . $safe_column_name . "`";
-//                 }
-//                 if (!empty($queryPart)) {
-//                     $selectColumnName .= ', ' . implode(",\n", $queryPart);
-//                 }
-//             }
-//         }
-// }
-        
-        
-        
+        //                     $queryPart[] = "
+        // COALESCE(
+        //   (
+        //     SELECT
+        //       CASE
+        //         WHEN received_status = 1 THEN 'Received'
+        //         ELSE 'Sent'
+        //       END
+        //     FROM " . db_prefix() . "client_apostille_data
+        //     WHERE userid = c.userid
+        //       AND doc_id = " . (int)$apostille['id'] . "
+        //     ORDER BY id DESC
+        //     LIMIT 1
+        //   ),
+        //   'Pending'
+        // ) AS `" . $safe_column_name . "`";
+        //                 }
+        //                 if (!empty($queryPart)) {
+        //                     $selectColumnName .= ', ' . implode(",\n", $queryPart);
+        //                 }
+        //             }
+        //         }
+        // }
+
+
+
         // Build conditions
         $condition_sql = "";
         if (!empty($fromDate) && !empty($toDate)) {
             $condition_sql .= " AND (c.datecreated BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
         }
         if (!empty($acadmic_year)) {
-            
+
             // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
-        
+
 
             // extract start & end years
 
 
 
-// safer split (handles spaces correctly)
-list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+            // safer split (handles spaces correctly)
+            list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
-// build semester codes
-$first_semester  = $start . "-09";
-$second_semester = $end . "-02";
-
-
-$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
-                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
 
 
+            $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
+                " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
         }
         if (!empty($sql_conditions)) {
             $condition_sql .= " {$sql_conditions}";
@@ -1282,11 +1278,11 @@ LEFT JOIN (
 
         // Add to final array
         $dataArray[] = [
-            "currentId"=>$currentId,
+            "currentId" => $currentId,
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
             "rowData"       => $arrayDataValues,
-            
+
         ];
     }
 
@@ -1369,24 +1365,23 @@ function fly_excel_sync($id = "")
         }
         if (!empty($acadmic_year)) {
             // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
-            
-            
-// safer split (handles spaces correctly)
-list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
-
-// build semester codes
-$first_semester  = $start . "-09";
-$second_semester = $end . "-02";
 
 
-$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
-                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            // safer split (handles spaces correctly)
+            list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+
+            $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
+                " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
         }
-$condition_sql ="";
+        $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
-        
-$sql = "SELECT {$selectColumnName}
+
+        $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "clients c
 INNER JOIN (
     SELECT td_latest.*,
@@ -1432,7 +1427,7 @@ GROUP BY c.userid ";
 
 
         $sql = preg_replace('/\s+/', ' ', trim($sql));
-       
+
         $query = $CI->db->query($sql);
 
         $arrayData = $query->result_array();
@@ -1456,16 +1451,15 @@ GROUP BY c.userid ";
             'lastSync' => date('Y-m-d H:i:s')
         ]);
         // Add to final array
-      return  $dataArray[] = [
+        return  $dataArray[] = [
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
             "rowData"       => $arrayDataValues
         ];
-    //      header('Content-Type: application/json');
-    // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    // exit;
+        //      header('Content-Type: application/json');
+        // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        // exit;
     }
-     
 }
 
 
@@ -1543,24 +1537,23 @@ function visa_excel_sync($id = "")
         }
         if (!empty($acadmic_year)) {
             // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
-            
-            
-// safer split (handles spaces correctly)
-list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
-
-// build semester codes
-$first_semester  = $start . "-09";
-$second_semester = $end . "-02";
 
 
-$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
-                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+            // safer split (handles spaces correctly)
+            list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+
+            $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
+                " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
         }
-$condition_sql ="";
+        $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
-        
-$sql = "SELECT {$selectColumnName}
+
+        $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "visa_details vd
 LEFT JOIN " . db_prefix() . "clients c ON c.userid = vd.userid
  LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
@@ -1585,7 +1578,7 @@ GROUP BY c.userid";
 
 
 
-          $sql = preg_replace('/\s+/', ' ', trim($sql));
+        $sql = preg_replace('/\s+/', ' ', trim($sql));
 
         $query = $CI->db->query($sql);
 
@@ -1610,16 +1603,15 @@ GROUP BY c.userid";
             'lastSync' => date('Y-m-d H:i:s')
         ]);
         // Add to final array
-      return  $dataArray[] = [
+        return  $dataArray[] = [
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
             "rowData"       => $arrayDataValues
         ];
-    //      header('Content-Type: application/json');
-    // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    // exit;
+        //      header('Content-Type: application/json');
+        // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        // exit;
     }
-     
 }
 
 function sa_excel_sync($id = "")
@@ -1695,19 +1687,18 @@ function sa_excel_sync($id = "")
         }
         if (!empty($acadmic_year)) {
             // $condition_sql .= " AND (" . db_prefix() . "admission_preferences.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
-            
-            
-// safer split (handles spaces correctly)
-list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
-
-// build semester codes
-$first_semester  = $start . "-09";
-$second_semester = $end . "-02";
 
 
-$condition_sql .= " AND (" . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($first_semester) . 
-                  " OR " . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($second_semester) . ")";
+            // safer split (handles spaces correctly)
+            list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
 
+            // build semester codes
+            $first_semester  = $start . "-09";
+            $second_semester = $end . "-02";
+
+
+            $condition_sql .= " AND (" . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($first_semester) .
+                " OR " . db_prefix() . "admission_preferences.session_intake = " . $CI->db->escape($second_semester) . ")";
         }
         // if (!empty($sql_conditions)) {
         //     $condition_sql .= " {$sql_conditions}";
@@ -1957,34 +1948,32 @@ function leads_excel_sync($id = "")
 
 function ma_quotations()
 {
-$condition_sql ="";
+    $condition_sql = "";
 
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
-$acadmic_year ="2025 - 2026";
+    $acadmic_year = "2025 - 2026";
 
- if (!empty($acadmic_year)) {
-            
-            // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
-        
+    if (!empty($acadmic_year)) {
 
-            // extract start & end years
+        // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
 
 
-
-// safer split (handles spaces correctly)
-list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
-
-// build semester codes
-$first_semester  = $start . "-09";
-$second_semester = $end . "-02";
+        // extract start & end years
 
 
-$condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) . 
-                  " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+
+        // safer split (handles spaces correctly)
+        list($start, $end) = array_map('trim', explode(" - ", $acadmic_year));
+
+        // build semester codes
+        $first_semester  = $start . "-09";
+        $second_semester = $end . "-02";
 
 
-        }
+        $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester) .
+            " OR p.session_intake = " . $CI->db->escape($second_semester) . ")";
+    }
     $columns = [
         "Applicant Name",
         "University Name",
@@ -2015,7 +2004,7 @@ $condition_sql .= " AND (p.session_intake = " . $CI->db->escape($first_semester)
     ];
     $sheet_name = "Quotation";
 
-$condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  ";
+    $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  ";
     try {
         // ✅ Correct SQL (removed trailing comma before FROM)
         $sql = "
@@ -2061,7 +2050,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
             LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
             LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
             LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
-           where 1=1 {$condition_sql} group by aq.id
+           where 1=1 and aq.status=1 {$condition_sql} group by aq.id
                
         ";
 
@@ -2094,7 +2083,7 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
             "company_dues_name" => array_column($CI->db->select("*")
                 ->from(db_prefix() . "company_dues_fees")
                 ->get()->result_array(), null, "id"),
-                "transaction_type" => array_column($CI->db->select("*")
+            "transaction_type" => array_column($CI->db->select("*")
                 ->from(db_prefix() . "transaction_type")
                 ->get()->result_array(), null, "id"),
 
@@ -2118,42 +2107,42 @@ $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  "
 
 function paymentDues()
 {
-    
+
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
-// fetch fees with lead_type as well
-$feesList = $CI->db->select("id, name")
-    ->from(db_prefix() . "applicant_fees")->where_in("id",[1,3,5,6,7])
-    ->order_by("sequence", "ASC")
-    ->get()
-    ->result_array();
+    // fetch fees with lead_type as well
+    $feesList = $CI->db->select("id, name")
+        ->from(db_prefix() . "applicant_fees")->where_in("id", [1, 3, 5, 6, 7])
+        ->order_by("sequence", "ASC")
+        ->get()
+        ->result_array();
 
-$columns = [
-    "Owner",
-    "Country",
-    "Primary University",
-    "App Process Stage",
-    "Student Name",
-    "Counsellor Name"
-];
+    $columns = [
+        "Owner",
+        "Country",
+        "Primary University",
+        "App Process Stage",
+        "Student Name",
+        "Counsellor Name"
+    ];
 
-$normal = $pay = $dues = [];
+    $normal = $pay = $dues = [];
 
-foreach ($feesList as $fee) {
-    $normal[] = $fee['name'];
-    $pay[]    = "Pay " . $fee['name'];
-    $dues[]   = "Dues " . $fee['name'];
-}
+    foreach ($feesList as $fee) {
+        $normal[] = $fee['name'];
+        $pay[]    = "Pay " . $fee['name'];
+        $dues[]   = "Dues " . $fee['name'];
+    }
 
-$columns = array_merge($columns, $normal, $pay, $dues);
+    $columns = array_merge($columns, $normal, $pay, $dues);
 
 
 
 
 
     $sheet_name = "Payment Dues";
-    
-  $sql = "
+
+    $sql = "
 SELECT 
     IF(c.client_type = 2, 'EVP', 'EV') AS owner,
     ap.primary_country,
@@ -2216,30 +2205,28 @@ LEFT JOIN " . db_prefix() . "ev_partner evp
 WHERE  (l.type = 2  OR l.type IS NULL OR c.client_type = 2) 
 GROUP BY fd.client_id
 ";
-// echo $sql;
+    // echo $sql;
 
- $arrayData = $CI->db->query($sql)->result_array();
- 
- 
- $dataArray = [[
-            "columnName"    => $columns,
-            "workSheetName" => $sheet_name,
-            "rowData"       => $arrayData,
-            "currency" => array_column($CI->db->select("id,name,symbol")
-                ->from(db_prefix() . "currencies")
-                ->order_by("isdefault", "DESC")
-                ->order_by("id", "ASC")
-                ->get()->result_array(), null, "id"),
-                 "fess_type" =>$feesList
-        ]];
-        
-         header('Content-Type: application/json');
-        echo json_encode($dataArray);
-        die;
+    $arrayData = $CI->db->query($sql)->result_array();
 
 
+    $dataArray = [[
+        "columnName"    => $columns,
+        "workSheetName" => $sheet_name,
+        "rowData"       => $arrayData,
+        "currency" => array_column($CI->db->select("id,name,symbol")
+            ->from(db_prefix() . "currencies")
+            ->order_by("isdefault", "DESC")
+            ->order_by("id", "ASC")
+            ->get()->result_array(), null, "id"),
+        "fess_type" => $feesList
+    ]];
+
+    header('Content-Type: application/json');
+    echo json_encode($dataArray);
+    die;
 }
-function payment_quotations($id='')
+function payment_quotations($id = '')
 {
 
     $CI = &get_instance();
@@ -2259,13 +2246,13 @@ function payment_quotations($id='')
     }
 
     $sheetData = $CI->db->order_by("id", "asc")->get()->result_array();
-    
-    
-    $get_currencies = get_currencies();
-$get_currencies = array_column($get_currencies, null, 'id');
 
-$university_applicant_fees_payments = university_applicant_fees_payments();
-$university_applicant_fees_payments = array_column($university_applicant_fees_payments, null, 'id');
+
+    $get_currencies = get_currencies();
+    $get_currencies = array_column($get_currencies, null, 'id');
+
+    $university_applicant_fees_payments = university_applicant_fees_payments();
+    $university_applicant_fees_payments = array_column($university_applicant_fees_payments, null, 'id');
     if (empty($sheetData)) {
         return [];
     }
@@ -2319,32 +2306,32 @@ $university_applicant_fees_payments = array_column($university_applicant_fees_pa
         if (!empty($acadmic_year)) {
             // $condition_sql .= " AND (p.acadmic_year = " . $CI->db->escape($acadmic_year) . ")";
         }
-$condition_sql ="";
+        $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
-    
-  $sql = "
+
+        $sql = "
         SELECT 
         {$selectColumnName},pq.exchange_value,fess_infomation
-        FROM `".db_prefix()."payment_quotations` pq 
-        LEFT JOIN ".db_prefix()."clients c ON pq.client_id = c.userid 
+        FROM `" . db_prefix() . "payment_quotations` pq 
+        LEFT JOIN " . db_prefix() . "clients c ON pq.client_id = c.userid 
         LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
          LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
-        LEFT JOIN ".db_prefix()."applicant_quotation_payment aqp ON aqp.id = pq.quotation_id 
+        LEFT JOIN " . db_prefix() . "applicant_quotation_payment aqp ON aqp.id = pq.quotation_id  and aqp.status = 1
         LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
-        LEFT JOIN ".db_prefix()."quotation_mode m ON m.id = pq.mode 
-        LEFT JOIN ".db_prefix()."basic_details b ON b.userid = pq.client_id 
-        JOIN ".db_prefix()."applicant_fees f ON f.id = pq.payment_type  
-        LEFT JOIN ".db_prefix()."applicant_stages tt ON tt.id = c.applicant_stage
-        LEFT JOIN ".db_prefix()."application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status 
-        LEFT JOIN ".db_prefix()."staff st ON l.assigned = st.staffid 
-        LEFT JOIN ".db_prefix()."office_location lo ON lo.id = pq.location_id  
-        LEFT JOIN ".db_prefix()."client_passport_details pd ON pd.client_id = c.userid 
-        LEFT JOIN ".db_prefix()."passport_stages ps ON ps.id = pd.passport_status 
+        LEFT JOIN " . db_prefix() . "quotation_mode m ON m.id = pq.mode 
+        LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = pq.client_id 
+        JOIN " . db_prefix() . "applicant_fees f ON f.id = pq.payment_type  
+        LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+        LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status 
+        LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid 
+        LEFT JOIN " . db_prefix() . "office_location lo ON lo.id = pq.location_id  
+        LEFT JOIN " . db_prefix() . "client_passport_details pd ON pd.client_id = c.userid 
+        LEFT JOIN " . db_prefix() . "passport_stages ps ON ps.id = pd.passport_status 
         
-                LEFT JOIN  ".db_prefix()."admission_preferences p 
+                LEFT JOIN  " . db_prefix() . "admission_preferences p 
                 ON p.userid = pq.client_id 
              
-   LEFT JOIN ".db_prefix()."client_university_shortlisting u ON u.client_id = pq.client_id 
+   LEFT JOIN " . db_prefix() . "client_university_shortlisting u ON u.client_id = pq.client_id 
         AND u.status = 1 
          AND (
         (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
@@ -2353,17 +2340,17 @@ $condition_sql ="";
    
 
        
-        LEFT JOIN ".db_prefix()."university_partner u_p ON u_p.id = u.partner 
-        LEFT JOIN ".db_prefix()."quotation_vendor vl ON vl.id = pq.vendor_id 
+        LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner 
+        LEFT JOIN " . db_prefix() . "quotation_vendor vl ON vl.id = pq.vendor_id 
         LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = pq.ex_currency
         LEFT JOIN " . db_prefix() . "transaction_type ptt ON ptt.id = pq.transaction_type
         WHERE 1=1 and pq.status > 0  {$condition_sql}
         GROUP BY pq.id ORDER BY pq.client_id
         ";
-    
-     
-    
-       $sql = preg_replace('/\s+/', ' ', trim($sql));
+
+
+
+        $sql = preg_replace('/\s+/', ' ', trim($sql));
 
         $query = $CI->db->query($sql);
 
@@ -2388,18 +2375,17 @@ $condition_sql ="";
             'lastSync' => date('Y-m-d H:i:s')
         ]);
         // Add to final array
-      return  $dataArray[] = [
+        return  $dataArray[] = [
             "columnName"    => $columns,
             "workSheetName" => $sheet_name,
             "rowData"       => $arrayDataValues,
-            "get_currencies"=>$get_currencies,
-            "university_applicant_fees_payments"=>$university_applicant_fees_payments
+            "get_currencies" => $get_currencies,
+            "university_applicant_fees_payments" => $university_applicant_fees_payments
         ];
-    //      header('Content-Type: application/json');
-    // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    // exit;
+        //      header('Content-Type: application/json');
+        // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        // exit;
     }
-
 }
 
 
