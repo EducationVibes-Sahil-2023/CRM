@@ -20,7 +20,8 @@ class hostel_management extends AdminController
     function index()
     {
 
-        $data["universities"] = $this->Hostel_model->get_university_rentInfo();
+        $data["universities"] = $this->Hostel_model->get_hostel_rentInfo();
+        // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
         $this->load->view('admin/hostel_management/manage', $data);
     }
 
@@ -34,6 +35,21 @@ class hostel_management extends AdminController
 
         // ✅ Correct table view (filename from views/admin/tables/)
         $view = 'hostel'; // corresponds to application/views/admin/tables/visa_clients.php
+
+        // ✅ Call DataTable loader
+        return $this->app->get_table_data($view);
+    }
+
+    function hostel_information()
+    {
+
+        // ✅ Permission check
+        if (!has_permission('hostel', '', 'view_own')) {
+            return access_denied('hostel'); // Use return to stop further execution
+        }
+
+        // ✅ Correct table view (filename from views/admin/tables/)
+        $view = 'hostel_information'; // corresponds to application/views/admin/tables/visa_clients.php
 
         // ✅ Call DataTable loader
         return $this->app->get_table_data($view);
@@ -88,8 +104,9 @@ class hostel_management extends AdminController
         $data["getId"] = $id;
         $data['hostelData'] = $this->db->select('*')->where('id', $id)->get(db_prefix() . 'hostel_infomation')->row();
 
-        $data["universities"] = array_column($this->Hostel_model->get_university_rentInfo(), null, 'university_id');
+        $data["universities"] = array_column($this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array(), null, 'university_id');
 
+        $data["hostelRentelData"] = array_column($this->Hostel_model->get_hostel_rentInfo(), null, "hostel_id");
         if ($_GET['tab'] == 'profile') {
 
             if (!has_permission('hostel_management', '', 'view_own')) {
@@ -197,7 +214,8 @@ class hostel_management extends AdminController
     function rental()
     {
         $data = [];
-        $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
+        // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
+        $data["hostelData"] = $this->db->query("SELECT id,name from tblhostel where status =1  ")->result_array();
 
         $this->load->view('admin/hostel_management/rental', $data);
     }
@@ -232,15 +250,15 @@ class hostel_management extends AdminController
 
             // Prepare data array
             $save_data = [
-                'university_id' => $data['university_id'],
-                'university_name' => $data['university_name'],
+                'hostel_id' => $data['hostel_id'],
+                // 'university_name' => $data['university_name'],
                 'room_capacity' => $data['room_capacity'],
                 'rent' => $data['rent'] ?? null,
                 'currency' => $data['currency'] ?? null
             ];
 
             $check_duplicate = [];
-            $check_duplicate['university_id'] = $data['university_id'];
+            $check_duplicate['hostel_id'] = $data['hostel_id'];
             $check_duplicate['room_capacity'] = $data['room_capacity'];
 
             // check duplicate entry
@@ -323,15 +341,15 @@ class hostel_management extends AdminController
             $data = $this->input->post();
 
             // If updating, check edit permission
-            if (!empty($data['id']) && !has_permission('hostel_management', '', 'edit')) {
+            if (!empty($data['hostel_management_id']) && !has_permission('hostel_management', '', 'edit')) {
                 return access_denied('hostel_management');
             }
 
             // --- Check for duplicate passport ---
             $this->db->where('passport', $data['passport'] ?? '');
-            if (!empty($data['id'])) {
+            if (!empty($data['hostel_management_id'])) {
                 // Exclude current record when updating
-                $this->db->where('id !=', $data['id']);
+                $this->db->where('id !=', $data['hostel_management_id']);
             }
             $existing = $this->db->get(db_prefix() . 'hostel_infomation')->row();
             if ($existing) {
@@ -359,13 +377,13 @@ class hostel_management extends AdminController
                 'end_date' => $data['enddate'] ?? '',
             ];
 
-            if (!empty($data['id'])) {
+            if (!empty($data['hostel_management_id'])) {
                 // Update existing record
                 $save_data['updated_date'] = date('Y-m-d H:i:s');
                 $save_data['updated_by'] = get_staff_user_id();
-                $this->db->where('id', $data['id']);
+                $this->db->where('id', $data['hostel_management_id']);
                 $this->db->update(db_prefix() . 'hostel_infomation', $save_data);
-                $record_id = $data['id'];
+                $record_id = $data['hostel_management_id'];
             } else {
                 // Insert new record
                 $save_data['created_date'] = date('Y-m-d H:i:s');
@@ -373,6 +391,7 @@ class hostel_management extends AdminController
                 $this->db->insert(db_prefix() . 'hostel_infomation', $save_data);
                 $record_id = $this->db->insert_id();
             }
+
 
             // Return success response
             echo json_encode([
@@ -434,6 +453,7 @@ class hostel_management extends AdminController
 
         $this->db->select([
 
+            'h.*',
             'hq.id',
             'hq.university_name',
             'hq.room_no',
@@ -451,23 +471,8 @@ class hostel_management extends AdminController
             'hq.company',
             'hq.hostel',
             'TIMESTAMPDIFF(MONTH, hq.start_date,hq.end_date)
-       + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference',
-            'h.hostel_name',
-            'h.beneficiary_bank',
-            'h.beneficiary_name',
-            'h.beneficiary_iban',
-            'h.beneficiary_iban_usd',
-            'h.contact_number',
-            'h.email',
-            'h.address',
-            'h.pin_code',
-            'h.state',
-            'h.bank_code',
-            'h.hostel_address',
-            'h.note',
-            'h.bank_header',
-            'h.hostel_logo',
-            'h.hostel_stamp',
+       + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference'
+
 
         ])
             ->from(db_prefix() . 'hostel_quotation AS hq')
@@ -926,6 +931,123 @@ class hostel_management extends AdminController
             echo json_encode([
                 'resp_code' => 'ERR',
                 'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+    public function hostel_management()
+    {
+        $data = [];
+        //   $data["universities"] = $this->Hostel_model->get_hostel_rentInfo();
+        $this->load->view('admin/hostel_management/create', $data);
+    }
+
+    public function save_hostel()
+    {
+        try {
+            // Permission check
+            if (!has_permission('hostel', '', 'create')) {
+                return access_denied('hostel');
+            }
+
+            $data = $this->input->post();
+
+            // --- Check for duplicate hostel name ---
+            $this->db->where('hostel_name', $data['hostel_name'] ?? '');
+            if (!empty($data['hostel_management_id'])) {
+                $this->db->where('id !=', $data['hostel_management_id']);
+            }
+            $existing = $this->db->get(db_prefix() . 'hostel')->row();
+            if ($existing) {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Hostel Name already exists.'
+                ]);
+                return;
+            }
+
+            $id = $data['hostel_management_id'] ?? 0;
+
+            // Remove unnecessary fields
+            unset($data['hostel_management_id'], $data['university_name']);
+
+            $upload_path = FCPATH . 'uploads/hostel/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0777, true);
+            }
+            // --- File upload handling ---
+            foreach ($_FILES as $field => $file) {
+                if (!empty($file['name'])) {
+                    $new_filename = time() . '_' . preg_replace('/\s+/', '_', $file['name']);
+                    $target_path = $upload_path . $new_filename;
+
+                    if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                        // Save the relative path in $data with the same key as input
+                        $data[$field] = 'uploads/hostel/' . $new_filename;
+                    } else {
+                        echo json_encode([
+                            'resp_code' => 'ERR',
+                            'resp_desc' => "Failed to upload file: {$file['name']}"
+                        ]);
+                        return;
+                    }
+                }
+            }
+            // --- Insert or Update ---
+            if (!empty($id)) {
+                // Update
+                $data['updated_date'] = date('Y-m-d H:i:s');
+                $data['updated_by'] = get_staff_user_id();
+                $this->db->where('id', $id);
+                $this->db->update(db_prefix() . 'hostel', $data);
+                $record_id = $id;
+            } else {
+                // Insert
+                $data['created_date'] = date('Y-m-d H:i:s');
+                $data['created_by'] = get_staff_user_id();
+                $this->db->insert(db_prefix() . 'hostel', $data);
+                $record_id = $this->db->insert_id();
+            }
+
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel details saved successfully.',
+                'record_id' => $record_id
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+
+    function delete_hostel($id)
+    {
+        // ✅ Permission check
+        if (!has_permission('hostel', '', 'delete')) {
+            return access_denied('hostel'); // Stop execution immediately
+        }
+
+        if (!$id) {
+            redirect(admin_url('hostel'));
+        }
+
+        $this->db->where('id', $id);
+        $this->db->update(db_prefix() . 'hostel', ["status" => "0"]);
+
+        if ($this->db->affected_rows() > 0) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel record deleted successfully.'
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Error deleting hostel record or record not found.'
             ]);
         }
     }

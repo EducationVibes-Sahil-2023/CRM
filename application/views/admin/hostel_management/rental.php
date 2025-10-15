@@ -4,7 +4,7 @@
 $get_currencies = get_currencies();
 
 $table_data = array(
-    array('name' => 'University Name'),
+    array('name' => 'Hostel Name'),
     array('name' => 'Room Capacity'),
     array('name' => 'Currency'),
     array('name' => 'Rent Amount'),
@@ -59,11 +59,11 @@ $table_data = array(
             <div class="modal-body">
                 <input type="hidden" name="rental_id" value="">
                 <div class="row">
-                    <div class="col-md-6">
+                    <!-- <div class="col-md-6">
                         <?= render_select(
-                            'university_id',
+                            'hostel_id',
                             $dropdown_country_university_selection,
-                            ['university_id', 'university_name'],
+                            ['hostel_id', 'university_name'],
                             'University Name',
                             '',
                             [
@@ -72,7 +72,25 @@ $table_data = array(
                                 'data-actions-box' => true
                             ]
                         ); ?>
+                    </div> -->
+
+                    <div class="col-md-6">
+                        <?= render_select(
+                            'hostel_id',
+                            $hostelData,
+                            ['id', 'name'],
+                            'Hostal Name',
+                            '',
+                            [
+                                'data-width' => '100%',
+                                'data-none-selected-text' => 'No Selected',
+                                'data-actions-box' => true
+                            ]
+                        ); ?>
                     </div>
+
+
+
 
                     <div class="col-md-6">
                         <?= render_select(
@@ -138,7 +156,7 @@ $table_data = array(
 
         // Initialize form validation
         appValidateForm($('#hostel_rental_form'), {
-            university_id: 'required',
+            hostel_id: 'required',
             room_capacity: 'required',
             currency: 'required',
             // adhar: 'required',
@@ -161,7 +179,7 @@ $table_data = array(
             var formData = new FormData(this);
 
             // Append country_name from select
-            var university_text = $('#university_id option:selected').text() || '';
+            var university_text = $('#hostel_id option:selected').text() || '';
             formData.append('university_name', university_text);
 
             show_loader();
@@ -212,7 +230,7 @@ $table_data = array(
         console.log(decodedData);
         // Populate form fields
         form.find('input[name="rental_id"]').val(id);
-        form.find('select[name="university_id"]').val(decodedData.university_id).selectpicker('refresh');
+        form.find('select[name="hostel_id"]').val(decodedData.hostel_id).selectpicker('refresh');
         form.find('select[name="room_capacity"]').val(decodedData.room_capacity).selectpicker('refresh');
         form.find('select[name="currency"]').val(decodedData.currency).selectpicker('refresh');
         form.find('input[name="rent"]').val(decodedData.rent);

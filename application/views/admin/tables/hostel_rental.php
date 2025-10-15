@@ -6,8 +6,8 @@ $has_permission_delete = has_permission('hostel_management', '', 'backend');
 
 // Columns for DataTables
 $aColumns = [
-    db_prefix() . 'hostel_rental.university_name as university_name',
-    db_prefix() . 'hostel_rental.university_id as university_id',
+    db_prefix() . 'hostel.name as name',
+    db_prefix() . 'hostel_rental.hostel_id as hostel_id',
     db_prefix() . 'hostel_rental.room_capacity as room_capacity',
     db_prefix() . 'hostel_rental.currency as currency',
     db_prefix() . 'currencies.name as currency_name',
@@ -24,6 +24,8 @@ $join = [];
 $join = [
     'LEFT JOIN ' . db_prefix() . 'currencies 
         ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'hostel_rental.currency',
+    'LEFT JOIN ' . db_prefix() . 'hostel 
+        ON ' . db_prefix() . 'hostel.id = ' . db_prefix() . 'hostel_rental.hostel_id',
 ];
 
 // Optional WHERE conditions
@@ -82,7 +84,7 @@ foreach ($rResult as $aRow) {
     //               </a>';
     // }
 
-    $row[] = $aRow['university_name'];
+    $row[] = $aRow['name'];
     $row[] = $aRow['room_capacity'];
     $row[] = $aRow['currency_name'];
     $row[] = $aRow['rent'];

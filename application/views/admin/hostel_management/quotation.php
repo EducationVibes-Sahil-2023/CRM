@@ -42,6 +42,7 @@
 </script>
 
 <?php
+
 $get_currencies = get_currencies();
 $university_applicant_fees = $university_applicant_fees = university_applicant_fees("", 1, [
     "university_name" => $hostelData->vendor_update,
@@ -132,7 +133,7 @@ if (!empty($_GET['quotation_id'])) {
                             <label for="release_to_counsellor"><br>Release to Counsellor</label>
                             <input type="checkbox" value="1" id="release_to_counsellor" <?= !empty($hostel_quotation_data->release_to_counsellor) ? 'checked' : '' ?> name="release_to_counsellor">
                         </div>
-                        <?php if (!empty($quotation_id) && !empty($hostel_quotation_data) && has_permission("hostel_management","","hostel_invoice_generate")) { ?>
+                        <?php if (!empty($quotation_id) && !empty($hostel_quotation_data) && has_permission("hostel_management", "", "hostel_invoice_generate")) { ?>
                             <div class="form-group col-md-3 text-right  ">
                                 <button class="btn btn-primary"
                                     onclick="window.open('<?= $hostel_quotation_data->pdf ?>', '_blank')">
@@ -194,7 +195,7 @@ if (!empty($_GET['quotation_id'])) {
                         <div class="col-md-3">
                             <div class="form-group">
                                 <?php
-                                $roomCapacity = json_decode($universities[$hostelData->university_id ?? '']["rooms"], true) ?? [];
+                                $roomCapacity = json_decode($hostelRentelData[$hostelData->hostel ?? '']["rooms"], true) ?? [];
                                 echo render_select(
                                     'room_capacity',
                                     $roomCapacity,
@@ -957,14 +958,16 @@ if (!empty($_GET['quotation_id'])) {
 
 
 <script>
-    var get_university_rentData = <?= json_encode(array_column($universities, null, "university_id"), true) ?>;
+    var get_university_rentData = <?= json_encode($hostelRentelData) ?>;
     var selectedUniversityRoomData = [];
 
-    function get_university_rentInfo(id) {
-
+    function get_hostel_rentInfo(id) {
+        console.log(id);
+        console.log(get_university_rentData[id]);
         if (get_university_rentData[id]) {
             console.log(get_university_rentData[id]);
             let rooms = get_university_rentData[id].rooms ? JSON.parse(get_university_rentData[id].rooms) : [];
+            console.log(rooms);
             selectedUniversityRoomData = rooms;
 
 
@@ -985,7 +988,7 @@ if (!empty($_GET['quotation_id'])) {
             end_date: 'required'
         });
 
-        get_university_rentInfo(<?= $hostelData->university_id ?>);
+        get_hostel_rentInfo(<?= $hostelData->hostel ?>);
         const applicantForm = document.getElementById("hostel_quotation_form");
 
         if (applicantForm) {
@@ -998,8 +1001,20 @@ if (!empty($_GET['quotation_id'])) {
             });
         }
 
+
+
     });
 
+    document.addEventListener("input", function(event) {
+        // Check if the target matches any of the selectors
+        if (
+            event.target.matches("input[name='exchange_value[]']") ||
+            event.target.matches(".currency-amount") ||
+            event.target.matches("input[name='fee_value[]']")
+        ) {
+            debounceCalculate(); // Call your debounce function
+        }
+    });
 
 
     function selectRoomCapacity(id) {
@@ -1010,14 +1025,15 @@ if (!empty($_GET['quotation_id'])) {
             $("select[name='rent_currency_type']").val(roomData.currency);
             $(".fees_5").val(roomData.rent);
             $(".currency-selector-5").val(roomData.currency);
-            updateSymbol_($(".currency-selector-5"),5);
+            updateSymbol_($(".currency-selector-5"), 5);
         } else {
             $(".fees_5").val(0);
-            updateSymbol_($(".currency-selector-5"),5);
+            updateSymbol_($(".currency-selector-5"), 5);
             $(".currency-selector-5").val('');
             $("input[name='rent']").val('');
             $("select[name='rent_currency_type']").val('');
         }
+        calculateInrValue();
     }
 
     // --- Server-side data ---
@@ -1328,38 +1344,40 @@ if (!empty($_GET['quotation_id'])) {
         event.preventDefault();
         let missingFields = [];
 
-            $(form)
-                .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
-                .each(function() {
-                    let value = $(this).val(); // safely get value
-                    if (!value || String(value).trim() === "") {
-                        $(this).addClass("is-invalid");
+        $(form)
+            .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
+            .each(function() {
+                let value = $(this).val(); // safely get value
+                if (!value || String(value).trim() === "") {
+                    $(this).addClass("is-invalid");
 
-                        // Try to get readable label
-                        let label = $(this).closest(".form-group").find("label").text().trim();
-                        let fieldName = label || $(this).attr("name");
+                    // Try to get readable label
+                    let label = $(this).siblings("label").text().trim();
+                    let fieldName = label || $(this).attr("name");
 
-                        // Collect field name or handle it as you wish
-                        console.warn("Missing required:", fieldName);
-                    } else {
-                        $(this).removeClass("is-invalid");
-                    }
-                });
+                    // Collect field name
+                    missingFields.push(fieldName);
 
+                    console.warn("Missing required:", fieldName);
+                } else {
+                    $(this).removeClass("is-invalid");
+                }
+            });
 
-            if (missingFields.length > 0) {
-                $('html, body').animate({
-                    scrollTop: $(".is-invalid").first().offset().top - 100
-                }, 400);
+        if (missingFields.length > 0) {
+            $('html, body').animate({
+                scrollTop: $(".is-invalid").first().offset().top - 100
+            }, 400);
 
-                alert_float(
-                    "danger",
-                    "Please fill the following required fields:<br><b>" +
-                    missingFields.join(", ") +
-                    "</b>"
-                );
-                return false;
-            }
+            alert_float(
+                "danger",
+                "Please fill the following required fields:<br><b>" +
+                missingFields.join(", ") +
+                "</b>"
+            );
+            return false;
+        }
+
 
         show_loader();
         try {
@@ -1562,15 +1580,7 @@ if (!empty($_GET['quotation_id'])) {
         }
 
         // Delegate input events to parent container for better performance
-        document.getElementById("applicant-quotation-form").addEventListener("input", function(event) {
-            if (
-                event.target.matches("input[name='exchange_value[]']") ||
-                event.target.matches(".currency-amount") ||
-                event.target.matches("input[name='fee_value[]']")
-            ) {
-                debounceCalculate();
-            }
-        });
+
 
         document.addEventListener("change", function(event) {
             if (event.target.matches("select[name='exchange_currency[]'], .currency-selector, select[name='fee_currency[]']")) {
