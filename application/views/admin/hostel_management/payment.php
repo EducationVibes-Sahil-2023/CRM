@@ -19,16 +19,16 @@
 } ?>
 
 
-    <div class="panel_s">
-        <div class="panel-body">
-            <h4 class="fs-title">Payments Dues <a data-toggle="tooltip" data-title="Payment Summary" data-placement="bottom" class="btn btn-default btn-with-tooltip" onclick="getPayementInformation(<?= $getId ?>)"><i class="fa fa-bar-chart"></i></a></h4>
-            <hr>
+<div class="panel_s">
+    <div class="panel-body">
+        <h4 class="fs-title">Payments Dues <a data-toggle="tooltip" data-title="Payment Summary" data-placement="bottom" class="btn btn-default btn-with-tooltip" onclick="getPayementInformation(<?= $getId ?>)"><i class="fa fa-bar-chart"></i></a></h4>
+        <hr>
 
-            <div class="PaymentInformationShow" style="display:none;">
+        <div class="PaymentInformationShow" style="display:none;">
 
-            </div>
         </div>
     </div>
+</div>
 
 
 
@@ -454,7 +454,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                     'data-none-selected-text' => 'Hostel Quotations',
                                                     'onchange' => 'check_quotations(this.value)',
                                                     'class' => 'electpicker-new quotation_id',
-                                                    'required'=>true
+                                                    'required' => true
 
                                                 ],
                                                 [],
@@ -1737,16 +1737,16 @@ if (has_permission('hostel_management', '', 'payment')) {
                     let mode_id = $(this).find("select.mode").val() || '';
                     let payment_type_id = $(this).find("select.payment_type").val() || '';
 
-                    let $quotationSelect = $(this).find("select.quotation_id");
+                    // let $quotationSelect = $(this).find("select.quotation_id");
 
-                    if (mode_id === "1" && payment_type_id === "<?= PACKAGE_FEES_ID ?>") {
-                        $quotationSelect.prop("required", true);
-                    } else {
-                        $quotationSelect.prop("required", false);
-                    }
+                    // if (mode_id === "1" && payment_type_id === "<?= PACKAGE_FEES_ID ?>") {
+                    //     $quotationSelect.prop("required", true);
+                    // } else {
+                    //     $quotationSelect.prop("required", false);
+                    // }
 
                     // refresh the Bootstrap select UI
-                    $quotationSelect.selectpicker("refresh");
+                    // $quotationSelect.selectpicker("refresh");
 
                     let $payment = $(this);
                     let paymentData = {};

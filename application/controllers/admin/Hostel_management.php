@@ -1051,4 +1051,85 @@ class hostel_management extends AdminController
             ]);
         }
     }
+
+    public function quotation_payment_approved()
+    {
+        $data = [];
+        // if ((!has_permission('payment_quotation', '', 'payment_approval'))) {
+        //     access_denied('Quatation Payment Approval');
+        //     die;
+        // }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $quotation_payment_id = $this->input->post("quotation_payment_id");
+            $hostel_info_id            = $this->input->post("hostel_info_id");
+            $status               = (int) $this->input->post("status");
+            $activity_data = [];
+            $this->db->select("id,status");
+            $this->db->where('hostel_info_id', $hostel_info_id);
+            $this->db->where('id', $quotation_payment_id);
+            $check_ = $this->db->get(db_prefix() . 'hostel_payments')->row();
+
+            if (!$check_) {
+                $data['resp_code'] = 'ERR';
+                $data['resp_desc'] = 'Payment quotation not found';
+            } else {
+                $current_status = (int) $check_->status;
+
+                if (in_array($current_status, [1, 2]) &&  $status != 0) {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'This quotation has already been ' . ($current_status == 1 ? 'approved' : 'rejected') . '.';
+                } elseif ($status == 0) {
+                    // Delete record
+                    $this->db->where('id', $quotation_payment_id)->update(db_prefix() . 'hostel_payments', ['pdf' => '', 'status' => $status]);
+                    if ($this->db->affected_rows() > 0) {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = 'Quotation payment deleted successfully.';
+                    } else {
+                        $data['resp_code'] = 'ERR';
+                        $data['resp_desc'] = 'Failed to delete quotation payment.';
+                    }
+
+                    $activity_data[] = [
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "hostel_info_id"   => $hostel_info_id,
+                        "description" => 'Quotation payment Delete successfully.',
+                        "payment_id" => $quotation_payment_id ?? 1
+                    ];
+
+                    $this->db->insert_batch(db_prefix() . 'hostel_payment_activity_log', $activity_data);
+                } elseif (in_array($status, [1, 2])) {
+                    // Update to approve/reject
+                    $this->db->where('id', $quotation_payment_id)
+                        ->update(db_prefix() . 'hostel_payments', ['status' => $status]);
+
+                    if ($this->db->affected_rows()) {
+                        $data['resp_code'] = 'RCS';
+                        $data['resp_desc'] = $status == 1 ? 'Quotation payment approved successfully.' : 'Quotation payment rejected successfully.';
+                    } else {
+                        $data['resp_code'] = 'ERR';
+                        $data['resp_desc'] = 'Failed to update quotation payment.';
+                    }
+
+                    $activity_data[] = [
+                        "date"        => date('Y-m-d H:i:s'),
+                        "staffid"     => get_staff_user_id(),
+                        "hostel_info_id"   => $hostel_info_id,
+                        "description" => 'Quotation payment ' . ($status == 1 ? 'Approved' : 'Rejected') . ' successfully.',
+                        "payment_id" => $quotation_payment_id ?? 1
+                    ];
+
+                    $this->db->insert_batch(db_prefix() . 'hostel_payment_activity_log', $activity_data);
+                } else {
+                    $data['resp_code'] = 'ERR';
+                    $data['resp_desc'] = 'Invalid status action.';
+                }
+            }
+        } else {
+            $data['resp_code'] = 'ERR';
+            $data['resp_desc'] = 'Invalid request method';
+        }
+
+        echo json_encode($data);
+    }
 }

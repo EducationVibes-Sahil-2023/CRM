@@ -2429,8 +2429,6 @@ function payment_quotations($id = '')
         (u.university_name IS NOT NULL AND p.primary_university = u.university_name)
         OR (u.university_name IS NULL)
    )
-   
-
        
         LEFT JOIN " . db_prefix() . "university_partner u_p ON u_p.id = u.partner 
         LEFT JOIN " . db_prefix() . "quotation_vendor vl ON vl.id = pq.vendor_id 
