@@ -8,7 +8,7 @@
     ?>
    <?= form_open('', ['id' => 'hostel_management_form']); ?>
 
-   <input type="hidden" name="hostel_management_id" value="">
+   <input type="hidden" name="hostel_management_id" value="<?= $getId ?? '' ?>">
    <div class="row">
 
 
@@ -38,7 +38,7 @@
                 ['university_id', 'university_name'],
                 'University Name',
                 [$hostelData->university_id ?? ''],
-                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true, "onchange" => "get_university_rentInfo(this.value)"]
+                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true, "onchange" => "get_hostel_rentInfo(this.value)"]
             );
             ?>
        </div>
@@ -131,9 +131,10 @@
 
    <script>
        var get_university_rentData = <?= json_encode(array_column($universities, null, "university_id"), true) ?>;
+       
        var selectedUniversityRoomData = [];
 
-       function get_university_rentInfo(id) {
+       function get_hostel_rentInfo(id) {
            $("select[name='room_capacity']").html('');
            $("select[name='room_capacity']").append('<option value="">No Selected</option>');
            if (get_university_rentData[id]) {
