@@ -20,7 +20,7 @@ class hostel_management extends AdminController
     function index()
     {
 
-        $data["universities"] = $this->Hostel_model->get_hostel_rentInfo();
+        $data["universities"] = array_column($this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array(), null, 'university_id');
         // $data["dropdown_country_university_selection"] = $this->s_db->query("SELECT co.name,c.country_name,u.university_name,c.id country_id,u.id university_id FROM course co left join countries c ON (co.id = c.segment_id) left join universities u on (u.country_id = c.id and u.status ='0') where co.id = 7  ")->result_array();
         $this->load->view('admin/hostel_management/manage', $data);
     }
