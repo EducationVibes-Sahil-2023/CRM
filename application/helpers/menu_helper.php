@@ -504,10 +504,16 @@ function app_init_admin_sidebar_menu_items()
                 ]);
 
                 $CI->app_menu->add_setup_children_item('hms_backend', [
+                        'slug'     => 'hrms-hostel',
+                        'name'     => "Hostel",
+                        'href'     => admin_url('hostel_management/hostel_management'),
+                        'position' => 1,
+                ]);
+                $CI->app_menu->add_setup_children_item('hms_backend', [
                         'slug'     => 'hrms-rental',
                         'name'     => "Rental",
                         'href'     => admin_url('hostel_management/rental'),
-                        'position' => 5,
+                        'position' => 2,
                 ]);
         }
 
