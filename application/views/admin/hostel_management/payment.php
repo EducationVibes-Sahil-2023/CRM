@@ -454,6 +454,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                     'data-none-selected-text' => 'Hostel Quotations',
                                                     'onchange' => 'check_quotations(this.value)',
                                                     'class' => 'electpicker-new quotation_id',
+                                                    'required'=>true
 
                                                 ],
                                                 [],

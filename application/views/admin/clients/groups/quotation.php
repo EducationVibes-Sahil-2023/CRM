@@ -105,6 +105,13 @@ if (has_permission('customers', '', 'quotation_create')) {
     $modes =  $this->quotation_model->payment_mod();
     $modes_vendor =  $this->quotation_model->payment_mode_vendors();
     array_unshift($modes, array("id" => "", "name" => "Select Mode"));
+  $company_modes = array_filter($modes, function($mode) {
+    return $mode['company'] == 1 ;
+});
+ array_unshift($company_modes, array("id" => "", "name" => "Select Mode"));
+
+// Optional: reindex array
+$company_modes = array_values($company_modes);
     $applicant_quotation_data = [];
     $exchange_value_array = [];
     $university_due_array = [];
@@ -869,7 +876,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                         <tr class="table-warning">
                                             <td>
                                                 <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
-                                                    <?php foreach ($modes as $m): ?>
+                                                    <?php foreach ($company_modes as $m): ?>
                                                         <option value="<?= $m['id'] ?>"
                                                             <?= (!empty($payMode) && $payMode == $m["id"]) ? "selected" : "" ?>>
                                                             <?= htmlspecialchars($m['name']) ?>
@@ -1031,7 +1038,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                                                         <tr class="table-warning">
                                                             <td>
                                                                 <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
-                                                                    <?php foreach ($modes as $m): ?>
+                                                                    <?php foreach ($company_modes as $m): ?>
                                                                         <option value="<?= $m['id'] ?>"
                                                                             <?= (!empty($l_array["payMode"]) && $l_array["payMode"] == $m["id"]) ? "selected" : "" ?>>
                                                                             <?= htmlspecialchars($m['name']) ?>
@@ -1385,7 +1392,7 @@ if (has_permission('customers', '', 'quotation_create')) {
                     <tr class="table-warning">
                     <td>
                         <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
-                                                <?php foreach ($modes as $m):
+                                                <?php foreach ($company_modes as $m):
                                                 ?>
                                                     <option value="<?= $m['id'] ?>" >
                                                         <?= htmlspecialchars($m['name']) ?>

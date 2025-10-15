@@ -171,7 +171,7 @@ class Quotation_model extends App_Model
             }
 
             if (!empty($status)) {
-                $this->db->where("status", 1);
+                $this->db->where("status >", 0);
             }
 
             // Optional: only active records (if you store a status column)
