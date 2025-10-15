@@ -2038,19 +2038,31 @@ function ma_quotations()
                
 
                  
-            FROM " . db_prefix() . "applicant_quotation_payment aq
-            LEFT JOIN " . db_prefix() . "basic_details bd  ON aq.client_id = bd.userid
-            LEFT JOIN " . db_prefix() . "clients c on c.userid = aq.client_id
-            LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
-            LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
-            LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
-            LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
-            LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
-            LEFT JOIN " . db_prefix() . "ticket_data td ON td.client_id = aq.client_id
-            LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
-            LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
-            LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
-           where 1=1 and aq.status=1 {$condition_sql} group by aq.id
+           FROM " . db_prefix() . "applicant_quotation_payment aq
+LEFT JOIN " . db_prefix() . "basic_details bd ON aq.client_id = bd.userid
+LEFT JOIN " . db_prefix() . "clients c ON c.userid = aq.client_id
+LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
+LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
+LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
+LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
+LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts ON ts.id = c.applicant_sub_status
+LEFT JOIN (
+    SELECT t1.*
+    FROM " . db_prefix() . "ticket_data t1
+    INNER JOIN (
+        SELECT client_id, MAX(id) AS latest_id
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+    ) t2 ON t1.client_id = t2.client_id AND t1.id = t2.latest_id
+) td ON td.client_id = aq.client_id
+LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
+LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
+LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+WHERE 1=1 
+  AND aq.status = 1
+  {$condition_sql}
+GROUP BY aq.id
+
                
         ";
 
@@ -2150,7 +2162,6 @@ SELECT
     CONCAT(c.applicant_stage, ' ', tt.name) AS app_process_stage,
     CONCAT(bd.first_name, ' ', bd.last_name) AS student_name,
 
-
     CONCAT('[', GROUP_CONCAT(
         DISTINCT JSON_OBJECT(
             'fees_id', fd.fees_id,
@@ -2172,12 +2183,12 @@ SELECT
 
 
     CONCAT('[', GROUP_CONCAT(
-        DISTINCT JSON_OBJECT(
-            'fees_id', fd.fees_id,
-            'amount', fd.amount - IFNULL(pq.amount, 0),
-            'currency_id', fd.currency_id
-        )
-    ), ']') AS due_details_json,
+    DISTINCT JSON_OBJECT(
+        'fees_id', fd.fees_id,
+        'amount', fd.amount - IF(fd.fees_id != " . RETURN_FEES_ID . ", IFNULL(pq.amount, 0), 0),
+        'currency_id', fd.currency_id
+    )
+), ']') AS due_details_json,
 
 
     IF(c.client_type = 2, evp.name, CONCAT(st.firstname, ' ', st.lastname)) AS counsellor_name
@@ -2196,17 +2207,98 @@ LEFT JOIN " . db_prefix() . "application_sub_category_mbbs ts
 LEFT JOIN " . db_prefix() . "leads l 
     ON c.leadid = l.id
 LEFT JOIN " . db_prefix() . "payment_quotations pq 
-    ON pq.client_id = fd.client_id
+    ON pq.client_id = fd.client_id and pq.status > 0
 LEFT JOIN " . db_prefix() . "staff st 
     ON st.staffid = l.assigned
 LEFT JOIN " . db_prefix() . "ev_partner evp 
     ON evp.id = c.agent_id
 
-WHERE  (l.type = 2  OR l.type IS NULL OR c.client_type = 2) 
+WHERE  (l.type = 2  OR l.type IS NULL OR c.client_type = 2)  and  pq.status > 0 and fd.client_id = 863
 GROUP BY fd.client_id
 ";
-    // echo $sql;
 
+
+// $sql = "
+// WITH payment_flat AS (
+//     SELECT 
+//         pq.client_id,
+//         CAST(JSON_EXTRACT(fee_item, '$.fee_id') AS UNSIGNED) AS fee_id,
+//         CAST(JSON_EXTRACT(fee_item, '$.fee_inr_value') AS DECIMAL(18,2)) AS fee_inr_value,
+//         TRIM(BOTH '\"' FROM JSON_UNQUOTE(JSON_EXTRACT(fee_item, '$.fee_currency'))) AS fee_currency
+//     FROM tblpayment_quotations pq
+//     CROSS JOIN JSON_TABLE(
+//         pq.fess_infomation, 
+//         '$[*]' 
+//         COLUMNS (
+//             fee_item JSON PATH '$'
+//         )
+//     ) AS jt
+//     WHERE pq.status > 0 
+//       AND pq.payment_type != 16
+// ),
+// agg_fees AS (
+//     -- Sum by client_id, fee_id, currency to make them unique
+//     SELECT 
+//         client_id, 
+//         fee_id, 
+//         fee_currency, 
+//         SUM(fee_inr_value) AS total_inr
+//     FROM payment_flat
+//     GROUP BY client_id, fee_id, fee_currency
+// ),
+// merged_json AS (
+//     -- Convert to JSON array
+//     SELECT 
+//         client_id,
+//         JSON_ARRAYAGG(
+//             JSON_OBJECT(
+//                 'fee_id', fee_id,
+//                 'fee_currency', fee_currency,
+//                 'fee_inr_value', total_inr
+//             )
+//         ) AS merged_fees_json
+//     FROM agg_fees
+//     GROUP BY client_id
+// )
+// SELECT
+//     c.userid AS client_id,
+//     IF(c.client_type = 2, 'EVP', 'EV') AS owner,
+//     CONCAT(c.applicant_stage, ' ', tt.name) AS app_process_stage,
+//     CONCAT(bd.first_name, ' ', bd.last_name) AS student_name,
+//     ap.primary_country,
+//     ap.primary_university,
+//     IF(c.client_type = 2, evp.name, CONCAT(st.firstname, ' ', st.lastname)) AS counsellor_name,
+//     pq.payment_type,
+//     CONCAT(
+//         '[', 
+//         GROUP_CONCAT(
+//             DISTINCT JSON_OBJECT(
+//                 'fees_id', fd.fees_id,
+//                 'amount', fd.amount,
+//                 'currency_id', fd.currency_id
+//             )
+//         ), 
+//         ']'
+//     ) AS fees_details_json,
+//     mj.merged_fees_json AS payment_details_json
+// FROM tblclients c
+// LEFT JOIN tblbasic_details bd ON bd.userid = c.userid
+// LEFT JOIN tbladmission_preferences ap ON ap.userid = c.userid
+// LEFT JOIN tblapplicant_stages tt ON tt.id = c.applicant_stage
+// LEFT JOIN tblleads l ON c.leadid = l.id
+// LEFT JOIN tblstaff st ON st.staffid = l.assigned
+// LEFT JOIN tblev_partner evp ON evp.id = c.agent_id
+// LEFT JOIN tblpayment_quotations pq ON pq.client_id = c.userid AND pq.status > 0
+// LEFT JOIN tblapplicant_fees_details fd ON fd.client_id = c.userid
+// JOIN merged_json mj ON mj.client_id = c.userid
+// WHERE (l.type = 2 OR l.type IS NULL OR c.client_type = 2)
+//   AND c.userid = 863
+// GROUP BY 
+//     c.userid;
+// ";
+
+
+  
     $arrayData = $CI->db->query($sql)->result_array();
 
 
