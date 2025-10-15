@@ -7,14 +7,14 @@ $get_clients_fees = get_clients_fees_details(2, $client_id);
 
 $FessAmounts  =  array_column($get_clients_fees, null, 'id');
 $FeesInformation = array_column(university_applicant_fees_payments(["lead_type" => 2]), null, "id");
-$applicantpaymentdata = $ci->quotation_model->applicant_payment_data($client_id, "", "");
+$applicantpaymentdata = $ci->quotation_model->applicant_payment_data($client_id, "", "1");
 $get_currencies = get_currencies();
 $currency_lookup = array_column($get_currencies, NULL, 'id');
 
 $orignal_amount = [];
 $remaningDues = [];
 $deduction_amount = [];
-
+$refund_amount = [];
 
 // if (!empty($applicantpaymentdata)) {
 //     foreach ($applicantpaymentdata as $applicantPayment) {
@@ -27,14 +27,28 @@ if (!empty($applicantpaymentdata)) {
         $FeesInformation_array = json_decode($applicantPayment['fess_infomation'],true);
   
         foreach ($FeesInformation_array as $applicantPayment_) {
+         
+            if($applicantPayment["payment_type"] == RETURN_FEES_ID)
+            {
+                if($applicantPayment_["fee_id"] ==1){
+        $refund_amount[$applicantPayment_["fee_id"]][3] += $applicantPayment_['fee_inr_value'] ?? 0;
+            }else
+            {
+                $refund_amount[$applicantPayment_["fee_id"]][$applicantPayment_["fee_currency"]] += $applicantPayment_['fee_amount'] ?? 0; 
+            }
+            }
+            else{
             if($applicantPayment_["fee_id"] ==1){
         $deduction_amount[$applicantPayment_["fee_id"]][3] += $applicantPayment_['fee_inr_value'] ?? 0;
             }else
             {
                 $deduction_amount[$applicantPayment_["fee_id"]][$applicantPayment_["fee_currency"]] += $applicantPayment_['fee_amount'] ?? 0; 
             }
+            }
         }
     }
+    
+
 }
 ?>
 
@@ -89,7 +103,7 @@ if(in_array($FeesInfo["id"],[2,4,8]))
 
             // Get deductions safely
             $deductions = $deduction_amount[$feeId] ?? [];
-
+            $refunds = $refund_amount[$feeId] ?? [];
 
             // Calculate total deductions
             $totalDeductions = 0;
@@ -97,6 +111,15 @@ if(in_array($FeesInfo["id"],[2,4,8]))
                 $d_Fees = (int) str_replace(',', '', $d_FeesRaw);
                 $totalDeductions += $d_Fees;
                 $orignal_amount[$feeId][$key] -= $d_Fees;
+                // $remaining[$feeId][$key] -= $d_Fees;
+            }
+            
+          
+            $totalRefund = 0;
+              foreach ($refunds as $key => $r_FeesRaw) {
+                $r_Fees = (int) str_replace(',', '', $r_FeesRaw);
+                $totalRefund += $r_Fees;
+                $orignal_amount[$feeId][$key] += $r_Fees;
                 // $remaining[$feeId][$key] -= $d_Fees;
             }
 
@@ -110,6 +133,22 @@ if(in_array($FeesInfo["id"],[2,4,8]))
                         <?php if (!empty($deductions)): ?>
                             <?php $paymentIndex = 0; ?>
                             <?php foreach ($deductions as $key => $d_FeesRaw): ?>
+                                <?php
+                                $d_Fees = (int) str_replace(',', '', $d_FeesRaw);
+                                $currencySymbol = $currency_lookup[$key]['symbol'] ?? $currency_lookup[$default_currency]['symbol'];
+                                ?>
+                                <?= ($paymentIndex > 0) ? '+' : '' ?>
+                                <?= htmlspecialchars($currencySymbol) . $d_Fees ?>
+                                <?php $paymentIndex++; ?>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <?= $currency_lookup[$default_currency]['symbol'] ?> 0
+                        <?php endif; ?>
+                    </p>
+                    <p><strong>Refund:</strong>
+                        <?php if (!empty($refunds)): ?>
+                            <?php $paymentIndex = 0; ?>
+                            <?php foreach ($refunds as $key => $d_FeesRaw): ?>
                                 <?php
                                 $d_Fees = (int) str_replace(',', '', $d_FeesRaw);
                                 $currencySymbol = $currency_lookup[$key]['symbol'] ?? $currency_lookup[$default_currency]['symbol'];

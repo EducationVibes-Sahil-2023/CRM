@@ -604,7 +604,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
 
 
-                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID ? 'show' : 'none' ?>">
+                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID || RETURN_FEES_ID ? 'show' : 'none' ?>">
                                             <label>Payment Fees Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new type"
                                                 multiple
@@ -1360,7 +1360,7 @@ function check_tt_copy(obj)
             let $panel = $(obj).closest('.panel_s');
             let $splitTypeDropdown = $panel.find(".split-type-dropdown");
             let $splitTypeSelect = $splitTypeDropdown.find("select.electpicker");
-            if (feesID == <?= PACKAGE_FEES_ID ?>) {
+            if (feesID == <?= PACKAGE_FEES_ID ?> || feesID == <?= RETURN_FEES_ID ?> ) {
                 $splitTypeSelect.val('').selectpicker('refresh');
                 $splitTypeDropdown.show();
                 $tbody.html('');
@@ -1766,14 +1766,14 @@ function check_tt_copy(obj)
                     }
                     console.log(totalAmountCheck);
                     console.log(totalAmountCheck_);
-                    if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_) && payment_type_id != "<?= PACKAGE_FEES_ID ?>") {
-                        error = true;
-                        hide_loader();
-                        alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match Amount.");
-                        return false;
-                    }
+                    // if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_)) {
+                    //     error = true;
+                    //     hide_loader();
+                    //     alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match Amount.");
+                    //     return false;
+                    // }
 
-                    if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_) && payment_type_id != "<?= PACKAGE_FEES_ID ?>") {
+                    if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_)) {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match INR Value. ");

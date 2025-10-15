@@ -70,7 +70,9 @@ function numberToWord($num)
         <td style="width:70%;" class="small">
             <p>Invoice Number: INVOICE-HM-00<?= htmlspecialchars($hostelData->id ?? '') ?></p>
             <p>Invoice Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date)) : '' ?></p>
-            <p>Payment Terms: <?= htmlspecialchars($modes[$paymentMode] ?? '') ?></p>
+            
+            <p>Payment Terms: CASH IN RECEPTION/BANK</p>
+            <!--<p>Payment Terms: <?= htmlspecialchars($modes[$paymentMode] ?? '') ?></p>-->
             <p>Payment Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day')) : '' ?></p>
         </td>
         <td style="width:30%; text-align:right;">
@@ -87,17 +89,17 @@ function numberToWord($num)
 <table>
     <tr>
         <td style="width:50%;" class="small">
+            <p>Company Name: <?= $hostelData->beneficiary_name ?></p>
+            <p>ID: 405757809</p>
             <?php if (!empty($hostelData->hostel_name)): ?>
-                <p>Name: <?= htmlspecialchars($hostelData->hostel_name) ?></p>
+                <!--<p>Company Name: <?= htmlspecialchars($hostelData->hostel_name) ?></p>-->
             <?php endif; ?>
 
             <?php if (!empty($hostelData->hostel_address)): ?>
                 <p>Address: <?= htmlspecialchars($hostelData->hostel_address) ?></p>
             <?php endif; ?>
 
-            <?php if (!empty($hostelData->hostel_id)): ?>
-                <p>ID: <?= htmlspecialchars($hostelData->hostel_id) ?></p>
-            <?php endif; ?>
+           
 
             <?php if (!empty($hostelData->contact_number)): ?>
                 <p>Phone: <?= htmlspecialchars($hostelData->contact_number) ?></p>
@@ -166,12 +168,14 @@ function numberToWord($num)
             <p>Bank Code</p>
             <p>Beneficiary’s IBAN</p>
             <p>Name of Beneficiary </p>
+            <p>Address</p>
         </td>
         <td>
             <p><?= $hostelData->beneficiary_bank ?></p>
             <p><?= $hostelData->bank_code ?></p>
             <p><?= $hostelData->beneficiary_iban ?></p>
             <p><?= $hostelData->beneficiary_name ?></p>
+            <p>29a Gagarin Street,Tbilisi 0160, Georgia </p>
         </td>
     </tr>
 </table>
@@ -189,12 +193,15 @@ function numberToWord($num)
                 <p> Bank Code </p>
                 <p> Beneficiary’s IBAN </p>
                 <p> Name of Beneficiary</p>
+                <p> Address</p>
+                
             </td>
             <td>
                 <p><?= $hostelData->beneficiary_bank ?></p>
                 <p><?= $hostelData->bank_code ?></p>
                 <p><?= $hostelData->beneficiary_iban_usd ?></p>
                 <p><?= $hostelData->beneficiary_name ?></p>
+                <p>29a Gagarin Street,Tbilisi 0160, Georgia </p>
             </td>
         </tr>
     </table>
@@ -205,17 +212,19 @@ function numberToWord($num)
     <tr class="small">
         <td>
             <p>Intermediary bank</p>
-            <p>Beneficiary Bank</p>
-            <p></p>
-            <p>Beneficiary</p>
-            <p>Account</p>
+            <p>SWIFT Code</p>
+            <!--<p>Beneficiary Bank</p>-->
+            <!--<p></p>-->
+            <!--<p>Beneficiary</p>-->
+            <!--<p>Account</p>-->
         </td>
         <td>
-            <p>Citibank N.A. , New York, USA: SWIFT : CITIUS33</p>
-            <p>Bank of Georgia, SWIFT : BAGAGE22; 29a Gagarin Street,</p>
-            <p>Tbilisi 0160, Georgia </p>
-            <p>Education Vibes LLP</p>
-            <p>GE95BG0000000606359971</p>
+            <p>Citibank N.A., New York, USA</p>
+            <p>CITIUS33</p>
+            <!--<p>Bank of Georgia, SWIFT : BAGAGE22; 29a Gagarin Street,</p>-->
+            <!--<p>Tbilisi 0160, Georgia </p>-->
+            <!--<p>Education Vibes LLP</p>-->
+            <!--<p>GE95BG0000000606359971</p>-->
         </td>
     </tr>
 </table>

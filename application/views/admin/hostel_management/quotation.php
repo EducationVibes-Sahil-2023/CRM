@@ -331,9 +331,9 @@ if (!empty($_GET['quotation_id'])) {
                                         <h4 class="mb-0">Food/Mess and Accommodation</h4>
                                     </div>
                                     <div class="col-md-6 text-right">
-                                        <button type="button" class="btn btn-primary" onclick="newUniversityDue()">
-                                            <i class="fa fa-plus"></i>
-                                        </button>
+                                        <!--<button type="button" class="btn btn-primary" onclick="newUniversityDue()">-->
+                                        <!--    <i class="fa fa-plus"></i>-->
+                                        <!--</button>-->
                                     </div>
                                 </div>
                                 <hr>
@@ -374,7 +374,7 @@ if (!empty($_GET['quotation_id'])) {
                                                                     <?= htmlspecialchars($symbol) ?>
                                                                 </div>
 
-                                                                <input type="text" name="<?= $field_name ?>_amount" required
+                                                                <input type="text" name="<?= $field_name ?>_amount" <?= $id == 5 ? 'required' : '' ?>
                                                                     oninput="calculateInrValue()"
                                                                     class="form-control currency-amount fees_<?= $fees['id'] ?>"
                                                                     placeholder="0.00" value="<?= $fees["amount"] ?? '' ?>">
@@ -1079,11 +1079,14 @@ if (!empty($_GET['quotation_id'])) {
                 vendor_select.append('<option value="">No vendors available</option>');
             }
         } else if (modeId == 2) {
-            vendor_select.empty();
-
             vendor_select.append(
-                '<option selected value="<?= $hostelData->vendor_update ?>"><?= $hostelData->vendor_update ?></option>'
+                '<option value="<?= htmlspecialchars($hostelData->university_name) ?>" selected>' +
+                '<?= htmlspecialchars($hostelData->university_name) ?>' +
+                '</option>'
             );
+
+            vendor_select.val("<?= htmlspecialchars($hostelData->university_name) ?>");
+            vendor_select.selectpicker('refresh');
         } else if (modeId == 3) {
             vendor_select.empty();
 
@@ -1344,37 +1347,45 @@ if (!empty($_GET['quotation_id'])) {
         event.preventDefault();
         let missingFields = [];
 
+
+
         $(form)
             .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
             .each(function() {
-                let value = $(this).val(); // safely get value
+                let value = $(this).val();
+
                 if (!value || String(value).trim() === "") {
                     $(this).addClass("is-invalid");
 
-                    // Try to get readable label
-                    let label = $(this).siblings("label").text().trim();
-                    let fieldName = label || $(this).attr("name");
+                    // Try to get a readable label (check <label for=""> or placeholder or name)
+                    let fieldLabel =
+                        $("label[for='" + $(this).attr("id") + "']").text().trim() ||
+                        $(this).attr("placeholder") ||
+                        $(this).attr("name") ||
+                        "Unnamed field";
 
-                    // Collect field name
-                    missingFields.push(fieldName);
+                    // Add field to list of missing fields
+                    missingFields.push(fieldLabel);
 
-                    console.warn("Missing required:", fieldName);
+                    console.warn("Missing required:", fieldLabel);
                 } else {
                     $(this).removeClass("is-invalid");
                 }
             });
 
+        // After checking all fields
         if (missingFields.length > 0) {
+            // Scroll to first invalid field
             $('html, body').animate({
                 scrollTop: $(".is-invalid").first().offset().top - 100
             }, 400);
 
+            // Show alert (assuming alert_float is defined)
             alert_float(
                 "danger",
-                "Please fill the following required fields:<br><b>" +
-                missingFields.join(", ") +
-                "</b>"
+                "Please fill the following required fields"
             );
+
             return false;
         }
 
