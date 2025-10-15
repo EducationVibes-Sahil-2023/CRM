@@ -58,6 +58,14 @@ function get_available_staff_permissions($data = [])
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],
         ],
+
+        'hostel' => [
+            'name'         => "Hostel",
+            'capabilities' => array_merge($allPermissionsArray),
+            'help'         => [
+                'view_own' => _l('permission_customers_based_on_admins'),
+            ],
+        ],
         'external_visa' => [
             'name'         => "External Visa",
             'capabilities' => $allPermissionsArray,
