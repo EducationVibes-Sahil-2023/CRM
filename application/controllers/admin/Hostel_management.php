@@ -516,8 +516,8 @@ class hostel_management extends AdminController
         if (file_exists($stampPath)) {
 
             // X and Y coordinates in mm
-            $x = 150; // distance from left
-            $y = 250;  // distance from top
+            $x = 130; // distance from left
+            $y = 230;  // distance from top
 
             // Width of image in mm (height auto-scaled)
             $width = 40;

@@ -64,15 +64,13 @@ function numberToWord($num)
 }
 
 ?>
-<h3 class="invoice-title">INVOICE</h3>
+<h2 class="invoice-title">INVOICE</h2>
 <table>
     <tr>
         <td style="width:70%;" class="small">
             <p>Invoice Number: INVOICE-HM-00<?= htmlspecialchars($hostelData->id ?? '') ?></p>
             <p>Invoice Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date)) : '' ?></p>
-            
             <p>Payment Terms: CASH IN RECEPTION/BANK</p>
-            <!--<p>Payment Terms: <?= htmlspecialchars($modes[$paymentMode] ?? '') ?></p>-->
             <p>Payment Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day')) : '' ?></p>
         </td>
         <td style="width:30%; text-align:right;">
@@ -85,26 +83,21 @@ function numberToWord($num)
 </table>
 <br>
 <hr>
-
 <table>
     <tr>
         <td style="width:50%;" class="small">
-            <p>Company Name: <?= $hostelData->beneficiary_name ?></p>
-            <p>ID: 405757809</p>
-            <?php if (!empty($hostelData->hostel_name)): ?>
-                <!--<p>Company Name: <?= htmlspecialchars($hostelData->hostel_name) ?></p>-->
+            <?php if (!empty($hostelData->company_name)): ?>
+                <p>Company Name: <?= $hostelData->company_name ?></p>
             <?php endif; ?>
-
-            <?php if (!empty($hostelData->hostel_address)): ?>
-                <p>Address: <?= htmlspecialchars($hostelData->hostel_address) ?></p>
+            <?php if (!empty($hostelData->company_id)): ?>
+                <p>ID: <?= $hostelData->company_id ?></p>
             <?php endif; ?>
-
-           
-
+            <?php if (!empty($hostelData->address)): ?>
+                <p>Address: <?= htmlspecialchars($hostelData->address) ?></p>
+            <?php endif; ?>
             <?php if (!empty($hostelData->contact_number)): ?>
                 <p>Phone: <?= htmlspecialchars($hostelData->contact_number) ?></p>
             <?php endif; ?>
-
             <?php if (!empty($hostelData->email)): ?>
                 <p>Email: <?= htmlspecialchars($hostelData->email) ?></p>
             <?php endif; ?>
@@ -156,9 +149,10 @@ function numberToWord($num)
             <!-- <p>(Equivalent in Gel)</p> -->
         </td>
     </tr>
+    <tr><td colspan="2"></td></tr>
     <tr class="small">
         <td colspan="2">
-            <p class="bold"><?= $hostelData->bank_header ?></p>
+            <p class="bold"><?= $hostelData->beneficiary_headline ?></p>
         </td>
     </tr>
     <tr class="small">
@@ -172,20 +166,19 @@ function numberToWord($num)
         </td>
         <td>
             <p><?= $hostelData->beneficiary_bank ?></p>
-            <p><?= $hostelData->bank_code ?></p>
+            <p><?= $hostelData->beneficiary_code ?></p>
             <p><?= $hostelData->beneficiary_iban ?></p>
             <p><?= $hostelData->beneficiary_name ?></p>
-            <p>29a Gagarin Street,Tbilisi 0160, Georgia </p>
+            <p><?= $hostelData->beneficiary_address ?></p>
         </td>
     </tr>
 </table>
 <p></p>
-<?php if (!empty($hostelData->beneficiary_iban_usd)) { ?>
-    <hr>
-    <p></p>
+<hr>
+<?php if (!empty($hostelData->usd_beneficiary_bank)) { ?>
     <table class="small">
         <tr>
-            <p class="bold"> FOR U.S. DOLLAR INTERNATIONAL TRANSFER</p>
+            <p class="bold"><?= $hostelData->usd_beneficiary_headline ?></p>
         </tr>
         <tr class="small">
             <td>
@@ -194,14 +187,14 @@ function numberToWord($num)
                 <p> Beneficiary’s IBAN </p>
                 <p> Name of Beneficiary</p>
                 <p> Address</p>
-                
+
             </td>
             <td>
-                <p><?= $hostelData->beneficiary_bank ?></p>
-                <p><?= $hostelData->bank_code ?></p>
-                <p><?= $hostelData->beneficiary_iban_usd ?></p>
-                <p><?= $hostelData->beneficiary_name ?></p>
-                <p>29a Gagarin Street,Tbilisi 0160, Georgia </p>
+                <p><?= $hostelData->usd_beneficiary_bank ?></p>
+                <p><?= $hostelData->usd_beneficiary_code ?></p>
+                <p><?= $hostelData->usd_beneficiary_iban ?></p>
+                <p><?= $hostelData->usd_beneficiary_name ?></p>
+                <p><?= $hostelData->usd_beneficiary_address ?></p>
             </td>
         </tr>
     </table>
@@ -213,18 +206,11 @@ function numberToWord($num)
         <td>
             <p>Intermediary bank</p>
             <p>SWIFT Code</p>
-            <!--<p>Beneficiary Bank</p>-->
-            <!--<p></p>-->
-            <!--<p>Beneficiary</p>-->
-            <!--<p>Account</p>-->
+
         </td>
         <td>
-            <p>Citibank N.A., New York, USA</p>
-            <p>CITIUS33</p>
-            <!--<p>Bank of Georgia, SWIFT : BAGAGE22; 29a Gagarin Street,</p>-->
-            <!--<p>Tbilisi 0160, Georgia </p>-->
-            <!--<p>Education Vibes LLP</p>-->
-            <!--<p>GE95BG0000000606359971</p>-->
+            <p><?= $hostelData->intermediary_bank ?></p>
+            <p><?= $hostelData->intermediary_swift_code ?></p>
         </td>
     </tr>
 </table>
@@ -234,11 +220,11 @@ function numberToWord($num)
 <table>
     <tr>
         <td>
-            <p class="large bold"><?= $hostelData->note ?></p>
+            <p class="large bold"><?= $hostelData->footer_note ?></p>
             <p class="large"><strong>Note:</strong> Kindly make the payment by <span style="background-color: yellow; font-weight: bold; padding: 2px 4px;"><?= !empty($hostelData->created_date)
-                                                                                                            ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
-                                                                                                            : ''
-                                                                                                        ?></span>. In the description of the bank receipt must mention Food & Accommodation for the
+                                                                                                                                                                ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
+                                                                                                                                                                : ''
+                                                                                                                                                            ?></span>. In the description of the bank receipt must mention Food & Accommodation for the
                 student name, invoice number and passport number clearly</p>
         </td>
     </tr>
