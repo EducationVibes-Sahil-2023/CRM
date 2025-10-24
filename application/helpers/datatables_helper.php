@@ -1107,8 +1107,10 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sLimit
     ";
 
-    // echo $sQuery;
-    // die;
+// if(is_admin()){
+//     echo $sQuery;
+//     die;
+// }
     $rResult = $CI->db->query($sQuery)->result_array();
 
     $rResult = hooks()->apply_filters('datatables_sql_query_results', $rResult, [

@@ -10450,6 +10450,7 @@ class Clients extends AdminController
 
     public function visa_details()
     {
+   
         // ✅ Permission check
         if (!has_permission('external_visa', '', 'view_own')) {
             return access_denied('external_visa'); // Stop execution immediately
@@ -10467,6 +10468,7 @@ class Clients extends AdminController
 
     public function visa_details_table()
     {
+             die;
         // ✅ Permission check
         if (!has_permission('external_visa', '', 'view_own')) {
             return access_denied('external_visa'); // Use return to stop further execution
