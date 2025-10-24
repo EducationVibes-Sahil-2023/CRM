@@ -48,7 +48,9 @@ $visa_vendors = get_vendor_list(2);
 $fly_vendors = get_vendor_list(3);
 $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
-$fly_batch = fly_batch();
+// $fly_batch = fly_batch();
+$fly_batch = $this->db->select("id,name")->from(db_prefix() . 'ticket_batch')
+        ->where('status', 1)->group_by("name")->get()->result_array();
 $fly_departure = fly_departure();
 
 
@@ -584,7 +586,7 @@ $client_type = [
                               <div class="col-md-2  margin-top leads-filter-column filter-hide-default filter-fly-batch hide">
                                  <?php
                                  echo '<div id="leads-filter-source">';
-                                 echo render_select('fly_batch_filter[]', $fly_batch, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Batch", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_batch_filter");
+                                 echo render_select('fly_batch_filter[]', $fly_batch, array('name', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Fly Batch", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "fly_batch_filter");
                                  echo '</div>';
                                  ?>
                               </div>

@@ -347,6 +347,7 @@ class hostel_management extends AdminController
 
             // --- Check for duplicate passport ---
             $this->db->where('passport', $data['passport'] ?? '');
+             $this->db->where('status',1);
             if (!empty($data['hostel_management_id'])) {
                 // Exclude current record when updating
                 $this->db->where('id !=', $data['hostel_management_id']);

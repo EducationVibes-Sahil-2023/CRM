@@ -638,10 +638,16 @@ if ($this->ci->input->post('last_to_date')) {
 
 if ($this->ci->input->post('fly_batch_filter')) {
     $batch_ids = $this->ci->input->post('fly_batch_filter');
-    if (is_array($batch_ids)) {
+    // if (is_array($batch_ids)) {
+    //     $escaped_batch_ids = array_map([$this->ci->db, 'escape'], $batch_ids);
+    //     array_push($where, 'AND td.batch_id IN (' . implode(',', $escaped_batch_ids) . ')');
+    // }
+    
+     if (is_array($batch_ids)) {
         $escaped_batch_ids = array_map([$this->ci->db, 'escape'], $batch_ids);
-        array_push($where, 'AND td.batch_id IN (' . implode(',', $escaped_batch_ids) . ')');
+        array_push($where, 'AND tb.name IN (' . implode(',', $escaped_batch_ids) . ')');
     }
+    
 }
 
 
