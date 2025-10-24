@@ -204,7 +204,7 @@ $route['external/applicant_sync_excel_new'] = 'External_Apis/Login_Controller/ap
 $route['external/quotations'] = 'External_Apis/Login_Controller/quotations';
 $route['external/payment_dues'] = 'External_Apis/Login_Controller/payment_dues';
 
-
+$route['external/payment_dues_hostel'] = 'External_Apis/Login_Controller/payment_dues_hostel';
 /**
  * @since  2.3.0
  * Route for clients set password URL, because it's using the same controller for staff to

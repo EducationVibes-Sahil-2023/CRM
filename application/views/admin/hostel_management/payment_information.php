@@ -37,19 +37,23 @@ $currency_lookup       = array_column($get_currencies, NULL, 'id');
                 <h4><?= $quotationKey ?></h4>
                 <hr>
                 <?php
-                $quotationFees = $quotation['quotation'] ?? [];
+                $quotationFees     = $quotation['quotation'] ?? [];
                 $quotationPayments = $quotation['payment'] ?? [];
+                $quotationRefunds  = $quotation['refund'] ?? [];
                 ?>
                 <?php foreach ($quotationFees as $feeId => $feeData): ?>
                     <?php
-                    $feeName = $feeData['fee_name'] ?? 'N/A';
+                    $feeName     = $feeData['fee_name'] ?? 'N/A';
                     $totalAmount = $feeData['total_inr'] ?? 0;
 
-                    $currencyId = array_key_first($currency_lookup) ?? 3; // fallback
+                    $currencyId     = array_key_first($currency_lookup) ?? 3; // fallback
                     $currencySymbol = $currency_lookup[$currencyId]['symbol'] ?? '₹';
 
                     // Payment amount for this fee
-                    $paidAmount = $quotationPayments[$feeId]['paid_inr'] ?? 0;
+                    $paidAmount   = $quotationPayments[$feeId]['paid_inr'] ?? 0;
+
+                    // Refund amount for this fee
+                    $refundAmount = $quotationRefunds[$feeId]['refund_inr'] ?? 0;
 
                     // Remaining due
                     $dueAmount = $totalAmount - $paidAmount;
@@ -66,6 +70,11 @@ $currency_lookup       = array_column($get_currencies, NULL, 'id');
                             <p class="mb-1">
                                 <strong>Payments:</strong>
                                 <?= htmlspecialchars($currencySymbol) . number_format($paidAmount, 2) ?>
+                            </p>
+
+                            <p class="mb-1">
+                                <strong>Refunds:</strong>
+                                <?= htmlspecialchars($currencySymbol) . number_format($refundAmount, 2) ?>
                             </p>
 
                             <p class="mb-0">

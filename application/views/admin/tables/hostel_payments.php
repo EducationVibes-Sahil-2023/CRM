@@ -137,7 +137,7 @@ if (!empty($_POST['payment_id'])) {
         $action = '';
         if (is_admin() || has_permission('payment_quotation', '', 'edit')) {
             $action .= '
-                <a class="btn btn-xs btn-sm btn-primary" href="?group=payment&payment_id=' . (int)$aRow['id'] . '">
+                <a class="btn btn-xs btn-sm btn-primary" href="?tab=payment&payment_id=' . (int)$aRow['id'] . '">
                     <i class="fa fa-pencil"></i>
                 </a>';
         }

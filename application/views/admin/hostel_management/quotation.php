@@ -377,7 +377,7 @@ if (!empty($_GET['quotation_id'])) {
                                                                 <input type="text" name="<?= $field_name ?>_amount" <?= $id == 5 ? 'required' : '' ?>
                                                                     oninput="calculateInrValue()"
                                                                     class="form-control currency-amount fees_<?= $fees['id'] ?>"
-                                                                    placeholder="0.00" value="<?= $fees["amount"] ?? '' ?>">
+                                                                    placeholder="0.00" value="<?= $fees["amount"] ?? 0 ?>">
 
                                                                 <div class="input-group-addon">
                                                                     <select name="<?= $field_name ?>_currency_type"
@@ -450,7 +450,7 @@ if (!empty($_GET['quotation_id'])) {
                                                                 <input type="text" name="<?= $field_name ?>_amount" required
                                                                     oninput="calculateInrValue()"
                                                                     class="form-control currency-amount fees_<?= $fees['id'] ?>"
-                                                                    placeholder="0.00" value="<?= $fees["amount"] ?? '' ?>">
+                                                                    placeholder="0.00" value="<?= $fees["amount"] ?? 0 ?>">
 
                                                                 <div class="input-group-addon">
                                                                     <select name="<?= $field_name ?>_currency_type"

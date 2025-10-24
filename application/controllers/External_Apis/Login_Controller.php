@@ -710,10 +710,17 @@ public function payment_dues()
 {
     
        $this->load->helper('google');
+    paymentDues();
+}
+
+public function payment_dues_hostel()
+{
+    
+       $this->load->helper('google');
     ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
-    paymentDues();
+    paymentDuesHostel();
 }
 
 }

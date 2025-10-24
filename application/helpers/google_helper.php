@@ -2025,7 +2025,7 @@ function ma_quotations()
                  ts.name sub_stage,
                  CONCAT(tt.id,' ',tt.name) application_stage,
                  if(c.client_type=1,'EV','EVP') as client_type,
-                 CONCAT(st.firstname,' ',st.lastname) as counsellor_name,
+                 if(c.client_type=1,CONCAT(st.firstname,' ',st.lastname),evp.name) as counsellor_name,
                  tb.name as batch_name,
                 DATE_FORMAT(
                 IF(td.fly_date IS NOT NULL AND td.fly_date != '0000-00-00',
@@ -2037,7 +2037,7 @@ function ma_quotations()
                 p.primary_country
                
 
-                 
+                 ev_partner
            FROM " . db_prefix() . "applicant_quotation_payment aq
 LEFT JOIN " . db_prefix() . "basic_details bd ON aq.client_id = bd.userid
 LEFT JOIN " . db_prefix() . "clients c ON c.userid = aq.client_id
@@ -2058,6 +2058,8 @@ LEFT JOIN (
 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
+LEFT JOIN " . db_prefix() . "ev_partner evp 
+    ON evp.id = c.agent_id
 WHERE 1=1 
   AND aq.status = 1
   {$condition_sql}
@@ -2213,7 +2215,7 @@ LEFT JOIN " . db_prefix() . "staff st
 LEFT JOIN " . db_prefix() . "ev_partner evp 
     ON evp.id = c.agent_id
 
-WHERE  (l.type = 2  OR l.type IS NULL OR c.client_type = 2)  and  pq.status > 0 and fd.client_id = 863
+WHERE  (l.type = 2  OR l.type IS NULL OR c.client_type = 2)  and  pq.status > 0 
 GROUP BY fd.client_id
 ";
 
@@ -2476,6 +2478,132 @@ function payment_quotations($id = '')
         // echo json_encode($dataArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         // exit;
     }
+}
+
+
+function paymentDuesHostel()
+{
+    
+    $CI = &get_instance();
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+    // fetch fees with lead_type as well
+    $feesList = $CI->db->select("id, name")
+        ->from(db_prefix() . "applicant_fees")->where_in("id", [5,6])
+        ->order_by("sequence", "ASC")
+        ->get()
+        ->result_array();
+
+    $columns = [
+        "Student Name",
+        "Passport",
+        "University Name",
+        "Hostel Type",
+        "Hostel Name",
+        "Floor No",
+        "Room No",
+        "Room Capacity",
+        // "Rent",
+        // "Currency",
+        "Start Date",
+        "End Date",
+        "Months",
+        // "Payment Mode",
+        // "Payment Type",
+        // "Transaction Type",
+        // "Vendor Name",
+        "Remark"
+    ];
+    
+    
+
+    $normal = $pay = $dues = [];
+
+    foreach ($feesList as $fee) {
+        $normal[] = $fee['name'];
+        $pay[]    = "Pay " . $fee['name'];
+        $dues[]   = "Dues " . $fee['name'];
+    }
+
+    $columns = array_merge($columns, $normal, $pay, $dues);
+
+
+
+
+
+    $sheet_name = "Hostel Payment Dues";
+    
+ $sql = "SELECT 
+    ho.id AS student_id,
+    ho.passport as passport,
+    ho.name AS student_name,
+    hq.id AS quotation_id,
+    hq.university_name,
+    hq.room_no,
+    hq.floor_no,
+    h.name AS hostel_type,
+    h.hostel_name AS hostel_name,
+    hq.room_capacity,
+    ho.rent_amount,
+    c.name AS currency_name,
+    hq.start_date,
+    hq.end_date,
+    hq.hostel_due,
+    hq.pdf,
+    m.name AS mode,
+    hp1.vendor_id,
+    IF(hp1.vendor_id > 0, hp1.vendor_name, NULL) AS vendor_name,
+    hp1.type,
+    hp1.pay_date,
+    hp1.remark,
+    tpt.name AS transaction_type,
+    TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date)
+        + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference,
+    JSON_ARRAYAGG(
+        JSON_MERGE_PATCH(
+            CAST(fees_table.fee AS JSON),
+            JSON_OBJECT('payment_type', hp1.payment_type)
+        )
+    ) AS fess_infomation
+
+FROM tblhostel_infomation ho
+LEFT JOIN tblhostel h 
+    ON ho.hostel = h.id
+LEFT JOIN tblhostel_quotation hq 
+    ON ho.id = hq.hostel_info_id AND hq.status > 0
+LEFT JOIN tblhostel_payments hp1 
+    ON hp1.quotation_id = hq.id AND hp1.status > 0
+LEFT JOIN tblquotation_mode m 
+    ON m.id = hp1.mode
+LEFT JOIN tblcurrencies c 
+    ON c.id = ho.currency
+LEFT JOIN tblapplicant_fees f ON f.id = hp1.payment_type  
+LEFT JOIN tbltransaction_type tpt 
+    ON tpt.id = hp1.transaction_type
+JOIN JSON_TABLE(hp1.fess_infomation, '$[*]' 
+    COLUMNS (fee JSON PATH '$')
+) AS fees_table
+WHERE ho.status = 1
+GROUP BY ho.id";
+
+    $arrayData = $CI->db->query($sql)->result_array();
+    
+    $dataArray = [[
+        "columnName"    => $columns,
+        "workSheetName" => $sheet_name,
+        "rowData"       => $arrayData,
+        "currency" => array_column($CI->db->select("id,name,symbol")
+            ->from(db_prefix() . "currencies")
+            ->order_by("isdefault", "DESC")
+            ->order_by("id", "ASC")
+            ->get()->result_array(), null, "id"),
+        "fess_type" => $feesList
+    ]];
+
+    header('Content-Type: application/json');
+    echo json_encode($dataArray);
+    die;
+
+    
 }
 
 

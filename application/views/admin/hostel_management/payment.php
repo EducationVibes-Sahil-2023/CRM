@@ -49,6 +49,7 @@
             "End Date",
             "Room Capacity",
             "Status",
+            "Proof",
             "Action",
         );
         ?>
@@ -287,7 +288,7 @@ if (has_permission('hostel_management', '', 'payment')) {
     $payment_id = !empty($_GET['payment_id']) ? (int)$_GET['payment_id'] : 0;
 
     if (!empty($payment_id)) {
-        $applicant_payment_data = $ci->quotation_model->applicant_payment_data($getId, $payment_id);
+        $applicant_payment_data = $ci->Hostel_model->hostel_paymentData($getId, $payment_id);
 
         if (!empty($applicant_payment_data->exchange_value)) {
             $exchange_value_array = json_decode($applicant_payment_data->exchange_value, true) ?? [];
@@ -342,14 +343,14 @@ if (has_permission('hostel_management', '', 'payment')) {
                             </div>
 
                             <div class="col-md-3">
-                                <?= render_input('start_date', 'Start Date ', '', 'date', ["placeholder" => "Select Start Date", "readonly" => true]); ?>
+                                <?= render_input('start_date', 'Start Date ',$applicant_payment_data->start_date ?? '', 'date', ["placeholder" => "Select Start Date", "readonly" => true]); ?>
                             </div>
 
                             <div class="col-md-3">
-                                <?= render_input('end_date', 'End Date ', '', 'date', ["placeholder" => "Select End Date", "readonly" => true]); ?>
+                                <?= render_input('end_date', 'End Date ', $applicant_payment_data->end_date ?? '', 'date', ["placeholder" => "Select End Date", "readonly" => true]); ?>
                             </div>
                             <div class="col-md-3">
-                                <?= render_input('room_capacity', 'Room Capacity ', '', 'number', ["placeholder" => "Enter Room capacity", "readonly" => true]); ?>
+                                <?= render_input('room_capacity', 'Room Capacity ', $applicant_payment_data->room_capacity ?? '', 'number', ["placeholder" => "Enter Room capacity", "readonly" => true]); ?>
                             </div>
                         </div>
                     </div>
@@ -575,7 +576,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 data-name='payment_type'
                                                 required
                                                 onchange="split_data(this, this.value)">
-                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [5, 6, 11])) {
+                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [5, 6, 11,16])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
@@ -590,7 +591,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
 
 
-                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID ? 'show' : 'none' ?>">
+                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID || RETURN_FEES_ID ? 'show' : 'none' ?>">
                                             <label>Payment Fees Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new type"
                                                 multiple
@@ -1346,14 +1347,18 @@ if (has_permission('hostel_management', '', 'payment')) {
                         <div class="input-group-addon currency-symbol-${unique}">
                             <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
                         </div>
-                        <input type="number" step="0.01"
-                               name="fee_amount[${feeData.id}]"
-                               required
-                               class="form-control fee-amount currency-amount ${readonly == 1 ? 'auto-populated' : ''}"
-                               placeholder="0.00"
-                               ${readonly == 1 ? 'readonly' : ''}
-                               value="${feeData.amount || 0}"
-                               oninput="calculateInrValue()">
+                       <input 
+    type="number" 
+    step="0.01"
+    name="fee_amount[${feeData.id}]"
+    ${feeData.id == 5 ? 'required' : ''}
+    class="form-control fee-amount currency-amount ${readonly == 1 ? 'auto-populated' : ''}"
+    placeholder="0.00"
+    ${readonly == 1 ? 'readonly' : ''}
+    value="${feeData.amount || 0}"
+    oninput="calculateInrValue()"
+/>
+
                         <div class="input-group-addon">
                             <select name="amount_currency_type[${feeData.id}]"
                                     ${readonly == 1 ? 'readonly' : ''}
@@ -1384,7 +1389,7 @@ if (has_permission('hostel_management', '', 'payment')) {
             let $panel = $(obj).closest('.panel_s');
             let $splitTypeDropdown = $panel.find(".split-type-dropdown");
             let $splitTypeSelect = $splitTypeDropdown.find("select.electpicker");
-            if (feesID == <?= PACKAGE_FEES_ID ?>) {
+            if (feesID == <?= PACKAGE_FEES_ID ?> || feesID == <?= RETURN_FEES_ID ?>) {
                 $splitTypeSelect.val('').selectpicker('refresh');
                 $splitTypeDropdown.show();
                 splitTypeDropdown.attr("required", true);
