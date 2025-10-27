@@ -3,22 +3,21 @@
 <?php
 $table_data = array(
     array('name' => 'Name'),
-    array('name' => 'Visa Vendor'),
-    array('name' => 'Visa Type'),
-    array('name' => 'Application Date'),
-    array('name' => 'Status'),
-    array('name' => 'Received Date'),
+    array('name' => 'Ticket Vendor'),
+    array('name' => 'Ticket Type'),
+    array('name' => 'Flight Date'),
     array('name' => 'Payment Mode'),
     array('name' => 'Payment Date'),
-    array('name' => 'Visa Cost'),
-    array('name' => 'Insurance Cost'),
+    array('name' => 'Ticket Cost'),
     array('name' => 'Country'),
+    array('name' => 'Departure'),
+    array('name' => 'Destination'),
     array('name' => 'Deposite Mode'),
     array('name' => 'Deposite Amount'),
     array('name' => 'Deposite Date')
 );
 ?>
-<div id="wrapper" class="visa_details">
+<div id="wrapper" class="ticket_details">
     <div class="content">
         <div class="row">
             <div class="col-md-12">
@@ -32,7 +31,7 @@ $table_data = array(
                             <div class="col-md-6 text-right">
                                 <?php if (has_permission('external_ticket', '', 'create')) {
                                 ?>
-                                    <a href="<?php echo admin_url('clients/external_visa'); ?>" class="btn btn-primary">
+                                    <a href="<?php echo admin_url('clients/external_ticket'); ?>" class="btn btn-primary">
                                         <i class="fa fa-plus"></i> <?php echo _l('create'); ?>
                                     </a>
                                 <?php } ?>
@@ -75,19 +74,19 @@ init_tail();
         CustomersServerParams['application_stage'] = "[name='view_application_stage']";
         CustomersServerParams['application_sub_stage'] = "[name='view_application_sub_stage']";
         CustomersServerParams['vendor_type'] = "[name='vendor_type[]']";
-        tAPI = initDataTable('.table-clients', admin_url + 'clients/visa_details_table', [0], [0], CustomersServerParams);
+        tAPI = initDataTable('.table-clients', admin_url + 'clients/ticket_details_table', [0], [0], CustomersServerParams);
         $('input[name="exclude_inactive"]').on('change', function() {
             tAPI.ajax.reload();
         });
     });
 
-    function deleteVisa(id) {
-        if (!confirm('Are you sure you want to delete this visa record?')) {
+    function deleteTicket(id) {
+        if (!confirm('Are you sure you want to delete this ticket record?')) {
             return;
         }
 
         $.ajax({
-            url: '<?= admin_url("clients/delete_visa/"); ?>' + id,
+            url: '<?= admin_url("clients/delete_ticket/"); ?>' + id,
             type: 'POST',
             dataType: 'json',
             success: function(response) {
