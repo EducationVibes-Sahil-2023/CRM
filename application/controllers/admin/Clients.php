@@ -10450,7 +10450,7 @@ class Clients extends AdminController
 
     public function visa_details()
     {
-   
+
         // ✅ Permission check
         if (!has_permission('external_visa', '', 'view_own')) {
             return access_denied('external_visa'); // Stop execution immediately
@@ -10468,7 +10468,7 @@ class Clients extends AdminController
 
     public function visa_details_table()
     {
-             die;
+
         // ✅ Permission check
         if (!has_permission('external_visa', '', 'view_own')) {
             return access_denied('external_visa'); // Use return to stop further execution
@@ -10652,5 +10652,182 @@ class Clients extends AdminController
 
         // ✅ Load view safely
         $this->load->view($view_page, $data);
+    }
+
+
+    public function external_ticket($id = "")
+    {
+        // ✅ Permission check
+        if (!has_permission('external_ticket', '', 'create')) {
+            return access_denied('external_ticket'); // Stop execution immediately
+        }
+
+        if (!empty($id) && !has_permission('external_ticket', '', 'edit')) {
+            return access_denied('external_ticket'); // Stop execution immediately
+        }
+
+        // ✅ Prepare any required data (if needed in view)
+        $data = [];
+        $data["id"] = $id;
+        $data["country"] = $this->s_db->query("SELECT co.name,c.country_name,c.id country_id FROM course co left join countries c ON (co.id = c.segment_id) where co.id=7")->result_array();
+        $data["ticketData"] = $this->db->where('id', $id)->get(db_prefix() . 'external_ticket_data')->row();
+        // ✅ Set correct view page
+        $view_page = 'admin/clients/external_ticket'; // Example path for view file
+
+        // ✅ Load view safely
+        $this->load->view($view_page, $data);
+    }
+
+
+    public function ticket_details_table()
+    {
+
+        // ✅ Permission check
+        if (!has_permission('ticket_visa', '', 'view_own')) {
+            return access_denied('ticket_visa'); // Use return to stop further execution
+        }
+
+        // ✅ Correct table view (filename from views/admin/tables/)
+        $view = 'ticket_clients'; // corresponds to application/views/admin/tables/visa_clients.php
+
+        // ✅ Call DataTable loader
+        return $this->app->get_table_data($view);
+    }
+
+    public function save_ticket_details()
+    {
+        try {
+            if (!has_permission('external_ticket', '', 'create')) {
+                return access_denied('external_ticket'); // Stop execution immediately
+            }
+
+            if (!empty($data['id']) && !has_permission('external_ticket', '', 'edit')) {
+                return access_denied('external_ticket'); // Stop execution immediately
+            }
+            $data = $this->input->post();
+
+            // Validate required fields
+            if (empty($data['name']) || empty($data['ticket_vendor']) || empty($data['ticket_type'])) {
+                throw new Exception('Please fill all required fields');
+            }
+
+            // Prepare data array
+            $save_data = [
+                'name' => $data['name'],
+                'ticket_vendor' => $data['ticket_vendor'],
+                'ticket_type' => $data['ticket_type'],
+                // 'ticket_status' => $data['ticket_status'] ?? null,
+                'flight_date' => $data['flight_date'] ?? null,
+                // 'ticket_rec_date' => $data['ticket_rec_date'] ?? null,
+                'payment_mode' => $data['payment_mode'] ?? null,
+                'payment_date' => $data['payment_date'] ?? null,
+                'ticket_cost' => $data['ticket_cost'] ?? null,
+                // 'insurance_cost' => $data['insurance_cost'] ?? null,
+                'country' => $data['country'] ?? null,
+                'deposite_mode' => $data['deposite_mode'] ?? null,
+                'deposite_amount' => $data['deposite_amount'] ?? null,
+                'deposite_date' => $data['deposite_date'] ?? null,
+                'remark' => $data['remark'] ?? null,
+                'country_name' => $data['country_name'] ?? null,
+                'passport' => $data['passport'] ?? null,
+                'gender' => $data['gender'] ?? null,
+                'dob' => $data['dob'] ?? null,
+                'issue_date' => $data['issue_date'] ?? null,
+                'exp_date' => $data['exp_date'] ?? null,
+                'departure_id' => $data['departure_id'] ?? null,
+                'destination_id' => $data['destination_id'] ?? null,
+                'airline' => $data['airline'] ?? null,
+                'flight_type' => $data['flight_type'] ?? null,
+                'status' => 1
+            ];
+
+      
+
+            $data = $this->input->post();
+
+            // Define upload directory
+            $upload_path = FCPATH . 'uploads/ticket_documents_external/';
+            if (!is_dir($upload_path)) {
+                mkdir($upload_path, 0777, true);
+            }
+
+            // Handle optional file uploads
+            $file_fields = ['adhar', 'ticket_file', 'minor', 'passport_file'];
+            foreach ($file_fields as $field) {
+                if (!empty($_FILES[$field]['name'])) {
+                    $file = $_FILES[$field];
+                    $new_filename = time() . '_' . preg_replace('/\s+/', '_', $file['name']);
+                    $target_path = $upload_path . $new_filename;
+
+                    if (move_uploaded_file($file['tmp_name'], $target_path)) {
+                        // Save relative file path
+                        $save_data[$field] = 'uploads/ticket_documents_external/' . $new_filename;
+                    } else {
+                        // throw new Exception("Failed to upload file: {$file['name']}");
+                    }
+                }
+            }
+
+            if (!empty($data['id'])) {
+                $save_data['updated_date'] = date('Y-m-d H:i:s');
+                $save_data['updated_by'] = get_staff_user_id();
+                // Update existing record
+                $this->db->where('id', $data['id']);
+                $this->db->update(db_prefix() . 'external_ticket_data', $save_data);
+                $record_id = $data['id'];
+            } else {
+                $save_data['created_date'] = date('Y-m-d H:i:s');
+                $save_data['created_by'] = get_staff_user_id();
+                // Insert new record
+                $this->db->insert(db_prefix() . 'external_ticket_data', $save_data);
+                $record_id = $this->db->insert_id();
+            }
+
+            // Return structured response
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Ticket details saved successfully.',
+                'data'      => [
+                    'id' => $record_id,
+                    'name' => $data['name'],
+                    'ticket_vendor' => $data['ticket_vendor'],
+                    'ticket_type' => $data['ticket_type']
+                ]
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function delete_ticket($id = null)
+    {
+        if (!has_permission('external_ticket', '', 'delete')) {
+            return access_denied('external_ticket'); // Stop execution immediately
+        }
+
+        if ($id) {
+            $this->db->where('id', $id);
+            $updated = $this->db->update(db_prefix() . 'external_ticket_data', ['status' => 0]);
+
+            if ($updated) {
+                echo json_encode([
+                    'resp_code' => 'RCS',
+                    'resp_desc' => 'Ticket record deleted successfully (status set to 0)'
+                ]);
+            } else {
+                echo json_encode([
+                    'resp_code' => 'ERR',
+                    'resp_desc' => 'Failed to update ticket status'
+                ]);
+            }
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Invalid ID'
+            ]);
+        }
     }
 }
