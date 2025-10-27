@@ -70,7 +70,13 @@ if ($manually == 1) {
     $group_by = 'GROUP BY ' . db_prefix() . 'ticket_batch.id';
 }
 
-$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [], $group_by);
+$search_column = [];
+// Define search and group-by clauses
+if (!empty($_POST["search"]["value"])) {
+    $search_column = [db_prefix(). "ticket_data.university_name",db_prefix() . "ticket_batch.country_name", db_prefix() . "vendor_list.name",db_prefix() . "ticket_batch.name"];
+}
+
+$result = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [], $group_by,[],1,$search_column);
 
 $output  = $result['output'];
 $rResult = $result['rResult'];
