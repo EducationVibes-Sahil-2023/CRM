@@ -604,7 +604,7 @@ if (has_permission('payment_quotation', '', 'create')) {
 
 
 
-                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID || RETURN_FEES_ID ? 'show' : 'none' ?>">
+                                        <div class="col-md-2 form-group split-type-dropdown" style="display:<?= !empty($applicant_payment_data->payment_type) && $applicant_payment_data->payment_type == PACKAGE_FEES_ID ||  $applicant_payment_data->payment_type == RETURN_FEES_ID ? 'show' : 'none' ?>">
                                             <label>Payment Fees Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new type"
                                                 multiple
