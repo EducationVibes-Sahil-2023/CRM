@@ -2534,7 +2534,7 @@ function paymentDuesHostel()
     
  $sql = "SELECT 
     ho.id AS student_id,
-    ho.passport as passport,
+    ho.passport AS passport,
     ho.name AS student_name,
     hq.id AS quotation_id,
     hq.university_name,
@@ -2556,8 +2556,10 @@ function paymentDuesHostel()
     hp1.pay_date,
     hp1.remark,
     tpt.name AS transaction_type,
+
     TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date)
         + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference,
+
     JSON_ARRAYAGG(
         JSON_MERGE_PATCH(
             CAST(fees_table.fee AS JSON),
@@ -2576,14 +2578,23 @@ LEFT JOIN tblquotation_mode m
     ON m.id = hp1.mode
 LEFT JOIN tblcurrencies c 
     ON c.id = ho.currency
-LEFT JOIN tblapplicant_fees f ON f.id = hp1.payment_type  
+LEFT JOIN tblapplicant_fees f 
+    ON f.id = hp1.payment_type  
 LEFT JOIN tbltransaction_type tpt 
     ON tpt.id = hp1.transaction_type
-JOIN JSON_TABLE(hp1.fess_infomation, '$[*]' 
-    COLUMNS (fee JSON PATH '$')
-) AS fees_table
+
+-- ✅ LEFT JOIN LATERAL keeps rows even when fess_infomation is NULL
+LEFT JOIN LATERAL (
+    SELECT fee
+    FROM JSON_TABLE(
+        hp1.fess_infomation,
+        '$[*]' COLUMNS (fee JSON PATH '$')
+    ) AS jt
+) AS fees_table ON TRUE
+
 WHERE ho.status = 1
-GROUP BY ho.id";
+GROUP BY ho.id;
+";
 
     $arrayData = $CI->db->query($sql)->result_array();
     
