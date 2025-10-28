@@ -6,6 +6,7 @@ $ci = &get_instance();
 $applicantPaymentData = $ci->Hostel_model->hostel_payment_data($hostel_info_id);
 $quotationDetails     = $applicantPaymentData["quotationDetails"] ?? [];
 
+
 $get_currencies        = get_currencies();
 $currency_lookup       = array_column($get_currencies, NULL, 'id');
 ?>
@@ -46,7 +47,7 @@ $currency_lookup       = array_column($get_currencies, NULL, 'id');
                     $feeName     = $feeData['fee_name'] ?? 'N/A';
                     $totalAmount = $feeData['total_inr'] ?? 0;
 
-                    $currencyId     = array_key_first($currency_lookup) ?? 3; // fallback
+                    $currencyId     = $feeData["currency_id"] ?? 3; // fallback
                     $currencySymbol = $currency_lookup[$currencyId]['symbol'] ?? '₹';
 
                     // Payment amount for this fee

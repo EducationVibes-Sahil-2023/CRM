@@ -156,6 +156,7 @@ class hostel_management extends AdminController
             'hostel_due'  => ($_POST["university_dues"]) ?? null,
             'company_due'     => ($_POST["company_due"]) ?? null,
             'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? null,
+            'status' => 1,
 
         ];
 
@@ -347,7 +348,7 @@ class hostel_management extends AdminController
 
             // --- Check for duplicate passport ---
             $this->db->where('passport', $data['passport'] ?? '');
-             $this->db->where('status',1);
+            $this->db->where('status', 1);
             if (!empty($data['hostel_management_id'])) {
                 // Exclude current record when updating
                 $this->db->where('id !=', $data['hostel_management_id']);
@@ -436,6 +437,37 @@ class hostel_management extends AdminController
             ]);
         }
     }
+
+    function quotationDelete()
+    {
+        $hostel_info_id = $_POST["hostel_info_id"] ?? null;
+        $quotation_id = $_POST["quotation_id"] ?? null;
+        // ✅ Permission check
+        if (!has_permission('hostel_quotation_delete', '', 'delete')) {
+            return access_denied('hostel_quotation_delete'); // Stop execution immediately
+        }
+
+        if (!$hostel_info_id || !$quotation_id) {
+            redirect(admin_url('hostel_management'));
+        }
+
+        $this->db->where('id', $quotation_id);
+        $this->db->where('hostel_info_id', $hostel_info_id);
+        $this->db->update(db_prefix() . 'hostel_quotation', ["status" => "0"]);
+
+        if ($this->db->affected_rows() > 0) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Hostel Quotation record deleted successfully.'
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Error deleting hostel record or record not found.'
+            ]);
+        }
+    }
+
 
 
     function quotationGenerate()

@@ -23,7 +23,8 @@ $aColumns = [
     db_prefix() . 'hostel_company.name as company_name',
     db_prefix() . 'currencies.name as currency_name',
     //find month difference between two dates as month_difference
-    "TIMESTAMPDIFF(MONTH, " . db_prefix() . "hostel_infomation.start_date, " . db_prefix() . "hostel_infomation.end_date) as month_difference"
+    "TIMESTAMPDIFF(MONTH, latest_quotation.start_date,latest_quotation.end_date)
+       + (DAY(latest_quotation.end_date) >= DAY(latest_quotation.start_date)) AS month_difference",
 
 
 ];
@@ -53,7 +54,7 @@ $join = [
         ON ' . db_prefix() . 'hostel_company.id = ' . db_prefix() . 'hostel_infomation.company',
 
     'LEFT JOIN ' . db_prefix() . 'currencies 
-        ON ' . db_prefix() . 'currencies.id = ' . db_prefix() . 'hostel_infomation.currency'
+        ON ' . db_prefix() . 'currencies.id = latest_quotation.currency'
 ];
 
 
@@ -61,7 +62,7 @@ $join = [
 // $where = [];
 
 $where[] = " AND " . db_prefix() . "hostel_infomation.status = 1 ";
-if (is_admin()) {
+if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
     $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
 }
@@ -85,14 +86,17 @@ $rResult = $result['rResult'];
 // Build DataTable rows
 foreach ($rResult as $aRow) {
     $row = [];
-    $nameRow = $aRow['name'] . "<br>";
-    if (has_permission('hostel_management', '', 'edit')) {
-        $nameRow .= '<a href="' . admin_url('hostel_management/hostel/' . $aRow['id'] . '?tab=profile') . '" >' . _l('edit') . '</a>';
-    }
+    $nameRow = "";
+    $nameRow .= '<a href="' . admin_url('hostel_management/hostel/' . $aRow['id'] . '?tab=profile') . '" >' . $aRow['name'] . '</a>';
+    // if (has_permission('hostel_management', '', 'edit')) {
+    // }
+    $nameRow .=   '<div class="row-options">';
 
     if ($has_permission_delete) {
-        $nameRow .= ' | <a href="javascript:void(0)" onclick="Delete(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
+        $nameRow .= ' <a href="javascript:void(0)" onclick="Delete(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
     }
+
+    $nameRow .=  '</div>';
     $row[] = $nameRow;
     $row[] = $aRow['passport'];
     $row[] = $aRow['university_name'];
@@ -106,6 +110,16 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['start_date'];
     $row[] = $aRow['end_date'];
     $row[] = $aRow['month_difference'];
+    $monthDiff = isset($aRow['month_difference']) && is_numeric($aRow['month_difference'])
+        ? (float)$aRow['month_difference']
+        : 0;
+
+    $rentAmount = isset($aRow['rent_amount']) && is_numeric($aRow['rent_amount'])
+        ? (float)$aRow['rent_amount']
+        : 0;
+
+    $row[] = $monthDiff * $rentAmount;
+
 
     // Add delete button if user has permission
     // if ($has_permission_delete) {

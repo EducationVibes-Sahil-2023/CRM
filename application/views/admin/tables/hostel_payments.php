@@ -9,6 +9,7 @@ $currency_lookup  = array_column($get_currencies, null, 'id');
 
 $sTable       = db_prefix() . 'hostel_payments';
 
+$_POST['length'] = 100;
 
 // Select columns
 $aColumns = [
@@ -30,6 +31,11 @@ $aColumns = [
     $sTable . ".pdf as pdf",
     $sTable . ".status as status_id",
     $sTable . ".id as id",
+    $sTable . ".amount as amount",
+    "TIMESTAMPDIFF(MONTH, " . db_prefix() . "hostel_payments.start_date," . db_prefix() . "hostel_payments.end_date)
+       + (DAY(" . db_prefix() . "hostel_payments.end_date) >= DAY(" . db_prefix() . "hostel_payments.start_date)) AS month_difference",
+    db_prefix() . 'currencies.name as currency_name',
+
 ];
 
 $sIndexColumn = 'id';
@@ -37,6 +43,7 @@ $sIndexColumn = 'id';
 $join = [
     ' LEFT JOIN ' . db_prefix() . 'quotation_mode ON ' . db_prefix() . 'quotation_mode.id = ' . $sTable . '.mode',
     ' LEFT JOIN ' . db_prefix() . 'quotation_vendor ON ' . db_prefix() . 'quotation_vendor.id = ' . $sTable . '.vendor_id',
+    ' LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . $sTable . '.ex_currency',
     // " LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = " . db_prefix() . "payment_quotations.client_id ",
 
 ];
@@ -96,10 +103,14 @@ if (!empty($_POST['payment_id'])) {
         $row[] = $university_applicant_fees_[$aRow['type']]['name'] ?? '';
         $row[] = $aRow['mode_name'];
         $row[] = !empty($aRow['v_name']) ? $aRow['v_name'] : $aRow['vendor_name'];
-        $row[] = $aRow['inr_value'];
+        // $row[] = $aRow['inr_value'];
         $row[] = $aRow['start_date'];
         $row[] = $aRow['end_date'];
         $row[] = $aRow['room_capacity'];
+        $row[] = $aRow['month_difference'];
+        $row[] = $aRow['amount'];
+        $row[] = $aRow['currency_name'];
+
 
         // Status + approval buttons
         $status = '';
@@ -142,7 +153,7 @@ if (!empty($_POST['payment_id'])) {
                 </a>';
         }
 
-        if (is_admin() || has_permission('payment_quotation', '', 'delete')) {
+        if (is_admin() || has_permission('hostel_quotation_delete', '', 'delete')) {
             $action .= '
      <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
                     <i class="fa fa-trash"></i>

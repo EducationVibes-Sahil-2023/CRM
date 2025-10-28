@@ -3685,7 +3685,7 @@ function vendor_types($type = "")
     }
 }
 
-function transaction_type()
+function transaction_type($where = [])
 {
     $CI = &get_instance();
 
@@ -3693,7 +3693,11 @@ function transaction_type()
         // Build query
         $CI->db->select('*')
             ->from(db_prefix() . 'transaction_type');
-
+        if (!empty($where)) {
+            $CI->db->where($where);
+        } else {
+            $CI->db->where('status', 1);
+        }
         // Order and limit
         $CI->db->order_by('name', 'ASC');
 
