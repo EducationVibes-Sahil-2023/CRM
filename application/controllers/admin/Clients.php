@@ -10483,6 +10483,7 @@ class Clients extends AdminController
 
     public function external_visa($id = "")
     {
+     
         // ✅ Permission check
         if (!has_permission('external_visa', '', 'create')) {
             return access_denied('external_visa'); // Stop execution immediately
