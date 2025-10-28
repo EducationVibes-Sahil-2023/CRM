@@ -29,7 +29,7 @@ class hostel_management extends AdminController
     {
 
         // ✅ Permission check
-        if (!has_permission('hostel_management', '', 'view_own')) {
+        if (!has_permission('hostel_management', '', 'view_own') && !has_permission('hostel_management', '', 'view')) {
             return access_denied('hostel_management'); // Use return to stop further execution
         }
 
@@ -109,7 +109,7 @@ class hostel_management extends AdminController
         $data["hostelRentelData"] = array_column($this->Hostel_model->get_hostel_rentInfo(), null, "hostel_id");
         if ($_GET['tab'] == 'profile') {
 
-            if (!has_permission('hostel_management', '', 'view_own')) {
+            if (!has_permission('hostel_management', '', 'view_own') && !has_permission('hostel_management', '', 'view')) {
                 return access_denied('hostel_management'); // Stop execution immediately
             }
             if (empty($data['hostelData'])) {
