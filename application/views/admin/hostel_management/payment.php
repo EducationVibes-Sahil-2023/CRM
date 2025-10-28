@@ -44,16 +44,28 @@
             "Type",
             "Mode",
             "Vendor",
-            "INR Amount",
             "Start Date",
             "End Date",
             "Room Capacity",
+            "Months",
+            "Amount",
+            "Currency",
             "Status",
             "Proof",
             "Action",
         );
         ?>
 
+        <style>
+            select.disabled {
+                pointer-events: none;
+                /* blocks clicks */
+                background-color: #e9ecef;
+                /* Bootstrap-like gray */
+                /* color: #6c757d; */
+                opacity: 1;
+            }
+        </style>
 
         <div class="row">
             <div class="col-md-12">
@@ -226,7 +238,7 @@ if (has_permission('hostel_management', '', 'payment')) {
     // Cache database queries
     $ci = &get_instance();
 
-    $transaction_type  = transaction_type();
+    $transaction_type  = transaction_type(array("hostel_status" => 1));
     // Get all required data in optimized queries
     $company_dues_fees_array = $ci->db->get(db_prefix() . "company_dues_fees")->result_array();
 
@@ -343,7 +355,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                             </div>
 
                             <div class="col-md-3">
-                                <?= render_input('start_date', 'Start Date ',$applicant_payment_data->start_date ?? '', 'date', ["placeholder" => "Select Start Date", "readonly" => true]); ?>
+                                <?= render_input('start_date', 'Start Date ', $applicant_payment_data->start_date ?? '', 'date', ["placeholder" => "Select Start Date", "readonly" => true]); ?>
                             </div>
 
                             <div class="col-md-3">
@@ -546,7 +558,8 @@ if (has_permission('hostel_management', '', 'payment')) {
                                             ?>
                                         </div>
 
-                                        <div class="col-md-2 form-group trans-div" style="display:<?= !empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 ? '' : 'none' ?>;">
+                                        <!-- <div class="col-md-2 form-group trans-div" style="display:<?= !empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 1 ? '' : 'none' ?>;"> -->
+                                        <div class="col-md-2 form-group trans-div">
                                             <label>Transaction Type <span class="text-danger">*</span></label>
                                             <select class="form-control selectpicker electpicker-new transaction_type"
                                                 onchange="check_tt_copy(this)"
@@ -576,7 +589,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 data-name='payment_type'
                                                 required
                                                 onchange="split_data(this, this.value)">
-                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [5, 6, 11,16])) {
+                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [5, 6, 11, 16])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
@@ -626,7 +639,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                     placeholder="0.00" required oninput="calculateInrValue()" value="<?= $applicant_payment_data->amount ? $applicant_payment_data->amount : '' ?>">
                                                 <div class="input-group-addon">
                                                     <select name="ex_currency" data-id="amount_<?= time() ?>" data-name="ex_currency"
-                                                        class="currency-selector currency-selector-amount ex_currency"
+                                                        class="currency-selector currency-selector-amount disabled ex_currency"
                                                         onchange="calculateInrValue(); updateSymbol_(this,'amount_<?= time() ?>')">
                                                         <?php foreach ($get_currencies as $c): ?>
                                                             <option value="<?= $c['id'] ?>" <?= $applicant_payment_data->ex_currency == $c['id'] ? 'selected' : '' ?> data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
@@ -757,7 +770,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                                         oninput="calculateInrValue()">
                                                                     <div class="input-group-addon">
                                                                         <select name="amount_currency_type[<?= $split['fee_id'] ?>]"
-                                                                            class="currency-selector currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : 'auto-populated-select' ?>"
+                                                                            class="currency-selector disabled currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : 'auto-populated-select' ?>"
                                                                             readonly
                                                                             onchange="calculateInrValue(); updateSymbol_(this,<?= $split['fee_id'] ?>)">
                                                                             <?php foreach ($get_currencies as $c): ?>
@@ -872,12 +885,16 @@ if (has_permission('hostel_management', '', 'payment')) {
                 const start_date = selected_quotation.start_date || "";
                 const end_date = selected_quotation.end_date || "";
                 const room_capacity = selected_quotation.room_capacity || "";
-
+                console.log(selected_quotation);
                 // 🏷️ Update input fields only if they exist
                 const $startInput = $("input[name='start_date']");
                 const $endInput = $("input[name='end_date']");
                 const $roomCapacityInput = $("input[name='room_capacity']");
-
+                if (id != "") {
+                    $(".currency-selector-amount").val(selected_quotation.currency).change().addClass('disabled');
+                } else {
+                    $(".currency-selector-amount").removeClass('disabled');
+                }
                 if ($startInput.length) $startInput.val(start_date);
                 if ($endInput.length) $endInput.val(end_date);
                 if ($roomCapacityInput.length) $roomCapacityInput.val(room_capacity);
@@ -1081,7 +1098,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                     placeholder="0.00" required oninput="calculateInrValue()" value="">
                                                 <div class="input-group-addon">
                                                     <select data-name="ex_currency" name="ex_currency_<?= time() ?>"ex_currency"
-                                                        class="currency-selector currency-selector-amount ex_currency"
+                                                        class="currency-selector currency-selector-amount disabled ex_currency"
                                                         onchange="calculateInrValue(); updateSymbol_(this,'amount_<?= time() ?>')">
                                                         <?php foreach ($get_currencies as $c): ?>
                                                             <option value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
@@ -1187,10 +1204,10 @@ if (has_permission('hostel_management', '', 'payment')) {
         function vendor_update(obj, modeId) {
             let $formGroup = $(obj).closest(".form-group");
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
-            $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
+            // $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
             $(obj).parents('.payment_payment').find("input[name='proof']").attr("required", true);
             if (modeId != 1) {
-                $(obj).parents('.payment_payment').find('.trans-div').hide();
+                // $(obj).parents('.payment_payment').find('.trans-div').hide();
             }
 
             if (modeId == 5) {
@@ -1223,7 +1240,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
             if (modeId == 1 || modeId == 4 || modeId == 6) {
                 if (modeId == 1) {
-                    $(obj).parents('.payment_payment').find('.trans-div').show();
+                    // $(obj).parents('.payment_payment').find('.trans-div').show();
 
                 }
                 if (vendors.length > 0) {
@@ -1362,7 +1379,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                         <div class="input-group-addon">
                             <select name="amount_currency_type[${feeData.id}]"
                                     ${readonly == 1 ? 'readonly' : ''}
-                                    data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
+                                    data-id="${unique}" class="currency-selector disabled currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
                                     onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
                                 ${getCurrencyOptions(3)}
                             </select>

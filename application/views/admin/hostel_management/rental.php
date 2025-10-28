@@ -7,7 +7,7 @@ $table_data = array(
     array('name' => 'Hostel Name'),
     array('name' => 'Room Capacity'),
     array('name' => 'Currency'),
-    array('name' => 'Rent Amount'),
+    array('name' => 'Monthly Rent Amount'),
     array('name' => 'Action'),
 );
 ?>
@@ -125,7 +125,7 @@ $table_data = array(
                     </div>
 
                     <div class="col-md-6">
-                        <?= render_input('rent', 'Rent Amount', '', 'number', [
+                        <?= render_input('rent', 'Monthly Rent Amount', '', 'number', [
                             'min' => 0,
                             'step' => 'any'
                         ]); ?>

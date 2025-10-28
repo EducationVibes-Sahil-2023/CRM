@@ -1,12 +1,25 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<style>
+    [id^="nested-applicant-table-"] div.row {
+        display: none !important;
+    }
+
+    .dataTables_wrapper div.row {
+        display: none !important;
+    }
+</style>
 <div class="panel_s">
     <div class="panel-body">
         <?php
         $quotation_table = array(
-            "University Name",
+            "Quotation Number",
             "Start Date",
             "End Date",
+            "Months",
             "Room Capacity",
+            "Month Rent",
+            "Amount",
+            "Currency",
             "PDF",
         );
         ?>
@@ -360,6 +373,7 @@ if (!empty($_GET['quotation_id'])) {
                                                     $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
                                                         ?? '$';
+                                                    $fees['quotation_name'] == 'Hostel'  ? $fees['quotation_name'] = 'Month Rent' : $fees['quotation_name'] = $fees['quotation_name'];
                                             ?>
                                                     <tr class="fee-row" data-id="<?= $id ?>">
                                                         <td>
@@ -433,6 +447,8 @@ if (!empty($_GET['quotation_id'])) {
                                                     $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
                                                         ?? '$';
+                                                    $fees['quotation_name'] == 'Hostel'  ? $fees['quotation_name'] = 'Month Rent' : $fees['quotation_name'] = $fees['quotation_name'];
+
                                                 ?>
                                                     <tr class="fee-row" data-id="<?= $id ?>">
                                                         <td>
@@ -1712,6 +1728,47 @@ if (!empty($_GET['quotation_id'])) {
                 step: "0.0001", // up to 4 decimals
                 min: "0" // optional: prevent negative values
             });
+        });
+    }
+
+    function DeleteQuotation(hostel_info_id, quotation_id) {
+        $.ajax({
+            url: "<?= admin_url('hostel_management/quotationDelete') ?>", // your controller method
+            type: "POST",
+            data: {
+                hostel_info_id: hostel_info_id,
+                quotation_id: quotation_id
+            },
+            beforeSend: function() {
+                show_loader();
+                // Optional: show loader
+                // console.log("Generating PDF...");
+            },
+            success: function(response) {
+                hide_loader();
+                let data = JSON.parse(response);
+                // console.log(data);
+                if (data.resp_code || data.resp_code === "RCS") {
+                    alert_float("success", data.resp_desc);
+                    // Get current URL
+                    // Get current URL
+                    const url = new URL(window.location.href);
+
+                    // Remove the "quotation_id" parameter
+                    url.searchParams.delete("quotation_id");
+
+                    // Reload the page with updated URL
+                    window.location.href = url.toString();
+
+                } else {
+                    alert_float("danger", "Quotation not delete sucessfully");
+
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(error);
+                alert_float("danger", "Something went wrong. Please try again.");
+            }
         });
     }
 </script>
