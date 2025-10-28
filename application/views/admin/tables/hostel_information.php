@@ -69,7 +69,9 @@ $rResult = $result['rResult'];
 // Build DataTable rows
 foreach ($rResult as $aRow) {
     $row = [];
-    $nameRow = $aRow['hostel_name'] . "<br>";
+    $nameRow = $aRow['hostel_name'];
+    
+    $nameRow .= '<div class="row-options">';
     if (has_permission('hostel', '', 'edit')) {
         $encodedData = base64_encode(json_encode($aRow));
         $nameRow .= '<a  href="javascript:void(0);" onclick="Edit('
@@ -79,6 +81,10 @@ foreach ($rResult as $aRow) {
     if ($has_permission_delete) {
         $nameRow .= ' | <a href="javascript:void(0)" onclick="Delete(' . $aRow['id'] . ')" class=" text-danger">' . _l('delete') . '</a>';
     }
+
+    $nameRow .= '</div>';
+
+
     $row[] = $nameRow;
     $row[] = $aRow['name'];
     $row[] = $aRow['contact_number'];
