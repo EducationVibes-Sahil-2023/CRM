@@ -227,7 +227,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                'Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)
         ) AS unique_id
     FROM " . db_prefix() . "hostel_quotation aq
-    WHERE aq.hostel_info_id = ?
+    WHERE aq.hostel_info_id = ? and aq.status = 1
     ORDER BY aq.id DESC
 ";
 
