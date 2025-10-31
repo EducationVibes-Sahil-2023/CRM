@@ -231,6 +231,13 @@
                               Post Sales</label>
                         </div>
                         <div class="checkbox checkbox-primary">
+                             <input type="checkbox" value="1" name="seo_department" id="seo_department" <?php if (isset($member->seo_department) && $member->seo_department == 1) {
+                                                                                                   echo ' checked';
+                                                                                                } ?>>
+                           <label for="seo_department"><i class="fa fa-question-circle" data-toggle="tooltip" data-title="Seo Department"></i>
+                              Seo Department</label>
+                        </div>
+                        <div class="checkbox checkbox-primary">
                            <input type="checkbox" value="1" name="department_head" id="department_head" onclick="set_department_head(this)" <?php if (isset($member) && $member->department_head == 1) {
                                                                                                                                                 echo ' checked';
                                                                                                                                              } ?>>

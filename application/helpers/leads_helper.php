@@ -1727,6 +1727,11 @@ function get_leads_summary_filter_report($params, $all_status = 0)
     $has_permission_view   = has_permission('leads', '', 'view');
     $sql                   = '';
     $whereNoViewPermission = '(' . db_prefix() . 'leads.addedfrom = ' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.assigned=' . get_staff_user_id() . ' OR ' . db_prefix() . 'leads.is_public = 1)';
+    
+ if(is_seoTeam())
+     {
+      $whereNoViewPermission =" 1=1 ";   
+     }
 
     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
     if ($role == 3) {
@@ -3025,6 +3030,10 @@ function get_status_summary_filter_report($params)
     $has_permission_view   = has_permission('leads', '', 'view');
     $sql                   = '';
     $whereNoViewPermission = '( l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
+     if(is_seoTeam())
+     {
+      $whereNoViewPermission =" 1=1 ";   
+     }
 
     $role = $CI->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
     if ($role == 3) {
@@ -3166,6 +3175,8 @@ function get_status_summary_filter_report($params)
     } else {
         $sql .= " GROUP BY tt.assigned,tt.source_id ";
     }
+    
+
 
     $result = [];
     $result = $CI->db->query($sql)->result_array();
@@ -6039,6 +6050,10 @@ function get_status_summary_filter_performance($params, $conversion_status = 0)
     $sql                   = '';
     $whereNoViewPermission = '( l.addedfrom = ' . get_staff_user_id() . ' OR l.assigned=' . get_staff_user_id() . ' OR l.is_public = 1)';
 
+ if(is_seoTeam())
+     {
+      $whereNoViewPermission =" 1=1 ";   
+     }
     // $statuses[] = [
     //     'lost'  => true,
     //     'name'  => _l('lost_leads'),

@@ -4,6 +4,20 @@ $staff_details = $this->db->where('staffid', get_staff_user_id())->get(db_prefix
 // $role = $this->db->where('staffid', get_staff_user_id())->get(db_prefix() . 'staff')->row()->role;
 $role = $staff_details->role;
 $staff_department = $staff_details->department;
+$seoDepartment = $staff_details->seo_department;
+
+if($seoDepartment == 1)
+{
+  $sources = array_filter($sources, function ($item) {
+    return (
+        isset($item['marketing_type'], $item['fixed_source']) &&
+        $item['marketing_type'] == 1 &&
+        $item['fixed_source'] == 1 &&
+         $item['performance_status'] == 1
+    );
+  
+});
+}
 $fb_query = $this->db->select('DISTINCT(website) as fb_name')->where("website!=", "")->get('leads');
 $facebook_names = $fb_query->result_array();
 $source_marketing = array(array("name" => "Google Ads"), array("name" => "Youtube"), array("name" => "Meta"), array("name" => "Organic"), array("name" => "Direct"));
@@ -439,7 +453,9 @@ $status_list_ = array_column($status_list, null, "id");
                                 <h3>Report Generate</h3>
 
                                 <div class="col-md-12 row">
+                                    <?php if(!is_seoTeam()){ ?>
                                     <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-calls hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls'); set_call_filter_data(); return false;">Show Calls Chart <i class="fa fa-bar-chart"></i></a>
+                                    <?php } ?>
                                     <div class="clearfix"></div>
                                     <div class="row hide col-md-12 leads-overview-calls">
                                         <hr class="hr-panel-heading" />
@@ -465,7 +481,9 @@ $status_list_ = array_column($status_list, null, "id");
                                     </div>
                                     <br>
                                     <br>
+                                     <?php if(!is_seoTeam()){ ?>
                                     <a href="#" class="btn btn-default btn-with-tooltip hide-graph hide-graph-daily hide" data-toggle="tooltip" data-title="<?php echo _l('Calls Leads Chart'); ?>" data-placement="bottom" onclick="slideToggle('.leads-overview-calls-daily'); graph_represent_(); return false;">Show Date Wise Chart <i class="fa fa-bar-chart"></i></a>
+                                    <?php } ?>
 
                                     <div class="row hide col-md-12 leads-overview-calls-daily">
                                         <hr class="hr-panel-heading" />
@@ -1894,7 +1912,21 @@ $status_list_ = array_column($status_list, null, "id");
         }
 
         $('#apply_filter').on('click', function() {
+            <?php if(is_seoTeam())
+            {
+              ?>
+              
+              if($("#view_source").val() == "")
+              {
+                $('#view_source option').prop('selected', true);
+                $('#view_source').trigger('change');
+              }
+              ajax_filter()
+              <?php
+            } else{
+            ?>
             ajax_filter()
+            <?php } ?>
         });
 
         function set_graph_(data) {

@@ -25,6 +25,44 @@ $aColumns = [
     //find month difference between two dates as month_difference
     "TIMESTAMPDIFF(MONTH, latest_quotation.start_date,latest_quotation.end_date)
        + (DAY(latest_quotation.end_date) >= DAY(latest_quotation.start_date)) AS month_difference",
+       "CAST(
+        JSON_UNQUOTE(
+            JSON_EXTRACT(
+                hostel_due,
+                CONCAT(
+                    '$.main.fees_info[',
+                    REGEXP_SUBSTR(
+                        JSON_UNQUOTE(
+                            JSON_SEARCH(hostel_due, 'one', '5', NULL, '$.main.fees_info[*].id')
+                        ),
+                        '[0-9]+'
+                    ),
+                    '].amount'
+                )
+            )
+        ) AS DECIMAL(10,2)
+    ) AS hostel_amount",
+
+    // ✅ Extract hostel currency_id directly from JSON
+    "CAST(
+        JSON_UNQUOTE(
+            JSON_EXTRACT(
+                hostel_due,
+                CONCAT(
+                    '$.main.fees_info[',
+                    REGEXP_SUBSTR(
+                        JSON_UNQUOTE(
+                            JSON_SEARCH(hostel_due, 'one', '5', NULL, '$.main.fees_info[*].id')
+                        ),
+                        '[0-9]+'
+                    ),
+                    '].currency_id'
+                )
+            )
+        ) AS UNSIGNED
+    ) AS hostel_currency_id",
+    db_prefix() . 'currencies.name as currency_name',
+
 
 
 ];
@@ -33,41 +71,55 @@ $sIndexColumn = 'id';
 $sTable       = db_prefix() . 'hostel_infomation';
 $join = [];
 // Joins with aliases for payment modes
-$join = [
-    'LEFT JOIN (
-        SELECT hq.*
-        FROM ' . db_prefix() . 'hostel_quotation hq
-        INNER JOIN (
-            SELECT hostel_info_id, MAX(id) AS max_id
-            FROM ' . db_prefix() . 'hostel_quotation
-            WHERE status = 1
-            GROUP BY hostel_info_id
-        ) latest_hq
-        ON hq.id = latest_hq.max_id
-    ) AS latest_quotation
-    ON latest_quotation.hostel_info_id = ' . db_prefix() . 'hostel_infomation.id',
+// $join = [
+//     'LEFT JOIN (
+//         SELECT hq.*
+//         FROM ' . db_prefix() . 'hostel_quotation hq
+//         INNER JOIN (
+//             SELECT hostel_info_id, MAX(id) AS max_id
+//             FROM ' . db_prefix() . 'hostel_quotation
+//             WHERE status = 1
+//             GROUP BY hostel_info_id
+//         ) latest_hq
+//         ON hq.id = latest_hq.max_id
+//     ) AS latest_quotation
+//     ON latest_quotation.hostel_info_id = ' . db_prefix() . 'hostel_infomation.id',
 
-    'LEFT JOIN ' . db_prefix() . 'hostel
+//     'LEFT JOIN ' . db_prefix() . 'hostel
+//         ON ' . db_prefix() . 'hostel.id = ' . db_prefix() . 'hostel_infomation.hostel',
+
+//     'LEFT JOIN ' . db_prefix() . 'hostel_company
+//         ON ' . db_prefix() . 'hostel_company.id = ' . db_prefix() . 'hostel_infomation.company',
+
+//     'LEFT JOIN ' . db_prefix() . 'currencies 
+//         ON ' . db_prefix() . 'currencies.id = latest_quotation.currency'
+// ];
+
+$join = [
+    'LEFT JOIN ' . db_prefix() . 'hostel_quotation AS latest_quotation 
+        ON latest_quotation.hostel_info_id = ' . db_prefix() . 'hostel_infomation.id ',
+
+    'LEFT JOIN ' . db_prefix() . 'hostel 
         ON ' . db_prefix() . 'hostel.id = ' . db_prefix() . 'hostel_infomation.hostel',
 
-    'LEFT JOIN ' . db_prefix() . 'hostel_company
+    'LEFT JOIN ' . db_prefix() . 'hostel_company 
         ON ' . db_prefix() . 'hostel_company.id = ' . db_prefix() . 'hostel_infomation.company',
 
     'LEFT JOIN ' . db_prefix() . 'currencies 
         ON ' . db_prefix() . 'currencies.id = latest_quotation.currency'
 ];
 
-
 // Optional WHERE conditions
 // $where = [];
 
 $where[] = " AND " . db_prefix() . "hostel_infomation.status = 1 ";
+$where[] = " AND latest_quotation.status > 0 ";
 if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
     $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
 }
 // Group by ID to prevent duplicates
-$group_by = 'GROUP BY ' . db_prefix() . 'hostel_infomation.id';
+$group_by = 'GROUP BY latest_quotation.id';
 
 // Execute DataTables query
 $result = data_tables_init(
@@ -87,7 +139,7 @@ $rResult = $result['rResult'];
 foreach ($rResult as $aRow) {
     $row = [];
     $nameRow = "";
-    $nameRow .= '<a href="' . admin_url('hostel_management/hostel/' . $aRow['id'] . '?tab=profile') . '" >' . $aRow['name'] . '</a>';
+    $nameRow .= '<a target="_blank" href="' . admin_url('hostel_management/hostel/' . $aRow['id'] . '?tab=profile') . '" >' . $aRow['name'] . '</a>';
     // if (has_permission('hostel_management', '', 'edit')) {
     // }
     $nameRow .=   '<div class="row-options">';
@@ -105,7 +157,7 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['company_name'];
     $row[] = $aRow['hostel_name'];
     $row[] = $aRow['room_capacity'];
-    $row[] = $aRow['rent_amount'];
+    $row[] = $aRow['hostel_amount'];
     $row[] = $aRow['currency_name'];
     $row[] = $aRow['start_date'];
     $row[] = $aRow['end_date'];
@@ -114,8 +166,8 @@ foreach ($rResult as $aRow) {
         ? (float)$aRow['month_difference']
         : 0;
 
-    $rentAmount = isset($aRow['rent_amount']) && is_numeric($aRow['rent_amount'])
-        ? (float)$aRow['rent_amount']
+    $rentAmount = isset($aRow['hostel_amount']) && is_numeric($aRow['hostel_amount'])
+        ? (float)$aRow['hostel_amount']
         : 0;
 
     $row[] = $monthDiff * $rentAmount;

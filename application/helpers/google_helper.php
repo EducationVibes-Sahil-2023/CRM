@@ -911,7 +911,7 @@ function syncExcel_neww($id = "")
 
         // Handle original documents extra columns
         if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
-            $orignal_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["status" => 1]);
+            $orignal_documents = get_orignal_document_list(0, 0, 0, 0, 0, 0, 0, ["excel_show " => 1]);
             $upload_document   = get_documents(2, [], 0, "", [db_prefix() . 'document_upload_type.orignal_status' => '1']);
 
             $queryPart = [];
@@ -1227,6 +1227,7 @@ LEFT JOIN (
                 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = td.vendor_id
                 LEFT JOIN " . db_prefix() . "departure_location fl ON fl.id = td.departure_location
                 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
+                LEFT JOIN " . db_prefix() . "pcc_status pcc ON pcc.id = c.pcc_status
                 
                {$apostile_query}  {$apostileSub}
                 WHERE 1=1 {$condition_sql}

@@ -1162,6 +1162,12 @@ class Reports extends AdminController
             $_POST["assigned"][] = get_staff_user_id();
         }
 
+   if(is_seoTeam())
+        {
+             $_POST["assigned"] = [];
+          $_POST["show_data"] =1;
+        
+        }
         if (!empty($_POST["location"]) && !empty($_POST["department"]) && empty($_POST["assigned"])) {
             $locationStaff = $this->db->select("staffid")->where_in("office_location", $_POST["location"])->where_in("department", $_POST["department"])->get(db_prefix() . "staff")->result_array();
             foreach ($locationStaff as $staff) {
