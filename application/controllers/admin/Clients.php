@@ -4455,11 +4455,14 @@ class Clients extends AdminController
 
     public function passport_info()
     {
+        
+  
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $client_id = $this->input->post("clientid");
                 $media_upload_data = $_POST;
+                $pcc_status = !empty($_POST["pcc_status"])?$_POST["pcc_status"]:0;
                 $passpot_data = [];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
@@ -4467,6 +4470,8 @@ class Clients extends AdminController
                 unset($_POST["doc_type"]);
                 unset($_POST["doc_name"]);
                 unset($_POST["doc_url"]);
+                unset($_POST["pcc_status"]);
+
 
 
                 foreach ($_POST as $key => $value) {
@@ -4508,6 +4513,9 @@ class Clients extends AdminController
                 }
 
                 if ($rows_affected) {
+                    
+$this->db->where("userid", $client_id);
+$this->db->update(db_prefix() . 'clients', array("pcc_status"=>$pcc_status));
 
                     if (!empty($media_upload_data["doc_type"][0])) {
                         $this->media_upload($media_upload_data, $_FILES);

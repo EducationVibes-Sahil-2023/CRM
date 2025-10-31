@@ -1481,6 +1481,19 @@ function get_passport_stages()
         ->result_array();
 }
 
+function get_pcc_stages()
+{
+    $CI = &get_instance();
+    return $passport_stages = $CI->db->select("*")
+        ->where('status', 1)
+        ->from(db_prefix() . 'pcc_status')
+        ->order_by("sequence", "asc")
+        ->get()
+        ->result_array();
+}
+
+
+
 function get_caste_category()
 {
     $CI = &get_instance();

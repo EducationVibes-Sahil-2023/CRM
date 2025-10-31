@@ -138,70 +138,108 @@ class hostel_management extends AdminController
     }
 
     public function quotation()
-    {
+{
+    $quotationSave = [
+        "hostel_info_id"        => $_POST["hostel_info_id"] ?? null,
+        "university_name"       => $_POST["university_name"] ?? null,
+        "start_date"            => $_POST["start_date"] ?? null,
+        "end_date"              => $_POST["end_date"] ?? null,
+        "room_capacity"         => $_POST["room_capacity"] ?? null,
+        "floor_No"              => $_POST["floor_No"] ?? null,
+        "room_No"               => $_POST["room_No"] ?? null,
+        "company"               => $_POST["company"] ?? null,
+        "rent"                  => $_POST["rent"] ?? null,
+        "currency"              => $_POST["rent_currency_type"] ?? null,
+        "hostel"                => $_POST["hostel"] ?? null,
+        "exchange_value"        => $_POST["currency_exchange"] ?? null,
+        "hostel_due"            => $_POST["university_dues"] ?? null,
+        "company_due"           => $_POST["company_due"] ?? null,
+        "release_to_counsellor" => $_POST["release_to_counsellor"] ?? null,
+        "status"                => 1,
+    ];
 
-        $quotationSave = [
-            "hostel_info_id" => $_POST["hostel_info_id"] ?? null,
-            "university_name" => $_POST["university_name"] ?? null,
-            "start_date" => $_POST["start_date"] ?? null,
-            "end_date" => $_POST["end_date"] ?? null,
-            "room_capacity" => $_POST["room_capacity"] ?? null,
-            "floor_No" => $_POST["floor_No"] ?? null,
-            "room_No" => $_POST["room_No"] ?? null,
-            "company" => $_POST["company"] ?? null,
-            "rent" => $_POST["rent"] ?? null,
-            "currency" => $_POST["rent_currency_type"] ?? null,
-            "hostel" => $_POST["hostel"] ?? null,
-            "exchange_value" => ($_POST["currency_exchange"]) ?? null,
-            'hostel_due'  => ($_POST["university_dues"]) ?? null,
-            'company_due'     => ($_POST["company_due"]) ?? null,
-            'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? null,
-            'status' => 1,
+    try {
+        $quotation_id = $_POST["quotation_id"] ?? null;
 
-        ];
+        // ---------------- VALIDATION SECTION ---------------- //
 
-
-        try {
-
-            $quotation_id = $_POST["quotation_id"] ?? null;
-
-            // 🔹 Optional: Check if record already exists
-            $this->db->where([
-                'university_name' => $_POST["university_name"],
-                'start_date' => $_POST["start_date"],
-                'end_date' => $_POST["end_date"]
-            ]);
-            $exists = $this->db->get(db_prefix() . 'hostel_quotation')->row();
-
-            if (!empty($quotation_id)) {
-                // 🔸 Update existing record
-                $quotationSave['updated_date'] = date('Y-m-d H:i:s');
-                $quotationSave['updated_by'] = get_staff_user_id();
-
-                $this->db->where('id', $quotation_id);
-                $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
-            } else {
-                $quotationSave['created_date'] = date('Y-m-d H:i:s');
-                $quotationSave['created_by'] = get_staff_user_id();
-                // 🔸 Insert new record
-                $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
-            }
-
-
-
-            // ✅ Success Response
-            echo json_encode([
-                'resp_code' => 'RCS',
-                'resp_desc' => 'Hostel rental details saved successfully.',
-            ]);
-        } catch (Exception $e) {
-            // ❌ Error Response
+        // 1️⃣ Required field validation
+        if (empty($quotationSave['hostel_info_id']) || empty($quotationSave['start_date']) || empty($quotationSave['end_date'])) {
             echo json_encode([
                 'resp_code' => 'ERR',
-                'resp_desc' => $e->getMessage()
+                'resp_desc' => 'Hostel, Start Date, and End Date are required fields.'
             ]);
+            return;
         }
+
+        // 2️⃣ Check if start_date <= end_date
+        $start_date = date('Y-m-d', strtotime($quotationSave['start_date']));
+        $end_date   = date('Y-m-d', strtotime($quotationSave['end_date']));
+
+        if ($start_date > $end_date) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'Start date cannot be greater than end date.'
+            ]);
+            return;
+        }
+
+        // 3️⃣ Check for overlapping date range for same hostel
+        $this->db->where('hostel_info_id', $quotationSave['hostel_info_id']);
+        $this->db->where('status', 1);
+
+        // Exclude current record if updating
+        if (!empty($quotation_id)) {
+            $this->db->where('id !=', $quotation_id);
+        }
+
+        $this->db->where("(
+            (start_date <= '$start_date' AND end_date >= '$start_date') OR
+            (start_date <= '$end_date' AND end_date >= '$end_date') OR
+            (start_date >= '$start_date' AND end_date <= '$end_date')
+        )");
+
+        $overlap = $this->db->get(db_prefix() . 'hostel_quotation')->row();
+
+        if ($overlap) {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => 'A quotation for this hostel already exists within the given date range.'
+            ]);
+            return;
+        }
+
+        // ---------------- INSERT / UPDATE SECTION ---------------- //
+
+        if (!empty($quotation_id)) {
+            // Update existing
+            $quotationSave['updated_date'] = date('Y-m-d H:i:s');
+            $quotationSave['updated_by']   = get_staff_user_id();
+
+            $this->db->where('id', $quotation_id);
+            $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
+        } else {
+            // Insert new
+            $quotationSave['created_date'] = date('Y-m-d H:i:s');
+            $quotationSave['created_by']   = get_staff_user_id();
+
+            $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
+        }
+
+        // ✅ Success Response
+        echo json_encode([
+            'resp_code' => 'RCS',
+            'resp_desc' => 'Hostel rental details saved successfully.'
+        ]);
+    } catch (Exception $e) {
+        // ❌ Error Response
+        echo json_encode([
+            'resp_code' => 'ERR',
+            'resp_desc' => $e->getMessage()
+        ]);
     }
+}
+
 
     public function quotation_table($hostelInfo_Id)
     {

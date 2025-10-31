@@ -4,6 +4,7 @@ if (!empty($score_value)) {
     $score_value = array_column($score_value, null, "type");
 }
 $passport_stages = get_passport_stages();
+$pcc_stages = get_pcc_stages();
 $caste_category = get_caste_category();
 $neet_status = get_neet_status();
 
@@ -599,6 +600,28 @@ if ($lead_type_status == 2) {
                                     <?php
                                     }
                                     ?>
+                                    
+                                           <div class="col-lg-3 ">
+                                        <div class="form-group">
+                                            <label>PCC status</label>
+                                            <select class="form-control" name="pcc_status" id="pcc_status" >
+                                                <option value="">Select PCC Status</option>
+                                                <?php
+                                                foreach ($pcc_stages as $pcc) {
+                                                    $selected = "";
+                                                    if ($pcc["id"] == $client->pcc_status) {
+                                                        $selected = "selected";
+                                                        $show_passport_details = $pcc['show_status'];
+                                                    }
+                                                ?>
+                                                    <option value="<?= $pcc["id"] ?>"  <?= $selected ?>><?= $pcc["name"] ?></option>
+                                                <?php
+
+                                                }
+                                                ?>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="btn-save-fun margin-top">
                                     <div class="col-md-12">
@@ -1185,6 +1208,19 @@ if ($lead_type_status == 2) {
                                                 // $required_attr = $is_mandatory ? "required required-check" : '';
                                                 $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
                                                 $required_attr = !empty($file_url) ? "" : $required_attr;
+                                               $upload_assign = [];
+
+if (!empty($doc_files['upload_assign'])) {
+    if (is_array($doc_files['upload_assign'])) {
+        $upload_assign = $doc_files['upload_assign'];
+    } else {
+        $upload_assign = explode(",", (string)$doc_files['upload_assign']);
+    }
+}
+
+
+                                   
+
                                             ?>
                                                 <tr>
                                                     <td><?= ($index) ?></td>
@@ -1223,11 +1259,17 @@ if ($lead_type_status == 2) {
 
                                                         <?php if (is_admin() || !empty($staff_list[get_staff_user_id()]["post_sales"])) {
                                                         ?>
-                                                            <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= !empty($doc_files["disabledd"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                            <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) || 
+    (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
+        ? 'disabledd' 
+        : '' ; ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                         <?php
                                                         } else {
                                                         ?>
-                                                            <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= !empty($doc_files["disabled"] == 1) ? 'disabledd' : '' ?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                            <input type="file" <?= !empty($doc_files["disabled"] == 1) ? 'disabled' : '' ?> name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control  <?= (!empty($doc_files['disabledd']) && $doc_files['disabledd'] == 1) || 
+    (!is_admin() && !empty($upload_assign) && !in_array(get_staff_user_id(), $upload_assign))
+        ? 'disabledd' 
+        : '' ;?>" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
                                                         <?php
                                                         }
                                                         ?>

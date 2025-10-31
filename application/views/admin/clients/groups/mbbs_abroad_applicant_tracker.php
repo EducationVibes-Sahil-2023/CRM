@@ -1719,7 +1719,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
                                 <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                             <?php } ?>
-                            <?php if (!empty($track['skip']) && $track['skip'] == 1 || !empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country) { ?>
+                            <?php if ((!empty($track['skip']) && $track['skip'] == 1) || ( $track['client_type_skip'] == $client_infomation->client_type ) || (!empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country)) { ?>
                                 <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ? 1 : $track['skip'] ?>')" value="Skip" />
                             <?php } ?>
                         <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
@@ -2375,6 +2375,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
             }
 
             if (id == 9) {
+                if (skip == 1 || same_step == 1) {} else {
                 await set_validation_visa();
                 let check_validation = await check_required_fields("visa-form");
                 if (!check_validation) {
@@ -2382,6 +2383,7 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                     return false;
                 }
                 await check_visa_letter(upload_data);
+                }
             }
 
             let secondary_university_remark = $('.secondary_university_remark').first().val();

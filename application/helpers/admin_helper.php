@@ -254,6 +254,8 @@ function is_admin($staffid = '')
     return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
 }
 
+
+
 function is_postSale($staffid = '')
 {
     /**
@@ -266,6 +268,23 @@ function is_postSale($staffid = '')
     $CI = & get_instance();
     $CI->db->select('1')
     ->where('post_sales', 1)
+    ->where('staffid', (int)$staffid);
+
+    return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
+}
+
+function is_seoTeam($staffid = '')
+{
+    /**
+     * Checking for current user?
+     */
+    if (!is_numeric($staffid)) {
+        $staffid = get_staff_user_id();
+    }
+
+    $CI = & get_instance();
+    $CI->db->select('1')
+    ->where('seo_department', 1)
     ->where('staffid', (int)$staffid);
 
     return $CI->db->count_all_results(db_prefix() . 'staff') > 0 ? true : false;
@@ -321,6 +340,39 @@ function get_admin_body_class($class = '')
     return array_unique($classes);
 }
 
+
+function getFilterData($table, $select = ['*'], $where = [], $orderBy = [], $limit = null)
+{
+    $CI =& get_instance(); // Access CI super object
+    $CI->db->from(db_prefix() . $table);
+
+    // Handle SELECT
+    if (is_array($select)) {
+        $CI->db->select(implode(',', $select));
+    } else {
+        $CI->db->select($select);
+    }
+
+    // Handle WHERE conditions
+    if (!empty($where)) {
+        $CI->db->where($where);
+    }
+
+    // Handle ORDER BY
+    if (!empty($orderBy)) {
+        foreach ($orderBy as $col => $dir) {
+            $CI->db->order_by($col, $dir);
+        }
+    }
+
+    // Handle LIMIT
+    if (!empty($limit)) {
+        $CI->db->limit($limit);
+    }
+
+    $query = $CI->db->get();
+    return $query->result_array(); // or ->result() if you want objects
+}
 
 /**
  * Feature that will render all JS necessary data in admin head

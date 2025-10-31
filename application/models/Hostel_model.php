@@ -85,6 +85,7 @@ class Hostel_model extends App_Model
             + (DAY(end_date) >= DAY(start_date)) AS month_difference")
             ->from(db_prefix() . "hostel_quotation")
             ->where("hostel_info_id", $hostel_info_id)
+             ->where("status > ", 0)
             ->get()
             ->result_array();
 

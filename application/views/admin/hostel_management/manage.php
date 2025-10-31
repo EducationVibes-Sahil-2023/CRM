@@ -1,6 +1,28 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php init_head(); ?>
 <?php
+$roomCapacity = [];
+
+for ($i = 1; $i <= 6; $i++) {
+    $roomCapacity[] = [
+        'id' => $i,
+        'name' => $i
+    ];
+}
+
+$statusJson = [
+    ['id' => 1, 'name' => 'active'],
+    ['id' => 2, 'name' => 'not active']
+];
+
+$paymentStatus = [
+    ['id' => 1, 'name' => 'Paid'],
+    ['id' => 2, 'name' => 'Dues'],
+    // ['id' => 3, 'name' => 'new']
+];
+
+$hostelCompany =[];
+$hostelName =[];
 $get_currencies = get_currencies();
 
 $table_data = array(
@@ -20,8 +42,7 @@ $table_data = array(
     array('name' => 'Total Rent Amount'),
 );
 
-$hostel = getDataInformation('hostel', 'id, name', 'status = 1');
-$hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1');
+
 ?>
 <div id="wrapper">
     <style>
@@ -32,8 +53,118 @@ $hostel_company = getDataInformation('hostel_company', 'id, name', 'status = 1')
     <div class="content">
         <div class="row">
             <div class="col-md-12">
+                
                 <div class="panel_s">
                     <div class="panel-body">
+                      <?php 
+                        
+                        
+if(is_admin())
+{
+    ?>
+    <div id="filterArea" class=" hidden-xs">
+                           <div class="row">
+                              <div class="col-md-12">
+                                 <p class="bold"><?php echo _l('filter_by'); ?></p>
+                              </div>
+                              <?php if (has_permission('hostel_management', '', 'view') || has_permission('hostel_management', '', 'own_view')) { ?>
+                                 <!--<div class="col-md-2  margin-top leads-filter-column">-->
+                                 <!--   <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>-->
+                                 <!--</div>-->
+                              <?php } ?>
+                              
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                   <?php echo render_select('room_capacity[]', $roomCapacity, array('id','name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Room Capacity", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'room_capacity'); ?>
+                                  </div>
+                                  
+                                   <div class="col-md-2  margin-top leads-filter-column">
+                                   <?php echo render_select('hostel_company[]', $hostel_company, array('id','name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Comapny", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_company'); ?>
+                                  </div>
+                                  
+                                   <div class="col-md-2  margin-top leads-filter-column">
+                                   <?php echo render_select('hostel_name[]', $hostel, array('id','name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Name", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_name'); ?>
+                                  </div>
+                                  <div class="col-lg-2 margin-top leads-filter-column">
+                                            <div class="form-group">
+                                                <!--<label for="session_intake">Start Date <small class="text-danger">*</small></label>-->
+                                                <input type="month" class="form-control"  id="start_date" name="start_date"
+                                                   
+                                                    placeholder="Select Month and Year">
+                                            </div>
+                                            </div>
+                                            
+                                            <div class="col-md-2 margin-top leads-filter-column">
+    <?php 
+    echo render_select(
+        'status[]',                 // name
+        $statusJson,                // options array
+        array('id', 'name'),        // key & value fields
+        '',                         // label (none)
+        '',                         // selected value
+        array(
+            'data-width' => '100%',
+            'data-none-selected-text' => "Status",
+            'multiple' => true,
+            'data-actions-box' => true
+        ),
+        array(),
+        'no-mbot',
+        '',
+        false,
+        'status'
+    ); 
+    ?>
+</div>
+
+<div class="col-md-2 margin-top leads-filter-column">
+    <?php 
+    echo render_select(
+        'payment_status[]',
+        $paymentStatus,
+        array('id', 'name'),
+        '',
+        '',
+        array(
+            'data-width' => '100%',
+            'data-none-selected-text' => "Payment Status",
+            'multiple' => true,
+            'data-actions-box' => true
+        ),
+        array(),
+        'no-mbot',
+        '',
+        false,
+        'payment_status'
+    ); 
+    ?>
+</div>
+
+                                <div class="col-md-4 margin-top leads-filter-column">
+                                 <div class="form-group">
+                                    <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
+
+                                    <!-- <button class="btn btn-primary" id="apply_filter">Apply Filter</button> -->
+                                    <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
+                                 </div>
+                              </div>
+                              </div>
+                                                    
+                              </div>
+    
+    <?php
+    
+}
+
+                        ?>
+                        </div>
+                        </div>
+                        <br>
+                <div class="panel_s">
+                    <div class="panel-body">
+                        
+                  
+                        
+                        <div class="clearfix"></div>
                         <div class="row">
                             <div class="col-md-6">
                                 <h4 class="no-margin"><?php echo _l('Hostel Management'); ?></h4>

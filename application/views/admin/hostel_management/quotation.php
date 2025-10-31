@@ -62,7 +62,7 @@ $university_applicant_fees = $university_applicant_fees = university_applicant_f
     "acadmic_year"    => $acadmic_year
 ]);
 $selected_mod = 0;
-$transaction_type  = transaction_type();
+$transaction_type  = transaction_type(array("hostel_status"=>1));
 $quotation_paymente_mode = $this->db
     ->select('*')
     ->from(db_prefix() . 'quotation_paymente_mode')
@@ -1073,9 +1073,9 @@ if (!empty($_GET['quotation_id'])) {
         $(obj).closest("tr").find("input.manually-cash").hide();
         $(obj).closest("tr").find("input.manually-cash").remove();
 
-        $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div select').val('').selectpicker('refresh');
+        // $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div select').val('').selectpicker('refresh');
         if (modeId != 1) {
-            $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').hide();
+            // $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').hide();
         }
 
         // 🔹 Filter vendors by mode
@@ -1083,7 +1083,7 @@ if (!empty($_GET['quotation_id'])) {
 
         if (modeId == 1 || modeId == 4 || modeId == 6) {
             if (modeId == 1) {
-                $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').show();
+                // $(obj).parents('.main-university-due,.aditional-university-due-table').find('.trans-div').show();
 
             }
             if (vendors.length > 0) {
@@ -1543,8 +1543,7 @@ if (!empty($_GET['quotation_id'])) {
             });
             const data = await response.json();
             hide_loader();
-            // console.log(data);
-            if (data.resp_code || data.resp_code === "RCS") {
+            if ( data.resp_code === "RCS") {
                 alert_float("success", data.resp_desc)
                 let url = new URL(window.location.href);
 

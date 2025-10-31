@@ -497,7 +497,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                     title="Select Mode"
                                                     onchange="vendor_update(this,this.value); check_tt_copy(this)">
                                                     <?php foreach ($modes as $m): ?>
-                                                        <option value="<?= $m['id'] ?>"
+                                                        <option data-package_status='<?= $m['package_status'] ?>' value="<?= $m['id'] ?>"
                                                             <?= (!empty($applicant_payment_data->mode) &&
                                                                 $applicant_payment_data->mode == $m["id"]) ? "selected" : "" ?>
                                                             <?= !empty($applicant_payment_data->mode) && $applicant_payment_data->mode == $m["id"] ? 'selected' : '' ?>>
@@ -572,7 +572,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                                                 data-name='transaction_type'
                                                 required>
                                                 <?php foreach ($transaction_type as $t_type): ?>
-                                                    <option value="<?= $t_type['id'] ?>"
+                                                    <option data-package_status='<?= $t_type['package_status'] ?>' value="<?= $t_type['id'] ?>"
                                                         <?= ($applicant_payment_data->transaction_type == $t_type['id']) ? 'selected' : '' ?>>
                                                         <?= htmlspecialchars($t_type['name']) ?>
                                                     </option>
@@ -907,6 +907,8 @@ function check_tt_copy(obj)
             {
                  paymentSection.find("input.tt_proof ").val('').attr("disabled",true).attr("required",false);
             }
+            
+            CheckPackageCondition()
 }
 
 
@@ -965,13 +967,13 @@ function check_tt_copy(obj)
                                         <div class="col-md-2">
                                             <div class=" form-group">
                                                 <label>Mode <span class="text-danger">*</span></label>
-                                                <select data-name="mode" class="form-control selectpicker electpicker-new mode"
+                                                <select data-name="mode" class="form-control selectpicker electpicker-new mode" 
                                                     name="mode_<?= time() ?>"mode"
                                                     required data-live-search="true" data-size="5"
                                                     title="Select Mode"
                                                     onchange="vendor_update(this,this.value); check_tt_copy(this);">
                                                     <?php foreach ($modes as $m): ?>
-                                                        <option value="<?= $m['id'] ?>">
+                                                        <option data-package_status='<?= $m['package_status'] ?>' value="<?= $m['id'] ?>">
                                                             <?= htmlspecialchars($m['name']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
@@ -1000,7 +1002,7 @@ function check_tt_copy(obj)
                                                 data-name='transaction_type'
                                                 required>
                                                 <?php foreach ($transaction_type as $t_type): ?>
-                                                    <option value="<?= $t_type['id'] ?>">
+                                                    <option data-package_status='<?= $t_type['package_status'] ?>' value="<?= $t_type['id'] ?>">
                                                         <?= htmlspecialchars($t_type['name']) ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -1243,7 +1245,46 @@ function check_tt_copy(obj)
                 $('<input type="text" data-name="vendor_name" name="vendor_name" required class="form-control manually-cash" placeholder="Enter Vendor Name">')
                     .insertBefore(vendor_select);
             }
+            
+            CheckPackageCondition()
         }
+
+function CheckPackageCondition() {
+    $(".payment_payment").each(function () {
+        const mode = parseInt($(this).find("select.mode option:selected").data("package_status")) || 0;
+        const transaction_type = parseInt($(this).find("select.transaction_type option:selected").data("package_status")) || 0;
+        const packageId = parseInt(<?= PACKAGE_FEES_ID ?>);
+
+        console.log("mode:", mode);
+        console.log("transaction_type:", transaction_type);
+
+        const paymentSelect = $(this).find("select.payment_type");
+
+        if (mode > 0 && transaction_type > 0 && mode === transaction_type) {
+
+            if (parseInt(paymentSelect.val()) !== packageId) {
+                paymentSelect.val(packageId).trigger("change");
+            } else {
+            }
+
+            // Disable all other options except selected
+            paymentSelect.find("option").prop("disabled", true);
+            paymentSelect.find(`option[value='${packageId}']`).prop("disabled", false);
+            paymentSelect.selectpicker("refresh");
+        } else {
+            <?php if (empty($payment_id) || empty($applicant_payment_data)) { ?>
+                // Reset when condition not met
+                paymentSelect.val("").trigger("change");
+                paymentSelect.find("option").prop("disabled", false);
+                paymentSelect.selectpicker("refresh");
+            <?php } ?>
+        }
+    });
+}
+
+// Run check
+CheckPackageCondition();
+
 
 
         // helper to build currency select options
