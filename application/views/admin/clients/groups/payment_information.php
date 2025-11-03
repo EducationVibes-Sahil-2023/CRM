@@ -4,6 +4,7 @@
 $ci = &get_instance();
 
 $get_clients_fees = get_clients_fees_details(2, $client_id);
+$client_information = $this->clients_model->getAdmissionPreferences($client_id);
 
 $FessAmounts  =  array_column($get_clients_fees, null, 'id');
 $FeesInformation = array_column(university_applicant_fees_payments(["lead_type" => 2]), null, "id");
@@ -79,10 +80,21 @@ if (!empty($applicantpaymentdata)) {
         <?php foreach ($FeesInformation as $FeesInfo): ?>
             <?php
 // print_r($FeesInfo);
-if(in_array($FeesInfo["id"],[2,4,8]))
+if(strtolower($client_information->primary_country) == "georgia")
+{
+if(in_array($FeesInfo["id"],[2,4,8,7]))
 {
     continue;
     
+}
+}
+else
+{
+    if(in_array($FeesInfo["id"],[2,4,8]))
+{
+    continue;
+    
+}
 }
 
 
@@ -97,6 +109,22 @@ if(in_array($FeesInfo["id"],[2,4,8]))
             // Get total fee amount safely
             $totalAmountRaw = $FessAmounts[$feeId]['total_amount'] ?? $currency_lookup[$default_currency]['symbol'] . "0";
             $totalAmount = (int) $FessAmounts[$feeId]['amount'] ?? 0;
+       
+if(strtolower($client_information->primary_country) == "georgia")
+{
+            if($feeId == 3)
+            {
+                
+                $feeName .=" + Medical";
+                if($FessAmounts[7]["currency_id"] == $FessAmounts[$feeId]["currency_id"] )
+                {
+                    $totalAmountRaw = $currency_lookup[$FessAmounts[$feeId]["currency_id"]]['symbol']."".($FessAmounts[7]['amount'] + $FessAmounts[$feeId]['amount']);
+                    
+                    $totalAmount = ($FessAmounts[7]['amount'] + $FessAmounts[$feeId]['amount']);
+                    
+                }
+            }
+}
             // Initialize original amount
             $orignal_amount[$feeId][$currencyId] = $totalAmount;
             $remaningDues[$feeId][$currencyId] = $totalAmount;
