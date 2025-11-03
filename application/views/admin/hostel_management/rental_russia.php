@@ -105,16 +105,31 @@ for ($i = 1; $i <= 6; $i++) {
                             $endYear = date("Y") + 2; // End at current year + 2
 
                             $years = [];
+                            $years[] = ['id' => '', 'name' => 'Select Academic Year']; // default option
+
                             for ($year = $startYear; $year < $endYear; $year++) {
-                                $years[] = $year . " - " . ($year + 1);
+                                $label = $year . ' - ' . ($year + 1);
+                                $years[] = ['id' => $label, 'name' => $label];
                             }
+
+
                             ?>
 
-                            <select class="form-control" id="acadmic_year" name="acadmic_year" required>
+                            <select
+                                class="form-control selectpicker"
+                                id="academic_year"
+                                name="academic_year"
+                                required
+                                data-width="100%"
+                                data-none-selected-text="No Selection"
+                                data-actions-box="true">
                                 <?php foreach ($years as $year): ?>
-                                    <option value="<?= $year ?>"><?= $year ?></option>
+                                    <option value="<?= htmlspecialchars($year['id']) ?>">
+                                        <?= htmlspecialchars($year['name']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
+
                         </div>
                     </div>
 
@@ -313,7 +328,7 @@ for ($i = 1; $i <= 6; $i++) {
         // Populate form fields with safe fallbacks
         form.find('input[name="rental_id"]').val(id || '');
         form.find('select[name="hostel_id"]').val(decodedData.hostel_id || '').selectpicker('refresh');
-        form.find('select[name="acadmic_year"]').val(decodedData.acadmic_year || '').selectpicker('refresh');
+        form.find('select[name="academic_year"]').val(decodedData.acadmic_year || '').selectpicker('refresh');
         form.find('select[name="year"]').val(decodedData.year || '').selectpicker('refresh');
         form.find('select[name="room_capacity"]').val(decodedData.room_capacity || '').selectpicker('refresh');
         form.find('select[name="currency"]').val(decodedData.currency || '').selectpicker('refresh');
@@ -344,7 +359,7 @@ for ($i = 1; $i <= 6; $i++) {
         $(this).find('input[name="rental_id"]').val('');
         // Optional: reset the entire form
         $(this).find('form')[0].reset();
-        // $(this).find('form select').selectpicker('refresh');
+        $(this).find('form select.selectpicker').selectpicker('refresh');
         // $(this).find('form select').selectpicker('refresh');
     });
 
