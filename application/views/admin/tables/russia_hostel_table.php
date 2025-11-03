@@ -16,8 +16,8 @@ $aColumns = [
     'latest_quotation.room_capacity as room_capacity',
     'latest_quotation.rent as rent_amount',
     'latest_quotation.currency as currency',
-    'latest_quotation.start_date as start_date',
-    'latest_quotation.end_date as end_date',
+    // 'latest_quotation.start_date as start_date',
+    // 'latest_quotation.end_date as end_date',
     'latest_quotation.year as year',
     db_prefix() . 'hostel_infomation.id as id',
     db_prefix() . 'hostel_infomation.acadmic_year as acadmic_year',
@@ -25,45 +25,45 @@ $aColumns = [
     db_prefix() . 'hostel_company.name as company_name',
     db_prefix() . 'currencies.name as currency_name',
     //find month difference between two dates as month_difference
-    "TIMESTAMPDIFF(MONTH, latest_quotation.start_date,latest_quotation.end_date)
-       + (DAY(latest_quotation.end_date) >= DAY(latest_quotation.start_date)) AS month_difference",
-    "CAST(
-        JSON_UNQUOTE(
-            JSON_EXTRACT(
-                hostel_due,
-                CONCAT(
-                    '$.main.fees_info[',
-                    REGEXP_SUBSTR(
-                        JSON_UNQUOTE(
-                            JSON_SEARCH(hostel_due, 'one', '5', NULL, '$.main.fees_info[*].id')
-                        ),
-                        '[0-9]+'
-                    ),
-                    '].amount'
-                )
-            )
-        ) AS DECIMAL(10,2)
-    ) AS hostel_amount",
+    // "TIMESTAMPDIFF(MONTH, latest_quotation.start_date,latest_quotation.end_date)
+    // //    + (DAY(latest_quotation.end_date) >= DAY(latest_quotation.start_date)) AS month_difference",
+    // "CAST(
+    //     JSON_UNQUOTE(
+    //         JSON_EXTRACT(
+    //             hostel_due,
+    //             CONCAT(
+    //                 '$.main.fees_info[',
+    //                 REGEXP_SUBSTR(
+    //                     JSON_UNQUOTE(
+    //                         JSON_SEARCH(hostel_due, 'one', '5', NULL, '$.main.fees_info[*].id')
+    //                     ),
+    //                     '[0-9]+'
+    //                 ),
+    //                 '].amount'
+    //             )
+    //         )
+    //     ) AS DECIMAL(10,2)
+    // ) AS hostel_amount",
 
     // ✅ Extract hostel currency_id directly from JSON
-    "CAST(
-        JSON_UNQUOTE(
-            JSON_EXTRACT(
-                hostel_due,
-                CONCAT(
-                    '$.main.fees_info[',
-                    REGEXP_SUBSTR(
-                        JSON_UNQUOTE(
-                            JSON_SEARCH(hostel_due, 'one', '5', NULL, '$.main.fees_info[*].id')
-                        ),
-                        '[0-9]+'
-                    ),
-                    '].currency_id'
-                )
-            )
-        ) AS UNSIGNED
-    ) AS hostel_currency_id",
-    db_prefix() . 'currencies.name as currency_name',
+    // "CAST(
+    //     JSON_UNQUOTE(
+    //         JSON_EXTRACT(
+    //             hostel_due,
+    //             CONCAT(
+    //                 '$.main.fees_info[',
+    //                 REGEXP_SUBSTR(
+    //                     JSON_UNQUOTE(
+    //                         JSON_SEARCH(hostel_due, 'one', '5', NULL, '$.main.fees_info[*].id')
+    //                     ),
+    //                     '[0-9]+'
+    //                 ),
+    //                 '].currency_id'
+    //             )
+    //         )
+    //     ) AS UNSIGNED
+    // ) AS hostel_currency_id",
+    // db_prefix() . 'currencies.name as currency_name',
 
 
 
@@ -138,9 +138,9 @@ foreach ($rResult as $aRow) {
     // $row[] = $aRow['room_capacity'];
     // $row[] = $aRow['hostel_amount'];
     // $row[] = $aRow['currency_name'];
-    $row[] = $aRow['start_date'];
-    $row[] = $aRow['end_date'];
-    $row[] = $aRow['month_difference'];
+    // $row[] = $aRow['start_date'];
+    // $row[] = $aRow['end_date'];
+    // $row[] = $aRow['month_difference'];
     // $monthDiff = isset($aRow['month_difference']) && is_numeric($aRow['month_difference'])
     //     ? (float)$aRow['month_difference']
     //     : 0;

@@ -130,7 +130,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         var tAPI = "";
         $(function() {
-            tAPI = initDataTable('.table-payment-table', admin_url + 'hostel_management/payment_table/' + <?= $getId ?>);
+            tAPI = initDataTable('.table-payment-table', admin_url + 'hostel_management/payment_table/georgia/' + <?= $getId ?>);
         });
 
         window.refreshPaymentTable = function() {

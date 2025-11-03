@@ -7,22 +7,23 @@ $aColumns = [
 
     "CONCAT('Q', ROW_NUMBER() OVER (PARTITION BY university_name ORDER BY " . db_prefix() . "hostel_quotation.id ASC)) AS quotation_label",
     "university_name AS university_name",
-    "room_capacity AS room_capacity",
-    "start_date AS start_date",
-    "end_date AS end_date",
-    "pdf AS pdf",
-
+    "acadmic_year AS acadmic_year",
+    "year AS year",
+    // "room_capacity AS room_capacity",
+    // "start_date AS start_date",
+    // "end_date AS end_date",
+    // "pdf AS pdf",
 
     // ✅ Unique ID for each quotation
-    "CONCAT(
-        university_name, '-', start_date, '-', end_date, '-', room_capacity, ' - ',
-        'Q', ROW_NUMBER() OVER (PARTITION BY university_name ORDER BY id ASC)
-    ) AS unique_id",
+    // "CONCAT(
+    //     university_name, '-', acadmic_year, '-', year,' - ',
+    //     'Q', ROW_NUMBER() OVER (PARTITION BY university_name ORDER BY id ASC)
+    // ) AS unique_id",
 
     // ✅ Month difference
-    "TIMESTAMPDIFF(MONTH, " . db_prefix() . "hostel_quotation.start_date," . db_prefix() . "hostel_quotation.end_date)
-       + (DAY(" . db_prefix() . "hostel_quotation.end_date) >= DAY(" . db_prefix() . "hostel_quotation.start_date)) AS month_difference",
-    db_prefix() . 'currencies.name as currency_name',
+    // "TIMESTAMPDIFF(MONTH, " . db_prefix() . "hostel_quotation.start_date," . db_prefix() . "hostel_quotation.end_date)
+    //    + (DAY(" . db_prefix() . "hostel_quotation.end_date) >= DAY(" . db_prefix() . "hostel_quotation.start_date)) AS month_difference",
+    // db_prefix() . 'currencies.name as currency_name',
 
 ];
 $_POST['length'] = 100;
@@ -34,27 +35,27 @@ $where = [];
 $where[] = "AND hostel_info_id = " . (int) $hostel_info_id;
 $where[] = "AND status = 1";
 
-
+$join = [];
 // ✅ Join currency table safely
-$join = [
-    'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = CAST(
-        JSON_UNQUOTE(
-            JSON_EXTRACT(
-                ' . db_prefix() . 'hostel_quotation.hostel_due,
-                CONCAT(
-                    "$.main.fees_info[",
-                    REGEXP_SUBSTR(
-                        JSON_UNQUOTE(
-                            JSON_SEARCH(' . db_prefix() . 'hostel_quotation.hostel_due, "one", "5", NULL, "$.main.fees_info[*].id")
-                        ),
-                        "[0-9]+"
-                    ),
-                    "].currency_id"
-                )
-            )
-        ) AS UNSIGNED
-    )'
-];
+// $join = [
+//     'LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = CAST(
+//         JSON_UNQUOTE(
+//             JSON_EXTRACT(
+//                 ' . db_prefix() . 'hostel_quotation.hostel_due,
+//                 CONCAT(
+//                     "$.main.fees_info[",
+//                     REGEXP_SUBSTR(
+//                         JSON_UNQUOTE(
+//                             JSON_SEARCH(' . db_prefix() . 'hostel_quotation.hostel_due, "one", "5", NULL, "$.main.fees_info[*].id")
+//                         ),
+//                         "[0-9]+"
+//                     ),
+//                     "].currency_id"
+//                 )
+//             )
+//         ) AS UNSIGNED
+//     )'
+// ];
 
 $groupBy = "";
 
@@ -62,7 +63,6 @@ $result  = data_tables_init($aColumns, $sIndexColumn, $sTable, $join, $where, [d
 $output  = $result['output'];
 $rResult = $result['rResult'];
 
-// print_r($rResult);
 // Format rows
 foreach ($rResult as $aRow) {
     $row = [];
@@ -89,10 +89,12 @@ foreach ($rResult as $aRow) {
 
     // Push into row
     $row[] = $nameRow;
+    $row[] = $aRow['acadmic_year'];
+    $row[] = $aRow['year'];
 
-    $row[] = $aRow['start_date'];
-    $row[] = $aRow['end_date'];
-    $row[] = $aRow['month_difference'];
+    // $row[] = $aRow['start_date'];
+    // $row[] = $aRow['end_date'];
+    // $row[] = $aRow['month_difference'];
     $row[] = "";
     if (!empty($aRow['pdf'])) {
         $row[] = '<button class="btn btn-primary"

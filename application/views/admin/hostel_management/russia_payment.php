@@ -41,15 +41,18 @@
         <?php
         $payment_table = array(
             "Pay Date",
+            "University Name",
+            "Acadmic Year",
+            "Year",
             "Type",
             "Mode",
             "Vendor",
-            "Start Date",
-            "End Date",
-            "Room Capacity",
-            "Months",
-            "Amount",
-            "Currency",
+            // "Start Date",
+            // "End Date",
+            // "Room Capacity",
+            // "Months",
+            // "Amount",
+            // "Currency",
             "Status",
             "Proof",
             "Action",
@@ -130,7 +133,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         var tAPI = "";
         $(function() {
-            tAPI = initDataTable('.table-payment-table', admin_url + 'hostel_management/payment_table/' + <?= $getId ?>);
+            tAPI = initDataTable('.table-payment-table', admin_url + 'hostel_management/payment_table/russia/' + <?= $getId ?>);
         });
 
         window.refreshPaymentTable = function() {
@@ -223,7 +226,7 @@ if (has_permission('hostel_management', '', 'payment')) {
     SELECT 
         aq.*,
         CONCAT('Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)) AS quotation_label,
-        CONCAT(aq.university_name, '-', aq.start_date,'-',aq.end_date,'-', aq.room_capacity, ' - ',
+        CONCAT(aq.university_name, '-', aq.acadmic_year,'-',aq.year,' - ',
                'Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)
         ) AS unique_id
     FROM " . db_prefix() . "hostel_quotation aq

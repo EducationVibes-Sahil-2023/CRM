@@ -165,21 +165,21 @@ class hostel_management extends AdminController
     {
 
         $quotationSave = [
-            "hostel_info_id" => $_POST["hostel_info_id"] ?? null,
-            "university_name" => $_POST["university_name"] ?? null,
-            "start_date" => $_POST["start_date"] ?? null,
-            "end_date" => $_POST["end_date"] ?? null,
+            "hostel_info_id" => $_POST["hostel_info_id"] ?? "",
+            "university_name" => $_POST["university_name"] ?? "",
+            "start_date" => $_POST["start_date"] ?? "",
+            "end_date" => $_POST["end_date"] ?? "",
             "room_capacity" => $_POST["room_capacity"] ?? 0,
             "floor_No" => $_POST["floor_No"] ?? 0,
             "room_No" => $_POST["room_No"] ?? 0,
-            "company" => $_POST["company"] ?? null,
-            "rent" => $_POST["rent"] ?? null,
-            "currency" => $_POST["rent_currency_type"] ?? null,
-            "hostel" => $_POST["hostel"] ?? null,
-            "exchange_value" => ($_POST["currency_exchange"]) ?? null,
-            'hostel_due'  => ($_POST["university_dues"]) ?? null,
-            'company_due'     => ($_POST["company_due"]) ?? null,
-            'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? null,
+            "company" => $_POST["company"] ?? "",
+            "rent" => $_POST["rent"] ?? "",
+            "currency" => $_POST["rent_currency_type"] ?? "",
+            "hostel" => $_POST["hostel"] ?? "",
+            "exchange_value" => ($_POST["currency_exchange"]) ?? "",
+            'hostel_due'  => ($_POST["university_dues"]) ?? "",
+            'company_due'     => ($_POST["company_due"]) ?? "",
+            'release_to_counsellor'     => ($_POST["release_to_counsellor"]) ?? "",
             'year'     => ($_POST["year"]) ?? 0,
             'acadmic_year'     => ($_POST["acadmic_year"]) ?? '',
             'services'     => ($_POST["services"]) ?? ''
@@ -206,21 +206,47 @@ class hostel_management extends AdminController
                 $quotationSave['updated_by'] = get_staff_user_id();
 
                 $this->db->where('id', $quotation_id);
-                $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
+                $updated = $this->db->update(db_prefix() . 'hostel_quotation', $quotationSave);
+
+                if ($updated) {
+                    // ✅ Update success
+                    $response = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => 'Quotation updated successfully.'
+                    ];
+                } else {
+                    // ❌ Update failed
+                    $db_error = $this->db->error();
+                    $response = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'Failed to update quotation: ' . $db_error['message']
+                    ];
+                }
             } else {
+                // 🔸 Insert new record
                 $quotationSave['created_date'] = date('Y-m-d H:i:s');
                 $quotationSave['created_by'] = get_staff_user_id();
-                // 🔸 Insert new record
-                $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
+
+                $inserted = $this->db->insert(db_prefix() . 'hostel_quotation', $quotationSave);
+
+                if ($inserted) {
+                    // ✅ Insert success
+                    $response = [
+                        'resp_code' => 'RCS',
+                        'resp_desc' => 'Quotation added successfully.',
+                        'insert_id' => $this->db->insert_id()
+                    ];
+                } else {
+                    // ❌ Insert failed
+                    $db_error = $this->db->error();
+                    $response = [
+                        'resp_code' => 'ERR',
+                        'resp_desc' => 'Failed to add quotation: ' . $db_error['message']
+                    ];
+                }
             }
 
-
-
-            // ✅ Success Response
-            echo json_encode([
-                'resp_code' => 'RCS',
-                'resp_desc' => 'Hostel rental details saved successfully.',
-            ]);
+            echo json_encode($response);
         } catch (Exception $e) {
             // ❌ Error Response
             echo json_encode([
@@ -708,12 +734,16 @@ class hostel_management extends AdminController
         ]);
     }
 
-    public function payment_table($hostel_info_id)
+    public function payment_table($table_type = "", $hostel_info_id)
     {
         if (!has_permission('hostel_management', '', 'payment')) {
             throw new Exception("Access denied: Quotation Payment View");
         }
         $view = "hostel_payments";
+
+        if (!empty($table_type)) {
+            $view = $table_type . '_hostel_payment_table'; // corresponds to application/views/admin/tables/visa_clients.php
+        }
 
         // Load the corresponding table data
         $this->app->get_table_data($view, ["hostel_info_id" => $hostel_info_id]);

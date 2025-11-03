@@ -32,9 +32,9 @@ $table_data = array(
     array('name' => 'Year'),
     array('name' => 'Company'),
     array('name' => 'Hostel'),
-    array('name' => 'Start Date'),
-    array('name' => 'End Date'),
-    array('name' => 'No of Months'),
+    // array('name' => 'Start Date'),
+    // array('name' => 'End Date'),
+    // array('name' => 'No of Months'),
 );
 
 
