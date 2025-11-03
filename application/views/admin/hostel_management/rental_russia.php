@@ -117,8 +117,8 @@ for ($i = 1; $i <= 6; $i++) {
 
                             <select
                                 class="form-control selectpicker"
-                                id="academic_year"
-                                name="academic_year"
+                                id="acadmic_year"
+                                name="acadmic_year"
                                 required
                                 data-width="100%"
                                 data-none-selected-text="No Selection"
