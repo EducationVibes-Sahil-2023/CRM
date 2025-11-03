@@ -43,7 +43,7 @@ $join = [];
 $where = [];
 
 $where[] = " AND " . db_prefix() . "hostel.status = 1 ";
-if (is_admin()) {
+if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
     $where[] = " AND " . db_prefix() . "hostel.created_by = " . get_staff_user_id();
 }

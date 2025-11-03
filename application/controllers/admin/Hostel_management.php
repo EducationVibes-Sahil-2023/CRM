@@ -8,6 +8,7 @@ class hostel_management extends AdminController
 
     function __construct()
     {
+      
 
         //         ini_set('display_errors', 1);
         // ini_set('display_startup_errors', 1);
@@ -19,6 +20,8 @@ class hostel_management extends AdminController
 
     function manage($page_type = '')
     {
+          
+      
         // ✅ Permission check
         if (!has_permission('hostel_management', '', 'view_own') && !has_permission('hostel_management', '', 'view')) {
             return access_denied('hostel_management'); // Use return to stop further execution
@@ -42,7 +45,7 @@ class hostel_management extends AdminController
     {
 
         // ✅ Permission check
-        if (!has_permission('hostel_management', '', 'view_own')) {
+        if (!has_permission('hostel_management', '', 'view_own') && !has_permission('hostel_management', '', 'view')) {
             return access_denied('hostel_management'); // Use return to stop further execution
         }
 
@@ -60,7 +63,7 @@ class hostel_management extends AdminController
     {
 
         // ✅ Permission check
-        if (!has_permission('hostel', '', 'view_own')) {
+        if (!has_permission('hostel', '', 'view_own') && !has_permission('hostel', '', 'view')) {
             return access_denied('hostel'); // Use return to stop further execution
         }
 
