@@ -66,6 +66,9 @@ foreach ($rResult as $aRow) {
     $row = [];
     $row[] = $aRow['name'];
     $row[] = $rental_info;
+    $row[] = $aRow['acadmic_year'];
+    $row[] = $aRow['year'];
+
 
     $action = '';
     if (has_permission('hostel_management', '', 'backend')) {

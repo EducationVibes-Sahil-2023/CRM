@@ -312,14 +312,18 @@ $table_data = array(
                             $endYear = date("Y") + 2; // End at current year + 2
 
                             $years = [];
+                            $years[] = ['id' => '', 'name' => 'Select Academic Year']; // default option
+
                             for ($year = $startYear; $year < $endYear; $year++) {
-                                $years[] = $year . " - " . ($year + 1);
+                                $label = $year . ' - ' . ($year + 1);
+                                $years[] = ['id' => $label, 'name' => $label];
                             }
+
                             ?>
 
                             <select class="form-control" id="acadmic_year" name="acadmic_year" required>
                                 <?php foreach ($years as $year): ?>
-                                    <option value="<?= $year ?>"><?= $year ?></option>
+                                    <option value="<?= $year["id"] ?>"><?= $year["name"] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -467,33 +471,40 @@ $table_data = array(
         });
 
         $('#hostel_management_form').on('submit', function(e) {
-            e.preventDefault(); // Prevent default submit
+            e.preventDefault(); // stop normal submission
 
             var form = $(this);
+            var isValid = true; // validation flag
 
-            $(form)
-                .find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
+            // Clear previous errors
+            form.find('.is-invalid').removeClass('is-invalid');
+
+            // Loop through required visible fields
+            form.find("input[required]:not([type='hidden']):visible, select[required]:visible, textarea[required]:visible")
                 .each(function() {
-                    let value = $(this).val(); // safely get value
+                    let value = $(this).val();
                     if (!value || String(value).trim() === "") {
                         $(this).addClass("is-invalid");
+                        isValid = false; // found an invalid field
 
-                        // Try to get readable label
+                        // Optional: show tooltip or inline message
                         let label = $(this).closest(".form-group").find("label").text().trim();
                         let fieldName = label || $(this).attr("name");
-
-                        // Collect field name or handle it as you wish
                         console.warn("Missing required:", fieldName);
-                    } else {
-                        $(this).removeClass("is-invalid");
                     }
                 });
 
+            // Stop submission if invalid
+            if (!isValid) {
+                alert_float('warning', 'Please fill all required fields before submitting.');
+                return false; // exit early
+            }
 
+            // Proceed with AJAX submit if all fields valid
             var url = '<?= admin_url("hostel_management/save_hostel_details"); ?>';
             var formData = new FormData(this);
 
-            // Append country_name from select
+            // Append additional field(s)
             var university_text = $('#university_id option:selected').text() || '';
             formData.append('university_name', university_text);
 
@@ -513,10 +524,9 @@ $table_data = array(
                     if (response.resp_code === 'RCS') {
                         alert_float('success', response.resp_desc);
                         $("#hostel_management").modal('hide');
-                        $("#hostel_management").find('form')[0].reset();
-                        $("#hostel_management").find('select.selectpicker').selectpicker('refresh');
-                        tAPI.ajax.reload(null, false); // Reload DataTable
-                        // window.location.href = '<?= admin_url("clients/visa_details"); ?>';
+                        form[0].reset();
+                        form.find('select.selectpicker').selectpicker('refresh');
+                        tAPI.ajax.reload(null, false); // refresh DataTable
                     } else {
                         alert_float('danger', 'Error: ' + response.resp_desc);
                     }
@@ -527,6 +537,7 @@ $table_data = array(
                 }
             });
         });
+
 
         document.getElementById("passport").addEventListener("input", function() {
             this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Convert to uppercase & remove invalid characters
