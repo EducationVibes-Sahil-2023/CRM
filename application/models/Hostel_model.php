@@ -296,4 +296,15 @@ class Hostel_model extends App_Model
         $result = $query->result_array();
         return $result;
     }
+
+    function get_russia_university()
+    {
+        $this->s_db->select('university_name');
+        $this->s_db->from('universities');
+        $this->s_db->where('status', 0);
+        $this->s_db->where('russia_hostel', 1);
+        $query = $this->s_db->get();
+        $result = $query->result_array();
+        return $result;
+    }
 }

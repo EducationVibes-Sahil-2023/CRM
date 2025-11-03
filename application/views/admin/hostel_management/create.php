@@ -3,6 +3,8 @@
 <?php
 $get_currencies = get_currencies();
 
+$russia_univercitysity = $this->Hostel_model->get_russia_university();
+
 $table_data = array(
     array('name' => 'Hostel Name'),
     array('name' => 'Short form'),
@@ -75,8 +77,14 @@ $table_data = array(
                 <h3>Hostel Information</h3>
                 <hr>
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <?= render_input('hostel_name', 'Hostel Name', '', 'text', ["placeholder" => "Enter Hostel Name"]); ?>
+                    </div>
+                    <div class="col-md-2">
+                        <?= render_input('hostel_name', 'Name', '', 'text', ["placeholder" => "EVR-OMSK"]); ?>
+                    </div>
+                    <div class="col-md-3">
+                        <?php echo render_select('university', $russia_univercitysity, array('university_name', 'university_name'), 'University Name', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Address", 'data-actions-box' => true), array(), 'no-mbot', '', false, 'university'); ?>
                     </div>
                     <div class="col-md-2">
                         <?= render_input('hostel_logo', 'Hostel Logo', '', 'file', ["placeholder" => "Enter Hostel Name", "required" => true]); ?>
@@ -97,6 +105,7 @@ $table_data = array(
                     </div>
                     <div class="col-md-2">
                         <?= render_input('address', 'Hostal Address', '', 'text', ["placeholder" => "Enter Hostel Address"]); ?>
+
                     </div>
                     <div class="col-md-2">
                         <?= render_input('contact_number', 'Contact Number', '', 'text', ["placeholder" => "+995 592 XX XXXX"]); ?>
