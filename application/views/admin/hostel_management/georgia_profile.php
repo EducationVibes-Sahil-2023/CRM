@@ -75,7 +75,7 @@
             );
             ?>
        </div>
-
+<!-- 
        <div class="col-lg-3">
            <div class="form-group">
                <label for="acadmic_year">Academic Year <small class="text-danger">*</small></label>
@@ -104,7 +104,7 @@
                    <?php endforeach; ?>
                </select>
            </div>
-       </div>
+       </div> -->
 
 
        <!-- <div class="col-md-3">

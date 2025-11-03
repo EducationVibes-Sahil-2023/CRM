@@ -94,10 +94,26 @@ function app_init_admin_sidebar_menu_items()
         if (has_permission('hostel_management', '', 'view') || has_permission('hostel_management', '', 'view_own')) {
 
                 $CI->app_menu->add_sidebar_menu_item('hostel_management', [
-                        'slug'     => 'hostel_management',
+                        'collapse' => true,
                         'icon'     => 'fa fa-hotel',
                         'name'     => "Hostel MS",
                         'href'     => admin_url('hostel_management'),
+                        'position' => 5,
+                ]);
+
+                $CI->app_menu->add_sidebar_children_item('hostel_management', [
+                        'slug'     => 'hostel_management/hostel_georgia',
+                        'icon'     => 'fa fa-hotel',
+                        'name'     => "Georgia Hostel",
+                        'href'     => admin_url('hostel_management/manage/georgia'),
+                        'position' => 5,
+                ]);
+
+                $CI->app_menu->add_sidebar_children_item('hostel_management', [
+                        'slug'     => 'hostel_management/hostel_georgia',
+                        'icon'     => 'fa fa-hotel',
+                        'name'     => "Russia Hostel",
+                        'href'     => admin_url('hostel_management/manage/russia'),
                         'position' => 5,
                 ]);
         }
@@ -510,10 +526,16 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 1,
                 ]);
                 $CI->app_menu->add_setup_children_item('hms_backend', [
-                        'slug'     => 'hrms-rental',
-                        'name'     => "Rental",
-                        'href'     => admin_url('hostel_management/rental'),
+                        'slug'     => 'hrms-rental-georgia',
+                        'name'     => "Rental Georgia",
+                        'href'     => admin_url('hostel_management/rental/georgia'),
                         'position' => 2,
+                ]);
+                $CI->app_menu->add_setup_children_item('hms_backend', [
+                        'slug'     => 'hrms-rental-russia',
+                        'name'     => "Rental Russia",
+                        'href'     => admin_url('hostel_management/rental/russia'),
+                        'position' => 3,
                 ]);
         }
 

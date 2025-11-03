@@ -12,6 +12,12 @@
     margin-bottom: 30px !important;
 }
 
+  .modal-dialog.fullscreen {
+            width: 80%;
+            max-width: 80%;
+
+
+        }
 .btn-default.active,
 .btn-default:active,
 .btn-default:focus,

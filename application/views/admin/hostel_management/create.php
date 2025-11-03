@@ -21,13 +21,6 @@ $table_data = array(
             margin-top: 20px;
         }
 
-        .modal-dialog.fullscreen {
-            width: 80%;
-            max-width: 80%;
-
-
-        }
-
         .modal-content {
             height: 100%;
             border-radius: 0;
