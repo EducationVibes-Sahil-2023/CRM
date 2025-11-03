@@ -43,7 +43,7 @@ $hostelDues = $hostel_due["fees_info"];
 $paymentMode = $hostel_due["pay_info"][0]["payMode"];
 
 $amountValue = $hostelDues[0]["amount"];
-$amountCurrency = $hostelDues[0]["currency_id"];
+$amountCurrency = $hostelDues[0]["document_currency"];
 
 $modes = $ci->quotation_model->payment_mod();
 $modes = array_column($modes, "name", "id");
@@ -133,9 +133,10 @@ function numberToWord($num)
     <hr>
     <tr class="medium bold">
         <td>
-            <p>Food &amp; Accommodation for <?= numberToWord($hostelData->room_capacity) ?> Sharing Room</p>
-            <p><?= $amountValue ?? '' ?><?= $get_currencies[$amountCurrency]["symbol"] ?> per month </p>
+            <p><?= !empty($hostelData->service_name) ? $hostelData->service_name : 'Food And Accommodation' ?> <?php if (!empty($hostelData->room_capacity)) { ?>for <?= numberToWord($hostelData->room_capacity) ?> Sharing Room <?php } ?></p>
+            <p><?= $amountValue ?? '' ?><?= $get_currencies[$amountCurrency]["symbol"] ?> <?php if (!empty($hostelData->room_capacity)) { ?>per month<?php } ?> </p>
             <p><?= $hostelData->month_difference ?? '' ?> Months Contract (<?= !empty($hostelData->start_date) ? date('d-m-Y', strtotime($hostelData->start_date)) : '' ?> ~ <?= !empty($hostelData->end_date) ? date('d-m-Y', strtotime($hostelData->end_date)) : '' ?>)</p>
+            <br>
             <p>One Time Payment</p>
         </td>
         <td style="text-align:right">
@@ -149,7 +150,9 @@ function numberToWord($num)
             <!-- <p>(Equivalent in Gel)</p> -->
         </td>
     </tr>
-    <tr><td colspan="2"></td></tr>
+    <tr>
+        <td colspan="2"></td>
+    </tr>
     <tr class="small">
         <td colspan="2">
             <p class="bold"><?= $hostelData->beneficiary_headline ?></p>
@@ -224,7 +227,7 @@ function numberToWord($num)
             <p class="large"><strong>Note:</strong> Kindly make the payment by <span style="background-color: yellow; font-weight: bold; padding: 2px 4px;"><?= !empty($hostelData->created_date)
                                                                                                                                                                 ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day'))
                                                                                                                                                                 : ''
-                                                                                                                                                            ?></span>. In the description of the bank receipt must mention Food & Accommodation for the
+                                                                                                                                                            ?></span>. In the description of the bank receipt must mention <?= !empty($hostelData->service_name) ? $hostelData->service_name : 'Food And Accommodation' ?> for the
                 student name, invoice number and passport number clearly</p>
         </td>
     </tr>

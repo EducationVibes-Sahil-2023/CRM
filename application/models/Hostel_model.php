@@ -11,25 +11,64 @@ class Hostel_model extends App_Model
 
     public function get_hostel_rentInfo()
     {
-        return
-            $this->db->query("SELECT 
+        // return
+        //     $this->db->query("SELECT 
+        // hostel_id,
+        // CONCAT(
+        // '[', 
+        // GROUP_CONCAT(
+        // DISTINCT JSON_OBJECT(
+        // 'room_capacity', room_capacity,
+        // 'currency', currency,
+        // 'rent', rent
+        // ) 
+        // SEPARATOR ','
+        // ),
+        // ']'
+        // ) AS rooms,
+        // rental_details,
+        // acadmic_year,
+        // year
+        // FROM tblhostel_rental
+        // WHERE status = 1
+        // GROUP BY hostel_id;
+        // ")->result_array();
+
+        return $this->db->query("
+    SELECT 
         hostel_id,
+
+        -- ROOMS JSON ARRAY
         CONCAT(
-        '[', 
-        GROUP_CONCAT(
-        DISTINCT JSON_OBJECT(
-        'room_capacity', room_capacity,
-        'currency', currency,
-        'rent', rent
-        ) 
-        SEPARATOR ','
-        ),
-        ']'
-        ) AS rooms
-        FROM tblhostel_rental
-        WHERE status = 1
-        GROUP BY hostel_id;
-        ")->result_array();
+            '[',
+            GROUP_CONCAT(
+                DISTINCT CONCAT(
+                    '{',
+                        '\"room_capacity\": \"', room_capacity, '\",',
+                        '\"currency\": \"', currency, '\",',
+                        '\"rent\": \"', rent, '\"',
+                    '}'
+                ) SEPARATOR ','
+            ),
+            ']'
+        ) AS rooms,
+
+        -- RENTAL DETAILS JSON OBJECT (acadmic_year + year unique key)
+        CONCAT(
+            '{',
+            GROUP_CONCAT(
+                DISTINCT CONCAT(
+                    '\"', acadmic_year, '_', year, '\": ',
+                    rental_details
+                ) SEPARATOR ','
+            ),
+            '}'
+        ) AS rental_details
+
+    FROM tblhostel_rental
+    WHERE status = 1
+    GROUP BY hostel_id;
+")->result_array();
     }
 
     public function hostel_quotation_data($getId, $quotation_id = "")
@@ -85,7 +124,7 @@ class Hostel_model extends App_Model
             + (DAY(end_date) >= DAY(start_date)) AS month_difference")
             ->from(db_prefix() . "hostel_quotation")
             ->where("hostel_info_id", $hostel_info_id)
-             ->where("status > ", 0)
+            ->where("status > ", 0)
             ->get()
             ->result_array();
 
@@ -107,6 +146,9 @@ class Hostel_model extends App_Model
             ->get()
             ->result_array();
 
+
+
+
         // Initialize structures
         $quotationDetails    = [];
         $quotationAmountData = [];
@@ -114,8 +156,11 @@ class Hostel_model extends App_Model
         $refundAmountData    = [];
         $pendingAmountData   = [];
 
+
         // ✅ Process quotations
         foreach ($allQuotations as $index => $quotation) {
+
+
             $quotationId = $quotation['id'];
             $quotationKey = sprintf(
                 '%s-%s-%s-%s-Q%d',
@@ -140,7 +185,7 @@ class Hostel_model extends App_Model
                     $feeId    = $fee["id"] ?? null;
                     if (!$feeId) continue;
 
-                    $inrValue = isset($fee["amount"]) ? (float)$fee["amount"] * $quotation["month_difference"] : 0;
+                    $inrValue = isset($fee["inr_value"]) ? (float)$fee["inr_value"] : 0;
 
                     if (!isset($quotationAmountData[$quotationId][$feeId])) {
                         $quotationAmountData[$quotationId][$feeId] = 0;
@@ -149,7 +194,7 @@ class Hostel_model extends App_Model
 
                     $quotationDetails[$quotationKey]["quotation"][$feeId] = [
                         "fee_name"  => $feesDetails[$feeId] ?? "Unknown Fee",
-                        "currency_id" => $fee["currency_id"] ?? "",
+                        "currency_id" => $fee["document_currency"] ?? "",
                         "total_inr" => $quotationAmountData[$quotationId][$feeId]
                     ];
                 }
@@ -163,6 +208,7 @@ class Hostel_model extends App_Model
 
 
             $decoded = json_decode($payment["fess_infomation"], true);
+
             if (!is_array($decoded)) continue;
 
             foreach ($decoded as $fee) {
@@ -185,7 +231,7 @@ class Hostel_model extends App_Model
                         if (!isset($details["refund"][$feeId])) {
                             $details["refund"][$feeId] = [
                                 "fee_name"   => $feesDetails[$feeId] ?? "Unknown Fee",
-                                "currency_id" => $payment["ex_currency"] ?? "",
+                                "currency_id" => $fee["document_currency"] ?? "",
                                 "refund_inr" => 0
                             ];
                         }
@@ -239,5 +285,15 @@ class Hostel_model extends App_Model
             'pendingAmountData'   => $pendingAmountData,
             'quotationDetails'    => $quotationDetails,
         ];
+    }
+
+    function get_hostel_services()
+    {
+        $this->db->select('*');
+        $this->db->from(db_prefix() . 'hostel_quotation_services');
+        $this->db->where('status', 1);
+        $query = $this->db->get();
+        $result = $query->result_array();
+        return $result;
     }
 }

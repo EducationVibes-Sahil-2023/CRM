@@ -152,7 +152,7 @@ $table_data = array(
         $.each($('._hidden_inputs._filters input'), function() {
             CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
         });
-        tAPI = initDataTable('.table-hostel_rental', admin_url + 'hostel_management/rental_table', [0], [0], CustomersServerParams);
+        tAPI = initDataTable('.table-hostel_rental', admin_url + 'hostel_management/rental_table/georgia', [0], [0], CustomersServerParams);
 
         // Initialize form validation
         appValidateForm($('#hostel_rental_form'), {

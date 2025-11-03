@@ -37,7 +37,7 @@ $tabs = [
                             <?php
                             foreach ($tabs as $key => $tab) { ?>
                                 <li class="<?php echo ($key == $active_tab) ? 'active ' : ''; ?>customer_tab_<?php echo $key; ?>">
-                                    <a data-group="<?php echo $key; ?>" href="<?php echo admin_url('hostel_management/hostel/' . $getId . '?tab=' . $key); ?>">
+                                    <a data-group="<?php echo $key; ?>" href="<?php echo admin_url('hostel_management/hostel/' . $active_segment . '/' . $getId . '?tab=' . $key); ?>">
                                         <?php if (!empty($tab['icon'])) { ?>
                                             <i class="<?php echo $tab['icon']; ?> menu-icon" aria-hidden="true"></i>
                                         <?php } ?>
