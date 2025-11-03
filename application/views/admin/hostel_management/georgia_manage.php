@@ -287,7 +287,7 @@ $table_data = array(
                     <div class="col-md-3 hide">
                         <label>Room Rent <span class="text-danger">*</span></label><br>
                         <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
-                            <input type="text" name="rent" <?= $required ?> class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="" size="8" onkeypress="return acceptText(this,'number')">
+                            <input type="text" name="rent" required class="form-control currency-amount fees_rent" placeholder="0.00" id="rent" value="" size="8" onkeypress="return acceptText(this,'number')">
                             <div class="input-group-addon currency-addon">
                                 <select name="rent_currency_type" id="rent" class="currency-selector currency-selector-rent" onchange="updateSymbol('rent')">
                                     <?php foreach ($get_currencies as $c) {
