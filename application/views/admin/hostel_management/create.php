@@ -212,23 +212,23 @@ $table_data = array(
                 contact_number: 'required',
                 email: 'required',
 
-                beneficiary_headline: 'required',
-                beneficiary_bank: 'required',
-                beneficiary_code: 'required',
-                beneficiary_iban: 'required',
-                beneficiary_name: 'required',
-                beneficiary_address: 'required',
+                // beneficiary_headline: 'required',
+                // beneficiary_bank: 'required',
+                // beneficiary_code: 'required',
+                // beneficiary_iban: 'required',
+                // beneficiary_name: 'required',
+                // beneficiary_address: 'required',
 
 
-                usd_beneficiary_headline: 'required',
-                usd_beneficiary_bank: 'required',
-                usd_beneficiary_code: 'required',
-                usd_beneficiary_iban: 'required',
-                usd_beneficiary_name: 'required',
-                usd_beneficiary_address: 'required',
+                // usd_beneficiary_headline: 'required',
+                // usd_beneficiary_bank: 'required',
+                // usd_beneficiary_code: 'required',
+                // usd_beneficiary_iban: 'required',
+                // usd_beneficiary_name: 'required',
+                // usd_beneficiary_address: 'required',
 
-                intermediary_bank: 'required',
-                intermediary_swift_code: 'required',
+                // intermediary_bank: 'required',
+                // intermediary_swift_code: 'required',
 
                 footer_note: 'required'
             });
