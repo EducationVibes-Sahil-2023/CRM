@@ -184,13 +184,13 @@ if (!empty($_GET['quotation_id'])) {
                             <?= render_input('university_name', 'University Name ', $hostelData->university_name ?? '', 'text', ["placeholder" => "Enter University Name", "readonly" => true]); ?>
                         </div>
 
-                        <div class="col-md-3">
+                        <!-- <div class="col-md-3">
                             <?= render_input('start_date', 'Start Date ', $hostel_quotation_data->start_date ?? '', 'date', ["placeholder" => "Select Start Date"]); ?>
                         </div>
 
                         <div class="col-md-3">
                             <?= render_input('end_date', 'End Date ', $hostel_quotation_data->end_date ?? '', 'date', ["placeholder" => "Select End Date"]); ?>
-                        </div>
+                        </div> -->
 
 
                         <div class="col-md-3 hide ">
@@ -525,7 +525,7 @@ if (!empty($_GET['quotation_id'])) {
 
                                                                 <div class="input-group-addon">
                                                                     <select name="<?= $field_name ?>_currency_type"
-                                                                       disabled class="currency-selector currency-selector-<?= $id ?>"
+                                                                        disabled class="currency-selector currency-selector-<?= $id ?>"
                                                                         onchange="calculateInrValue(); updateSymbol_(this,<?= $id ?>)">
                                                                         <?php foreach ($get_currencies as $c): ?>
                                                                             <option data-symbol="<?= htmlspecialchars($c['symbol']) ?>"
@@ -1166,8 +1166,8 @@ if (!empty($_GET['quotation_id'])) {
             company: 'required',
             hostel: 'required',
             room_capacity: 'required',
-            start_date: 'required',
-            end_date: 'required'
+            // start_date: 'required',
+            // end_date: 'required'
         });
 
         // get_hostel_rentInfo(<?= $hostelData->hostel ?>);
