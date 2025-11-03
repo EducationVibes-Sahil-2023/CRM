@@ -13,9 +13,8 @@
         <?php
         $quotation_table = array(
             "Quotation Number",
-            "Start Date",
-            "End Date",
-            "Months",
+            "Acadmic Year",
+            "Year",
             "Fees Details",
             "PDF",
         );
@@ -680,10 +679,10 @@ if (!empty($_GET['quotation_id'])) {
 
                                                 </td>
                                                 <td>
-                                                    <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
+                                                    <select class="form-control" disabled required name="university_pay_mode" onchange="vendor_update(this,this.value);">
                                                         <?php foreach ($modes as $m):
                                                         ?>
-                                                            <option value="<?= $m['id'] ?>" <?= $university_due_array["main"]["pay_info"] ?> <?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == $m["id"] ? "selected" : "" ?>>
+                                                            <option value="<?= $m['id'] ?>" <?= $university_due_array["main"]["pay_info"] ?> <?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == $m["id"] || ($quotation_id == '' &&  $m["id"] == 5) ? "selected" : "" ?>>
                                                                 <?= htmlspecialchars($m['name']) ?>
                                                             </option>
                                                         <?php endforeach; ?>
@@ -691,7 +690,7 @@ if (!empty($_GET['quotation_id'])) {
 
                                                 </td>
                                                 <td>
-                                                    <select class="form-control" style="display:<?= (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) ? 'none' : 'show' ?>" required id="university_pay_vendor" name="university_pay_vendor">
+                                                    <select class="form-control" style="display:<?= (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5 || $quotation_id == '') ? 'none' : 'show' ?>" required id="university_pay_vendor" name="university_pay_vendor">
                                                         <?php if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] != 5) { ?>
                                                             <option value="">Select Vendor</option>
                                                         <?php } ?>
@@ -722,14 +721,15 @@ if (!empty($_GET['quotation_id'])) {
                                                     <?php
                                                     $payInfo_new = $university_due_array["main"]['pay_info'][0] ?? null;
 
-                                                    if (!empty($payInfo_new) && isset($payInfo_new["payMode"]) && $payInfo_new["payMode"] == 5): ?>
+                                                    if (!empty($payInfo_new) && isset($payInfo_new["payMode"]) && $payInfo_new["payMode"] == 5 || $quotation_id == ''): ?>
                                                         <input
                                                             type="text"
                                                             name="manual_cash_vendor"
                                                             required
+                                                            readonly
                                                             class="form-control manually-cash"
                                                             placeholder="Enter Vendor Name"
-                                                            value="<?= !empty($payInfo_new["payVendor"]) ? htmlspecialchars($payInfo_new["payVendor"], ENT_QUOTES, 'UTF-8') : '' ?>">
+                                                            value="<?= !empty($payInfo_new["payVendor"]) ? htmlspecialchars($payInfo_new["payVendor"], ENT_QUOTES, 'UTF-8') : 'EVR-FOREX' ?>">
                                                     <?php endif; ?>
 
                                                 </td>
@@ -749,7 +749,7 @@ if (!empty($_GET['quotation_id'])) {
                 </div>
 
                 <!-- Company Dues -->
-                <div class="panel_s hide">
+                <!-- <div class="panel_s hide">
                     <div class="panel-body">
                         <div class="row align-items-center mb-2">
                             <div class="col-md-6">
@@ -863,7 +863,7 @@ if (!empty($_GET['quotation_id'])) {
                                         <td>
                                             <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
                                                 <?php foreach ($modes as $m): ?>
-                                                    <option value="<?= $m['id'] ?>"
+                                                    <option <?= $m['id'] == 5 ? 'selected' : '' ?> value="<?= $m['id'] ?>"
                                                         <?= (!empty($payMode) && $payMode == $m["id"]) ? "selected" : "" ?>>
                                                         <?= htmlspecialchars($m['name']) ?>
                                                     </option>
@@ -871,7 +871,7 @@ if (!empty($_GET['quotation_id'])) {
                                             </select>
                                         </td>
                                         <td>
-                                            <select class="form-control" style="display:<?= (!empty($payMode) && $payMode == 5) ? 'none' : 'show' ?>" required name="university_pay_vendor" id="university_pay_vendor">
+                                            <select class="form-control" style="display:<?= (!empty($payMode) && $payMode == 5 || $quotation_id == '') ? 'none' : 'show' ?>" required name="university_pay_vendor" id="university_pay_vendor">
                                                 <?php if ($payMode != 5) { ?>
                                                     <option value="">Select Vendor</option>
                                                 <?php } ?>
@@ -895,7 +895,7 @@ if (!empty($_GET['quotation_id'])) {
 
                                             <?php
 
-                                            if (!empty($payMode) && isset($payMode) && $payMode == 5): ?>
+                                            if (!empty($payMode) && isset($payMode) && $payMode == 5 || $quotation_id == ''): ?>
                                                 <input
                                                     type="text"
                                                     name="manual_cash_vendor"
@@ -1097,7 +1097,7 @@ if (!empty($_GET['quotation_id'])) {
                         </div>
 
                     </div>
-                </div>
+                </div> -->
 
                 <?php if (has_permission('hostel_management', '', 'quotation')) { ?>
                     <div class="row text-right">
@@ -1139,14 +1139,14 @@ if (!empty($_GET['quotation_id'])) {
                 // console.log("Parsed rental details:", rental_details);
 
                 // Get the correct key’s data
-                let selectedData = rental_details[key] || null;
+                let selectedData = rental_details[key] || [];
 
                 if (selectedData) {
                     selectedUniversityRoomData = selectedData;
                     // console.log("Resolved rental data:", selectedData);
                     resolve(selectedData);
                 } else {
-                    reject(`No data found for key: ${key}`);
+                    resolve(selectedData);
                 }
             } catch (error) {
                 console.error("Error in get_hostel_rentInfo:", error);
@@ -1209,8 +1209,8 @@ if (!empty($_GET['quotation_id'])) {
     async function selectHostelYear(id) {
         await get_hostel_rentInfo(id);
         let roomData = selectedUniversityRoomData;
+
         // if (roomData) {
-        console.log("roomData", roomData);
         //     $("input[name='rent']").val(roomData.rent);
         //     $("select[name='rent_currency_type']").val(roomData.currency);
         //     $(".fees_5").val(roomData.rent);
@@ -1224,14 +1224,20 @@ if (!empty($_GET['quotation_id'])) {
         //     $("select[name='rent_currency_type']").val('');
         // }
         // console.log("roomData in selectHostelYear", roomData);
-        for (const room of roomData) {
-            $(".credit-currency-change .fees_" + room.fee_id).val(room.amount);
-            $(".credit-currency-change .currency-selector-" + room.fee_id).val(room.currency);
-            $(".document-currency-change .currency-selector-" + room.fee_id).val(room.currency);
-            updateSymbol_($(".credit-currency-change .currency-selector-" + room.fee_id), room.fee_id);
-            updateSymbol_($(".document-currency-change .currency-selector-" + room.fee_id), room.fee_id);
-        }
+        if (roomData.length == 0) {
+            alert_float('warning', 'No rental data found for the selected academic year and year.');
+            $(".credit-currency-change .fees_5").val(0);
+            $(".currency-selector-5").val('');
 
+        } else {
+            for (const room of roomData) {
+                $(".credit-currency-change .fees_" + room.fee_id).val(room.amount);
+                $(".credit-currency-change .currency-selector-" + room.fee_id).val(room.currency);
+                $(".document-currency-change .currency-selector-" + room.fee_id).val(room.currency);
+                updateSymbol_($(".credit-currency-change .currency-selector-" + room.fee_id), room.fee_id);
+                updateSymbol_($(".document-currency-change .currency-selector-" + room.fee_id), room.fee_id);
+            }
+        }
         calculateInrValue();
     }
 
