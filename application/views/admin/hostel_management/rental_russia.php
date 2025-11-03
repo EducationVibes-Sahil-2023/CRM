@@ -7,6 +7,8 @@ $get_clients_fees = get_clients_fees(2);
 $table_data = array(
     array('name' => 'Hostel Name'),
     array('name' => 'Rental Details'),
+    array('name' => 'Academic Year'),
+    array('name' => 'Year'),
     array('name' => 'Action'),
 );
 
