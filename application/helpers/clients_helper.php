@@ -1469,6 +1469,26 @@ function get_clients_fees($lead_type = "", $client_id = "", $university_quotatio
 }
 
 
+function get_clients_fees_hostel($where = [])
+{
+    $CI = &get_instance();
+
+    // Select base columns from applicant_fees
+    $CI->db->select("f.*")
+        ->from(db_prefix() . 'applicant_fees f');
+
+    // Conditionally join applicant_fees_details if client_id is provided
+    if (!empty($where)) {
+        $CI->db->where($where);
+    }
+    $CI->db->order_by("f.sequence", "asc");
+
+    $client_fees = $CI->db->get()->result_array();
+
+    return $client_fees;
+}
+
+
 
 function get_passport_stages()
 {

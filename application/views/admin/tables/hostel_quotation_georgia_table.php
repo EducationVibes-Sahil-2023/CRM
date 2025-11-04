@@ -36,7 +36,7 @@ $aColumns = [
                         ),
                         '[0-9]+'
                     ),
-                    '].amount'
+                    '].inr_value'
                 )
             )
         ) AS DECIMAL(10,2)
@@ -86,7 +86,7 @@ $join = [
                         ),
                         "[0-9]+"
                     ),
-                    "].currency_id"
+                    "].document_currency"
                 )
             )
         ) AS UNSIGNED
@@ -131,9 +131,9 @@ foreach ($rResult as $aRow) {
     $row[] = $aRow['end_date'];
     $row[] = $aRow['month_difference'];
     $row[] = $aRow['room_capacity'];
-    $row[] = $aRow['hostel_amount'] ?? 0;
-    $row[] = (!empty((int)$aRow['hostel_amount']) ? $aRow['hostel_amount'] : 0) * $aRow['month_difference'];
-    $row[] = $aRow['currency_name'];
+    $row[] = $aRow['hostel_amount'] . " " . $aRow['currency_name'] ?? 0 . " " . $aRow['currency_name'];
+    $row[] = (!empty((int)$aRow['hostel_amount']) ? $aRow['hostel_amount'] : 0) * $aRow['month_difference'] . " " . $aRow['currency_name'];
+
     if (!empty($aRow['pdf'])) {
         $row[] = '<button class="btn btn-primary"
                     onclick="window.open(\'' . $aRow['pdf'] . '\', \'_blank\')">

@@ -8,7 +8,7 @@ class hostel_management extends AdminController
 
     function __construct()
     {
-      
+
 
         //         ini_set('display_errors', 1);
         // ini_set('display_startup_errors', 1);
@@ -20,8 +20,8 @@ class hostel_management extends AdminController
 
     function manage($page_type = '')
     {
-          
-      
+
+
         // ✅ Permission check
         if (!has_permission('hostel_management', '', 'view_own') && !has_permission('hostel_management', '', 'view')) {
             return access_denied('hostel_management'); // Use return to stop further execution
@@ -753,12 +753,12 @@ class hostel_management extends AdminController
     }
     public function payment_quotation()
     {
-        
-        ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+
+
         try {
             $payment_id         = $this->input->post("payment_id") ?? '';
+            $acadmic_year         = $this->input->post("acadmic_year") ?? '';
+            $year         = $this->input->post("year") ?? '';
             $hostel_info_id          = $this->input->post("hostel_info_id") ?? '';
             $university_name    = $this->input->post("university_name") ?? '';
             $start_date       = $this->input->post("start_date") ?? '';
@@ -816,6 +816,8 @@ error_reporting(E_ALL);
 
                 $row = [
                     "hostel_info_id"        => $hostel_info_id,
+                    "acadmic_year"        => $acadmic_year,
+                    "year"        => $year,
                     "university_name"  => $university_name,
                     "start_date"    => $start_date,
                     "end_date"    => $end_date,
@@ -903,26 +905,26 @@ error_reporting(E_ALL);
                 //     'amount'         => $row['amount'],
                 //     'pay_date'       => $row['pay_date']
                 // ]);
-                
+
                 $where = [
-    'hostel_info_id' => $hostel_info_id,
-    'university_name' => $university_name,
-    'start_date' => $start_date,
-    'end_date' => $end_date,
-    'room_capacity' => $room_capacity,
-    'mode' => $row['mode'],
-    'amount' => $row['amount'],
-    'pay_date' => $row['pay_date']
-];
+                    'hostel_info_id' => $hostel_info_id,
+                    'university_name' => $university_name,
+                    'start_date' => $start_date,
+                    'end_date' => $end_date,
+                    'room_capacity' => $room_capacity,
+                    'mode' => $row['mode'],
+                    'amount' => $row['amount'],
+                    'pay_date' => $row['pay_date']
+                ];
 
-// Filter out empty values (null, '', or 0 if you wish)
-$filtered_where = array_filter($where, function($v) {
-    return ($v !== null && $v !== ''); // you can adjust this rule
-});
+                // Filter out empty values (null, '', or 0 if you wish)
+                $filtered_where = array_filter($where, function ($v) {
+                    return ($v !== null && $v !== ''); // you can adjust this rule
+                });
 
-if (!empty($filtered_where)) {
-    $this->db->where($filtered_where);
-}
+                if (!empty($filtered_where)) {
+                    $this->db->where($filtered_where);
+                }
 
 
                 if (!empty($row["vendor_id"])) {
@@ -936,8 +938,8 @@ if (!empty($filtered_where)) {
 
                 $this->db->where('status > ', 0);
                 $duplicate = $this->db->get(db_prefix() . 'hostel_payments')->row();
-                
-            
+
+
                 // if ($duplicate) {
                 //     throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");
                 // }

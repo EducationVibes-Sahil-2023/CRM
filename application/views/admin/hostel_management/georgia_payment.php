@@ -88,7 +88,7 @@
 
 <script>
     function getPayementInformation(hostel_info_id) {
-        console.log("Client ID:", hostel_info_id);
+        // console.log("Client ID:", hostel_info_id);
 
         let $container = $(".PaymentInformationShow");
 
@@ -114,7 +114,7 @@
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error("AJAX Error:", error);
+                    // console.error("AJAX Error:", error);
                     $container.html(
                         '<div class="alert alert-danger">Error loading payment info.</div>'
                     ).slideDown();
@@ -158,7 +158,7 @@
             try {
                 feeData = JSON.parse(feeData);
             } catch (e) {
-                console.error("Invalid fees JSON:", e);
+                // console.error("Invalid fees JSON:", e);
                 return;
             }
         }
@@ -170,7 +170,7 @@
             return;
         }
 
-        const secondaryTableColumns = ["Type", "Amount", "Currency", "INR Value"];
+        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value"];
         const nestedTableId = `nested-applicant-table-${payment_id}`;
 
         // Create child row HTML
@@ -198,7 +198,7 @@
         // Initialize nested DataTable with server-side options
         nestedTableIdArray[nestedTableId] = await initDataTable(
             `#${nestedTableId}`,
-            admin_url + 'hostel_management/payment_table/' + <?= $getId ?>,
+            admin_url + 'hostel_management/payment_table/georgia/' + <?= $getId ?>,
             [0], // columns not orderable
             [0], // columns not searchable
             CustomersServerParamsArray, {
@@ -535,7 +535,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                         <?php if (!empty($applicant_payment_data->mode) &&  $applicant_payment_data->mode == 5) { ?>
                                             <script>
                                                 $(document).ready(function() {
-                                                    console.log("hide vendor");
+                                                    // console.log("hide vendor");
                                                     $(".vendor_id").hide();
                                                 })
                                             </script>
@@ -546,7 +546,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                                         <div class="col-md-2 form-group">
                                             <label>Vendor <span class="text-danger">*</span></label>
-                                            <select class="form-control selectpicker electpicker-new vendor_id"
+                                            <select class="form-control selectpicker electpicker-new vendor_id" required
                                                 onchange="check_tt_copy(this)"
                                                 style="display:<?= (!empty($applicant_payment_data->mode) &&
                                                                     $applicant_payment_data->mode == 5) ? 'none' : 'block' ?>"
@@ -643,7 +643,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 data-selected-text-format="count > 3"
                                                 name="type" ,
                                                 data-name="type"
-
+                                                required
                                                 onchange="split_data(this)">
                                                 <?php foreach ($university_applicant_fees as $fees): if (!in_array($fees['id'], [5, 6, 11])) {
                                                         continue;
@@ -768,7 +768,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                         <td>Fees type</td>
                                                         <td>Fees Amount</td>
                                                         <td>Ex-currency</td>
-                                                        <td>INR Value</td>
+                                                        <td>Document Currency Value</td>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -788,7 +788,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                                 <div class="input-group">
                                                                     <div class="input-group-addon currency-symbol-<?= $split['fee_id'] ?>">
 
-                                                                        <?= $currency_lookup[!empty($split['fee_currency']) ? $split['fee_currency'] : 3]["symbol"] ?>
+                                                                        <?= $currency_lookup[!empty($split['credit_currency']) ? $split['credit_currency'] : 3]["symbol"] ?>
                                                                     </div>
                                                                     <input type="number" step="0.01"
                                                                         name="fee_amount[<?= $split['fee_id'] ?>]"
@@ -800,7 +800,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                                         oninput="calculateInrValue()">
                                                                     <div class="input-group-addon">
                                                                         <select name="amount_currency_type[<?= $split['fee_id'] ?>]"
-                                                                            class="currency-selector disabled currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : 'auto-populated-select' ?>"
+                                                                            class="currency-selector disabled credit-currency currency-selector-amount <?= $applicant_payment_data->payment_type != PACKAGE_FEES_ID ? 'auto-populated-select' : 'auto-populated-select' ?>"
                                                                             readonly
                                                                             onchange="calculateInrValue(); updateSymbol_(this,<?= $split['fee_id'] ?>)">
                                                                             <?php foreach ($get_currencies as $c): ?>
@@ -869,7 +869,7 @@ if (has_permission('hostel_management', '', 'payment')) {
         var selectedUniversityRoomData = [];
 
         function get_hostel_rentInfo(id) {
-            console.log("get_hostel_rentInfo", id);
+            // console.log("get_hostel_rentInfo", id);
             if (get_university_rentData[id]) {
                 let rooms = get_university_rentData[id].rooms ? JSON.parse(get_university_rentData[id].rooms) : [];
                 selectedUniversityRoomData = rooms;
@@ -937,7 +937,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 const start_date = selected_quotation.start_date || "";
                 const end_date = selected_quotation.end_date || "";
                 const room_capacity = selected_quotation.room_capacity || "";
-                console.log(selected_quotation);
+                // console.log(selected_quotation);
                 // 🏷️ Update input fields only if they exist
                 const $startInput = $("input[name='start_date']");
                 const $endInput = $("input[name='end_date']");
@@ -955,7 +955,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                 $("select.payment_type").val('').selectpicker('refresh');
             } catch (error) {
-                console.error("Error in check_quotations:", error);
+                // console.error("Error in check_quotations:", error);
                 alert_float("danger", "Something went wrong while loading quotation details.");
             }
         }
@@ -996,18 +996,18 @@ if (has_permission('hostel_management', '', 'payment')) {
         }
 
 
-        function check_tt_copy(obj) {
-            let paymentSection = $(obj).parents('.payment_payment');
-            let modeId = paymentSection.find("select.mode").val();
-            let vendor_select = paymentSection.find("select.vendor_id").val();
-            let transaction_type = paymentSection.find("select.transaction_type ").val();
+        // function check_tt_copy(obj) {
+        //     let paymentSection = $(obj).parents('.payment_payment');
+        //     let modeId = paymentSection.find("select.mode").val();
+        //     let vendor_select = paymentSection.find("select.vendor_id").val();
+        //     let transaction_type = paymentSection.find("select.transaction_type ").val();
 
-            if (modeId == 2 || (modeId == 4 && vendor_select == 5) || (modeId == 1 && transaction_type == 1)) {
-                paymentSection.find("input.tt_proof ").attr("disabled", false).attr("required", true);
-            } else {
-                paymentSection.find("input.tt_proof ").val('').attr("disabled", true).attr("required", false);
-            }
-        }
+        //     if (modeId == 2 || (modeId == 4 && vendor_select == 5) || (modeId == 1 && transaction_type == 1)) {
+        //         paymentSection.find("input.tt_proof ").attr("disabled", false).attr("required", true);
+        //     } else {
+        //         paymentSection.find("input.tt_proof ").val('').attr("disabled", true).attr("required", false);
+        //     }
+        // }
 
 
         function setPaymentDate() {
@@ -1221,7 +1221,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                         <td>Fees type</td>
                                                         <td>Fees Amount</td>
                                                         <td>Ex-currency</td>
-                                                        <td>INR Value</td>
+                                                        <td>Document Currency Value</td>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1262,7 +1262,19 @@ if (has_permission('hostel_management', '', 'payment')) {
             let $formGroup = $(obj).closest(".form-group");
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
             // $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
-            $(obj).parents('.payment_payment').find("input[name='proof']").attr("required", true);
+
+            let hasEyeIcon = $(obj).parents('.payment_payment').find("input[name='proof']")
+                .closest('div') // find the nearest parent div
+                .find('i.fa.fa-eye') // look for <i class="fa fa-eye">
+                .length > 0; // true if exists
+
+            if (hasEyeIcon) {
+                console.log('✅ Eye icon exists inside closest div');
+            } else {
+                $(obj).parents('.payment_payment').find("input[name='proof']").attr("required", true);
+            }
+
+
             if (modeId != 1) {
                 // $(obj).parents('.payment_payment').find('.trans-div').hide();
             }
@@ -1436,7 +1448,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                         <div class="input-group-addon">
                             <select name="amount_currency_type[${feeData.id}]"
                                     ${readonly == 1 ? 'readonly' : ''}
-                                    data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
+                                    data-id="${unique}" class="currency-selector credit-currency currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
                                     onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
                                 ${getCurrencyOptions(selectedUniversityRoomData[0]?.currency || 3)}
                             </select>
@@ -1490,14 +1502,18 @@ if (has_permission('hostel_management', '', 'payment')) {
 
         function calculateExchangeRate() {
             exchangeRates = {};
+
+            // Build exchange rate map
             document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
-                const currencySelect = row.querySelector("select[name='exchange_currency[]']");
+                const credit_currency = row.querySelector("select[name='credit_currency[]']");
+                const document_currency = row.querySelector("select[name='document_currency[]']");
                 const amountInput = row.querySelector("input[name='exchange_value[]']");
 
-                if (currencySelect && amountInput) {
-                    const currencyId = currencySelect.value;
-                    const rate = parseFloat(amountInput.value) || 1;
-                    exchangeRates[currencyId] = rate;
+                if (credit_currency && document_currency && amountInput) {
+                    const credit_currencyId = credit_currency.value;
+                    const document_currencyId = document_currency.value;
+                    const rate = parseFloat(amountInput.value) || 0;
+                    exchangeRates[credit_currencyId + "_" + document_currencyId] = rate;
                 }
             });
         }
@@ -1506,17 +1522,8 @@ if (has_permission('hostel_management', '', 'payment')) {
             let $tbody = $paymentpayment.find("table.payment_payment_split_table tbody tr");
 
             // Build exchange rate map from exchange table
-            let exchangeRates = {};
-            document.querySelectorAll("#exchangeTableBody tr").forEach(row => {
-                const currencySelect = row.querySelector("select[name='exchange_currency[]']");
-                const amountInput = row.querySelector("input[name='exchange_value[]']");
-                if (currencySelect && amountInput) {
-                    const currencyId = currencySelect.value;
-                    const rate = parseFloat(amountInput.value) || 1;
-                    exchangeRates[currencyId] = rate;
-                }
-            });
-
+            calculateExchangeRate();
+            // console.log(exchangeRates);
             let totalINR = 0;
 
             // Recalculate INR for each fee row
@@ -1525,8 +1532,10 @@ if (has_permission('hostel_management', '', 'payment')) {
                 let feeId = $row.data("fee-id") || 0;
 
                 let amount = parseFloat($row.find(`input[name='fee_amount[${feeId}]']`).val()) || 0;
-                let currency = $row.find(`select[name='amount_currency_type[${feeId}]']`).val();
-                let rate = exchangeRates[currency] || 1;
+                let credit_currency = $row.find(`select[name='amount_currency_type[${feeId}]']`).val();
+                let document_currency = $row.find(`select.document_currency`).val();
+                let key = credit_currency + "_" + document_currency;
+                let rate = exchangeRates[key] || 1;
                 let inrValue = 0;
 
                 if (typeof currencyDisabledStatus !== "undefined" && currencyDisabledStatus == 1) {
@@ -1607,18 +1616,27 @@ if (has_permission('hostel_management', '', 'payment')) {
                     $entry.find("select[name='payment_type']").val() != 'undefined' && $entry.find("select[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>
                 ) {
 
-                    console.log($entry.find("select[name='payment_type']").val());
-                    console.log(<?= PACKAGE_FEES_ID ?>);
-                    console.log("Same INR Value");
+                    // console.log($entry.find("select[name='payment_type']").val());
+                    // console.log(<?= PACKAGE_FEES_ID ?>);
+                    // console.log("Same Document Value");
                     $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
                 }
 
                 // Refresh read-only and force currency select state where needed
                 $entry.find("select.auto-populated-select").each(function() {
-                    let idd = $(this).data("id");
+                    // let idd = $(this).data("id");
+
+                    let nameAttr = $(this).attr('name');
+                    // e.g. "amount_currency_type[5]"
+
+                    let idd = nameAttr.match(/\[(\d+)\]/)[1];
+
+                    // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
+                    // $(".input-group-addon.currency-symbol-" + idd).html($);
                     $(this)
                         .attr("readonly", true)
                         .val(currency_id);
+
                     updateSymbol_($(this), idd);
                 });
 
@@ -1686,7 +1704,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 }
 
             } catch (err) {
-                console.error("updateSymbol_ error:", err, obj, feeId);
+                // console.error("updateSymbol_ error:", err, obj, feeId);
             }
         }
 
@@ -1746,7 +1764,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                         let fieldName = label || $(this).attr("name");
 
                         // Collect field name or handle it as you wish
-                        console.warn("Missing required:", fieldName);
+                        // console.warn("Missing required:", fieldName);
                     } else {
                         $(this).removeClass("is-invalid");
                     }
@@ -1913,8 +1931,8 @@ if (has_permission('hostel_management', '', 'payment')) {
                             formData.append("tt_proof_" + index, file);
                         });
                     }
-                    console.log(totalAmountCheck);
-                    console.log(totalAmountCheck_);
+                    // console.log(totalAmountCheck);
+                    // console.log(totalAmountCheck_);
                     if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_)) {
                         error = true;
                         hide_loader();
@@ -1922,12 +1940,14 @@ if (has_permission('hostel_management', '', 'payment')) {
                         return false;
                     }
 
-                    if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_)) {
-                        error = true;
-                        hide_loader();
-                        alert_float("danger", "Hostel Quotation Payments Section " + (index + 1) + " Not match INR Value. ");
-                        return false;
-                    }
+                    // console.log(totalINRCheck);
+                    // console.log(totalINRCheck_);
+                    // if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_)) {
+                    //     error = true;
+                    //     hide_loader();
+                    //     alert_float("danger", "Hostel Quotation Payments Section " + (index + 1) + " Not match Credit Currency Value. ");
+                    //     return false;
+                    // }
 
                 });
 
@@ -1984,7 +2004,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 }
             } catch (error) {
                 hide_loader();
-                console.error("Error:", error);
+                // console.error("Error:", error);
                 alert_float("danger", "Something went wrong! Please try again.");
             }
         }
@@ -2076,7 +2096,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 },
                 beforeSend: function() {
                     // Optional: show loader
-                    console.log("Generating PDF...");
+                    // console.log("Generating PDF...");
                 },
                 success: function(response) {
                     hide_loader();
@@ -2091,7 +2111,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                     }
                 },
                 error: function(xhr, status, error) {
-                    console.error(error);
+                    // console.error(error);
                     alert("Something went wrong. Please try again.");
                 }
             });
@@ -2150,7 +2170,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
             } catch (error) {
                 hide_loader();
-                console.error(error);
+                // console.error(error);
                 alert_float("danger", error.responseText || error.statusText || "Something went wrong");
             }
         }

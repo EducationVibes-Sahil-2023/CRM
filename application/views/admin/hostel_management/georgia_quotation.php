@@ -17,9 +17,8 @@
             "End Date",
             "Months",
             "Room Capacity",
-            "Month Rent",
-            "Amount",
-            "Currency",
+            "Hostel Month Rent",
+            "Hostel Total Amount",
             "PDF",
         );
         ?>
@@ -57,10 +56,12 @@
 <?php
 
 $get_currencies = get_currencies();
-$university_applicant_fees = $university_applicant_fees = university_applicant_fees("", 1, [
-    "university_name" => $hostelData->vendor_update,
-    "acadmic_year"    => $acadmic_year
-]);
+// $university_applicant_fees = university_applicant_fees("", 1, [
+//     "university_name" => $hostelData->vendor_update,
+//     "acadmic_year"    => $acadmic_year
+// ]);
+
+$university_applicant_fees = get_clients_fees_hostel(array("f.georgia_hostel" => 1));
 $selected_mod = 0;
 $transaction_type  = transaction_type(array("hostel_status" => 1));
 $quotation_paymente_mode = $this->db
@@ -405,14 +406,9 @@ $serviceList = $this->Hostel_model->get_hostel_services();
                                         <tbody id="university_dues">
                                             <?php if (!empty($university_due_array)) {
                                                 foreach ($university_due_array["main"]["fees_info"] as $fees) {
-
                                                     $id         = $fees["id"];
-                                                    if (!in_array($id, [5, 6])) {
-                                                        continue;
-                                                    }
-
                                                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
-                                                    $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
+                                                    $symbol     = $currency_lookup[$fees["credit_currency"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
                                                         ?? '$';
                                                     $fees['quotation_name'] == 'Hostel'  ? $fees['quotation_name'] = 'Month Rent' : $fees['quotation_name'] = $fees['quotation_name'];
@@ -512,22 +508,20 @@ $serviceList = $this->Hostel_model->get_hostel_services();
                                             } else { ?>
                                                 <?php foreach ($university_applicant_fees as $fees):
                                                     $id         = $fees["id"];
-                                                    if (!in_array($id, [5, 6])) {
-                                                        continue;
-                                                    }
+
                                                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
                                                     $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
                                                         ?? '$';
-                                                    $fees['quotation_name'] == 'Hostel'  ? $fees['quotation_name'] = 'Month Rent' : $fees['quotation_name'] = $fees['quotation_name'];
+                                                    $fees['hostel_russia_label'] == 'Hostel'  ? $fees['hostel_russia_label'] = 'Month Rent' : $fees['hostel_russia_label'] = $fees['hostel_russia_label'];
 
                                                 ?>
                                                     <tr class="fee-row" data-id="<?= $id ?>">
                                                         <td>
-                                                            <label><?= htmlspecialchars($fees['quotation_name']) ?> <small class="text-danger">*</small></label>
+                                                            <label><?= htmlspecialchars($fees['hostel_georgia_label']) ?> <small class="text-danger">*</small></label>
                                                             <div class="input-group form-group credit-currency-change">
                                                                 <input type="hidden" name="applicant_fees[]" value="<?= $field_name ?>">
-                                                                <input type="hidden" name="quotation_name" value="<?= htmlspecialchars($fees['quotation_name']) ?>">
+                                                                <input type="hidden" name="quotation_name" value="<?= htmlspecialchars($fees['hostel_georgia_label']) ?>">
                                                                 <input type="hidden" name="<?= $field_name ?>_id" value="<?= $fees['id'] ?>">
                                                                 <input type="hidden" name="<?= $field_name ?>_detail_id_<?= $fees['id'] ?>" value="<?= $fees['detail_id'] ?? '' ?>">
 
@@ -583,7 +577,7 @@ $serviceList = $this->Hostel_model->get_hostel_services();
                                                             </div> -->
 
 
-                                                            <label><?= htmlspecialchars($fees['quotation_name']) ?> <small class="text-danger">*</small></label>
+                                                            <label><?= htmlspecialchars($fees['hostel_georgia_label']) ?> <small class="text-danger">*</small></label>
                                                             <div disabled class="input-group form-group document-currency-change">
 
                                                                 <div class="input-group-addon currency-symbol-<?= $id ?>">
@@ -1513,6 +1507,7 @@ $serviceList = $this->Hostel_model->get_hostel_services();
                 }
             });
 
+        console.log(missingFields);
         // After checking all fields
         if (missingFields.length > 0) {
             // Scroll to first invalid field

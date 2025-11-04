@@ -173,7 +173,7 @@
             return;
         }
 
-        const secondaryTableColumns = ["Type", "Amount", "Currency", "INR Value"];
+        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value"];
         const nestedTableId = `nested-applicant-table-${payment_id}`;
 
         // Create child row HTML
@@ -201,7 +201,7 @@
         // Initialize nested DataTable with server-side options
         nestedTableIdArray[nestedTableId] = await initDataTable(
             `#${nestedTableId}`,
-            admin_url + 'hostel_management/payment_table/' + <?= $getId ?>,
+            admin_url + 'hostel_management/payment_table/russia/' + <?= $getId ?>,
             [0], // columns not orderable
             [0], // columns not searchable
             CustomersServerParamsArray, {
@@ -254,7 +254,14 @@ if (has_permission('hostel_management', '', 'payment')) {
         "payment_quotation_type" => 1
     ]);
 
+    $merged = array_merge($university_applicant_fees, $university_applicant_fees_type);
 
+    $unique = [];
+    foreach ($merged as $row) {
+        $unique[$row['id']] = $row;  // overwrites duplicates by ID
+    }
+
+    $university_applicant_fees_type = array_values($unique);
     $university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
     $university_applicant_fees_array = university_applicant_fees_details([
         "fd.university_name" => $hostelData->university_name,
@@ -365,10 +372,10 @@ if (has_permission('hostel_management', '', 'payment')) {
                             <!--    <?= render_input('end_date', 'End Date ', $applicant_payment_data->end_date ?? '', 'date', ["placeholder" => "Select End Date", "readonly" => true]); ?>-->
                             <!--</div>-->
                             <div class="col-md-2">
-                                <?= render_input('acadmic_year', 'Acadmic Year', $applicant_payment_data->acadmic_year ?? '', 'text', ["placeholder" => "Enter Acadmic Year", "readonly" => true]); ?>
+                                <?= render_input('acadmic_year', 'Acadmic Year', $applicant_payment_data->acadmic_year ?? '', 'text', ["placeholder" => "Enter Acadmic Year", "readonly" => true, "required" => "required"]); ?>
                             </div>
                             <div class="col-md-2">
-                                <?= render_input('year', 'Year', $applicant_payment_data->year ?? '', 'number', ["placeholder" => "Enter Year", "readonly" => true]); ?>
+                                <?= render_input('year', 'Year', $applicant_payment_data->year ?? '', 'number', ["placeholder" => "Enter Year", "readonly" => true, "required" => "required"]); ?>
                             </div>
                         </div>
                     </div>
@@ -620,7 +627,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 data-name='payment_type'
                                                 required
                                                 onchange="split_data(this, this.value)">
-                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [3, 5, 6, 7,10, 11, 16])) {
+                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [3, 5, 6, 7, 10, 11, 16])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
@@ -649,9 +656,9 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 data-selected-text-format="count > 3"
                                                 name="type" ,
                                                 data-name="type"
-
+                                                required
                                                 onchange="split_data(this)">
-                                                <?php foreach ($university_applicant_fees as $fees): if (!in_array($fees['id'], [3, 5, 6, 7, 11])) {
+                                                <?php foreach ($university_applicant_fees as $fees): if (!in_array($fees['id'], [3, 5, 6, 7, 10, 11])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
@@ -774,7 +781,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                         <td>Fees type</td>
                                                         <td>Fees Amount</td>
                                                         <td>Ex-currency</td>
-                                                        <td>INR Value</td>
+                                                        <td>Document Currency Value</td>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1034,7 +1041,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                 get_hostel_rentInfo(selected_quotation.hostel, selected_quotation.year);
 
-                $("select.payment_type").val('').selectpicker('refresh');
+                $("select.payment_type").val('').selectpicker('refresh').trigger("change");
             } catch (error) {
                 console.error("Error in check_quotations:", error);
                 alert_float("danger", "Something went wrong while loading quotation details.");
@@ -1077,18 +1084,18 @@ if (has_permission('hostel_management', '', 'payment')) {
         }
 
 
-        function check_tt_copy(obj) {
-            let paymentSection = $(obj).parents('.payment_payment');
-            let modeId = paymentSection.find("select.mode").val();
-            let vendor_select = paymentSection.find("select.vendor_id").val();
-            let transaction_type = paymentSection.find("select.transaction_type ").val();
+        // function check_tt_copy(obj) {
+        //     let paymentSection = $(obj).parents('.payment_payment');
+        //     let modeId = paymentSection.find("select.mode").val();
+        //     let vendor_select = paymentSection.find("select.vendor_id").val();
+        //     let transaction_type = paymentSection.find("select.transaction_type ").val();
 
-            if (modeId == 2 || (modeId == 4 && vendor_select == 5) || (modeId == 1 && transaction_type == 1)) {
-                paymentSection.find("input.tt_proof ").attr("disabled", false).attr("required", true);
-            } else {
-                paymentSection.find("input.tt_proof ").val('').attr("disabled", true).attr("required", false);
-            }
-        }
+        //     if (modeId == 2 || (modeId == 4 && vendor_select == 5) || (modeId == 1 && transaction_type == 1)) {
+        //         paymentSection.find("input.tt_proof ").attr("disabled", false).attr("required", true);
+        //     } else {
+        //         paymentSection.find("input.tt_proof ").val('').attr("disabled", true).attr("required", false);
+        //     }
+        // }
 
 
         function setPaymentDate() {
@@ -1302,7 +1309,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                         <td>Fees type</td>
                                                         <td>Fees Amount</td>
                                                         <td>Ex-currency</td>
-                                                        <td>INR Value</td>
+                                                        <td>Document Currency Value</td>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1343,7 +1350,19 @@ if (has_permission('hostel_management', '', 'payment')) {
             let $formGroup = $(obj).closest(".form-group");
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
             // $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
-            $(obj).parents('.payment_payment').find("input[name='proof']").attr("required", true);
+            // $(obj).parents('.payment_payment').find("input[name='proof']").attr("required", true);
+
+            let hasEyeIcon = $(obj).parents('.payment_payment').find("input[name='proof']")
+                .closest('div') // find the nearest parent div
+                .find('i.fa.fa-eye') // look for <i class="fa fa-eye">
+                .length > 0; // true if exists
+
+            if (hasEyeIcon) {
+                console.log('✅ Eye icon exists inside closest div');
+            } else {
+                $(obj).parents('.payment_payment').find("input[name='proof']").attr("required", true);
+            }
+
             if (modeId != 1) {
                 // $(obj).parents('.payment_payment').find('.trans-div').hide();
             }
@@ -1435,6 +1454,130 @@ if (has_permission('hostel_management', '', 'payment')) {
             return html;
         }
 
+        //         function split_data(obj, feesID = 0) {
+        //             let selectedFeesIds = $(obj).val() || [];
+        //             let singleSelectedValue = "";
+
+        //             // Ensure always an array
+        //             if (!Array.isArray(selectedFeesIds)) {
+        //                 singleSelectedValue = selectedFeesIds;
+        //                 selectedFeesIds = [selectedFeesIds];
+        //             } else if (selectedFeesIds.length === 1) {
+        //                 singleSelectedValue = selectedFeesIds[0];
+        //             }
+
+        //             let $paymentpayment = $(obj).closest('.payment_payment');
+        //             let paymentType = $paymentpayment.find("select[name='payment_type']").val();
+
+        //             // If payment_type is NOT PACKAGE_FEES_ID, clear the split table
+        //             if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+        //                 $paymentpayment.find("table.payment_payment_split_table tbody").html('');
+        //             }
+        //             let $tbody = $paymentpayment.find("table.payment_payment_split_table tbody");
+
+        //             // Remove rows NOT selected anymore
+        //             $tbody.find("tr").each(function() {
+        //                 let feeId = $(this).data("fee-id") || 0;
+        //                 if (!selectedFeesIds.includes(feeId.toString())) {
+        //                     $(this).remove();
+        //                 }
+        //             });
+
+        //             // Toggle split-data visibility
+        //             $paymentpayment.find(".payment-split-data").toggle(selectedFeesIds.length > 0);
+
+        //             // Build/update fee split rows
+        //             selectedFeesIds.forEach(function(feeId) {
+        //                 feeId = feeId.toString();
+        //                 let unique = Date.now() + "_" + feeId;
+        //                 // Skip if already exists
+        //                 if ($tbody.find(`tr[data-fee-id='${feeId}']`).length > 0) {
+        //                     return;
+        //                 }
+
+        //                 let readonly = 0;
+        //                 if (feesID > 0 && singleSelectedValue !== '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
+        //                     readonly = 1;
+        //                 }
+        //                 // Example: if (currencyDisabledStatus == 1) readonly = 0;
+
+        //                 let feeData = university_applicant_fees.find(f => f.id == feeId);
+        //                 if (feeData) {
+        //                     let inrValue = 0;
+        //                     if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+        //                         inrValue = parseFloat(feeData.inr_value || 0);
+        //                     }
+
+        //                     let row = `
+        //             <tr data-fee-id="${feeData.id}">
+        //                 <td>
+        //                     <select class="form-control selectpicker" disabled>
+        //                         <option selected value="${feeData.id}">${feeData.name}</option>
+        //                     </select>
+        //                     <input type="hidden" name="selected_fees[]" value="${feeData.id}">
+        //                 </td>
+        //                 <td>
+        //                     <div class="input-group">
+        //                         <div class="input-group-addon currency-symbol-${unique}">
+        //                             <?= htmlspecialchars($currency_lookup[3]["symbol"] ?? '') ?>
+        //                         </div>
+        //                        <input 
+        //     type="number" 
+        //     step="0.01"
+        //     name="fee_amount[${feeData.id}]"
+        //     ${feeData.id == 5 ? 'required' : ''}
+        //     class="form-control fee-amount currency-amount ${readonly == 1 ? 'auto-populated' : ''}"
+        //     placeholder="0.00"
+        //     ${readonly == 1 ? 'readonly' : ''}
+        //     value="${feeData.amount || 0}"
+        //     oninput="calculateInrValue()"
+        // />
+
+        //                         <div class="input-group-addon">
+        //                             <select name="amount_currency_type[${feeData.id}]"
+        //                                     ${readonly == 1 ? 'readonly' : ''}
+        //                                     data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'readonly' : 'auto-populated-select'}"
+        //                                     onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
+        //                                 ${getCurrencyOptions(selectedUniversityRoomData[feeData.id]?.currency || 3)}
+        //                             </select>
+        //                         </div>
+        //                     </div>
+        //                 </td>
+        //                 <td>
+        //                     <select readonly name="fee_currency[${feeData.id}]" class="form-control document_currency">
+        //                         ${getCurrencyOptions(selectedUniversityRoomData[feeData.id]?.currency || 3)}
+        //                     </select>
+        //                 </td>
+        //                 <td>
+        //                     <input type="number" required name="fee_inr_value[${feeData.id}]"
+        //                            oninput="calculateInrValue()" class="form-control fee-inr" value="${inrValue.toFixed(2)}" ${currencyDisabledStatus == 1 ? '' : 'readonly'}>
+        //                 </td>
+        //             </tr>
+        //             `;
+        //                     $tbody.append(row);
+        //                     $tbody.find(".selectpicker").selectpicker("refresh");
+        //                 }
+        //             });
+
+        //             // Handle split-type dropdown
+        //             // let $panel = $(obj).closest('.panel_s');
+        //             let $splitTypeDropdown = $(".split-type-dropdown");
+        //             let $splitTypeSelect = $splitTypeDropdown.find("select.electpicker");
+        //             if (feesID == <?= PACKAGE_FEES_ID ?> || feesID == <?= RETURN_FEES_ID ?>) {
+        //                 $splitTypeSelect.val('').selectpicker('refresh');
+        //                 $splitTypeDropdown.show();
+        //                 splitTypeDropdown.attr("required", "required");
+
+        //                 //     $tbody.html('');
+        //             } else if (feesID > 0 && singleSelectedValue !== '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
+        //                 $splitTypeDropdown.hide();
+        //                 splitTypeDropdown.removeAttr("required");
+        //                 $splitTypeSelect.val('').selectpicker('refresh');
+        //             }
+
+        //             calculateInrValue();
+        //         }
+
         function split_data(obj, feesID = 0) {
             let selectedFeesIds = $(obj).val() || [];
             let singleSelectedValue = "";
@@ -1517,16 +1660,16 @@ if (has_permission('hostel_management', '', 'payment')) {
                         <div class="input-group-addon">
                             <select name="amount_currency_type[${feeData.id}]"
                                     ${readonly == 1 ? 'readonly' : ''}
-                                    data-id="${unique}" class="currency-selector currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
+                                    data-id="${unique}" class="currency-selector credit-currency currency-selector-amount ${readonly == 1 ? 'auto-populated-select' : 'auto-populated-select'}"
                                     onchange="calculateInrValue(); updateSymbol_(this, '${unique}')">
-                                ${getCurrencyOptions(selectedUniversityRoomData[feeData.id]?.currency || 3)}
+                                ${getCurrencyOptions(selectedUniversityRoomData[0]?.currency || 3)}
                             </select>
                         </div>
                     </div>
                 </td>
                 <td>
                     <select readonly name="fee_currency[${feeData.id}]" class="form-control document_currency">
-                        ${getCurrencyOptions(selectedUniversityRoomData[feeData.id]?.currency || 3)}
+                        ${getCurrencyOptions(selectedUniversityRoomData[0]?.currency || 3)}
                     </select>
                 </td>
                 <td>
@@ -1558,8 +1701,6 @@ if (has_permission('hostel_management', '', 'payment')) {
 
             calculateInrValue();
         }
-
-
 
 
         // 🔹 Recalc INR when user edits amounts/currency
@@ -1669,6 +1810,60 @@ if (has_permission('hostel_management', '', 'payment')) {
             calculateInrValue();
         }
 
+        // function calculateInrValue() {
+        //     calculateExchangeRate();
+
+        //     $('.payment_payment').each(function() {
+        //         const $entry = $(this);
+
+        //         // Get main input values
+        //         let amount = parseFloat($entry.find("input.fee-amount").val()) || 0;
+        //         let credit_currency = $entry.find("select.currency-selector-amount").val();
+        //         let document_currency = $entry.find("select.document_currency").val();
+
+
+        //         // Get exchange rate for selected currency
+        //         let rate = typeof exchangeRates !== "undefined" ? (exchangeRates[credit_currency + "_" + document_currency] || 1) : 1;
+
+        //         // Calculate INR value
+        //         let inrValue = amount * rate;
+
+        //         console.log("currencyDisabledStatus:", currencyDisabledStatus);
+        //         // Set main INR value (only if not in manual/disabled mode)
+        //         if (currencyDisabledStatus !== 1) {
+        //             $entry.find("input.inr_value").val(inrValue.toFixed(2));
+        //         }
+        //         // Auto-populated amount fields (e.g. split fee rows)
+        //         // $entry.find("input.auto-populated").val(inrValue.toFixed(2));
+
+        //         // If special package fee and disabled mode, propagate INR
+        //         if (
+        //             currencyDisabledStatus == 1 &&
+        //             $entry.find("select[name='payment_type']").val() != 'undefined' && $entry.find("select[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>
+        //         ) {
+
+        //             console.log($entry.find("select[name='payment_type']").val());
+        //             console.log(<?= PACKAGE_FEES_ID ?>);
+        //             console.log("Same INR Value");
+        //             $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
+        //         }
+
+        //         // Refresh read-only and force currency select state where needed
+        //         // $entry.find("select.auto-populated-select").each(function() {
+        //         //     let idd = $(this).data("id");
+        //         //     $(this)
+        //         //         .attr("readonly", true)
+        //         //         .val(currency_id);
+        //         //     updateSymbol_($(this), idd);
+        //         // });
+
+        //         // Recalculate totals for this payment entry
+        //         recalcTotalINR($entry);
+        //     });
+        // }
+
+
+
         function calculateInrValue() {
             calculateExchangeRate();
 
@@ -1676,24 +1871,22 @@ if (has_permission('hostel_management', '', 'payment')) {
                 const $entry = $(this);
 
                 // Get main input values
-                let amount = parseFloat($entry.find("input.fee-amount").val()) || 0;
-                let credit_currency = $entry.find("select.currency-selector-amount").val();
-                let document_currency = $entry.find("select.document_currency").val();
-
+                let amount = parseFloat($entry.find("input.amount").val()) || 0;
+                let currency_id = $entry.find("select.ex_currency").val();
 
                 // Get exchange rate for selected currency
-                let rate = typeof exchangeRates !== "undefined" ? (exchangeRates[credit_currency + "_" + document_currency] || 1) : 1;
+                let rate = typeof exchangeRates !== "undefined" ? (exchangeRates[currency_id] || 1) : 1;
 
                 // Calculate INR value
                 let inrValue = amount * rate;
 
-                console.log("currencyDisabledStatus:", currencyDisabledStatus);
                 // Set main INR value (only if not in manual/disabled mode)
                 if (currencyDisabledStatus !== 1) {
                     $entry.find("input.inr_value").val(inrValue.toFixed(2));
                 }
+
                 // Auto-populated amount fields (e.g. split fee rows)
-                // $entry.find("input.auto-populated").val(inrValue.toFixed(2));
+                $entry.find("input.auto-populated").val(amount);
 
                 // If special package fee and disabled mode, propagate INR
                 if (
@@ -1701,20 +1894,26 @@ if (has_permission('hostel_management', '', 'payment')) {
                     $entry.find("select[name='payment_type']").val() != 'undefined' && $entry.find("select[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>
                 ) {
 
-                    console.log($entry.find("select[name='payment_type']").val());
-                    console.log(<?= PACKAGE_FEES_ID ?>);
-                    console.log("Same INR Value");
+                    // console.log($entry.find("select[name='payment_type']").val());
+                    // console.log(<?= PACKAGE_FEES_ID ?>);
+                    // console.log("Same Document Value");
                     $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
                 }
 
                 // Refresh read-only and force currency select state where needed
-                // $entry.find("select.auto-populated-select").each(function() {
-                //     let idd = $(this).data("id");
-                //     $(this)
-                //         .attr("readonly", true)
-                //         .val(currency_id);
-                //     updateSymbol_($(this), idd);
-                // });
+                $entry.find("select.auto-populated-select").each(function() {
+                    let idd = $(this).data("id");
+
+
+
+                    // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
+                    // $(".input-group-addon.currency-symbol-" + idd).html($);
+                    $(this)
+                        .attr("readonly", true)
+                        .val(currency_id);
+
+                    updateSymbol_($(this), idd);
+                });
 
                 // Recalculate totals for this payment entry
                 recalcTotalINR($entry);
@@ -2009,7 +2208,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                     }
                     console.log(totalAmountCheck);
                     console.log(totalAmountCheck_);
-                    if (parseFloat(totalAmountCheck) > parseFloat(totalAmountCheck_)) {
+                    if (parseFloat(totalAmountCheck) == parseFloat(totalAmountCheck_)) {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Hostel Quotation Payments Section " + (index + 1) + " Not match Amount.");

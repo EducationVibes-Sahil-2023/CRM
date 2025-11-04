@@ -89,6 +89,7 @@ foreach ($rResult as $aRow) {
 
     // Push into row
     $row[] = $nameRow;
+    $row[] = $aRow['university_name'];
     $row[] = $aRow['acadmic_year'];
     $row[] = $aRow['year'];
 
