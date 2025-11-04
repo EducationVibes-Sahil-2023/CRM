@@ -753,6 +753,10 @@ class hostel_management extends AdminController
     }
     public function payment_quotation()
     {
+        
+        ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
         try {
             $payment_id         = $this->input->post("payment_id") ?? '';
             $hostel_info_id          = $this->input->post("hostel_info_id") ?? '';
@@ -889,16 +893,38 @@ class hostel_management extends AdminController
                 $seenEntries[$entryKey] = true;
 
                 // 🚫 Prevent duplicate in DB
-                $this->db->where([
-                    'hostel_info_id'      => $hostel_info_id,
-                    'university_name' => $university_name,
-                    'start_date'  => $start_date,
-                    'end_date'  => $end_date,
-                    'room_capacity'           => $room_capacity,
-                    'mode'           => $row['mode'],
-                    'amount'         => $row['amount'],
-                    'pay_date'       => $row['pay_date']
-                ]);
+                // $this->db->where([
+                //     'hostel_info_id'      => $hostel_info_id,
+                //     'university_name' => $university_name,
+                //     'start_date'  => $start_date,
+                //     'end_date'  => $end_date,
+                //     'room_capacity'           => $room_capacity,
+                //     'mode'           => $row['mode'],
+                //     'amount'         => $row['amount'],
+                //     'pay_date'       => $row['pay_date']
+                // ]);
+                
+                $where = [
+    'hostel_info_id' => $hostel_info_id,
+    'university_name' => $university_name,
+    'start_date' => $start_date,
+    'end_date' => $end_date,
+    'room_capacity' => $room_capacity,
+    'mode' => $row['mode'],
+    'amount' => $row['amount'],
+    'pay_date' => $row['pay_date']
+];
+
+// Filter out empty values (null, '', or 0 if you wish)
+$filtered_where = array_filter($where, function($v) {
+    return ($v !== null && $v !== ''); // you can adjust this rule
+});
+
+if (!empty($filtered_where)) {
+    $this->db->where($filtered_where);
+}
+
+
                 if (!empty($row["vendor_id"])) {
                     $this->db->where('vendor_id', $row["vendor_id"]);
                 } else {
@@ -910,6 +936,8 @@ class hostel_management extends AdminController
 
                 $this->db->where('status > ', 0);
                 $duplicate = $this->db->get(db_prefix() . 'hostel_payments')->row();
+                
+            
                 // if ($duplicate) {
                 //     throw new Exception("Duplicate entry already exists (Mode {$row['mode']}, Amount {$row['amount']}).");
                 // }

@@ -357,13 +357,13 @@ if (has_permission('hostel_management', '', 'payment')) {
                                 </div>
                             </div>
 
-                            <div class="col-md-2">
-                                <?= render_input('start_date', 'Start Date ', $applicant_payment_data->start_date ?? '', 'date', ["placeholder" => "Select Start Date", "readonly" => true]); ?>
-                            </div>
+                            <!--<div class="col-md-2">-->
+                            <!--    <?= render_input('start_date', 'Start Date ', $applicant_payment_data->start_date ?? '', 'date', ["placeholder" => "Select Start Date", "readonly" => true]); ?>-->
+                            <!--</div>-->
 
-                            <div class="col-md-2">
-                                <?= render_input('end_date', 'End Date ', $applicant_payment_data->end_date ?? '', 'date', ["placeholder" => "Select End Date", "readonly" => true]); ?>
-                            </div>
+                            <!--<div class="col-md-2">-->
+                            <!--    <?= render_input('end_date', 'End Date ', $applicant_payment_data->end_date ?? '', 'date', ["placeholder" => "Select End Date", "readonly" => true]); ?>-->
+                            <!--</div>-->
                             <div class="col-md-2">
                                 <?= render_input('acadmic_year', 'Acadmic Year', $applicant_payment_data->acadmic_year ?? '', 'text', ["placeholder" => "Enter Acadmic Year", "readonly" => true]); ?>
                             </div>
@@ -620,7 +620,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 data-name='payment_type'
                                                 required
                                                 onchange="split_data(this, this.value)">
-                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [3, 5, 6, 7, 11, 16])) {
+                                                <?php foreach ($university_applicant_fees_type as $fees): if (!in_array($fees['id'], [3, 5, 6, 7,10, 11, 16])) {
                                                         continue;
                                                     } ?>
                                                     <option value="<?= $fees['id'] ?>"
@@ -2009,12 +2009,12 @@ if (has_permission('hostel_management', '', 'payment')) {
                     }
                     console.log(totalAmountCheck);
                     console.log(totalAmountCheck_);
-                    // if (parseFloat(totalAmountCheck) !== parseFloat(totalAmountCheck_)) {
-                    //     error = true;
-                    //     hide_loader();
-                    //     alert_float("danger", "Hostel Quotation Payments Section " + (index + 1) + " Not match Amount.");
-                    //     return false;
-                    // }
+                    if (parseFloat(totalAmountCheck) > parseFloat(totalAmountCheck_)) {
+                        error = true;
+                        hide_loader();
+                        alert_float("danger", "Hostel Quotation Payments Section " + (index + 1) + " Not match Amount.");
+                        return false;
+                    }
 
                     // if (parseFloat(totalINRCheck) !== parseFloat(totalINRCheck_)) {
                     //     error = true;

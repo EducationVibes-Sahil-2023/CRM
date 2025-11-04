@@ -215,7 +215,7 @@ class Hostel_model extends App_Model
                 $feeId = $fee["fee_id"] ?? null;
                 if (!$feeId) continue;
 
-                $inrValue = isset($fee["fee_amount"]) ? (float)$fee["fee_amount"] : 0;
+                $inrValue = isset($fee["fee_inr_value"]) ? (float)$fee["fee_inr_value"] : 0;
                 $isRefund = isset($payment["payment_type"]) && $payment["payment_type"] == RETURN_FEES_ID;
 
                 foreach ($quotationDetails as &$details) {
