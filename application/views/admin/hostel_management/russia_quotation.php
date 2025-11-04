@@ -1,4 +1,4 @@
-,10<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <style>
     [id^="nested-applicant-table-"] div.row {
         display: none !important;
@@ -13,6 +13,7 @@
         <?php
         $quotation_table = array(
             "Quotation Number",
+            "University Name",
             "Acadmic Year",
             "Year",
             "Fees Details",
@@ -61,10 +62,12 @@ for ($i = 1; $i <= 6; $i++) {
 }
 
 $get_currencies = get_currencies();
-$university_applicant_fees = $university_applicant_fees = university_applicant_fees("", 1, [
-    "university_name" => $hostelData->vendor_update,
-    "acadmic_year"    => $acadmic_year
-]);
+// $university_applicant_fees  = university_applicant_fees("", 1, [
+//     "university_name" => $hostelData->vendor_update,
+//     "acadmic_year"    => $acadmic_year
+// ]);
+
+$university_applicant_fees = get_clients_fees_hostel(array("f.russia_hostel" => 1));
 $selected_mod = 0;
 $transaction_type  = transaction_type(array("hostel_status" => 1));
 $quotation_paymente_mode = $this->db
@@ -86,7 +89,7 @@ $sql = "
     SELECT 
         aq.*,
         CONCAT('Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)) AS quotation_label,
-        CONCAT(aq.university_name, '-', aq.start_date,'-',aq.end_date,'-', aq.room_capacity, ' - ',
+        CONCAT(aq.university_name, '-', aq.acadmic_year,'-',aq.year, ' - ',
                'Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)
         ) AS unique_id
     FROM " . db_prefix() . "hostel_quotation aq
@@ -158,12 +161,12 @@ if (!empty($_GET['quotation_id'])) {
                         </div>
                         <?php if (!empty($quotation_id) && !empty($hostel_quotation_data) && has_permission("hostel_management", "", "hostel_invoice_generate")) { ?>
                             <div class="form-group col-md-3 text-right  ">
-                                <button class="btn btn-primary"
+                                <!-- <button class="btn btn-primary"
                                     onclick="window.open('<?= $hostel_quotation_data->pdf ?>', '_blank')">
                                     <i class="fa fa-eye"></i>
-                                </button>
+                                </button> -->
 
-                                <button class="btn btn-primary" onclick="GeneratePDF('<?= $getId ?>','<?= $quotation_id ?>')">Generate PDF</button>
+                                <!-- <button class="btn btn-primary" onclick="GeneratePDF('<?= $getId ?>','<?= $quotation_id ?>')">Generate PDF</button> -->
                             </div>
                         <?php } ?>
                     <?php } ?>
@@ -308,9 +311,9 @@ if (!empty($_GET['quotation_id'])) {
                                 'year',
                                 $years_array,
                                 ['id', 'name'],
-                                'Year',
+                                'Year <small class="text-danger">*</small>',
                                 $hostel_quotation_data->year ?? '',
-                                ['data-width' => '100%', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true, 'onchange' => 'selectHostelYear(this.value)',]
+                                ['data-width' => '100%', 'required' => 'required', 'data-none-selected-text' => 'No Selected', 'data-actions-box' => true, 'onchange' => 'selectHostelYear(this.value)',]
                             );
                             ?>
 
@@ -440,9 +443,7 @@ if (!empty($_GET['quotation_id'])) {
                                                 foreach ($university_due_array["main"]["fees_info"] as $fees) {
 
                                                     $id         = $fees["id"];
-                                                    if (!in_array($id, [3, 5, 6, 7,10])) {
-                                                        continue;
-                                                    }
+
 
                                                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
                                                     $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
@@ -510,7 +511,7 @@ if (!empty($_GET['quotation_id'])) {
                                                             </div> -->
 
                                                             <label>&nbsp;</label>
-                                                            <div   class="input-group form-group document-currency-change">
+                                                            <div class="input-group form-group document-currency-change">
 
                                                                 <div class="input-group-addon currency-symbol-<?= $id ?>">
                                                                     <?= htmlspecialchars($symbol) ?>
@@ -545,9 +546,7 @@ if (!empty($_GET['quotation_id'])) {
                                             } else { ?>
                                                 <?php foreach ($university_applicant_fees as $fees):
                                                     $id         = $fees["id"];
-                                                    if (!in_array($id, [3, 5, 6, 7,10])) {
-                                                        continue;
-                                                    }
+
                                                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
                                                     $symbol     = $currency_lookup[$fees["currency_id"]]["symbol"]
                                                         ?? $currency_lookup[$fees["university_quotation_currency"]]["symbol"]
@@ -557,10 +556,10 @@ if (!empty($_GET['quotation_id'])) {
                                                 ?>
                                                     <tr class="fee-row" data-id="<?= $id ?>">
                                                         <td>
-                                                            <label><?= htmlspecialchars($fees['quotation_name']) ?> <small class="text-danger">*</small></label>
+                                                            <label><?= htmlspecialchars($fees['hostel_russia_label']) ?> <small class="text-danger">*</small></label>
                                                             <div class="input-group form-group credit-currency-change">
                                                                 <input type="hidden" name="applicant_fees[]" value="<?= $field_name ?>">
-                                                                <input type="hidden" name="quotation_name" value="<?= htmlspecialchars($fees['quotation_name']) ?>">
+                                                                <input type="hidden" name="quotation_name" value="<?= htmlspecialchars($fees['hostel_russia_label']) ?>">
                                                                 <input type="hidden" name="<?= $field_name ?>_id" value="<?= $fees['id'] ?>">
                                                                 <input type="hidden" name="<?= $field_name ?>_detail_id_<?= $fees['id'] ?>" value="<?= $fees['detail_id'] ?? '' ?>">
 
@@ -617,7 +616,7 @@ if (!empty($_GET['quotation_id'])) {
 
 
                                                             <label><?= htmlspecialchars($fees['quotation_name']) ?> <small class="text-danger">*</small></label>
-                                                            <div  class="input-group form-group document-currency-change">
+                                                            <div class="input-group form-group document-currency-change">
 
                                                                 <div class="input-group-addon currency-symbol-<?= $id ?>">
                                                                     <?= htmlspecialchars($symbol) ?>
@@ -679,7 +678,7 @@ if (!empty($_GET['quotation_id'])) {
 
                                                 </td>
                                                 <td>
-                                                    <select class="form-control" disabled required name="university_pay_mode" onchange="vendor_update(this,this.value);">
+                                                    <select class="form-control" required name="university_pay_mode" onchange="vendor_update(this,this.value);">
                                                         <?php foreach ($modes as $m):
                                                         ?>
                                                             <option value="<?= $m['id'] ?>" <?= $university_due_array["main"]["pay_info"] ?> <?= !empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == $m["id"] || ($quotation_id == '' &&  $m["id"] == 5) ? "selected" : "" ?>>
@@ -726,7 +725,7 @@ if (!empty($_GET['quotation_id'])) {
                                                             type="text"
                                                             name="manual_cash_vendor"
                                                             required
-                                                            readonly
+
                                                             class="form-control manually-cash"
                                                             placeholder="Enter Vendor Name"
                                                             value="<?= !empty($payInfo_new["payVendor"]) ? htmlspecialchars($payInfo_new["payVendor"], ENT_QUOTES, 'UTF-8') : 'EVR-FOREX' ?>">
@@ -1226,9 +1225,9 @@ if (!empty($_GET['quotation_id'])) {
         // console.log("roomData in selectHostelYear", roomData);
         if (roomData.length == 0) {
             $(".credit-currency-change input.currency-amount").val(0);
-              calculateInrValue();
+            calculateInrValue();
             alert_float('warning', 'No rental data found for the selected academic year and year.');
-            
+
 
         } else {
             for (const room of roomData) {
@@ -1688,7 +1687,7 @@ if (!empty($_GET['quotation_id'])) {
                 },
                 addition: []
             };
-
+            let checkAmount = 0;
             // ✅ Collect main university fees info
             $(".main-university-due tbody tr").each(function() {
                 let paymentOptionSelect = $(this).find("select[name$='_payment_option']");
@@ -1704,8 +1703,16 @@ if (!empty($_GET['quotation_id'])) {
                     amount: $(this).find("input[name$='_amount']").val() || null,
                     quotation_name: $(this).find("input[name='quotation_name']").val() || null,
                 };
+
+                checkAmount += parseInt($(this).find("input[name$='_amount']").val() || 0);
                 university_dues.main.fees_info.push(rowData);
             });
+
+            if (checkAmount <= 0) {
+                hide_loader();
+                alert_float('danger', 'Quotation amounts must be greater than 0.');
+                return false; // stop the process
+            }
 
             // ✅ Collect main pay info
             $(".main-university-due tfoot tr").each(function() {

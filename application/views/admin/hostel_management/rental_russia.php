@@ -3,7 +3,7 @@
 <?php
 $get_currencies = get_currencies();
 $currency_lookup = array_column($get_currencies, NULL, 'id');
-$get_clients_fees = get_clients_fees(2);
+$get_clients_fees = get_clients_fees_hostel(array("f.russia_hostel" => 1));
 $table_data = array(
     array('name' => 'Hostel Name'),
     array('name' => 'Rental Details'),
@@ -151,33 +151,33 @@ for ($i = 1; $i <= 6; $i++) {
 
                     if (!empty($get_clients_fees)) {
                         foreach ($get_clients_fees as $fee) {
-                            if (in_array($fee['id'], [3, 5, 6, 7,10])) {
+
                     ?>
-                                <div class="col-md-6 form-group rental-details-fee rental-details-fee-<?= $fee['id'] ?>">
-                                    <label><?= $fee["quotation_name"] ?> <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <div class="input-group-addon currency-symbol-amount_<?= $fee['id'] ?>">
-                                            <?= $currency_lookup[!empty($applicant_payment_data->ex_currency) ? $applicant_payment_data->ex_currency : 3]["symbol"] ?? '' ?>
-                                        </div>
-                                        <input type="hidden" class="fee_id" name="fee_id_<?= $fee['id'] ?>" value="<?= $fee['id'] ?>">
-                                        <input type="hidden" class="fees_name" name="fees_name_<?= $fee['id'] ?>" value="<?= $fee['name'] ?>">
-                                        <input type="number" name="amount_<?= $fee['id'] ?>" data-name="amount" class="form-control amount currency-amount"
-                                            placeholder="0.00" required value="">
-                                        <div class="input-group-addon">
-                                            <select name="ex_currency_<?= $fee['id'] ?>" data-id="amount_<?= $fee['id'] ?>" data-name="ex_currency"
-                                                class="currency-selector currency-selector-amount disabled ex_currency"
-                                                onchange="updateSymbol_(this,'amount_<?= $fee['id'] ?>')">
-                                                <?php foreach ($get_currencies as $c): ?>
-                                                    <option value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
-                                                        <?= htmlspecialchars($c['name']) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                        </div>
+                            <div class="col-md-6 form-group rental-details-fee rental-details-fee-<?= $fee['id'] ?>">
+                                <label><?= $fee["hostel_russia_label"] ?> <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <div class="input-group-addon currency-symbol-amount_<?= $fee['id'] ?>">
+                                        <?= $currency_lookup[!empty($applicant_payment_data->ex_currency) ? $applicant_payment_data->ex_currency : 3]["symbol"] ?? '' ?>
+                                    </div>
+                                    <input type="hidden" class="fee_id" name="fee_id_<?= $fee['id'] ?>" value="<?= $fee['id'] ?>">
+                                    <input type="hidden" class="fees_name" name="fees_name_<?= $fee['id'] ?>" value="<?= $fee['name'] ?>">
+                                    <input type="number" name="amount_<?= $fee['id'] ?>" data-name="amount" class="form-control amount currency-amount"
+                                        placeholder="0.00" required value="">
+                                    <div class="input-group-addon">
+                                        <select name="ex_currency_<?= $fee['id'] ?>" data-id="amount_<?= $fee['id'] ?>" data-name="ex_currency"
+                                            class="currency-selector currency-selector-amount disabled ex_currency"
+                                            onchange="updateSymbol_(this,'amount_<?= $fee['id'] ?>')">
+                                            <?php foreach ($get_currencies as $c): ?>
+                                                <option value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
+                                                    <?= htmlspecialchars($c['name']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
                                     </div>
                                 </div>
+                            </div>
                     <?php
-                            }
+
                         }
                     }
                     ?>

@@ -76,9 +76,8 @@ if (!empty($_POST['payment_id'])) {
         foreach ($fess_infomation as $fInfo) {
             $row   = [];
             $row[] = $university_applicant_fees_[$fInfo->fee_id]['name'] ?? '-';
-            $row[] = $fInfo->fee_amount ?? '0';
-            $row[] = $currency_lookup[$fInfo->fee_currency]['name'] ?? '-';
-            $row[] = $fInfo->fee_inr_value ?? '0';
+            $row[] =  $fInfo->fee_amount . " " . $currency_lookup[$fInfo->credit_currency]['name'] ?? '0';
+            $row[] = $fInfo->fee_inr_value . " " . $currency_lookup[$fInfo->document_currency]['name'] ?? '0';
             $output['aaData'][] = $row;
         }
     }

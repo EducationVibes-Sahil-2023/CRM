@@ -892,29 +892,29 @@ if (has_permission('payment_quotation', '', 'create')) {
         }
 
 
-function check_tt_copy(obj)
-{
-     let paymentSection = $(obj).parents('.payment_payment');
-     let modeId = paymentSection.find("select.mode").val();
-     let vendor_select = paymentSection.find("select.vendor_id").val();
-      let transaction_type = paymentSection.find("select.transaction_type ").val();
+// function check_tt_copy(obj)
+// {
+//      let paymentSection = $(obj).parents('.payment_payment');
+//      let modeId = paymentSection.find("select.mode").val();
+//      let vendor_select = paymentSection.find("select.vendor_id").val();
+//       let transaction_type = paymentSection.find("select.transaction_type ").val();
             
-              if(modeId == 2 || (modeId == 1 && transaction_type== 1))
-            {
-                paymentSection.find("input.tt_proof ").attr("disabled",false).attr("required",true);
-            }
-            else
-            {
-                 paymentSection.find("input.tt_proof ").val('').attr("disabled",true).attr("required",false);
-            }
+//               if(modeId == 2 || (modeId == 1 && transaction_type== 1))
+//             {
+//                 paymentSection.find("input.tt_proof ").attr("disabled",false).attr("required",true);
+//             }
+//             else
+//             {
+//                  paymentSection.find("input.tt_proof ").val('').attr("disabled",true).attr("required",false);
+//             }
             
-             if(modeId == 4 && vendor_select== 5)
-             {
-                 paymentSection.find("input.tt_proof ").attr("disabled",false).attr("required",false);
-             }
+//              if(modeId == 4 && vendor_select== 5)
+//              {
+//                  paymentSection.find("input.tt_proof ").attr("disabled",false).attr("required",false);
+//              }
             
-            CheckPackageCondition()
-}
+//             CheckPackageCondition()
+// }
 
 
         function setPaymentDate() {

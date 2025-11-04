@@ -97,7 +97,7 @@ $join = [];
 
 $join = [
     'LEFT JOIN ' . db_prefix() . 'hostel_quotation AS latest_quotation 
-        ON latest_quotation.hostel_info_id = ' . db_prefix() . 'hostel_infomation.id ',
+        ON latest_quotation.hostel_info_id = ' . db_prefix() . 'hostel_infomation.id  and latest_quotation.status=1',
 
     'LEFT JOIN ' . db_prefix() . 'hostel 
         ON ' . db_prefix() . 'hostel.id = ' . db_prefix() . 'hostel_infomation.hostel',
