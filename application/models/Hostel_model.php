@@ -162,14 +162,25 @@ class Hostel_model extends App_Model
 
 
             $quotationId = $quotation['id'];
-            $quotationKey = sprintf(
-                '%s-%s-%s-%s-Q%d',
-                $quotation["university_name"],
-                $quotation["start_date"],
-                $quotation["end_date"],
-                $quotation["room_capacity"],
-                $index + 1
-            );
+
+            if (!empty($quotation["acadmic_year"])) {
+                $quotationKey = sprintf(
+                    '%s-%s-%s-Q%d',
+                    $quotation["university_name"],
+                    $quotation["acadmic_year"],
+                    $quotation["year"],
+                    $index + 1
+                );
+            } else {
+                $quotationKey = sprintf(
+                    '%s-%s-%s-%s-Q%d',
+                    $quotation["university_name"],
+                    $quotation["start_date"],
+                    $quotation["end_date"],
+                    $quotation["room_capacity"],
+                    $index + 1
+                );
+            }
 
             $quotationDetails[$quotationKey] = [
                 "quotation_id" => $quotationId,

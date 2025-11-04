@@ -173,7 +173,7 @@
             return;
         }
 
-        const secondaryTableColumns = ["Type", "Amount", "Currency", "INR Value"];
+        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value"];
         const nestedTableId = `nested-applicant-table-${payment_id}`;
 
         // Create child row HTML
@@ -781,7 +781,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                         <td>Fees type</td>
                                                         <td>Fees Amount</td>
                                                         <td>Ex-currency</td>
-                                                        <td>INR Value</td>
+                                                        <td>Document Currency Value</td>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1309,7 +1309,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                         <td>Fees type</td>
                                                         <td>Fees Amount</td>
                                                         <td>Ex-currency</td>
-                                                        <td>INR Value</td>
+                                                        <td>Document Currency Value</td>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
