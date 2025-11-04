@@ -1,4 +1,4 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+,10<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <style>
     [id^="nested-applicant-table-"] div.row {
         display: none !important;
@@ -440,7 +440,7 @@ if (!empty($_GET['quotation_id'])) {
                                                 foreach ($university_due_array["main"]["fees_info"] as $fees) {
 
                                                     $id         = $fees["id"];
-                                                    if (!in_array($id, [3, 5, 6, 7])) {
+                                                    if (!in_array($id, [3, 5, 6, 7,10])) {
                                                         continue;
                                                     }
 
@@ -510,7 +510,7 @@ if (!empty($_GET['quotation_id'])) {
                                                             </div> -->
 
                                                             <label>&nbsp;</label>
-                                                            <div class="input-group form-group document-currency-change">
+                                                            <div   class="input-group form-group document-currency-change">
 
                                                                 <div class="input-group-addon currency-symbol-<?= $id ?>">
                                                                     <?= htmlspecialchars($symbol) ?>
@@ -523,7 +523,7 @@ if (!empty($_GET['quotation_id'])) {
                                                                     placeholder="0.00" value="<?= $fees["inr_value"] ?? 0 ?>">
 
                                                                 <div class="input-group-addon">
-                                                                    <select name="<?= $field_name ?>_currency_type"
+                                                                    <select disabled name="<?= $field_name ?>_currency_type"
                                                                         disabled class="currency-selector currency-selector-<?= $id ?>"
                                                                         onchange="calculateInrValue(); updateSymbol_(this,<?= $id ?>)">
                                                                         <?php foreach ($get_currencies as $c): ?>
@@ -545,7 +545,7 @@ if (!empty($_GET['quotation_id'])) {
                                             } else { ?>
                                                 <?php foreach ($university_applicant_fees as $fees):
                                                     $id         = $fees["id"];
-                                                    if (!in_array($id, [3, 5, 6, 7])) {
+                                                    if (!in_array($id, [3, 5, 6, 7,10])) {
                                                         continue;
                                                     }
                                                     $field_name = strtolower(str_replace(" ", "_", $fees["name"]));
@@ -617,7 +617,7 @@ if (!empty($_GET['quotation_id'])) {
 
 
                                                             <label><?= htmlspecialchars($fees['quotation_name']) ?> <small class="text-danger">*</small></label>
-                                                            <div class="input-group form-group document-currency-change">
+                                                            <div  class="input-group form-group document-currency-change">
 
                                                                 <div class="input-group-addon currency-symbol-<?= $id ?>">
                                                                     <?= htmlspecialchars($symbol) ?>
@@ -630,7 +630,7 @@ if (!empty($_GET['quotation_id'])) {
                                                                     placeholder="0.00" value="<?= $fees["amount"] ?? 0 ?>">
 
                                                                 <div class="input-group-addon">
-                                                                    <select name="<?= $field_name ?>_currency_type"
+                                                                    <select disabled name="<?= $field_name ?>_currency_type"
                                                                         class="currency-selector currency-selector-<?= $id ?>"
                                                                         onchange="calculateInrValue(); updateSymbol_(this,<?= $id ?>)">
                                                                         <?php foreach ($get_currencies as $c): ?>
@@ -1225,9 +1225,10 @@ if (!empty($_GET['quotation_id'])) {
         // }
         // console.log("roomData in selectHostelYear", roomData);
         if (roomData.length == 0) {
+            $(".credit-currency-change input.currency-amount").val(0);
+              calculateInrValue();
             alert_float('warning', 'No rental data found for the selected academic year and year.');
-            $(".credit-currency-change .fees_5").val(0);
-            $(".currency-selector-5").val('');
+            
 
         } else {
             for (const room of roomData) {

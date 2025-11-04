@@ -151,7 +151,7 @@ for ($i = 1; $i <= 6; $i++) {
 
                     if (!empty($get_clients_fees)) {
                         foreach ($get_clients_fees as $fee) {
-                            if (in_array($fee['id'], [3, 5, 6, 7])) {
+                            if (in_array($fee['id'], [3, 5, 6, 7,10])) {
                     ?>
                                 <div class="col-md-6 form-group rental-details-fee rental-details-fee-<?= $fee['id'] ?>">
                                     <label><?= $fee["quotation_name"] ?> <span class="text-danger">*</span></label>
@@ -330,7 +330,7 @@ for ($i = 1; $i <= 6; $i++) {
         // Populate form fields with safe fallbacks
         form.find('input[name="rental_id"]').val(id || '');
         form.find('select[name="hostel_id"]').val(decodedData.hostel_id || '').selectpicker('refresh');
-        form.find('select[name="academic_year"]').val(decodedData.acadmic_year || '').selectpicker('refresh');
+        form.find('select[name="acadmic_year"]').val(decodedData.acadmic_year || '').selectpicker('refresh');
         form.find('select[name="year"]').val(decodedData.year || '').selectpicker('refresh');
         form.find('select[name="room_capacity"]').val(decodedData.room_capacity || '').selectpicker('refresh');
         form.find('select[name="currency"]').val(decodedData.currency || '').selectpicker('refresh');
