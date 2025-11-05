@@ -91,14 +91,14 @@ $join = [
 
 $where[] = " AND " . db_prefix() . "hostel_infomation.status = 1 ";
 // $where[] = " AND latest_quotation.status = 1 ";
-$where[] = " AND " . db_prefix() . "hostel_infomation.acadmic_year != '' ";
+$where[] = " AND " . db_prefix() . "hostel_infomation.acadmic_year != '' and " . db_prefix() . "hostel_infomation.room_capacity = 0 ";
 // $where[] = " AND latest_quotation.status > 0 ";
 if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
     $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
 }
 // Group by ID to prevent duplicates
-$group_by = 'GROUP BY latest_quotation.id';
+$group_by = 'GROUP BY  ' . db_prefix() . 'hostel_infomation.name,latest_quotation.id';
 
 // Execute DataTables query
 $result = data_tables_init(
@@ -108,7 +108,9 @@ $result = data_tables_init(
     $join,
     $where,
     [db_prefix() . 'hostel_infomation.id'], // Select ID explicitly
-    $group_by
+    $group_by,
+    [],
+    1
 );
 
 $output  = $result['output'];

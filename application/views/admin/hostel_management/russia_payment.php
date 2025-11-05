@@ -801,7 +801,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                                 <div class="input-group">
                                                                     <div class="input-group-addon currency-symbol-<?= $split['fee_id'] ?>">
 
-                                                                        <?= $currency_lookup[!empty($split['fee_currency']) ? $split['fee_currency'] : 3]["symbol"] ?>
+                                                                        <?= $currency_lookup[!empty($split['credit_currency']) ? $split['credit_currency'] : 3]["symbol"] ?>
                                                                     </div>
                                                                     <input type="number" step="0.01"
                                                                         name="fee_amount[<?= $split['fee_id'] ?>]"
@@ -1669,7 +1669,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 </td>
                 <td>
                     <select readonly name="fee_currency[${feeData.id}]" class="form-control document_currency">
-                        ${getCurrencyOptions(selectedUniversityRoomData[0]?.currency || 3)}
+                        ${getCurrencyOptions(selectedUniversityRoomData[feeData.id]?.currency || 3)}
                     </select>
                 </td>
                 <td>
@@ -1903,9 +1903,15 @@ if (has_permission('hostel_management', '', 'payment')) {
                 // Refresh read-only and force currency select state where needed
                 $entry.find("select.auto-populated-select").each(function() {
                     let idd = $(this).data("id");
+if(idd == undefined)
+{
+      let nameAttr = $(this).attr('name');
+                    // e.g. "amount_currency_type[5]"
 
+                     idd = nameAttr.match(/\[(\d+)\]/)[1];
+}
 
-
+console.log(idd);
                     // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
                     // $(".input-group-addon.currency-symbol-" + idd).html($);
                     $(this)
@@ -2208,7 +2214,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                     }
                     console.log(totalAmountCheck);
                     console.log(totalAmountCheck_);
-                    if (parseFloat(totalAmountCheck) == parseFloat(totalAmountCheck_)) {
+                    if (parseFloat(totalAmountCheck) != parseFloat(totalAmountCheck_)) {
                         error = true;
                         hide_loader();
                         alert_float("danger", "Hostel Quotation Payments Section " + (index + 1) + " Not match Amount.");

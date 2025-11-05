@@ -1555,7 +1555,14 @@ CheckPackageCondition();
 
                 // Refresh read-only and force currency select state where needed
                 $entry.find("select.auto-populated-select").each(function() {
-                    let idd = $(this).data("id");
+                       let idd = $(this).data("id");
+if(idd == undefined)
+{
+      let nameAttr = $(this).attr('name');
+                    // e.g. "amount_currency_type[5]"
+
+                     idd = nameAttr.match(/\[(\d+)\]/)[1];
+}
                     $(this)
                         .attr("readonly", true)
                         .val(currency_id);
@@ -1773,7 +1780,13 @@ CheckPackageCondition();
                                 paymentData[name] = value;
                             }
                         }
+                        
+                     
+
+
                     });
+                    
+             
 
                     // 🔹 Collect split data rows
                     let splitData = [];
@@ -1825,13 +1838,44 @@ CheckPackageCondition();
                         alert_float("danger", "Applicant Quotation Payments Section " + (index + 1) + " Not match INR Value. ");
                         return false;
                     }
+                    
+                     <?php if(is_admin()) { ?>
+    let typeVal = $(this).find("select.type").val();
+
+    // Normalize value to array
+    typeVal = Array.isArray(typeVal) ? typeVal : [typeVal];
+
+    // Convert all to integers for safe comparison
+    typeVal = typeVal.map(v => parseInt(v));
+
+    // Check if payment_type_id OR any multi-select contains 1
+    let hasServiceCharge = parseInt(payment_type_id) === 1 || typeVal.includes(1);
+
+    if ([1, 2, 3].includes(parseInt(mode_id)) && hasServiceCharge) {
+
+        let modeText = $(this).find("select.mode option:selected").text();
+
+        alert_float(
+            'danger',
+            'This selected "' + modeText + '" mode does not accept Total Service Charge payment type'
+        );
+
+        return false; // ✅ stop further processing
+    }
+<?php } ?>
 
                 });
+
+       
+                      
+
 
                 await validation_set("applicant-payment-form");
                 if (error == true) {
                     return false;
                 }
+                
+                
                 // 🔹 Add all form data to FormData
                 $("#applicant-payment-form").serializeArray().forEach(function(field) {
                     formData.append(field.name, field.value);
@@ -1878,7 +1922,7 @@ CheckPackageCondition();
             } catch (error) {
                 hide_loader();
                 console.error("Error:", error);
-                alert_float("danger", "Something went wrong! Please try again.");
+                // alert_float("danger", "Something went wrong! Please try again.");
             }
         }
 
