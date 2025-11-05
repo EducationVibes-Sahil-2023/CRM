@@ -81,7 +81,7 @@ $table_data = array(
                         <?= render_input('hostel_name', 'Hostel Name', '', 'text', ["placeholder" => "Enter Hostel Name"]); ?>
                     </div>
                     <div class="col-md-2">
-                        <?= render_input('hostel_name', 'Name', '', 'text', ["placeholder" => "EVR-OMSK"]); ?>
+                        <?= render_input('name', 'Name', '', 'text', ["placeholder" => "EVR-OMSK"]); ?>
                     </div>
                     <div class="col-md-3">
                         <?php echo render_select('university', $russia_univercitysity, array('university_name', 'university_name'), 'University Name', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Address", 'data-actions-box' => true), array(), 'no-mbot', '', false, 'university'); ?>
