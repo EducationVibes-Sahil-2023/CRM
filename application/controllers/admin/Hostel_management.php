@@ -104,9 +104,14 @@ class hostel_management extends AdminController
     function hostel($segment = "", $id = "")
     {
         // ✅ Permission check
-        if (!has_permission('hostel_management', '', 'edit')) {
-            return access_denied('hostel_management'); // Stop execution immediately
-        }
+      if (
+    !has_permission('hostel_management', '', 'view')
+    && !has_permission('hostel_management', '', 'view_own')
+    && !has_permission('hostel_management', '', 'edit')
+) {
+    return access_denied('hostel_management');
+}
+
 
         if (!$id) {
             redirect(admin_url('hostel_management'));
@@ -132,7 +137,7 @@ class hostel_management extends AdminController
 
         if ($_GET['tab'] == 'profile') {
 
-            if (!has_permission('hostel_management', '', 'view_own')) {
+            if (!has_permission('hostel_management', '', 'view_own') && !has_permission('hostel_management', '', 'view')) {
                 return access_denied('hostel_management'); // Stop execution immediately
             }
             if (empty($data['hostelData'])) {
@@ -196,12 +201,39 @@ class hostel_management extends AdminController
             $quotation_id = $_POST["quotation_id"] ?? null;
 
             // 🔹 Optional: Check if record already exists
-            $this->db->where([
-                'university_name' => $_POST["university_name"],
-                'start_date' => $_POST["start_date"],
-                'end_date' => $_POST["end_date"]
-            ]);
-            $exists = $this->db->get(db_prefix() . 'hostel_quotation')->row();
+              $checkData = [
+            'hostel_info_id' => $_POST["hostel_info_id"] ?? null,
+            'hostel'         => $_POST["hostel"] ?? null,
+            'company'        => $_POST["company"] ?? null,
+            'start_date'     => $_POST["start_date"] ?? null,
+            'end_date'       => $_POST["end_date"] ?? null,
+            'acadmic_year'   => $_POST["acadmic_year"] ?? null,
+            'year'           => $_POST["year"] ?? null,
+        ];
+
+        // ✅ Remove empty null or ""
+        $checkData = array_filter($checkData, function($v) {
+            return $v !== null && $v !== "" && $v !== "0";
+        });
+
+        // ✅ Check duplicate only with NON-EMPTY values
+        if (!empty($checkData)) {
+            $this->db->where($checkData);
+
+            if (!empty($quotation_id)) {
+                $this->db->where('id !=', $quotation_id); // ignore same record on update
+            }
+
+            $duplicate = $this->db->get(db_prefix() . 'hostel_quotation')->row();
+
+            if ($duplicate) {
+                echo json_encode([
+                    'resp_code' => 'DUP',
+                    'resp_desc' => 'Duplicate entry exists for selected Hostel, Company, Date or Academic Year.'
+                ]);
+                return;
+            }
+        }
 
             if (!empty($quotation_id)) {
                 // 🔸 Update existing record

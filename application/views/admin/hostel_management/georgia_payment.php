@@ -364,6 +364,10 @@ if (has_permission('hostel_management', '', 'payment')) {
                             <div class="col-md-3">
                                 <?= render_input('room_capacity', 'Room Capacity ', $applicant_payment_data->room_capacity ?? '', 'number', ["placeholder" => "Enter Room capacity", "readonly" => true]); ?>
                             </div>
+                            
+                             <div class="col-md-2 hide">
+                                <?= render_input('acadmic_year', 'Acadmic Year', $applicant_payment_data->acadmic_year ?? $hostelData->acadmic_year, 'text', ["placeholder" => "Enter Acadmic Year", "readonly" => true, "required" => "required"]); ?>
+                            </div>
                         </div>
                     </div>
 
@@ -953,7 +957,8 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                 get_hostel_rentInfo(selected_quotation.hostel);
 
-                $("select.payment_type").val('').selectpicker('refresh');
+                $("select.payment_type").val('').selectpicker('refresh').trigger('change');
+                $("select.type").val('').selectpicker('refresh').trigger('change');
             } catch (error) {
                 // console.error("Error in check_quotations:", error);
                 alert_float("danger", "Something went wrong while loading quotation details.");
@@ -1367,6 +1372,9 @@ if (has_permission('hostel_management', '', 'payment')) {
         }
 
         function split_data(obj, feesID = 0) {
+            let room_capacity =$("#room_capacity").val();
+            let roomData = selectedUniversityRoomData.find(r => r.room_capacity == room_capacity);
+      
             let selectedFeesIds = $(obj).val() || [];
             let singleSelectedValue = "";
 
@@ -1457,7 +1465,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 </td>
                 <td>
                     <select readonly name="fee_currency[${feeData.id}]" class="form-control document_currency">
-                        ${getCurrencyOptions(selectedUniversityRoomData[0]?.currency || 3)}
+                        ${getCurrencyOptions(roomData?.currency || 3)}
                     </select>
                 </td>
                 <td>
@@ -1624,12 +1632,14 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                 // Refresh read-only and force currency select state where needed
                 $entry.find("select.auto-populated-select").each(function() {
-                    // let idd = $(this).data("id");
-
-                    let nameAttr = $(this).attr('name');
+                    let idd = $(this).data("id");
+if(idd == undefined)
+{
+      let nameAttr = $(this).attr('name');
                     // e.g. "amount_currency_type[5]"
 
-                    let idd = nameAttr.match(/\[(\d+)\]/)[1];
+                     idd = nameAttr.match(/\[(\d+)\]/)[1];
+}
 
                     // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
                     // $(".input-group-addon.currency-symbol-" + idd).html($);

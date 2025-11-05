@@ -69,15 +69,51 @@ if (!empty($this->ci->input->post('up_to_date'))) {
 
     // $sTable = $call_table;
 
-    $join[] = " JOIN " . db_prefix() . "leads ON (
-   {$call_table}.contact IN (
-        REPLACE(TRIM(REPLACE(phonenumber, '+91', '')), ' ', ''),
-        REPLACE(TRIM(REPLACE(alternative_phonenumber, '+91', '')), ' ', '')
-    )
-    AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c
-)";
+//     $join[] = " JOIN " . db_prefix() . "leads ON (
+//   {$call_table}.contact IN (
+//         REPLACE(TRIM(REPLACE(phonenumber, '+91', '')), ' ', ''),
+//         REPLACE(TRIM(REPLACE(alternative_phonenumber, '+91', '')), ' ', '')
+//     )
+//     AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c
+// )";
 
-    $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
+// $join[] = "JOIN " . db_prefix() . "leads ON (
+//     (
+//         tblleads.phonenumber IS NOT NULL
+//         AND tblleads.phonenumber != ''
+//         AND REPLACE(TRIM(REPLACE(tblleads.phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
+//     )
+//     OR
+//     (
+//         tblleads.alternative_phonenumber IS NOT NULL
+//         AND tblleads.alternative_phonenumber != ''
+//         AND REPLACE(TRIM(REPLACE(tblleads.alternative_phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
+//     )
+// )
+// AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c";
+
+
+//     $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
+
+$join[] = "JOIN " . db_prefix() . "leads ON (
+    (
+        tblleads.phonenumber IS NOT NULL
+        AND tblleads.phonenumber != ''
+        AND REPLACE(TRIM(REPLACE(tblleads.phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
+    )
+    OR
+    (
+        tblleads.alternative_phonenumber IS NOT NULL
+        AND tblleads.alternative_phonenumber != ''
+        AND REPLACE(TRIM(REPLACE(tblleads.alternative_phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
+    )
+)
+AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
+AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' $where_c";
+
+$where[] = " AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
+             AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' ";
+
 
     if (!empty($this->ci->input->post('assigned'))) {
         $where[] = "AND " . $call_table . ".staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";

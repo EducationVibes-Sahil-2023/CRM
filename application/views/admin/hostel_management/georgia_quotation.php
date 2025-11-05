@@ -258,6 +258,36 @@ $serviceList = $this->Hostel_model->get_hostel_services();
                         <div class="col-md-3">
                             <?= render_input('room_No', 'Room No', $hostel_quotation_data->room_no ?? '', 'number', ["placeholder" => "Enter Room No"]); ?>
                         </div>
+                        
+                        <div class="col-md-3 hide">
+                            <div class="form-group">
+                                <label for="acadmic_year">Academic Year <small class="text-danger">*</small></label>
+                                <?php
+                                $currentYear = date("Y");
+                                $startYear = 2023;               // Start from 2023
+                                $endYear = $currentYear + 2;     // End at current year + 2
+
+                                // Generate academic years from 2023 up to currentYear + 2
+                                $years = [];
+                                for ($year = $startYear; $year < $endYear; $year++) {
+                                    $years[] = $year . " - " . ($year + 1);
+                                }
+
+                                // Use saved preference or default to current year range
+                                $selectedYear = !empty($hostelData->acadmic_year)
+                                    ? $hostelData->acadmic_year
+                                    : ($currentYear . " - " . ($currentYear + 1));
+                                ?>
+
+                                <select class="form-control" id="acadmic_year" name="acadmic_year" required disabled>
+                                    <?php foreach ($years as $year): ?>
+                                        <option value="<?= $year ?>" <?= ($year == $selectedYear) ? 'selected' : '' ?>>
+                                            <?= $year ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
 
 
                         <div class="col-md-3">
@@ -591,7 +621,7 @@ $serviceList = $this->Hostel_model->get_hostel_services();
                                                                     placeholder="0.00" value="<?= $fees["amount"] ?? 0 ?>">
 
                                                                 <div class="input-group-addon">
-                                                                    <select name="<?= $field_name ?>_currency_type"
+                                                                    <select disabled name="<?= $field_name ?>_currency_type"
                                                                         class="currency-selector currency-selector-<?= $id ?>"
                                                                         onchange="calculateInrValue(); updateSymbol_(this,<?= $id ?>)">
                                                                         <?php foreach ($get_currencies as $c): ?>

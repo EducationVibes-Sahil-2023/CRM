@@ -307,6 +307,30 @@ $table_data = array(
                         </div>
                     </div>
 
+  <div class="col-lg-3">
+                        <label for="acadmic_year">Academic Year <span class="text-danger">*</span></label>
+                        <div class="form-group">
+                            <?php
+                            $startYear = 2023; // Always start from 2023
+                            $endYear = date("Y") + 2; // End at current year + 2
+
+                            $years = [];
+                            $years[] = ['id' => '', 'name' => 'Select Academic Year']; // default option
+
+                            for ($year = $startYear; $year < $endYear; $year++) {
+                                $label = $year . ' - ' . ($year + 1);
+                                $years[] = ['id' => $label, 'name' => $label];
+                            }
+
+                            ?>
+
+                            <select class="form-control" id="acadmic_year" name="acadmic_year" required>
+                                <?php foreach ($years as $year): ?>
+                                    <option value="<?= $year["id"] ?>"><?= $year["name"] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
                     <div class="col-md-3">
                         <!--    <?= render_input('startdate', 'Start Date', '', 'date'); ?>-->
                         <!--</div>-->

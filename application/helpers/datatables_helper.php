@@ -1482,6 +1482,11 @@ function data_tables_init_($aColumns, $sIndexColumn, $sTable, $join = [], $where
     $sLimit
     ";
 
+// if(is_admin())
+// {
+//     echo $sQuery;
+//     die;
+// }
     $rResult = $CI->db->query($sQuery)->result_array();
 
 

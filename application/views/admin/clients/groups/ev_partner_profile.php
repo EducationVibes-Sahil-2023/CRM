@@ -38,6 +38,7 @@ $final_sumbit = $client->submission_status;
 $read_only = "readonly";
 
 $admin_status = 0;
+$visa_details =  visa_details($client_id, 0, 1);
 
 if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"]) || has_permission('customers', '', 'create')) {
 	$final_sumbit = 0;

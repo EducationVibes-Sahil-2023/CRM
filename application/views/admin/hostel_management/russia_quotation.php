@@ -601,7 +601,7 @@ if (!empty($_GET['quotation_id'])) {
                                                             <select <?= $fees["disabled"] == 1 ? "disabled" : "" ?> name="<?= $field_name ?>_payment_option" class="form-control" required>
                                                                 <option value="">Select Payment Option</option>
                                                                 <?php foreach ($quotation_paymente_mode as $payment_mode) { ?>
-                                                                    <option value="<?= $payment_mode['id'] ?>" <?= $fees["option_payment"] == $payment_mode['id'] ? "selected" : "" ?>><?= $payment_mode['name'] ?></option>
+                                                                    <option value="<?= $payment_mode['id'] ?>" <?= 2 == $payment_mode['id'] ? "selected" : "" ?>><?= $payment_mode['name'] ?></option>
                                                                 <?php } ?>
                                                             </select>
                                                         </td>

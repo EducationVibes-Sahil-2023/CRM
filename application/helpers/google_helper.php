@@ -2488,13 +2488,23 @@ function paymentDuesHostel()
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
     // fetch fees with lead_type as well
-    $feesList = $CI->db->select("id, name")
-        ->from(db_prefix() . "applicant_fees")->where_in("id", [5,6])
+    $feesList =[];
+    $feesList["g"] = $CI->db->select("id, name")
+        ->from(db_prefix() . "applicant_fees")->where("georgia_hostel", 1)
+        ->order_by("sequence", "ASC")
+        ->get()
+        ->result_array();
+        
+        
+        
+        $feesList["r"] = $CI->db->select("id, name")
+        ->from(db_prefix() . "applicant_fees")->where("russia_hostel",1)
         ->order_by("sequence", "ASC")
         ->get()
         ->result_array();
 
-    $columns = [
+
+    $columns['g'] = [
         "Student Name",
         "Passport",
         "University Name",
@@ -2515,15 +2525,46 @@ function paymentDuesHostel()
         "Remark"
     ];
     
+      $columns['r'] = [
+        "Student Name",
+        "Passport",
+        "University Name",
+        "Hostel Type",
+        "Hostel Name",
+        "Remark"
+    ];
+    
+    // $columns = [
+    //     "Student Name",
+    //     "Passport",
+    //     "University Name",
+    //     "Hostel Type",
+    //     "Hostel Name",
+    //     "Floor No",
+    //     "Room No",
+    //     "Room Capacity",
+    //     // "Rent",
+    //     // "Currency",
+    //     "Start Date",
+    //     "End Date",
+    //     "Months",
+    //     // "Payment Mode",
+    //     // "Payment Type",
+    //     // "Transaction Type",
+    //     // "Vendor Name",
+    //     "Remark"
+    // ];
+    
     
 
     $normal = $pay = $dues = [];
-
-    foreach ($feesList as $fee) {
+foreach ($feesList as $fees){
+    foreach ($fees as $fee) {
         $normal[] = $fee['name'];
         $pay[]    = "Pay " . $fee['name'];
         $dues[]   = "Dues " . $fee['name'];
     }
+}
 
     $columns = array_merge($columns, $normal, $pay, $dues);
 
@@ -2535,6 +2576,7 @@ function paymentDuesHostel()
     
  $sql = "SELECT 
     ho.id AS student_id,
+    ho.acadmic_year AS acadmic_year,
     ho.passport AS passport,
     ho.name AS student_name,
     hq.id AS quotation_id,
