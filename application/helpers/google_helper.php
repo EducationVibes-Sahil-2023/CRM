@@ -2437,6 +2437,24 @@ function payment_quotations($id = '')
         LEFT JOIN " . db_prefix() . "quotation_vendor vl ON vl.id = pq.vendor_id 
         LEFT JOIN " . db_prefix() . "currencies ctf ON ctf.id = pq.ex_currency
         LEFT JOIN " . db_prefix() . "transaction_type ptt ON ptt.id = pq.transaction_type
+        
+        LEFT JOIN (
+        SELECT td_latest.*,
+        td_sum.total_ticket_cost
+        FROM " . db_prefix() . "ticket_data td_latest
+        INNER JOIN (
+        SELECT client_id, SUM(ticket_cost) AS total_ticket_cost
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+        ) td_sum ON td_latest.client_id = td_sum.client_id
+        INNER JOIN (
+        SELECT client_id, MAX(id) AS latest_id
+        FROM " . db_prefix() . "ticket_data
+        GROUP BY client_id
+        ) td_max ON td_latest.client_id = td_max.client_id 
+        AND td_latest.id = td_max.latest_id
+        ) td ON td.client_id = c.userid
+        LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
         WHERE 1=1 and pq.status > 0  {$condition_sql}
         GROUP BY pq.id ORDER BY pq.client_id
         ";

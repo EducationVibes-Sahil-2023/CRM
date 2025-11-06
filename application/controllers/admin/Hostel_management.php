@@ -1322,4 +1322,190 @@ class hostel_management extends AdminController
 
         echo json_encode($data);
     }
+    
+    
+    function hostelPaymentGenerate()
+    {
+        
+        //  if (!has_permission('hostel_management', '', 'hostel_invoice_generate')) {
+        //     return access_denied('hostel_management'); // Stop execution if no permission
+        // }
+        
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
+$hostels = $this->db->select("university")
+    ->from(db_prefix() . "hostel")
+    ->get()
+    ->result_array();
+
+// Extract only `university` values
+// Extract only the names
+$university_names = array_column($hostels, 'university');
+
+// Remove empty values (optional)
+$university_names = array_filter($university_names);
+
+
+
+$university_details = $this->s_db->select("universities.id, universities.university_name, countries.country_name,CONCAT('https://educationvibes.in/',logo_image) as logo_image")
+    ->from("universities")
+    ->join("countries", "countries.id = universities.country_id", "left")
+    ->join("university_banner", "university_banner.university_id = universities.id", "left")
+    ->where_in("universities.university_name", $university_names)
+    ->get()
+    ->result_array();
+
+
+
+$data["university_details"] = array_column($university_details,null,"university_name");
+
+$payment_id = 17;
+
+$columns = [
+    "hp.university_name",
+    "hp.acadmic_year",
+    "hp.hostel_info_id",
+    "hp.id",
+    "hp.pay_date",
+    "hi.name",
+    "hi.passport",
+    "h.name as hostel_name",
+    "h.email",
+    "h.contact_number",
+    "h.hostel_logo",
+    ];
+$this->db->select($columns)
+         ->from(db_prefix() . 'hostel_payments AS hp')
+         ->join(db_prefix() . 'hostel_infomation AS hi', 'hi.id = hp.hostel_info_id', 'left')
+         ->join(db_prefix() . 'hostel_quotation AS hq', 'hq.id = hp.quotation_id', 'left')
+         ->join(db_prefix() . 'hostel AS h', 'h.id = hi.hostel', 'left')
+         ->where('hp.id', $payment_id);
+
+$data['hostelData'] = $this->db->get()->row();
+$data["invoice_number"] = str_pad($payment_id, 6, '0', STR_PAD_LEFT);
+
+// echo "<pre>";
+// print_r($data['hostelData']);
+// echo "</pre>";
+// die;
+   
+
+
+        // Disable SSL verification (for images/fonts)
+        stream_context_set_default(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+
+        // Initialize TCPDF
+        $pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf->SetAuthor('Education Vibes');
+        $pdf->SetTitle('Hostel Invoice');
+        $pdf->SetSubject('Hostel Invoice');
+
+
+        // Disable default header/footer
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        // This won't work anymore if you decide to add a watermark
+        $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, PDF_HEADER_TITLE . ' 006', PDF_HEADER_STRING);
+        // ✅ Force small margins to fit more on one page
+        $pdf->SetMargins(10, 10, 10, true);
+        $pdf->SetAutoPageBreak(false, 0); // ✅ Disable automatic page breaks completely
+
+        // Add single page
+        $pdf->AddPage();
+
+        // $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
+
+        // // Check if image exists
+        // if (file_exists($stampPath)) {
+
+        //     // X and Y coordinates in mm
+        //     $x = 130; // distance from left
+        //     $y = 230;  // distance from top
+
+        //     // Width of image in mm (height auto-scaled)
+        //     $width = 40;
+
+        //     // Place the stamp at absolute position
+        //     $pdf->Image($stampPath, $x, $y, $width, 0, '', '', '', false, 300);
+        // }
+
+        // Optional: Custom fonts
+        $path_gill_sans_mt = APPPATH . 'libraries/tcpdf/fonts/GILB____.ttf';
+        $path_book_antiqua = APPPATH . 'libraries/tcpdf/fonts/book-antiqua-bold.ttf';
+        $path_Cambria_Math = APPPATH . 'libraries/tcpdf/fonts/Cambria Math.ttf';
+        $path_Cambria = APPPATH . 'libraries/tcpdf/fonts/Cambria/Cambria Bold 700.ttf';
+
+        $data["gillsansmt"]   = TCPDF_FONTS::addTTFfont($path_gill_sans_mt, 'TrueTypeUnicode', '', 15);
+        $data["book_antiqua"] = TCPDF_FONTS::addTTFfont($path_book_antiqua, 'TrueTypeUnicode', '', 15);
+        $data["Cambria_Math"] = TCPDF_FONTS::addTTFfont($path_Cambria_Math, 'TrueTypeUnicode', '', 15);
+        $data["Cambria"]      = TCPDF_FONTS::addTTFfont($path_Cambria, 'TrueTypeUnicode', '', 15);
+
+        $pdf->setImageScale(1.7);
+
+
+        // Load the HTML view
+        $html = $this->load->view('admin/pdf/hostel_payment_receipt', $data, true);
+
+         $pdf->writeHTML($html, true, false, true, false, '');
+
+        // ✅ Output PDF to browser (single page)
+        $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
+
+        die;
+        $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/";
+
+        if (!is_dir($upload_dir)) {
+            if (!mkdir($upload_dir, 0777, true) && !is_dir($upload_dir)) {
+                echo json_encode(["status" => "error", "message" => "Failed to create upload directory."]);
+                return;
+            }
+        }
+
+        // $file_name = 'Quotation_' . time() . '.pdf';
+
+        $file_name = $data["hostelData"]->name . " " .
+            $data["hostelData"]->university_name . " " .
+            $data["hostelData"]->start_date . " " .
+            $data["hostelData"]->end_date . " " .
+            $data["hostelData"]->room_capacity . " " .
+            time() . '.pdf';
+
+        $file_name = strtolower(str_replace(" ", "_", $file_name));
+
+
+        $file_path = $upload_dir . $file_name;
+
+        // Remove if exists
+        if (file_exists($file_path)) {
+            unlink($file_path);
+        }
+
+        // Save file
+        $pdf->Output($file_path, 'F');
+
+        if (!file_exists($file_path)) {
+            echo json_encode(["status" => "error", "message" => "Failed to generate PDF file."]);
+            return;
+        }
+
+        // -----------------------------
+        // Update quotation record (not clients!)
+
+        // -----------------------------
+        $update_data = ["pdf" =>  base_url() . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/" . $file_name];
+        $this->db->where(["hostel_info_id" => $hostelInfo_Id, "id" => $quotation_id]);
+        $this->db->update(db_prefix() . 'hostel_quotation', $update_data);
+
+
+        // -----------------------------
+        // Return response
+        // -----------------------------
+        echo json_encode([
+            "status"   => "success",
+            "pdf_url"  => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/" . $file_name)
+        ]);
+        
+    }
 }
