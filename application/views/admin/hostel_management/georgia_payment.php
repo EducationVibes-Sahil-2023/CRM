@@ -687,7 +687,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>Proof <span class="text-danger">*</span></label>
-                                            <input type="file" name="proof" data-name="proof" class="form-control proof" <?= !empty($applicant_payment_data->pdf) ? '' : 'required' ?>>
+                                            <input type="file" name="proof" data-name="proof" class="form-control proof" <?= !empty($applicant_payment_data->pdf) ||$applicant_payment_data->mode == 5 ? '' : 'required' ?>>
                                             <?php
                                             $file_url = !empty($applicant_payment_data->pdf) ? $applicant_payment_data->pdf : "";
                                             if (!empty($file_url)) { ?>

@@ -46,6 +46,12 @@ class Forms extends ClientsController
                 $post_data = $this->input->post();
 
                 $google_source =  !empty($form->lead_source) ? $form->lead_source : '';
+                
+                if(!empty($post_data["form-cf-37"]) && $post_data["form-cf-37"] == "Reddit Ads")
+                {
+                   $form->lead_source =69; 
+                   
+                }
                 $post_data["phonenumber"] =  substr(preg_replace('/\D/', '', $post_data["phonenumber"]), -10);
                 $post_data["phonenumber"] = !empty($post_data["phonenumber"]) ? substr(trim($post_data["phonenumber"]), -10) : '';
                 $post_data["phonenumber"] = str_replace("+91", "", $post_data["phonenumber"]);
