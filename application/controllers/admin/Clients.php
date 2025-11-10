@@ -4455,14 +4455,15 @@ class Clients extends AdminController
 
     public function passport_info()
     {
-        
-  
+
+
         $data = array();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $client_id = $this->input->post("clientid");
                 $media_upload_data = $_POST;
-                $pcc_status = !empty($_POST["pcc_status"])?$_POST["pcc_status"]:0;
+                $pcc_status = !empty($_POST["pcc_status"]) ? $_POST["pcc_status"] : 0;
+                $orignal_doc_id =  $_POST["orignal_doc_id"] ?? 0;
                 $passpot_data = [];
                 unset($_POST["clientid"]);
                 unset($_POST["doc_type_id"]);
@@ -4471,6 +4472,7 @@ class Clients extends AdminController
                 unset($_POST["doc_name"]);
                 unset($_POST["doc_url"]);
                 unset($_POST["pcc_status"]);
+                unset($_POST['orignal_doc_id']);
 
 
 
@@ -4513,13 +4515,61 @@ class Clients extends AdminController
                 }
 
                 if ($rows_affected) {
-                    
-$this->db->where("userid", $client_id);
-$this->db->update(db_prefix() . 'clients', array("pcc_status"=>$pcc_status));
 
-                    if (!empty($media_upload_data["doc_type"][0])) {
-                        $this->media_upload($media_upload_data, $_FILES);
+                    if (!empty($pcc_status)) {
+                        $this->db->where("userid", $client_id);
+                        $this->db->update(db_prefix() . 'clients', array("pcc_status" => $pcc_status));
+                        if (!empty($media_upload_data["doc_type"])) {
+                            $this->media_upload($media_upload_data, $_FILES);
+                        }
                     }
+
+                    if (isset($orignal_doc_id)) {
+                        $batch_update = [];
+                        $batch_insert = [];
+                        $location = $this->db
+                            ->select("office_location")
+                            ->where("staffid", get_staff_user_id())
+                            ->get(db_prefix() . 'staff')
+                            ->row()->office_location ?? 0;
+
+                        $exitData = $this->db
+                            ->select("id")
+                            ->from(db_prefix() . "orignal_documents_received")
+                            ->where([
+                                "doc_id"  => $orignal_doc_id,
+                                "userid"  => $client_id
+                            ])->get()->row();
+
+
+                        if ($exitData) {
+                            // ✅ Collect update data
+                            $batch_update[] = [
+                                "id"            => $exitData->id,
+                                "doc_id"        => $orignal_doc_id,
+                                "userid"        => $client_id,
+                                "received_by"   => get_staff_user_id(),
+                                "received_date" => date('Y-m-d H:i:s'),
+                                "location_id"   => $location,
+                                "in_transit"    => ""
+                            ];
+                        } else {
+                            // ✅ Collect insert data
+                            $batch_insert[] = [
+                                "doc_id"        => $orignal_doc_id,
+                                "userid"        => $client_id,
+                                "received_by"   => get_staff_user_id(),
+                                "received_date" => date('Y-m-d H:i:s'),
+                                "location_id"   => $location
+                            ];
+                        }
+
+
+                        $this->clients_model->document_update_insert($batch_insert, $batch_update);
+
+
+                    }
+
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
                     applicant_last_update($client_id);
                     $data['resp_code'] = 'RCS';
@@ -10491,7 +10541,7 @@ $this->db->update(db_prefix() . 'clients', array("pcc_status"=>$pcc_status));
 
     public function external_visa($id = "")
     {
-     
+
         // ✅ Permission check
         if (!has_permission('external_visa', '', 'create')) {
             return access_denied('external_visa'); // Stop execution immediately
@@ -10750,7 +10800,7 @@ $this->db->update(db_prefix() . 'clients', array("pcc_status"=>$pcc_status));
                 'status' => 1
             ];
 
-      
+
 
             $data = $this->input->post();
 

@@ -42,7 +42,7 @@ if (!is_postSale() && !is_admin()) {
                 echo "<br> <div class='mt-5 margin-top return-documents'>";
                 if ($client->client_type == 1) {
                     echo "Document Return Notification";
-                   echo  getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RETURN, $client_id);
+                    echo  getLastEmailWhatsappDate("email", ORIGNAL_DOCUMENT_RETURN, $client_id);
                 ?>
                     <button type="button" class="btn btn-primary btn-xs" onclick="orignal_document_received_notification(<?= $client_id ?>,1)"><i class="fa fa-envelope"></i> </button>
                 <?php }
@@ -88,18 +88,35 @@ if (!is_postSale() && !is_admin()) {
                                         <td class="d-flex align-items-center">
                                             <div class="checkbox">
                                                 <input type="hidden" name="received_id" value="<?= !empty($doc['received_id']) ? $doc['received_id'] : '' ?>">
-                                                <input type="checkbox" name="doc_ids" data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
+                                                <input type="checkbox" name="doc_ids" <?= !empty($doc["disabled"]) && $doc["disabled"] == 1 ? 'disabled' : '' ?> data-name="<?= $doc["name"] ?>" value="<?= $doc["id"] ?>"><label> </label>
 
 
                                             </div>
                                         </td>
-                                        <td><?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
+                                        <td>
+                                            <?= $doc["name"] ?> <?= !empty($doc["info"]) ? '<i class="fa fa-info-circle" title="' . $doc["info"] . '"></i>' : '' ?></td>
                                         <td><?= !empty($doc["received_by"]) ? $doc["received_by"] : '' ?></td>
                                         <td><?= !empty($doc["received_date"]) ? $doc["received_date"] : '' ?></td>
                                         <td><?= !empty($doc["received_location"]) ? $doc["received_location"] : '' ?></td>
                                         <td><?= !empty($doc["in_transit"]) ? $doc["in_transit"] : '' ?></td>
-                                        <td><?= render_select('location', $office_location, array('id', 'name'), '', [], array('data-width' => '100%', 'data-none-selected-text' => 'Select Office Location'), array(), 'no-mbot', '', false, "office_location");
-                                            ?></td>
+                                        <td><?= render_select(
+                                                'location',
+                                                $office_location,
+                                                array('id', 'name'),
+                                                '',
+                                                [],
+                                                [
+                                                    'data-width' => '100%',
+                                                    'data-none-selected-text' => 'Select Office Location',
+                                                    !empty($doc["disabled"]) && $doc["disabled"] == 1 ? 'disabled' : '' => !empty($doc["disabled"]) && $doc["disabled"] == 1 ? true : false
+                                                ],
+                                                [],
+                                                'no-mbot',
+                                                '',
+                                                false,
+                                                "office_location"
+                                            ); ?>
+                                        </td>
                                     </tr>
                                 <?php $index++;
                                 endforeach; ?>

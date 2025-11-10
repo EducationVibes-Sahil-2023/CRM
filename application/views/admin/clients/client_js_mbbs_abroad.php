@@ -160,6 +160,7 @@
 
         formData.append("csrf_token_name", csrfData.hash);
         formData.append("clientid", $('input[name="clientid"]').val());
+        formData.append("orignal_doc_id", $("#pcc_status option:selected").attr("data-pcc_orignal_doc_id") ?? 0);
 
         $.ajax({
             url: "<?php echo base_url() . 'admin/clients/passport_info' ?>",
@@ -195,6 +196,21 @@
             $(".passport-div-status").hide();
             $(".passport-div-status input").val('');
             $(".passport-div-status").addClass("hide");
+        }
+    }
+
+
+    function change_pcc_status() {
+
+        let status = $("#pcc_status option:selected").attr("data-pcc_status");
+        console.log(status);
+        if (status == 1) {
+            $(".pcc-div-status").show();
+            $(".pcc-div-status").removeClass("hide");
+        } else {
+            $(".pcc-div-status").hide();
+            $(".pcc-div-status input").val('');
+            $(".pcc-div-status").addClass("hide");
         }
     }
 

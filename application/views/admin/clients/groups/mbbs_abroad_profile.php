@@ -599,21 +599,20 @@ if ($lead_type_status == 2) {
                                     <?php
                                     }
                                     ?>
-
                                     <div class="col-lg-3 ">
                                         <div class="form-group">
                                             <label>PCC status</label>
-                                            <select class="form-control" name="pcc_status" id="pcc_status">
+                                            <select class="form-control" onchange="change_pcc_status()" name="pcc_status" id="pcc_status">
                                                 <option value="">Select PCC Status</option>
                                                 <?php
                                                 foreach ($pcc_stages as $pcc) {
                                                     $selected = "";
                                                     if ($pcc["id"] == $client->pcc_status) {
                                                         $selected = "selected";
-                                                        $show_passport_details = $pcc['show_status'];
+                                                        $show_pcc_details = $pcc['upload'];
                                                     }
                                                 ?>
-                                                    <option value="<?= $pcc["id"] ?>" <?= $selected ?>><?= $pcc["name"] ?></option>
+                                                    <option value="<?= $pcc["id"] ?>" <?= $selected ?> data-pcc_orignal_doc_id="<?= $pcc['orignal_doc_id'] ?? 0 ?>" data-pcc_status="<?= $pcc['upload'] ?? 0 ?>"><?= $pcc["name"] ?></option>
                                                 <?php
 
                                                 }
@@ -621,6 +620,45 @@ if ($lead_type_status == 2) {
                                             </select>
                                         </div>
                                     </div>
+
+                                    <?php
+                                    foreach ($profile_section["pcc"] as $s_stage) {
+                                        $doc_type = $s_stage["name"] ?? '';
+                                        $doc_id = $s_stage["id"] ?? '';
+                                        $info = $s_stage["info"] ?? '';
+                                        $accept = $s_stage["file_type"] ?? '';
+                                        $is_mandatory = !empty($s_stage["mandatry"]);
+                                        $mandatry_text = $is_mandatory ? "<small class='text-danger'>*</small>" : '';
+                                        $required_attr = $is_mandatory ? "required required-check" : '';
+                                        $file_url = !empty($applicant_documents[$doc_id]["document_file"]) ? $applicant_documents[$doc_id]["document_file"] : '';
+                                        $required_attr = !empty($file_url) ? "" : $required_attr;
+
+                                    ?>
+                                        <div class="col-lg-3 media-files pcc-div-status <?= !empty($show_pcc_details && $show_pcc_details == 1) ? '' : 'hide' ?>">
+                                            <div class="form-group">
+                                                <label for="exampleInputMobileNumber"><?= $s_stage["name"] ?> <?= $mandatry_text  . "  (" . $s_stage["file_type"] . ")" ?> <?php if (!empty($info)) : ?>
+                                                        &nbsp;<i class="fa fa-info-circle" title="<?= htmlspecialchars($info, ENT_QUOTES, 'UTF-8') ?>"></i>
+                                                    <?php endif; ?></label>
+                                                <input type="hidden" name="doc_type[]" value="<?= htmlspecialchars($doc_id, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="doc_name[]" value="<?= htmlspecialchars($doc_type, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="hidden" name="doc_url[]" value="<?= htmlspecialchars($file_url, ENT_QUOTES, 'UTF-8') ?>">
+                                                <input type="file" name="files[<?= $doc_id ?>]" value="<?= $file_url ?>" class="form-control" accept="<?= htmlspecialchars($accept, ENT_QUOTES, 'UTF-8') ?>" <?= $required_attr ?>>
+                                                <?php
+                                                if (!empty($file_url)) {
+                                                ?>
+                                                    <div class="margin-top">
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('<?= base_url($file_url) ?>');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files(`<?= base_url($file_url) ?>`, '_blank');"></i>
+                                                    </div>
+                                                <?php
+                                                }
+                                                ?>
+
+                                            </div>
+                                        </div>
+                                    <?php
+                                    }
+                                    ?>
                                 </div>
                                 <div class="btn-save-fun margin-top">
                                     <div class="col-md-12">

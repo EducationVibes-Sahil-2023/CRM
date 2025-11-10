@@ -2450,7 +2450,7 @@ class Clients_model extends App_Model
     /**
      * Function to insert or update received documents.
      */
-    private function document_update_insert($data_insert = [], $data_update = [])
+    public function document_update_insert($data_insert = [], $data_update = [])
     {
         if (!empty($data_insert)) {
             $this->db->insert_batch(db_prefix() . 'orignal_documents_received', $data_insert);
