@@ -77,7 +77,7 @@ $table_data = array(
                                     </div>
 
                                     <div class="col-md-2  margin-top leads-filter-column">
-                                        <?php echo render_select('hostel_company[]', $hostel_company, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Comapny", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_company'); ?>
+                                        <?php echo render_select('hostel_company[]', $hostel_company, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Company", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_company'); ?>
                                     </div>
 
                                     <div class="col-md-2  margin-top leads-filter-column">
@@ -307,7 +307,7 @@ $table_data = array(
                         </div>
                     </div>
 
-  <div class="col-lg-3">
+                    <div class="col-lg-3">
                         <label for="acadmic_year">Academic Year <span class="text-danger">*</span></label>
                         <div class="form-group">
                             <?php

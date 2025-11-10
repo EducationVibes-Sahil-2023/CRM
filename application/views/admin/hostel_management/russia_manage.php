@@ -72,7 +72,7 @@ $table_data = array(
                                     </div>
 
                                     <div class="col-md-2  margin-top leads-filter-column">
-                                        <?php echo render_select('hostel_company[]', $hostel_company, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Comapny", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_company'); ?>
+                                        <?php echo render_select('hostel_company[]', $hostel_company, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Company", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_company'); ?>
                                     </div>
 
                                     <div class="col-md-2  margin-top leads-filter-column">
