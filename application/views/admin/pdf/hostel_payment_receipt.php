@@ -20,7 +20,6 @@
             font-weight: bold;
         }
 
-
         table {
             font-size: 16px;
         }
@@ -47,41 +46,73 @@
 
 <body>
 
-    <?php
-    $uniData =$university_details[$hostelData->university_name];
-    // echo "<pre>";
-    // print_r($hostelData);
-    print_r($uniData);
-    // echo "</pre>";
-    function formatCurrency($amount)
-    {
-        if (!empty($amount) && preg_match('/^(\D*)(\d[\d,.]*)$/', $amount, $matches)) {
-            $currency_symbol = $matches[1]; // Captures "$", "₹", "€", etc.
-            $numeric_amount = floatval(str_replace(',', '', $matches[2])); // Removes commas & converts to float
-            return $currency_symbol . number_format($numeric_amount, 2, '.', ','); // Formats to 2 decimal places
-        }
-        return !empty($amount) ? $amount : '';
+<?php
+$uniData = $university_details[strtolower($hostelData->university_name)] ?? [];
+
+/* -------------------------
+   1. Get quoted amount (ID = 6)
+------------------------- */
+$qArray = [];
+if (!empty($hostelData->hostel_due)) {
+    $decoded = json_decode($hostelData->hostel_due, true);
+    if (!empty($decoded['main']['fees_info'])) {
+        $feesIndexed = array_column($decoded['main']['fees_info'], null, 'id');
+        $qArray = $feesIndexed[$payment_type] ?? [];
     }
+}
 
-    function formatCurrency_($amount)
-    {
-        if (!empty($amount) && preg_match('/^(\D*)(\d[\d,.]*)$/', $amount, $matches)) {
-            $currency_symbol = $matches[1]; // Captures "$", "₹", "€", etc.
-            $numeric_amount = floatval(str_replace(',', '', $matches[2])); // Removes commas & converts to float
-            return [$currency_symbol, $numeric_amount]; // Returns symbol and numeric value separately
+$totalCurrency = !empty($qArray["document_currency"])
+    ? get_currency($qArray["document_currency"])->symbol
+    : '';
+
+$totalQuotedValue = !empty($qArray["inr_value"]) ? floatval($qArray["inr_value"]) : 0;
+$totalAmount = $totalCurrency . " " . $totalQuotedValue;
+
+/* -------------------------
+   2. Sum payments (ID = 6)
+------------------------- */
+$pArray = !empty($hostelData->fess_infomation)
+    ? json_decode($hostelData->fess_infomation, true)
+    : [];
+
+$totalPaidValue   = 0;
+$paidCurrency     = $totalCurrency;
+$pArray = array_merge(...$pArray);
+if (!empty($pArray)) {
+    foreach ($pArray as $pay) {
+        if (
+            !empty($pay["fee_id"]) &&
+            $pay["fee_id"] == $payment_type &&
+            !empty($pay["document_currency"]) &&
+            $pay["document_currency"] == $qArray["document_currency"]
+        ) {
+  
+         $totalPaidValue += floatval($pay["fee_inr_value"]);
+            $paidCurrency = get_currency($pay["document_currency"])->symbol;
         }
-        return ['', 0]; // Default empty symbol and zero value
     }
+}
 
+ $total_payment = $paidCurrency . " " . $totalPaidValue;
 
-    list($currency_symbol, $total_value) = formatCurrency_($total_amount);
-    list(, $registration_value) = formatCurrency_($registration_amount);
-    $total_value;
-    $registration_value;
-    // Calculate difference
-    $difference = $total_value - $registration_value;
+/* -------------------------
+   3. Balance
+------------------------- */
+$balanceValue = $totalQuotedValue - $totalPaidValue;
+$formattedBalance = $totalCurrency . " " . number_format($balanceValue, 2, '.', ',');
 
-    ?>
+/* -------------------------
+   Format Helper
+------------------------- */
+function formatCurrencyText($amountString) {
+    if (!empty($amountString) && preg_match('/^(\D*)(\d[\d,.]*)$/', $amountString, $matches)) {
+        $symbol = $matches[1];
+        $num    = floatval(str_replace(',', '', $matches[2]));
+        return $symbol . number_format($num, 2, '.', ',');
+    }
+    return '';
+}
+?>
 
     <div class="container" cellspacing="15">
         <table cellpadding="5" cellspacing="0" style="margin:10px; padding:10px;">
@@ -131,12 +162,10 @@
                     <td colspan="3"></td>
                 </tr>
                 <tr>
-                    <!--<td><strong>Residence Address</strong></td>-->
                     <td colspan="2"><strong>University Name</strong></td>
                     <td><strong>Country</strong></td>
                 </tr>
                 <tr>
-                    <!--<td><?= !empty($address) ? $address : '' ?></td>-->
                     <td colspan="2"><?= !empty($hostelData->university_name) ? ucwords($hostelData->university_name) : '' ?></td>
                     <td><?= !empty($uniData["country_name"]) ? ucwords($uniData["country_name"]) : '' ?></td>
                 </tr>
@@ -151,10 +180,9 @@
                         <br>
                         Payment Received
                     </td>
-                    <td style="padding: 10px;" style="text-align:right; border-right: 3px solid black; font-family:dejavusans;" >
+                    <td style="padding: 10px; text-align:right; border-right: 3px solid black;">
                         <span class="text-blue">Total Payment &nbsp; &nbsp;</span><br>
-                        <?= !empty($registration_amount) ? formatCurrency($registration_amount) : '' ?>
-                        &nbsp; &nbsp;
+                        <?= formatCurrencyText($total_payment) ?> &nbsp; &nbsp;
                     </td>
                 </tr>
 
@@ -168,18 +196,17 @@
                         Total Service Charged Received till date<br>
                         <span class="text-pink">Balance Due</span>
                     </td>
-                    <td style="text-align: right; border-right: 3px solid black; font-family:dejavusans;">
+                    <td style="text-align: right; border-right: 3px solid black;">
                         <span class="text-blue">Amount &nbsp; &nbsp;</span><br>
-                        <?= !empty($total_amount) ? formatCurrency($total_amount) : '' ?> &nbsp; &nbsp;<br>
-                        <?= !empty($registration_amount) ? formatCurrency($registration_amount) : '' ?> &nbsp; &nbsp;<br>
-                        <span class="text-pink"><?= !empty($pending_amount) ? $currency_symbol . number_format($difference, 2, '.', ',') : '' ?> &nbsp; &nbsp;</span>
+                        <?= formatCurrencyText($totalAmount) ?> &nbsp; &nbsp;<br>
+                        <?= formatCurrencyText($total_payment) ?> &nbsp; &nbsp;<br>
+                        <span class="text-pink"><?= formatCurrencyText($formattedBalance) ?> &nbsp; &nbsp;</span>
                     </td>
                 </tr>
 
                 <tr>
                     <td colspan="3" style="text-align: center; font-size:xx-small;">
-                        <br>
-                        <br>
+                        <br><br>
                         *This is a computer generated Receipt and doesn't require signature or any company seal. If you have any questions about this invoice, please contact on<br>
                         <?= !empty($hostelData->email) ? ucwords($hostelData->email) : '' ?> or Call <?= !empty($hostelData->contact_number) ? ucwords($hostelData->contact_number) : '' ?>.<br>
                     </td>

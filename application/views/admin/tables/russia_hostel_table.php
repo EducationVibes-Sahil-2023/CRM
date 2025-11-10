@@ -4,11 +4,17 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 $has_permission_delete = has_permission('hostel_management', '', 'delete');
 
+// if(is_admin())
+// {
+//     ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+// }
 // Columns for DataTables
 $aColumns = [
     db_prefix() . 'hostel_infomation.name as name',
     db_prefix() . 'hostel_infomation.passport as passport',
-    db_prefix() . 'hostel_infomation.university_name as university_name',
+    // db_prefix() . 'hostel_infomation.university_name as university_name',
     'latest_quotation.room_no as room_no',
     'latest_quotation.floor_no as floor_no',
     'latest_quotation.company as company',
@@ -97,9 +103,39 @@ if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
     $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
 }
+
+
+
+
+if (!empty($_POST['acadmic_year'])) {
+    $year = intval($_POST['acadmic_year']);
+    $where[] = " AND ".db_prefix()."hostel_infomation.acadmic_year = $year";
+}
+
+
+
+if (!empty($_POST['year']) && is_array($_POST['year'])) {
+    $years = array_map('intval', $_POST['year']); // safe numeric only
+    $years_list = implode(',', $years);
+    $where[] = " AND latest_quotation.year IN ($years_list)";
+}
+
+
+if (!empty($_POST['hostel_company']) && is_array($_POST['hostel_company'])) {
+    $hostel_company = array_map('intval', $_POST['hostel_company']); // safe numeric only
+    $hostel_company_list = implode(',', $hostel_company);
+    $where[] = " AND latest_quotation.company IN ($hostel_company_list)";
+}
+
+
+if (!empty($_POST['hostel_name']) && is_array($_POST['hostel_name'])) {
+    $hostel_name = array_map('intval', $_POST['hostel_name']); // safe numeric only
+    $hostel_name_list = implode(',', $hostel_name);
+     $where[] = " AND latest_quotation.hostel IN ($hostel_name_list)";
+}
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY  ' . db_prefix() . 'hostel_infomation.name,latest_quotation.id';
-
+$searchAs =[db_prefix() . 'hostel_infomation.name'];
 // Execute DataTables query
 $result = data_tables_init(
     $aColumns,
@@ -107,10 +143,11 @@ $result = data_tables_init(
     $sTable,
     $join,
     $where,
-    [db_prefix() . 'hostel_infomation.id'], // Select ID explicitly
+    [], // Select ID explicitly
     $group_by,
     [],
-    1
+    1,
+    $searchAs
 );
 
 $output  = $result['output'];

@@ -2615,8 +2615,15 @@ foreach ($feesList as $fees){
     IF(hp1.vendor_id > 0, hp1.vendor_name, NULL) AS vendor_name,
     hp1.type,
     hp1.pay_date,
+    hp1.pay_date,
     hp1.remark,
     tpt.name AS transaction_type,
+    hp1.acadmic_year AS acadmic_year,
+    hp1.year AS year,
+    MONTHNAME(hp1.pay_date) AS month,
+    dl.name as location,
+    hp1.ex_currency,
+    hp1.amount,
 
     TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date)
         + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference,
@@ -2643,6 +2650,7 @@ LEFT JOIN tblapplicant_fees f
     ON f.id = hp1.payment_type  
 LEFT JOIN tbltransaction_type tpt 
     ON tpt.id = hp1.transaction_type
+    LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = hp1.location_id
 
 -- ✅ LEFT JOIN LATERAL keeps rows even when fess_infomation is NULL
 LEFT JOIN LATERAL (
@@ -2656,6 +2664,8 @@ LEFT JOIN LATERAL (
 WHERE ho.status = 1
 GROUP BY ho.id;
 ";
+
+
 
     $arrayData = $CI->db->query($sql)->result_array();
     

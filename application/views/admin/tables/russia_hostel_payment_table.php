@@ -80,6 +80,22 @@ if (!empty($_POST['payment_id'])) {
             $row[] = $university_applicant_fees_[$fInfo->fee_id]['name'] ?? '-';
             $row[] =  $fInfo->fee_amount . " " . $currency_lookup[$fInfo->credit_currency]['name'] ?? '0';
             $row[] = $fInfo->fee_inr_value . " " . $currency_lookup[$fInfo->document_currency]['name'] ?? '0';
+            if (!empty($aRow['pdf']) && !empty($fInfo->fee_id) && $fInfo->fee_id ==6) {
+            $row[] = '
+                &nbsp; 
+                <button class="btn btn-xs btn-primary" onclick="window.open(\'' . $aRow['pdf'] . '\', \'_blank\')">
+                    <i class="fa fa-eye"></i>
+                </button>';
+        } else {
+            $row[] = '';
+        }
+        
+                if (!empty($fInfo->fee_id) && $fInfo->fee_id ==6) {
+            $row[] = '&nbsp; <button class="btn btn-primary" onclick="GeneratePDF(' . $hostel_info_id . ',' . $aRow['id'] . ')">Generate PDF</button>';
+            } else {
+            $row[] = '';
+            }
+
             $output['aaData'][] = $row;
         }
     }
@@ -149,7 +165,7 @@ if (!empty($_POST['payment_id'])) {
             $row[] = '';
         }
         $action = '';
-        if (is_admin() || has_permission('payment_quotation', '', 'edit')) {
+        if (is_admin() || has_permission('hostel_management', '', 'payment')) {
             $action .= '
                 <a class="btn btn-xs btn-sm btn-primary" href="?tab=payment&payment_id=' . (int)$aRow['id'] . '">
                     <i class="fa fa-pencil"></i>

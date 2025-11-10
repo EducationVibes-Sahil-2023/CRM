@@ -45,14 +45,14 @@ if (is_admin() ||  !empty($staff_list[get_staff_user_id()]["post_sales"])) {
 //     $admin_status = 1;
 // }
 
-
+$last_index = array_key_last($visa_details);
 $applicant_documents =  get_clients_documents($client_id);
 if (!empty($applicant_documents[0]["data"])) {
     $applicant_documents = json_decode($applicant_documents[0]["data"], true);
 
     array_push($applicant_documents, array("id" => "application", "document_file" => !empty($university_shortlisting[0]['application_file']) ? $university_shortlisting[0]['application_file'] : ''));
     array_push($applicant_documents, array("id" => "invitation", "document_file" => !empty($university_shortlisting[0]['invitation_letter']) ? $university_shortlisting[0]['invitation_letter'] : ''));
-    array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($visa_details[0]['file']) ? $visa_details[0]['file'] : ''));
+    array_push($applicant_documents, array("id" => "visa", "document_file" => !empty($visa_details[$last_index]['file']) ? $visa_details[$last_index]['file'] : ''));
     array_push($applicant_documents, array("id" => "University_Payment_Slip", "document_file" => !empty($university_shortlisting[0]['university_fees_payment_slip']) ? $university_shortlisting[0]['university_fees_payment_slip'] : ''));
 
     if (!empty($applicant_documents)) {

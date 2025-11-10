@@ -1672,8 +1672,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <?php } else if ($track["show_div_name"] == "sc_div") {
 
                             if (!has_permission($track['check_permission'], '', 'edit')) {
-
+                                if (!empty($client->sc_100) && $client->sc_100 == 1) {
+                                    echo '<h4 class="text-success text-center">Congratulations! Your application to <b>'.$admissionpreferences->primary_university.','.$admissionpreferences->primary_country.'</b> has been completed successfully.</h4>';
+                                }
+                                else{
                                 echo ' <div class="col-md-12"><h3>You do not have permission to continue to the next step.</h3></div>';
+                                }
                             } else {
                             ?>
                                 <form id="final-form" class="form-disabled" onsubmit="return false;">
@@ -1726,7 +1730,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
                         <?php } else {
                         ?>
-                            <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>
+                            <!--<?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>-->
+                            <!--    <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />-->
+                            <!--<?php } ?>-->
+                            
+                             <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit')) { ?>
                                 <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
                             <?php } ?>
                         <?php
@@ -1812,12 +1820,20 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var is_admin = <?= is_admin() ? 1 : 0 ?>;
     if (complete_application == 1) {
         setTimeout(function() {
+        
             $(".btn-hide-complete").hide();
             $(".secondary_university_remark").prop("disabled", true);
             $("fieldset form").find("select").prop("disabled", true);
             $("fieldset form").find("input, select.selectpicker, textarea").prop("disabled", true).selectpicker("refresh");
             $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").hide();
             $("#primary_university").prop("disabled", true).selectpicker("refresh");
+                <?php if(is_admin() || has_permission("application_tracker_mbbbs_sc", '', 'edit'))
+            {
+                ?>
+                $('input[name="sc_100"]').prop('disabled', false);
+                <?php 
+            }
+            ?>
         }, 500);
 
     }
@@ -2231,12 +2247,23 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     async function next_step(id, obj, skip = 0, completed = 0, same_step = 0) {
         id = $.trim(id) || $("#progressbar .active").data("id");
 
+if (completed == 1) {
+    if($("#sc_100").is(':checked') ? 1 : 0 == 0)
+    {
+        complete_application = 0;
+    }
+     
+}
+
+
+
         let upload_data = new FormData();
         show_loader();
         if (complete_application == 1) {
             skip == 1;
             skip == 1;
             show_next_stage(id);
+            hide_loader();
             return false;
         }
         try {
@@ -2251,9 +2278,11 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                 if (!check_validation) {
                     hide_loader();
                     return false;
-                }
+                } 
+               
                 upload_data.append("sc_100", $("#sc_100").is(":checked") ? 1 : 0);
                 upload_data.append("completed", 1);
+                 upload_data.append("tracker_id", 9);
             } else if (id == 2) {
                 let result = await university_shortlisting_dropdown();
                 if (!result) {

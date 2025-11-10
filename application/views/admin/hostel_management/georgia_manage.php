@@ -59,21 +59,46 @@ $table_data = array(
                         <?php
 
 
-                        if (is_admin()) {
+                        if (1==1) {
                         ?>
-                            <div id="filterArea" class=" hidden-xs">
-                                <div class="row">
+                           <div id="filterArea" class=" hidden-xs">
+                                <div class="row col-md-12">
                                     <div class="col-md-12">
                                         <p class="bold"><?php echo _l('filter_by'); ?></p>
                                     </div>
+                                    <div class="row">
                                     <?php if (has_permission('hostel_management', '', 'view') || has_permission('hostel_management', '', 'own_view')) { ?>
                                         <!--<div class="col-md-2  margin-top leads-filter-column">-->
                                         <!--   <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => _l('leads_dt_assigned'), 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>-->
                                         <!--</div>-->
                                     <?php } ?>
 
+    <div class="col-lg-2 margin-top leads-filter-column">
+                        <!--<label for="acadmic_year">Academic Year <span class="text-danger">*</span></label>-->
+                        <div class="form-group">
+                            <?php
+                            $startYear = 2023; // Always start from 2023
+                            $endYear = date("Y") + 2; // End at current year + 2
+
+                            $years = [];
+                            $years[] = ['id' => '', 'name' => 'Select Academic Year']; // default option
+
+                            for ($year = $startYear; $year < $endYear; $year++) {
+                                $label = $year . ' - ' . ($year + 1);
+                                $years[] = ['id' => $label, 'name' => $label];
+                            }
+
+                            ?>
+
+                            <select class="form-control" id="acadmic_year" name="acadmic_year" required>
+                                <?php foreach ($years as $year): ?>
+                                    <option value="<?= $year["id"] ?>"><?= $year["name"] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
                                     <div class="col-md-2  margin-top leads-filter-column">
-                                        <?php echo render_select('room_capacity[]', $roomCapacity, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Room Capacity", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'room_capacity'); ?>
+                                        <?php echo render_select('room_capacity', $roomCapacity, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Room Capacity", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'room_capacity'); ?>
                                     </div>
 
                                     <div class="col-md-2  margin-top leads-filter-column">
@@ -83,6 +108,7 @@ $table_data = array(
                                     <div class="col-md-2  margin-top leads-filter-column">
                                         <?php echo render_select('hostel_name[]', $hostel, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Name", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_name'); ?>
                                     </div>
+
                                     <div class="col-lg-2 margin-top leads-filter-column">
                                         <div class="form-group">
                                             <!--<label for="session_intake">Start Date <small class="text-danger">*</small></label>-->
@@ -92,7 +118,7 @@ $table_data = array(
                                         </div>
                                     </div>
 
-                                    <div class="col-md-2 margin-top leads-filter-column">
+                                    <div class="col-md-2 margin-top leads-filter-column hide">
                                         <?php
                                         echo render_select(
                                             'status[]',                 // name
@@ -114,8 +140,9 @@ $table_data = array(
                                         );
                                         ?>
                                     </div>
-
-                                    <div class="col-md-2 margin-top leads-filter-column">
+                                    </div>  
+                                    <div class="row">
+                                        <div class="col-md-2 margin-top leads-filter-column hide">
                                         <?php
                                         echo render_select(
                                             'payment_status[]',
@@ -138,7 +165,7 @@ $table_data = array(
                                         ?>
                                     </div>
 
-                                    <div class="col-md-4 margin-top leads-filter-column">
+                                    <div class="col-md-3 margin-top leads-filter-column">
                                         <div class="form-group">
                                             <button type="button" class="btn btn-primary" id="apply_filter">Apply Filter</button>
 
@@ -146,6 +173,9 @@ $table_data = array(
                                             <button class="btn btn-primary" onclick="window. location. reload();">Reset</button>
                                         </div>
                                     </div>
+                                    </div>
+
+                                    
                                 </div>
 
                             </div>
@@ -391,9 +421,9 @@ $table_data = array(
         }
         $(function() {
             var CustomersServerParams = {};
-            $.each($('._hidden_inputs._filters input'), function() {
-                CustomersServerParams[$(this).attr('name')] = '[name="' + $(this).attr('name') + '"]';
-            });
+            $('#filterArea input, #filterArea select').each(function () {
+    CustomersServerParams[$(this).attr('name')] = `[name="${$(this).attr('name')}"]`;
+});
             tAPI = initDataTable('.table-hostel', admin_url + 'hostel_management/table/georgia_hostel', [0], [0], CustomersServerParams);
 
             // Initialize form validation
@@ -535,4 +565,15 @@ $table_data = array(
         document.getElementById("passport").addEventListener("input", function() {
             this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); // Convert to uppercase & remove invalid characters
         });
+        
+        
+        $('#apply_filter').on('click', function() {
+    show_loader();
+    if (tAPI && tAPI.ajax) {
+        
+        tAPI.ajax.reload();
+        hide_loader();
+    }
+    hide_loader();
+});
     </script>
