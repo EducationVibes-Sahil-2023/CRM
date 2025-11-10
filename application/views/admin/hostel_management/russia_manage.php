@@ -54,7 +54,7 @@ $table_data = array(
                         <?php
 
 
-                        if (is_admin()) {
+                        if (1==1) {
                         ?>
                             <div id="filterArea" class=" hidden-xs">
                                 <div class="row col-md-12">

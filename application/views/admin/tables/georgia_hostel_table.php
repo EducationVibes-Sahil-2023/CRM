@@ -165,7 +165,9 @@ if (!empty($_POST['room_capacity']) && is_array($_POST['room_capacity'])) {
 }
 
 // Group by ID to prevent duplicates
-$group_by = 'GROUP BY latest_quotation.id';
+$group_by = 'GROUP BY tblhostel_infomation.id,latest_quotation.id';
+
+$searchAs =[db_prefix() . 'hostel_infomation.name'];
 
 // Execute DataTables query
 $result = data_tables_init(
