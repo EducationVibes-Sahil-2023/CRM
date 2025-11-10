@@ -121,6 +121,49 @@ if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
     $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
 }
+
+
+
+if (!empty($_POST['acadmic_year'])) {
+    $year = intval($_POST['acadmic_year']);
+    $where[] = " AND ".db_prefix()."hostel_infomation.acadmic_year = $year";
+}
+
+
+
+if (!empty($_POST['year']) && is_array($_POST['year'])) {
+    $years = array_map('intval', $_POST['year']); // safe numeric only
+    $years_list = implode(',', $years);
+    $where[] = " AND latest_quotation.year IN ($years_list)";
+}
+
+
+if (!empty($_POST['hostel_company']) && is_array($_POST['hostel_company'])) {
+    $hostel_company = array_map('intval', $_POST['hostel_company']); // safe numeric only
+    $hostel_company_list = implode(',', $hostel_company);
+    $where[] = " AND latest_quotation.company IN ($hostel_company_list)";
+}
+
+
+if (!empty($_POST['hostel_name']) && is_array($_POST['hostel_name'])) {
+    $hostel_name = array_map('intval', $_POST['hostel_name']); // safe numeric only
+    $hostel_name_list = implode(',', $hostel_name);
+     $where[] = " AND latest_quotation.hostel IN ($hostel_name_list)";
+}
+
+
+
+if (!empty($_POST['start_date']) && is_array($_POST['start_date'])) {
+   $start_date =$_POST['start_date'];
+     $where[] = " AND latest_quotation.start_date ='$start_date'";
+}
+
+if (!empty($_POST['room_capacity']) && is_array($_POST['room_capacity'])) {
+    $room_capacity = array_map('intval', $_POST['room_capacity']); // safe numeric only
+    $room_capacity_list = implode(',', $room_capacity);
+    $where[] = " AND latest_quotation.room_capacity  IN ($room_capacity_list)";
+}
+
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY latest_quotation.id';
 

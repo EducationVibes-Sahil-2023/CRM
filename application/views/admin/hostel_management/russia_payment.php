@@ -173,7 +173,7 @@
             return;
         }
 
-        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value"];
+        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value","Payment Slip","GeneratePDF"];
         const nestedTableId = `nested-applicant-table-${payment_id}`;
 
         // Create child row HTML
@@ -696,7 +696,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>Proof <span class="text-danger">*</span></label>
-                                            <input type="file" name="proof" data-name="proof" class="form-control proof" <?= !empty($applicant_payment_data->pdf) ? '' : 'required' ?>>
+                                            <input type="file" name="proof" data-name="proof" class="form-control proof" <?= !empty($applicant_payment_data->pdf) || $applicant_payment_data->mode == 5 ? '' : 'required' ?>>
                                             <?php
                                             $file_url = !empty($applicant_payment_data->pdf) ? $applicant_payment_data->pdf : "";
                                             if (!empty($file_url)) { ?>
@@ -2452,6 +2452,36 @@ console.log(idd);
                 console.error(error);
                 alert_float("danger", error.responseText || error.statusText || "Something went wrong");
             }
+        }
+        
+        
+          function GeneratePDF(student_id, payment_id) {
+            $.ajax({
+                url: "<?= admin_url('hostel_management/hostelPaymentGenerate') ?>", // your controller method
+                type: "POST",
+                data: {
+                    student_id: student_id,
+                    payment_id: payment_id
+                },
+                beforeSend: function() {
+                    // Optional: show loader
+                    // console.log("Generating PDF...");
+                },
+                success: function(response) {
+                    response = JSON.parse(response);
+
+                    // If backend returns PDF file URL
+                    if (response.pdf_url) {
+                        window.open(response.pdf_url, "_blank"); // Open in new tab
+                    } else {
+                        alert("PDF generated successfully.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error(error);
+                    alert("Something went wrong. Please try again.");
+                }
+            });
         }
     </script>
 <?php } ?>
