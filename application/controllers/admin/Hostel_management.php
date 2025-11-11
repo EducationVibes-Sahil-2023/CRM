@@ -104,13 +104,13 @@ class hostel_management extends AdminController
     function hostel($segment = "", $id = "")
     {
         // ✅ Permission check
-      if (
-    !has_permission('hostel_management', '', 'view')
-    && !has_permission('hostel_management', '', 'view_own')
-    && !has_permission('hostel_management', '', 'edit')
-) {
-    return access_denied('hostel_management');
-}
+        if (
+            !has_permission('hostel_management', '', 'view')
+            && !has_permission('hostel_management', '', 'view_own')
+            && !has_permission('hostel_management', '', 'edit')
+        ) {
+            return access_denied('hostel_management');
+        }
 
 
         if (!$id) {
@@ -201,39 +201,39 @@ class hostel_management extends AdminController
             $quotation_id = $_POST["quotation_id"] ?? null;
 
             // 🔹 Optional: Check if record already exists
-              $checkData = [
-            'hostel_info_id' => $_POST["hostel_info_id"] ?? null,
-            'hostel'         => $_POST["hostel"] ?? null,
-            'company'        => $_POST["company"] ?? null,
-            'start_date'     => $_POST["start_date"] ?? null,
-            'end_date'       => $_POST["end_date"] ?? null,
-            'acadmic_year'   => $_POST["acadmic_year"] ?? null,
-            'year'           => $_POST["year"] ?? null,
-        ];
+            $checkData = [
+                'hostel_info_id' => $_POST["hostel_info_id"] ?? null,
+                'hostel'         => $_POST["hostel"] ?? null,
+                'company'        => $_POST["company"] ?? null,
+                'start_date'     => $_POST["start_date"] ?? null,
+                'end_date'       => $_POST["end_date"] ?? null,
+                'acadmic_year'   => $_POST["acadmic_year"] ?? null,
+                'year'           => $_POST["year"] ?? null,
+            ];
 
-        // ✅ Remove empty null or ""
-        $checkData = array_filter($checkData, function($v) {
-            return $v !== null && $v !== "" && $v !== "0";
-        });
+            // ✅ Remove empty null or ""
+            $checkData = array_filter($checkData, function ($v) {
+                return $v !== null && $v !== "" && $v !== "0";
+            });
 
-        // ✅ Check duplicate only with NON-EMPTY values
-        if (!empty($checkData)) {
-            $this->db->where($checkData);
+            // ✅ Check duplicate only with NON-EMPTY values
+            if (!empty($checkData)) {
+                $this->db->where($checkData);
 
-            if (!empty($quotation_id)) {
-                $this->db->where('id !=', $quotation_id); // ignore same record on update
+                if (!empty($quotation_id)) {
+                    $this->db->where('id !=', $quotation_id); // ignore same record on update
+                }
+
+                $duplicate = $this->db->get(db_prefix() . 'hostel_quotation')->row();
+
+                if ($duplicate) {
+                    echo json_encode([
+                        'resp_code' => 'DUP',
+                        'resp_desc' => 'Duplicate entry exists for selected Hostel, Company, Date or Academic Year.'
+                    ]);
+                    return;
+                }
             }
-
-            $duplicate = $this->db->get(db_prefix() . 'hostel_quotation')->row();
-
-            if ($duplicate) {
-                echo json_encode([
-                    'resp_code' => 'DUP',
-                    'resp_desc' => 'Duplicate entry exists for selected Hostel, Company, Date or Academic Year.'
-                ]);
-                return;
-            }
-        }
 
             if (!empty($quotation_id)) {
                 // 🔸 Update existing record
@@ -509,6 +509,7 @@ class hostel_management extends AdminController
                 'start_date' => $data['startdate'] ?? '',
                 'end_date' => $data['enddate'] ?? '',
                 'acadmic_year' => $data['acadmic_year'] ?? '',
+                'hostel_type' => $data['hostel_type'] ?? '',
             ];
 
             if (!empty($data['hostel_management_id'])) {
@@ -1322,156 +1323,157 @@ class hostel_management extends AdminController
 
         echo json_encode($data);
     }
-    
-    
- function hostelPaymentGenerate()
-{
-    
-//     ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
-    // Check required POST data
-    $student_id   = $this->input->post('student_id');
-    $payment_id   = $this->input->post('payment_id');
-    $payment_type = $this->input->post('payment_type')??6;
 
-    if (empty($student_id) || empty($payment_id)) {
-        echo json_encode(["status" => "error", "message" => "Missing required inputs."]);
-        return;
-    }
 
-    // Load university names
-    $hostels = $this->db->select("university")
-        ->from(db_prefix() . "hostel")
-        ->get()->result_array();
+    function hostelPaymentGenerate()
+    {
 
-    $university_names = array_filter(array_column($hostels, 'university'));
+        //     ini_set('display_errors', 1);
+        // ini_set('display_startup_errors', 1);
+        // error_reporting(E_ALL);
+        // Check required POST data
+        $student_id   = $this->input->post('student_id');
+        $payment_id   = $this->input->post('payment_id');
+        $payment_type = $this->input->post('payment_type') ?? 6;
 
-    // Fetch university info
-    $university_details = $this->s_db->select("
+        if (empty($student_id) || empty($payment_id)) {
+            echo json_encode(["status" => "error", "message" => "Missing required inputs."]);
+            return;
+        }
+
+        // Load university names
+        $hostels = $this->db->select("university")
+            ->from(db_prefix() . "hostel")
+            ->get()->result_array();
+
+        $university_names = array_filter(array_column($hostels, 'university'));
+
+        // Fetch university info
+        $university_details = $this->s_db->select("
             universities.id,
             LOWER(universities.university_name) AS university_name,
             countries.country_name,
             CONCAT('https://educationvibes.in/', logo_image) AS logo_image
         ")
-        ->from("universities")
-        ->join("countries","countries.id = universities.country_id","left")
-        ->join("university_banner","university_banner.university_id = universities.id","left")
-        ->where_in("universities.university_name", $university_names)
-        ->get()
-        ->result_array();
+            ->from("universities")
+            ->join("countries", "countries.id = universities.country_id", "left")
+            ->join("university_banner", "university_banner.university_id = universities.id", "left")
+            ->where_in("universities.university_name", $university_names)
+            ->get()
+            ->result_array();
 
 
-    $data["university_details"] = array_column($university_details, null, "university_name");
+        $data["university_details"] = array_column($university_details, null, "university_name");
 
-    // Fetch hostel payment data
-    $columns = [
-        "hp.id",
-        " JSON_MERGE_PRESERVE(JSON_ARRAY(), 
+        // Fetch hostel payment data
+        $columns = [
+            "hp.id",
+            " JSON_MERGE_PRESERVE(JSON_ARRAY(), 
         JSON_ARRAYAGG(JSON_EXTRACT(hp.fess_infomation, '$'))
     ) AS fess_infomation",
-        "hq.hostel_due",
-        "hp.university_name",
-        "hp.acadmic_year",
-        "hp.hostel_info_id",
-        "hp.pay_date",
-        "hi.name",
-        "hi.passport",
-        "h.name as hostel_name",
-        "h.email",
-        "h.contact_number",
-        "h.hostel_logo",
-        "h.hostel_stamp"
-    ];
+            "hq.hostel_due",
+            "hp.university_name",
+            "hp.acadmic_year",
+            "hp.hostel_info_id",
+            "hp.pay_date",
+            "hi.name",
+            "hi.passport",
+            "h.name as hostel_name",
+            "h.email",
+            "h.contact_number",
+            "h.hostel_logo",
+            "h.hostel_stamp"
+        ];
 
- $query = $this->db->select($columns)
-    ->from(db_prefix().'hostel_payments AS hp')
-    ->join(db_prefix().'hostel_infomation AS hi', 'hi.id = hp.hostel_info_id', 'left')
-    ->join(db_prefix().'hostel_quotation AS hq', 'hq.id = hp.quotation_id', 'left')
-    ->join(db_prefix().'hostel AS h', 'h.id = hi.hostel', 'left')
-    ->group_start()                             // (
-        ->where('hp.id', $payment_id)
-        ->or_group_start()                       // OR (
+        $query = $this->db->select($columns)
+            ->from(db_prefix() . 'hostel_payments AS hp')
+            ->join(db_prefix() . 'hostel_infomation AS hi', 'hi.id = hp.hostel_info_id', 'left')
+            ->join(db_prefix() . 'hostel_quotation AS hq', 'hq.id = hp.quotation_id', 'left')
+            ->join(db_prefix() . 'hostel AS h', 'h.id = hi.hostel', 'left')
+            ->group_start()                             // (
+            ->where('hp.id', $payment_id)
+            ->or_group_start()                       // OR (
             ->where('hp.id <=', $payment_id)
             ->where('hp.quotation_id = hp.quotation_id')    // )
-        ->group_end()
-    ->group_end()                                // )
-    ->where('hp.hostel_info_id', $student_id)
-    ->where('hp.status >', 0)
-    ->order_by('hp.id', 'DESC')
-    ->get();
+            ->group_end()
+            ->group_end()                                // )
+            ->where('hp.hostel_info_id', $student_id)
+            ->where('hp.status >', 0)
+            ->order_by('hp.id', 'DESC')
+            ->get();
 
 
-    $data['hostelData'] = $query->row();
+        $data['hostelData'] = $query->row();
 
-    if (empty($data['hostelData'])) {
-        echo json_encode(["status" => "error", "message" => "No record found."]);
-        return;
-    }
-
-    $data["payment_type"]   = $payment_type;
-    $data["invoice_number"] = str_pad($payment_id, 6, '0', STR_PAD_LEFT);
-
-    // Disable SSL check for fonts/images
-    stream_context_set_default(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
-
-    // Start TCPDF
-    $pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-    $pdf->setPrintHeader(false);
-    $pdf->setPrintFooter(false);
-    $pdf->SetMargins(10, 10, 10, true);
-    $pdf->AddPage();
-    $pdf->setImageScale(1.7);
-
-    // Stamp
-    $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
-    if (!empty($data['hostelData']->hostel_stamp) && file_exists($stampPath)) {
-        $pdf->Image($stampPath, 130, 110, 50, 0, '', '', '', false, 300);
-    }
-
-    // Load view
-    $html = $this->load->view('admin/pdf/hostel_payment_receipt', $data, true);
-    $pdf->writeHTML($html, true, false, true, false, '');
-
-
-    // Upload directory
-    $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $student_id . "/Hostel-Payment/";
-
-    if (!is_dir($upload_dir)) {
-        if (!mkdir($upload_dir, 0777, true)) {
-            echo json_encode(["status" => "error", "message" => "Failed to create directory."]);
+        if (empty($data['hostelData'])) {
+            echo json_encode(["status" => "error", "message" => "No record found."]);
             return;
         }
+
+        $data["payment_type"]   = $payment_type;
+        $data["invoice_number"] = str_pad($payment_id, 6, '0', STR_PAD_LEFT);
+
+        // Disable SSL check for fonts/images
+        stream_context_set_default(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+
+        // Start TCPDF
+        $pdf = new TCPDF('P', PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetMargins(10, 10, 10, true);
+        $pdf->AddPage();
+        $pdf->setImageScale(1.7);
+
+        // Stamp
+        $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
+        if (!empty($data['hostelData']->hostel_stamp) && file_exists($stampPath)) {
+            $pdf->Image($stampPath, 130, 110, 50, 0, '', '', '', false, 300);
+        }
+
+        // Load view
+        $html = $this->load->view('admin/pdf/hostel_payment_receipt', $data, true);
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+
+        // Upload directory
+        $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $student_id . "/Hostel-Payment/";
+
+        if (!is_dir($upload_dir)) {
+            if (!mkdir($upload_dir, 0777, true)) {
+                echo json_encode(["status" => "error", "message" => "Failed to create directory."]);
+                return;
+            }
+        }
+
+        $file_name = strtolower(str_replace(
+            " ",
+            "_",
+            $data["hostelData"]->name . "_" . $data["hostelData"]->university_name . "_" . time() . ".pdf"
+        ));
+
+        $file_path = $upload_dir . $file_name;
+
+        if (file_exists($file_path)) unlink($file_path);
+
+        // Save PDF
+        $pdf->Output($file_path, 'F');
+
+        if (!file_exists($file_path)) {
+            echo json_encode(["status" => "error", "message" => "Failed to generate PDF."]);
+            return;
+        }
+
+        // Database update
+        $update_data = [
+            "pdf" => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $student_id . "/Hostel-Payment/" . $file_name)
+        ];
+
+        $this->db->where("id", $payment_id)
+            ->update(db_prefix() . 'hostel_payments', $update_data);
+
+        echo json_encode([
+            "status" => "success",
+            "pdf_url" => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $student_id . "/Hostel-Payment/" . $file_name)
+        ]);
     }
-
-    $file_name = strtolower(str_replace(" ", "_",
-        $data["hostelData"]->name . "_" . $data["hostelData"]->university_name . "_" . time() . ".pdf"
-    ));
-
-    $file_path = $upload_dir . $file_name;
-
-    if (file_exists($file_path)) unlink($file_path);
-
-    // Save PDF
-    $pdf->Output($file_path, 'F');
-
-    if (!file_exists($file_path)) {
-        echo json_encode(["status" => "error", "message" => "Failed to generate PDF."]);
-        return;
-    }
-
-    // Database update
-    $update_data = [
-        "pdf" => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $student_id . "/Hostel-Payment/" . $file_name)
-    ];
-
-    $this->db->where("id", $payment_id)
-        ->update(db_prefix() . 'hostel_payments', $update_data);
-
-    echo json_encode([
-        "status" => "success",
-        "pdf_url" => base_url(APPLICANT_UPLOAD_DOCUMENT_PATH . $student_id . "/Hostel-Payment/" . $file_name)
-    ]);
-}
-
 }
