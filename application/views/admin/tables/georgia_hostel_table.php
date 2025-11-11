@@ -176,8 +176,11 @@ $result = data_tables_init(
     $sTable,
     $join,
     $where,
-    [db_prefix() . 'hostel_infomation.id'], // Select ID explicitly
-    $group_by
+    [],
+    $group_by,
+    [],
+    1,
+    $searchAs
 );
 
 $output  = $result['output'];
