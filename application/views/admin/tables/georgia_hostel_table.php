@@ -116,6 +116,10 @@ $where[] = " AND " . db_prefix() . "hostel_infomation.status = 1 ";
 // $where[] = " AND latest_quotation.status = 1 ";
 $where[] = " AND " . db_prefix() . 'hostel_infomation.currency > 0 ';
 
+$where[] = " AND " . db_prefix() . "hostel_infomation.hostel = 3 ";
+
+
+
 // $where[] = " AND latest_quotation.status > 0 ";
 if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
