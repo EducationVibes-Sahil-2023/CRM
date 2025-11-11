@@ -113,10 +113,8 @@ $join = [
 // $where = [];
 
 $where[] = " AND " . db_prefix() . "hostel_infomation.status = 1 ";
-// $where[] = " AND latest_quotation.status = 1 ";
-$where[] = " AND " . db_prefix() . 'hostel_infomation.currency > 0 ';
 
-$where[] = " AND " . db_prefix() . "hostel_infomation.hostel = 3 ";
+$where[] = " AND " . db_prefix() . "hostel_infomation.hostel_type = 'georgia' ";
 
 
 
@@ -130,7 +128,7 @@ if (is_admin() || has_permission('hostel_management', '', 'view')) {
 
 if (!empty($_POST['acadmic_year'])) {
     $year = intval($_POST['acadmic_year']);
-    $where[] = " AND ".db_prefix()."hostel_infomation.acadmic_year = $year";
+    $where[] = " AND " . db_prefix() . "hostel_infomation.acadmic_year = $year";
 }
 
 
@@ -152,14 +150,14 @@ if (!empty($_POST['hostel_company']) && is_array($_POST['hostel_company'])) {
 if (!empty($_POST['hostel_name']) && is_array($_POST['hostel_name'])) {
     $hostel_name = array_map('intval', $_POST['hostel_name']); // safe numeric only
     $hostel_name_list = implode(',', $hostel_name);
-     $where[] = " AND latest_quotation.hostel IN ($hostel_name_list)";
+    $where[] = " AND latest_quotation.hostel IN ($hostel_name_list)";
 }
 
 
 
 if (!empty($_POST['start_date']) && is_array($_POST['start_date'])) {
-   $start_date =$_POST['start_date'];
-     $where[] = " AND latest_quotation.start_date ='$start_date'";
+    $start_date = $_POST['start_date'];
+    $where[] = " AND latest_quotation.start_date ='$start_date'";
 }
 
 if (!empty($_POST['room_capacity']) && is_array($_POST['room_capacity'])) {
@@ -171,7 +169,7 @@ if (!empty($_POST['room_capacity']) && is_array($_POST['room_capacity'])) {
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY tblhostel_infomation.id,latest_quotation.id';
 
-$searchAs =[db_prefix() . 'hostel_infomation.name'];
+$searchAs = [db_prefix() . 'hostel_infomation.name'];
 
 // Execute DataTables query
 $result = data_tables_init(

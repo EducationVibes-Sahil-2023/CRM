@@ -173,7 +173,7 @@
             return;
         }
 
-        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value","Payment Slip","GeneratePDF"];
+        const secondaryTableColumns = ["Type", "Amount", "Document Currency Value", "Payment Slip", "GeneratePDF"];
         const nestedTableId = `nested-applicant-table-${payment_id}`;
 
         // Create child row HTML
@@ -752,7 +752,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                                         <div class="col-md-3 form-group">
                                             <label>Location</label>
-                                            <select name="location_id" data-name="location_id" <?= !empty($applicant_payment_data->location_id) ? '' : 'disabled' ?>
+                                            <select name="location_id" data-name="location_id" <?= !empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 5 ? '' : 'disabled' ?>
                                                 data-live-search="true" data-actions-box="true" title="Select Location"
                                                 class="selectpicker electpicker-new form-control location_id">
                                                 <?php foreach ($office_location as $l): ?>
@@ -1755,7 +1755,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 let $row = $(this);
                 let feeId = $row.data("fee-id") || 0;
 
-                let amount = parseFloat($row.find(`input[name='fee_amount[${feeId}]']`).val()) || 0;
+                let amount = parseFloat($row.find(`input[name='fee_amount[${feeId}]']`).val()) || '';
                 let c_currencyId = $row.find(`select[name='amount_currency_type[${feeId}]']`).val();
                 let d_currencyId = $row.find(`select[name='fee_currency[${feeId}]']`).val();
                 let currencyKey = c_currencyId + "_" + d_currencyId;
@@ -1764,18 +1764,21 @@ if (has_permission('hostel_management', '', 'payment')) {
 
                 if (typeof currencyDisabledStatus !== "undefined" && currencyDisabledStatus == 1) {
                     // If disabled, trust user-entered INR value
-                    inrValue = parseFloat($row.find(".fee-inr").val()) || 0;
+                    if (c_currencyId == d_currencyId) {
+                        $row.find(".fee-inr").val(parseFloat(amount).toFixed(2));
+                    }
+                    inrValue = parseFloat($row.find(".fee-inr").val()) || '';
                 } else {
                     // Otherwise, calculate
                     inrValue = amount * rate;
-                    $row.find(".fee-inr").val(inrValue.toFixed(2));
+                    $row.find(".fee-inr").val(parseFloat(inrValue).toFixed(2));
                 }
 
                 totalINR += inrValue;
             });
 
             // Update total INR
-            $paymentpayment.find("input.total_inr_amount").val(totalINR.toFixed(2));
+            $paymentpayment.find("input.total_inr_amount").val(parseFloat(totalINR).toFixed(2));
         }
 
 
@@ -1903,15 +1906,14 @@ if (has_permission('hostel_management', '', 'payment')) {
                 // Refresh read-only and force currency select state where needed
                 $entry.find("select.auto-populated-select").each(function() {
                     let idd = $(this).data("id");
-if(idd == undefined)
-{
-      let nameAttr = $(this).attr('name');
-                    // e.g. "amount_currency_type[5]"
+                    if (idd == undefined) {
+                        let nameAttr = $(this).attr('name');
+                        // e.g. "amount_currency_type[5]"
 
-                     idd = nameAttr.match(/\[(\d+)\]/)[1];
-}
+                        idd = nameAttr.match(/\[(\d+)\]/)[1];
+                    }
 
-console.log(idd);
+                    console.log(idd);
                     // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
                     // $(".input-group-addon.currency-symbol-" + idd).html($);
                     $(this)
@@ -2178,19 +2180,56 @@ console.log(idd);
 
                     // 🔹 Collect split data rows
                     let splitData = [];
+                    let validationFailed = false;
+
                     $payment.find("table.payment_payment_split_table tbody tr").each(function() {
+
+                        let fee_amount = parseFloat($(this).find(".fee-amount").val()) || 0;
+                        let fee_inr_value = parseFloat($(this).find(".fee-inr").val()) || 0;
+
                         let rowData = {
                             fee_id: $(this).data("fee-id") || null,
-                            fee_amount: $(this).find(".fee-amount").val() || 0,
+                            fee_amount: fee_amount,
                             credit_currency: $(this).find("select.currency-selector-amount").val() || '',
                             document_currency: $(this).find("select.document_currency").val() || '',
-                            fee_inr_value: $(this).find(".fee-inr").val() || 0
+                            fee_inr_value: fee_inr_value
                         };
-                        totalAmountCheck_ += parseFloat($(this).find(".fee-amount").val()) || 0;
-                        totalINRCheck_ += parseFloat($(this).find(".fee-inr").val()) || 0;
+
+                        totalAmountCheck_ += fee_amount;
+                        totalINRCheck_ += fee_inr_value;
 
                         splitData.push(rowData);
+
+                        if (fee_amount <= 0) {
+                            hide_loader();
+                            alert_float(
+                                "danger",
+                                $(this).find(".fee-amount").attr("placeholder") +
+                                " credit amount must be greater than 0. Zero is not allowed. Please enter a valid amount or remove this entry."
+                            );
+                            validationFailed = true;
+                            return false; // breaks current .each
+                        }
+
+                        if (fee_amount > 0 && fee_inr_value <= 0) {
+                            hide_loader();
+                            alert_float(
+                                "danger",
+                                $(this).find(".fee-amount").attr("placeholder") +
+                                " document amount must be greater than 0. Please enter a valid conversion amount."
+                            );
+                            validationFailed = true;
+                            return false; // breaks current .each
+                        }
                     });
+
+                    // stop further execution if validation error happened
+                    if (validationFailed) {
+                        error = true;
+                        hide_loader();
+                        return false;
+                    }
+
 
                     paymentData.split_data = splitData;
 
@@ -2212,8 +2251,6 @@ console.log(idd);
                             formData.append("tt_proof_" + index, file);
                         });
                     }
-                    console.log(totalAmountCheck);
-                    console.log(totalAmountCheck_);
                     if (parseFloat(totalAmountCheck) != parseFloat(totalAmountCheck_)) {
                         error = true;
                         hide_loader();
@@ -2453,9 +2490,9 @@ console.log(idd);
                 alert_float("danger", error.responseText || error.statusText || "Something went wrong");
             }
         }
-        
-        
-          function GeneratePDF(student_id, payment_id) {
+
+
+        function GeneratePDF(student_id, payment_id) {
             $.ajax({
                 url: "<?= admin_url('hostel_management/hostelPaymentGenerate') ?>", // your controller method
                 type: "POST",

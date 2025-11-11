@@ -512,6 +512,7 @@ $('#hostel_management_form').on('submit', function(e) {
 
     let formData = new FormData(this);
     formData.append('university_name', $('#university_id option:selected').text() || '');
+    formData.append('hostel_type', 'russia');
 
     show_loader();
 
