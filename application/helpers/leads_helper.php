@@ -8309,7 +8309,7 @@ function get_client_list_fly_batch($university_names = [], $batch_id = "")
 
     if (empty($batch_id)) {
         $sql .= "AND (
-        t.ticket_status = 3 OR t.id IS NULL
+        t.ticket_status > 2 OR t.id IS NULL
     )";
     }
 

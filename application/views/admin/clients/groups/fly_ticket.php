@@ -4,14 +4,18 @@
     .table>tfoot>tr>td {
         text-wrap: auto !important;
     }
+    
+    .table-responsive {
+    overflow-x: unset !important;
+}
 </style>
 
 <?php
 if (!is_postSale() && !is_admin()) {
 ?>
-    <h2 class="text-center">Fly Ticket - Accessible Only for Post-Sale & Admin</h2>
+    <!--<h2 class="text-center">Fly Ticket - Accessible Only for Post-Sale & Admin</h2>-->
 <?php
-    die;
+    // die;
 }
 
 $table_data = array(
@@ -25,6 +29,7 @@ $table_data = array(
     _l('Fly Date'),
     _l('Departure'),
     _l('Status'),
+    _l('Fly Ticket'),
     "Action",
 );
 ?>
@@ -70,7 +75,9 @@ $table_data = array(
                     <div class="form-group col-md-4">
                         <?= render_select('vendor_name', $vendor_list, ['id', 'name'], 'Vendor Name', []); ?>
                     </div>
-
+<div class="form-group col-md-4 hide">
+                        <?= render_input('batch_id', 'Batch id', '', 'text'); ?>
+                    </div>
                     <div class="form-group col-md-4">
                         <?= render_input('ticket_cost', 'Ticket Cost', '', 'number'); ?>
                     </div>
@@ -89,6 +96,10 @@ $table_data = array(
 
                     <div class="form-group col-md-4">
                         <?= render_select('departure_location', $departure_location, ['id', 'name'], 'Departure Location', []); ?>
+                    </div>
+                    
+                     <div class="form-group col-md-4">
+                        <?= render_input('ticket_file', 'Ticket', '', 'file'); ?>
                     </div>
                 </form>
             </div>
@@ -139,12 +150,41 @@ $table_data = array(
 
                 // Populate modal fields
                 $("#ticket_cost").val(decodedData.cost);
+                 $("#batch_id").val(decodedData.batch_id);
                 $("#ticket_id").val(decodedData.data_id);
                 $("#payment_date").val(decodedData.payment_date);
                 $("#payment_mode").val(decodedData.payment_mode_id).trigger("change");
                 $("#fly_date").val(decodedData.fly_date);
                 $("#vendor_name").val(decodedData.vendor_id).trigger("change");
                 $("#departure_location").val(decodedData.departure_location_id).trigger("change");
+                
+if (decodedData.batch_id > 0) {
+    // Disable all input and select fields inside #ticketModal, except file inputs
+    $('#ticketModal')
+        .find('input:not([type="file"]), select')
+        .prop('disabled', true);
+
+    // Refresh Bootstrap selectpickers only inside #ticketModal
+    $('#ticketModal .selectpicker').selectpicker('refresh');
+}
+else
+{
+       // Disable all input and select fields inside #ticketModal, except file inputs
+    $('#ticketModal')
+        .find('input:not([type="file"]), select')
+        .prop('disabled', false);
+
+    // Refresh Bootstrap selectpickers only inside #ticketModal
+    $('#ticketModal .selectpicker').selectpicker('refresh');
+}
+
+                if(decodedData.ticket_file != ''){
+                    
+                $("#ticket_file").after(`<div class="margin-top ticket_file_view ">
+                                                        <i class="fa fa-eye  btn btn-xs btn-primary" onclick="show_media_files('`+decodedData.ticket_file+`');"></i>
+                                                        <i class="fa fa-download  btn btn-xs btn-primary" onclick="download_media_files('`+decodedData.ticket_file+`', '_blank');"></i>
+                                                    </div>`);
+                }
 
                 resolve("Modal data set successfully.");
             } catch (error) {
@@ -159,7 +199,15 @@ $table_data = array(
         $("#ticket-form")[0].reset();
         $("#ticket-form input").val('');
         $("#ticket-form select").val('').trigger("change");
+    // Disable all input and select fields inside #ticketModal, except file inputs
+    $('#ticketModal')
+        .find('input:not([type="file"]), select')
+        .prop('disabled', false);
 
+    // Refresh Bootstrap selectpickers only inside #ticketModal
+    $('#ticketModal .selectpicker').selectpicker('refresh');
+
+$(".ticket_file_view").remove();
         set_modal(data)
             .then((msg) => {
                 console.log(msg);
@@ -181,6 +229,7 @@ $table_data = array(
         let vendor_name = $("#vendor_name").val();
         let departure_location = $("#departure_location").val();
         let id = $("#ticket_id").val();
+        let batch_id = $("#batch_id").val()??0;
 
 
         // Get selected client IDs (you must set this dynamically from your selection logic)
@@ -200,10 +249,16 @@ $table_data = array(
         formData.append("payment_mode", payment_mode);
         formData.append("fly_date", fly_date);
         formData.append("vendor_name", vendor_name);
-        formData.append("manually", 1);
+        formData.append("manually", batch_id>0?2:1);
         formData.append("departure_location", departure_location);
         formData.append("id", id);
+        
+        // ✅ Append file input (ensure there's an <input type="file" id="ticket_file">)
+let fileInput = document.getElementById("ticket_file");
+if (fileInput && fileInput.files.length > 0) {
+  formData.append("ticket_file", fileInput.files[0]); // "documents" should match your PHP $_FILES['documents']
 
+}
         // Append selected client list
         formData.append("client_list", JSON.stringify(client_selected_list));
 

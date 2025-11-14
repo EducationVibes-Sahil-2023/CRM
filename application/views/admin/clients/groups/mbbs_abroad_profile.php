@@ -1494,6 +1494,7 @@ if ($lead_type_status == 2) {
                                                 // Set the required attribute based on the "mandatry" field
                                                 $required = !empty($fees["mandatry"]) ? "required" : "false";
                                                 $mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'>*</small>" : "";
+$disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6?'disabled':'';
 
 
                                             ?>
@@ -1519,10 +1520,10 @@ if ($lead_type_status == 2) {
 
 
                                                         </div>
-                                                        <input type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
+                                                        <input <?=$disabled?> type="text" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8" onkeypress="return acceptText(this,'number')">
                                                         <div class="input-group-addon currency-addon">
 
-                                                            <select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+                                                            <select <?=$disabled?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?=$disabled?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
                                                                 <?php foreach ($get_currencies as $c) {
                                                                 ?>
                                                                     <option

@@ -129,6 +129,26 @@ class Fly_batch extends AdminController
                     "departure_location" => $departure_location,
                     "ticket_status" => 1,
                 ];
+                
+                $documents =  $_FILES["ticket_file"];
+                if (isset($documents) && is_array($documents) && $documents["error"] === UPLOAD_ERR_OK) {
+    
+    // Safely build file name
+    $upload_data = [
+        "name"     => $documents['name'],
+        "type"     => $documents['type'],
+        "tmp_name" => $documents['tmp_name'],
+        "error"    => $documents['error'],
+        "size"     => $documents['size'],
+    ];
+
+    // Upload file and assign it to the ticket data
+     $file_name = upload_applicant_documents($client_id, $upload_data);
+
+    if (!empty($file_name["file_path"])) {
+        $postData_Ticket["ticket_file"] = base_url().$file_name["file_path"];
+    }
+}
 
                 $ticket_result = $this->fly_model->insert_client_ticket($postData_Ticket, 0);
 
@@ -145,9 +165,68 @@ class Fly_batch extends AdminController
                 }
                 return;
             }
+          else if ((int)$manually === 2) {
+
+    // Prepare base data (always include ID for reference)
+    $postData_Ticket = [
+        "id" => $id
+    ];
+
+    // Handle file upload (if provided)
+    if (isset($_FILES["ticket_file"]) && is_array($_FILES["ticket_file"])) {
+        $documents = $_FILES["ticket_file"];
+
+        if ($documents["error"] === UPLOAD_ERR_OK) {
+            $upload_data = [
+                "name"     => $documents['name'],
+                "type"     => $documents['type'],
+                "tmp_name" => $documents['tmp_name'],
+                "error"    => $documents['error'],
+                "size"     => $documents['size'],
+            ];
+
+            $file_name = upload_applicant_documents($client_id, $upload_data);
+
+            if (!empty($file_name["file_path"])) {
+                $file_path = ltrim($file_name["file_path"], '/');
+                $postData_Ticket["ticket_file"] = rtrim(base_url(), '/') . '/' . $file_path;
+            }
+        }
+    }
+
+    // ✅ Remove the ID from update fields (not needed for update)
+    unset($postData_Ticket["id"]);
+
+    // ✅ Check if there is anything to update
+    if (!empty($postData_Ticket)) {
+        $this->db->where('id', $id);
+        $ticket_result = $this->db->update(db_prefix() . 'ticket_data', $postData_Ticket);
+
+        if ($ticket_result) {
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => "Fly Ticket updated successfully.",
+            ]);
+        } else {
+            echo json_encode([
+                'resp_code' => 'ERR',
+                'resp_desc' => "Ticket update failed.",
+            ]);
+        }
+    } else {
+        // 🚫 No data to update
+        echo json_encode([
+            'resp_code' => 'ERR',
+            'resp_desc' => "No data provided to update.",
+        ]);
+    }
+
+    return;
+}
+
 
             // Validate required inputs
-            if (empty($country_name) || empty($batch_name) || empty($client_list)) {
+            if (empty($country_name) || empty($batch_name)) {
                 echo json_encode([
                     'resp_code' => 'ERR',
                     'resp_desc' => "Missing required fields",
