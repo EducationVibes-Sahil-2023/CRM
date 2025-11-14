@@ -238,12 +238,39 @@ if (has_permission('payment_quotation', '', 'create')) {
         "payment_quotation_type" => 1
     ]);
 
+if (!empty($admissionpreferences->primary_country) &&
+    strtolower($admissionpreferences->primary_country) == "georgia") {
+
+    $university_applicant_fees_type = array_values(array_filter(
+        $university_applicant_fees_type,
+        function ($v) {
+            return $v['id'] != 6;
+        }
+    ));
+
+    $university_applicant_fees = array_values(array_filter(
+        $university_applicant_fees,
+        function ($v) {
+            return $v['id'] != 6;
+        }
+    ));
+}
+
+
+
 
     $university_applicant_fees_ = array_column($university_applicant_fees, NULL, 'id');
     $university_applicant_fees_array = university_applicant_fees_details([
         "fd.university_name" => $primary_university,
         "fd.acadmic_year"    => $acadmic_year
     ]);
+
+
+if(!empty($admissionpreferences->primary_country) && strtolower($admissionpreferences->primary_country) == "georgia") {
+    $university_applicant_fees_array = array_filter($university_applicant_fees_array, function($v){
+        return $v['id'] != 6;
+    });
+}
 
     $years_array =  range(1, 6);
     // Get client data with optimized queries

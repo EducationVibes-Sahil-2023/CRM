@@ -24,6 +24,11 @@ $aColumns = [
     db_prefix() . 'ticket_data.ticket_status as ticket_status',
     db_prefix() . 'ticket_status.name as ticket_status_name',
     db_prefix() . 'ticket_status.color as color',
+    db_prefix() . 'ticket_data.ticket_file as ticket_file',
+    db_prefix() . 'ticket_batch.id as batch_id',
+    
+   
+    
 ];
 
 if ($manually == 1) {
@@ -85,9 +90,9 @@ $rResult = $result['rResult'];
 
 if ($manually == 1) {
     foreach ($rResult as $aRow) {
-
+  $encodedData = base64_encode(json_encode($aRow));
         $row = []; // Corrected initialization
-
+            $id = $aRow['data_id'];
         $row[] = !empty($aRow["id"]) ? $aRow["name"] : 'Manually';
         $row[] = $aRow["country_name"];
         $row[] = $aRow["university_name"];
@@ -102,7 +107,7 @@ if ($manually == 1) {
 
         $outputStatus = '<span class="inline-block lead-status-' . $aRow['ticket_status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['ticket_status_name'];
 
-        if ($aRow['ticket_status'] != 3 && empty($aRow['id'])) {
+        if ($aRow['ticket_status'] < 3 && empty($aRow['id'])) {
             $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
             $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['data_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
             $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
@@ -125,18 +130,36 @@ if ($manually == 1) {
 
 
         $row[] = $outputStatus;
+        $ticket_view ="";
+        if(!empty($aRow["ticket_file"]))
+        {
+        $ticket_view = '<i class="fa fa-eye btn btn-xs btn-primary" onclick="show_media_files(\'' . $aRow['ticket_file'] . '\')"></i>';
 
-        if (empty($aRow['auto']) && $manually == 1 && $aRow["ticket_status"] != 3) {
-            $id = $aRow['data_id'];
-            $encodedData = base64_encode(json_encode($aRow));
-            $row[] = "<div>
-             <a class='btn btn-xs btn-danger' href='javascript:void(0)' onclick='delete_ticket($id)'>
+        }
+        $row[] = $ticket_view;
+        
+        if(is_postSale() && is_admin()){
+        // if (empty($aRow['auto']) && $manually == 1 && $aRow["ticket_status"] < 3) {
+        if (empty($aRow['auto']) && $manually == 1 && $aRow["ticket_status"] < 3) {
+
+          
+            
+                
+            
+           $action = "<div> ";
+            if($has_permission_delete == 1)
+            {
+             $action .= "<a class='btn btn-xs btn-danger' href='javascript:void(0)' onclick='delete_ticket($id)'>
                     <i class='fa fa-trash'></i>
-                </a>
-                <a class='btn btn-xs btn-primary' href='javascript:void(0)' onclick='edit_ticket($id, \"" . $encodedData . "\")'>
+                </a>";
+            }
+                
+                 $action .= "<a class='btn btn-xs btn-primary' href='javascript:void(0)' onclick='edit_ticket($id, \"" . $encodedData . "\")'>
                     <i class='fa fa-eye'></i>
                 </a>
             </div>";
+            
+            $row[] = $action;
         } else if (!empty($aRow['auto']) && $manually != 1) {
             $row[] = "<div>
         <a class='btn btn-xs btn-primary' href='" . base_url('admin/fly_batch/create/') . $aRow['id'] . "'>
@@ -146,7 +169,28 @@ if ($manually == 1) {
     </div>
     ";
         } else {
-            $row[] = "";
+            if( $aRow["ticket_status"] < 3 || is_admin()){
+              $action = "<div> ";
+            if($has_permission_delete == 1)
+            {
+             $action .= "<a class='btn btn-xs btn-danger' href='javascript:void(0)' onclick='delete_ticket($id)'>
+                    <i class='fa fa-trash'></i>
+                </a>";
+            }
+                
+                 $action .= "<a class='btn btn-xs btn-primary' href='javascript:void(0)' onclick='edit_ticket($id, \"" . $encodedData . "\")'>
+                    <i class='fa fa-eye'></i>
+                </a>
+            </div>";
+            }
+            
+            $row[] = $action;
+            // $row[] = "";
+        }
+        }
+        else
+        {
+             $row[] = $action;
         }
 
         $output['aaData'][] = $row;

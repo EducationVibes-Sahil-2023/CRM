@@ -1487,7 +1487,7 @@ if (!empty($doc_files['upload_assign'])) {
 													// Set the required attribute based on the "mandatry" field
 													$required = !empty($fees["mandatry"]) ? "required" : "false";
 													$mandatry = !empty($fees["mandatry"]) ? "<small class='text-danger'></small>" : "";
-
+$disabled = (strtolower($admissionpreferences->primary_country) == 'georgia') && $id == 6?'disabled':'';
 
 												?>
 													<div class="col-lg-4 col-md-4 col-6 fees-block-<?= $id ?>">
@@ -1512,10 +1512,10 @@ if (!empty($doc_files['upload_assign'])) {
 
 
 															</div>
-															<input type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
+															<input <?=$disabled?> type="text" onkeypress="return acceptText(this,'number')" name="<?= $field_name ?>" <?= $required ?> class="form-control currency-amount fees_<?= $fees['id'] ?>" placeholder="0.00" id="<?= $field_name ?>" value="<?= $fees["amount"] ?>" size="8">
 															<div class="input-group-addon currency-addon">
 
-																<select name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
+																<select <?=$disabled?> name="<?= $field_name ?>_currency_type" id="<?= $field_name ?>" class="currency-selector <?=$disabled?> currency-selector-<?= $id ?>" onchange="updateSymbol(<?= $id ?>)">
 																	<?php foreach ($get_currencies as $c) {
 																	?>
 																		<option

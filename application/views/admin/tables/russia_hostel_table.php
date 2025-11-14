@@ -125,14 +125,14 @@ if (!empty($_POST['year']) && is_array($_POST['year'])) {
 if (!empty($_POST['hostel_company']) && is_array($_POST['hostel_company'])) {
     $hostel_company = array_map('intval', $_POST['hostel_company']); // safe numeric only
     $hostel_company_list = implode(',', $hostel_company);
-    $where[] = " AND latest_quotation.company IN ($hostel_company_list)";
+    $where[] = " AND " . db_prefix() . "hostel_infomation.company IN ($hostel_company_list)";
 }
 
 
 if (!empty($_POST['hostel_name']) && is_array($_POST['hostel_name'])) {
     $hostel_name = array_map('intval', $_POST['hostel_name']); // safe numeric only
     $hostel_name_list = implode(',', $hostel_name);
-    $where[] = " AND latest_quotation.hostel IN ($hostel_name_list)";
+    $where[] = " AND " . db_prefix() . "hostel_infomation.hostel IN ($hostel_name_list)";
 }
 // Group by ID to prevent duplicates
 $group_by = 'GROUP BY  ' . db_prefix() . 'hostel_infomation.name,latest_quotation.id';

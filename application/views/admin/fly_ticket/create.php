@@ -402,8 +402,8 @@ for ($i = 1; $i <= 10; $i++) {
         }
 
         if (client_selected_list.length === 0) {
-            alert_float("danger", "Please select at least one client.");
-            return;
+            // alert_float("danger", "Please select at least one client.");
+            // return;
         }
 
         // Prepare form data
