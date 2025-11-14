@@ -676,6 +676,10 @@ $reference_name = $this->db
                                  'name' => _l('Connected'),
                                  'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
                               ),
+                               array(
+                                 'name' => _l('First Conn Diff'),
+                                 'th_attrs' => array('class' => 'toggleable', 'id' => 'th-number')
+                              ),
                               array(
                                  'name' => _l('leads_dt_datecreated'),
                                  'th_attrs' => array('class' => 'date-created toggleable', 'id' => 'th-date-created')
