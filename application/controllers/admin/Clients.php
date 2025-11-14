@@ -4524,7 +4524,7 @@ class Clients extends AdminController
                         }
                     }
 
-                    if (isset($orignal_doc_id)) {
+                    if (!empty($orignal_doc_id)) {
                         $batch_update = [];
                         $batch_insert = [];
                         $location = $this->db
