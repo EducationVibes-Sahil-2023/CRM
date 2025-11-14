@@ -380,6 +380,19 @@ if ($this->ci->input->post('office_location_orignal_documents')) {
     $where[] = 'AND ' . db_prefix() . 'orignal_documents_received.location_id IN (' . implode(',', $escaped_ids) . ')';
 }
 
+if ($this->ci->input->post('pcc_stages')) {
+    $pcc_status_list = $this->ci->input->post('pcc_stages');
+
+    if (!is_array($pcc_status_list)) {
+        $pcc_status_list = [$pcc_status_list];
+    }
+
+    // Cast to integers to ensure safety (assuming IDs are numeric)
+    $escaped_ids = array_map('intval', $pcc_status_list);
+
+    $where[] = 'AND ' . db_prefix() . 'clients.pcc_status IN (' . implode(',', $escaped_ids) . ')';
+}
+
 
 if ($this->ci->input->post('lead_type')) {
     array_push($where, 'AND( ' . db_prefix() . 'leads.type IN (' . implode(',', $this->ci->db->escape_str($this->ci->input->post('lead_type'))) . ')  or ' . db_prefix() . 'clients.client_type = 2)');
