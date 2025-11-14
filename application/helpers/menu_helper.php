@@ -421,6 +421,15 @@ function app_init_admin_sidebar_menu_items()
                         'position' => 20,
                 ]);
 
+                if (is_admin()) {
+                        $CI->app_menu->add_sidebar_children_item('reports', [
+                                'slug'     => 'leads-connect',
+                                'name'     => "Leads connect",
+                                'href'     => admin_url('reports/leads_connect'),
+                                'position' => 20,
+                        ]);
+                }
+
                 $CI->app_menu->add_sidebar_children_item('reports', [
                         'slug'     => 'leads-performance-reports',
                         'name'     => 'Leads Performance',

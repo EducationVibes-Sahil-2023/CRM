@@ -2987,4 +2987,14 @@ class Reports extends AdminController
     {
         return $this->db->query('SELECT DISTINCT taxname,taxrate FROM ' . db_prefix() . "item_tax WHERE rel_type='" . $rel_type . "' ORDER BY taxname ASC")->result_array();
     }
+
+    function leads_connect()
+    {
+        $this->load->model('leads_model');
+        $data['staff'] = $this->staff_model->get('', ['active' => 1]);
+        $data['status'] = $this->leads_model->get_status();
+        $data['sources']  = $this->leads_model->get_source();
+        $data['leadType']  = $this->leads_model->get_type();
+        $this->load->view('admin/reports/lead_connect', $data);
+    }
 }

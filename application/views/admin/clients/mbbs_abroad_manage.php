@@ -50,9 +50,10 @@ $courier_type = get_courier_list();
 $payment_mode = get_payment_mode();
 // $fly_batch = fly_batch();
 $fly_batch = $this->db->select("id,name")->from(db_prefix() . 'ticket_batch')
-        ->where('status', 1)->group_by("name")->get()->result_array();
+   ->where('status', 1)->group_by("name")->get()->result_array();
 $fly_departure = fly_departure();
 
+$pcc_stages = get_pcc_stages();
 
 
 $filter_data = filter_country_university_array(2);
@@ -421,6 +422,15 @@ $client_type = [
                               </div>
 
 
+                              <div class="col-md-2  margin-top leads-filter-column">
+                                 <?php
+                                 echo '<div id="leads-filter-neet">';
+                                 echo render_select('pcc_stages[]', $pcc_stages, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "PCC Status", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, "pcc_stages");
+                                 echo '</div>';
+                                 ?>
+                              </div>
+
+
                               <?php if (has_permission('leads', '', 'view') || is_postSale()) { ?>
                                  <div class="col-md-2  margin-top leads-filter-column">
                                     <?php echo render_select('view_assigned[]', $staff, array('staffid', array('firstname', 'lastname')), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Counsellor", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'view_assigned'); ?>
@@ -627,13 +637,13 @@ $client_type = [
                                     <input type="text" class="form-control datepicker" name="courier_date" id="courier_date" placeholder="APS Courier Date" autocomplete="off">
                                  </div>
                               </div>
-                              
+
                               <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-ap-status hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="apostille_received" id="apostille_received" placeholder="APS Receving Date" autocomplete="off">
                                  </div>
                               </div>
-   <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-courior hide">
+                              <div class="col-md-2  margin-top leads-filter-column  filter-hide-default filter-visa-courior hide">
                                  <div class="form-group">
                                     <input type="text" class="form-control datepicker" name="visa_courier_date" id="visa_courier_date" placeholder="Visa Courier Date" autocomplete="off">
                                  </div>
@@ -1321,11 +1331,12 @@ init_tail();
          'fly_date': "[name='fly_date']",
          'university_secondary': "[name='university_secondary[]']",
          'neet_status': "[name='neet_status[]']",
+         'pcc_stages': "[name='pcc_stages[]']",
          'office_location_orignal_documents': "[name='office_location_orignal_documents[]']",
          'courier_date': "[name='courier_date']",
-          'apostille_received': "[name='apostille_received']",
+         'apostille_received': "[name='apostille_received']",
          'visa_courier_date': "[name='visa_courier_date']",
-         
+
       });
 
       applicant_table = initDataTable(
@@ -1514,7 +1525,7 @@ init_tail();
 
       if (apostille_status === true) {
          $('.apostille_status_update').find('input, select').each(function() {
-            var name =  $(this).attr("name");
+            var name = $(this).attr("name");
             var show_name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
@@ -1555,8 +1566,8 @@ init_tail();
 
       if (visa_status === true) {
          $('.visa_status_update').find('input, select').each(function() {
-            var name =  $(this).attr("name");
-             var show_name = $(this).data("name") || $(this).attr("name");
+            var name = $(this).attr("name");
+            var show_name = $(this).data("name") || $(this).attr("name");
             var value = $(this).val();
             var required = $(this).attr('required') || $(this).attr('requried');
             if (name) {
