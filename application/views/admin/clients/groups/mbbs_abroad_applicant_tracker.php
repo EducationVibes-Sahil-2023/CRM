@@ -2411,8 +2411,9 @@ if (completed == 1) {
                     hide_loader();
                     return false;
                 }
-                await check_visa_letter(upload_data);
+                
                 }
+                await check_visa_letter(upload_data);
             }
 
             let secondary_university_remark = $('.secondary_university_remark').first().val();
@@ -2867,16 +2868,7 @@ if (completed == 1) {
                                 
                             </label>
                         </div>
-                            // <div class="col-md-4">
-                            // <label for="leg_payment_date_${leg.id}">Leg Pay Date</label>
-                            // <input 
-                            // <?= $payment_action ?>
-                            // type="date" 
-                            // class="form-control" 
-                            // id="leg_payment_date_${leg.id}" 
-                            // name="leg_payment_date_${leg.id}" 
-                            // value="${leg.leg_payment_date ? leg.leg_payment_date : ''}">
-                            // </div>
+                   
                     </div>
                 `;
                 }
@@ -3014,8 +3006,16 @@ if (completed == 1) {
                     invitation_letter = `<button class="btn-xs btn btn-danger" onclick="delete_documents(5,${tracker_id},${leg.id})"><i class="fa fa-trash"></i></button>`;
                 }
 
-                let file_url_university_payment = leg.invitation_letter ? leg.invitation_letter : "";
-                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
+let file_url_university_payment = "";
+
+if (leg.invitation_letter) {
+  // Check if invitation_letter already includes the base URL
+  if (leg.invitation_letter.startsWith(base_url)) {
+    file_url_university_payment = leg.invitation_letter;
+  } else {
+    file_url_university_payment = base_url + leg.invitation_letter;
+  }
+}                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
                 let card = `
                 <div class="invitation-item card shadow-sm p-3 mb-3">
                     <h4 class="university-name">${leg.university_name}</h4>

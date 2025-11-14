@@ -1210,7 +1210,7 @@ LEFT JOIN (
            td_sum.total_ticket_cost
     FROM " . db_prefix() . "ticket_data td_latest
     INNER JOIN (
-        SELECT client_id, SUM(ticket_cost) AS total_ticket_cost
+        SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
         FROM " . db_prefix() . "ticket_data
         GROUP BY client_id
     ) td_sum ON td_latest.client_id = td_sum.client_id
@@ -1389,7 +1389,7 @@ INNER JOIN (
            td_sum.total_ticket_cost
     FROM " . db_prefix() . "ticket_data td_latest
     INNER JOIN (
-        SELECT client_id, SUM(ticket_cost) AS total_ticket_cost
+        SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
         FROM " . db_prefix() . "ticket_data
         GROUP BY client_id
     ) td_sum ON td_latest.client_id = td_sum.client_id
@@ -1737,7 +1737,7 @@ LEFT JOIN " . db_prefix() . "admission_program ON " . db_prefix() . "admission_p
 LEFT JOIN (SELECT client_id, shortlisting_id, SUM(payment_amount) AS total_payment_amount, MAX(id) AS latest_deposite_id, MAX(date_of_deposite) AS latest_deposite_date, MAX(currency_type) AS currency_type FROM " . db_prefix() . "applicntion_pre_deposite GROUP BY client_id, shortlisting_id) AS deposit_summary ON deposit_summary.client_id = " . db_prefix() . "clients.userid
 LEFT JOIN " . db_prefix() . "offer_condition ON " . db_prefix() . "offer_condition.client_id = " . db_prefix() . "clients.userid AND " . db_prefix() . "offer_condition.university_id = " . db_prefix() . "client_university_shortlisting.university_id
 LEFT JOIN " . db_prefix() . "university_offer_letter ON " . db_prefix() . "university_offer_letter.client_id = " . db_prefix() . "clients.userid
-LEFT JOIN (SELECT td1.*, td2.total_cost FROM " . db_prefix() . "ticket_data td1 INNER JOIN (SELECT MAX(id) AS max_id, SUM(ticket_cost) total_cost FROM " . db_prefix() . "ticket_data GROUP BY client_id) td2 ON td1.id = td2.max_id) td ON td.client_id = " . db_prefix() . "clients.userid
+LEFT JOIN (SELECT td1.*, td2.total_cost FROM " . db_prefix() . "ticket_data td1 INNER JOIN (SELECT MAX(id) AS max_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) total_cost FROM " . db_prefix() . "ticket_data GROUP BY client_id) td2 ON td1.id = td2.max_id) td ON td.client_id = " . db_prefix() . "clients.userid
 LEFT JOIN " . db_prefix() . "ticket_status ts ON ts.id = td.ticket_status
 LEFT JOIN " . db_prefix() . "departure_location dl ON dl.id = td.departure_location
 LEFT JOIN " . db_prefix() . "ticket_batch tb ON tb.id = td.batch_id
@@ -2443,7 +2443,7 @@ function payment_quotations($id = '')
         td_sum.total_ticket_cost
         FROM " . db_prefix() . "ticket_data td_latest
         INNER JOIN (
-        SELECT client_id, SUM(ticket_cost) AS total_ticket_cost
+        SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
         FROM " . db_prefix() . "ticket_data
         GROUP BY client_id
         ) td_sum ON td_latest.client_id = td_sum.client_id
@@ -2549,6 +2549,10 @@ function paymentDuesHostel()
         "University Name",
         "Hostel Type",
         "Hostel Name",
+        // "Payment Mode",
+        // "Payment Type",
+        "Trans. Type",
+        "Vendor Name",
         "Remark"
     ];
     
@@ -2612,7 +2616,7 @@ foreach ($feesList as $fees){
     hq.pdf,
     m.name AS mode,
     hp1.vendor_id,
-    IF(hp1.vendor_id > 0, hp1.vendor_name, NULL) AS vendor_name,
+    IF(hp1.vendor_id > 0,vl.name,hp1.vendor_name) AS vendor_name,
     hp1.type,
     hp1.pay_date,
     hp1.pay_date,
@@ -2651,7 +2655,7 @@ LEFT JOIN tblapplicant_fees f
 LEFT JOIN tbltransaction_type tpt 
     ON tpt.id = hp1.transaction_type
     LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = hp1.location_id
-
+LEFT JOIN " . db_prefix() . "quotation_vendor vl ON vl.id = hp1.vendor_id 
 -- ✅ LEFT JOIN LATERAL keeps rows even when fess_infomation is NULL
 LEFT JOIN LATERAL (
     SELECT fee

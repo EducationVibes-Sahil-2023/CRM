@@ -15,7 +15,7 @@ $company_dues_fees_array = $this->db
     ->result_array();
 
 $inrSymbol = $currency_lookup[3]["name"] ?? 'INR';
-$ticketingLabel ="Remaining service charge for ticketing";
+$ticketingLabel ="Remaining service charge for Visa/ticketing";
 // Decode JSON safely
 $university_dues           = json_decode($applicant_quotation_data->university_due ?? '{}');
 $university_pay_information = $university_dues->main->pay_info ?? [];
@@ -274,23 +274,59 @@ $requiredDocuments = [
 
 <br>
 <?php foreach ($companyDues as $key => $c_Dues): ?>
-        <h4 class="underline"><?=$key==0?'Education Vibes Professional Fees:':'Amount to be paid for ticketing:'?></h4>
+       <!-- <h4 class="underline"><?=$key==0?'Education Vibes Professional Fees:':'Amount to be paid for Visa/ticketing:'?></h4>-->
+       <!-- <div class="bank-information">-->
+       <!--     <?php foreach ($serviceCharges[$key] as $label => $amount):?>-->
+       <!--         <p><strong><?= $label ?></strong>: <?=isset($amount["other"])?"(".$amount["other"].") = ":''?> <?=$inrSymbol?> <?= htmlspecialchars(isset($amount["inr"])?$amount["inr"]:$amount) ?></p>-->
+       <!--     <?php endforeach; ?>-->
+       <!-- </div>-->
+
+       <!-- <p>Please pay the outstanding balance to the following account to proceed for the ticketing processing.-->
+       <!-- </p>-->
+
+
+       <!-- <div class="bank-information">-->
+       <!--     <?php foreach ($c_Dues as $key => $value): ?>-->
+       <!--         <p><strong><?= $key ?></strong>: <?= htmlspecialchars($value) ?></p>-->
+       <!--     <?php endforeach; ?>-->
+       <!-- </div>-->
+       <!--<?php endforeach; ?> -->
+       
+       <?php foreach ($companyDues as $key => $c_Dues): ?>
+
+<?php
+// Check if all INR values are 0
+$allZero = true;
+
+foreach ($serviceCharges[$key] as $amount) {
+    // if INR exists and > 0, or amount itself > 0
+    $inrValue = isset($amount["inr"]) ? $amount["inr"] : (is_numeric($amount) ? $amount : 0);
+    if ($inrValue > 0) {
+        $allZero = false;
+        break;
+    }
+}
+
+if ($allZero) {
+    continue;
+}
+?>
+    <h4 class="underline"><?=$key==0?'Education Vibes Professional Fees:':'Amount to be paid for Visa/ticketing:'?></h4>
         <div class="bank-information">
             <?php foreach ($serviceCharges[$key] as $label => $amount):?>
                 <p><strong><?= $label ?></strong>: <?=isset($amount["other"])?"(".$amount["other"].") = ":''?> <?=$inrSymbol?> <?= htmlspecialchars(isset($amount["inr"])?$amount["inr"]:$amount) ?></p>
             <?php endforeach; ?>
         </div>
-
-        <p>Please pay the outstanding balance to the following account to proceed for the ticketing processing.
+        <p>Please pay the outstanding balance to the following account to proceed for the Visa/ticketing processing.
         </p>
-
-
         <div class="bank-information">
             <?php foreach ($c_Dues as $key => $value): ?>
                 <p><strong><?= $key ?></strong>: <?= htmlspecialchars($value) ?></p>
             <?php endforeach; ?>
         </div>
-       <?php endforeach; ?> 
+
+<?php endforeach; ?>
+
 
 
 

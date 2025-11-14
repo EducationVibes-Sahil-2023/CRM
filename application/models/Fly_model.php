@@ -112,7 +112,7 @@ class Fly_model extends App_Model
 
 
             // Deny if another active ticket exists (status == 3), and we're not updating the same one
-            if ($ticket && $ticket->ticket_status != 3 && (empty($data["id"]) &&  $ticket->id != $data["id"])) {
+            if ($ticket && $ticket->ticket_status < 3 && (empty($data["id"]) &&  $ticket->id != $data["id"])) {
                 $data = [
                     "status" => false,
                     "message" => "Cannot create ticket. Client " . get_client_name($client_id) . " already has an active ticket."
@@ -129,9 +129,9 @@ class Fly_model extends App_Model
     public function insert_client_ticket($client_exam_data, $auto = 0)
     {
         try {
-            if (empty($client_exam_data["client_ids"]) || !is_array($client_exam_data["client_ids"])) {
-                return ["status" => false, "message" => "No clients provided."];
-            }
+            // if (empty($client_exam_data["client_ids"]) || !is_array($client_exam_data["client_ids"])) {
+            //     return ["status" => false, "message" => "No clients provided."];
+            // }
 
             // Validate invitation letters
             // $check_invitation = check_invitation_letter($client_exam_data["client_ids"]);
@@ -175,8 +175,13 @@ class Fly_model extends App_Model
                     "status"             => 1,
                     "ticket_status"      => 2,
                     "country_name"       => $get_primary_university[$client_id]["primary_country"] ?? '',
-                    "university_name"    => $get_primary_university[$client_id]["primary_university"] ?? '',
+                    "university_name"    => $get_primary_university[$client_id]["primary_university"] ?? ''
+                    
                 ];
+                if(!empty($client_exam_data["ticket_file"]))
+                {
+                  $data["ticket_file"] = $client_exam_data["ticket_file"]; 
+                }
 
                 if (!empty($client_exam_data["batch_id"])) {
                     $data["batch_id"] = $client_exam_data["batch_id"];
