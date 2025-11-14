@@ -67,57 +67,34 @@ if (!empty($this->ci->input->post('up_to_date'))) {
 
     $where_c  .= " AND {$call_table}.staffid = {$sTable}.assigned ";
 
-    // $sTable = $call_table;
 
-//     $join[] = " JOIN " . db_prefix() . "leads ON (
-//   {$call_table}.contact IN (
-//         REPLACE(TRIM(REPLACE(phonenumber, '+91', '')), ' ', ''),
-//         REPLACE(TRIM(REPLACE(alternative_phonenumber, '+91', '')), ' ', '')
-//     )
-//     AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c
-// )";
+    $join[] = "JOIN " . db_prefix() . "leads ON (
+        (
+        tblleads.phonenumber  = {$call_table}.contact
+        )
+        OR
+        (
+        tblleads.alternative_phonenumber != '' AND
+        tblleads.alternative_phonenumber = {$call_table}.contact
+        )
+        )
+        AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
+        AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' $where_c";
 
-// $join[] = "JOIN " . db_prefix() . "leads ON (
-//     (
-//         tblleads.phonenumber IS NOT NULL
-//         AND tblleads.phonenumber != ''
-//         AND REPLACE(TRIM(REPLACE(tblleads.phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
-//     )
-//     OR
-//     (
-//         tblleads.alternative_phonenumber IS NOT NULL
-//         AND tblleads.alternative_phonenumber != ''
-//         AND REPLACE(TRIM(REPLACE(tblleads.alternative_phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
-//     )
-// )
-// AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' $where_c";
-
-
-//     $where[] = " AND DATE({$call_table}.adjusted_call_start) BETWEEN '{$up_from_date}' AND '{$up_to_date}' ";
-
-$join[] = "JOIN " . db_prefix() . "leads ON (
-    (
-        tblleads.phonenumber IS NOT NULL
-        AND tblleads.phonenumber != ''
-        AND REPLACE(TRIM(REPLACE(tblleads.phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
-    )
-    OR
-    (
-        tblleads.alternative_phonenumber IS NOT NULL
-        AND tblleads.alternative_phonenumber != ''
-        AND REPLACE(TRIM(REPLACE(tblleads.alternative_phonenumber, '+91', '')), ' ', '') = {$call_table}.contact
-    )
-)
-AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
-AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' $where_c";
-
-$where[] = " AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
-             AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' ";
+    $where[] = " AND {$call_table}.adjusted_call_start >= '{$up_from_date} 00:00:00'
+        AND {$call_table}.adjusted_call_start <= '{$up_to_date} 23:59:59' ";
 
 
     if (!empty($this->ci->input->post('assigned'))) {
         $where[] = "AND " . $call_table . ".staffid IN (" . implode(',', $this->ci->db->escape_str($this->ci->input->post('assigned'))) . ")";
     }
+} else {
+
+    $join[] = "LEFT JOIN " . $call_table . " ON (
+        (
+        tblleads.phonenumber  = {$call_table}.contact 
+        )  or (tblleads.alternative_phonenumber!='' AND tblleads.phonenumber = {$call_table}.contact)
+        )  and ({$call_table}.call_start + 19800) > UNIX_TIMESTAMP(tblleads.dateassigned) AND {$call_table}.staffid = tblleads.assigned";
 }
 
 
@@ -344,7 +321,103 @@ $additionalColumns = hooks()->apply_filters('leads_table_additional_columns_sql'
     'zip',
     '(SELECT ' . db_prefix() . 'notes.dateadded FROM ' . db_prefix() . 'notes  WHERE rel_id = ' . $sTable . '.id and rel_type="lead" ORDER by id DESC LIMIT 1) as notesdate',
     "{$sTable}.lastupdate_date as lastupdate_date",
+//     "IF (
+//     MIN(tblcalls_activity_logs.call_start + 19800) IS NOT NULL
+//     AND tblleads.dateassigned IS NOT NULL
+//     AND tblcalls_activity_logs.staffid = tblleads.assigned
+//     AND MIN(tblcalls_activity_logs.call_start + 19800) > UNIX_TIMESTAMP(tblleads.dateassigned),
+//     CONCAT(
+//         FLOOR(
+//             TIMESTAMPDIFF(
+//                 SECOND,
+//                 tblleads.dateassigned,
+//                 FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
+//             ) / 86400
+//         ), ':',
+        
+//         LPAD(
+//             FLOOR(
+//                 (TIMESTAMPDIFF(
+//                     SECOND,
+//                     tblleads.dateassigned,
+//                     FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
+//                 ) % 86400) / 3600
+//             ), 
+//             2, '0'
+//         ), ':',
+        
+//         LPAD(
+//             FLOOR(
+//                 (TIMESTAMPDIFF(
+//                     SECOND,
+//                     tblleads.dateassigned,
+//                     FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
+//                 ) % 3600) / 60
+//             ), 
+//             2, '0'
+//         ), ':',
+        
+//         LPAD(
+//             TIMESTAMPDIFF(
+//                 SECOND,
+//                 tblleads.dateassigned,
+//                 FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
+//             ) % 60,
+//             2, '0'
+//         ), ''
+//     ),
 
+//     ''
+// ) AS first_connect_difference"
+"CASE 
+    /* CASE 1: No call + source = 1 → return 10 seconds */
+    WHEN MIN(tblcalls_activity_logs.call_start + 19800) IS NULL
+         AND tblcalls_activity_logs.calls_source = 1
+    THEN '0 Day 00:00:10'
+
+    /* CASE 2: No call and source ≠ 1 → return empty */
+    WHEN MIN(tblcalls_activity_logs.call_start + 19800) IS NULL
+    THEN ''
+    ELSE
+        (
+            SELECT 
+                CONCAT(
+                    FLOOR(diff_sec / 86400), ' Day ',
+                    LPAD(FLOOR((diff_sec % 86400) / 3600), 2, '0'), ':',
+                    LPAD(FLOOR((diff_sec % 3600) / 60), 2, '0'), ':',
+                    LPAD(diff_sec % 60, 2, '0')
+                )
+            FROM (
+                SELECT 
+                    TIMESTAMPDIFF(
+                        SECOND,
+                        
+                        /* EFFECTIVE START */
+                        CASE 
+                            WHEN DAYNAME(tblleads.dateassigned) = 'Sunday' 
+                                THEN CONCAT(DATE_ADD(DATE(tblleads.dateassigned), INTERVAL 1 DAY), ' 10:00:00')
+                            WHEN TIME(tblleads.dateassigned) > '20:00:00'
+                                THEN CONCAT(DATE_ADD(DATE(tblleads.dateassigned), INTERVAL 1 DAY), ' 10:00:00')
+                            WHEN TIME(tblleads.dateassigned) < '10:00:00'
+                                THEN CONCAT(DATE(tblleads.dateassigned), ' 10:00:00')
+                            ELSE tblleads.dateassigned
+                        END,
+
+                        /* EFFECTIVE CALL */
+                        CASE 
+                            WHEN DAYNAME(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))) = 'Sunday'
+                                THEN CONCAT(DATE_ADD(DATE(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))), INTERVAL 1 DAY), ' 10:00:00')
+                            WHEN TIME(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))) < '10:00:00'
+                                THEN CONCAT(DATE(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))), ' 10:00:00')
+                            WHEN TIME(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))) > '20:00:00'
+                                THEN CONCAT(DATE_ADD(DATE(FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))), INTERVAL 1 DAY), ' 10:00:00')
+                            ELSE FROM_UNIXTIME(MIN(tblcalls_activity_logs.call_start + 19800))
+                        END
+                    ) AS diff_sec
+            ) AS t
+        )
+END AS first_connect_difference
+"
 ]);
 
 
@@ -473,7 +546,9 @@ foreach ($rResult as $aRow) {
     //     }
     // }
     $row[] =  ($aRow['lastcontact_date'] == '0000-00-00') ? '' : $aRow['lastcontact_date'];
+    $row[] = $aRow['first_connect_difference'];
     $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
+    
 
 
     // $row[] = date("Y-m-d", strtotime($aRow['dateadded']));
