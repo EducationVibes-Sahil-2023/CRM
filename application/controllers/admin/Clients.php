@@ -4519,11 +4519,12 @@ class Clients extends AdminController
                     if (!empty($pcc_status)) {
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("pcc_status" => $pcc_status));
-                        if (!empty($media_upload_data["doc_type"])) {
-                            $this->media_upload($media_upload_data, $_FILES);
-                        }
+                        
                     }
 
+if (!empty($media_upload_data["doc_type"])) {
+                            $this->media_upload($media_upload_data, $_FILES);
+                        }
                     if (!empty($orignal_doc_id)) {
                         $batch_update = [];
                         $batch_insert = [];
