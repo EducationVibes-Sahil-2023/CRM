@@ -2503,6 +2503,8 @@ function payment_quotations($id = '')
 function paymentDuesHostel()
 {
     
+    
+$country = !empty($_GET['country'])?$_GET['country']:'';
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
     // fetch fees with lead_type as well
@@ -2628,6 +2630,7 @@ foreach ($feesList as $fees){
     dl.name as location,
     hp1.ex_currency,
     hp1.amount,
+    ho.hostel_type as country_hostel_type,
 
     TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date)
         + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference,
@@ -2656,7 +2659,7 @@ LEFT JOIN tbltransaction_type tpt
     ON tpt.id = hp1.transaction_type
     LEFT JOIN " . db_prefix() . "office_location dl ON dl.id = hp1.location_id
 LEFT JOIN " . db_prefix() . "quotation_vendor vl ON vl.id = hp1.vendor_id 
--- ✅ LEFT JOIN LATERAL keeps rows even when fess_infomation is NULL
+
 LEFT JOIN LATERAL (
     SELECT fee
     FROM JSON_TABLE(
@@ -2665,11 +2668,14 @@ LEFT JOIN LATERAL (
     ) AS jt
 ) AS fees_table ON TRUE
 
-WHERE ho.status = 1
-GROUP BY ho.id;
-";
+WHERE ho.status = 1";
 
+if(!empty($country))
+{
+    $sql .=" AND ho.hostel_type = '${country}' ";
 
+}
+ $sql .=" GROUP BY hp1.id ORDER BY ho.id  ASC";
 
     $arrayData = $CI->db->query($sql)->result_array();
     

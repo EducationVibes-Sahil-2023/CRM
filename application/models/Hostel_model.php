@@ -197,7 +197,7 @@ class Hostel_model extends App_Model
                     if (!$feeId) continue;
 
                     $inrValue = isset($fee["inr_value"]) ? (float)$fee["inr_value"] : 0;
-
+                    $inrValue = $inrValue * ($quotation["month_difference"]??1);
                     if (!isset($quotationAmountData[$quotationId][$feeId])) {
                         $quotationAmountData[$quotationId][$feeId] = 0;
                     }

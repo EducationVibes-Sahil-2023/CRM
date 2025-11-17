@@ -145,12 +145,12 @@ if (!empty($_POST['payment_id'])) {
             $row[] = '';
         }
         $action = '';
-        if (is_admin() || has_permission('payment_quotation', '', 'edit')) {
+        // if (is_admin() || has_permission('payment_quotation', '', 'edit')) {
             $action .= '
                 <a class="btn btn-xs btn-sm btn-primary" href="?tab=payment&payment_id=' . (int)$aRow['id'] . '">
                     <i class="fa fa-pencil"></i>
                 </a>';
-        }
+        // }
 
         if (is_admin() || has_permission('hostel_quotation_delete', '', 'delete')) {
             $action .= '

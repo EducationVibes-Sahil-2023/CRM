@@ -87,11 +87,11 @@ $table_data = array(
                         <?php echo render_select('university', $russia_univercitysity, array('university_name', 'university_name'), 'University Name', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Address", 'data-actions-box' => true), array(), 'no-mbot', '', false, 'university'); ?>
                     </div>
                     <div class="col-md-2">
-                        <?= render_input('hostel_logo', 'Hostel Logo', '', 'file', ["placeholder" => "Enter Hostel Name", "required" => true]); ?>
+                        <?= render_input('hostel_logo', 'Hostel Logo', '', 'file', ["placeholder" => "Enter Hostel Name"]); ?>
                     </div>
 
                     <div class="col-md-2">
-                        <?= render_input('hostel_stamp', 'Hostel Stamp', '', 'file', ["placeholder" => "Enter Hostel Name", "required" => true]); ?>
+                        <?= render_input('hostel_stamp', 'Hostel Stamp', '', 'file', ["placeholder" => "Enter Hostel Name"]); ?>
                     </div>
                 </div>
                 <h3>Company Information</h3>
@@ -239,7 +239,7 @@ $table_data = array(
                 // intermediary_bank: 'required',
                 // intermediary_swift_code: 'required',
 
-                footer_note: 'required'
+                // footer_note: 'required'
             });
 
 
