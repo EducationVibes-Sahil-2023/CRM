@@ -119,15 +119,27 @@ class Quotation_model extends App_Model
         }
     }
 
-    public function payment_mode_vendors()
+    public function payment_mode_vendors($hostel_status = 0)
     {
         try {
+            
+            if(!empty($hostel_status))
+            {
+                 $vendors = $this->db
+                ->select("*")
+                ->from(db_prefix() . "quotation_vendor")
+                ->where("hostel_status", 1) // ✅ fixed syntax ("status" = 1 ❌ → correct is ("status", 1))
+                ->get()
+                ->result_array();
+            }
+            else{
             $vendors = $this->db
                 ->select("*")
                 ->from(db_prefix() . "quotation_vendor")
                 ->where("status", 1) // ✅ fixed syntax ("status" = 1 ❌ → correct is ("status", 1))
                 ->get()
                 ->result_array();
+            }
 
             return $vendors ?: [];
         } catch (Exception $e) {

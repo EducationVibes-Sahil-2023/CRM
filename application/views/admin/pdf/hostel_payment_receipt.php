@@ -119,11 +119,15 @@ function formatCurrencyText($amountString) {
             <tbody>
                 <tr>
                     <td class="company-info">
+                        <?php if(!empty($hostelData->hostel_logo)){ ?>
                         <img style="height:80px;" src="<?= base_url($hostelData->hostel_logo) ?>">
+                        <?php } ?>
                     </td>
                     <td></td>
                     <td style="text-align:right;">
+                         <?php if(!empty($uniData["logo_image"])){ ?>
                         <img style="height:100px;" src="<?= $uniData["logo_image"]?>">
+                         <?php } ?>
                     </td>
                 </tr>
                 <tr>
@@ -192,8 +196,8 @@ function formatCurrencyText($amountString) {
                 <tr class="bordered-row">
                     <td colspan="2" style="border-left: 3px solid black;">
                         <span class="text-blue">Balance Details</span><br>
-                        Total Service Charge<br>
-                        Total Service Charged Received till date<br>
+                        Total Indian Mess Charge<br>
+                        Total Indian Mess Charge Received till date<br>
                         <span class="text-pink">Balance Due</span>
                     </td>
                     <td style="text-align: right; border-right: 3px solid black;">
@@ -207,8 +211,8 @@ function formatCurrencyText($amountString) {
                 <tr>
                     <td colspan="3" style="text-align: center; font-size:xx-small;">
                         <br><br>
-                        *This is a computer generated Receipt and doesn't require signature or any company seal. If you have any questions about this invoice, please contact on<br>
-                        <?= !empty($hostelData->email) ? ucwords($hostelData->email) : '' ?> or Call <?= !empty($hostelData->contact_number) ? ucwords($hostelData->contact_number) : '' ?>.<br>
+                        *This is a computer generated Receipt and doesn't require signature. If you have any questions about this invoice, please contact on<br>
+                        <?= !empty($hostelData->email) ? strtolower($hostelData->email) : '' ?> or Call <?= !empty($hostelData->contact_number) ? ucwords($hostelData->contact_number) : '' ?>.<br>
                     </td>
                 </tr>
 

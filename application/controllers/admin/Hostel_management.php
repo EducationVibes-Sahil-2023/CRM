@@ -146,7 +146,7 @@ class hostel_management extends AdminController
             $data["view_page"] = 'profile';
         } else if ($_GET['tab'] == 'quotation') {
 
-            if (!has_permission('hostel_management', '', 'quotation')) {
+            if (!has_permission('hostel_management', '', 'quotation_view') && !has_permission('hostel_management', '', 'quotation')) {
                 return access_denied('hostel_management'); // Stop execution immediately
             }
 
@@ -154,7 +154,7 @@ class hostel_management extends AdminController
             $data["quotation_id"] = $_GET["quotation_id"] ?? '';
         } else if ($_GET['tab'] == 'payment') {
 
-            if (!has_permission('hostel_management', '', 'payment')) {
+            if (!has_permission('hostel_management', '', 'payment_view') && !has_permission('hostel_management', '', 'payment')) {
                 return access_denied('hostel_management'); // Stop execution immediately
             }
 
@@ -209,6 +209,7 @@ class hostel_management extends AdminController
                 'end_date'       => $_POST["end_date"] ?? null,
                 'acadmic_year'   => $_POST["acadmic_year"] ?? null,
                 'year'           => $_POST["year"] ?? null,
+                'status'           => 1,
             ];
 
             // ✅ Remove empty null or ""
@@ -234,6 +235,41 @@ class hostel_management extends AdminController
                     return;
                 }
             }
+            
+            
+            // ✅ Check for overlapping time periods
+if (!empty($_POST["start_date"]) && !empty($_POST["end_date"]) && !empty($_POST["hostel_info_id"]) && !empty($_POST["company"])) {
+    $start_date = $_POST["start_date"];
+    $end_date = $_POST["end_date"];
+    $hostel_info_id = $_POST["hostel_info_id"];
+    $company = $_POST["company"];
+    
+    $this->db->where('hostel_info_id', $hostel_info_id);
+    $this->db->where('company', $company);
+    $this->db->where('status', 1);
+    
+    // Check for overlapping time periods
+    $this->db->where("(
+        (start_date <= '" . $end_date . "' AND end_date >= '" . $start_date . "') OR
+        (start_date BETWEEN '" . $start_date . "' AND '" . $end_date . "') OR
+        (end_date BETWEEN '" . $start_date . "' AND '" . $end_date . "') OR
+        (start_date <= '" . $start_date . "' AND end_date >= '" . $end_date . "')
+    )");
+
+    if (!empty($quotation_id)) {
+        $this->db->where('id !=', $quotation_id);
+    }
+
+    $overlapping = $this->db->get(db_prefix() . 'hostel_quotation')->row();
+
+    if ($overlapping) {
+        echo json_encode([
+            'resp_code' => 'OVERLAP',
+            'resp_desc' => 'The selected time period overlaps with an existing quotation for the same hostel and company.'
+        ]);
+        return;
+    }
+}
 
             if (!empty($quotation_id)) {
                 // 🔸 Update existing record
@@ -574,6 +610,10 @@ class hostel_management extends AdminController
 
     function quotationGenerate()
     {
+        
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
         if (!has_permission('hostel_management', '', 'hostel_invoice_generate')) {
             return access_denied('hostel_management'); // Stop execution if no permission
         }
@@ -616,8 +656,11 @@ class hostel_management extends AdminController
     END) AS service_name",
 
             // ✅ Month difference
-            'TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date) 
-        + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference'
+         ' GREATEST(
+    1,
+    TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date) 
+    + (DAY(hq.end_date) >= DAY(hq.start_date))
+) AS month_difference '
         ])
             ->from(db_prefix() . 'hostel_quotation AS hq')
             ->join(db_prefix() . 'hostel_infomation AS hi', 'hi.id = hq.hostel_info_id', 'left')
@@ -661,6 +704,8 @@ class hostel_management extends AdminController
 
         // Add single page
         $pdf->AddPage();
+        
+        if(!empty($data['hostelData']->hostel_stamp)){
 
         $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
 
@@ -676,6 +721,7 @@ class hostel_management extends AdminController
 
             // Place the stamp at absolute position
             $pdf->Image($stampPath, $x, $y, $width, 0, '', '', '', false, 300);
+        }
         }
 
         // Optional: Custom fonts
@@ -711,12 +757,14 @@ class hostel_management extends AdminController
         //     true      // autopadding
         // );
         $pdf->writeHTML($html, true, false, true, false, '');
+        
 
         // ✅ Output PDF to browser (single page)
         // $pdf->Output('hostel_invoice_' . $data['hostelData']->id . '.pdf', 'I');
 
         // die;
         $upload_dir = FCPATH . APPLICANT_UPLOAD_DOCUMENT_PATH . $hostelInfo_Id . "/Hostel-Quotation/";
+
 
         if (!is_dir($upload_dir)) {
             if (!mkdir($upload_dir, 0777, true) && !is_dir($upload_dir)) {
@@ -772,7 +820,7 @@ class hostel_management extends AdminController
 
     public function payment_table($table_type = "", $hostel_info_id)
     {
-        if (!has_permission('hostel_management', '', 'payment')) {
+        if (!has_permission('hostel_management', '', 'payment_view') && !has_permission('hostel_management', '', 'payment')) {
             throw new Exception("Access denied: Quotation Payment View");
         }
         $view = "hostel_payments";
@@ -1327,10 +1375,6 @@ class hostel_management extends AdminController
 
     function hostelPaymentGenerate()
     {
-
-        //     ini_set('display_errors', 1);
-        // ini_set('display_startup_errors', 1);
-        // error_reporting(E_ALL);
         // Check required POST data
         $student_id   = $this->input->post('student_id');
         $payment_id   = $this->input->post('payment_id');
@@ -1425,9 +1469,11 @@ class hostel_management extends AdminController
         $pdf->setImageScale(1.7);
 
         // Stamp
+        if(!empty($data['hostelData']->hostel_stamp)){
         $stampPath = FCPATH . $data['hostelData']->hostel_stamp;
         if (!empty($data['hostelData']->hostel_stamp) && file_exists($stampPath)) {
             $pdf->Image($stampPath, 130, 110, 50, 0, '', '', '', false, 300);
+        }
         }
 
         // Load view

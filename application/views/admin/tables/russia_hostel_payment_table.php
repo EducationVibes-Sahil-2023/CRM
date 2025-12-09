@@ -18,7 +18,9 @@ $aColumns = [
     $sTable . ".mode as mode",
     db_prefix() . "quotation_mode.name as mode_name",
     $sTable . ".vendor_name as vendor_name",
-    db_prefix() . "quotation_vendor.name as v_name",
+    // db_prefix() . "quotation_vendor.name as v_name",
+         "IF(".$sTable.".mode = 3, " . db_prefix() . "_hostel_vendors.name, " . db_prefix() . "quotation_vendor.name) AS v_name",
+
     $sTable . ".inr_value as inr_value",
     $sTable . ".payment_type as payment_type",
     $sTable . ".university_name as university_name",
@@ -46,6 +48,8 @@ $join = [
     ' LEFT JOIN ' . db_prefix() . 'quotation_mode ON ' . db_prefix() . 'quotation_mode.id = ' . $sTable . '.mode',
     ' LEFT JOIN ' . db_prefix() . 'quotation_vendor ON ' . db_prefix() . 'quotation_vendor.id = ' . $sTable . '.vendor_id',
     ' LEFT JOIN ' . db_prefix() . 'currencies ON ' . db_prefix() . 'currencies.id = ' . $sTable . '.ex_currency',
+        'LEFT JOIN ' . db_prefix() . '_hostel_vendors ON ' . db_prefix() . '_hostel_vendors.id = ' . $sTable . '.vendor_id',
+
     // " LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = " . db_prefix() . "payment_quotations.client_id ",
 
 ];
@@ -165,14 +169,14 @@ if (!empty($_POST['payment_id'])) {
             $row[] = '';
         }
         $action = '';
-        if (is_admin() || has_permission('hostel_management', '', 'payment')) {
+        if (is_admin() ||  has_permission('hostel_management', '', 'hostel_payment_delete')) {
             $action .= '
                 <a class="btn btn-xs btn-sm btn-primary" href="?tab=payment&payment_id=' . (int)$aRow['id'] . '">
                     <i class="fa fa-pencil"></i>
                 </a>';
         }
 
-        if (is_admin() || has_permission('hostel_quotation_delete', '', 'delete')) {
+        if (is_admin() || has_permission('hostel_payment_delete', '', 'delete')) {
             $action .= '
      <button class="btn-xs btn btn-xs btn-danger" onclick="document_approved(this, 0,' . (int)$aRow['id'] . ')">
                     <i class="fa fa-trash"></i>

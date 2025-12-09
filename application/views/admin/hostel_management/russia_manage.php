@@ -102,7 +102,16 @@ $table_data = array(
 
                                     <div class="col-md-2  margin-top leads-filter-column">
                                         <?php echo render_select('hostel_name[]', $hostel, array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Hostel Name", 'multiple' => true, 'data-actions-box' => true), array(), 'no-mbot', '', false, 'hostel_name'); ?>
-                                    </div>
+                                    </div>4 <div class="col-md-2  margin-top leads-filter-column">
+                                            
+                                            <?php                                  echo render_select('active_status', array(
+        array('id' => "", 'name' => 'Select Active Status'),array('id' => 1, 'name' => 'Yes'),
+        array('id' => 2, 'name' => 'No')
+    ), array('id', 'name'), '', '', array('data-width' => '100%', 'data-none-selected-text' => "Active Status", 'data-actions-box' => true), array(), 'no-mbot', '', false, "active_status");
+ ?>
+                                         
+
+                                        </div>
 
                                     <!--<div class="col-lg-2 margin-top leads-filter-column">-->
                                     <!--    <div class="form-group">-->

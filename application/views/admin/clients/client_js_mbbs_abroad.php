@@ -260,6 +260,8 @@
                 $(".disabledd").attr("disabled", true);
 
                 $("#save_admission_preferences").attr("disabled", true);
+                $("#documents-form input[name='files[61]']:not(.disabledd)").attr("disabled", false);
+
 
                 // Directly applying instead of using another setTimeout
                 $(".tags-input-wrapper").css("pointer-events", "none");
@@ -862,6 +864,8 @@
             $(".tab-pane form").find("input, select, textarea,button").prop("disabled", true).selectpicker("refresh");
         }
         $(".disabledd").attr("disabled", true);
+        $("#documents-form input[name='files[61]']:not(.disabledd)").attr("disabled", false);
+
     });
 
 

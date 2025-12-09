@@ -9,8 +9,8 @@
    <?= form_open('', ['id' => 'hostel_management_form']); ?>
 
    <input type="hidden" name="hostel_management_id" value="<?= $getId ?? '' ?>">
+   <input type="hidden" name="hostel_type" value="<?= $hostelData->hostel_type ?? 'georgia' ?>">
    <div class="row">
-
 
        <div class="col-md-3">
            <?= render_input('student_name', 'Name', $hostelData->name ?? '', 'text', ["placeholder" => "Enter Name"]); ?>

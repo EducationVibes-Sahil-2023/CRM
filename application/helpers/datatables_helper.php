@@ -1107,7 +1107,7 @@ function data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $where 
     $sLimit
     ";
 
-// if(is_admin()){
+// if(is_admin() || get_staff_user_id() == 243){
 //     echo $sQuery;
 //     die;
 // }

@@ -1240,7 +1240,7 @@ LEFT JOIN (
         // if (!empty($orignal_documents_status) && (int) $orignal_documents_status === 1) {
         //  echo $sql; die;
         //         }
-        // if($currentId == 11)
+        // if($currentId == 5)
         // {
         //  echo $sql; die;
         // }
@@ -1563,7 +1563,7 @@ LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
 LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type =2)
 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
-LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
+LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
 LEFT JOIN " . db_prefix() . "client_university_shortlisting us ON (us.client_id = c.userid AND us.status = 1)
 LEFT JOIN " . db_prefix() . "application_status appst ON appst.id = us.application_status
@@ -1574,7 +1574,7 @@ LEFT JOIN " . db_prefix() . "visa_status vs ON vs.id = vd.status
 LEFT JOIN " . db_prefix() . "vendor_list vl ON vl.id = vd.vendor_id
 
 WHERE 1=1 {$condition_sql}
-GROUP BY c.userid";
+GROUP BY c.userid,vd.id";
 
 
 
@@ -2411,7 +2411,7 @@ function payment_quotations($id = '')
         LEFT JOIN " . db_prefix() . "clients c ON pq.client_id = c.userid 
         LEFT JOIN " . db_prefix() . "leads l ON l.id = c.leadid
          LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
-        LEFT JOIN " . db_prefix() . "applicant_quotation_payment aqp ON aqp.id = pq.quotation_id  and aqp.status = 1
+        LEFT JOIN " . db_prefix() . "applicant_quotation_payment aqp ON ( aqp.id = pq.quotation_id and aqp.status = 1 )
         LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
         LEFT JOIN " . db_prefix() . "quotation_mode m ON m.id = pq.mode 
         LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = pq.client_id 
@@ -2523,11 +2523,13 @@ $country = !empty($_GET['country'])?$_GET['country']:'';
         ->get()
         ->result_array();
 
+ $today = date('Y-m-d');
 
     $columns['g'] = [
         "Student Name",
         "Passport",
         "University Name",
+        "Company",
         "Hostel Type",
         "Hostel Name",
         "Floor No",
@@ -2542,20 +2544,24 @@ $country = !empty($_GET['country'])?$_GET['country']:'';
         // "Payment Type",
         // "Transaction Type",
         // "Vendor Name",
-        "Remark"
+        "Remark",
+        "Active Status",
     ];
     
       $columns['r'] = [
         "Student Name",
         "Passport",
         "University Name",
+        "Company",
         "Hostel Type",
         "Hostel Name",
         // "Payment Mode",
         // "Payment Type",
         "Trans. Type",
         "Vendor Name",
-        "Remark"
+        "Month",
+        "Remark",
+        "Active Status",
     ];
     
     // $columns = [
@@ -2593,11 +2599,31 @@ foreach ($feesList as $fees){
     $columns = array_merge($columns, $normal, $pay, $dues);
 
 
-
-
+ $today = date('Y-m-d');
 
     $sheet_name = "Hostel Payment Dues";
     
+ $active_status_sql = " ,  CASE 
+        WHEN LOWER(ho.hostel_type) = 'russia' THEN
+            CASE 
+                WHEN hp1.id > 0 THEN 'YES'
+                ELSE 'No'
+            END
+
+        WHEN LOWER(ho.hostel_type) = 'georgia' THEN
+            CASE 
+                WHEN hp1.start_date IS NOT NULL 
+                 AND hp1.end_date IS NOT NULL
+                 AND '$today' BETWEEN hp1.start_date AND hp1.end_date
+                THEN 'YES'
+                ELSE 'NO'
+            END
+
+        ELSE 'N/A'
+    END AS active_status ";
+
+ 
+ 
  $sql = "SELECT 
     ho.id AS student_id,
     ho.acadmic_year AS acadmic_year,
@@ -2617,8 +2643,13 @@ foreach ($feesList as $fees){
     hq.hostel_due,
     hq.pdf,
     m.name AS mode,
+    hp1.id as payment_id,
     hp1.vendor_id,
-    IF(hp1.vendor_id > 0,vl.name,hp1.vendor_name) AS vendor_name,
+IF(
+    hp1.vendor_id > 0,
+    IF(hp1.mode = 3, hv.name, vl.name),
+    hp1.vendor_name
+) AS vendor_name,
     hp1.type,
     hp1.pay_date,
     hp1.pay_date,
@@ -2631,9 +2662,12 @@ foreach ($feesList as $fees){
     hp1.ex_currency,
     hp1.amount,
     ho.hostel_type as country_hostel_type,
-
+    hc.name as company_name,
+    GREATEST(
+    1,
     TIMESTAMPDIFF(MONTH, hq.start_date, hq.end_date)
-        + (DAY(hq.end_date) >= DAY(hq.start_date)) AS month_difference,
+    + (DAY(hq.end_date) >= DAY(hq.start_date))
+) AS month_difference,
 
     JSON_ARRAYAGG(
         JSON_MERGE_PATCH(
@@ -2641,14 +2675,21 @@ foreach ($feesList as $fees){
             JSON_OBJECT('payment_type', hp1.payment_type)
         )
     ) AS fess_infomation
+    
+    $active_status_sql
 
 FROM tblhostel_infomation ho
 LEFT JOIN tblhostel h 
     ON ho.hostel = h.id
+    
 LEFT JOIN tblhostel_quotation hq 
     ON ho.id = hq.hostel_info_id AND hq.status > 0
+    LEFT JOIN tblhostel_company hc 
+    ON hc.id = hq.company 
 LEFT JOIN tblhostel_payments hp1 
     ON hp1.quotation_id = hq.id AND hp1.status > 0
+LEFT JOIN tbl_hostel_vendors hv 
+    ON hv.id = hp1.vendor_id
 LEFT JOIN tblquotation_mode m 
     ON m.id = hp1.mode
 LEFT JOIN tblcurrencies c 
@@ -2675,7 +2716,17 @@ if(!empty($country))
     $sql .=" AND ho.hostel_type = '${country}' ";
 
 }
- $sql .=" GROUP BY hp1.id ORDER BY ho.id  ASC";
+
+
+if(!empty($_GET["group_by"]))
+{
+   $sql .=" ".$_GET["group_by"]." ";
+}
+else
+{
+  $sql .=" GROUP BY ho.id ";
+}
+ $sql .=" ORDER BY ho.id  ASC";
 
     $arrayData = $CI->db->query($sql)->result_array();
     

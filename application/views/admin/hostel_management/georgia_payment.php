@@ -8,7 +8,7 @@
         display: none !important;
     }
 </style>
-<?php if (!has_permission('hostel_management', '', 'payment') && !has_permission('hostel_management', '', 'payment')) {
+<?php if (!has_permission('hostel_management', '', 'payment_view') && !has_permission('hostel_management', '', 'payment')) {
 
     echo ' <div class="row">
             <div class="col-md-12">
@@ -285,7 +285,7 @@ if (has_permission('hostel_management', '', 'payment')) {
     $get_currencies = get_currencies();
     $currency_lookup = array_column($get_currencies, NULL, 'id');
     $modes = $ci->quotation_model->payment_mod();
-    $modes_vendor = $ci->quotation_model->payment_mode_vendors();
+    $modes_vendor = $ci->quotation_model->payment_mode_vendors(1);
 
     // die;
 
@@ -323,6 +323,7 @@ if (has_permission('hostel_management', '', 'payment')) {
 
     $payment_payment_mode = $ci->db->get(db_prefix() . 'quotation_paymente_mode')->result_array();
 
+$hostelVendors = $this->db->select("*")->from(db_prefix()."_hostel_vendors")->get()->result_array();
 
 
 ?>
@@ -418,7 +419,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                 <td>
                                                     <input type="number" step="0.01" class="form-control currency-amount"
                                                         oninput="calculateInrValue()" name="exchange_value[]"
-                                                        placeholder="0.00" value="<?= htmlspecialchars($exchange['exchange_value']) ?>">
+                                                        placeholder="0.00" required value="<?= htmlspecialchars($exchange['exchange_value']) ?>">
                                                 </td>
                                                 <td class="text-center">
                                                     <button type="button" class="btn btn-<?= $key == 0 ? 'success' : 'danger' ?> btn-sm <?= $key == 0 ? 'addRow' : 'removeRow' ?>">
@@ -432,7 +433,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                             <td>
                                                 <select name="credit_currency[]" class="form-control" onchange="calculateInrValue()">
                                                     <?php foreach ($get_currencies as $c): ?>
-                                                        <option value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
+                                                        <option value="<?= $c['id'] ?>" <?= $c['id'] == 1?'selected':''?> data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
                                                             <?= htmlspecialchars($c['name']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
@@ -441,7 +442,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                             <td>
                                                 <select name="document_currency[]" class="form-control" onchange="calculateInrValue()">
                                                     <?php foreach ($get_currencies as $c): ?>
-                                                        <option value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
+                                                        <option  <?= $c['id'] == 1?'selected':''?> value="<?= $c['id'] ?>" data-symbol="<?= htmlspecialchars($c['symbol']) ?>">
                                                             <?= htmlspecialchars($c['name']) ?>
                                                         </option>
                                                     <?php endforeach; ?>
@@ -449,7 +450,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                                             </td>
                                             <td>
                                                 <input type="number" step="0.01" class="form-control currency-amount"
-                                                    oninput="calculateInrValue()" name="exchange_value[]" placeholder="0.00">
+                                                    oninput="calculateInrValue()" required value="1" name="exchange_value[]" placeholder="0.00">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-success btn-sm addRow">
@@ -569,12 +570,23 @@ if (has_permission('hostel_management', '', 'payment')) {
                                                     <?php
                                                         }
                                                     }
-                                                } else if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 2 || $applicant_payment_data->mode == 3) {
+                                                } else if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 2 ) {
                                                     ?>
                                                     <option value="<?= $applicant_payment_data->vendor_name ?>" selected><?= $applicant_payment_data->vendor_name ?></option>
                                                 <?php
 
                                                 }
+                                                
+                                                else if (!empty($applicant_payment_data->mode) && $applicant_payment_data->mode == 3) {
+                                                            
+                                                                  foreach ($hostelVendors as $vendor) {
+                                                        ?>
+                                                                    <option value="<?= $vendor["id"] ?>" <?= $vendor["id"] == $applicant_payment_data->vendor_id ? "selected" : "" ?>><?= $vendor["name"] ?></option>
+
+                                                            <?php
+                                                                
+                                                            }
+                                                        }
 
                                                 ?>
                                             </select>
@@ -871,7 +883,7 @@ if (has_permission('hostel_management', '', 'payment')) {
     <script>
         var get_university_rentData = <?= json_encode($hostelRentelData) ?>;
         var selectedUniversityRoomData = [];
-
+var hostel_vendors = <?= json_encode($hostelVendors) ?>;
         function get_hostel_rentInfo(id) {
             // console.log("get_hostel_rentInfo", id);
             if (get_university_rentData[id]) {
@@ -968,7 +980,39 @@ if (has_permission('hostel_management', '', 'payment')) {
 
 
 
-        function currencyDisabled(obj) {
+        // function currencyDisabled(obj) {
+        //     $(".payment_payment").each(function() {
+        //         var $paymentpayment = $(this);
+        //         var paymentType = $paymentpayment.find("select[name='payment_type']").val();
+
+        //         if ($(obj).is(":checked")) {
+        //             currencyDisabledStatus = 1;
+        //             if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+        //                 $paymentpayment.find(".inr_value")
+        //                     .val('')
+        //                     .removeAttr('readonly');
+        //             } else {
+        //                 $paymentpayment.find(".inr_value, .fee-inr")
+        //                     .val('')
+        //                     .removeAttr('readonly');
+        //             }
+        //         } else {
+        //             currencyDisabledStatus = 0;
+        //             if (paymentType != <?= PACKAGE_FEES_ID ?>) {
+        //                 $paymentpayment.find(".inr_value")
+        //                     .val('')
+        //                     .attr('readonly', 'readonly');
+        //             } else {
+        //                 $paymentpayment.find(".inr_value, .fee-inr")
+        //                     .val('')
+        //                     .attr('readonly', 'readonly');
+        //             }
+        //         }
+        //     });
+        //     calculateInrValue();
+        // }
+
+      function currencyDisabled(obj) {
             $(".payment_payment").each(function() {
                 var $paymentpayment = $(this);
                 var paymentType = $paymentpayment.find("select[name='payment_type']").val();
@@ -976,7 +1020,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 if ($(obj).is(":checked")) {
                     currencyDisabledStatus = 1;
                     if (paymentType != <?= PACKAGE_FEES_ID ?>) {
-                        $paymentpayment.find(".inr_value")
+                        $paymentpayment.find(".inr_value, .fee-inr")
                             .val('')
                             .removeAttr('readonly');
                     } else {
@@ -999,7 +1043,6 @@ if (has_permission('hostel_management', '', 'payment')) {
             });
             calculateInrValue();
         }
-
 
         // function check_tt_copy(obj) {
         //     let paymentSection = $(obj).parents('.payment_payment');
@@ -1342,13 +1385,16 @@ if (has_permission('hostel_management', '', 'payment')) {
                 vendor_select.selectpicker('refresh');
 
             } else if (modeId == 3) {
-                vendor_select.append(
-                    '<option value="<?= htmlspecialchars(!empty($partnerName['name']) ? $partnerName['name'] : "") ?>" selected>' +
-                    '<?= htmlspecialchars(!empty($partnerName['name']) ? $partnerName['name'] : "No vendors available") ?>' +
-                    '</option>'
-                );
+                vendor_select.empty();
 
-                // vendor_select.val("<?= htmlspecialchars(!empty($partnerName['id']) ? $partnerName['id'] : "") ?>");
+             if (hostel_vendors.length > 0) {
+                vendor_select.append('<option value="">-- Select Vendor --</option>');
+                hostel_vendors.forEach(v => {
+                    vendor_select.append(`<option value="${v.id}">${v.name}</option>`);
+                });
+            } else {
+                vendor_select.append('<option value="">No vendors available</option>');
+            }
                 vendor_select.selectpicker('refresh');
 
             } else if (modeId == 5) {
@@ -1481,19 +1527,45 @@ if (has_permission('hostel_management', '', 'payment')) {
 
             // Handle split-type dropdown
             // let $panel = $(obj).closest('.panel_s');
-            let $splitTypeDropdown = $(".split-type-dropdown");
-            let $splitTypeSelect = $splitTypeDropdown.find("select.electpicker");
-            if (feesID == <?= PACKAGE_FEES_ID ?> || feesID == <?= RETURN_FEES_ID ?>) {
-                $splitTypeSelect.val('').selectpicker('refresh');
-                $splitTypeDropdown.show();
-                splitTypeDropdown.attr("required", "required");
+          let $splitTypeDropdown = $(".split-type-dropdown");
 
-                //     $tbody.html('');
-            } else if (feesID > 0 && singleSelectedValue !== '' && singleSelectedValue != <?= PACKAGE_FEES_ID ?>) {
-                $splitTypeDropdown.hide();
-                splitTypeDropdown.removeAttr("required");
-                $splitTypeSelect.val('').selectpicker('refresh');
-            }
+// Safely get the select element
+let $splitTypeSelect = $splitTypeDropdown.find("select.selectpicker");
+
+if (!$splitTypeDropdown.length || !$splitTypeSelect.length) {
+    console.warn("Split-type dropdown or selectpicker element not found!");
+    return; // stop execution safely
+}
+
+// For selectpicker safety
+const refreshSelect = () => {
+    if ($splitTypeSelect.selectpicker) {
+        $splitTypeSelect.selectpicker('refresh');
+    }
+};
+
+// Conditions
+if (feesID == <?= PACKAGE_FEES_ID ?> || feesID == <?= RETURN_FEES_ID ?>) {
+
+    $splitTypeSelect.val('');
+    refreshSelect();
+
+    $splitTypeDropdown.show();
+    $splitTypeDropdown.attr("required", "required");
+
+} else if (
+    feesID > 0 &&
+    singleSelectedValue !== '' &&
+    singleSelectedValue != <?= PACKAGE_FEES_ID ?>
+) {
+
+    $splitTypeDropdown.hide();
+    $splitTypeDropdown.removeAttr("required");
+
+    $splitTypeSelect.val('');
+    refreshSelect();
+}
+
 
             calculateInrValue();
         }
@@ -1611,7 +1683,68 @@ if (has_permission('hostel_management', '', 'payment')) {
             calculateInrValue();
         }
 
-        function calculateInrValue() {
+        // function calculateInrValue() {
+        //     calculateExchangeRate();
+
+        //     $('.payment_payment').each(function() {
+        //         const $entry = $(this);
+
+        //         // Get main input values
+        //         let amount = parseFloat($entry.find("input.amount").val()) || 0;
+        //         let currency_id = $entry.find("select.ex_currency").val();
+
+        //         // Get exchange rate for selected currency
+        //         let rate = typeof exchangeRates !== "undefined" ? (exchangeRates[currency_id] || 1) : 1;
+
+        //         // Calculate INR value
+        //         let inrValue = amount * rate;
+
+        //         // Set main INR value (only if not in manual/disabled mode)
+        //         if (currencyDisabledStatus !== 1) {
+        //             $entry.find("input.inr_value").val(inrValue.toFixed(2));
+        //         }
+
+        //         // Auto-populated amount fields (e.g. split fee rows)
+        //         $entry.find("input.auto-populated").val(amount);
+
+        //         // If special package fee and disabled mode, propagate INR
+        //         if (
+        //             currencyDisabledStatus == 1 &&
+        //             $entry.find("select[name='payment_type']").val() != 'undefined' && $entry.find("select[name='payment_type']").val() != <?= PACKAGE_FEES_ID ?>
+        //         ) {
+
+        //             // console.log($entry.find("select[name='payment_type']").val());
+        //             // console.log(<?= PACKAGE_FEES_ID ?>);
+        //             // console.log("Same Document Value");
+        //             $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
+        //         }
+
+        //         // Refresh read-only and force currency select state where needed
+        //         $entry.find("select.auto-populated-select").each(function() {
+        //             let idd = $(this).data("id");
+        //             if (idd == undefined) {
+        //                 let nameAttr = $(this).attr('name');
+        //                 // e.g. "amount_currency_type[5]"
+
+        //                 idd = nameAttr.match(/\[(\d+)\]/)[1];
+        //             }
+
+        //             // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
+        //             // $(".input-group-addon.currency-symbol-" + idd).html($);
+        //             $(this)
+        //                 .attr("readonly", true)
+        //                 .val(currency_id);
+
+        //             updateSymbol_($(this), idd);
+        //         });
+
+        //         // Recalculate totals for this payment entry
+        //         recalcTotalINR($entry);
+        //     });
+        // }
+
+
+    function calculateInrValue() {
             calculateExchangeRate();
 
             $('.payment_payment').each(function() {
@@ -1644,7 +1777,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                     // console.log($entry.find("select[name='payment_type']").val());
                     // console.log(<?= PACKAGE_FEES_ID ?>);
                     // console.log("Same Document Value");
-                    $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
+                    // $entry.find("input.fee-inr").val($entry.find("input.inr_value").val());
                 }
 
                 // Refresh read-only and force currency select state where needed
@@ -1657,6 +1790,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                         idd = nameAttr.match(/\[(\d+)\]/)[1];
                     }
 
+                    console.log(idd);
                     // $(".input-group-addon.currency-symbol-" + 5).html($("select.ex_currency option:selected").data("symbol") || '');
                     // $(".input-group-addon.currency-symbol-" + idd).html($);
                     $(this)
@@ -1670,7 +1804,6 @@ if (has_permission('hostel_management', '', 'payment')) {
                 recalcTotalINR($entry);
             });
         }
-
 
 
         // Helper: robustly extract numeric id (with optional _suffix) from the addon element
@@ -1824,35 +1957,59 @@ if (has_permission('hostel_management', '', 'payment')) {
                 let currency_exchange = [];
                 let seenCurrencies = new Set();
                 let hasDuplicate = false;
+let ex_rate =  {};
+  $("#exchangeTable tbody tr").each(function () {
+    let credit_currency = $(this).find("select[name='credit_currency[]']").val() || null;
+    let document_currency = $(this).find("select[name='document_currency[]']").val() || null;
+    let exchangeValue = $(this).find("input[name='exchange_value[]']").val() || null;
+
+    // Skip empty rows
+    // if (!credit_currency && !exchangeValue) return;
+
+    // === 1️⃣ CHECK CREDIT & DOCUMENT ARE NOT SAME ===
+    if (credit_currency === document_currency && exchangeValue!=1) {
+        hasDuplicate = true;
+        $(this)
+            .find("select[name='credit_currency[]'], select[name='document_currency[]']")
+            .addClass("is-invalid");
+
+        alert_float("danger", "When Credit Currency and Document Currency are the same, the exchange rate must be 1.");
+        hide_loader();
+        return false;
+    }
+
+    // Unique key for checking duplicates
+    let pairKey = credit_currency + "_" + document_currency;
+ex_rate[pairKey] = exchangeValue;
+
+    // === 2️⃣ CHECK DUPLICATE ENTRY ===
+    if (seenCurrencies.has(pairKey)) {
+        hasDuplicate = true;
+        $(this)
+            .find("select[name='credit_currency[]'], select[name='document_currency[]']")
+            .addClass("is-invalid");
+
+        alert_float("danger", "Duplicate Currency Exchange Rate detected. Please select unique currency pairs.");
+        hide_loader();
+        return false;
+    }
+
+    // Store unique pair
+    seenCurrencies.add(pairKey);
+
+    // Push row data
+    currency_exchange.push({
+        credit_currency: credit_currency,
+        document_currency: document_currency,
+        exchange_value: exchangeValue,
+    });
+});
 
 
-                $("#exchangeTable tbody tr").each(function() {
-                    let credit_currency = $(this).find("select[name='credit_currency[]']").val() || null;
-                    let document_currency = $(this).find("select[name='document_currency[]']").val() || null;
-                    let exchangeValue = $(this).find("input[name='exchange_value[]']").val() || null;
-                    if (credit_currency || exchangeValue) {
-                        if (seenCurrencies.has(credit_currency)) {
-                            hasDuplicate = true;
-                            $(this).find("select[name='exchange_currency[]']").addClass("is-invalid"); // highlight duplicate
-                        } else {
-                            seenCurrencies.add(credit_currency + "_" + document_currency);
-                            currency_exchange.push({
-                                credit_currency: credit_currency,
-                                document_currency: document_currency,
-                                exchange_value: exchangeValue,
-                            });
-                        }
-                    }
-                });
-
-
-
-
-                if (hasDuplicate) {
-                    hide_loader();
-                    alert_float("danger", "Duplicate Currency Exchange Rates detected. Please select unique currencies.");
-                    return false;
-                }
+// Final stop if any error found
+if (hasDuplicate) {
+    return false;
+}
 
                 // 🔹 Collect all payment payment data
 
@@ -1860,7 +2017,7 @@ if (has_permission('hostel_management', '', 'payment')) {
                 let error = false;
 
                 $(".payment_payment").each(function(index) {
-
+let disabledSection = $(this);
                     let q_id = $(this).find("select.quotation_id").val() || '';
                     let mode_id = $(this).find("select.mode").val() || '';
                     let payment_type_id = $(this).find("select.payment_type").val() || '';
@@ -1942,6 +2099,22 @@ if (has_permission('hostel_management', '', 'payment')) {
                         totalINRCheck_ += fee_inr_value;
 
                         splitData.push(rowData);
+
+    
+
+if (!ex_rate[$(this).find("select.currency-selector-amount").val() + "_" + $(this).find("select.document_currency").val()] && $(this).find("select.currency-selector-amount").val() != $(this).find("select.document_currency").val() && !$("[name='currency_disabled']").is(':checked')) {
+    hide_loader();
+    alert_float(
+        "danger",
+        $(this).find("select.currency-selector-amount option:selected").text() +
+        " - " +
+        $(this).find("select.document_currency option:selected").text() +
+        ": Exchange rate for the selected currency pair does not exist. Please update the exchange rate or choose a different currency."
+    );
+    validationFailed = true;
+    return false; // breaks current .each
+}
+
 
                         if (fee_amount <= 0) {
                             hide_loader();

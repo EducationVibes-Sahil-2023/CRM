@@ -26,6 +26,7 @@ $aColumns = [
     db_prefix() . 'ticket_status.color as color',
     db_prefix() . 'ticket_data.ticket_file as ticket_file',
     db_prefix() . 'ticket_batch.id as batch_id',
+    db_prefix() . 'ticket_data.batch_id as ticket_batch_id',
     
    
     
@@ -42,10 +43,10 @@ if ($manually == 1) {
 $sIndexColumn = 'id';
 if ($manually == 1) {
     $sTable = db_prefix() . 'ticket_data';
-    $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_batch ON ' . db_prefix() . 'ticket_batch.id = ' . db_prefix() . 'ticket_data.batch_id';
+    $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_batch ON ' . db_prefix() . 'ticket_batch.id = ' . db_prefix() . 'ticket_data.old_batch_id';
 } else {
     $sTable = db_prefix() . 'ticket_batch';
-    $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_data ON ' . db_prefix() . 'ticket_data.batch_id = ' . db_prefix() . 'ticket_batch.id';
+    $join[] = 'LEFT JOIN ' . db_prefix() . 'ticket_data ON ' . db_prefix() . 'ticket_data.old_batch_id = ' . db_prefix() . 'ticket_batch.id';
 }
 
 // Append additional joins without overwriting
@@ -107,7 +108,7 @@ if ($manually == 1) {
 
         $outputStatus = '<span class="inline-block lead-status-' . $aRow['ticket_status'] . ' label label-' . (empty($aRow['color']) ? 'default' : '') . '" style="color:' . $aRow['color'] . ';border:1px solid ' . $aRow['color'] . '">' . $aRow['ticket_status_name'];
 
-        if ($aRow['ticket_status'] < 3 && empty($aRow['id'])) {
+        if ($aRow['ticket_status'] < 3 && empty($aRow['ticket_batch_id'])) {
             $outputStatus .= '<div class="dropdown inline-block mleft5 table-export-exclude">';
             $outputStatus .= '<a href="#" style="font-size:14px;vertical-align:middle;" class="dropdown-toggle text-dark" id="tableLeadsStatus-' . $aRow['data_id'] . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">';
             $outputStatus .= '<span data-toggle="tooltip" title="' . _l('ticket_single_change_status') . '"><i class="fa fa-caret-down" aria-hidden="true"></i></span>';
@@ -169,7 +170,7 @@ if ($manually == 1) {
     </div>
     ";
         } else {
-            if( $aRow["ticket_status"] < 3 || is_admin()){
+            if( $aRow["ticket_status"] < 3 && (get_staff_user_id() == 214 || is_admin())){
               $action = "<div> ";
             if($has_permission_delete == 1)
             {
@@ -184,12 +185,28 @@ if ($manually == 1) {
             </div>";
             }
             
+            
+            
             $row[] = $action;
             // $row[] = "";
         }
         }
         else
         {
+                 if( $aRow["ticket_status"] < 3  && (get_staff_user_id() == 214 || is_admin())){
+              $action = "<div> ";
+            if($has_permission_delete == 1)
+            {
+             $action .= "<a class='btn btn-xs btn-danger' href='javascript:void(0)' onclick='delete_ticket($id)'>
+                    <i class='fa fa-trash'></i>
+                </a>";
+            }
+                
+                 $action .= "<a class='btn btn-xs btn-primary' href='javascript:void(0)' onclick='edit_ticket($id, \"" . $encodedData . "\")'>
+                    <i class='fa fa-eye'></i>
+                </a>
+            </div>";
+            }
              $row[] = $action;
         }
 
@@ -227,7 +244,22 @@ if ($manually == 1) {
     </div>
     ";
         } else {
-            $row[] = "";
+            
+                      if( $aRow["ticket_status"] < 3  && (get_staff_user_id() == 214 || is_admin())){
+              $action = "<div> ";
+            if($has_permission_delete == 1)
+            {
+             $action .= "<a class='btn btn-xs btn-danger' href='javascript:void(0)' onclick='delete_ticket($id)'>
+                    <i class='fa fa-trash'></i>
+                </a>";
+            }
+                
+                 $action .= "<a class='btn btn-xs btn-primary' href='javascript:void(0)' onclick='edit_ticket($id, \"" . $encodedData . "\")'>
+                    <i class='fa fa-eye'></i>
+                </a>
+            </div>";
+            }
+            $row[] = $action;
         }
 
         $output['aaData'][] = $row;
