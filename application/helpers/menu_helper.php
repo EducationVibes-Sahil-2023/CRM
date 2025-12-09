@@ -73,7 +73,7 @@ function app_init_admin_sidebar_menu_items()
                         $CI->app_menu->add_sidebar_children_item('customers', [
                                 'slug'     => 'visa_details',
                                 'icon'     => 'fa fa-cc-visa',
-                                'name'     => "Visa Data",
+                                'name'     => "Ext Visa Data",
                                 'href'     => admin_url('clients/visa_details'),
                                 'position' => 5,
                         ]);
@@ -83,7 +83,7 @@ function app_init_admin_sidebar_menu_items()
                         $CI->app_menu->add_sidebar_children_item('customers', [
                                 'slug'     => 'ticket_details',
                                 'icon'     => 'fa fa-ticket',
-                                'name'     => "Ticket Data",
+                                'name'     => "Ext Ticket Data",
                                 'href'     => admin_url('clients/ticket_details'),
                                 'position' => 5,
                         ]);

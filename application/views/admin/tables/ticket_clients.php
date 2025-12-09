@@ -14,7 +14,7 @@ $aColumns = [
     db_prefix() . 'external_ticket_data.payment_date as payment_date',
     db_prefix() . 'external_ticket_data.ticket_cost as ticket_cost',
     db_prefix() . 'external_ticket_data.country_name as country',
-    db_prefix() . 'external_departure.name as departure_name',
+    db_prefix() . 'departure_location.name as departure_name',
     'des.name as destination_name',
     'dm.name as deposite_mode',
     db_prefix() . 'external_ticket_data.deposite_amount as deposite_amount',
@@ -35,9 +35,9 @@ $join = [
         ON ' . db_prefix() . 'external_visa_type.id = ' . db_prefix() . 'external_ticket_data.ticket_type',
     'LEFT JOIN ' . db_prefix() . 'external_ticket_vendor 
         ON ' . db_prefix() . 'external_ticket_vendor.id = ' . db_prefix() . 'external_ticket_data.ticket_vendor',
-    'LEFT JOIN ' . db_prefix() . 'external_departure 
-        ON ' . db_prefix() . 'external_departure.id = ' . db_prefix() . 'external_ticket_data.departure_id',
-    'LEFT JOIN ' . db_prefix() . 'external_departure  as des
+    'LEFT JOIN ' . db_prefix() . 'departure_location 
+        ON ' . db_prefix() . 'departure_location.id = ' . db_prefix() . 'external_ticket_data.departure_id',
+    'LEFT JOIN ' . db_prefix() . 'departure_location  as des
         ON des.id = ' . db_prefix() . 'external_ticket_data.destination_id'
 ];
 
