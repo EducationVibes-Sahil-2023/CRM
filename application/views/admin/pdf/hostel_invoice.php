@@ -74,7 +74,7 @@ function numberToWord($num)
             <p>Payment Date: <?= !empty($hostelData->created_date) ? date('d-m-Y', strtotime($hostelData->created_date . ' +1 day')) : '' ?></p>
         </td>
         <td style="width:30%; text-align:right;">
-            <?php if (file_exists($logoPath)): ?>
+            <?php if (file_exists($logoPath) &&  !empty($hostelData->hostel_logo)): ?>
                 <img src="<?= $logoPath ?>" width="200">
             <?php endif; ?>
         </td>

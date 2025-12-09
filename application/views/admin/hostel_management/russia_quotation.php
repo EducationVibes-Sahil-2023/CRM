@@ -77,7 +77,7 @@ $quotation_paymente_mode = $this->db
     ->result_array();
 $currency_lookup   = array_column($get_currencies, null, 'id');
 $modes =  $this->quotation_model->payment_mod();
-$modes_vendor =  $this->quotation_model->payment_mode_vendors();
+$modes_vendor =  $this->quotation_model->payment_mode_vendors(1);
 $fees_details_array = [
     ["label" => "Total Service Charge", "name" => "total_service_charge", "readonly" => true, "add_btn" => true],
 ];
@@ -120,6 +120,7 @@ if (!empty($_GET['quotation_id'])) {
     $university_due_array = json_decode($hostel_quotation_data->hostel_due, true);
     $company_due_array = json_decode($hostel_quotation_data->company_due, true);
 }
+$hostelVendors = $this->db->select("*")->from(db_prefix()."_hostel_vendors")->get()->result_array();
 
 
 
@@ -365,7 +366,7 @@ if (!empty($_GET['quotation_id'])) {
                                             <td>
                                                 <input type="number" step="0.01" class="form-control currency-amount"
                                                     oninput="calculateInrValue()" name="exchange_value[]"
-                                                    placeholder="0.00" value="<?= htmlspecialchars($exchange['exchange_value']) ?>">
+                                                    placeholder="0.00" required value="<?= htmlspecialchars($exchange['exchange_value']) ?>">
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-<?= $key == 0 ? 'success' : 'danger' ?> btn-sm <?= $key == 0 ? 'addRow' : 'removeRow' ?>">
@@ -396,7 +397,7 @@ if (!empty($_GET['quotation_id'])) {
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" class="form-control currency-amount"
-                                                oninput="calculateInrValue()" name="exchange_value[]" placeholder="0.00">
+                                                oninput="calculateInrValue()" required value="1" name="exchange_value[]" placeholder="0.00">
                                         </td>
                                         <td class="text-center">
                                             <button type="button" class="btn btn-success btn-sm addRow">
@@ -703,12 +704,24 @@ if (!empty($_GET['quotation_id'])) {
                                                             <?php
                                                                 }
                                                             }
-                                                        } else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 2 || $university_due_array["main"]['pay_info'][0]["payMode"] == 3) {
+                                                        } else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 2) {
                                                             ?>
                                                             <option value="<?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?>" selected><?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?></option>
                                                         <?php
 
-                                                        } else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) {
+                                                        }
+                                                        
+                                                         else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 3) {
+                                                            
+                                                                  foreach ($hostelVendors as $vendor) {
+                                                        ?>
+                                                                    <option value="<?= $vendor["id"] ?>" <?= $vendor["id"] == $university_due_array["main"]['pay_info'][0]["payVendor"] ? "selected" : "" ?>><?= $vendor["name"] ?></option>
+
+                                                            <?php
+                                                                
+                                                            }
+                                                        }
+                                                        else if (!empty($university_due_array["main"]['pay_info'][0]["payMode"]) && $university_due_array["main"]['pay_info'][0]["payMode"] == 5) {
                                                         ?>
                                                             <option value="<?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?>" selected><?= $university_due_array["main"]['pay_info'][0]["payVendor"] ?></option>
                                                         <?php
@@ -1113,6 +1126,7 @@ if (!empty($_GET['quotation_id'])) {
 <script>
     var get_university_rentData = <?= json_encode($hostelRentelData) ?>;
     var selectedUniversityRoomData = [];
+var hostel_vendors = <?= json_encode($hostelVendors) ?>;
 
     function get_hostel_rentInfo(year) {
         return new Promise((resolve, reject) => {
@@ -1285,6 +1299,7 @@ if (!empty($_GET['quotation_id'])) {
             } else {
                 vendor_select.append('<option value="">No vendors available</option>');
             }
+              vendor_select.selectpicker('refresh');
         } else if (modeId == 2) {
             vendor_select.append(
                 '<option value="<?= htmlspecialchars($hostelData->university_name) ?>" selected >' +
@@ -1294,19 +1309,22 @@ if (!empty($_GET['quotation_id'])) {
 
             // vendor_select.val("<?= htmlspecialchars($hostelData->university_name) ?>");
             vendor_select.selectpicker('refresh');
-        } else if (modeId == 3) {
+        }  else if (modeId == 3) {
             vendor_select.empty();
 
-            <?php
-            $partnerId   = !empty($partnerName['id']) ? $partnerName['id'] : '';
-            $partnerText = !empty($partnerName['name']) ? $partnerName['name'] : 'No vendors available';
-            ?>
-            vendor_select.append(
-                '<option selected value="<?= $partnerText ?>"><?= htmlspecialchars($partnerText) ?></option>'
-            );
-        } else if (modeId == 5) {
+             if (hostel_vendors.length > 0) {
+                vendor_select.append('<option value="">-- Select Vendor --</option>');
+                hostel_vendors.forEach(v => {
+                    vendor_select.append(`<option value="${v.id}">${v.name}</option>`);
+                });
+            } else {
+                vendor_select.append('<option value="">No vendors available</option>');
+            }
+              vendor_select.selectpicker('refresh');
+        }  else if (modeId == 5) {
             // 🔹 Hide the select
-            vendor_select.hide();
+           vendor_select.selectpicker('destroy');
+                vendor_select.hide();
 
             // 🔹 Remove existing manually-input if already added
             $(obj).closest("tr").find("input.manually-cash").remove();
@@ -1617,33 +1635,61 @@ if (!empty($_GET['quotation_id'])) {
             let currency_exchange = [];
             let seenCurrencies = new Set();
             let hasDuplicate = false;
+            let validationFailed = false;
 
-            $("#exchangeTable tbody tr").each(function() {
-                let credit_currency = $(this).find("select[name='credit_currency[]']").val() || null;
-                let document_currency = $(this).find("select[name='document_currency[]']").val() || null;
-                let exchangeValue = $(this).find("input[name='exchange_value[]']").val() || null;
-                if (credit_currency || exchangeValue) {
-                    if (seenCurrencies.has(credit_currency)) {
-                        hasDuplicate = true;
-                        $(this).find("select[name='exchange_currency[]']").addClass("is-invalid"); // highlight duplicate
-                    } else {
-                        seenCurrencies.add(credit_currency + "_" + document_currency);
-                        currency_exchange.push({
-                            credit_currency: credit_currency,
-                            document_currency: document_currency,
-                            exchange_value: exchangeValue,
-                        });
-                    }
-                }
-            });
+     let ex_rate =  {};
+  $("#exchangeTable tbody tr").each(function () {
+    let credit_currency = $(this).find("select[name='credit_currency[]']").val() || null;
+    let document_currency = $(this).find("select[name='document_currency[]']").val() || null;
+    let exchangeValue = $(this).find("input[name='exchange_value[]']").val() || null;
+
+    // Skip empty rows
+    // if (!credit_currency && !exchangeValue) return;
+
+    // === 1️⃣ CHECK CREDIT & DOCUMENT ARE NOT SAME ===
+    if (credit_currency === document_currency && exchangeValue!=1) {
+        hasDuplicate = true;
+        $(this)
+            .find("select[name='credit_currency[]'], select[name='document_currency[]']")
+            .addClass("is-invalid");
+
+        alert_float("danger", "When Credit Currency and Document Currency are the same, the exchange rate must be 1.");
+        hide_loader();
+        return false;
+    }
+
+    // Unique key for checking duplicates
+    let pairKey = credit_currency + "_" + document_currency;
+ex_rate[pairKey] = exchangeValue;
+
+    // === 2️⃣ CHECK DUPLICATE ENTRY ===
+    if (seenCurrencies.has(pairKey)) {
+        hasDuplicate = true;
+        $(this)
+            .find("select[name='credit_currency[]'], select[name='document_currency[]']")
+            .addClass("is-invalid");
+
+        alert_float("danger", "Duplicate Currency Exchange Rate detected. Please select unique currency pairs.");
+        hide_loader();
+        return false;
+    }
+
+    // Store unique pair
+    seenCurrencies.add(pairKey);
+
+    // Push row data
+    currency_exchange.push({
+        credit_currency: credit_currency,
+        document_currency: document_currency,
+        exchange_value: exchangeValue,
+    });
+});
 
 
-            // Show error if duplicates exist
-            if (hasDuplicate) {
-                hide_loader();
-                alert_float("danger", "Duplicate Currency Exchange Rates detected. Please select unique currencies.");
-                return false; // stop further processing
-            }
+// Final stop if any error found
+if (hasDuplicate) {
+    return false;
+}
 
             let package_amount = 0;
 
@@ -1706,8 +1752,28 @@ if (!empty($_GET['quotation_id'])) {
 
                 checkAmount += parseInt($(this).find("input[name$='_amount']").val() || 0);
                 university_dues.main.fees_info.push(rowData);
+                
+                
+                if (!ex_rate[$(this).find(".credit-currency-change select[name$='_currency_type']").val() + "_" + $(this).find(".document-currency-change select[name$='_currency_type']").val()] && $(this).find(".credit-currency-change select[name$='_currency_type']").val()!=$(this).find(".document-currency-change select[name$='_currency_type']").val()) {
+    hide_loader();
+    alert_float(
+        "danger",
+       $(this).find(".credit-currency-change select[name$='_currency_type'] option:selected").text() +
+        " - " +
+       $(this).find(".document-currency-change select[name$='_currency_type'] option:selected").text() +
+        ": Exchange rate for the selected currency pair does not exist. Please update the exchange rate or choose a different currency."
+    );
+    validationFailed = true;
+    return false; // breaks current .each
+}
+
             });
 
+
+if(validationFailed)
+{
+    return false;
+}
             if (checkAmount <= 0) {
                 hide_loader();
                 alert_float('danger', 'Quotation amounts must be greater than 0.');

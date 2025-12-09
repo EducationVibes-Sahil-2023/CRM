@@ -205,7 +205,7 @@ $company_modes = array_values($company_modes);
                             <div class="form-group">
                                 <label for="university_name">University Name <small class="text-danger">*</small></label>
                                 <input type="text" class="form-control" name="university_name" id="university_name" readonly
-                                    value="<?= htmlspecialchars($primary_university); ?>">
+                                    value="<?= !empty($applicant_quotation_data->university_name) ? $applicant_quotation_data->university_name:$primary_university; ?>">
                             </div>
                         </div>
                         <div class="col-lg-3">

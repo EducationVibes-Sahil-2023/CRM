@@ -20,8 +20,21 @@ $aColumns = [
     ) AS unique_id",
 
     // ✅ Month difference
-    "TIMESTAMPDIFF(MONTH, " . db_prefix() . "hostel_quotation.start_date," . db_prefix() . "hostel_quotation.end_date)
-       + (DAY(" . db_prefix() . "hostel_quotation.end_date) >= DAY(" . db_prefix() . "hostel_quotation.start_date)) AS month_difference",
+    // "TIMESTAMPDIFF(MONTH, " . db_prefix() . "hostel_quotation.start_date," . db_prefix() . "hostel_quotation.end_date)
+    //   + (DAY(" . db_prefix() . "hostel_quotation.end_date) >= DAY(" . db_prefix() . "hostel_quotation.start_date)) AS month_difference",
+       "GREATEST(
+    1,
+    TIMESTAMPDIFF(
+        MONTH, 
+        " . db_prefix() . "hostel_quotation.start_date,
+        " . db_prefix() . "hostel_quotation.end_date
+    ) 
+    + (
+        DAY(" . db_prefix() . "hostel_quotation.end_date) 
+        >= 
+        DAY(" . db_prefix() . "hostel_quotation.start_date)
+    )
+) AS month_difference",
 
     // ✅ Extract hostel amount directly from JSON (id = 5)
     "CAST(

@@ -53,7 +53,7 @@ function get_available_staff_permissions($data = [])
         ],
         'hostel_management' => [
             'name'         => "Hostel Management",
-            'capabilities' => array_merge($allPermissionsArray, array("quotation" => "Hostel Quotation", "hostel_quotation_delete" => "Hostel Quotation Delete", "hostel_payment_delete" => "Hostel Payment Delete", "payment" => "Hostel Payment", "hostel_invoice_generate" => "Generate Invoice", "backend" => "HMS Backend")),
+            'capabilities' => array_merge($allPermissionsArray, array("quotation_view" => "Hostel Quotation View","quotation" => "Hostel Quotation Create", "hostel_quotation_delete" => "Hostel Quotation Delete", "hostel_payment_delete" => "Hostel Payment Delete", "payment_view" => "Hostel Payment View","payment" => "Hostel Payment Create", "hostel_invoice_generate" => "Generate Invoice", "backend" => "HMS Backend")),
             'help'         => [
                 'view_own' => _l('permission_customers_based_on_admins'),
             ],

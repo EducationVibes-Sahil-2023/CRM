@@ -7,6 +7,10 @@
     .dataTables_wrapper div.row {
         display: none !important;
     }
+    .bg-warning {
+    padding: 10px;
+    background-color: #fcf8e3;
+    }
 </style>
 <?php if (!has_permission('payment_quotation', '', 'view') && !has_permission('payment_quotation', '', 'view_own')) {
 
@@ -215,7 +219,7 @@ if (has_permission('payment_quotation', '', 'create')) {
                'Q', ROW_NUMBER() OVER (PARTITION BY aq.university_name ORDER BY aq.id ASC)
         ) AS unique_id
     FROM " . db_prefix() . "applicant_quotation_payment aq
-    WHERE aq.client_id = ?
+    WHERE aq.client_id = ? and aq.status = 1
     ORDER BY aq.id DESC
 ";
 
@@ -861,13 +865,15 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
     </div>
 
     <script>
+    const applicant_quotations = <?= json_encode(array_column($applicant_quotations ?? [], null, "id")) ?>;
+    const currency_lookup =  <?= json_encode(array_column($currency_lookup ?? [], null, "id")) ?>;
         // --- Server-side data ---
         const universityApplicantFeesArray = <?= json_encode($university_applicant_fees_array ?? []) ?>;
         const university_applicant_fees = <?= json_encode($university_applicant_fees ?? []) ?>;
         const get_currencies = <?= json_encode($get_currencies ?? []) ?>;
         const getClientsFees = <?= json_encode($get_clients_fees ?? []) ?>;
         const TSC = 0;
-
+ const primaryCountry = "<?= strtolower($admissionpreferences->primary_country ?? '') ?>";
         let exchangeRates = {};
         const applicant_payment_data = <?= json_encode($applicant_payment_data ?? []) ?>;
         const payment_mod = <?= json_encode($modes ?? []) ?>;
@@ -885,6 +891,86 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
         window._cloneCounter = window._cloneCounter || 0;
 
         var currencyDisabledStatus = <?= !empty($applicant_payment_data->currency_disabled) ? $applicant_payment_data->currency_disabled : 0 ?>;
+
+        let quotationSelectedData = [];
+        function check_quotations(id) {
+        check_warning_message();
+        }
+        
+        
+       
+        function check_warning_message() {
+        
+        // -----------------------------
+        // 1. Parse quotation JSON safely
+        // -----------------------------
+       
+        
+        // -----------------------------
+        // 2. Country
+        // -----------------------------
+       
+        
+        // -----------------------------
+        // 3. Loop payments
+        // -----------------------------
+     $(".payment_payment").each(function () {
+         let quotation_id = $("select.quotation_id").val();
+         
+           let quotationSelectedData = applicant_quotations[quotation_id]??[];
+           
+           
+            let qData = {};
+        try {
+        qData = JSON.parse(quotationSelectedData?.university_due || "{}");
+        } catch (err) {
+        console.error("Invalid JSON in university_due", err);
+        qData = {};
+        }
+        
+        // Fees array
+        const feesInfo = qData?.main?.fees_info || [];
+        
+        // Find fee with id = 12
+        const fee12 = feesInfo.find(fee => Number(fee.id) === 12) || null;
+        
+        console.log(fee12);
+
+    let modeId = Number($(this).find("select.mode").val());
+    let bankChargeText = "";
+
+    console.log("Mode ID:", modeId);
+
+    // Remove previous warnings inside this block BEFORE adding new ones
+    $(this).find(".warning-message-bank-charge").remove();
+
+    if (modeId === 1) {
+
+        if (!fee12) {
+            console.warn("Fee ID 12 not found in fees_info");
+            return;
+        }
+
+        const currencyName = currency_lookup?.[3]["symbol"] || "Unknown Currency";
+        const b_currency = `${currencyName} ${fee12.inr_value || 0}`;
+
+        bankChargeText =
+            "<i class='fa fa-warning' style='color:red'></i> There is Bank Charge of " +
+            b_currency +
+            " have been quoted from customer in referred Quotations. Kindly validate before saving the payment.";
+
+        console.log("Bank Charge Warning:", bankChargeText);
+
+        // Append warning below the row
+        $(this).append(
+            `<div class='warning-message-bank-charge bg-warning p-2 mt-2'>
+                ${bankChargeText}
+            </div>`
+        );
+    }
+});
+
+        }
 
         function currencyDisabled(obj) {
             $(".payment_payment").each(function() {
@@ -1194,6 +1280,7 @@ if(!empty($admissionpreferences->primary_country) && strtolower($admissionprefer
 
         function vendor_update(obj, modeId) {
             let $formGroup = $(obj).closest(".form-group");
+            check_warning_message();
             let vendor_select = $formGroup.closest(".row").find("select.vendor_id");
             $(obj).parents('.payment_payment').find('.trans-div select').val('').selectpicker('refresh');
             
@@ -1317,7 +1404,7 @@ function CheckPackageCondition() {
 // Run check
 CheckPackageCondition();
 
-
+check_warning_message();
 
         // helper to build currency select options
         function getCurrencyOptions(selectedId = 3) {

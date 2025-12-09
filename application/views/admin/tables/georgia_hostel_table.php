@@ -109,6 +109,41 @@ $join = [
         ON ' . db_prefix() . 'currencies.id = latest_quotation.currency'
 ];
 
+
+if (!empty($_POST['active_status'])) {
+   $active_status = intval($_POST['active_status']);
+if ($active_status == 1) {
+
+    $today = date('Y-m-d');
+
+    $join[] = "LEFT JOIN " . db_prefix() . "hostel_payments AS hostel_payments 
+        ON hostel_payments.hostel_info_id = latest_quotation.hostel_info_id
+        AND hostel_payments.status > 0
+        AND hostel_payments.quotation_id = latest_quotation.id";
+     
+
+    $where[] = " AND ('$today' BETWEEN hostel_payments.start_date AND hostel_payments.end_date)";
+
+}
+
+else if ($active_status == 2) {
+
+    $today = date('Y-m-d');
+
+    $join[] = "LEFT JOIN " . db_prefix() . "hostel_payments AS hostel_payments 
+        ON hostel_payments.hostel_info_id = latest_quotation.hostel_info_id
+        AND hostel_payments.status > 0
+        AND hostel_payments.quotation_id = latest_quotation.id";
+
+    // ❗ Not active → NOT BETWEEN start_date AND end_date
+    $where[] = " AND ('$today' NOT BETWEEN hostel_payments.start_date AND hostel_payments.end_date 
+                       OR hostel_payments.start_date IS NULL 
+                       OR hostel_payments.end_date IS NULL)";
+}
+
+    
+}
+
 // Optional WHERE conditions
 // $where = [];
 
@@ -121,7 +156,7 @@ $where[] = " AND " . db_prefix() . "hostel_infomation.hostel_type = 'georgia' ";
 // $where[] = " AND latest_quotation.status > 0 ";
 if (is_admin() || has_permission('hostel_management', '', 'view')) {
 } else {
-    $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
+    // $where[] = " AND " . db_prefix() . "hostel_infomation.created_by = " . get_staff_user_id();
 }
 
 

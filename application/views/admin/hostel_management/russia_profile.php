@@ -9,6 +9,8 @@
    <?= form_open('', ['id' => 'hostel_management_form']); ?>
 
    <input type="hidden" name="hostel_management_id" value="<?= $getId ?? '' ?>">
+   <input type="hidden" name="hostel_type" value="<?= $hostelData->hostel_type ?? 'russia' ?>">
+
    <div class="row">
 
 

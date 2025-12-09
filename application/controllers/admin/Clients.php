@@ -2692,7 +2692,25 @@ class Clients extends AdminController
                     $upload_data["tmp_name"] = $documents['tmp_name'];
                     $upload_data["error"] = $documents['error'];
                     $upload_data["size"] = $documents['size'];
-                    if ($upload_data["error"] === UPLOAD_ERR_OK) {;
+                    if ($upload_data["error"] === UPLOAD_ERR_OK) {
+                        
+if($doc_ids[$i] == 16)
+{
+
+
+$update = $this->db->query("
+UPDATE tblclient_university_shortlisting AS s
+JOIN tbladmission_preferences AS p 
+ON p.userid = s.client_id
+AND s.university_name = p.primary_university
+AND p.primary_country = 'georgia'
+SET s.ministry_document_recived = 1
+WHERE s.client_id = " . (int)$client_id . "
+");
+
+
+
+}
                         $file_name = upload_applicant_documents($client_id, $upload_data);
                         array_push($update_array, array("id" => $doc_ids[$i], "document_file" => $file_name["file_path"], "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')));
                         $doc_name = $documents_type[$doc_ids[$i]]["name"];
