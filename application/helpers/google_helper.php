@@ -1382,31 +1382,36 @@ function fly_excel_sync($id = "")
         $condition_sql = "";
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
 
+
+// INNER JOIN (
+//     SELECT td_latest.*,
+//           td_sum.total_ticket_cost
+//     FROM " . db_prefix() . "ticket_data td_latest
+//     INNER JOIN (
+//         SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
+//         FROM " . db_prefix() . "ticket_data
+//         GROUP BY client_id
+//     ) td_sum ON td_latest.client_id = td_sum.client_id
+//     INNER JOIN (
+//         SELECT client_id, MAX(id) AS latest_id
+//         FROM " . db_prefix() . "ticket_data
+//         GROUP BY client_id
+//     ) td_max ON td_latest.client_id = td_max.client_id 
+//             AND td_latest.id = td_max.latest_id
+// ) td ON td.client_id = c.userid
+
+
         $sql = "SELECT {$selectColumnName}
 FROM " . db_prefix() . "clients c
-INNER JOIN (
-    SELECT td_latest.*,
-           td_sum.total_ticket_cost
-    FROM " . db_prefix() . "ticket_data td_latest
-    INNER JOIN (
-        SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
-        FROM " . db_prefix() . "ticket_data
-        GROUP BY client_id
-    ) td_sum ON td_latest.client_id = td_sum.client_id
-    INNER JOIN (
-        SELECT client_id, MAX(id) AS latest_id
-        FROM " . db_prefix() . "ticket_data
-        GROUP BY client_id
-    ) td_max ON td_latest.client_id = td_max.client_id 
-            AND td_latest.id = td_max.latest_id
-) td ON td.client_id = c.userid
+
+ LEFT JOIN " . db_prefix() . "ticket_data td ON td.client_id = c.userid
  LEFT JOIN " . db_prefix() . "ev_partner evp ON evp.id = c.agent_id
   LEFT JOIN " . db_prefix() . "applicant_status s ON c.active = s.id
 LEFT JOIN " . db_prefix() . "basic_details b ON b.userid = c.userid
 LEFT JOIN " . db_prefix() . "applicant_status aps ON aps.id = c.active
 LEFT JOIN " . db_prefix() . "leads l ON (l.id = c.leadid AND l.type = 2)
 LEFT JOIN " . db_prefix() . "staff st ON l.assigned = st.staffid
-LEFT JOIN " . db_prefix() . "applicant_tracker tt ON tt.id = (c.applicant_status + 1)
+LEFT JOIN " . db_prefix() . "applicant_stages tt ON tt.id = c.applicant_stage
 LEFT JOIN " . db_prefix() . "admission_preferences p ON p.userid = c.userid
 LEFT JOIN " . db_prefix() . "client_university_shortlisting us ON (us.client_id = c.userid AND us.status = 1)
 LEFT JOIN " . db_prefix() . "application_status appst ON appst.id = us.application_status
@@ -1422,9 +1427,7 @@ LEFT JOIN " . db_prefix() . "departure_location tdl ON tdl.id = td.departure_loc
 LEFT JOIN " . db_prefix() . "payment_mode pm ON pm.id = td.payment_mode
 
 WHERE 1=1 {$condition_sql}
-GROUP BY c.userid ";
-
-
+GROUP BY c.userid,td.id ";
 
 
         $sql = preg_replace('/\s+/', ' ', trim($sql));
