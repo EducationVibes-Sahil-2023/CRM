@@ -9,7 +9,7 @@ $payment_mode   = getDataInformation('external_payment_mode', ['id', 'name'], ['
 $ticket_status   = getDataInformation('external_visa_status', ['id', 'name'], ['status' => 1]);
 $payment_mode_deposite   = getDataInformation('external_payment_mode', ['id', 'name'], ['deposite' => 1]);
 $flight_type   = getDataInformation('flight_type', ['id', 'name'], ['status' => 1]);
-$flight_departure   = getDataInformation('external_departure', ['id', 'name'], ['status' => 1]);
+$flight_departure   = getDataInformation('departure_location', ['id', 'name'], ['status' => 1]);
 $airline   = getDataInformation('airline', ['id', 'name'], ['status' => 1]);
 
 // $visa_status = [
