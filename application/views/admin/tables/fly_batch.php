@@ -141,7 +141,7 @@ if ($manually == 1) {
         
         if(is_postSale() && is_admin()){
         // if (empty($aRow['auto']) && $manually == 1 && $aRow["ticket_status"] < 3) {
-        if (empty($aRow['auto']) && $manually == 1 && $aRow["ticket_status"] < 3) {
+        if (empty($aRow['auto']) && $manually == 1) {
 
           
             
@@ -170,7 +170,7 @@ if ($manually == 1) {
     </div>
     ";
         } else {
-            if( $aRow["ticket_status"] < 3 && (get_staff_user_id() == 214 || is_admin())){
+            if( (get_staff_user_id() == 214 || is_admin())){
               $action = "<div> ";
             if($has_permission_delete == 1)
             {
@@ -193,7 +193,7 @@ if ($manually == 1) {
         }
         else
         {
-                 if( $aRow["ticket_status"] < 3  && (get_staff_user_id() == 214 || is_admin())){
+                 if( (get_staff_user_id() == 214 || is_admin())){
               $action = "<div> ";
             if($has_permission_delete == 1)
             {
@@ -245,7 +245,7 @@ if ($manually == 1) {
     ";
         } else {
             
-                      if( $aRow["ticket_status"] < 3  && (get_staff_user_id() == 214 || is_admin())){
+                      if( (get_staff_user_id() == 214 || is_admin())){
               $action = "<div> ";
             if($has_permission_delete == 1)
             {

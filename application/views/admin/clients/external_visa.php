@@ -25,7 +25,7 @@ if (!empty(!empty($country))) {
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
-                        <h4 class="no-margin"><?php echo _l('Visa Details'); ?></h4>
+                        <h4 class="no-margin"><?php echo _l('External Visa Details'); ?></h4>
                         <hr>
 
                         <?= form_open('', ['id' => 'visa_form']); ?>
@@ -187,20 +187,23 @@ if (!empty(!empty($country))) {
                                     ]
                                 ); ?>
                             </div>
-
+                            
                             <div class="col-md-3">
-                                <?= render_select(
-                                    'deposite_mode',
-                                    $payment_mode_deposite,
-                                    ['id', 'name'],
-                                    'Deposit Mode',
-                                    [$visaData->deposite_mode ?? ''] ?? '',
-                                    [
-                                        'data-width' => '100%',
-                                        'data-none-selected-text' => 'No Selected'
-                                    ]
-                                ); ?>
+                               <?= render_input(
+    'reference_name',
+    'Reference Name',
+    $visaData->reference_name ?? '',
+    'text',
+    [
+        'placeholder' => 'Reference Name',
+        'pattern' => '[A-Za-z\s]+',
+        'title' => 'Only letters and spaces are allowed'
+    ]
+); ?>
+
                             </div>
+
+                         
                         </div>
                         <div class="row">
                             <div class="col-md-3">
@@ -249,7 +252,21 @@ if (!empty(!empty($country))) {
                             <div class="col-md-3">
                                 <?= render_input('deposite_date', 'Deposit Date', $visaData->deposite_date ?? '', 'date'); ?>
                             </div>
-                            <div class="col-md-3">
+                            
+                               <div class="col-md-3">
+                                <?= render_select(
+                                    'deposite_mode',
+                                    $payment_mode_deposite,
+                                    ['id', 'name'],
+                                    'Deposit Mode',
+                                    [$visaData->deposite_mode ?? ''] ?? '',
+                                    [
+                                        'data-width' => '100%',
+                                        'data-none-selected-text' => 'No Selected'
+                                    ]
+                                ); ?>
+                            </div>
+                            <div class="col-md-3 hide">
                                 <?= render_input('minor', 'Minor Aff (image/*,application/pdf)', $visaData->minor ?? '', 'file', ["accept" => "image/*,application/pdf"]); ?>
 
                                 <?php
@@ -283,6 +300,17 @@ if (!empty(!empty($country))) {
 </div>
 
 <?php init_tail(); ?>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("reference_name");
+
+    input.addEventListener("input", function () {
+        this.value = this.value.replace(/[^A-Za-z\s]/g, ""); 
+    });
+});
+</script>
+
+
 <script>
     // Optional form validation or AJAX submission
     $(function() {

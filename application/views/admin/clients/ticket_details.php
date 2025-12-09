@@ -26,7 +26,7 @@ $table_data = array(
 
                         <div class="row">
                             <div class="col-md-6">
-                                <h4 class="no-margin"><?php echo _l('Ticket Details'); ?></h4>
+                                <h4 class="no-margin"><?php echo _l('External Ticket Details'); ?></h4>
                             </div>
                             <div class="col-md-6 text-right">
                                 <?php if (has_permission('external_ticket', '', 'create')) {

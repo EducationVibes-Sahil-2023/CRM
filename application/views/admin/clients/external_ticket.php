@@ -2,6 +2,7 @@
 <?php init_head(); ?>
 
 <?php
+
 // ✅ Fetch dropdown data safely
 $ticket_vendor = getDataInformation('external_ticket_vendor', ['id', 'name'], ['status' => 1]);
 $ticket_type   = getDataInformation('external_visa_type', ['id', 'name'], ['status' => 1]);
@@ -12,6 +13,14 @@ $flight_type   = getDataInformation('flight_type', ['id', 'name'], ['status' => 
 $flight_departure   = getDataInformation('departure_location', ['id', 'name'], ['status' => 1]);
 $airline   = getDataInformation('airline', ['id', 'name'], ['status' => 1]);
 
+        if(is_admin())
+    {
+//         ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
+
+// print_r($ticket_vendor);
+    }
 // $visa_status = [
 //     ['id' => 1, 'name' => 'Yes'],
 //     ['id' => 0, 'name' => 'No']
@@ -28,7 +37,7 @@ if (!empty(!empty($country))) {
             <div class="col-md-12">
                 <div class="panel_s">
                     <div class="panel-body">
-                        <h4 class="no-margin"><?php echo _l('Ticket Details'); ?></h4>
+                        <h4 class="no-margin"><?php echo _l('External Ticket Details'); ?></h4>
                         <hr>
 
                         <?= form_open('', ['id' => 'ticket_form']); ?>
@@ -126,25 +135,25 @@ if (!empty(!empty($country))) {
                             </div>
 
                             <div class="col-md-3">
-                                <?= render_select(
-                                    'airline',
-                                    $airline,
-                                    ['id', 'name'],
-                                    'Airline',
-                                    [explode($ticketData->airline, ",") ?? ''] ?? '',
-                                    [
-                                        'data-width' => '100%',
-                                        'data-none-selected-text' => 'No Selected',
-                                        'multiple' => false,
-                                        // 'data-actions-box' => true,
-                                        'data-max-options' => '1'
-                                    ],
-                                    array(),
-                                    'no-mbot',
-                                    '',
-                                    false,
-                                    'airline'
-                                ); ?>
+                               <?= render_select(
+    'airline',
+    $airline,
+    ['id', 'name'],
+    'Airline',
+    !empty($ticketData->airline) ? explode(',', $ticketData->airline) : [],
+    [
+        'data-width' => '100%',
+        'data-none-selected-text' => 'No Selected',
+        'multiple' => false,
+        'data-max-options' => '1'
+    ],
+    [],
+    'no-mbot',
+    '',
+    false,
+    'airline'
+); ?>
+
                             </div>
                             <!-- <div class="col-md-3">
                                 <?= render_select(
