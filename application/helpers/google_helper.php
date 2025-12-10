@@ -866,6 +866,21 @@ function syncExcel_neww($id = "")
             // die;
         }
 
+        if ((int) $sheet['excel_type'] === 7) {
+
+            $dataArray[] = ex_visa_data($id);
+
+            continue;
+            // die;
+        }
+
+        if ((int) $sheet['excel_type'] === 8) {
+
+            $dataArray[] = ex_ticket_data($id);
+
+            continue;
+            // die;
+        }
 
         if ((int) $sheet['excel_type'] !== 1) {
             continue;
@@ -1383,22 +1398,22 @@ function fly_excel_sync($id = "")
         $condition_sql .= " AND ((l.type = 2 OR l.type IS NULL) OR c.client_type = 2)  and c.userid IS NOT NULL ";
 
 
-// INNER JOIN (
-//     SELECT td_latest.*,
-//           td_sum.total_ticket_cost
-//     FROM " . db_prefix() . "ticket_data td_latest
-//     INNER JOIN (
-//         SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
-//         FROM " . db_prefix() . "ticket_data
-//         GROUP BY client_id
-//     ) td_sum ON td_latest.client_id = td_sum.client_id
-//     INNER JOIN (
-//         SELECT client_id, MAX(id) AS latest_id
-//         FROM " . db_prefix() . "ticket_data
-//         GROUP BY client_id
-//     ) td_max ON td_latest.client_id = td_max.client_id 
-//             AND td_latest.id = td_max.latest_id
-// ) td ON td.client_id = c.userid
+        // INNER JOIN (
+        //     SELECT td_latest.*,
+        //           td_sum.total_ticket_cost
+        //     FROM " . db_prefix() . "ticket_data td_latest
+        //     INNER JOIN (
+        //         SELECT client_id, SUM(IF(ticket_status != 6, ticket_cost, -ticket_cost)) AS total_ticket_cost
+        //         FROM " . db_prefix() . "ticket_data
+        //         GROUP BY client_id
+        //     ) td_sum ON td_latest.client_id = td_sum.client_id
+        //     INNER JOIN (
+        //         SELECT client_id, MAX(id) AS latest_id
+        //         FROM " . db_prefix() . "ticket_data
+        //         GROUP BY client_id
+        //     ) td_max ON td_latest.client_id = td_max.client_id 
+        //             AND td_latest.id = td_max.latest_id
+        // ) td ON td.client_id = c.userid
 
 
         $sql = "SELECT {$selectColumnName}
@@ -2224,87 +2239,87 @@ GROUP BY fd.client_id
 ";
 
 
-// $sql = "
-// WITH payment_flat AS (
-//     SELECT 
-//         pq.client_id,
-//         CAST(JSON_EXTRACT(fee_item, '$.fee_id') AS UNSIGNED) AS fee_id,
-//         CAST(JSON_EXTRACT(fee_item, '$.fee_inr_value') AS DECIMAL(18,2)) AS fee_inr_value,
-//         TRIM(BOTH '\"' FROM JSON_UNQUOTE(JSON_EXTRACT(fee_item, '$.fee_currency'))) AS fee_currency
-//     FROM tblpayment_quotations pq
-//     CROSS JOIN JSON_TABLE(
-//         pq.fess_infomation, 
-//         '$[*]' 
-//         COLUMNS (
-//             fee_item JSON PATH '$'
-//         )
-//     ) AS jt
-//     WHERE pq.status > 0 
-//       AND pq.payment_type != 16
-// ),
-// agg_fees AS (
-//     -- Sum by client_id, fee_id, currency to make them unique
-//     SELECT 
-//         client_id, 
-//         fee_id, 
-//         fee_currency, 
-//         SUM(fee_inr_value) AS total_inr
-//     FROM payment_flat
-//     GROUP BY client_id, fee_id, fee_currency
-// ),
-// merged_json AS (
-//     -- Convert to JSON array
-//     SELECT 
-//         client_id,
-//         JSON_ARRAYAGG(
-//             JSON_OBJECT(
-//                 'fee_id', fee_id,
-//                 'fee_currency', fee_currency,
-//                 'fee_inr_value', total_inr
-//             )
-//         ) AS merged_fees_json
-//     FROM agg_fees
-//     GROUP BY client_id
-// )
-// SELECT
-//     c.userid AS client_id,
-//     IF(c.client_type = 2, 'EVP', 'EV') AS owner,
-//     CONCAT(c.applicant_stage, ' ', tt.name) AS app_process_stage,
-//     CONCAT(bd.first_name, ' ', bd.last_name) AS student_name,
-//     ap.primary_country,
-//     ap.primary_university,
-//     IF(c.client_type = 2, evp.name, CONCAT(st.firstname, ' ', st.lastname)) AS counsellor_name,
-//     pq.payment_type,
-//     CONCAT(
-//         '[', 
-//         GROUP_CONCAT(
-//             DISTINCT JSON_OBJECT(
-//                 'fees_id', fd.fees_id,
-//                 'amount', fd.amount,
-//                 'currency_id', fd.currency_id
-//             )
-//         ), 
-//         ']'
-//     ) AS fees_details_json,
-//     mj.merged_fees_json AS payment_details_json
-// FROM tblclients c
-// LEFT JOIN tblbasic_details bd ON bd.userid = c.userid
-// LEFT JOIN tbladmission_preferences ap ON ap.userid = c.userid
-// LEFT JOIN tblapplicant_stages tt ON tt.id = c.applicant_stage
-// LEFT JOIN tblleads l ON c.leadid = l.id
-// LEFT JOIN tblstaff st ON st.staffid = l.assigned
-// LEFT JOIN tblev_partner evp ON evp.id = c.agent_id
-// LEFT JOIN tblpayment_quotations pq ON pq.client_id = c.userid AND pq.status > 0
-// LEFT JOIN tblapplicant_fees_details fd ON fd.client_id = c.userid
-// JOIN merged_json mj ON mj.client_id = c.userid
-// WHERE (l.type = 2 OR l.type IS NULL OR c.client_type = 2)
-//   AND c.userid = 863
-// GROUP BY 
-//     c.userid;
-// ";
+    // $sql = "
+    // WITH payment_flat AS (
+    //     SELECT 
+    //         pq.client_id,
+    //         CAST(JSON_EXTRACT(fee_item, '$.fee_id') AS UNSIGNED) AS fee_id,
+    //         CAST(JSON_EXTRACT(fee_item, '$.fee_inr_value') AS DECIMAL(18,2)) AS fee_inr_value,
+    //         TRIM(BOTH '\"' FROM JSON_UNQUOTE(JSON_EXTRACT(fee_item, '$.fee_currency'))) AS fee_currency
+    //     FROM tblpayment_quotations pq
+    //     CROSS JOIN JSON_TABLE(
+    //         pq.fess_infomation, 
+    //         '$[*]' 
+    //         COLUMNS (
+    //             fee_item JSON PATH '$'
+    //         )
+    //     ) AS jt
+    //     WHERE pq.status > 0 
+    //       AND pq.payment_type != 16
+    // ),
+    // agg_fees AS (
+    //     -- Sum by client_id, fee_id, currency to make them unique
+    //     SELECT 
+    //         client_id, 
+    //         fee_id, 
+    //         fee_currency, 
+    //         SUM(fee_inr_value) AS total_inr
+    //     FROM payment_flat
+    //     GROUP BY client_id, fee_id, fee_currency
+    // ),
+    // merged_json AS (
+    //     -- Convert to JSON array
+    //     SELECT 
+    //         client_id,
+    //         JSON_ARRAYAGG(
+    //             JSON_OBJECT(
+    //                 'fee_id', fee_id,
+    //                 'fee_currency', fee_currency,
+    //                 'fee_inr_value', total_inr
+    //             )
+    //         ) AS merged_fees_json
+    //     FROM agg_fees
+    //     GROUP BY client_id
+    // )
+    // SELECT
+    //     c.userid AS client_id,
+    //     IF(c.client_type = 2, 'EVP', 'EV') AS owner,
+    //     CONCAT(c.applicant_stage, ' ', tt.name) AS app_process_stage,
+    //     CONCAT(bd.first_name, ' ', bd.last_name) AS student_name,
+    //     ap.primary_country,
+    //     ap.primary_university,
+    //     IF(c.client_type = 2, evp.name, CONCAT(st.firstname, ' ', st.lastname)) AS counsellor_name,
+    //     pq.payment_type,
+    //     CONCAT(
+    //         '[', 
+    //         GROUP_CONCAT(
+    //             DISTINCT JSON_OBJECT(
+    //                 'fees_id', fd.fees_id,
+    //                 'amount', fd.amount,
+    //                 'currency_id', fd.currency_id
+    //             )
+    //         ), 
+    //         ']'
+    //     ) AS fees_details_json,
+    //     mj.merged_fees_json AS payment_details_json
+    // FROM tblclients c
+    // LEFT JOIN tblbasic_details bd ON bd.userid = c.userid
+    // LEFT JOIN tbladmission_preferences ap ON ap.userid = c.userid
+    // LEFT JOIN tblapplicant_stages tt ON tt.id = c.applicant_stage
+    // LEFT JOIN tblleads l ON c.leadid = l.id
+    // LEFT JOIN tblstaff st ON st.staffid = l.assigned
+    // LEFT JOIN tblev_partner evp ON evp.id = c.agent_id
+    // LEFT JOIN tblpayment_quotations pq ON pq.client_id = c.userid AND pq.status > 0
+    // LEFT JOIN tblapplicant_fees_details fd ON fd.client_id = c.userid
+    // JOIN merged_json mj ON mj.client_id = c.userid
+    // WHERE (l.type = 2 OR l.type IS NULL OR c.client_type = 2)
+    //   AND c.userid = 863
+    // GROUP BY 
+    //     c.userid;
+    // ";
 
 
-  
+
     $arrayData = $CI->db->query($sql)->result_array();
 
 
@@ -2505,28 +2520,28 @@ function payment_quotations($id = '')
 
 function paymentDuesHostel()
 {
-    
-    
-$country = !empty($_GET['country'])?$_GET['country']:'';
+
+
+    $country = !empty($_GET['country']) ? $_GET['country'] : '';
     $CI = &get_instance();
     $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
     // fetch fees with lead_type as well
-    $feesList =[];
+    $feesList = [];
     $feesList["g"] = $CI->db->select("id, name")
         ->from(db_prefix() . "applicant_fees")->where("georgia_hostel", 1)
         ->order_by("sequence", "ASC")
         ->get()
         ->result_array();
-        
-        
-        
-        $feesList["r"] = $CI->db->select("id, name")
-        ->from(db_prefix() . "applicant_fees")->where("russia_hostel",1)
+
+
+
+    $feesList["r"] = $CI->db->select("id, name")
+        ->from(db_prefix() . "applicant_fees")->where("russia_hostel", 1)
         ->order_by("sequence", "ASC")
         ->get()
         ->result_array();
 
- $today = date('Y-m-d');
+    $today = date('Y-m-d');
 
     $columns['g'] = [
         "Student Name",
@@ -2550,8 +2565,8 @@ $country = !empty($_GET['country'])?$_GET['country']:'';
         "Remark",
         "Active Status",
     ];
-    
-      $columns['r'] = [
+
+    $columns['r'] = [
         "Student Name",
         "Passport",
         "University Name",
@@ -2566,7 +2581,7 @@ $country = !empty($_GET['country'])?$_GET['country']:'';
         "Remark",
         "Active Status",
     ];
-    
+
     // $columns = [
     //     "Student Name",
     //     "Passport",
@@ -2587,26 +2602,26 @@ $country = !empty($_GET['country'])?$_GET['country']:'';
     //     // "Vendor Name",
     //     "Remark"
     // ];
-    
-    
+
+
 
     $normal = $pay = $dues = [];
-foreach ($feesList as $fees){
-    foreach ($fees as $fee) {
-        $normal[] = $fee['name'];
-        $pay[]    = "Pay " . $fee['name'];
-        $dues[]   = "Dues " . $fee['name'];
+    foreach ($feesList as $fees) {
+        foreach ($fees as $fee) {
+            $normal[] = $fee['name'];
+            $pay[]    = "Pay " . $fee['name'];
+            $dues[]   = "Dues " . $fee['name'];
+        }
     }
-}
 
     $columns = array_merge($columns, $normal, $pay, $dues);
 
 
- $today = date('Y-m-d');
+    $today = date('Y-m-d');
 
     $sheet_name = "Hostel Payment Dues";
-    
- $active_status_sql = " ,  CASE 
+
+    $active_status_sql = " ,  CASE 
         WHEN LOWER(ho.hostel_type) = 'russia' THEN
             CASE 
                 WHEN hp1.id > 0 THEN 'YES'
@@ -2625,9 +2640,9 @@ foreach ($feesList as $fees){
         ELSE 'N/A'
     END AS active_status ";
 
- 
- 
- $sql = "SELECT 
+
+
+    $sql = "SELECT 
     ho.id AS student_id,
     ho.acadmic_year AS acadmic_year,
     ho.passport AS passport,
@@ -2714,25 +2729,20 @@ LEFT JOIN LATERAL (
 
 WHERE ho.status = 1";
 
-if(!empty($country))
-{
-    $sql .=" AND ho.hostel_type = '${country}' ";
-
-}
+    if (!empty($country)) {
+        $sql .= " AND ho.hostel_type = '${country}' ";
+    }
 
 
-if(!empty($_GET["group_by"]))
-{
-   $sql .=" ".$_GET["group_by"]." ";
-}
-else
-{
-  $sql .=" GROUP BY ho.id ";
-}
- $sql .=" ORDER BY ho.id  ASC";
+    if (!empty($_GET["group_by"])) {
+        $sql .= " " . $_GET["group_by"] . " ";
+    } else {
+        $sql .= " GROUP BY ho.id ";
+    }
+    $sql .= " ORDER BY ho.id  ASC";
 
     $arrayData = $CI->db->query($sql)->result_array();
-    
+
     $dataArray = [[
         "columnName"    => $columns,
         "workSheetName" => $sheet_name,
@@ -2748,8 +2758,106 @@ else
     header('Content-Type: application/json');
     echo json_encode($dataArray);
     die;
+}
 
-    
+
+function ex_visa_data()
+{
+    $CI = &get_instance();
+
+    $CI->db->query("SET SESSION group_concat_max_len = 10000000000");
+
+    // Fetch sheet config(s)
+    $sheetData = $CI->db->select("id, spreadsheetId, fromDate, toDate, autoSync, sheet_name, sql_condition, column_ids")
+        ->from(db_prefix() . "excel_data_update")
+        ->where("excel_type", 3)
+        ->where("autoSync", 1)
+        ->order_by("id", "asc")
+        ->get()
+        ->result_array();
+
+    $dataArray = [];
+
+    foreach ($sheetData as $sheet) {
+        $currentId     = $sheet['id'] ?? null;
+        $fromDate      = $sheet['fromDate'] ?? null;
+        $toDate        = $sheet['toDate'] ?? null;
+        $spreadsheetId = $sheet['spreadsheetId'] ?? null;
+        $sheet_name    = $sheet['sheet_name'] ?? null;
+
+        // Parse column IDs
+        $column_ids_raw = $sheet['column_ids'] ?? '';
+        $column_ids = (is_string($column_ids_raw) && trim($column_ids_raw) !== '')
+            ? array_map('intval', explode(",", $column_ids_raw))
+            : [];
+
+        if (empty($column_ids)) {
+            continue; // skip if no columns configured
+        }
+        $orderColumns = implode(',', $column_ids);
+        // Fetch column names in correct order
+
+        $selectColumnName = $CI->db
+            ->select("GROUP_CONCAT(fetch_column_name ORDER BY FIELD(id, $orderColumns)) AS fetch_column_name", false)
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->get()
+            ->row()
+            ->fetch_column_name ?? '';
+        if (empty($selectColumnName)) {
+            continue;
+        }
+        // Build conditions
+        $condition_sql = "";
+        if (!empty($fromDate) && !empty($toDate)) {
+            $condition_sql .= " AND (vd.created_at BETWEEN " . $CI->db->escape($fromDate) . " AND " . $CI->db->escape($toDate) . ")";
+        }
+        $sql = "
+    SELECT 
+        {$selectColumnName}
+    FROM `" . db_prefix() . "external_visa_data` vd
+    LEFT JOIN `" . db_prefix() . "external_visa_type` vt 
+        ON vd.visa_type = vt.id
+    LEFT JOIN `" . db_prefix() . "external_visa_status` vs 
+        ON vd.visa_status = vs.id
+    LEFT JOIN `" . db_prefix() . "external_ticket_vendor` v 
+        ON vd.visa_vendor = v.id
+    LEFT JOIN `" . db_prefix() . "external_payment_mode` m 
+        ON vd.payment_mode = m.id
+    LEFT JOIN `" . db_prefix() . "clients` c 
+        ON vd.client_id = c.userid
+    WHERE 1=1 {$condition_sql}
+    GROUP BY vd.id
+    ORDER BY vd.id DESC
+";
+
+        $arrayData = $CI->db->query($sql)->result_array();
+
+        // Get column names
+        $sheetColumnName = $CI->db->select("name")
+            ->from(db_prefix() . "excel_column_update")
+            ->where_in("id", $column_ids)
+            ->order_by("FIELD(id, {$orderColumns})", "", false)
+            ->get()
+            ->result_array();
+        $columns = array_column($sheetColumnName, "name");
+
+
+        // Update last sync
+        $CI->db->where('id', $currentId)
+            ->update(db_prefix() . "excel_data_update", [
+                'lastSync' => date('Y-m-d H:i:s')
+            ]);
+        // Add to final array
+        $dataArray[] = [
+            "columnName"    => $columns,
+            "workSheetName" => $sheet_name,
+            "rowData"       => $arrayData
+        ];
+    }
+    header('Content-Type: application/json');
+    echo json_encode($dataArray);
+    exit;
 }
 
 

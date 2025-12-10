@@ -56,7 +56,9 @@ $academicYears = [
                                             <option value="2" <?php echo ($excelInfo->excel_type == "2") ? 'selected' : ''; ?>>Leads</option>
                                             <option value="4" <?php echo ($excelInfo->excel_type == "4") ? 'selected' : ''; ?>>Flight</option>
                                             <option value="5" <?php echo ($excelInfo->excel_type == "5") ? 'selected' : ''; ?>>Visa</option>
-                                             <option value="6" <?php echo ($excelInfo->excel_type == "6") ? 'selected' : ''; ?>>Ma Quotation</option>
+                                            <option value="6" <?php echo ($excelInfo->excel_type == "6") ? 'selected' : ''; ?>>Ma Quotation</option>
+                                            <option value="7" <?php echo ($excelInfo->excel_type == "7") ? 'selected' : ''; ?>>Ex Visa Data</option>
+                                            <option value="8" <?php echo ($excelInfo->excel_type == "8") ? 'selected' : ''; ?>>Ex Ticket Data</option>
                                         </select>
                                     </div>
 
@@ -222,18 +224,21 @@ $academicYears = [
         } else if (type === "3" || type === 3) {
             $(".applicant-sa").show();
             $(".excel-type-3").show();
-        }
-        else if (type === "4" || type === 4) {
+        } else if (type === "4" || type === 4) {
             $(".visa-data").show();
             $(".excel-type-4").show();
-        }
-         else if (type === "5" || type === 5) {
+        } else if (type === "5" || type === 5) {
             $(".visa-data").show();
             $(".excel-type-5").show();
-        }
-        else if (type === "6" || type === 6) {
+        } else if (type === "6" || type === 6) {
             $(".visa-data").show();
             $(".excel-type-6").show();
+        } else if (type === "7" || type === 7) {
+            $(".ex-visa-data").show();
+            $(".excel-type-7").show();
+        } else if (type === "8" || type === 8) {
+            $(".ex-ticket-data").show();
+            $(".excel-type-8").show();
         }
     }
 
@@ -357,18 +362,21 @@ $academicYears = [
         } else if (excel_type === "3" || excel_type === 3) {
             $(".applicant-sa").show();
             $(".excel-type-3").show();
-        }
-        else if (excel_type === "4" || excel_type === 4) {
+        } else if (excel_type === "4" || excel_type === 4) {
             $(".visa-data").show();
             $(".excel-type-4").show();
-        }
-         else if (excel_type === "5" || excel_type === 5) {
+        } else if (excel_type === "5" || excel_type === 5) {
             $(".visa-data").show();
             $(".excel-type-5").show();
-        }
-          else if (excel_type === "6" || excel_type === 6) {
+        } else if (excel_type === "6" || excel_type === 6) {
             $(".visa-data").show();
             $(".excel-type-6").show();
+        } else if (type === "7" || type === 7) {
+            $(".ex-visa-data").show();
+            $(".excel-type-7").show();
+        } else if (type === "8" || type === 8) {
+            $(".ex-ticket-data").show();
+            $(".excel-type-8").show();
         }
     });
 </script>
