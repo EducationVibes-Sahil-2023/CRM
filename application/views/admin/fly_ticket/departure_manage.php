@@ -18,7 +18,7 @@ $table_data = array(
                         <h4 class="no-margin"><?= $title ?></h4>
                     </div>
                     <div class="panel-body _buttons">
-                        <?php if (has_permission('fly_batch_departure', '', 'create')) { ?>
+                        <?php if (has_permission('fly_batch', '', 'departure_create')) { ?>
 
 
                             <button type="button" data-toggle="modal" data-target="#fly_location" class="btn btn-primary">
@@ -80,11 +80,11 @@ $table_data = array(
 
 <?php init_tail(); ?>
 <script>
-     var exam_data_table = "";
+    var exam_data_table = "";
     $(function() {
 
 
-       
+
         $(function() {
             exam_data_table = initDataTable('.table-fly-departure', window.location.href);
         });
@@ -100,7 +100,7 @@ $table_data = array(
     function edit(id, data) {
         var decodedData = JSON.parse(atob(data));
 
-        
+
 
         $('#fly_location').modal('show');
         $('input[name=departure_id]').val(id);

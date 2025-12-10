@@ -349,7 +349,7 @@ if (!empty(!empty($country))) {
         appValidateForm($('#ticket_form'), {
             name: 'required',
             gender: 'required',
-            dob: 'required',
+            // dob: 'required',
             // adhar: 'required',
             ticket_vendor: 'required',
             ticket_type: 'required'

@@ -171,7 +171,7 @@ function app_init_admin_sidebar_menu_items()
 
 
 
-    if (has_permission('fly_batch_departure', '', 'create')) {
+    if (has_permission('fly_batch', '', 'departure_create')) {
                  $CI->app_menu->add_sidebar_children_item('batch_create', [
                         'href'     => admin_url('fly_batch/departure'),
                         'slug'     => 'fly_departure',

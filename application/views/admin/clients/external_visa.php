@@ -54,12 +54,12 @@ if (!empty(!empty($country))) {
                             <div class="col-md-3">
                                 <?= render_input(
                                     'adhar',
-                                    'Adhar Card Front/Back * (.pdf)',
+                                    'Adhar Card Front/Back (.pdf)',
                                     $visaData->adhar ?? '',
                                     'file',
                                     [
                                         "accept" => "image/*,application/pdf",
-                                        empty($visaData->adhar) ? 'required' : false => "true"
+                                        // empty($visaData->adhar) ? 'required' : false => "true"
                                     ]
                                 ); ?>
 
@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", function () {
         appValidateForm($('#visa_form'), {
             name: 'required',
             gender: 'required',
-            dob: 'required',
+            // dob: 'required',
             // adhar: 'required',
             visa_vendor: 'required',
             visa_type: 'required'
