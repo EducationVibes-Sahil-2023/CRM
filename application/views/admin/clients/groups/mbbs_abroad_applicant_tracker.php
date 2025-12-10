@@ -1509,12 +1509,35 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                                 'required' => 'required'
                                                             ]); ?>
                                                         </div>
+
                                                         <div class="col-md-4">
                                                             <label>Visa Cost <small class='text-danger'>*</small></label>
-                                                            <?php echo render_input('visa_cost_' . $visa_id, '',  !empty($visa["cost"]) ? $visa["cost"] : '', 'number', [
-                                                                'required-check' => 'required-check',
-                                                                'required' => 'required'
-                                                            ]); ?>
+                                                            <!-- <?php echo render_input('visa_cost', '', '', 'number', [
+                                                                        'required-check' => 'required-check',
+                                                                        'required' => 'required'
+                                                                    ]); ?> -->
+
+                                                            <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                                <input type="number" class="form-control" name="visa_cost" value="<?= $visa["cost"] ?? 0 ?>" required-check required>
+
+                                                                <div class="input-group-addon currency-addon">
+
+                                                                    <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-<?= $id ?>">
+                                                                        <?php foreach ($get_currencies as $c) {
+                                                                        ?>
+                                                                            <option
+                                                                                data-symbol="<?= $c['symbol'] ?>"
+                                                                                value="<?= $c['id'] ?>"
+                                                                                data-placeholder="0.00" <?= (!empty($visa["currency_type"]) && $visa["currency_type"] == $c['id']) ? "selected" : "" ?>>
+                                                                                <?= $c['name'] ?>
+
+                                                                            </option>
+                                                                        <?php
+                                                                        }
+                                                                        ?>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                         <div class="col-md-4">
                                                             <label>Payment Mode <small class='text-danger'>*</small></label>
@@ -1613,11 +1636,31 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                                                         ]); ?>
                                                     </div>
                                                     <div class="col-md-4">
-                                                        <label>Cost <small class='text-danger'>*</small></label>
-                                                        <?php echo render_input('visa_cost', '', '', 'number', [
-                                                            'required-check' => 'required-check',
-                                                            'required' => 'required'
-                                                        ]); ?>
+                                                        <label>Visa Cost <small class='text-danger'>*</small></label>
+                                                        <!-- <?php echo render_input('visa_cost', '', '', 'number', [
+                                                                    'required-check' => 'required-check',
+                                                                    'required' => 'required'
+                                                                ]); ?> -->
+
+                                                        <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                            <input type="number" class="form-control" name="visa_cost" value="" required-check required>
+                                                            <div class="input-group-addon currency-addon">
+
+                                                                <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-<?= $id ?>">
+                                                                    <?php foreach ($get_currencies as $c) {
+                                                                    ?>
+                                                                        <option
+                                                                            data-symbol="<?= $c['symbol'] ?>"
+                                                                            value="<?= $c['id'] ?>"
+                                                                            data-placeholder="0.00">
+                                                                            <?= $c['name'] ?>
+                                                                        </option>
+                                                                    <?php
+                                                                    }
+                                                                    ?>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <label>Payment Mode <small class='text-danger'>*</small></label>
@@ -1673,10 +1716,9 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
 
                             if (!has_permission($track['check_permission'], '', 'edit')) {
                                 if (!empty($client->sc_100) && $client->sc_100 == 1) {
-                                    echo '<h4 class="text-success text-center">Congratulations! Your application to <b>'.$admissionpreferences->primary_university.','.$admissionpreferences->primary_country.'</b> has been completed successfully.</h4>';
-                                }
-                                else{
-                                echo ' <div class="col-md-12"><h3>You do not have permission to continue to the next step.</h3></div>';
+                                    echo '<h4 class="text-success text-center">Congratulations! Your application to <b>' . $admissionpreferences->primary_university . ',' . $admissionpreferences->primary_country . '</b> has been completed successfully.</h4>';
+                                } else {
+                                    echo ' <div class="col-md-12"><h3>You do not have permission to continue to the next step.</h3></div>';
                                 }
                             } else {
                             ?>
@@ -1723,8 +1765,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <?php if (!empty($track['id']) && $track['id'] == 2) { ?>
                                 <input type="button" name="next" class="next btn-hide-complete  text-center btn-danger action-button next-reset-<?= $track['id'] ?>" onclick="reset_university_shortlisting()" value="Reset" />
                             <?php } ?>
-                            <?php if ((!empty($track['skip']) && $track['skip'] == 1) || ( $track['client_type_skip'] == $client_infomation->client_type ) || (!empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country)) { ?>
-                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ||  ( $track['client_type_skip'] == $client_infomation->client_type )  ? 1 : $track['skip'] ?>')" value="Skip" />
+                            <?php if ((!empty($track['skip']) && $track['skip'] == 1) || ($track['client_type_skip'] == $client_infomation->client_type) || (!empty($track['no_skip']) && $track['no_skip'] != $admissionpreferences->primary_country)) { ?>
+                                <input type="button" name="next" class=" btn-hide-complete text-center btn-warning action-button next-<?= $track ?>" onclick="next_step('<?= $track['id'] ?>',this,'<?= !empty($track['no_skip']) ||  ($track['client_type_skip'] == $client_infomation->client_type)  ? 1 : $track['skip'] ?>')" value="Skip" />
                             <?php } ?>
                         <?php } else if (($k + 2) == count($applicant_tracker)) {  ?>
                             <input type="button" name="next" class="next btn-hide-complete  text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this)" value="Update" />
@@ -1733,8 +1775,8 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
                             <!--<?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit') &&  empty($client->sc_100)) { ?>-->
                             <!--    <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />-->
                             <!--<?php } ?>-->
-                            
-                             <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit')) { ?>
+
+                            <?php if (has_permission("application_tracker_mbbbs_sc", '', 'edit')) { ?>
                                 <input type="button" name="next" class="next text-center action-button next-<?= $track['id'] ?>" onclick="next_step('<?= $track['id'] ?>',this,0,1)" value="Complete" />
                             <?php } ?>
                         <?php
@@ -1820,18 +1862,17 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     var is_admin = <?= is_admin() ? 1 : 0 ?>;
     if (complete_application == 1) {
         setTimeout(function() {
-        
+
             $(".btn-hide-complete").hide();
             $(".secondary_university_remark").prop("disabled", true);
             $("fieldset form").find("select").prop("disabled", true);
             $("fieldset form").find("input, select.selectpicker, textarea").prop("disabled", true).selectpicker("refresh");
             $(".remove_university_btn,.add_university_btn,.add_university_btn,.add_university_btn").hide();
             $("#primary_university").prop("disabled", true).selectpicker("refresh");
-                <?php if(is_admin() || has_permission("application_tracker_mbbbs_sc", '', 'edit'))
-            {
-                ?>
+            <?php if (is_admin() || has_permission("application_tracker_mbbbs_sc", '', 'edit')) {
+            ?>
                 $('input[name="sc_100"]').prop('disabled', false);
-                <?php 
+            <?php
             }
             ?>
         }, 500);
@@ -2247,13 +2288,12 @@ if (empty($staff_list[get_staff_user_id()]["post_sales"]) && !is_admin()) {
     async function next_step(id, obj, skip = 0, completed = 0, same_step = 0) {
         id = $.trim(id) || $("#progressbar .active").data("id");
 
-if (completed == 1) {
-    if($("#sc_100").is(':checked') ? 1 : 0 == 0)
-    {
-        complete_application = 0;
-    }
-     
-}
+        if (completed == 1) {
+            if ($("#sc_100").is(':checked') ? 1 : 0 == 0) {
+                complete_application = 0;
+            }
+
+        }
 
 
 
@@ -2278,11 +2318,11 @@ if (completed == 1) {
                 if (!check_validation) {
                     hide_loader();
                     return false;
-                } 
-               
+                }
+
                 upload_data.append("sc_100", $("#sc_100").is(":checked") ? 1 : 0);
                 upload_data.append("completed", 1);
-                 upload_data.append("tracker_id", 9);
+                upload_data.append("tracker_id", 9);
             } else if (id == 2) {
                 let result = await university_shortlisting_dropdown();
                 if (!result) {
@@ -2405,13 +2445,13 @@ if (completed == 1) {
 
             if (id == 9) {
                 if (skip == 1 || same_step == 1) {} else {
-                await set_validation_visa();
-                let check_validation = await check_required_fields("visa-form");
-                if (!check_validation) {
-                    hide_loader();
-                    return false;
-                }
-                
+                    await set_validation_visa();
+                    let check_validation = await check_required_fields("visa-form");
+                    if (!check_validation) {
+                        hide_loader();
+                        return false;
+                    }
+
                 }
                 await check_visa_letter(upload_data);
             }
@@ -3006,16 +3046,17 @@ if (completed == 1) {
                     invitation_letter = `<button class="btn-xs btn btn-danger" onclick="delete_documents(5,${tracker_id},${leg.id})"><i class="fa fa-trash"></i></button>`;
                 }
 
-let file_url_university_payment = "";
+                let file_url_university_payment = "";
 
-if (leg.invitation_letter) {
-  // Check if invitation_letter already includes the base URL
-  if (leg.invitation_letter.startsWith(base_url)) {
-    file_url_university_payment = leg.invitation_letter;
-  } else {
-    file_url_university_payment = base_url + leg.invitation_letter;
-  }
-}                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
+                if (leg.invitation_letter) {
+                    // Check if invitation_letter already includes the base URL
+                    if (leg.invitation_letter.startsWith(base_url)) {
+                        file_url_university_payment = leg.invitation_letter;
+                    } else {
+                        file_url_university_payment = base_url + leg.invitation_letter;
+                    }
+                }
+                let email_button = `<div class="text-right"><button type="button" class="btn btn-primary btn-xs hide" onclick="whatsapp_message_send(${client_id}, 4,'','${leg.id}')"><i class="fa fa-whatsapp hide-client-type"></i></button> <button type="button" class="btn btn-primary btn-xs hide" onclick="email_send(${client_id}, 3,${leg.id})"><i class="fa fa-envelope hide-client-type"></i></button> </div>`;
                 let card = `
                 <div class="invitation-item card shadow-sm p-3 mb-3">
                     <h4 class="university-name">${leg.university_name}</h4>
@@ -3721,7 +3762,23 @@ if (leg.invitation_letter) {
                 <div class="col-md-4">
                 <div class="form-group">
                     <label>Visa Cost</label>
-                    <input type="number" id="visa_cost_${visa_id}" name="visa_cost_${visa_id}" value="${visa.cost ?? ''}" class="form-control"  ${requried}/>
+                      <div class="input-group mb-2 mr-sm-2 mb-sm-0 col-3 form-group">
+                                                                <input type="number" id="visa_cost_${visa_id}" class="form-control" name="visa_cost_${visa_id}" value="${visa.cost ?? ''}" required-check required>
+                                                                <div class="input-group-addon currency-addon">
+
+                                                                    <select name="visa_cost_currency" id="visa_cost_currency" class="currency-selector currency-selector-${visa_id}">
+                                                                       ${currencies.map(c => `
+                <option 
+                    value="${c.id}"
+                    data-symbol="${c.symbol}"
+                    ${visa.currency_type == c.id ? "selected" : ""}
+                >
+                    ${c.name}
+                </option>
+            `).join('')}
+                                                                    </select>
+                                                                </div>
+                                                            </div>
                     </div>
                 </div>
                 <div class="col-md-4">
