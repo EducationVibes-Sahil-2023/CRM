@@ -83,7 +83,7 @@ class Fly_model extends App_Model
 
     public function check_batch($where)
     {
-         return [];
+        return [];
         try {
             $result = $this->db->select("id")
                 ->from(db_prefix() . "ticket_batch")
@@ -176,11 +176,10 @@ class Fly_model extends App_Model
                     "ticket_status"      => 2,
                     "country_name"       => $get_primary_university[$client_id]["primary_country"] ?? '',
                     "university_name"    => $get_primary_university[$client_id]["primary_university"] ?? ''
-                    
+
                 ];
-                if(!empty($client_exam_data["ticket_file"]))
-                {
-                  $data["ticket_file"] = $client_exam_data["ticket_file"]; 
+                if (!empty($client_exam_data["ticket_file"])) {
+                    $data["ticket_file"] = $client_exam_data["ticket_file"];
                 }
 
                 if (!empty($client_exam_data["batch_id"])) {
@@ -238,7 +237,7 @@ class Fly_model extends App_Model
                     "batch_id" => $client_exam_data["batch_id"],
                     "status" => 0,
                     "auto"     => 1
-                ])->update(db_prefix() . 'ticket_data', ["auto" => 0, 'batch_id' => 0,'status'=>1]);
+                ])->update(db_prefix() . 'ticket_data', ["auto" => 0, 'batch_id' => 0, 'status' => 1]);
             }
             return ["status" => true, "message" => "Ticket Fly Batch saved successfully."];
         } catch (Exception $e) {
@@ -283,6 +282,65 @@ class Fly_model extends App_Model
         } catch (Exception $e) {
             log_message("error", "Error fetching exam batch: " . $e->getMessage());
             return false;
+        }
+    }
+
+    public function insert_update_departure($data)
+    {
+        try {
+
+            // Validate
+            if (empty($data["name"])) {
+                return ["status" => false, "message" => "Departure name is required"];
+            }
+
+            $name = trim($data["name"]);
+            $id   = $data["id"] ?? null;
+
+            
+
+            // Prepare save data
+            $save = [
+                "name"         => $name,
+                "updated_at" => date("Y-m-d H:i:s"),
+                "updated_by"   => get_staff_user_id()
+            ];
+
+     
+            if (!empty($id)) {
+                // -------------------------
+                // UPDATE RECORD
+                // -------------------------
+                $this->db->where("id", $id)->update(db_prefix() . "departure_location", $save);
+                return [
+                    "status"  => true,
+                    "message" => "Departure updated successfully",
+                    "id"      => $id
+                ];
+            } else {
+                // -------------------------
+                // INSERT RECORD
+                // -------------------------
+                $save["created_at"] = date("Y-m-d H:i:s");
+                $save["created_by"]   = get_staff_user_id();
+
+                $this->db->insert(db_prefix() . "departure_location", $save);
+                $new_id = $this->db->insert_id();
+
+                return [
+                    "status"  => true,
+                    "message" => "Departure added successfully",
+                    "id"      => $new_id
+                ];
+            }
+        } catch (Exception $e) {
+
+            log_message("error", "insert_update_departure failed: " . $e->getMessage());
+
+            return [
+                "status"  => false,
+                "message" => "Unexpected error occurred"
+            ];
         }
     }
 }

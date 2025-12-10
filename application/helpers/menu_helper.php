@@ -145,6 +145,8 @@ function app_init_admin_sidebar_menu_items()
                 ]);
         }
 
+       
+
         // Fly Batch
         if (has_permission('fly_batch', '', 'view_own') || has_permission('fly_batch', '', 'view')) {
                 $CI->app_menu->add_sidebar_children_item('batch_create', [
@@ -169,7 +171,15 @@ function app_init_admin_sidebar_menu_items()
 
 
 
-
+    if (has_permission('fly_batch', '', 'departure_create')) {
+                 $CI->app_menu->add_sidebar_children_item('batch_create', [
+                        'href'     => admin_url('fly_batch/departure'),
+                        'slug'     => 'fly_departure',
+                        'name'     => "Fly Departure",
+                        'icon'     => 'fa fa-book',
+                        'position' => 200,
+                ]);
+        }
 
 
 

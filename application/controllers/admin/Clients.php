@@ -2693,12 +2693,11 @@ class Clients extends AdminController
                     $upload_data["error"] = $documents['error'];
                     $upload_data["size"] = $documents['size'];
                     if ($upload_data["error"] === UPLOAD_ERR_OK) {
-                        
-if($doc_ids[$i] == 16)
-{
+
+                        if ($doc_ids[$i] == 16) {
 
 
-$update = $this->db->query("
+                            $update = $this->db->query("
 UPDATE tblclient_university_shortlisting AS s
 JOIN tbladmission_preferences AS p 
 ON p.userid = s.client_id
@@ -2707,10 +2706,7 @@ AND p.primary_country = 'georgia'
 SET s.ministry_document_recived = 1
 WHERE s.client_id = " . (int)$client_id . "
 ");
-
-
-
-}
+                        }
                         $file_name = upload_applicant_documents($client_id, $upload_data);
                         array_push($update_array, array("id" => $doc_ids[$i], "document_file" => $file_name["file_path"], "updated_by" => get_staff_user_id(), "updated_date" => date('Y-m-d H:i:s')));
                         $doc_name = $documents_type[$doc_ids[$i]]["name"];
@@ -4537,12 +4533,11 @@ WHERE s.client_id = " . (int)$client_id . "
                     if (!empty($pcc_status)) {
                         $this->db->where("userid", $client_id);
                         $this->db->update(db_prefix() . 'clients', array("pcc_status" => $pcc_status));
-                        
                     }
 
-if (!empty($media_upload_data["doc_type"])) {
-                            $this->media_upload($media_upload_data, $_FILES);
-                        }
+                    if (!empty($media_upload_data["doc_type"])) {
+                        $this->media_upload($media_upload_data, $_FILES);
+                    }
                     if (!empty($orignal_doc_id)) {
                         $batch_update = [];
                         $batch_insert = [];
@@ -4585,8 +4580,6 @@ if (!empty($media_upload_data["doc_type"])) {
 
 
                         $this->clients_model->document_update_insert($batch_insert, $batch_update);
-
-
                     }
 
                     // handle_custom_fields_post($client_id, $update_applicant_custom_data);
@@ -8462,13 +8455,13 @@ if (!empty($media_upload_data["doc_type"])) {
             }
 
 
-
             $data_ = [
                 'id'                => $row['id'],
                 'userid'           => $client_id ?? "",
                 'vendor_id'           => $row['visa_vendor'] ?? "",
                 'courier_date'           => $row['visa_date'] ?? "",
                 'cost'           =>     $row['visa_cost'] ?? "",
+                'currency_type'           =>     $row['visa_cost_currency'] ?? "",
                 'payment_date'           => $row['visa_payment_date'] ?? "",
                 'payment_mode'           => $row['visa_payment_mode'] ?? "",
                 'courier_type'           => $row['visa_courier_type'] ?? "",
@@ -10623,7 +10616,7 @@ if (!empty($media_upload_data["doc_type"])) {
                 'issue_date' => $data['issue_date'] ?? null,
                 'exp_date' => $data['exp_date'] ?? null,
                 'status' => 1,
-                'reference_name'=> $data['reference_name'] ?? null,
+                'reference_name' => $data['reference_name'] ?? null,
             ];
 
 
@@ -10658,14 +10651,14 @@ if (!empty($media_upload_data["doc_type"])) {
                 // Update existing record
                 $this->db->where('id', $data['id']);
                 $this->db->update(db_prefix() . 'external_visa_data', $save_data);
-                                  $db_error = $this->db->error();
-    if ($db_error['code'] != 0) {
-        echo json_encode([
-                'resp_code' => 'ERR',
-                'resp_desc' => "Failed Data update"
-            ]);
-    }
-        
+                $db_error = $this->db->error();
+                if ($db_error['code'] != 0) {
+                    echo json_encode([
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "Failed Data update"
+                    ]);
+                }
+
                 $record_id = $data['id'];
             } else {
                 $save_data['created_date'] = date('Y-m-d H:i:s');
@@ -10673,14 +10666,14 @@ if (!empty($media_upload_data["doc_type"])) {
                 // Insert new record
                 $this->db->insert(db_prefix() . 'external_visa_data', $save_data);
                 $record_id = $this->db->insert_id();
-                
-                                  $db_error = $this->db->error();
-    if ($db_error['code'] != 0) {
-        echo json_encode([
-                'resp_code' => 'ERR',
-                'resp_desc' => "Failed Data update"
-            ]);
-    }
+
+                $db_error = $this->db->error();
+                if ($db_error['code'] != 0) {
+                    echo json_encode([
+                        'resp_code' => 'ERR',
+                        'resp_desc' => "Failed Data update"
+                    ]);
+                }
             }
 
             // Return structured response
@@ -10809,38 +10802,38 @@ if (!empty($media_upload_data["doc_type"])) {
             }
 
             // Prepare data array
-        $save_data = [
-    'name'             => $data['name'] ?? '',
+            $save_data = [
+                'name'             => $data['name'] ?? '',
 
-    // INT fields (empty -> 0)
-    'ticket_vendor'    => !empty($data['ticket_vendor']) ? (int)$data['ticket_vendor'] : 0,
-    'ticket_type'      => !empty($data['ticket_type']) ? (int)$data['ticket_type'] : 0,
-    'payment_mode'     => !empty($data['payment_mode']) ? (int)$data['payment_mode'] : 0,
-    'ticket_cost'      => !empty($data['ticket_cost']) ? (int)$data['ticket_cost'] : 0,
-    'country'          => !empty($data['country']) ? (int)$data['country'] : 0,
-    'deposite_mode'    => !empty($data['deposite_mode']) ? (int)$data['deposite_mode'] : 0,
-    'deposite_amount'  => !empty($data['deposite_amount']) ? (int)$data['deposite_amount'] : 0,
-    'departure_id'     => !empty($data['departure_id']) ? (int)$data['departure_id'] : 0,
-    'destination_id'   => !empty($data['destination_id']) ? (int)$data['destination_id'] : 0,
-    'airline'          => !empty($data['airline']) ? (int)$data['airline'] : 0,
-    'flight_type'      => !empty($data['flight_type']) ? (int)$data['flight_type'] : 0,
+                // INT fields (empty -> 0)
+                'ticket_vendor'    => !empty($data['ticket_vendor']) ? (int)$data['ticket_vendor'] : 0,
+                'ticket_type'      => !empty($data['ticket_type']) ? (int)$data['ticket_type'] : 0,
+                'payment_mode'     => !empty($data['payment_mode']) ? (int)$data['payment_mode'] : 0,
+                'ticket_cost'      => !empty($data['ticket_cost']) ? (int)$data['ticket_cost'] : 0,
+                'country'          => !empty($data['country']) ? (int)$data['country'] : 0,
+                'deposite_mode'    => !empty($data['deposite_mode']) ? (int)$data['deposite_mode'] : 0,
+                'deposite_amount'  => !empty($data['deposite_amount']) ? (int)$data['deposite_amount'] : 0,
+                'departure_id'     => !empty($data['departure_id']) ? (int)$data['departure_id'] : 0,
+                'destination_id'   => !empty($data['destination_id']) ? (int)$data['destination_id'] : 0,
+                'airline'          => !empty($data['airline']) ? (int)$data['airline'] : 0,
+                'flight_type'      => !empty($data['flight_type']) ? (int)$data['flight_type'] : 0,
 
-    // DATE fields (empty or invalid -> null)
-    'flight_date'      => (!empty($data['flight_date']) && $data['flight_date'] != "0000-00-00") ? $data['flight_date'] : null,
-    'payment_date'     => (!empty($data['payment_date']) && $data['payment_date'] != "0000-00-00") ? $data['payment_date'] : null,
-    'deposite_date'    => (!empty($data['deposite_date']) && $data['deposite_date'] != "0000-00-00") ? $data['deposite_date'] : null,
-    'dob'              => (!empty($data['dob']) && $data['dob'] != "0000-00-00") ? $data['dob'] : null,
-    'issue_date'       => (!empty($data['issue_date']) && $data['issue_date'] != "0000-00-00") ? $data['issue_date'] : null,
-    'exp_date'         => (!empty($data['exp_date']) && $data['exp_date'] != "0000-00-00") ? $data['exp_date'] : null,
+                // DATE fields (empty or invalid -> null)
+                'flight_date'      => (!empty($data['flight_date']) && $data['flight_date'] != "0000-00-00") ? $data['flight_date'] : null,
+                'payment_date'     => (!empty($data['payment_date']) && $data['payment_date'] != "0000-00-00") ? $data['payment_date'] : null,
+                'deposite_date'    => (!empty($data['deposite_date']) && $data['deposite_date'] != "0000-00-00") ? $data['deposite_date'] : null,
+                'dob'              => (!empty($data['dob']) && $data['dob'] != "0000-00-00") ? $data['dob'] : null,
+                'issue_date'       => (!empty($data['issue_date']) && $data['issue_date'] != "0000-00-00") ? $data['issue_date'] : null,
+                'exp_date'         => (!empty($data['exp_date']) && $data['exp_date'] != "0000-00-00") ? $data['exp_date'] : null,
 
-    // TEXT fields
-    'remark'           => $data['remark'] ?? '',
-    'country_name'     => $data['country_name'] ?? '',
-    'passport'         => $data['passport'] ?? '',
-    'gender'           => $data['gender'] ?? '',
+                // TEXT fields
+                'remark'           => $data['remark'] ?? '',
+                'country_name'     => $data['country_name'] ?? '',
+                'passport'         => $data['passport'] ?? '',
+                'gender'           => $data['gender'] ?? '',
 
-    'status'           => 1
-];
+                'status'           => 1
+            ];
 
 
 
@@ -10884,23 +10877,19 @@ if (!empty($media_upload_data["doc_type"])) {
                 // Insert new record
                 $this->db->insert(db_prefix() . 'external_ticket_data', $save_data);
                 $record_id = $this->db->insert_id();
-                
             }
 
-    // SUCCESS RESPONSE
-    echo json_encode([
-        'resp_code' => 'RCS',
-        'resp_desc' => 'Ticket details saved successfully.',
-        'data'      => [
-            'id'            => $data['id'],
-            'name'          => $data['name'],
-            'ticket_vendor' => $data['ticket_vendor'],
-            'ticket_type'   => $data['ticket_type']
-        ]
-    ]);
-            
-
-           
+            // SUCCESS RESPONSE
+            echo json_encode([
+                'resp_code' => 'RCS',
+                'resp_desc' => 'Ticket details saved successfully.',
+                'data'      => [
+                    'id'            => $data['id'],
+                    'name'          => $data['name'],
+                    'ticket_vendor' => $data['ticket_vendor'],
+                    'ticket_type'   => $data['ticket_type']
+                ]
+            ]);
         } catch (Exception $e) {
             echo json_encode([
                 'resp_code' => 'ERR',
